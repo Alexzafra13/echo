@@ -1,0 +1,2 @@
+api/models/*.onnx filter=lfs diff=lfs merge=lfs -text
+api/models/*.onnx.data filter=lfs diff=lfs merge=lfs -text

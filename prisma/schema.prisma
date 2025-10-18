@@ -1,0 +1,524 @@
+// ============================================
+// PRISMA SCHEMA - MUSIC SERVER
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USUARIOS
+// ============================================
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique @db.VarChar(50)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  name         String?   @db.VarChar(100)
+  isAdmin      Boolean   @default(false) @map("is_admin")
+  isActive     Boolean   @default(true) @map("is_active")
+  theme        String    @default("dark") @db.VarChar(20)
+  language     String    @default("es") @db.VarChar(10)
+  lastLoginAt  DateTime? @map("last_login_at")
+  lastAccessAt DateTime? @map("last_access_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relaciones
+  playlists     Playlist[]
+  starred       UserStarred[]
+  ratings       UserRating[]
+  playHistory   PlayHistory[]
+  playStats     UserPlayStats[]
+  playQueue     PlayQueue?
+  shares        Share[]
+  players       Player[]
+  bookmarks     Bookmark[]
+
+  @@map("users")
+}
+
+// ============================================
+// ARTISTAS
+// ============================================
+
+model Artist {
+  id                     String    @id @default(uuid())
+  name                   String    @db.VarChar(255)
+  albumCount             Int       @default(0) @map("album_count")
+  songCount              Int       @default(0) @map("song_count")
+  mbzArtistId            String?   @map("mbz_artist_id") @db.VarChar(36)
+  biography              String?   @db.Text
+  smallImageUrl          String?   @map("small_image_url") @db.VarChar(512)
+  mediumImageUrl         String?   @map("medium_image_url") @db.VarChar(512)
+  largeImageUrl          String?   @map("large_image_url") @db.VarChar(512)
+  externalUrl            String?   @map("external_url") @db.VarChar(512)
+  externalInfoUpdatedAt  DateTime? @map("external_info_updated_at")
+  orderArtistName        String?   @map("order_artist_name") @db.VarChar(255)
+  size                   BigInt    @default(0)
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  // Relaciones
+  albums              Album[]       @relation("ArtistAlbums")
+  albumsAsAlbumArtist Album[]       @relation("AlbumArtist")
+  tracks              Track[]       @relation("ArtistTracks")
+  tracksAsAlbumArtist Track[]       @relation("AlbumArtistTracks")
+  trackArtists        TrackArtist[]
+  genres              ArtistGenre[]
+
+  @@index([name], map: "idx_artists_name")
+  @@index([albumCount(sort: Desc)], map: "idx_artists_album_count")
+  @@map("artists")
+}
+
+// ============================================
+// GÉNEROS
+// ============================================
+
+model Genre {
+  id         String   @id @default(uuid())
+  name       String   @unique @db.VarChar(100)
+  albumCount Int      @default(0) @map("album_count")
+  songCount  Int      @default(0) @map("song_count")
+
+  // Relaciones
+  artists ArtistGenre[]
+  albums  AlbumGenre[]
+  tracks  TrackGenre[]
+
+  @@map("genres")
+}
+
+// ============================================
+// ÁLBUMES
+// ============================================
+
+model Album {
+  id                      String    @id @default(uuid())
+  name                    String    @db.VarChar(255)
+  albumArtistId           String?   @map("album_artist_id") @db.VarChar(36)
+  artistId                String?   @map("artist_id") @db.VarChar(36)
+  coverArtPath            String?   @map("cover_art_path") @db.VarChar(512)
+  coverArtId              String?   @map("cover_art_id") @db.VarChar(255)
+  year                    Int?
+  releaseDate             DateTime? @map("release_date") @db.Date
+  originalDate            DateTime? @map("original_date") @db.Date
+  compilation             Boolean   @default(false)
+  songCount               Int       @default(0) @map("song_count")
+  duration                Int       @default(0)
+  size                    BigInt    @default(0)
+  mbzAlbumId              String?   @map("mbz_album_id") @db.VarChar(36)
+  mbzAlbumArtistId        String?   @map("mbz_album_artist_id") @db.VarChar(36)
+  mbzAlbumType            String?   @map("mbz_album_type") @db.VarChar(100)
+  catalogNum              String?   @map("catalog_num") @db.VarChar(255)
+  comment                 String?   @db.VarChar(255)
+  orderAlbumName          String?   @map("order_album_name") @db.VarChar(255)
+  orderAlbumArtistName    String?   @map("order_album_artist_name") @db.VarChar(255)
+  sortAlbumName           String?   @map("sort_album_name") @db.VarChar(255)
+  sortArtistName          String?   @map("sort_artist_name") @db.VarChar(255)
+  sortAlbumArtistName     String?   @map("sort_album_artist_name") @db.VarChar(255)
+  description             String?   @db.Text
+  smallImageUrl           String?   @map("small_image_url") @db.VarChar(512)
+  mediumImageUrl          String?   @map("medium_image_url") @db.VarChar(512)
+  largeImageUrl           String?   @map("large_image_url") @db.VarChar(512)
+  externalUrl             String?   @map("external_url") @db.VarChar(512)
+  externalInfoUpdatedAt   DateTime? @map("external_info_updated_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  // Relaciones
+  artist       Artist?      @relation("ArtistAlbums", fields: [artistId], references: [id], onDelete: SetNull)
+  albumArtist  Artist?      @relation("AlbumArtist", fields: [albumArtistId], references: [id], onDelete: SetNull)
+  tracks       Track[]
+  genres       AlbumGenre[]
+
+  @@index([artistId], map: "idx_albums_artist")
+  @@index([albumArtistId], map: "idx_albums_album_artist")
+  @@index([year(sort: Desc)], map: "idx_albums_year")
+  @@index([name], map: "idx_albums_name")
+  @@map("albums")
+}
+
+// ============================================
+// TRACKS
+// ============================================
+
+model Track {
+  id                  String    @id @default(uuid())
+  title               String    @db.VarChar(255)
+  albumId             String?   @map("album_id") @db.VarChar(36)
+  albumArtistId       String?   @map("album_artist_id") @db.VarChar(36)
+  artistId            String?   @map("artist_id") @db.VarChar(36)
+  hasCoverArt         Boolean   @default(false) @map("has_cover_art")
+  trackNumber         Int?      @map("track_number")
+  discNumber          Int       @default(1) @map("disc_number")
+  discSubtitle        String?   @map("disc_subtitle") @db.VarChar(255)
+  year                Int?
+  date                DateTime? @db.Date
+  originalDate        DateTime? @map("original_date") @db.Date
+  releaseDate         DateTime? @map("release_date") @db.Date
+  size                BigInt?
+  suffix              String?   @db.VarChar(10)
+  duration            Int?
+  bitRate             Int?      @map("bit_rate")
+  channels            Int?
+  fullText            String?   @map("full_text") @db.Text
+  albumName           String?   @map("album_name") @db.VarChar(255)
+  artistName          String?   @map("artist_name") @db.VarChar(255)
+  albumArtistName     String?   @map("album_artist_name") @db.VarChar(255)
+  compilation         Boolean   @default(false)
+  comment             String?   @db.VarChar(512)
+  lyrics              String?   @db.Text
+  sortTitle           String?   @map("sort_title") @db.VarChar(255)
+  sortAlbumName       String?   @map("sort_album_name") @db.VarChar(255)
+  sortArtistName      String?   @map("sort_artist_name") @db.VarChar(255)
+  sortAlbumArtistName String?   @map("sort_album_artist_name") @db.VarChar(255)
+  orderTitle          String?   @map("order_title") @db.VarChar(255)
+  orderAlbumName      String?   @map("order_album_name") @db.VarChar(255)
+  orderArtistName     String?   @map("order_artist_name") @db.VarChar(255)
+  orderAlbumArtistName String?  @map("order_album_artist_name") @db.VarChar(255)
+  mbzTrackId          String?   @map("mbz_track_id") @db.VarChar(36)
+  mbzAlbumId          String?   @map("mbz_album_id") @db.VarChar(36)
+  mbzArtistId         String?   @map("mbz_artist_id") @db.VarChar(36)
+  mbzAlbumArtistId    String?   @map("mbz_album_artist_id") @db.VarChar(36)
+  mbzReleaseTrackId   String?   @map("mbz_release_track_id") @db.VarChar(36)
+  catalogNum          String?   @map("catalog_num") @db.VarChar(255)
+  path                String    @unique @db.VarChar(512)
+  bpm                 Int?
+  rgAlbumGain         Float?    @map("rg_album_gain")
+  rgAlbumPeak         Float?    @map("rg_album_peak")
+  rgTrackGain         Float?    @map("rg_track_gain")
+  rgTrackPeak         Float?    @map("rg_track_peak")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  // Relaciones
+  album           Album?            @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  artist          Artist?           @relation("ArtistTracks", fields: [artistId], references: [id], onDelete: SetNull)
+  albumArtist     Artist?           @relation("AlbumArtistTracks", fields: [albumArtistId], references: [id], onDelete: SetNull)
+  trackArtists    TrackArtist[]
+  genres          TrackGenre[]
+  playlistTracks  PlaylistTrack[]
+  playHistory     PlayHistory[]
+  playQueueTracks PlayQueueTrack[]
+  playQueues      PlayQueue[]
+
+  @@index([albumId], map: "idx_tracks_album")
+  @@index([artistId], map: "idx_tracks_artist")
+  @@index([title], map: "idx_tracks_title")
+  @@index([path], map: "idx_tracks_path")
+  @@index([albumId, trackNumber], map: "idx_tracks_album_track")
+  @@map("tracks")
+}
+
+// ============================================
+// RELACIONES MANY-TO-MANY
+// ============================================
+
+model TrackArtist {
+  trackId    String @map("track_id") @db.VarChar(36)
+  artistId   String @map("artist_id") @db.VarChar(36)
+  artistName String @map("artist_name") @db.VarChar(255)
+
+  track  Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@id([trackId, artistId])
+  @@map("track_artists")
+}
+
+model ArtistGenre {
+  artistId String @map("artist_id") @db.VarChar(36)
+  genreId  String @map("genre_id") @db.VarChar(36)
+
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  genre  Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([artistId, genreId])
+  @@map("artist_genres")
+}
+
+model AlbumGenre {
+  albumId String @map("album_id") @db.VarChar(36)
+  genreId String @map("genre_id") @db.VarChar(36)
+
+  album Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([albumId, genreId])
+  @@map("album_genres")
+}
+
+model TrackGenre {
+  trackId String @map("track_id") @db.VarChar(36)
+  genreId String @map("genre_id") @db.VarChar(36)
+
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([trackId, genreId])
+  @@map("track_genres")
+}
+
+// ============================================
+// PLAYLISTS
+// ============================================
+
+model Playlist {
+  id            String   @id @default(uuid())
+  name          String   @db.VarChar(255)
+  description   String?  @db.Text
+  coverImageUrl String?  @map("cover_image_url") @db.VarChar(512)
+  duration      Int      @default(0)
+  size          BigInt   @default(0)
+  ownerId       String   @map("owner_id") @db.VarChar(36)
+  public        Boolean  @default(false)
+  songCount     Int      @default(0) @map("song_count")
+  path          String?  @db.VarChar(512)
+  sync          Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  owner  User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tracks PlaylistTrack[]
+
+  @@index([ownerId], map: "idx_playlists_owner")
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  id         String   @id @default(uuid())
+  playlistId String   @map("playlist_id") @db.VarChar(36)
+  trackId    String   @map("track_id") @db.VarChar(36)
+  trackOrder Int      @map("track_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, trackOrder])
+  @@index([playlistId, trackOrder], map: "idx_playlist_tracks_playlist")
+  @@map("playlist_tracks")
+}
+
+// ============================================
+// INTERACCIONES DE USUARIO
+// ============================================
+
+model UserStarred {
+  userId      String   @map("user_id") @db.VarChar(36)
+  starredId   String   @map("starred_id") @db.VarChar(36)
+  starredType String   @map("starred_type") @db.VarChar(50)
+  starredAt   DateTime @default(now()) @map("starred_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, starredId, starredType])
+  @@index([userId, starredAt(sort: Desc)], map: "idx_user_starred_user")
+  @@index([starredId, starredType], map: "idx_user_starred_item")
+  @@map("user_starred")
+}
+
+model UserRating {
+  userId    String   @map("user_id") @db.VarChar(36)
+  itemId    String   @map("item_id") @db.VarChar(36)
+  itemType  String   @map("item_type") @db.VarChar(50)
+  rating    Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, itemId, itemType])
+  @@index([userId], map: "idx_user_ratings_user")
+  @@map("user_ratings")
+}
+
+model PlayHistory {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id") @db.VarChar(36)
+  trackId   String   @map("track_id") @db.VarChar(36)
+  playedAt  DateTime @map("played_at")
+  client    String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([userId, playedAt(sort: Desc)], map: "idx_play_history_user_date")
+  @@index([trackId], map: "idx_play_history_track")
+  @@index([playedAt(sort: Desc)], map: "idx_play_history_played_at")
+  @@map("play_history")
+}
+
+model UserPlayStats {
+  userId       String    @map("user_id") @db.VarChar(36)
+  itemId       String    @map("item_id") @db.VarChar(36)
+  itemType     String    @map("item_type") @db.VarChar(50)
+  playCount    BigInt    @default(0) @map("play_count")
+  lastPlayedAt DateTime? @map("last_played_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, itemId, itemType])
+  @@index([userId, playCount(sort: Desc)], map: "idx_user_play_stats_user")
+  @@index([itemId, itemType], map: "idx_user_play_stats_item")
+  @@map("user_play_stats")
+}
+
+// ============================================
+// COLA DE REPRODUCCIÓN
+// ============================================
+
+model PlayQueue {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id") @db.VarChar(36)
+  currentTrackId String?  @map("current_track_id") @db.VarChar(36)
+  position       BigInt   @default(0)
+  changedBy      String?  @map("changed_by") @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentTrack Track?           @relation(fields: [currentTrackId], references: [id], onDelete: SetNull)
+  tracks       PlayQueueTrack[]
+
+  @@map("play_queue")
+}
+
+model PlayQueueTrack {
+  id         String   @id @default(uuid())
+  queueId    String   @map("queue_id") @db.VarChar(36)
+  trackId    String   @map("track_id") @db.VarChar(36)
+  queueOrder Int      @map("queue_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  queue PlayQueue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  track Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([queueId, queueOrder])
+  @@index([queueId, queueOrder], map: "idx_play_queue_tracks_queue")
+  @@map("play_queue_tracks")
+}
+
+// ============================================
+// BOOKMARKS
+// ============================================
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id") @db.VarChar(36)
+  itemId    String   @map("item_id") @db.VarChar(36)
+  itemType  String   @map("item_type") @db.VarChar(50)
+  position  BigInt
+  comment   String?  @db.VarChar(512)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId, itemType])
+  @@map("bookmarks")
+}
+
+// ============================================
+// SHARES
+// ============================================
+
+model Share {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id") @db.VarChar(36)
+  description   String?   @db.VarChar(512)
+  expiresAt     DateTime? @map("expires_at")
+  lastVisitedAt DateTime? @map("last_visited_at")
+  resourceIds   String    @map("resource_ids") @db.Text
+  resourceType  String    @map("resource_type") @db.VarChar(50)
+  visitCount    Int       @default(0) @map("visit_count")
+  downloadable  Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("shares")
+}
+
+// ============================================
+// OTROS
+// ============================================
+
+model Radio {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  streamUrl   String   @map("stream_url") @db.VarChar(512)
+  homePageUrl String?  @map("home_page_url") @db.VarChar(512)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("radios")
+}
+
+model Transcoding {
+  id             String   @id @default(uuid())
+  name           String   @db.VarChar(255)
+  targetFormat   String   @map("target_format") @db.VarChar(10)
+  defaultBitRate Int?     @map("default_bit_rate")
+  command        String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  players Player[]
+
+  @@map("transcoding")
+}
+
+model Player {
+  id              String    @id @default(uuid())
+  name            String    @db.VarChar(255)
+  type            String?   @db.VarChar(50)
+  userName        String?   @map("user_name") @db.VarChar(255)
+  userId          String?   @map("user_id") @db.VarChar(36)
+  client          String?   @db.VarChar(255)
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  lastSeen        DateTime? @map("last_seen")
+  maxBitRate      Int?      @map("max_bit_rate")
+  transcodingId   String?   @map("transcoding_id") @db.VarChar(36)
+  scrobbleEnabled Boolean   @default(true) @map("scrobble_enabled")
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcoding Transcoding? @relation(fields: [transcodingId], references: [id], onDelete: SetNull)
+
+  @@map("players")
+}
+
+model MetadataCache {
+  entityId   String   @map("entity_id") @db.VarChar(36)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  provider   String   @db.VarChar(50)
+  data       String   @db.Text
+  fetchedAt  DateTime @default(now()) @map("fetched_at")
+  expiresAt  DateTime? @map("expires_at")
+
+  @@id([entityId, entityType, provider])
+  @@index([expiresAt], map: "idx_metadata_cache_expires")
+  @@map("metadata_cache")
+}
+
+model LibraryScan {
+  id            String    @id @default(uuid())
+  status        String    @db.VarChar(50)
+  startedAt     DateTime  @default(now()) @map("started_at")
+  finishedAt    DateTime? @map("finished_at")
+  tracksAdded   Int       @default(0) @map("tracks_added")
+  tracksUpdated Int       @default(0) @map("tracks_updated")
+  tracksDeleted Int       @default(0) @map("tracks_deleted")
+  errorMessage  String?   @map("error_message") @db.Text
+
+  @@map("library_scans")
+}
