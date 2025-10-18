@@ -1,6 +1,3 @@
-// ===============================================
-// 📁 src/features/auth/infrastructure/persistence/user.repository.ts
-// ===============================================
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { User } from '../../domain/entities/user.entity';
@@ -57,21 +54,22 @@ export class PrismaUserRepository implements IUserRepository {
   async create(user: User): Promise<User> {
     const primitives = user.toPrimitives();
 
-const created = await this.prisma.user.create({
-  data: {
-    id: primitives.id,
-    username: primitives.username,
-    email: primitives.email,
-    passwordHash: primitives.passwordHash,
-    name: primitives.name || null,
-    isActive: primitives.isActive,       
-    isAdmin: primitives.isAdmin,           
-    theme: 'dark',
-    language: 'es',
-    createdAt: primitives.createdAt,       
-    updatedAt: primitives.updatedAt,        
-  },
-});
+    const created = await this.prisma.user.create({
+      data: {
+        id: primitives.id,
+        username: primitives.username,
+        email: primitives.email || null,
+        passwordHash: primitives.passwordHash,
+        name: primitives.name || null,
+        isActive: primitives.isActive,
+        isAdmin: primitives.isAdmin,
+        theme: 'dark',
+        language: 'es',
+        createdAt: primitives.createdAt,
+        updatedAt: primitives.updatedAt,
+      },
+    });
+
     return UserMapper.toDomain(created);
   }
 }

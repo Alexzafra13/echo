@@ -46,7 +46,7 @@
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.2",
     "reflect-metadata": "~0.2.2",
-    "uuid": "^13.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",

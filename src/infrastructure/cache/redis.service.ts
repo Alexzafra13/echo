@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Redis } from 'ioredis';
-import { cacheConfig } from 'src/config/cache.config';
+import { cacheConfig } from '@config/cache.config';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
-  private redis: Redis;
+  private redis!: Redis;
 
   async onModuleInit() {
     this.redis = new Redis({

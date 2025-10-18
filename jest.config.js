@@ -3,22 +3,32 @@ module.exports = {
   rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
   preset: 'ts-jest',
-  transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      useESM: true,
-      tsconfig: {
-        module: 'commonjs',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
-    }],
-  },
+  testEnvironment: 'node',
   collectCoverageFrom: [
     '**/*.(t|j)s',
   ],
   coverageDirectory: '../coverage',
-  testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.ts'],
+  
+  // ✅ Configuración correcta de transform
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          isolatedModules: true,
+        },
+      },
+    ],
+  },
+  
+  // ✅ IMPORTANTE: Transformar uuid y otros módulos ES
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)',
+  ],
+  
+  // ✅ Path aliases para los imports
   moduleNameMapper: {
     '^@config/(.*)$': '<rootDir>/config/$1',
     '^@shared/(.*)$': '<rootDir>/shared/$1',
