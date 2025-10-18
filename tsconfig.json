@@ -6,8 +6,10 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "target": "ES2024",
+    "strict": true,
     "strictNullChecks": true,
     "sourceMap": true,
     "outDir": "./dist",
@@ -15,6 +17,8 @@
     "baseUrl": "./",
     "skipLibCheck": true,
     "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "types": ["node", "jest"],
     "paths": {
       "@config/*": ["src/config/*"],
@@ -22,5 +26,7 @@
       "@infrastructure/*": ["src/infrastructure/*"],
       "@features/*": ["src/features/*"]
     }
-  }
+  },
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

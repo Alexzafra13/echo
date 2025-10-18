@@ -10,19 +10,19 @@ export class UserMapper {
    * Convierte Prisma User a Domain User
    * Se usa cuando traes datos de BD
    */
-  static toDomain(raw: any): User {
-    return User.reconstruct({
-      id: raw.id,
-      username: raw.username,
-      email: raw.email,
-      passwordHash: raw.password_hash,
-      name: raw.name || undefined,
-      isActive: raw.is_active,
-      isAdmin: raw.is_admin,
-      createdAt: raw.created_at,
-      updatedAt: raw.updated_at,
-    });
-  }
+static toDomain(raw: any): User {
+  return User.reconstruct({
+    id: raw.id,
+    username: raw.username,
+    email: raw.email || undefined,
+    passwordHash: raw.passwordHash,  // ← Prisma devuelve camelCase
+    name: raw.name || undefined,
+    isActive: raw.isActive,
+    isAdmin: raw.isAdmin,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+  });
+}
 
   /**
    * Convierte Domain User a formato Prisma
