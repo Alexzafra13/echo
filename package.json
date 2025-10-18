@@ -1,5 +1,5 @@
 {
-  "name": "music-server-backend",
+  "name": "echo-server-backend",
   "version": "1.0.0",
   "description": "",
   "main": "dist/src/main",
@@ -7,7 +7,11 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:prod": "node ."
+    "start:prod": "node .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "keywords": [],
   "author": "",
@@ -49,13 +53,16 @@
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.6",
     "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.8.1",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^11.0.0",
+    "jest": "^29.7.0",
     "prisma": "^6.17.1",
     "supertest": "^7.1.4",
+    "ts-jest": "^29.1.1",
     "typescript": "^5.9.3"
   }
 }
