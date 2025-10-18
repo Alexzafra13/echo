@@ -18,6 +18,7 @@ datasource db {
 model User {
   id           String    @id @default(uuid())
   username     String    @unique @db.VarChar(50)
+  email        String?   @unique @db.VarChar(255)    // ← OPCIONAL (con ?)
   passwordHash String    @map("password_hash") @db.VarChar(255)
   name         String?   @db.VarChar(100)
   isAdmin      Boolean   @default(false) @map("is_admin")
