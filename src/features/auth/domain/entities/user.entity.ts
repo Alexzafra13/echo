@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid';
 export interface UserProps {
   id: string;
   username: string;
-  email: string;
+  email?: string;
   passwordHash: string;
   name?: string;
   isActive: boolean;
@@ -71,7 +71,7 @@ export class User {
     return this.props.username;
   }
 
-  get email(): string {
+  get email(): string | undefined {
     return this.props.email;
   }
 

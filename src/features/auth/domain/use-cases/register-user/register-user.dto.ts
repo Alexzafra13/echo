@@ -3,7 +3,7 @@
  */
 export interface RegisterUserInput {
   username: string;
-  email: string;
+  email?: string;
   password: string;
   name?: string;
 }
@@ -15,7 +15,7 @@ export interface RegisterUserOutput {
   user: {
     id: string;
     username: string;
-    email: string;
+    email?: string;
     name?: string;
   };
   accessToken: string;

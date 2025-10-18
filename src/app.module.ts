@@ -5,6 +5,7 @@ import { PrismaModule } from './infrastructure/persistence/prisma.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
+import { AuthModule } from './features/auth/auth.module';
 
 @Module({
   imports: [
@@ -20,8 +21,8 @@ import { FilesystemModule } from './infrastructure/filesystem/filesystem.module'
     QueueModule,
     FilesystemModule,
 
-    // Features (irán aquí)
-    // AuthModule,
+    // Features
+    AuthModule,
     // TracksModule,
     // AlbumsModule,
     // ArtistsModule,

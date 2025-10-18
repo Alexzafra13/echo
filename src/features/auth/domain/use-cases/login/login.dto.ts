@@ -13,7 +13,7 @@ export interface LoginOutput {
   user: {
     id: string;
     username: string;
-    email: string;
+    email?: string;
     name?: string;
   };
   accessToken: string;
