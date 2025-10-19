@@ -6,6 +6,7 @@ import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
 import { AuthModule } from './features/auth/auth.module';
+import { AlbumsModule } from './features/albums/albums.module';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { AuthModule } from './features/auth/auth.module';
     // Features
     AuthModule,
     // TracksModule,
-    // AlbumsModule,
+    AlbumsModule,
     // ArtistsModule,
     // PlaylistsModule,
     // StreamingModule,
