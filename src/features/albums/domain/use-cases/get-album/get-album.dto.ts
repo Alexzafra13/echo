@@ -1,15 +1,14 @@
 /**
- * GetAlbumsInput - Datos de entrada para obtener lista de álbumes
+ * GetAlbumInput - Datos de entrada para obtener UN álbum por ID
  */
-export interface GetAlbumsInput {
-  skip: number;
-  take: number;
+export interface GetAlbumInput {
+  id: string;
 }
 
 /**
- * AlbumOutput - Datos de un álbum en la respuesta
+ * GetAlbumOutput - Datos de salida de un álbum individual
  */
-export interface AlbumOutput {
+export interface GetAlbumOutput {
   id: string;
   name: string;
   artistId?: string;
@@ -24,15 +23,4 @@ export interface AlbumOutput {
   description?: string;
   createdAt: Date;
   updatedAt: Date;
-}
-
-/**
- * GetAlbumsOutput - Datos de salida de la lista de álbumes
- */
-export interface GetAlbumsOutput {
-  data: AlbumOutput[];
-  total: number;
-  skip: number;
-  take: number;
-  hasMore: boolean;
 }
