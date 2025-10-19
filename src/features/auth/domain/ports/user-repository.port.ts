@@ -1,56 +1,62 @@
 import { User } from '../entities/user.entity';
 
+export interface UserUpdateableFields {
+  name?: string;
+  email?: string;
+  theme?: string;
+  language?: string;
+  lastLoginAt?: Date;
+  lastAccessAt?: Date;
+}
+
 /**
- * IUserRepository Port - Define contrato para acceder a usuarios
- *
- * Esta es una INTERFAZ (contrato)
- * Define QUÉ métodos necesita el dominio, pero NO CÓMO se implementan
- *
- * Ventaja: El dominio no conoce Prisma, MongoDB, etc
- * La implementación viene en Infrastructure Layer
- *
- * Métodos:
- * - findByUsername: Buscar user por username
- * - findByEmail: Buscar user por email
- * - findById: Buscar user por ID
- * - create: Crear nuevo user
+ * IUserRepository - Contrato de persistencia
+ * 
+ * Responsabilidad: SOLO acceso a datos
+ * NO contiene lógica de negocio
  */
 export interface IUserRepository {
   /**
-   * Busca un usuario por su username
-   * @param username - El username a buscar
-   * @returns User si existe, null si no
-   */
-  findByUsername(username: string): Promise<User | null>;
-
-  /**
-   * Busca un usuario por su email
-   * @param email - El email a buscar
-   * @returns User si existe, null si no
-   */
-  findByEmail(email: string): Promise<User | null>;
-
-  /**
-   * Busca un usuario por su ID
-   * @param id - El ID (UUID) a buscar
-   * @returns User si existe, null si no
+   * Busca usuario por ID
    */
   findById(id: string): Promise<User | null>;
 
   /**
-   * Crea un nuevo usuario en la BD
-   * @param user - La entidad User a guardar
-   * @returns El User guardado (con datos de la BD)
+   * Busca usuario por username
+   */
+  findByUsername(username: string): Promise<User | null>;
+
+  /**
+   * Busca usuario por email
+   */
+  findByEmail(email: string): Promise<User | null>;
+
+  /**
+   * Crea un nuevo usuario
    */
   create(user: User): Promise<User>;
+
+  /**
+   * Actualiza campos específicos de un usuario
+   * SOLO actualiza los campos proporcionados en 'data'
+   * 
+   * @param id - ID del usuario
+   * @param data - Campos a actualizar (parcial)
+   * @returns Usuario actualizado completo
+   */
+  updatePartial(id: string, data: Partial<UserUpdateableFields>): Promise<User>;
+
+  /**
+   * Actualiza la contraseña de un usuario
+   * Método separado porque requiere validaciones especiales
+   */
+  updatePassword(userId: string, newPasswordHash: string): Promise<void>;
+
+  /**
+   * Cambia el estado de admin de un usuario
+   * Método separado porque es una operación sensible
+   */
+  updateAdminStatus(userId: string, isAdmin: boolean): Promise<void>;
 }
 
-/**
- * Constante con el nombre del provider
- * Se usa en NestJS para inyección de dependencias
- * 
- * Uso:
- * @Inject(USER_REPOSITORY)
- * private readonly userRepository: IUserRepository
- */
 export const USER_REPOSITORY = 'IUserRepository';

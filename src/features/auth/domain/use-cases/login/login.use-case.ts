@@ -1,58 +1,60 @@
+// src/features/auth/domain/use-cases/login/login.use-case.ts
 import { Injectable, Inject } from '@nestjs/common';
-import { UnauthorizedError } from '@shared/errors';
-import { IUserRepository, USER_REPOSITORY } from '../../ports/user-repository.port';
-import { ITokenService, TOKEN_SERVICE } from '../../ports/token-service.port';
-import { IPasswordService, PASSWORD_SERVICE } from '../../ports/password-service.port';
+import { UnauthorizedError, ValidationError } from '@shared/errors';
+import { DateUtil } from '@shared/utils/date.util';
+import {
+  USER_REPOSITORY,
+  IUserRepository,
+  PASSWORD_SERVICE,
+  IPasswordService,
+  TOKEN_SERVICE,
+  ITokenService,
+} from '../../ports';
 import { LoginInput, LoginOutput } from './login.dto';
 
-/**
- * LoginUseCase - Lógica de login
- *
- * Proceso:
- * 1. Validar que username y password existen
- * 2. Buscar usuario por username
- * 3. Verificar que está activo
- * 4. Comparar contraseña con hash
- * 5. Generar tokens
- * 6. Retornar usuario y tokens
- */
 @Injectable()
 export class LoginUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
-    @Inject(TOKEN_SERVICE)
-    private readonly tokenService: ITokenService,
+    private readonly userRepo: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    @Inject(TOKEN_SERVICE)
+    private readonly tokenService: ITokenService,
   ) {}
 
   async execute(input: LoginInput): Promise<LoginOutput> {
-    // 1. Validar entrada
+    // 1. Validaciones
     if (!input.username || !input.password) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new ValidationError('Username and password are required');
     }
 
     // 2. Buscar usuario
-    const user = await this.userRepository.findByUsername(input.username);
-    if (!user || !user.isActive) {
+    const user = await this.userRepo.findByUsername(input.username);
+    if (!user) {
       throw new UnauthorizedError('Invalid credentials');
     }
 
     // 3. Verificar contraseña
-    const isPasswordValid = await this.passwordService.compare(
+    const isValid = await this.passwordService.compare(
       input.password,
       user.passwordHash,
     );
-    if (!isPasswordValid) {
+    if (!isValid) {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    // 4. Generar tokens
+    // 4. Actualizar fechas de acceso
+    const now = DateUtil.now();
+    await this.userRepo.updatePartial(user.id, {
+      lastLoginAt: now,
+      lastAccessAt: now,
+    });
+
+    // 5. Generar tokens
     const accessToken = await this.tokenService.generateAccessToken(user);
     const refreshToken = await this.tokenService.generateRefreshToken(user);
 
-    // 5. Retornar
     return {
       user: {
         id: user.id,
