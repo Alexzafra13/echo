@@ -31,19 +31,23 @@ describe('RefreshTokenUseCase', () => {
         userId: 'user-123',
         username: 'juan',
       });
-      mockUserRepository.findById.mockResolvedValue(
-        User.reconstruct({
-          id: 'user-123',
-          username: 'juan',
-          email: 'juan@test.com',
-          passwordHash: 'hash',
-          name: 'Juan',
-          isActive: true,
-          isAdmin: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }),
-      );
+
+      const mockUser = User.reconstruct({
+        id: 'user-123',
+        username: 'juan',
+        email: 'juan@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'Juan',
+        isActive: true,
+        isAdmin: false,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      mockUserRepository.findById.mockResolvedValue(mockUser);
       mockTokenService.generateAccessToken.mockResolvedValue('new_access_token');
       mockTokenService.generateRefreshToken.mockResolvedValue('new_refresh_token');
 
@@ -55,6 +59,10 @@ describe('RefreshTokenUseCase', () => {
       // Assert
       expect(result.accessToken).toBe('new_access_token');
       expect(result.refreshToken).toBe('new_refresh_token');
+      expect(mockTokenService.verifyRefreshToken).toHaveBeenCalledWith('old_refresh_token');
+      expect(mockUserRepository.findById).toHaveBeenCalledWith('user-123');
+      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith(mockUser);
+      expect(mockTokenService.generateRefreshToken).toHaveBeenCalledWith(mockUser);
     });
 
     it('debería lanzar error si refresh token es inválido', async () => {
@@ -68,7 +76,26 @@ describe('RefreshTokenUseCase', () => {
         useCase.execute({
           refreshToken: 'invalid_token',
         }),
+      ).rejects.toThrow(UnauthorizedError);
+      await expect(
+        useCase.execute({
+          refreshToken: 'invalid_token',
+        }),
       ).rejects.toThrow('Invalid refresh token');
+    });
+
+    it('debería lanzar error si refresh token está expirado', async () => {
+      // Arrange
+      mockTokenService.verifyRefreshToken.mockRejectedValue(
+        new Error('Token expired'),
+      );
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          refreshToken: 'expired_token',
+        }),
+      ).rejects.toThrow(UnauthorizedError);
     });
 
     it('debería lanzar error si usuario no existe', async () => {
@@ -84,6 +111,11 @@ describe('RefreshTokenUseCase', () => {
         useCase.execute({
           refreshToken: 'valid_token',
         }),
+      ).rejects.toThrow(UnauthorizedError);
+      await expect(
+        useCase.execute({
+          refreshToken: 'valid_token',
+        }),
       ).rejects.toThrow('User not found or inactive');
     });
 
@@ -93,26 +125,125 @@ describe('RefreshTokenUseCase', () => {
         userId: 'user-123',
         username: 'juan',
       });
-      mockUserRepository.findById.mockResolvedValue(
-        User.reconstruct({
-          id: 'user-123',
-          username: 'juan',
-          email: 'juan@test.com',
-          passwordHash: 'hash',
-          name: 'Juan',
-          isActive: false, // Inactivo
-          isAdmin: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }),
-      );
+
+      const inactiveUser = User.reconstruct({
+        id: 'user-123',
+        username: 'juan',
+        email: 'juan@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'Juan',
+        isActive: false,
+        isAdmin: false,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      mockUserRepository.findById.mockResolvedValue(inactiveUser);
 
       // Act & Assert
       await expect(
         useCase.execute({
           refreshToken: 'valid_token',
         }),
+      ).rejects.toThrow(UnauthorizedError);
+      await expect(
+        useCase.execute({
+          refreshToken: 'valid_token',
+        }),
       ).rejects.toThrow('User not found or inactive');
+    });
+
+    it('debería lanzar error si refresh token está vacío', async () => {
+      // Arrange
+      mockTokenService.verifyRefreshToken.mockRejectedValue(
+        new Error('Token required'),
+      );
+
+      // Act & Assert
+      await expect(
+        useCase.execute({
+          refreshToken: '',
+        }),
+      ).rejects.toThrow(UnauthorizedError);
+    });
+
+    it('debería funcionar para usuarios admin', async () => {
+      // Arrange
+      mockTokenService.verifyRefreshToken.mockResolvedValue({
+        userId: 'admin-123',
+        username: 'admin',
+      });
+
+      const adminUser = User.reconstruct({
+        id: 'admin-123',
+        username: 'admin',
+        email: 'admin@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'Admin',
+        isActive: true,
+        isAdmin: true,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      mockUserRepository.findById.mockResolvedValue(adminUser);
+      mockTokenService.generateAccessToken.mockResolvedValue('admin_access_token');
+      mockTokenService.generateRefreshToken.mockResolvedValue('admin_refresh_token');
+
+      // Act
+      const result = await useCase.execute({
+        refreshToken: 'admin_old_token',
+      });
+
+      // Assert
+      expect(result.accessToken).toBe('admin_access_token');
+      expect(result.refreshToken).toBe('admin_refresh_token');
+    });
+
+    it('debería generar tokens diferentes en cada llamada', async () => {
+      // Arrange
+      mockTokenService.verifyRefreshToken.mockResolvedValue({
+        userId: 'user-123',
+        username: 'juan',
+      });
+
+      const mockUser = User.reconstruct({
+        id: 'user-123',
+        username: 'juan',
+        email: 'juan@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'Juan',
+        isActive: true,
+        isAdmin: false,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      mockUserRepository.findById.mockResolvedValue(mockUser);
+      mockTokenService.generateAccessToken
+        .mockResolvedValueOnce('access_1')
+        .mockResolvedValueOnce('access_2');
+      mockTokenService.generateRefreshToken
+        .mockResolvedValueOnce('refresh_1')
+        .mockResolvedValueOnce('refresh_2');
+
+      // Act
+      const result1 = await useCase.execute({ refreshToken: 'token_1' });
+      const result2 = await useCase.execute({ refreshToken: 'token_2' });
+
+      // Assert
+      expect(result1.accessToken).toBe('access_1');
+      expect(result2.accessToken).toBe('access_2');
+      expect(result1.refreshToken).not.toBe(result2.refreshToken);
     });
   });
 });

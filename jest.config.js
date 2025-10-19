@@ -4,11 +4,19 @@ module.exports = {
   testRegex: '.*\\.spec\\.ts$',
   preset: 'ts-jest',
   testEnvironment: 'node',
+  
+  // ✅ Excluir archivos innecesarios del coverage
   collectCoverageFrom: [
     '**/*.(t|j)s',
+    '!**/*.spec.ts',
+    '!**/*.dto.ts',
+    '!**/*.module.ts',
+    '!**/index.ts',
+    '!**/main.ts',
+    '!**/*.d.ts',
   ],
   coverageDirectory: '../coverage',
-  
+ 
   // ✅ Configuración correcta de transform
   transform: {
     '^.+\\.ts$': [
@@ -22,12 +30,12 @@ module.exports = {
       },
     ],
   },
-  
+ 
   // ✅ IMPORTANTE: Transformar uuid y otros módulos ES
   transformIgnorePatterns: [
     'node_modules/(?!(uuid)/)',
   ],
-  
+ 
   // ✅ Path aliases para los imports
   moduleNameMapper: {
     '^@config/(.*)$': '<rootDir>/config/$1',
@@ -35,4 +43,13 @@ module.exports = {
     '^@infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/features/$1',
   },
+
+  // ✅ Performance: Tests unitarios en paralelo (50% de CPUs)
+  maxWorkers: '50%',
+
+  // ✅ Timeout: 10 segundos para tests de integración
+  testTimeout: 10000,
+
+  // ✅ Mostrar resultados individuales
+  verbose: true,
 };
