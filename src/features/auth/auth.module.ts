@@ -1,4 +1,3 @@
-// src/features/auth/auth.module.ts
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -7,8 +6,6 @@ import { AuthController } from './presentation/auth.controller';
 import {
   LoginUseCase,
   RefreshTokenUseCase,
-  ChangeThemeUseCase,
-  ChangeLanguageUseCase,
 } from './domain/use-cases';
 import { PrismaUserRepository } from './infrastructure/persistence/user.repository';
 import { JwtAdapter } from './infrastructure/adapters/jwt.adapter';
@@ -32,8 +29,6 @@ import { USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE } from './domain/ports
     // Use Cases
     LoginUseCase,
     RefreshTokenUseCase,
-    ChangeThemeUseCase,
-    ChangeLanguageUseCase,
 
     // Repository
     PrismaUserRepository,

@@ -5,7 +5,11 @@ import { PrismaModule } from './infrastructure/persistence/prisma.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
+
+// Features
 import { AuthModule } from './features/auth/auth.module';
+import { UsersModule } from './features/users/users.module';    
+import { AdminModule } from './features/admin/admin.module';     
 import { AlbumsModule } from './features/albums/albums.module';
 
 @Module({
@@ -23,9 +27,11 @@ import { AlbumsModule } from './features/albums/albums.module';
     FilesystemModule,
 
     // Features
-    AuthModule,
-    // TracksModule,
+    AuthModule,     
+    UsersModule,    
+    AdminModule,     
     AlbumsModule,
+    // TracksModule,
     // ArtistsModule,
     // PlaylistsModule,
     // StreamingModule,
