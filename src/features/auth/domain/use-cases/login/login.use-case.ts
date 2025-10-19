@@ -1,4 +1,3 @@
-// src/features/auth/domain/use-cases/login/login.use-case.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { UnauthorizedError, ValidationError } from '@shared/errors';
 import { DateUtil } from '@shared/utils/date.util';
@@ -24,7 +23,7 @@ export class LoginUseCase {
   ) {}
 
   async execute(input: LoginInput): Promise<LoginOutput> {
-    // 1. Validaciones
+    // 1. Validar entrada
     if (!input.username || !input.password) {
       throw new ValidationError('Username and password are required');
     }
@@ -35,7 +34,12 @@ export class LoginUseCase {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    // 3. Verificar contraseña
+    // 3. Verificar que esté activo
+    if (!user.isActive) {
+      throw new UnauthorizedError('Account is inactive');
+    }
+
+    // 4. Verificar contraseña
     const isValid = await this.passwordService.compare(
       input.password,
       user.passwordHash,
@@ -44,26 +48,29 @@ export class LoginUseCase {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    // 4. Actualizar fechas de acceso
+    // 5. Actualizar fechas de acceso
     const now = DateUtil.now();
     await this.userRepo.updatePartial(user.id, {
       lastLoginAt: now,
       lastAccessAt: now,
     });
 
-    // 5. Generar tokens
+    // 6. Generar tokens
     const accessToken = await this.tokenService.generateAccessToken(user);
     const refreshToken = await this.tokenService.generateRefreshToken(user);
 
+    // 7. Retornar con flag mustChangePassword
     return {
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
         name: user.name,
+        isAdmin: user.isAdmin,
       },
       accessToken,
       refreshToken,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 }
