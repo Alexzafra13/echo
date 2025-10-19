@@ -1,8 +1,8 @@
 import { generateUuid } from '@shared/utils';
+import { DateUtil } from '@shared/utils/date.util';
 
 /**
  * Interfaz que define la estructura de propiedades del User
- * Esta es la forma que el User tiene internamente
  */
 export interface UserProps {
   id: string;
@@ -12,6 +12,10 @@ export interface UserProps {
   name?: string;
   isActive: boolean;
   isAdmin: boolean;
+  theme: string;
+  language: string;
+  lastLoginAt?: Date;
+  lastAccessAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,34 +26,42 @@ export interface UserProps {
  * Responsabilidades:
  * - Encapsular las propiedades de un usuario
  * - Proporcionar getters para acceder a los datos
- * - Crear nuevos usuarios con factory method
- * - Convertir a primitivos (para mapear a BD o DTOs)
+ * - Factory methods para crear/reconstruir usuarios
+ * - Convertir a primitivos
  *
- * NO tiene métodos de negocio complejos (eso va en Use Cases)
+ * NO tiene lógica de negocio (eso va en Use Cases o Domain Services)
  */
 export class User {
   private props: UserProps;
 
   /**
    * Constructor privado - no llamar directamente
-   * Usar User.create() en su lugar
+   * Usar User.create() o User.reconstruct() en su lugar
    */
-  constructor(props: UserProps) {
+  private constructor(props: UserProps) {
     this.props = props;
   }
 
   /**
    * Factory method para crear un nuevo User
    * Genera automáticamente: id (UUID), createdAt, updatedAt
+   * Valores por defecto: theme='dark', language='es'
    */
   static create(
-    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt'>,
+    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt' | 'theme' | 'language' | 'lastLoginAt' | 'lastAccessAt'> & {
+      theme?: string;
+      language?: string;
+    },
   ): User {
     return new User({
       ...props,
       id: generateUuid(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      theme: props.theme || 'dark',
+      language: props.language || 'es',
+      lastLoginAt: undefined,
+      lastAccessAt: undefined,
+      createdAt: DateUtil.now(),
+      updatedAt: DateUtil.now(),
     });
   }
 
@@ -89,6 +101,22 @@ export class User {
 
   get isAdmin(): boolean {
     return this.props.isAdmin;
+  }
+
+  get theme(): string {
+    return this.props.theme;
+  }
+
+  get language(): string {
+    return this.props.language;
+  }
+
+  get lastLoginAt(): Date | undefined {
+    return this.props.lastLoginAt;
+  }
+
+  get lastAccessAt(): Date | undefined {
+    return this.props.lastAccessAt;
   }
 
   get createdAt(): Date {
