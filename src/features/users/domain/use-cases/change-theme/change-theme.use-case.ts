@@ -1,17 +1,8 @@
-// src/features/auth/domain/use-cases/change-theme/change-theme.use-case.ts
 import { Injectable, Inject } from '@nestjs/common';
-import { USER_REPOSITORY, IUserRepository } from '../../ports/user-repository.port';
+import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { ChangeThemeInput } from './change-theme.dto';
 
-/**
- * ChangeThemeUseCase - Cambia el tema de un usuario
- * 
- * Responsabilidad: Lógica de negocio para cambiar tema
- * - Valida que el tema sea válido
- * - Verifica que el usuario exista
- * - Actualiza el tema
- */
 @Injectable()
 export class ChangeThemeUseCase {
   private readonly VALID_THEMES = ['dark', 'light'];
@@ -25,7 +16,7 @@ export class ChangeThemeUseCase {
     // 1. Validar tema
     if (!this.VALID_THEMES.includes(input.theme)) {
       throw new ValidationError(
-        `Invalid theme. Must be one of: ${this.VALID_THEMES.join(', ')}`
+        `Invalid theme. Must be one of: ${this.VALID_THEMES.join(', ')}`,
       );
     }
 
@@ -35,7 +26,7 @@ export class ChangeThemeUseCase {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 3. Actualizar SOLO el tema
+    // 3. Actualizar tema
     await this.userRepository.updatePartial(input.userId, {
       theme: input.theme,
     });

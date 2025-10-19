@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
+import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator'; 
 import {
   LoginUseCase,
   RefreshTokenUseCase,
@@ -52,6 +53,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
+  @AllowChangePassword() 
   @HttpCode(HttpStatus.OK)
   async me(@CurrentUser() user: any) {
     return { user };

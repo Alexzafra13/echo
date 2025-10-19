@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { USER_REPOSITORY, IUserRepository } from '../../ports/user-repository.port';
+import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { ChangeLanguageInput } from './change-language.dto';
 
@@ -16,7 +16,7 @@ export class ChangeLanguageUseCase {
     // 1. Validar idioma
     if (!this.VALID_LANGUAGES.includes(input.language)) {
       throw new ValidationError(
-        `Invalid language. Must be one of: ${this.VALID_LANGUAGES.join(', ')}`
+        `Invalid language. Must be one of: ${this.VALID_LANGUAGES.join(', ')}`,
       );
     }
 
@@ -26,7 +26,7 @@ export class ChangeLanguageUseCase {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 3. Actualizar SOLO el idioma
+    // 3. Actualizar idioma
     await this.userRepository.updatePartial(input.userId, {
       language: input.language,
     });
