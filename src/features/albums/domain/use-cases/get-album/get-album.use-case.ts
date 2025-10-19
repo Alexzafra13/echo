@@ -1,62 +1,61 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ValidationError } from '@shared/errors';
+import { NotFoundError } from '@shared/errors';
 import { Album } from '../../entities/album.entity';
-import { IAlbumRepository, ALBUM_REPOSITORY } from '../../ports/album-repository.port';
-import { GetAlbumsInput, GetAlbumsOutput } from './get-album.dto';
+import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports/album-repository.port';
+import { GetAlbumInput, GetAlbumOutput } from './get-album.dto';
 
 /**
- * GetAlbumsUseCase - Obtener lista paginada de álbumes
+ * GetAlbumUseCase - Obtener UN álbum por su ID
+ *
+ * Responsabilidades:
+ * - Validar que el ID es válido
+ * - Buscar el álbum en el repositorio
+ * - Lanzar error si no existe
+ * - Retornar el álbum
  *
  * Proceso:
- * 1. Validar paginación (skip, take)
- * 2. Buscar álbumes en repositorio
- * 3. Obtener total de álbumes
- * 4. Calcular si hay más resultados
- * 5. Retornar resultado paginado
+ * 1. Validar entrada (ID)
+ * 2. Buscar álbum en repositorio
+ * 3. Lanzar error si no existe
+ * 4. Retornar álbum
  */
 @Injectable()
-export class GetAlbumsUseCase {
+export class GetAlbumUseCase {
   constructor(
     @Inject(ALBUM_REPOSITORY)
     private readonly albumRepository: IAlbumRepository,
   ) {}
 
-  async execute(input: GetAlbumsInput): Promise<GetAlbumsOutput> {
-    // 1. Validar paginación
-    const skip = Math.max(0, input.skip || 0);
-    const take = Math.min(100, Math.max(1, input.take || 10));
+  async execute(input: GetAlbumInput): Promise<GetAlbumOutput> {
+    // 1. Validar entrada
+    if (!input.id || input.id.trim() === '') {
+      throw new NotFoundError('Album', 'invalid-id');
+    }
 
-    // 2. Buscar álbumes
-    const albums = await this.albumRepository.findAll(skip, take);
+    // 2. Buscar álbum en BD
+    const album = await this.albumRepository.findById(input.id);
 
-    // 3. Obtener total
-    const total = await this.albumRepository.count();
+    // 3. Lanzar error si no existe
+    if (!album) {
+      throw new NotFoundError('Album', input.id);
+    }
 
-    // 4. Calcular si hay más
-    const hasMore = skip + take < total;
-
-    // 5. Retornar
+    // 4. Retornar
     return {
-      data: albums.map((album) => ({
-        id: album.id,
-        name: album.name,
-        artistId: album.artistId,
-        albumArtistId: album.albumArtistId,
-        coverArtPath: album.coverArtPath,
-        year: album.year,
-        releaseDate: album.releaseDate,
-        compilation: album.compilation,
-        songCount: album.songCount,
-        duration: album.duration,
-        size: album.size,
-        description: album.description,
-        createdAt: album.createdAt,
-        updatedAt: album.updatedAt,
-      })),
-      total,
-      skip,
-      take,
-      hasMore,
+      id: album.id,
+      name: album.name,
+      artistId: album.artistId,
+      albumArtistId: album.albumArtistId,
+      coverArtPath: album.coverArtPath,
+      year: album.year,
+      releaseDate: album.releaseDate,
+      compilation: album.compilation,
+      songCount: album.songCount,
+      duration: album.duration,
+      size: album.size,
+      description: album.description,
+      createdAt: album.createdAt,
+      updatedAt: album.updatedAt,
     };
   }
 }
