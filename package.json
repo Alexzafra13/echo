@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/src/main",
-  "scripts": {
+ "scripts": {
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -11,6 +11,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
+    "test:unit": "jest --testPathIgnorePatterns=repository.spec.ts",
+    "test:integration": "jest --testPathPattern=repository.spec.ts --runInBand",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
