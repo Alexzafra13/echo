@@ -3,9 +3,9 @@ import { IsString, MinLength } from 'class-validator';
 export class LoginRequestDto {
   @IsString()
   @MinLength(3)
-  username: string;
+  username!: string;
 
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 }

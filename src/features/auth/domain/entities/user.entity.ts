@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { generateUuid } from '@shared/utils';
 
 /**
  * Interfaz que define la estructura de propiedades del User
@@ -47,7 +47,7 @@ export class User {
   ): User {
     return new User({
       ...props,
-      id: uuid(),
+      id: generateUuid(),
       createdAt: new Date(),
       updatedAt: new Date(),
     });

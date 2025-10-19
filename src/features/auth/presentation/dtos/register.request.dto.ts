@@ -7,7 +7,7 @@ export class RegisterRequestDto {
   @Matches(/^[a-zA-Z0-9_]{3,50}$/, {
     message: 'Username must be alphanumeric with underscores only',
   })
-  username: string;
+  username!: string;
 
   @IsOptional()
   @IsEmail()
@@ -18,7 +18,7 @@ export class RegisterRequestDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/, {
     message: 'Password must contain uppercase, lowercase, number and special character',
   })
-  password: string;
+  password!: string;
 
   @IsOptional()
   @IsString()
