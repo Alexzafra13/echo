@@ -11,11 +11,9 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import {
   LoginUseCase,
-  RegisterUserUseCase,
   RefreshTokenUseCase,
 } from '../domain/use-cases';
 import {
-  RegisterRequestDto,
   LoginRequestDto,
   AuthResponseDto,
   RefreshTokenResponseDto,
@@ -26,22 +24,8 @@ import {
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
-    private readonly registerUseCase: RegisterUserUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
   ) {}
-
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  async register(@Body() dto: RegisterRequestDto): Promise<AuthResponseDto> {
-    const result = await this.registerUseCase.execute({
-      username: dto.username,
-      email: dto.email,
-      password: dto.password,
-      name: dto.name,
-    });
-
-    return AuthResponseDto.fromDomain(result);
-  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)

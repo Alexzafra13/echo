@@ -1,4 +1,5 @@
 import { Expose } from 'class-transformer';
+import { LoginOutput } from '../../domain/use-cases';
 
 export class UserResponseDto {
   @Expose()
@@ -12,6 +13,9 @@ export class UserResponseDto {
 
   @Expose()
   name?: string;
+
+  @Expose()
+  isAdmin!: boolean; 
 }
 
 export class AuthResponseDto {
@@ -24,15 +28,23 @@ export class AuthResponseDto {
   @Expose()
   refreshToken!: string;
 
-  static fromDomain(data: any): AuthResponseDto {
+  @Expose()
+  mustChangePassword!: boolean;  
+
+  static fromDomain(data: LoginOutput): AuthResponseDto {
     const dto = new AuthResponseDto();
+    
     dto.user = new UserResponseDto();
     dto.user.id = data.user.id;
     dto.user.username = data.user.username;
     dto.user.email = data.user.email;
     dto.user.name = data.user.name;
+    dto.user.isAdmin = data.user.isAdmin;  
+    
     dto.accessToken = data.accessToken;
     dto.refreshToken = data.refreshToken;
+    dto.mustChangePassword = data.mustChangePassword;  
+    
     return dto;
   }
 }
