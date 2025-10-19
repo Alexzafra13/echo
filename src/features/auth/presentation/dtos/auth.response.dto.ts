@@ -2,10 +2,10 @@ import { Expose } from 'class-transformer';
 
 export class UserResponseDto {
   @Expose()
-  id: string;
+  id!: string;
 
   @Expose()
-  username: string;
+  username!: string;
 
   @Expose()
   email?: string;
@@ -16,13 +16,13 @@ export class UserResponseDto {
 
 export class AuthResponseDto {
   @Expose()
-  user: UserResponseDto;
+  user!: UserResponseDto;
 
   @Expose()
-  accessToken: string;
+  accessToken!: string;
 
   @Expose()
-  refreshToken: string;
+  refreshToken!: string;
 
   static fromDomain(data: any): AuthResponseDto {
     const dto = new AuthResponseDto();
@@ -39,10 +39,10 @@ export class AuthResponseDto {
 
 export class RefreshTokenResponseDto {
   @Expose()
-  accessToken: string;
+  accessToken!: string;
 
   @Expose()
-  refreshToken: string;
+  refreshToken!: string;
 
   static fromDomain(data: any): RefreshTokenResponseDto {
     const dto = new RefreshTokenResponseDto();
