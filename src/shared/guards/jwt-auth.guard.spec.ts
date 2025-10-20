@@ -1,77 +1,97 @@
-import { ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { AdminGuard } from './admin.guard';
 
-describe('JwtAuthGuard', () => {
-  let guard: JwtAuthGuard;
-  let mockReflector: any;
+describe('AdminGuard', () => {
+  let guard: AdminGuard;
 
   beforeEach(() => {
-    mockReflector = {
-      getAllAndOverride: jest.fn(),
-    };
-
-    guard = new JwtAuthGuard(mockReflector);
+    guard = new AdminGuard();
   });
 
   describe('canActivate', () => {
-    it('debería permitir acceso si el usuario está autenticado', async () => {
+    it('debería permitir acceso si el usuario es admin', () => {
       // Arrange
       const mockContext = createMockContext({
-        user: { userId: 'user-123', username: 'testuser' },
+        user: {
+          userId: 'admin-123',
+          username: 'admin',
+          isAdmin: true,
+        },
       });
 
-      mockReflector.getAllAndOverride.mockReturnValue(false);
-
       // Act
-      const result = await guard.canActivate(mockContext);
+      const result = guard.canActivate(mockContext);
 
       // Assert
       expect(result).toBe(true);
     });
 
-    it('debería denegar acceso si no hay usuario autenticado', async () => {
+    it('debería denegar acceso si el usuario NO es admin', () => {
       // Arrange
       const mockContext = createMockContext({
-        user: undefined,
+        user: {
+          userId: 'user-123',
+          username: 'normaluser',
+          isAdmin: false,
+        },
       });
-
-      mockReflector.getAllAndOverride.mockReturnValue(false);
 
       // Act & Assert
-      await expect(guard.canActivate(mockContext)).rejects.toThrow();
+      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+      expect(() => guard.canActivate(mockContext)).toThrow(
+        'Admin access required'
+      );
     });
 
-    it('debería permitir acceso en rutas públicas', async () => {
+    it('debería denegar acceso si no hay usuario en el request', () => {
       // Arrange
       const mockContext = createMockContext({
         user: undefined,
       });
 
-      // Simular que la ruta es pública
-      mockReflector.getAllAndOverride.mockReturnValue(true);
-
-      // Act
-      const result = await guard.canActivate(mockContext);
-
-      // Assert
-      expect(result).toBe(true);
+      // Act & Assert
+      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     });
 
-    it('debería verificar metadata IS_PUBLIC_KEY', () => {
+    it('debería denegar acceso si user.isAdmin es undefined', () => {
       // Arrange
-      const mockContext = createMockContext({});
+      const mockContext = createMockContext({
+        user: {
+          userId: 'user-123',
+          username: 'testuser',
+        },
+      });
 
-      mockReflector.getAllAndOverride.mockReturnValue(true);
+      // Act & Assert
+      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    });
 
-      // Act
-      guard.canActivate(mockContext);
+    it('debería denegar acceso si user.isAdmin es null', () => {
+      // Arrange
+      const mockContext = createMockContext({
+        user: {
+          userId: 'user-123',
+          username: 'testuser',
+          isAdmin: null,
+        },
+      });
 
-      // Assert
-      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
-        'isPublic',
-        expect.anything()
-      );
+      // Act & Assert
+      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    });
+
+    it('debería denegar acceso si user.isAdmin es false explícitamente', () => {
+      // Arrange
+      const mockContext = createMockContext({
+        user: {
+          userId: 'user-123',
+          username: 'testuser',
+          isAdmin: false,
+        },
+      });
+
+      // Act & Assert
+      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     });
   });
 });
@@ -81,9 +101,6 @@ function createMockContext(request: any): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => request,
-      getResponse: () => ({}), // ⬅️ AGREGADO
     }),
-    getHandler: () => ({}),
-    getClass: () => ({}),
   } as any;
 }

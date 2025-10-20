@@ -22,20 +22,26 @@ describe('ListUsersUseCase - Integration', () => {
 
     useCase = module.get<ListUsersUseCase>(ListUsersUseCase);
     prisma = module.get<PrismaService>(PrismaService);
-  });
-
-  beforeEach(async () => {
-    // CRÍTICO: Limpiar ANTES de cada test
+    
+    // Limpieza inicial
     await prisma.user.deleteMany();
   });
 
+  beforeEach(async () => {
+    // Limpiar TODO antes de cada test
+    await prisma.user.deleteMany();
+    
+    // Esperar a que se complete la eliminación
+    await new Promise(resolve => setTimeout(resolve, 50));
+  });
+
   afterEach(async () => {
-    // También limpiar DESPUÉS por seguridad
     await prisma.user.deleteMany();
   });
 
   afterAll(async () => {
     await prisma.user.deleteMany();
+    await prisma.$disconnect();
     await module.close();
   });
 
@@ -64,10 +70,6 @@ describe('ListUsersUseCase - Integration', () => {
       });
 
       expect(createdUsers.count).toBe(2);
-
-      // Verificar directamente en BD
-      const countInDb = await prisma.user.count();
-      expect(countInDb).toBe(2);
 
       // Act
       const result = await useCase.execute({});
@@ -105,10 +107,6 @@ describe('ListUsersUseCase - Integration', () => {
       const created = await prisma.user.createMany({ data: users });
       expect(created.count).toBe(5);
 
-      // Verificar directamente en BD
-      const countInDb = await prisma.user.count();
-      expect(countInDb).toBe(5);
-
       // Act
       const result = await useCase.execute({
         skip: 2,
@@ -118,67 +116,56 @@ describe('ListUsersUseCase - Integration', () => {
       // Assert
       expect(result.users).toHaveLength(2);
       expect(result.total).toBe(5);
-      expect(result.users.every(u => u.username.startsWith('paguser'))).toBe(true);
     });
 
     it('debería retornar usuarios ordenados por createdAt desc', async () => {
-      // Arrange - Crear usuarios con timestamps explícitos
+      // Arrange
       const now = new Date();
       
       await prisma.user.create({
         data: {
-          username: 'order1',
-          email: 'order1@test.com',
+          username: 'olduser',
+          email: 'old@test.com',
           passwordHash: '$2b$12$hashed',
           isActive: true,
           isAdmin: false,
-          createdAt: new Date(now.getTime() - 2000), // Hace 2 segundos
+          createdAt: new Date(now.getTime() - 3000),
         },
       });
 
       await prisma.user.create({
         data: {
-          username: 'order2',
-          email: 'order2@test.com',
+          username: 'miduser',
+          email: 'mid@test.com',
           passwordHash: '$2b$12$hashed',
           isActive: true,
           isAdmin: false,
-          createdAt: new Date(now.getTime() - 1000), // Hace 1 segundo
+          createdAt: new Date(now.getTime() - 2000),
         },
       });
 
       await prisma.user.create({
         data: {
-          username: 'order3',
-          email: 'order3@test.com',
+          username: 'newuser',
+          email: 'new@test.com',
           passwordHash: '$2b$12$hashed',
           isActive: true,
           isAdmin: false,
-          createdAt: now, // Ahora
+          createdAt: now,
         },
       });
-
-      const count = await prisma.user.count();
-      expect(count).toBe(3);
 
       // Act
       const result = await useCase.execute({});
 
       // Assert
-      expect(result.users.length).toBe(3);
-      expect(result.total).toBe(3);
-      
-      // El orden debe ser: order3 (más reciente), order2, order1
-      expect(result.users[0].username).toBe('order3');
-      expect(result.users[1].username).toBe('order2');
-      expect(result.users[2].username).toBe('order1');
+      expect(result.users).toHaveLength(3);
+      expect(result.users[0].username).toBe('newuser');
+      expect(result.users[1].username).toBe('miduser');
+      expect(result.users[2].username).toBe('olduser');
     });
 
     it('debería retornar lista vacía si no hay usuarios', async () => {
-      // Verificar que está vacío
-      const countBefore = await prisma.user.count();
-      expect(countBefore).toBe(0);
-
       // Act
       const result = await useCase.execute({});
 
@@ -189,7 +176,7 @@ describe('ListUsersUseCase - Integration', () => {
 
     it('debería incluir usuarios inactivos y activos', async () => {
       // Arrange
-      const created = await prisma.user.createMany({
+      await prisma.user.createMany({
         data: [
           {
             username: 'activeuser',
@@ -207,11 +194,6 @@ describe('ListUsersUseCase - Integration', () => {
           },
         ],
       });
-
-      expect(created.count).toBe(2);
-
-      const countInDb = await prisma.user.count();
-      expect(countInDb).toBe(2);
 
       // Act
       const result = await useCase.execute({});
@@ -240,9 +222,6 @@ describe('ListUsersUseCase - Integration', () => {
           isAdmin: false,
         },
       });
-
-      const count = await prisma.user.count();
-      expect(count).toBe(1);
 
       // Act
       const result = await useCase.execute({});

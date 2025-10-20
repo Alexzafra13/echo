@@ -10,7 +10,6 @@ describe('AdminGuard', () => {
 
   describe('canActivate', () => {
     it('debería permitir acceso si el usuario es admin', () => {
-      // Arrange
       const mockContext = createMockContext({
         user: {
           userId: 'admin-123',
@@ -19,15 +18,12 @@ describe('AdminGuard', () => {
         },
       });
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('debería denegar acceso si el usuario NO es admin', () => {
-      // Arrange
       const mockContext = createMockContext({
         user: {
           userId: 'user-123',
@@ -36,39 +32,30 @@ describe('AdminGuard', () => {
         },
       });
 
-      // Act & Assert
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        'Access denied: Admin privileges required'
-      );
+      expect(() => guard.canActivate(mockContext)).toThrow('Admin access required');
     });
 
     it('debería denegar acceso si no hay usuario en el request', () => {
-      // Arrange
       const mockContext = createMockContext({
         user: undefined,
       });
 
-      // Act & Assert
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     });
 
     it('debería denegar acceso si user.isAdmin es undefined', () => {
-      // Arrange
       const mockContext = createMockContext({
         user: {
           userId: 'user-123',
           username: 'testuser',
-          // isAdmin no está definido
         },
       });
 
-      // Act & Assert
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     });
 
     it('debería denegar acceso si user.isAdmin es null', () => {
-      // Arrange
       const mockContext = createMockContext({
         user: {
           userId: 'user-123',
@@ -77,12 +64,10 @@ describe('AdminGuard', () => {
         },
       });
 
-      // Act & Assert
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     });
 
     it('debería denegar acceso si user.isAdmin es false explícitamente', () => {
-      // Arrange
       const mockContext = createMockContext({
         user: {
           userId: 'user-123',
@@ -91,13 +76,11 @@ describe('AdminGuard', () => {
         },
       });
 
-      // Act & Assert
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     });
   });
 });
 
-// Helper para crear mock context
 function createMockContext(request: any): ExecutionContext {
   return {
     switchToHttp: () => ({
