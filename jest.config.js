@@ -5,6 +5,9 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   
+  // ✅ Setup que asigna BD por worker
+  setupFilesAfterEnv: ['<rootDir>/../test/setup-test-db.ts'],
+ 
   // ✅ Excluir archivos innecesarios del coverage
   collectCoverageFrom: [
     '**/*.(t|j)s',
@@ -44,8 +47,8 @@ module.exports = {
     '^@features/(.*)$': '<rootDir>/features/$1',
   },
 
-  // ✅ Performance: Tests unitarios en paralelo (50% de CPUs)
-  maxWorkers: '50%',
+  // ✅ 4 workers = 4 BDs = tests en paralelo SIN conflictos
+  maxWorkers: 4,
 
   // ✅ Timeout: 10 segundos para tests de integración
   testTimeout: 10000,
