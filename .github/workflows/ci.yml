@@ -51,10 +51,9 @@ jobs:
         with:
           node-version: '22'
 
-      # 3️⃣ Instalar pnpm
+      # 3️⃣ Instalar pnpm (lee versión de package.json)
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-
 
       # 4️⃣ Obtener directorio de caché
       - name: Get pnpm store directory
@@ -101,11 +100,11 @@ jobs:
             DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm prisma migrate deploy
           done
 
-      # 1️⃣1️⃣ Ejecutar tests
+      # 1️⃣1️⃣ Ejecutar tests (LIMITADO A 4 WORKERS)
       - name: Run tests
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
-        run: pnpm test
+        run: pnpm test -- --maxWorkers=4
 
       # 1️⃣2️⃣ Compilar el proyecto
       - name: Build project
