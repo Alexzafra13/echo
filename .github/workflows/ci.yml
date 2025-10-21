@@ -89,7 +89,8 @@ jobs:
       - name: Run tests
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
-        run: pnpm test:ci
+          JEST_MAX_WORKERS: "4"
+        run: pnpm test
 
       - name: Build project
         run: pnpm build
