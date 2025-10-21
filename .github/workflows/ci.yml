@@ -68,7 +68,7 @@ jobs:
         env:
           PGPASSWORD: music_password
         run: |
-          for i in {0..3}; do
+          for i in {1..4}; do
             psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;"
           done
 
@@ -82,7 +82,7 @@ jobs:
 
       - name: Run migrations (test DBs)
         run: |
-          for i in {0..3}; do
+          for i in {1..4}; do
             DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm prisma migrate deploy
           done
 
