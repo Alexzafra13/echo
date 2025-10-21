@@ -21,6 +21,7 @@
     "test:cov": "jest --coverage",
     "test:migrate": "bash scripts/database/migrate-test-dbs.sh",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:ci": "jest --maxWorkers=4 --ci",
    
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
