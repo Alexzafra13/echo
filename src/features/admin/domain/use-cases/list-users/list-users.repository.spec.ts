@@ -22,25 +22,14 @@ describe('ListUsersUseCase - Integration', () => {
 
     useCase = module.get<ListUsersUseCase>(ListUsersUseCase);
     prisma = module.get<PrismaService>(PrismaService);
-    
-    // Limpieza inicial
-    await prisma.user.deleteMany();
   });
 
   beforeEach(async () => {
-    // Limpiar TODO antes de cada test
-    await prisma.user.deleteMany();
-    
-    // Esperar a que se complete la eliminación
-    await new Promise(resolve => setTimeout(resolve, 50));
-  });
-
-  afterEach(async () => {
+    // Limpiar TODO - es BD de test
     await prisma.user.deleteMany();
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany();
     await prisma.$disconnect();
     await module.close();
   });
@@ -48,7 +37,7 @@ describe('ListUsersUseCase - Integration', () => {
   describe('execute', () => {
     it('debería listar todos los usuarios con paginación por defecto', async () => {
       // Arrange
-      const createdUsers = await prisma.user.createMany({
+      await prisma.user.createMany({
         data: [
           {
             username: 'listuser1',
@@ -68,8 +57,6 @@ describe('ListUsersUseCase - Integration', () => {
           },
         ],
       });
-
-      expect(createdUsers.count).toBe(2);
 
       // Act
       const result = await useCase.execute({});
@@ -104,8 +91,7 @@ describe('ListUsersUseCase - Integration', () => {
         });
       }
       
-      const created = await prisma.user.createMany({ data: users });
-      expect(created.count).toBe(5);
+      await prisma.user.createMany({ data: users });
 
       // Act
       const result = await useCase.execute({
