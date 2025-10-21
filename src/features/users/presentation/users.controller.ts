@@ -20,6 +20,7 @@ import {
   UpdateProfileRequestDto,
   ChangeThemeRequestDto,
   ChangeLanguageRequestDto,
+  UserResponseDto,
 } from './dtos';
 
 @Controller('users')
@@ -51,12 +52,14 @@ export class UsersController {
   async updateProfile(
     @CurrentUser() user: any,
     @Body() dto: UpdateProfileRequestDto,
-  ) {
-    return this.updateProfileUseCase.execute({
+  ): Promise<UserResponseDto> {
+    const result = await this.updateProfileUseCase.execute({
       userId: user.userId,
       name: dto.name,
       email: dto.email,
     });
+
+    return UserResponseDto.fromDomain(result);
   }
 
   @Put('theme')
