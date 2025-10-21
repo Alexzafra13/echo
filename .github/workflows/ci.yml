@@ -1,0 +1,113 @@
+name: CI
+
+# 🎯 Cuándo se ejecuta esto
+on:
+  push:
+    branches: [ main ]  # Cuando haces push a main
+  pull_request:
+    branches: [ main ]  # Cuando creas un Pull Request
+
+# 🏗️ Trabajos a ejecutar
+jobs:
+  test:
+    name: Tests & Build
+    runs-on: ubuntu-latest  # Máquina virtual de Ubuntu
+
+    # 🐘 Servicios (PostgreSQL + Redis)
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: music_admin
+          POSTGRES_PASSWORD: music_password
+          POSTGRES_DB: music_server
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    # 📋 Pasos a seguir (en orden)
+    steps:
+      # 1️⃣ Descargar el código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Instalar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 3️⃣ Instalar pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # 4️⃣ Obtener directorio de caché
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      # 5️⃣ Usar caché para ir más rápido
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      # 6️⃣ Instalar dependencias
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 7️⃣ Crear las 4 bases de datos de test
+      - name: Create test databases
+        env:
+          PGPASSWORD: music_password
+        run: |
+          for i in {0..3}; do
+            psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;"
+          done
+
+      # 8️⃣ Generar Prisma Client
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+
+      # 9️⃣ Migrar BD de desarrollo
+      - name: Run migrations (dev)
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+        run: pnpm db:migrate
+
+      # 🔟 Migrar las 4 BDs de test
+      - name: Run migrations (test DBs)
+        run: |
+          for i in {0..3}; do
+            DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm prisma migrate deploy
+          done
+
+      # 1️⃣1️⃣ Ejecutar tests
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+        run: pnpm test
+
+      # 1️⃣2️⃣ Compilar el proyecto
+      - name: Build project
+        run: pnpm build
