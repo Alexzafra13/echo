@@ -17,6 +17,7 @@ import {
 import {
   CreateUserRequestDto,
   CreateUserResponseDto,
+  ListUsersResponseDto,
 } from './dtos';
 
 @Controller('admin/users')
@@ -45,10 +46,12 @@ export class AdminController {
   async listUsers(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ) {
-    return this.listUsersUseCase.execute({
+  ): Promise<ListUsersResponseDto> {
+    const result = await this.listUsersUseCase.execute({
       skip: skip ? parseInt(skip, 10) : undefined,
       take: take ? parseInt(take, 10) : undefined,
     });
+
+    return ListUsersResponseDto.fromDomain(result);
   }
 }
