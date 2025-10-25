@@ -8,9 +8,10 @@ import { FilesystemModule } from './infrastructure/filesystem/filesystem.module'
 
 // Features
 import { AuthModule } from './features/auth/auth.module';
-import { UsersModule } from './features/users/users.module';    
-import { AdminModule } from './features/admin/admin.module';     
+import { UsersModule } from './features/users/users.module';
+import { AdminModule } from './features/admin/admin.module';
 import { AlbumsModule } from './features/albums/albums.module';
+import { TracksModule } from './features/tracks/tracks.module';
 
 @Module({
   imports: [
@@ -27,11 +28,11 @@ import { AlbumsModule } from './features/albums/albums.module';
     FilesystemModule,
 
     // Features
-    AuthModule,     
-    UsersModule,    
-    AdminModule,     
+    AuthModule,
+    UsersModule,
+    AdminModule,
     AlbumsModule,
-    // TracksModule,
+    TracksModule,
     // ArtistsModule,
     // PlaylistsModule,
     // StreamingModule,
