@@ -61,8 +61,8 @@ export class SearchAlbumsUseCase {
     }
 
     // 2. Validar paginación
-    const skip = Math.max(0, input.skip || 0);
-    const take = Math.min(100, Math.max(1, input.take || 10));
+    const skip = Math.max(0, input.skip ?? 0);
+    const take = Math.min(100, Math.max(1, input.take ?? 10));
     const query = input.query.trim();
 
     // 3. Buscar álbumes

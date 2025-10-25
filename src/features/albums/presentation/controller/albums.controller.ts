@@ -1,8 +1,6 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase } from '../../domain/use-cases';
-import { AlbumResponseDto } from '../dtos/album.response.dto';
-import { GetAlbumsResponseDto } from '../dtos/get-albums.response.dto';
-import { SearchAlbumsResponseDto } from '../dtos/search-albums.response.dto';
+import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 
 /**
  * AlbumsController - Controlador de álbumes
