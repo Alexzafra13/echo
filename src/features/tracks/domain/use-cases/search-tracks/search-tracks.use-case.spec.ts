@@ -181,7 +181,8 @@ describe('SearchTracksUseCase', () => {
 
     it('debería establecer hasMore correctamente', async () => {
       // Arrange
-      (trackRepository.search as jest.Mock).mockResolvedValue(mockTracks);
+      // Mock debe respetar el 'take' y retornar solo 1 track
+      (trackRepository.search as jest.Mock).mockResolvedValue([mockTracks[0]]);
 
       // Act
       const result = await useCase.execute({
