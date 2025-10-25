@@ -105,7 +105,7 @@ export class AdminController {
   ): Promise<ListUsersResponseDto> {
     const result = await this.listUsersUseCase.execute({
       skip: skip ? parseInt(skip, 10) : undefined,
-      take: take ? parseInt(skip, 10) : undefined,
+      take: take ? parseInt(take, 10) : undefined,
     });
 
     return ListUsersResponseDto.fromDomain(result);
