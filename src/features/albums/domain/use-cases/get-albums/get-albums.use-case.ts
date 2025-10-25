@@ -32,8 +32,8 @@ export class GetAlbumsUseCase {
     // 1. Validar paginación
     // - skip no puede ser negativo
     // - take debe estar entre 1 y 100 para evitar queries gigantes
-    const skip = Math.max(0, input.skip || 0);
-    const take = Math.min(100, Math.max(1, input.take || 10));
+    const skip = Math.max(0, input.skip ?? 0);
+    const take = Math.min(100, Math.max(1, input.take ?? 10));
 
     // 2. Buscar álbumes en BD
     const albums = await this.albumRepository.findAll(skip, take);
