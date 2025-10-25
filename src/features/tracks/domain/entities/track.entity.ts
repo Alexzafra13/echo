@@ -1,0 +1,167 @@
+import { generateUuid } from '@shared/utils';
+
+/**
+ * TrackProps - Propiedades de un Track
+ */
+export interface TrackProps {
+  id: string;
+  title: string;
+  albumId?: string;
+  artistId?: string;
+  albumArtistId?: string;
+  trackNumber?: number;
+  discNumber: number;
+  year?: number;
+  duration?: number;
+  path: string;
+  bitRate?: number;
+  size?: bigint;
+  suffix?: string;
+  lyrics?: string;
+  comment?: string;
+  albumName?: string;
+  artistName?: string;
+  albumArtistName?: string;
+  compilation: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Track Entity - Representa una canción/track en el dominio
+ *
+ * Responsabilidades:
+ * - Encapsular las propiedades de un track
+ * - Proporcionar getters para acceder a los datos
+ * - Factory methods para crear nuevos tracks
+ * - Conversión a primitivos
+ */
+export class Track {
+  private props: TrackProps;
+
+  /**
+   * Constructor privado - usar Track.create() o Track.reconstruct()
+   */
+  constructor(props: TrackProps) {
+    this.props = props;
+  }
+
+  /**
+   * Factory method para crear un nuevo Track
+   * Genera automáticamente: id (UUID), createdAt, updatedAt
+   */
+  static create(
+    props: Omit<TrackProps, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Track {
+    return new Track({
+      ...props,
+      id: generateUuid(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+
+  /**
+   * Factory method para reconstruir un Track desde BD
+   * Se usa cuando traes datos de Prisma
+   */
+  static reconstruct(props: TrackProps): Track {
+    return new Track(props);
+  }
+
+  // ============ GETTERS (Solo lectura) ============
+
+  get id(): string {
+    return this.props.id;
+  }
+
+  get title(): string {
+    return this.props.title;
+  }
+
+  get albumId(): string | undefined {
+    return this.props.albumId;
+  }
+
+  get artistId(): string | undefined {
+    return this.props.artistId;
+  }
+
+  get albumArtistId(): string | undefined {
+    return this.props.albumArtistId;
+  }
+
+  get trackNumber(): number | undefined {
+    return this.props.trackNumber;
+  }
+
+  get discNumber(): number {
+    return this.props.discNumber;
+  }
+
+  get year(): number | undefined {
+    return this.props.year;
+  }
+
+  get duration(): number | undefined {
+    return this.props.duration;
+  }
+
+  get path(): string {
+    return this.props.path;
+  }
+
+  get bitRate(): number | undefined {
+    return this.props.bitRate;
+  }
+
+  get size(): bigint | undefined {
+    return this.props.size;
+  }
+
+  get suffix(): string | undefined {
+    return this.props.suffix;
+  }
+
+  get lyrics(): string | undefined {
+    return this.props.lyrics;
+  }
+
+  get comment(): string | undefined {
+    return this.props.comment;
+  }
+
+  get albumName(): string | undefined {
+    return this.props.albumName;
+  }
+
+  get artistName(): string | undefined {
+    return this.props.artistName;
+  }
+
+  get albumArtistName(): string | undefined {
+    return this.props.albumArtistName;
+  }
+
+  get compilation(): boolean {
+    return this.props.compilation;
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
+
+  get updatedAt(): Date {
+    return this.props.updatedAt;
+  }
+
+  // ============ MÉTODOS DE CONVERSIÓN ============
+
+  /**
+   * Retorna todas las propiedades del track como un objeto plano
+   * Útil para mapear a Prisma o DTOs
+   */
+  toPrimitives(): TrackProps {
+    return { ...this.props };
+  }
+}

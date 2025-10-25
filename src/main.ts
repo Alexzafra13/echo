@@ -57,6 +57,7 @@ async function bootstrap() {
     .addTag('users', 'Gestión de perfil de usuario')
     .addTag('admin', 'Administración de usuarios')
     .addTag('albums', 'Gestión de álbumes')
+    .addTag('tracks', 'Gestión de tracks y canciones')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
