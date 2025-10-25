@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 
@@ -12,6 +13,7 @@ import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from 
  * - Mapear respuestas a DTOs
  * - Retornar JSON
  */
+@ApiTags('albums')
 @Controller('albums')
 export class AlbumsController {
   constructor(
@@ -26,6 +28,25 @@ export class AlbumsController {
    */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener álbum por ID',
+    description: 'Retorna la información completa de un álbum específico por su identificador UUID'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del álbum',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Álbum encontrado exitosamente',
+    type: AlbumResponseDto
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Álbum no encontrado'
+  })
   async getAlbum(@Param('id') id: string): Promise<AlbumResponseDto> {
     const result = await this.getAlbumUseCase.execute({ id });
     return AlbumResponseDto.fromDomain(result);
@@ -41,6 +62,29 @@ export class AlbumsController {
    */
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Listar álbumes',
+    description: 'Retorna una lista paginada de todos los álbumes disponibles en el servidor'
+  })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    type: Number,
+    description: 'Número de álbumes a omitir (para paginación)',
+    example: 0
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Número de álbumes a retornar (1-100)',
+    example: 10
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes obtenida exitosamente',
+    type: GetAlbumsResponseDto
+  })
   async getAlbums(
     @Query('skip') skip: string = '0',
     @Query('take') take: string = '10',
@@ -66,6 +110,39 @@ export class AlbumsController {
    */
   @Get('search/:query')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Buscar álbumes',
+    description: 'Busca álbumes por nombre (mínimo 2 caracteres). La búsqueda es case-insensitive y busca coincidencias parciales'
+  })
+  @ApiParam({
+    name: 'query',
+    type: String,
+    description: 'Término de búsqueda (mínimo 2 caracteres)',
+    example: 'Abbey'
+  })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    type: Number,
+    description: 'Número de resultados a omitir (para paginación)',
+    example: 0
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Número de resultados a retornar (1-100)',
+    example: 10
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Búsqueda completada exitosamente',
+    type: SearchAlbumsResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Query inválido (vacío o menor a 2 caracteres)'
+  })
   async searchAlbums(
     @Param('query') query: string,
     @Query('skip') skip: string = '0',

@@ -6,9 +6,10 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
-import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';  // ← IMPORTAR
+import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 import {
   ChangePasswordUseCase,
   UpdateProfileUseCase,
@@ -23,6 +24,8 @@ import {
   UserResponseDto,
 } from './dtos';
 
+@ApiTags('users')
+@ApiBearerAuth('JWT-auth')
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
@@ -34,8 +37,25 @@ export class UsersController {
   ) {}
 
   @Put('password')
-  @AllowChangePassword() 
+  @AllowChangePassword()
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Cambiar contraseña',
+    description: 'Permite al usuario cambiar su contraseña actual por una nueva. Requiere la contraseña actual para validación.'
+  })
+  @ApiBody({ type: ChangePasswordRequestDto })
+  @ApiResponse({
+    status: 204,
+    description: 'Contraseña cambiada exitosamente'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Contraseña actual incorrecta o contraseña nueva inválida'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
   async changePassword(
     @CurrentUser() user: any,
     @Body() dto: ChangePasswordRequestDto,
@@ -49,6 +69,24 @@ export class UsersController {
 
   @Put('profile')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Actualizar perfil',
+    description: 'Actualiza la información del perfil del usuario (nombre y/o email)'
+  })
+  @ApiBody({ type: UpdateProfileRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil actualizado exitosamente',
+    type: UserResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Email ya registrado o datos inválidos'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
   async updateProfile(
     @CurrentUser() user: any,
     @Body() dto: UpdateProfileRequestDto,
@@ -64,6 +102,23 @@ export class UsersController {
 
   @Put('theme')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Cambiar tema',
+    description: 'Cambia el tema de la interfaz del usuario (light o dark)'
+  })
+  @ApiBody({ type: ChangeThemeRequestDto })
+  @ApiResponse({
+    status: 204,
+    description: 'Tema cambiado exitosamente'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Tema inválido'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
   async changeTheme(
     @CurrentUser() user: any,
     @Body() dto: ChangeThemeRequestDto,
@@ -76,6 +131,23 @@ export class UsersController {
 
   @Put('language')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Cambiar idioma',
+    description: 'Cambia el idioma de la interfaz del usuario (es o en)'
+  })
+  @ApiBody({ type: ChangeLanguageRequestDto })
+  @ApiResponse({
+    status: 204,
+    description: 'Idioma cambiado exitosamente'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Idioma inválido'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
   async changeLanguage(
     @CurrentUser() user: any,
     @Body() dto: ChangeLanguageRequestDto,
