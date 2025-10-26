@@ -76,7 +76,7 @@ export class StreamingController {
     });
 
     // 3. Enviar solo headers (sin body)
-    res.status(HttpStatus.OK).end();
+    res.status(HttpStatus.OK).send();
   }
 
   /**
@@ -133,7 +133,7 @@ export class StreamingController {
         res.headers({
           'Content-Range': `bytes */${fileSize}`,
         });
-        res.end();
+        res.send();
         return;
       }
 
