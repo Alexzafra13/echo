@@ -1,0 +1,65 @@
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
+import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+import { RemoveTrackFromPlaylistInput, RemoveTrackFromPlaylistOutput } from './remove-track-from-playlist.dto';
+
+@Injectable()
+export class RemoveTrackFromPlaylistUseCase {
+  constructor(
+    @Inject(PLAYLIST_REPOSITORY)
+    private readonly playlistRepository: IPlaylistRepository,
+    @Inject(TRACK_REPOSITORY)
+    private readonly trackRepository: ITrackRepository,
+  ) {}
+
+  async execute(input: RemoveTrackFromPlaylistInput): Promise<RemoveTrackFromPlaylistOutput> {
+    // 1. Validar input
+    if (!input.playlistId || input.playlistId.trim() === '') {
+      throw new BadRequestException('Playlist ID is required');
+    }
+
+    if (!input.trackId || input.trackId.trim() === '') {
+      throw new BadRequestException('Track ID is required');
+    }
+
+    // 2. Verificar que la playlist existe
+    const playlist = await this.playlistRepository.findById(input.playlistId);
+    if (!playlist) {
+      throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
+    }
+
+    // 3. Verificar que el track existe
+    const track = await this.trackRepository.findById(input.trackId);
+    if (!track) {
+      throw new NotFoundException(`Track with ID ${input.trackId} not found`);
+    }
+
+    // 4. Verificar que el track está en la playlist
+    const isInPlaylist = await this.playlistRepository.isTrackInPlaylist(input.playlistId, input.trackId);
+    if (!isInPlaylist) {
+      throw new NotFoundException(`Track ${input.trackId} is not in playlist ${input.playlistId}`);
+    }
+
+    // 5. Remover track de la playlist
+    const removed = await this.playlistRepository.removeTrack(input.playlistId, input.trackId);
+
+    if (!removed) {
+      throw new NotFoundException(`Failed to remove track ${input.trackId} from playlist ${input.playlistId}`);
+    }
+
+    // 6. Actualizar metadata de la playlist (duration, size, songCount)
+    const trackDuration = track.duration ?? 0;
+    const trackSize = track.size ?? BigInt(0);
+    playlist.updateDuration(Math.max(0, playlist.duration - trackDuration));
+    playlist.updateSize(playlist.size > trackSize ? playlist.size - trackSize : BigInt(0));
+    playlist.updateSongCount(Math.max(0, playlist.songCount - 1));
+    await this.playlistRepository.update(playlist.id, playlist);
+
+    // 7. Retornar output
+    return {
+      success: true,
+      message: `Track ${input.trackId} removed from playlist ${input.playlistId} successfully`,
+    };
+  }
+}
