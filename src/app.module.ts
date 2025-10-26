@@ -13,6 +13,7 @@ import { AdminModule } from './features/admin/admin.module';
 import { AlbumsModule } from './features/albums/albums.module';
 import { TracksModule } from './features/tracks/tracks.module';
 import { ArtistsModule } from './features/artists/artists.module';
+import { StreamingModule } from './features/streaming/streaming.module';
 
 @Module({
   imports: [
@@ -35,8 +36,8 @@ import { ArtistsModule } from './features/artists/artists.module';
     AlbumsModule,
     TracksModule,
     ArtistsModule,
+    StreamingModule,
     // PlaylistsModule,
-    // StreamingModule,
     // ScannerModule,
   ],
   controllers: [],
