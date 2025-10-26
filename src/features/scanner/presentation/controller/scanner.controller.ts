@@ -15,8 +15,8 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
-import { AdminGuard } from '@features/admin/infrastructure/guards/admin.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
 import {
   StartScanUseCase,
   GetScanStatusUseCase,

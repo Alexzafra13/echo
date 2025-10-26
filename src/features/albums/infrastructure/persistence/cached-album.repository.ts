@@ -43,7 +43,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
     const cached = await this.cache.get(cacheKey);
     if (cached) {
       console.log(`🎯 Cache HIT: ${cacheKey}`);
-      return Album.fromPrimitives ? Album.fromPrimitives(cached) : cached;
+      return Album.reconstruct(cached);
     }
 
     console.log(`❌ Cache MISS: ${cacheKey}`);
@@ -93,7 +93,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
     if (cached) {
       console.log(`🎯 Cache HIT: ${cacheKey}`);
       return cached.map((item: any) =>
-        Album.fromPrimitives ? Album.fromPrimitives(item) : item,
+        Album.reconstruct(item),
       );
     }
 
@@ -128,7 +128,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
     if (cached) {
       console.log(`🎯 Cache HIT: ${cacheKey}`);
       return cached.map((item: any) =>
-        Album.fromPrimitives ? Album.fromPrimitives(item) : item,
+        Album.reconstruct(item),
       );
     }
 
@@ -155,7 +155,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
     if (cached) {
       console.log(`🎯 Cache HIT: ${cacheKey}`);
       return cached.map((item: any) =>
-        Album.fromPrimitives ? Album.fromPrimitives(item) : item,
+        Album.reconstruct(item),
       );
     }
 
