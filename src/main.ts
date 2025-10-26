@@ -59,6 +59,7 @@ async function bootstrap() {
     .addTag('albums', 'Gestión de álbumes')
     .addTag('tracks', 'Gestión de tracks y canciones')
     .addTag('artists', 'Gestión de artistas')
+    .addTag('streaming', 'Streaming y descarga de audio')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
