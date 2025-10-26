@@ -14,6 +14,7 @@ import { AlbumsModule } from './features/albums/albums.module';
 import { TracksModule } from './features/tracks/tracks.module';
 import { ArtistsModule } from './features/artists/artists.module';
 import { StreamingModule } from './features/streaming/streaming.module';
+import { PlaylistsModule } from './features/playlists/playlists.module';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { StreamingModule } from './features/streaming/streaming.module';
     TracksModule,
     ArtistsModule,
     StreamingModule,
-    // PlaylistsModule,
+    PlaylistsModule,
     // ScannerModule,
   ],
   controllers: [],
