@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs/promises';
+import type { Stats } from 'fs';
 import * as path from 'path';
 
 /**
@@ -114,7 +115,7 @@ export class FileScannerService {
   /**
    * Obtiene stats de un archivo
    */
-  async getFileStats(filePath: string): Promise<fs.Stats | null> {
+  async getFileStats(filePath: string): Promise<Stats | null> {
     try {
       return await fs.stat(filePath);
     } catch {

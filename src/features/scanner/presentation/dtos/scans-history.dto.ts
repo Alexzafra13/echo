@@ -36,28 +36,28 @@ export class ScansHistoryQueryDto {
  */
 export class ScanHistoryItemDto {
   @ApiProperty({ description: 'ID del escaneo' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'Estado del escaneo' })
-  status: string;
+  status!: string;
 
   @ApiProperty({ description: 'Fecha de inicio' })
-  startedAt: Date;
+  startedAt!: Date;
 
   @ApiProperty({ description: 'Fecha de finalización', required: false })
   finishedAt?: Date;
 
   @ApiProperty({ description: 'Tracks añadidos' })
-  tracksAdded: number;
+  tracksAdded!: number;
 
   @ApiProperty({ description: 'Tracks actualizados' })
-  tracksUpdated: number;
+  tracksUpdated!: number;
 
   @ApiProperty({ description: 'Tracks eliminados' })
-  tracksDeleted: number;
+  tracksDeleted!: number;
 
   @ApiProperty({ description: 'Total de cambios' })
-  totalChanges: number;
+  totalChanges!: number;
 
   @ApiProperty({ description: 'Duración en ms', required: false })
   durationMs?: number;
@@ -71,17 +71,17 @@ export class ScanHistoryItemDto {
  */
 export class ScansHistoryResponseDto {
   @ApiProperty({ description: 'Lista de escaneos', type: [ScanHistoryItemDto] })
-  scans: ScanHistoryItemDto[];
+  scans!: ScanHistoryItemDto[];
 
   @ApiProperty({ description: 'Total de escaneos' })
-  total: number;
+  total!: number;
 
   @ApiProperty({ description: 'Página actual' })
-  page: number;
+  page!: number;
 
   @ApiProperty({ description: 'Límite por página' })
-  limit: number;
+  limit!: number;
 
   @ApiProperty({ description: 'Total de páginas' })
-  totalPages: number;
+  totalPages!: number;
 }

@@ -38,14 +38,14 @@ export class StartScanRequestDto {
  */
 export class StartScanResponseDto {
   @ApiProperty({ description: 'ID del escaneo' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'Estado del escaneo' })
-  status: string;
+  status!: string;
 
   @ApiProperty({ description: 'Fecha de inicio' })
-  startedAt: Date;
+  startedAt!: Date;
 
   @ApiProperty({ description: 'Mensaje informativo' })
-  message: string;
+  message!: string;
 }

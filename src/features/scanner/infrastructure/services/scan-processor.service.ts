@@ -115,7 +115,7 @@ export class ScanProcessorService implements OnModuleInit {
       await this.scannerRepository.update(scanId, {
         status: 'failed',
         finishedAt: new Date(),
-        errorMessage: error.message || 'Error desconocido',
+        errorMessage: (error as Error).message || 'Error desconocido',
       } as any);
 
       throw error;
