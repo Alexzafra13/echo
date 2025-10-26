@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+
+# Build output
+dist
+build
+coverage
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Uploads (will be volume mounted)
+uploads
+
+# Documentation
+README.md
+*.md
+docs
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore

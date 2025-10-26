@@ -1,0 +1,161 @@
+# ============================================
+# DOCKER COMPOSE - PRODUCTION
+# ============================================
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#   docker-compose -f docker-compose.prod.yml down
+#
+# Environment:
+#   Copy .env.example to .env.production and configure
+#   docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-music_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      POSTGRES_DB: ${POSTGRES_DB:-music_server}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - echo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-music_admin} -d ${POSTGRES_DB:-music_server}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------
+  # Redis Cache
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me_in_production}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - echo-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------
+  # NestJS Application
+  # ----------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: echo-api-prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-music_admin}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-music_server}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_me_in_production}
+
+      # Application
+      NODE_ENV: production
+      PORT: 3000
+      API_PREFIX: api
+
+      # Security
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+
+      # File Storage
+      UPLOAD_PATH: /app/uploads/music
+      COVERS_PATH: /app/uploads/covers
+
+      # Cache
+      ENABLE_CACHE: ${ENABLE_CACHE:-true}
+      CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-3600}
+      CACHE_ALBUM_TTL: ${CACHE_ALBUM_TTL:-3600}
+      CACHE_ARTIST_TTL: ${CACHE_ARTIST_TTL:-7200}
+
+    volumes:
+      # Persistent storage for uploaded music and covers
+      - music_data:/app/uploads/music
+      - covers_data:/app/uploads/covers
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    networks:
+      - echo-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ----------------------------------------
+  # Nginx Reverse Proxy (Optional)
+  # ----------------------------------------
+  # Uncomment to use Nginx as reverse proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: echo-nginx-prod
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - app
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   networks:
+  #     - echo-network
+
+# ----------------------------------------
+# Volumes
+# ----------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  music_data:
+    driver: local
+  covers_data:
+    driver: local
+
+# ----------------------------------------
+# Networks
+# ----------------------------------------
+networks:
+  echo-network:
+    driver: bridge
