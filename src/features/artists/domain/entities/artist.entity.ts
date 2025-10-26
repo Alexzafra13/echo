@@ -1,4 +1,4 @@
-import { generateUuid } from '@shared/utils/uuid';
+import { generateUuid } from '@shared/utils';
 
 /**
  * ArtistProps - Propiedades del artista
