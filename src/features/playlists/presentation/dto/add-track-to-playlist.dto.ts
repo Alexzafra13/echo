@@ -8,5 +8,5 @@ export class AddTrackToPlaylistDto {
   })
   @IsString()
   @IsNotEmpty()
-  trackId: string;
+  trackId!: string;
 }

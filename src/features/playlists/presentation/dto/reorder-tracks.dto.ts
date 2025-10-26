@@ -8,14 +8,14 @@ export class TrackOrderDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsString()
-  trackId: string;
+  trackId!: string;
 
   @ApiProperty({
     description: 'Nuevo orden del track (0-based)',
     example: 0,
   })
   @IsNumber()
-  order: number;
+  order!: number;
 }
 
 export class ReorderTracksDto {
@@ -31,5 +31,5 @@ export class ReorderTracksDto {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => TrackOrderDto)
-  trackOrders: TrackOrderDto[];
+  trackOrders!: TrackOrderDto[];
 }

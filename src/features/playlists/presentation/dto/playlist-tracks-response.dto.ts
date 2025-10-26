@@ -3,28 +3,28 @@ import { GetPlaylistTracksOutput, TrackItem } from '../../domain/use-cases';
 
 export class PlaylistTrackResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ example: 'Bohemian Rhapsody' })
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({ example: 1 })
   trackNumber?: number;
 
   @ApiProperty({ example: 1 })
-  discNumber: number;
+  discNumber!: number;
 
   @ApiPropertyOptional({ example: 1975 })
   year?: number;
 
   @ApiProperty({ example: 354, description: 'Duración en segundos' })
-  duration: number;
+  duration!: number;
 
   @ApiProperty({ example: '5242880', description: 'Tamaño en bytes (como string)' })
-  size: string;
+  size!: string;
 
   @ApiProperty({ example: '/music/Queen/A Night at the Opera/01 Bohemian Rhapsody.mp3' })
-  path: string;
+  path!: string;
 
   @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000' })
   albumId?: string;
@@ -36,10 +36,10 @@ export class PlaylistTrackResponseDto {
   bitRate?: number;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   static fromTrackItem(item: TrackItem): PlaylistTrackResponseDto {
     return {
@@ -62,16 +62,16 @@ export class PlaylistTrackResponseDto {
 
 export class PlaylistTracksResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  playlistId: string;
+  playlistId!: string;
 
   @ApiProperty({ example: 'Mi Playlist Favorita' })
-  playlistName: string;
+  playlistName!: string;
 
   @ApiProperty({ type: [PlaylistTrackResponseDto] })
-  tracks: PlaylistTrackResponseDto[];
+  tracks!: PlaylistTrackResponseDto[];
 
   @ApiProperty({ example: 10 })
-  total: number;
+  total!: number;
 
   static fromDomain(output: GetPlaylistTracksOutput): PlaylistTracksResponseDto {
     return {

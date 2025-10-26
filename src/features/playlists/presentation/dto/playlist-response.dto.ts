@@ -7,10 +7,10 @@ import {
 
 export class PlaylistResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ example: 'Mi Playlist Favorita' })
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({ example: 'Mis canciones favoritas de rock' })
   description?: string;
@@ -19,31 +19,31 @@ export class PlaylistResponseDto {
   coverImageUrl?: string;
 
   @ApiProperty({ example: 3600, description: 'Duración total en segundos' })
-  duration: number;
+  duration!: number;
 
   @ApiProperty({ example: '1048576', description: 'Tamaño total en bytes (como string)' })
-  size: string;
+  size!: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  ownerId: string;
+  ownerId!: string;
 
   @ApiProperty({ example: false })
-  public: boolean;
+  public!: boolean;
 
   @ApiProperty({ example: 10 })
-  songCount: number;
+  songCount!: number;
 
   @ApiPropertyOptional({ example: '/music/playlists/my-playlist' })
   path?: string;
 
   @ApiProperty({ example: false })
-  sync: boolean;
+  sync!: boolean;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   static fromDomain(output: GetPlaylistOutput): PlaylistResponseDto {
     return {
@@ -84,16 +84,16 @@ export class PlaylistResponseDto {
 
 export class PlaylistsListResponseDto {
   @ApiProperty({ type: [PlaylistResponseDto] })
-  items: PlaylistResponseDto[];
+  items!: PlaylistResponseDto[];
 
   @ApiProperty({ example: 100 })
-  total: number;
+  total!: number;
 
   @ApiProperty({ example: 0 })
-  skip: number;
+  skip!: number;
 
   @ApiProperty({ example: 20 })
-  take: number;
+  take!: number;
 
   static fromDomain(output: GetPlaylistsOutput): PlaylistsListResponseDto {
     return {

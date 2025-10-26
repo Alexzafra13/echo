@@ -11,7 +11,7 @@ export class CreatePlaylistDto {
   @IsString()
   @MinLength(1)
   @MaxLength(255)
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({
     description: 'Descripción de la playlist',
