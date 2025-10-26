@@ -39,6 +39,10 @@ export class CachedTrackRepository implements ITrackRepository {
     return this.baseRepository.findByAlbumId(albumId);
   }
 
+  async findByArtistId(artistId: string, skip: number, take: number): Promise<Track[]> {
+    return this.baseRepository.findByArtistId(artistId, skip, take);
+  }
+
   async count(): Promise<number> {
     return this.baseRepository.count();
   }
