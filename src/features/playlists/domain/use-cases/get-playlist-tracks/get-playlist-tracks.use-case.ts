@@ -1,0 +1,51 @@
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { GetPlaylistTracksInput, GetPlaylistTracksOutput, TrackItem } from './get-playlist-tracks.dto';
+
+@Injectable()
+export class GetPlaylistTracksUseCase {
+  constructor(
+    @Inject(PLAYLIST_REPOSITORY)
+    private readonly playlistRepository: IPlaylistRepository,
+  ) {}
+
+  async execute(input: GetPlaylistTracksInput): Promise<GetPlaylistTracksOutput> {
+    // 1. Validar input
+    if (!input.playlistId || input.playlistId.trim() === '') {
+      throw new BadRequestException('Playlist ID is required');
+    }
+
+    // 2. Verificar que la playlist existe
+    const playlist = await this.playlistRepository.findById(input.playlistId);
+    if (!playlist) {
+      throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
+    }
+
+    // 3. Obtener tracks de la playlist
+    const tracks = await this.playlistRepository.getPlaylistTracks(input.playlistId);
+
+    // 4. Mapear a output
+    const items: TrackItem[] = tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      trackNumber: track.trackNumber,
+      discNumber: track.discNumber,
+      year: track.year,
+      duration: track.duration ?? 0,
+      size: track.size ?? BigInt(0),
+      path: track.path,
+      albumId: track.albumId,
+      artistId: track.artistId,
+      bitRate: track.bitRate,
+      createdAt: track.createdAt,
+      updatedAt: track.updatedAt,
+    }));
+
+    return {
+      playlistId: playlist.id,
+      playlistName: playlist.name,
+      tracks: items,
+      total: items.length,
+    };
+  }
+}
