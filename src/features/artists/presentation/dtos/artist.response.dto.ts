@@ -1,0 +1,87 @@
+import { Expose } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+
+/**
+ * ArtistResponseDto - DTO de respuesta para UN artista
+ */
+export class ArtistResponseDto {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @Expose()
+  id!: string;
+
+  @ApiProperty({ example: 'The Beatles' })
+  @Expose()
+  name!: string;
+
+  @ApiProperty({ example: 13, description: 'Número de álbumes del artista' })
+  @Expose()
+  albumCount!: number;
+
+  @ApiProperty({ example: 213, description: 'Número de canciones del artista' })
+  @Expose()
+  songCount!: number;
+
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', required: false })
+  @Expose()
+  mbzArtistId?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  biography?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  smallImageUrl?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  mediumImageUrl?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  largeImageUrl?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  externalUrl?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  externalInfoUpdatedAt?: Date;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  orderArtistName?: string;
+
+  @ApiProperty({ example: 1073741824, description: 'Tamaño total en bytes' })
+  @Expose()
+  size!: bigint;
+
+  @ApiProperty()
+  @Expose()
+  createdAt!: Date;
+
+  @ApiProperty()
+  @Expose()
+  updatedAt!: Date;
+
+  static fromDomain(data: any): ArtistResponseDto {
+    const dto = new ArtistResponseDto();
+    dto.id = data.id;
+    dto.name = data.name;
+    dto.albumCount = data.albumCount;
+    dto.songCount = data.songCount;
+    dto.mbzArtistId = data.mbzArtistId;
+    dto.biography = data.biography;
+    dto.smallImageUrl = data.smallImageUrl;
+    dto.mediumImageUrl = data.mediumImageUrl;
+    dto.largeImageUrl = data.largeImageUrl;
+    dto.externalUrl = data.externalUrl;
+    dto.externalInfoUpdatedAt = data.externalInfoUpdatedAt;
+    dto.orderArtistName = data.orderArtistName;
+    dto.size = data.size;
+    dto.createdAt = data.createdAt;
+    dto.updatedAt = data.updatedAt;
+    return dto;
+  }
+}
