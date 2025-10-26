@@ -16,7 +16,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
 import * as fs from 'fs';
 
@@ -62,13 +62,13 @@ export class StreamingController {
   @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   async getStreamMetadata(
     @Param('id') trackId: string,
-    @Res() res: Response,
+    @Res() res: FastifyReply,
   ): Promise<void> {
     // 1. Obtener metadata del track
     const metadata = await this.streamTrackUseCase.execute({ trackId });
 
     // 2. Configurar headers
-    res.set({
+    res.headers({
       'Content-Type': metadata.mimeType,
       'Content-Length': metadata.fileSize.toString(),
       'Accept-Ranges': 'bytes',
@@ -114,7 +114,7 @@ export class StreamingController {
   async streamTrack(
     @Param('id') trackId: string,
     @Headers('range') range: string | undefined,
-    @Res() res: Response,
+    @Res() res: FastifyReply,
   ): Promise<void> {
     // 1. Obtener metadata del track
     const metadata = await this.streamTrackUseCase.execute({ trackId, range });
@@ -130,7 +130,7 @@ export class StreamingController {
       // Validar rango
       if (start >= fileSize || end >= fileSize || start > end) {
         res.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
-        res.set({
+        res.headers({
           'Content-Range': `bytes */${fileSize}`,
         });
         res.end();
@@ -141,7 +141,7 @@ export class StreamingController {
 
       // Headers para partial content
       res.status(HttpStatus.PARTIAL_CONTENT);
-      res.set({
+      res.headers({
         'Content-Type': mimeType,
         'Content-Length': chunkSize.toString(),
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
@@ -151,11 +151,11 @@ export class StreamingController {
 
       // Stream del rango solicitado
       const stream = fs.createReadStream(filePath, { start, end });
-      stream.pipe(res);
+      stream.pipe(res.raw);
     } else {
       // 3. Sin Range header, enviar archivo completo
       res.status(HttpStatus.OK);
-      res.set({
+      res.headers({
         'Content-Type': mimeType,
         'Content-Length': fileSize.toString(),
         'Accept-Ranges': 'bytes',
@@ -164,7 +164,7 @@ export class StreamingController {
 
       // Stream del archivo completo
       const stream = fs.createReadStream(filePath);
-      stream.pipe(res);
+      stream.pipe(res.raw);
     }
   }
 
@@ -190,7 +190,7 @@ export class StreamingController {
   @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   async downloadTrack(
     @Param('id') trackId: string,
-    @Res() res: Response,
+    @Res() res: FastifyReply,
   ): Promise<void> {
     // 1. Obtener metadata del track
     const metadata = await this.streamTrackUseCase.execute({ trackId });
@@ -198,7 +198,7 @@ export class StreamingController {
     const { filePath, fileName, fileSize, mimeType } = metadata;
 
     // 2. Headers para descarga
-    res.set({
+    res.headers({
       'Content-Type': mimeType,
       'Content-Length': fileSize.toString(),
       'Content-Disposition': `attachment; filename="${fileName}"`,
@@ -207,6 +207,6 @@ export class StreamingController {
 
     // 3. Stream del archivo
     const stream = fs.createReadStream(filePath);
-    stream.pipe(res);
+    stream.pipe(res.raw);
   }
 }
