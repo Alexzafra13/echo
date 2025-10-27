@@ -8,7 +8,7 @@ describe('GetPlaylistsUseCase', () => {
   let playlistRepository: jest.Mocked<IPlaylistRepository>;
 
   const mockPlaylists = [
-    Playlist.reconstruct({
+    Playlist.fromPrimitives({
       id: 'playlist-1',
       name: 'Playlist 1',
       description: 'Test 1',
@@ -23,7 +23,7 @@ describe('GetPlaylistsUseCase', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     }),
-    Playlist.reconstruct({
+    Playlist.fromPrimitives({
       id: 'playlist-2',
       name: 'Playlist 2',
       description: 'Test 2',

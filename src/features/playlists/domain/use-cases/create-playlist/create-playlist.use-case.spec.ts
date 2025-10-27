@@ -38,7 +38,7 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.reconstruct({
+      const mockPlaylist = Playlist.fromPrimitives({
         id: 'playlist-123',
         name: 'My Playlist',
         description: 'Test playlist',
@@ -82,7 +82,7 @@ describe('CreatePlaylistUseCase', () => {
         public: true,
       };
 
-      const mockPlaylist = Playlist.reconstruct({
+      const mockPlaylist = Playlist.fromPrimitives({
         id: 'playlist-123',
         name: 'Public Playlist',
         description: null,
@@ -114,7 +114,7 @@ describe('CreatePlaylistUseCase', () => {
         ownerId: 'user-123',
       };
 
-      const mockPlaylist = Playlist.reconstruct({
+      const mockPlaylist = Playlist.fromPrimitives({
         id: 'playlist-123',
         name: 'Default Playlist',
         description: null,
@@ -151,7 +151,7 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.reconstruct({
+      const mockPlaylist = Playlist.fromPrimitives({
         id: 'playlist-123',
         name: 'Playlist with spaces',
         description: null,
@@ -232,7 +232,7 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.reconstruct({
+      const mockPlaylist = Playlist.fromPrimitives({
         id: 'playlist-123',
         name: 'Minimal Playlist',
         description: null,
@@ -267,7 +267,7 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.reconstruct({
+      const mockPlaylist = Playlist.fromPrimitives({
         id: 'playlist-123',
         name: 'New Playlist',
         description: null,
