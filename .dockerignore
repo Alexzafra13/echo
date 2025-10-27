@@ -1,6 +1,6 @@
 # Dependencies
 node_modules
-pnpm-lock.yaml
+# pnpm-lock.yaml - NEEDED for Docker build!
 
 # Build output
 dist
