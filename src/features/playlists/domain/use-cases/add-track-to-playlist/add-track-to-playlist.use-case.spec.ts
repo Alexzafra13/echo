@@ -14,7 +14,7 @@ describe('AddTrackToPlaylistUseCase', () => {
   let playlistRepository: jest.Mocked<IPlaylistRepository>;
   let trackRepository: jest.Mocked<ITrackRepository>;
 
-  const mockPlaylist = Playlist.reconstruct({
+  const mockPlaylist = Playlist.fromPrimitives({
     id: 'playlist-123',
     name: 'Test Playlist',
     description: null,
@@ -89,7 +89,8 @@ describe('AddTrackToPlaylistUseCase', () => {
         trackId: 'track-123',
       };
 
-      const mockPlaylistTrack = PlaylistTrack.reconstruct({
+      const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
+        id: 'playlist-track-123',
         playlistId: 'playlist-123',
         trackId: 'track-123',
         trackOrder: 1,
@@ -124,7 +125,8 @@ describe('AddTrackToPlaylistUseCase', () => {
         trackId: 'track-123',
       };
 
-      const mockPlaylistTrack = PlaylistTrack.reconstruct({
+      const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
+        id: 'playlist-track-123',
         playlistId: 'playlist-123',
         trackId: 'track-123',
         trackOrder: 0,
@@ -232,7 +234,8 @@ describe('AddTrackToPlaylistUseCase', () => {
         trackId: 'track-123',
       };
 
-      const mockPlaylistTrack = PlaylistTrack.reconstruct({
+      const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
+        id: 'playlist-track-123',
         playlistId: 'playlist-123',
         trackId: 'track-123',
         trackOrder: 1,
