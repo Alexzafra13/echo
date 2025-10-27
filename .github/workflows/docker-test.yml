@@ -1,0 +1,43 @@
+name: Docker Build Test
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose*.yml'
+      - '.dockerignore'
+      - 'scripts/docker-entrypoint.sh'
+      - '.github/workflows/docker-*.yml'
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (test only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: echo-music-server:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker Compose (Development)
+        run: |
+          cp .env.development.example .env
+          docker compose -f docker-compose.dev.yml config
+
+      - name: Test Docker Compose (Production)
+        run: |
+          cp .env.production.example .env.production
+          # Set required secrets for validation
+          export JWT_SECRET=test-secret-for-ci
+          export JWT_REFRESH_SECRET=test-refresh-secret-for-ci
+          docker compose -f docker-compose.prod.yml config

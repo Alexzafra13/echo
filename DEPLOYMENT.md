@@ -48,10 +48,10 @@ CORS_ORIGINS="https://yourdomain.com,https://www.yourdomain.com"
 docker-compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 
 # Ver logs
-docker-compose -f docker-compose.prod.yml logs -f app
+docker compose -f docker-compose.prod.yml logs -f app
 
 # Verificar estado
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ### 4. Migraciones de Base de Datos
@@ -194,16 +194,16 @@ http {
 
 ```bash
 # Todos los servicios
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 
 # Solo la app
-docker-compose -f docker-compose.prod.yml logs -f app
+docker compose -f docker-compose.prod.yml logs -f app
 
 # PostgreSQL
-docker-compose -f docker-compose.prod.yml logs -f postgres
+docker compose -f docker-compose.prod.yml logs -f postgres
 
 # Redis
-docker-compose -f docker-compose.prod.yml logs -f redis
+docker compose -f docker-compose.prod.yml logs -f redis
 ```
 
 ### Métricas
@@ -256,10 +256,10 @@ Usa **secretos** de tu plataforma:
 git pull origin main
 
 # Reconstruir solo la app
-docker-compose -f docker-compose.prod.yml up -d --build --no-deps app
+docker compose -f docker-compose.prod.yml up -d --build --no-deps app
 
 # Verificar
-docker-compose -f docker-compose.prod.yml logs -f app
+docker compose -f docker-compose.prod.yml logs -f app
 ```
 
 ### Rollback
@@ -269,7 +269,7 @@ docker-compose -f docker-compose.prod.yml logs -f app
 git checkout <previous-commit>
 
 # Rebuild
-docker-compose -f docker-compose.prod.yml up -d --build --no-deps app
+docker compose -f docker-compose.prod.yml up -d --build --no-deps app
 ```
 
 ---
@@ -280,7 +280,7 @@ docker-compose -f docker-compose.prod.yml up -d --build --no-deps app
 
 ```bash
 # Ver logs detallados
-docker-compose -f docker-compose.prod.yml logs app
+docker compose -f docker-compose.prod.yml logs app
 
 # Verificar variables de entorno
 docker exec echo-api-prod env | grep DATABASE_URL
@@ -290,7 +290,7 @@ docker exec echo-api-prod env | grep DATABASE_URL
 
 ```bash
 # Verificar que PostgreSQL esté corriendo
-docker-compose -f docker-compose.prod.yml ps postgres
+docker compose -f docker-compose.prod.yml ps postgres
 
 # Probar conexión manualmente
 docker exec -it echo-postgres-prod psql -U music_admin -d music_server
@@ -313,7 +313,7 @@ docker exec -it echo-redis-prod redis-cli -a YOUR_PASSWORD ping
 docker exec echo-api-prod env | grep ENABLE_CACHE
 
 # Ver logs de Redis
-docker-compose -f docker-compose.prod.yml logs redis
+docker compose -f docker-compose.prod.yml logs redis
 
 # Limpiar cache
 docker exec -it echo-redis-prod redis-cli -a YOUR_PASSWORD FLUSHALL
