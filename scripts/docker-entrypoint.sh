@@ -32,7 +32,15 @@ npx prisma generate || {
 }
 
 echo "✅ Initialization complete!"
-echo "🎵 Starting application..."
+echo ""
+echo "🎵 Starting Echo Music Server..."
+echo "📍 Environment: ${NODE_ENV:-production}"
+echo "🌐 Listening on: ${HOST:-0.0.0.0}:${PORT:-4567}"
+echo ""
+echo "Access your server at:"
+echo "  - http://localhost:${PORT:-4567} (from this machine)"
+echo "  - http://<SERVER_IP>:${PORT:-4567} (from network)"
+echo ""
 
 # Start the application
 exec node dist/src/main.js
