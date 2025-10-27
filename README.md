@@ -2,52 +2,69 @@
 
 Music streaming server con arquitectura hexagonal construido con NestJS, Prisma y PostgreSQL.
 
+## Características
+
+- **Arquitectura Hexagonal** (Ports & Adapters)
+- **Scanner de música** automático con caché Redis
+- **Autenticación JWT** con roles (user/admin)
+- **Sistema de álbumes, artistas y canciones**
+- **Tests unitarios y E2E** con 4 BDs paralelas
+- **Docker multi-stage** optimizado para producción
+
 ## Requisitos Previos
 
 - Node.js >= 22.17.0
 - pnpm >= 10.0.0
 - Docker y Docker Compose
 
-## Setup Inicial
+## Setup Rápido (Docker)
 
-### 1. Instalar dependencias
+### Desarrollo
 ```bash
+# 1. Copiar variables de entorno
+cp .env.development.example .env
+
+# 2. Levantar todo (PostgreSQL + Redis + App)
+docker compose -f docker-compose.dev.yml up
+
+# Servidor: http://localhost:3000/api
+```
+
+### Producción
+```bash
+# 1. Configurar variables
+cp .env.production.example .env
+# Editar .env con tus valores seguros
+
+# 2. Levantar en producción
+docker compose -f docker-compose.prod.yml up -d
+
+# Servidor: http://<SERVER_IP>:4567/api
+```
+
+### Imagen Pre-construida (GHCR)
+```bash
+# Usar imagen desde GitHub Container Registry
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+## Setup Local (sin Docker)
+
+```bash
+# 1. Instalar dependencias
 pnpm install
-```
 
-### 2. Levantar servicios (PostgreSQL + Redis)
-```bash
-pnpm docker:up
-```
+# 2. Levantar solo PostgreSQL + Redis
+docker compose -f docker-compose.dev.yml up postgres redis -d
 
-### 3. Generar cliente Prisma
-```bash
+# 3. Generar Prisma
 pnpm db:generate
-```
 
-### 4. Ejecutar migraciones
-```bash
-# BD principal
+# 4. Ejecutar migraciones
 pnpm db:migrate
 
-# BDs de testing (4 bases paralelas para Jest)
-pnpm test:migrate
-```
-
-### 5. (Opcional) Seed de datos
-```bash
-pnpm db:seed
-```
-
-## Ejecutar el proyecto
-
-```bash
-# Desarrollo con hot-reload
+# 5. Iniciar desarrollo
 pnpm start:dev
-
-# Producción
-pnpm build
-pnpm start:prod
 ```
 
 El servidor estará disponible en `http://localhost:3000/api`
@@ -74,35 +91,38 @@ El servidor estará disponible en `http://localhost:3000/api`
 - `pnpm docker:up` - Levanta contenedores (PostgreSQL + Redis)
 - `pnpm docker:down` - Detiene contenedores
 - `pnpm docker:setup` - Setup completo (up + migraciones)
+- `docker compose -f docker-compose.dev.yml up` - Dev completo (puerto 3000)
+- `docker compose -f docker-compose.prod.yml up` - Prod completo (puerto 4567)
+- `docker compose -f docker-compose.ghcr.yml up` - Imagen pre-construida
 
 ## Arquitectura
 
 ```
 src/
-├── features/              # Módulos por característica (Hexagonal Architecture)
-│   ├── auth/
-│   ├── users/
-│   ├── admin/
-│   └── albums/
+├── features/              # Módulos por característica
+│   ├── auth/             # Autenticación JWT + roles
+│   ├── users/            # Gestión de usuarios
+│   ├── admin/            # Panel admin
+│   ├── albums/           # Álbumes
+│   ├── artists/          # Artistas
+│   ├── songs/            # Canciones
+│   └── scanner/          # Scanner de archivos de música
 │       ├── domain/              # Lógica de negocio
 │       │   ├── entities/
 │       │   ├── ports/           # Interfaces
 │       │   └── use-cases/       # Casos de uso
 │       ├── infrastructure/      # Adaptadores externos
-│       │   └── persistence/
+│       │   ├── persistence/
+│       │   └── cache/           # Caché Redis con decoradores
 │       └── presentation/        # Capa HTTP
 │           ├── controller/
 │           └── dtos/
-├── infrastructure/        # Servicios compartidos
+├── infrastructure/        # Servicios compartidos (Redis, etc)
 ├── shared/               # Guards, decorators, utils
 └── config/               # Configuración de app
 ```
 
-### Capas de la Arquitectura Hexagonal
-
-**Domain** → Lógica de negocio pura, sin dependencias externas
-**Infrastructure** → Adaptadores (BD, APIs externas, servicios)
-**Presentation** → Controllers, DTOs, validación HTTP
+**Arquitectura Hexagonal**: Domain (negocio) → Infrastructure (adaptadores) → Presentation (HTTP)
 
 ## Testing
 
@@ -130,17 +150,23 @@ pnpm test -- src/features/users/domain/use-cases/change-password/change-password
 
 ## Variables de Entorno
 
-Configuradas en `.env` (desarrollo) y `.env.test` (testing):
+Usa los archivos `.env*.example` como plantillas:
+
+- `.env.development.example` → Desarrollo (puerto 3000, localhost)
+- `.env.production.example` → Producción (puerto 4567, 0.0.0.0)
 
 ```env
-DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server"
-JWT_SECRET="your-secret-key"
-JWT_EXPIRATION="24h"
-REDIS_HOST="localhost"
+NODE_ENV=production
+PORT=4567
+HOST=0.0.0.0
+DATABASE_URL=postgresql://user:pass@postgres:5432/music_server
+REDIS_HOST=redis
 REDIS_PORT=6379
-NODE_ENV="development"
-PORT=3000
+JWT_SECRET=your-super-secret-key
+JWT_EXPIRATION=24h
 ```
+
+**Importante**: En producción, cambia todas las contraseñas y secrets.
 
 ## Flujo de Trabajo Típico
 
@@ -182,9 +208,18 @@ pnpm docker:setup
 ## Tecnologías
 
 - **NestJS** - Framework backend
-- **Prisma** - ORM
+- **Prisma** - ORM con auto-migraciones
 - **PostgreSQL** - Base de datos
-- **Redis** - Caché y colas
+- **Redis** - Caché (Scanner, metadatos)
 - **JWT** - Autenticación
-- **Jest** - Testing
+- **Jest** - Testing (4 BDs paralelas)
 - **TypeScript** - Lenguaje
+- **Docker** - Multi-stage build optimizado
+- **GitHub Actions** - CI/CD con GHCR
+
+## Documentación Adicional
+
+- `DEPLOYMENT.md` - Guía de despliegue completa
+- `ENVIRONMENTS.md` - Configuración dev/prod
+- `DOCKER_REGISTRY.md` - Uso de GitHub Container Registry
+- `DOCKER.md` - Guía Docker detallada
