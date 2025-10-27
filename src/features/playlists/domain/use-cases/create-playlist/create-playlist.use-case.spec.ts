@@ -1,0 +1,297 @@
+import { BadRequestException } from '@nestjs/common';
+import { CreatePlaylistUseCase } from './create-playlist.use-case';
+import { IPlaylistRepository } from '../../ports';
+import { Playlist } from '../../entities';
+
+describe('CreatePlaylistUseCase', () => {
+  let useCase: CreatePlaylistUseCase;
+  let playlistRepository: jest.Mocked<IPlaylistRepository>;
+
+  beforeEach(() => {
+    playlistRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByOwner: jest.fn(),
+      findPublic: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      addTrack: jest.fn(),
+      removeTrack: jest.fn(),
+      getPlaylistTracks: jest.fn(),
+      reorderTracks: jest.fn(),
+    } as any;
+
+    useCase = new CreatePlaylistUseCase(playlistRepository);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('execute', () => {
+    it('should create a new playlist successfully', async () => {
+      // Arrange
+      const input = {
+        name: 'My Playlist',
+        description: 'Test playlist',
+        ownerId: 'user-123',
+        public: false,
+      };
+
+      const mockPlaylist = Playlist.reconstruct({
+        id: 'playlist-123',
+        name: 'My Playlist',
+        description: 'Test playlist',
+        coverImageUrl: null,
+        duration: 0,
+        size: BigInt(0),
+        ownerId: 'user-123',
+        public: false,
+        songCount: 0,
+        path: null,
+        sync: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      playlistRepository.create.mockResolvedValue(mockPlaylist);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.create).toHaveBeenCalledTimes(1);
+      expect(playlistRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'My Playlist',
+          description: 'Test playlist',
+          ownerId: 'user-123',
+          public: false,
+        }),
+      );
+      expect(result.id).toBe('playlist-123');
+      expect(result.name).toBe('My Playlist');
+      expect(result.ownerId).toBe('user-123');
+    });
+
+    it('should create a public playlist', async () => {
+      // Arrange
+      const input = {
+        name: 'Public Playlist',
+        ownerId: 'user-123',
+        public: true,
+      };
+
+      const mockPlaylist = Playlist.reconstruct({
+        id: 'playlist-123',
+        name: 'Public Playlist',
+        description: null,
+        coverImageUrl: null,
+        duration: 0,
+        size: BigInt(0),
+        ownerId: 'user-123',
+        public: true,
+        songCount: 0,
+        path: null,
+        sync: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      playlistRepository.create.mockResolvedValue(mockPlaylist);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.public).toBe(true);
+    });
+
+    it('should default to private playlist if public not specified', async () => {
+      // Arrange
+      const input = {
+        name: 'Default Playlist',
+        ownerId: 'user-123',
+      };
+
+      const mockPlaylist = Playlist.reconstruct({
+        id: 'playlist-123',
+        name: 'Default Playlist',
+        description: null,
+        coverImageUrl: null,
+        duration: 0,
+        size: BigInt(0),
+        ownerId: 'user-123',
+        public: false,
+        songCount: 0,
+        path: null,
+        sync: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      playlistRepository.create.mockResolvedValue(mockPlaylist);
+
+      // Act
+      await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          public: false,
+        }),
+      );
+    });
+
+    it('should trim whitespace from name', async () => {
+      // Arrange
+      const input = {
+        name: '  Playlist with spaces  ',
+        ownerId: 'user-123',
+        public: false,
+      };
+
+      const mockPlaylist = Playlist.reconstruct({
+        id: 'playlist-123',
+        name: 'Playlist with spaces',
+        description: null,
+        coverImageUrl: null,
+        duration: 0,
+        size: BigInt(0),
+        ownerId: 'user-123',
+        public: false,
+        songCount: 0,
+        path: null,
+        sync: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      playlistRepository.create.mockResolvedValue(mockPlaylist);
+
+      // Act
+      await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Playlist with spaces',
+        }),
+      );
+    });
+
+    it('should throw error if name is empty', async () => {
+      // Arrange
+      const input = {
+        name: '',
+        ownerId: 'user-123',
+        public: false,
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow('Playlist name is required');
+      expect(playlistRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if name is only whitespace', async () => {
+      // Arrange
+      const input = {
+        name: '   ',
+        ownerId: 'user-123',
+        public: false,
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      expect(playlistRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if ownerId is empty', async () => {
+      // Arrange
+      const input = {
+        name: 'Test Playlist',
+        ownerId: '',
+        public: false,
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow('Owner ID is required');
+      expect(playlistRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should handle optional fields', async () => {
+      // Arrange
+      const input = {
+        name: 'Minimal Playlist',
+        ownerId: 'user-123',
+        description: undefined,
+        coverImageUrl: undefined,
+        path: undefined,
+        public: false,
+      };
+
+      const mockPlaylist = Playlist.reconstruct({
+        id: 'playlist-123',
+        name: 'Minimal Playlist',
+        description: null,
+        coverImageUrl: null,
+        duration: 0,
+        size: BigInt(0),
+        ownerId: 'user-123',
+        public: false,
+        songCount: 0,
+        path: null,
+        sync: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      playlistRepository.create.mockResolvedValue(mockPlaylist);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.description).toBeNull();
+      expect(result.coverImageUrl).toBeNull();
+      expect(result.path).toBeNull();
+    });
+
+    it('should initialize playlist with zero tracks and duration', async () => {
+      // Arrange
+      const input = {
+        name: 'New Playlist',
+        ownerId: 'user-123',
+        public: false,
+      };
+
+      const mockPlaylist = Playlist.reconstruct({
+        id: 'playlist-123',
+        name: 'New Playlist',
+        description: null,
+        coverImageUrl: null,
+        duration: 0,
+        size: BigInt(0),
+        ownerId: 'user-123',
+        public: false,
+        songCount: 0,
+        path: null,
+        sync: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      playlistRepository.create.mockResolvedValue(mockPlaylist);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.songCount).toBe(0);
+      expect(result.duration).toBe(0);
+      expect(result.size).toBe(BigInt(0));
+    });
+  });
+});
