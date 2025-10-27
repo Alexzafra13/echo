@@ -14,6 +14,7 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
       host: cacheConfig.redis_host,
       port: cacheConfig.redis_port,
       password: cacheConfig.redis_password,
+      maxRetriesPerRequest: null, // Required by BullMQ for blocking operations
     });
 
     this.redisConnection.on('connect', () => {
