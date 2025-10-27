@@ -139,7 +139,7 @@ cp .env.production.example .env
 nano .env
 
 # Start services (NO BUILD NEEDED!)
-docker-compose -f docker-compose.ghcr.yml up -d
+docker compose -f docker-compose.ghcr.yml up -d
 ```
 
 ---
@@ -222,14 +222,14 @@ docker pull ghcr.io/alexzafra13/echo:latest
 ### Development
 ```bash
 # Build locally
-docker-compose -f docker-compose.dev.yml up -d --build
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
 ### Staging/Testing
 ```bash
 # Use latest image
-docker-compose -f docker-compose.ghcr.yml pull
-docker-compose -f docker-compose.ghcr.yml up -d
+docker compose -f docker-compose.ghcr.yml pull
+docker compose -f docker-compose.ghcr.yml up -d
 ```
 
 ### Production
@@ -238,8 +238,8 @@ docker-compose -f docker-compose.ghcr.yml up -d
 # Edit docker-compose.ghcr.yml:
 #   image: ghcr.io/alexzafra13/echo:v1.2.3
 
-docker-compose -f docker-compose.ghcr.yml pull
-docker-compose -f docker-compose.ghcr.yml up -d
+docker compose -f docker-compose.ghcr.yml pull
+docker compose -f docker-compose.ghcr.yml up -d
 ```
 
 ---
