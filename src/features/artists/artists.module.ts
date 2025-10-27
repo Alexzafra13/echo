@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
+import { CacheModule } from '@infrastructure/cache/cache.module';
 import { ArtistsController } from './presentation/controller/artists.controller';
 import { GetArtistUseCase, GetArtistsUseCase, SearchArtistsUseCase } from './domain/use-cases';
 import { PrismaArtistRepository } from './infrastructure/persistence/artist.repository';
+import { CachedArtistRepository } from './infrastructure/persistence/cached-artist.repository';
 import { ARTIST_REPOSITORY } from './domain/ports/artist-repository.port';
 
 /**
@@ -10,16 +12,27 @@ import { ARTIST_REPOSITORY } from './domain/ports/artist-repository.port';
  *
  * Estructura:
  * - Domain Layer: Use cases, entities, ports
- * - Infrastructure Layer: Repository, mapper
+ * - Infrastructure Layer: Repository (con cache), mapper
  * - Presentation Layer: Controller, DTOs
  *
  * Responsabilidades:
- * - Importar dependencias globales (Prisma)
+ * - Importar dependencias globales (Prisma, Cache)
  * - Registrar providers (use cases, repositorio)
  * - Exportar controllers
+ *
+ * Cache:
+ * - Usa CachedArtistRepository (Decorator Pattern)
+ * - Transparente para el dominio
+ * - Configurable con ENABLE_CACHE
  */
+
+const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
+
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    CacheModule,
+  ],
   controllers: [ArtistsController],
   providers: [
     // Use Cases
@@ -27,13 +40,14 @@ import { ARTIST_REPOSITORY } from './domain/ports/artist-repository.port';
     GetArtistsUseCase,
     SearchArtistsUseCase,
 
-    // Repository
+    // Repositories
     PrismaArtistRepository,
+    CachedArtistRepository,
 
-    // Implementación del port
+    // Implementación del port - CONFIGURABLE
     {
       provide: ARTIST_REPOSITORY,
-      useClass: PrismaArtistRepository,
+      useClass: USE_CACHE ? CachedArtistRepository : PrismaArtistRepository,
     },
   ],
   exports: [ARTIST_REPOSITORY],
