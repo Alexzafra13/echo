@@ -1,0 +1,323 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { RedisService } from '../../src/infrastructure/cache/redis.service';
+import { CachedAlbumRepository } from '../../src/features/albums/infrastructure/persistence/cached-album.repository';
+import { Album } from '../../src/features/albums/domain/entities/album.entity';
+import { IAlbumRepository } from '../../src/features/albums/domain/ports/album-repository.port';
+import { ConfigModule } from '@nestjs/config';
+
+/**
+ * CachedAlbumRepository Integration Tests
+ *
+ * Tests de integración que verifican el comportamiento del CachedAlbumRepository
+ * con una instancia REAL de Redis (no mocks).
+ *
+ * Requieren: Redis corriendo (docker-compose.dev.yml)
+ * Ejecutar: pnpm test cached-album-repository.integration-spec
+ */
+describe('CachedAlbumRepository Integration', () => {
+  let redisService: RedisService;
+  let cachedRepository: CachedAlbumRepository;
+  let baseRepository: jest.Mocked<IAlbumRepository>;
+  let module: TestingModule;
+
+  const mockAlbumData = {
+    id: 'album-test-1',
+    title: 'Integration Test Album',
+    artistId: 'artist-1',
+    releaseDate: new Date('2024-01-15'),
+    coverPath: '/covers/test.jpg',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockAlbum = Album.reconstruct(mockAlbumData);
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot()],
+      providers: [RedisService],
+    }).compile();
+
+    redisService = module.get<RedisService>(RedisService);
+    await redisService.onModuleInit();
+
+    // Limpiar Redis antes de empezar
+    await redisService.clear();
+  });
+
+  beforeEach(() => {
+    // Mock del base repository
+    baseRepository = {
+      findById: jest.fn(),
+      findAll: jest.fn(),
+      search: jest.fn(),
+      findByArtistId: jest.fn(),
+      findRecent: jest.fn(),
+      findMostPlayed: jest.fn(),
+      count: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    } as any;
+
+    // Crear instancia del cached repository con Redis REAL
+    cachedRepository = new CachedAlbumRepository(
+      baseRepository as any,
+      redisService,
+    );
+  });
+
+  afterEach(async () => {
+    // Limpiar Redis después de cada test
+    await redisService.clear();
+    jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await redisService.clear();
+    await redisService.onModuleDestroy();
+    await module.close();
+  });
+
+  describe('findById with Real Redis', () => {
+    it('should fetch from DB and cache in Redis on first call', async () => {
+      // Arrange
+      baseRepository.findById.mockResolvedValue(mockAlbum);
+
+      // Act
+      const result = await cachedRepository.findById('album-test-1');
+
+      // Assert - Verificar que se llamó al repository
+      expect(baseRepository.findById).toHaveBeenCalledWith('album-test-1');
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('album-test-1');
+
+      // Verificar que se guardó en Redis
+      const cached = await redisService.get('album:album-test-1');
+      expect(cached).toBeDefined();
+      expect(cached.id).toBe('album-test-1');
+      expect(cached.title).toBe('Integration Test Album');
+    });
+
+    it('should return from Redis cache on second call (cache hit)', async () => {
+      // Arrange - Primera llamada para cachear
+      baseRepository.findById.mockResolvedValue(mockAlbum);
+      await cachedRepository.findById('album-test-1');
+
+      // Reset mock para verificar que no se llama en la segunda vez
+      jest.clearAllMocks();
+
+      // Act - Segunda llamada (debería venir de cache)
+      const result = await cachedRepository.findById('album-test-1');
+
+      // Assert - NO debería llamar al repository (viene de cache)
+      expect(baseRepository.findById).not.toHaveBeenCalled();
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('album-test-1');
+      expect(result?.title).toBe('Integration Test Album');
+    });
+
+    it('should return null if album not found in DB or cache', async () => {
+      // Arrange
+      baseRepository.findById.mockResolvedValue(null);
+
+      // Act
+      const result = await cachedRepository.findById('non-existent');
+
+      // Assert
+      expect(baseRepository.findById).toHaveBeenCalledWith('non-existent');
+      expect(result).toBeNull();
+
+      // Verificar que no se guardó nada en cache
+      const cached = await redisService.get('album:non-existent');
+      expect(cached).toBeNull();
+    });
+
+    it('should respect TTL and refetch after expiration', async () => {
+      // Arrange
+      baseRepository.findById.mockResolvedValue(mockAlbum);
+
+      // Configurar TTL corto para testing (1 segundo)
+      const shortTTLRepository = new CachedAlbumRepository(
+        baseRepository as any,
+        redisService,
+        1, // 1 segundo de TTL
+      );
+
+      // Act - Primera llamada
+      await shortTTLRepository.findById('album-test-1');
+      expect(baseRepository.findById).toHaveBeenCalledTimes(1);
+
+      // Verificar cache inmediatamente
+      const cachedBefore = await redisService.get('album:album-test-1');
+      expect(cachedBefore).toBeDefined();
+
+      // Esperar a que expire el TTL
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Act - Segunda llamada después de expiración
+      jest.clearAllMocks();
+      await shortTTLRepository.findById('album-test-1');
+
+      // Assert - Debería llamar al repository de nuevo (cache expiró)
+      expect(baseRepository.findById).toHaveBeenCalledTimes(1);
+    }, 10000); // Timeout aumentado
+  });
+
+  describe('create with Real Redis', () => {
+    it('should create album and cache it', async () => {
+      // Arrange
+      const newAlbum = Album.create({
+        title: 'New Album',
+        artistId: 'artist-1',
+        releaseDate: new Date('2024-03-01'),
+        coverPath: '/covers/new.jpg',
+      });
+
+      baseRepository.create.mockResolvedValue(newAlbum);
+
+      // Act
+      const result = await cachedRepository.create(newAlbum);
+
+      // Assert
+      expect(baseRepository.create).toHaveBeenCalledWith(newAlbum);
+      expect(result).toBeDefined();
+
+      // Verificar que se cacheó
+      const cached = await redisService.get(`album:${result.id}`);
+      expect(cached).toBeDefined();
+      expect(cached.title).toBe('New Album');
+    });
+  });
+
+  describe('update with Real Redis', () => {
+    it('should update album and invalidate cache', async () => {
+      // Arrange - Cachear primero
+      baseRepository.findById.mockResolvedValue(mockAlbum);
+      await cachedRepository.findById('album-test-1');
+
+      // Verificar que está en cache
+      let cached = await redisService.get('album:album-test-1');
+      expect(cached).toBeDefined();
+
+      // Act - Actualizar
+      const updatedAlbum = Album.reconstruct({
+        ...mockAlbumData,
+        title: 'Updated Title',
+      });
+      baseRepository.update.mockResolvedValue(updatedAlbum);
+      await cachedRepository.update(updatedAlbum);
+
+      // Assert - Cache debería estar invalidado
+      cached = await redisService.get('album:album-test-1');
+      expect(cached).toBeNull();
+    });
+  });
+
+  describe('delete with Real Redis', () => {
+    it('should delete album and invalidate cache', async () => {
+      // Arrange - Cachear primero
+      baseRepository.findById.mockResolvedValue(mockAlbum);
+      await cachedRepository.findById('album-test-1');
+
+      // Verificar que está en cache
+      let cached = await redisService.get('album:album-test-1');
+      expect(cached).toBeDefined();
+
+      // Act - Eliminar
+      baseRepository.delete.mockResolvedValue(undefined);
+      await cachedRepository.delete('album-test-1');
+
+      // Assert - Cache debería estar invalidado
+      cached = await redisService.get('album:album-test-1');
+      expect(cached).toBeNull();
+      expect(baseRepository.delete).toHaveBeenCalledWith('album-test-1');
+    });
+  });
+
+  describe('Multiple Albums Caching', () => {
+    it('should cache multiple albums independently', async () => {
+      // Arrange
+      const album1 = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'album-1',
+        title: 'Album 1',
+      });
+      const album2 = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'album-2',
+        title: 'Album 2',
+      });
+      const album3 = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'album-3',
+        title: 'Album 3',
+      });
+
+      baseRepository.findById
+        .mockResolvedValueOnce(album1)
+        .mockResolvedValueOnce(album2)
+        .mockResolvedValueOnce(album3);
+
+      // Act - Cachear todos
+      await cachedRepository.findById('album-1');
+      await cachedRepository.findById('album-2');
+      await cachedRepository.findById('album-3');
+
+      // Assert - Todos deberían estar en cache
+      const cached1 = await redisService.get('album:album-1');
+      const cached2 = await redisService.get('album:album-2');
+      const cached3 = await redisService.get('album:album-3');
+
+      expect(cached1?.title).toBe('Album 1');
+      expect(cached2?.title).toBe('Album 2');
+      expect(cached3?.title).toBe('Album 3');
+
+      // Segunda ronda - deberían venir de cache
+      jest.clearAllMocks();
+      await cachedRepository.findById('album-1');
+      await cachedRepository.findById('album-2');
+      await cachedRepository.findById('album-3');
+
+      expect(baseRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('should invalidate only the updated album', async () => {
+      // Arrange - Cachear dos álbumes
+      const album1 = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'album-1',
+        title: 'Album 1',
+      });
+      const album2 = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'album-2',
+        title: 'Album 2',
+      });
+
+      baseRepository.findById
+        .mockResolvedValueOnce(album1)
+        .mockResolvedValueOnce(album2);
+
+      await cachedRepository.findById('album-1');
+      await cachedRepository.findById('album-2');
+
+      // Act - Actualizar solo album-1
+      const updatedAlbum1 = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'album-1',
+        title: 'Updated Album 1',
+      });
+      baseRepository.update.mockResolvedValue(updatedAlbum1);
+      await cachedRepository.update(updatedAlbum1);
+
+      // Assert - Solo album-1 debería estar invalidado
+      const cached1 = await redisService.get('album:album-1');
+      const cached2 = await redisService.get('album:album-2');
+
+      expect(cached1).toBeNull(); // Invalidado
+      expect(cached2).toBeDefined(); // Sigue en cache
+      expect(cached2.title).toBe('Album 2');
+    });
+  });
+});
