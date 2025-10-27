@@ -45,7 +45,6 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/shared/$1',
     '^@infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/features/$1',
-    '^@prisma/client$': '<rootDir>/../test/__mocks__/prisma-client.ts',
   },
 
   // ✅ 4 workers = 4 BDs = tests en paralelo SIN conflictos
