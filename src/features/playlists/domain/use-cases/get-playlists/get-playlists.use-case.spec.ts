@@ -1,0 +1,259 @@
+import { BadRequestException } from '@nestjs/common';
+import { GetPlaylistsUseCase } from './get-playlists.use-case';
+import { IPlaylistRepository } from '../../ports';
+import { Playlist } from '../../entities';
+
+describe('GetPlaylistsUseCase', () => {
+  let useCase: GetPlaylistsUseCase;
+  let playlistRepository: jest.Mocked<IPlaylistRepository>;
+
+  const mockPlaylists = [
+    Playlist.reconstruct({
+      id: 'playlist-1',
+      name: 'Playlist 1',
+      description: 'Test 1',
+      coverImageUrl: null,
+      duration: 180,
+      size: BigInt(1000000),
+      ownerId: 'user-123',
+      public: false,
+      songCount: 3,
+      path: null,
+      sync: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    Playlist.reconstruct({
+      id: 'playlist-2',
+      name: 'Playlist 2',
+      description: 'Test 2',
+      coverImageUrl: null,
+      duration: 240,
+      size: BigInt(2000000),
+      ownerId: 'user-123',
+      public: true,
+      songCount: 5,
+      path: null,
+      sync: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+  ];
+
+  beforeEach(() => {
+    playlistRepository = {
+      create: jest.fn(),
+      findById: jest.fn(),
+      findByOwner: jest.fn(),
+      findByOwnerId: jest.fn(),
+      findPublic: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      addTrack: jest.fn(),
+      removeTrack: jest.fn(),
+      getPlaylistTracks: jest.fn(),
+      reorderTracks: jest.fn(),
+      count: jest.fn(),
+      countByOwnerId: jest.fn(),
+    } as any;
+
+    useCase = new GetPlaylistsUseCase(playlistRepository);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('execute', () => {
+    it('should get playlists by ownerId', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: 0,
+        take: 20,
+        publicOnly: false,
+      };
+
+      playlistRepository.findByOwnerId.mockResolvedValue(mockPlaylists);
+      playlistRepository.countByOwnerId.mockResolvedValue(2);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 20);
+      expect(playlistRepository.countByOwnerId).toHaveBeenCalledWith('user-123');
+      expect(result.items).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(result.skip).toBe(0);
+      expect(result.take).toBe(20);
+    });
+
+    it('should get public playlists only', async () => {
+      // Arrange
+      const input = {
+        publicOnly: true,
+        skip: 0,
+        take: 20,
+      };
+
+      const publicPlaylists = [mockPlaylists[1]]; // Solo la pública
+
+      playlistRepository.findPublic.mockResolvedValue(publicPlaylists);
+      playlistRepository.count.mockResolvedValue(1);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.findPublic).toHaveBeenCalledWith(0, 20);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].public).toBe(true);
+    });
+
+    it('should use default pagination values', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        // No skip ni take
+      };
+
+      playlistRepository.findByOwnerId.mockResolvedValue(mockPlaylists);
+      playlistRepository.countByOwnerId.mockResolvedValue(2);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 20);
+      expect(result.skip).toBe(0);
+      expect(result.take).toBe(20);
+    });
+
+    it('should handle custom pagination', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: 10,
+        take: 5,
+        publicOnly: false,
+      };
+
+      playlistRepository.findByOwnerId.mockResolvedValue([]);
+      playlistRepository.countByOwnerId.mockResolvedValue(15);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 10, 5);
+      expect(result.skip).toBe(10);
+      expect(result.take).toBe(5);
+    });
+
+    it('should throw error if skip is negative', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: -1,
+        take: 20,
+        publicOnly: false,
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow('Skip must be non-negative');
+      expect(playlistRepository.findByOwnerId).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if take is zero', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: 0,
+        take: 0,
+        publicOnly: false,
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow('Take must be between 1 and 100');
+    });
+
+    it('should throw error if take exceeds 100', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: 0,
+        take: 101,
+        publicOnly: false,
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow('Take must be between 1 and 100');
+    });
+
+    it('should throw error if no filter specified', async () => {
+      // Arrange
+      const input = {
+        skip: 0,
+        take: 20,
+        publicOnly: false,
+        // Sin ownerId ni publicOnly=true
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow('Must specify ownerId or publicOnly filter');
+    });
+
+    it('should map playlists to output format correctly', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: 0,
+        take: 20,
+        publicOnly: false,
+      };
+
+      playlistRepository.findByOwnerId.mockResolvedValue(mockPlaylists);
+      playlistRepository.countByOwnerId.mockResolvedValue(2);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.items[0]).toEqual(
+        expect.objectContaining({
+          id: 'playlist-1',
+          name: 'Playlist 1',
+          description: 'Test 1',
+          ownerId: 'user-123',
+          public: false,
+          songCount: 3,
+        }),
+      );
+    });
+
+    it('should handle empty result', async () => {
+      // Arrange
+      const input = {
+        ownerId: 'user-123',
+        skip: 0,
+        take: 20,
+        publicOnly: false,
+      };
+
+      playlistRepository.findByOwnerId.mockResolvedValue([]);
+      playlistRepository.countByOwnerId.mockResolvedValue(0);
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
+});
