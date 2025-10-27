@@ -14,7 +14,8 @@ describe('AddTrackToPlaylistUseCase', () => {
   let playlistRepository: jest.Mocked<IPlaylistRepository>;
   let trackRepository: jest.Mocked<ITrackRepository>;
 
-  const mockPlaylist = Playlist.fromPrimitives({
+  // Helper functions to create fresh instances for each test
+  const createMockPlaylist = () => Playlist.fromPrimitives({
     id: 'playlist-123',
     name: 'Test Playlist',
     description: null,
@@ -30,7 +31,7 @@ describe('AddTrackToPlaylistUseCase', () => {
     updatedAt: new Date(),
   });
 
-  const mockTrack = Track.reconstruct({
+  const createMockTrack = () => Track.reconstruct({
     id: 'track-123',
     title: 'Test Track',
     duration: 200,
@@ -97,12 +98,12 @@ describe('AddTrackToPlaylistUseCase', () => {
         createdAt: new Date(),
       });
 
-      playlistRepository.findById.mockResolvedValue(mockPlaylist);
-      trackRepository.findById.mockResolvedValue(mockTrack);
+      playlistRepository.findById.mockResolvedValue(createMockPlaylist());
+      trackRepository.findById.mockResolvedValue(createMockTrack());
       playlistRepository.isTrackInPlaylist.mockResolvedValue(false);
       playlistRepository.getPlaylistTracks.mockResolvedValue([mockPlaylistTrack]);
       playlistRepository.addTrack.mockResolvedValue(mockPlaylistTrack);
-      playlistRepository.update.mockResolvedValue(mockPlaylist);
+      playlistRepository.update.mockResolvedValue(createMockPlaylist());
 
       // Act
       const result = await useCase.execute(input);
@@ -133,12 +134,12 @@ describe('AddTrackToPlaylistUseCase', () => {
         createdAt: new Date(),
       });
 
-      playlistRepository.findById.mockResolvedValue(mockPlaylist);
-      trackRepository.findById.mockResolvedValue(mockTrack);
+      playlistRepository.findById.mockResolvedValue(createMockPlaylist());
+      trackRepository.findById.mockResolvedValue(createMockTrack());
       playlistRepository.isTrackInPlaylist.mockResolvedValue(false);
       playlistRepository.getPlaylistTracks.mockResolvedValue([]); // Empty playlist
       playlistRepository.addTrack.mockResolvedValue(mockPlaylistTrack);
-      playlistRepository.update.mockResolvedValue(mockPlaylist);
+      playlistRepository.update.mockResolvedValue(createMockPlaylist());
 
       // Act
       await useCase.execute(input);
@@ -215,8 +216,8 @@ describe('AddTrackToPlaylistUseCase', () => {
         trackId: 'track-123',
       };
 
-      playlistRepository.findById.mockResolvedValue(mockPlaylist);
-      trackRepository.findById.mockResolvedValue(mockTrack);
+      playlistRepository.findById.mockResolvedValue(createMockPlaylist());
+      trackRepository.findById.mockResolvedValue(createMockTrack());
       playlistRepository.isTrackInPlaylist.mockResolvedValue(true); // Already in playlist
 
       // Act & Assert
@@ -234,6 +235,9 @@ describe('AddTrackToPlaylistUseCase', () => {
         trackId: 'track-123',
       };
 
+      const mockPlaylist = createMockPlaylist();
+      const mockTrack = createMockTrack();
+
       const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
         id: 'playlist-track-123',
         playlistId: 'playlist-123',
@@ -247,7 +251,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       playlistRepository.isTrackInPlaylist.mockResolvedValue(false);
       playlistRepository.getPlaylistTracks.mockResolvedValue([]);
       playlistRepository.addTrack.mockResolvedValue(mockPlaylistTrack);
-      playlistRepository.update.mockResolvedValue(mockPlaylist);
+      playlistRepository.update.mockResolvedValue(createMockPlaylist());
 
       // Act
       await useCase.execute(input);
