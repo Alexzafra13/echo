@@ -27,7 +27,7 @@
 cp .env.development.example .env
 
 # 2. Start services
-docker-compose -f docker-compose.dev.yml up -d --build
+docker compose -f docker-compose.dev.yml up -d --build
 
 # 3. Access
 # From your browser: http://localhost:3000
@@ -53,7 +53,7 @@ cp .env.production.example .env.production
 nano .env.production
 
 # 3. Start services
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # 4. Access
 # From server: http://localhost:4567
@@ -90,7 +90,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 
 ```bash
 # 1. Develop locally
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 
 # 2. Test your changes
 # Make API calls to http://localhost:3000
@@ -102,7 +102,7 @@ git push
 
 # 4. On production server
 git pull
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # 5. Access from network
 # http://YOUR_SERVER_IP:4567
@@ -255,7 +255,7 @@ New-NetFirewallRule -DisplayName "Echo Music Server" -Direction Inbound -Protoco
 
 1. **Check if app is running:**
    ```bash
-   docker-compose -f docker-compose.prod.yml ps
+   docker compose -f docker-compose.prod.yml ps
    ```
 
 2. **Check firewall:**
@@ -266,7 +266,7 @@ New-NetFirewallRule -DisplayName "Echo Music Server" -Direction Inbound -Protoco
 
 3. **Check app logs:**
    ```bash
-   docker-compose -f docker-compose.prod.yml logs app
+   docker compose -f docker-compose.prod.yml logs app
    ```
 
 4. **Test from server itself:**
