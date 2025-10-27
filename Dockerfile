@@ -53,6 +53,9 @@ FROM node:22-alpine AS production
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
+# Install netcat for health checks
+RUN apk add --no-cache netcat-openbsd
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
@@ -65,6 +68,10 @@ COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
 
+# Copy entrypoint script
+COPY --chown=nestjs:nodejs scripts/docker-entrypoint.sh /app/
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Create upload directories
 RUN mkdir -p /app/uploads/music /app/uploads/covers && \
     chown -R nestjs:nodejs /app/uploads
@@ -75,9 +82,9 @@ USER nestjs
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check (extended start period for migrations)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start the application
-CMD ["node", "dist/src/main.js"]
+# Start the application with entrypoint script
+CMD ["/app/docker-entrypoint.sh"]
