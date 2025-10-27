@@ -15,7 +15,9 @@ export interface IUserRepository {
   findById(id: string): Promise<User | null>;
   findByUsername(username: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
-  
+  findAll(skip: number, take: number): Promise<User[]>;
+  count(): Promise<number>;
+
   create(user: User): Promise<User>;
   updatePartial(id: string, data: Partial<UserUpdateableFields>): Promise<User>;
   updatePassword(userId: string, newPasswordHash: string): Promise<void>;

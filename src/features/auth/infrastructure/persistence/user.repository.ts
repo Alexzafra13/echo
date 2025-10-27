@@ -32,6 +32,19 @@ export class PrismaUserRepository implements IUserRepository {
     return user ? UserMapper.toDomain(user) : null;
   }
 
+  async findAll(skip: number, take: number): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+    return users.map(user => UserMapper.toDomain(user));
+  }
+
+  async count(): Promise<number> {
+    return this.prisma.user.count();
+  }
+
   async create(user: User): Promise<User> {
     const primitives = user.toPrimitives();
 
