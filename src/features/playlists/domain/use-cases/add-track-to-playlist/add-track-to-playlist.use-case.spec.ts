@@ -238,6 +238,11 @@ describe('AddTrackToPlaylistUseCase', () => {
       const mockPlaylist = createMockPlaylist();
       const mockTrack = createMockTrack();
 
+      // Save original values before mutation
+      const originalDuration = mockPlaylist.duration;
+      const originalSize = mockPlaylist.size;
+      const originalSongCount = mockPlaylist.songCount;
+
       const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
         id: 'playlist-track-123',
         playlistId: 'playlist-123',
@@ -264,9 +269,9 @@ describe('AddTrackToPlaylistUseCase', () => {
       expect(updateCall[0]).toBe('playlist-123');
 
       const updatedPlaylist = updateCall[1];
-      expect(updatedPlaylist.duration).toBe(mockPlaylist.duration + mockTrack.duration);
-      expect(updatedPlaylist.size).toBe(mockPlaylist.size + mockTrack.size);
-      expect(updatedPlaylist.songCount).toBe(mockPlaylist.songCount + 1);
+      expect(updatedPlaylist.duration).toBe(originalDuration + mockTrack.duration);
+      expect(updatedPlaylist.size).toBe(originalSize + mockTrack.size);
+      expect(updatedPlaylist.songCount).toBe(originalSongCount + 1);
     });
   });
 });
