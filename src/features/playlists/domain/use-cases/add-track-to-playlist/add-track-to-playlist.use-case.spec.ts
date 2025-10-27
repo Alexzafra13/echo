@@ -253,14 +253,16 @@ describe('AddTrackToPlaylistUseCase', () => {
       await useCase.execute(input);
 
       // Assert
-      expect(playlistRepository.update).toHaveBeenCalledWith(
-        'playlist-123',
-        expect.objectContaining({
-          duration: mockPlaylist.duration + mockTrack.duration,
-          size: mockPlaylist.size + mockTrack.size,
-          songCount: mockPlaylist.songCount + 1,
-        }),
-      );
+      expect(playlistRepository.update).toHaveBeenCalledTimes(1);
+
+      // Get the actual entity passed to update
+      const updateCall = playlistRepository.update.mock.calls[0];
+      expect(updateCall[0]).toBe('playlist-123');
+
+      const updatedPlaylist = updateCall[1];
+      expect(updatedPlaylist.duration).toBe(mockPlaylist.duration + mockTrack.duration);
+      expect(updatedPlaylist.size).toBe(mockPlaylist.size + mockTrack.size);
+      expect(updatedPlaylist.songCount).toBe(mockPlaylist.songCount + 1);
     });
   });
 });
