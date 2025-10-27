@@ -42,8 +42,8 @@ COPY . .
 # Build the application
 RUN pnpm run build
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Remove development dependencies (faster than reinstalling)
+RUN pnpm prune --prod
 
 # ----------------------------------------
 # Stage 3: Production
@@ -53,8 +53,8 @@ FROM node:22-alpine AS production
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
-# Install netcat for health checks
-RUN apk add --no-cache netcat-openbsd
+# Install netcat for health checks and dumb-init for signal handling
+RUN apk add --no-cache netcat-openbsd dumb-init
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -79,12 +79,16 @@ RUN mkdir -p /app/uploads/music /app/uploads/covers && \
 # Switch to non-root user
 USER nestjs
 
-# Expose port
-EXPOSE 3000
+# Default port (can be overridden with PORT env var)
+ENV PORT=4567
+EXPOSE ${PORT}
 
-# Health check (extended start period for migrations)
+# Health check with dynamic port (extended start period for migrations)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "const port = process.env.PORT || 4567; require('http').get('http://localhost:' + port + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # Start the application with entrypoint script
 CMD ["/app/docker-entrypoint.sh"]
