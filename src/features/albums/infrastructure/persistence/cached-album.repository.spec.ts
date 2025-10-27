@@ -1,19 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
+// Mock Prisma Client before any imports
+jest.mock('@prisma/client', () => ({
+  PrismaClient: jest.fn().mockImplementation(() => ({})),
+}));
+
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
-
-// Mock dependencies
-jest.mock('./album.repository');
-jest.mock('@infrastructure/cache/redis.service');
-
 import { CachedAlbumRepository } from './cached-album.repository';
-import { PrismaAlbumRepository } from './album.repository';
-import { RedisService } from '@infrastructure/cache/redis.service';
 
 describe('CachedAlbumRepository', () => {
   let cachedRepository: CachedAlbumRepository;
   let baseRepository: jest.Mocked<IAlbumRepository>;
-  let cacheService: jest.Mocked<RedisService>;
+  let cacheService: any;
 
   const mockAlbumPrimitives = {
     id: 'album-1',
@@ -27,7 +24,7 @@ describe('CachedAlbumRepository', () => {
 
   const mockAlbum = Album.reconstruct(mockAlbumPrimitives);
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Mock base repository
     baseRepository = {
       findById: jest.fn(),
@@ -47,23 +44,10 @@ describe('CachedAlbumRepository', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
-    } as any;
+    };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CachedAlbumRepository,
-        {
-          provide: PrismaAlbumRepository,
-          useValue: baseRepository,
-        },
-        {
-          provide: RedisService,
-          useValue: cacheService,
-        },
-      ],
-    }).compile();
-
-    cachedRepository = module.get<CachedAlbumRepository>(CachedAlbumRepository);
+    // Create instance directly without TestingModule to avoid Prisma imports
+    cachedRepository = new CachedAlbumRepository(baseRepository as any, cacheService);
   });
 
   afterEach(() => {

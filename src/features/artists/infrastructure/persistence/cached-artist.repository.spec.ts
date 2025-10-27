@@ -1,19 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
+// Mock Prisma Client before any imports
+jest.mock('@prisma/client', () => ({
+  PrismaClient: jest.fn().mockImplementation(() => ({})),
+}));
+
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
-
-// Mock dependencies
-jest.mock('./artist.repository');
-jest.mock('@infrastructure/cache/redis.service');
-
 import { CachedArtistRepository } from './cached-artist.repository';
-import { PrismaArtistRepository } from './artist.repository';
-import { RedisService } from '@infrastructure/cache/redis.service';
 
 describe('CachedArtistRepository', () => {
   let cachedRepository: CachedArtistRepository;
   let baseRepository: jest.Mocked<IArtistRepository>;
-  let cacheService: jest.Mocked<RedisService>;
+  let cacheService: any;
 
   const mockArtistPrimitives = {
     id: 'artist-1',
@@ -26,7 +23,7 @@ describe('CachedArtistRepository', () => {
 
   const mockArtist = Artist.reconstruct(mockArtistPrimitives);
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Mock base repository
     baseRepository = {
       findById: jest.fn(),
@@ -43,25 +40,10 @@ describe('CachedArtistRepository', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
-    } as any;
+    };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CachedArtistRepository,
-        {
-          provide: PrismaArtistRepository,
-          useValue: baseRepository,
-        },
-        {
-          provide: RedisService,
-          useValue: cacheService,
-        },
-      ],
-    }).compile();
-
-    cachedRepository = module.get<CachedArtistRepository>(
-      CachedArtistRepository,
-    );
+    // Create instance directly without TestingModule to avoid Prisma imports
+    cachedRepository = new CachedArtistRepository(baseRepository as any, cacheService);
   });
 
   afterEach(() => {

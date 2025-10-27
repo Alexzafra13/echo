@@ -1,19 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
+// Mock Prisma Client before any imports
+jest.mock('@prisma/client', () => ({
+  PrismaClient: jest.fn().mockImplementation(() => ({})),
+}));
+
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
-
-// Mock dependencies
-jest.mock('./track.repository');
-jest.mock('@infrastructure/cache/redis.service');
-
 import { CachedTrackRepository } from './cached-track.repository';
-import { PrismaTrackRepository } from './track.repository';
-import { RedisService } from '@infrastructure/cache/redis.service';
 
 describe('CachedTrackRepository', () => {
   let cachedRepository: CachedTrackRepository;
   let baseRepository: jest.Mocked<ITrackRepository>;
-  let cacheService: jest.Mocked<RedisService>;
+  let cacheService: any;
 
   const mockTrackPrimitives = {
     id: 'track-1',
@@ -33,7 +30,7 @@ describe('CachedTrackRepository', () => {
 
   const mockTrack = Track.reconstruct(mockTrackPrimitives);
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Mock base repository
     baseRepository = {
       findById: jest.fn(),
@@ -52,23 +49,10 @@ describe('CachedTrackRepository', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
-    } as any;
+    };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CachedTrackRepository,
-        {
-          provide: PrismaTrackRepository,
-          useValue: baseRepository,
-        },
-        {
-          provide: RedisService,
-          useValue: cacheService,
-        },
-      ],
-    }).compile();
-
-    cachedRepository = module.get<CachedTrackRepository>(CachedTrackRepository);
+    // Create instance directly without TestingModule to avoid Prisma imports
+    cachedRepository = new CachedTrackRepository(baseRepository as any, cacheService);
   });
 
   afterEach(() => {
