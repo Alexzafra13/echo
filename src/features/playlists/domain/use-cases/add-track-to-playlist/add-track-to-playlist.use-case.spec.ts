@@ -200,7 +200,7 @@ describe('AddTrackToPlaylistUseCase', () => {
         trackId: 'non-existent',
       };
 
-      playlistRepository.findById.mockResolvedValue(mockPlaylist);
+      playlistRepository.findById.mockResolvedValue(createMockPlaylist());
       trackRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
