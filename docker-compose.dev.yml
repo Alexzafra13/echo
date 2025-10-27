@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Development)
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: music_user
+      POSTGRES_PASSWORD: music_password
+      POSTGRES_DB: music_db
+    ports:
+      - "5432:5432"  # Exposed for local development
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U music_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-network-dev
+
+  # Redis Cache (Development)
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis-dev
+    restart: unless-stopped
+    command: redis-server --requirepass dev_redis_password
+    ports:
+      - "6379:6379"  # Exposed for local development
+    volumes:
+      - redis-data-dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-network-dev
+
+  # NestJS Application (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: echo-app-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Development port
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      HOST: 0.0.0.0
+
+      # Database
+      DATABASE_URL: postgresql://music_user:music_password@postgres:5432/music_db?schema=public
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: dev_redis_password
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+
+      # Music Library
+      MUSIC_LIBRARY_PATH: /music
+
+      # Cache
+      ENABLE_CACHE: ${ENABLE_CACHE:-true}
+      CACHE_ALBUM_TTL: ${CACHE_ALBUM_TTL:-3600}
+      CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-3600}
+      CACHE_ARTIST_TTL: ${CACHE_ARTIST_TTL:-7200}
+    volumes:
+      - ./uploads:/app/uploads  # Local uploads for testing
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - echo-network-dev
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+volumes:
+  postgres-data-dev:
+    name: echo-postgres-data-dev
+  redis-data-dev:
+    name: echo-redis-data-dev
+
+networks:
+  echo-network-dev:
+    name: echo-network-dev
+    driver: bridge
