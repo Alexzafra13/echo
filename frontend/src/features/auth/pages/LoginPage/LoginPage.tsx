@@ -34,11 +34,13 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
-      {/* Background */}
-      <div className={styles.background}>
-        {/* Background image will be added via CSS or inline style */}
-        <div className={styles.backgroundImage} />
-      </div>
+      {/* Background image */}
+      <div
+        className={styles.background}
+        style={{
+          backgroundImage: 'url(/images/backgrounds/login-bg.jpg)'
+        }}
+      />
 
       {/* Vinyl decorations */}
       <div className={`${styles.vinylDecoration} ${styles.vinyl1}`} />
@@ -50,10 +52,16 @@ export default function LoginPage() {
         <Card variant="white" padding="md" className={styles.logoCard}>
           <div className={styles.logoContainer}>
             <div className={styles.logoCircle}>
-              {/* Logo image or icon */}
-              <div className={styles.logoImage}>
-                {/* SVG or image will go here */}
-              </div>
+              {/* Logo icon - Replace with your actual logo */}
+              <img
+                src="/images/logos/echo-icon.png"
+                alt="Echo Icon"
+                className={styles.logoImage}
+                onError={(e) => {
+                  // Fallback si no existe la imagen
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
               <span className={styles.logoBadge}>V1</span>
             </div>
             <h1 className={styles.logoText}>Echo</h1>
