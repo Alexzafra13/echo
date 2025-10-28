@@ -1,0 +1,113 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-slate-900);
+  background-color: var(--input-bg);
+  border: 2px solid var(--input-border);
+  border-radius: var(--radius-base);
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-slate-400);
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--color-slate-400);
+}
+
+.input:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: var(--input-focus-ring);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-slate-100);
+}
+
+/* Error state */
+.error .input {
+  border-color: var(--color-error);
+}
+
+.error .input:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* With icon */
+.withLeftIcon .input {
+  padding-left: var(--space-10);
+}
+
+.withRightIcon .input {
+  padding-right: var(--space-10);
+}
+
+.leftIcon,
+.rightIcon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-slate-400);
+  pointer-events: none;
+}
+
+.leftIcon {
+  left: var(--space-3);
+}
+
+.rightIcon {
+  right: var(--space-3);
+}
+
+/* Helper text */
+.helperText {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.errorText {
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Sizes */
+.sm .input {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.lg .input {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-lg);
+}
