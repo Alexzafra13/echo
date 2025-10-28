@@ -84,11 +84,65 @@ pnpm docker:down      # Detener servicios
 - **Backend API**: http://localhost:3000/api (Swagger docs)
 - **Frontend**: http://localhost:5173
 
+## 🐳 Docker Deployment (Production)
+
+Echo follows the **Jellyfin/Navidrome architecture**: a single container serves both API and frontend, perfect for self-hosting.
+
+### Quick Deploy
+
+```bash
+# 1. Configure environment
+cp .env.example .env
+# Edit .env with your settings (JWT secrets, music path, etc.)
+
+# 2. Build and run
+pnpm docker:build
+pnpm docker:up
+
+# 3. Access at http://localhost:4567
+```
+
+### Architecture
+
+```
+Single Container (echo-app)
+├── Frontend (React) - served as static files
+├── Backend (NestJS) - API + streaming
+├── PostgreSQL - database
+└── Redis - cache
+```
+
+**Benefits:**
+- ✅ Simple deployment - one command
+- ✅ Self-contained - everything in one image
+- ✅ Automatic migrations on startup
+- ✅ Production-ready with health checks
+- ✅ Minimal resource usage
+
+**Docker Commands:**
+```bash
+pnpm docker:build      # Build full-stack image
+pnpm docker:up         # Start all services
+pnpm docker:down       # Stop all services
+pnpm docker:logs       # View application logs
+pnpm docker:restart    # Restart the app
+```
+
+See [DOCKER.md](./DOCKER.md) for full documentation including:
+- Production deployment guide
+- Reverse proxy setup (Nginx/Caddy)
+- Volume management
+- Backup strategies
+- Troubleshooting
+
 ## 📚 Documentation
+
+### Main
+- [DOCKER.md](./DOCKER.md) - **Full-stack Docker deployment** (Jellyfin-style)
 
 ### Backend (server/)
 - [DEPLOYMENT.md](./server/DEPLOYMENT.md) - Production deployment guide
-- [DOCKER.md](./server/DOCKER.md) - Docker usage
+- [DOCKER.md](./server/DOCKER.md) - Backend-only Docker usage
 - [DOCKER_COMPOSE_INFO.md](./server/DOCKER_COMPOSE_INFO.md) - Docker Compose guide
 - [ENVIRONMENTS.md](./server/ENVIRONMENTS.md) - Environment configuration
 
@@ -145,9 +199,16 @@ pnpm build:frontend     # Build del frontend
 pnpm test:server        # Tests del backend
 pnpm test:all           # Tests de todo el proyecto
 
-# Docker
-pnpm docker:up          # Levantar PostgreSQL + Redis
-pnpm docker:down        # Detener servicios
+# Docker Development (solo DB + Redis)
+pnpm docker:dev         # Levantar PostgreSQL + Redis
+pnpm docker:dev:down    # Detener servicios
+
+# Docker Production (full-stack)
+pnpm docker:build       # Build imagen full-stack
+pnpm docker:up          # Levantar todo (app + DB + Redis)
+pnpm docker:down        # Detener todo
+pnpm docker:logs        # Ver logs de la app
+pnpm docker:restart     # Reiniciar la app
 
 # Utilities
 pnpm install:all        # Instalar todas las dependencias
@@ -168,24 +229,6 @@ pnpm db:studio          # Open Prisma Studio
 pnpm dev                # Development mode
 pnpm build              # Build for production
 pnpm preview            # Preview production build
-```
-
-## 🐳 Docker
-
-### Development
-```bash
-# Services only (PostgreSQL + Redis)
-cd server
-docker-compose up -d
-
-# Full stack
-docker-compose -f docker-compose.full.yml up -d
-```
-
-### Production
-```bash
-cd server
-docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## 🏗️ Architecture
