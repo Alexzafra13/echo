@@ -161,6 +161,22 @@
   gap: var(--space-6);
 }
 
+.errorAlert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-base);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+}
+
+.errorAlert svg {
+  flex-shrink: 0;
+}
+
 .forgotPassword {
   text-align: center;
   margin-top: var(--space-4);

@@ -14,22 +14,19 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.0",
+    "wouter": "^3.1.0",
     "zustand": "^4.5.0",
     "axios": "^1.6.7",
     "@tanstack/react-query": "^5.22.0",
     "react-hook-form": "^7.50.0",
     "zod": "^3.22.4",
     "@hookform/resolvers": "^3.3.4",
-    "howler": "^2.2.4",
     "lucide-react": "^0.344.0",
-    "@headlessui/react": "^1.7.18",
     "clsx": "^2.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@types/howler": "^2.2.11",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react": "^4.2.1",
