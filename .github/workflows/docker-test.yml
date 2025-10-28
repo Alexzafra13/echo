@@ -3,10 +3,10 @@ name: Docker Build Test
 on:
   pull_request:
     paths:
-      - 'Dockerfile'
-      - 'docker-compose*.yml'
-      - '.dockerignore'
-      - 'scripts/docker-entrypoint.sh'
+      - 'server/Dockerfile'
+      - 'server/docker-compose*.yml'
+      - 'server/.dockerignore'
+      - 'server/scripts/docker-entrypoint.sh'
       - '.github/workflows/docker-*.yml'
 
 jobs:
@@ -23,18 +23,20 @@ jobs:
       - name: Build Docker image (test only)
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./server
           push: false
           tags: echo-music-server:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Test Docker Compose (Development)
+        working-directory: server
         run: |
           cp .env.development.example .env
           docker compose -f docker-compose.dev.yml config
 
       - name: Test Docker Compose (Production)
+        working-directory: server
         run: |
           cp .env.production.example .env.production
           # Set required secrets for validation
