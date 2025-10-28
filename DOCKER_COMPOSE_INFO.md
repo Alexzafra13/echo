@@ -4,9 +4,9 @@ Este proyecto tiene múltiples archivos `docker-compose` para diferentes propós
 
 ## Archivos Disponibles
 
-### 1. `docker-compose.services.yml` ⭐ **RECOMENDADO para Desarrollo Local**
+### 1. `docker-compose.yml` ⭐ **RECOMENDADO para Desarrollo Local**
 
-**Uso:** Desarrollo local en tu PC
+**Uso:** Desarrollo local diario en tu PC
 
 **Qué hace:**
 - ✅ Levanta **solo PostgreSQL y Redis**
@@ -14,22 +14,23 @@ Este proyecto tiene múltiples archivos `docker-compose` para diferentes propós
 - ✅ Expone puertos en `localhost` (5432 para PostgreSQL, 6379 para Redis)
 
 **Cuándo usarlo:**
-- Cuando desarrollas en tu PC con tu editor (VS Code, WebStorm, etc.)
-- Cuando quieres usar hot-reload con `pnpm run start:dev`
-- Cuando quieres debuggear con tu IDE
+- ✅ Desarrollo diario con tu editor (VS Code, WebStorm, etc.)
+- ✅ Cuando quieres hot-reload con `pnpm run start:dev`
+- ✅ Cuando quieres debuggear con tu IDE
+- ✅ Es el archivo **por defecto** - no necesitas especificar `-f`
 
 **Comando:**
 ```bash
-# Usando pnpm script (recomendado)
-pnpm docker:services
+# Usando docker-compose directamente (usa docker-compose.yml por defecto)
+docker-compose up -d
 
-# O directamente con docker-compose
-docker-compose -f docker-compose.services.yml up -d
+# O con pnpm scripts (recomendado)
+pnpm docker:up
 
 # Detener
-pnpm docker:services:down
+docker-compose down
 # o
-docker-compose -f docker-compose.services.yml down
+pnpm docker:down
 ```
 
 **Configuración `.env`:**
@@ -40,9 +41,9 @@ REDIS_HOST=localhost
 
 ---
 
-### 2. `docker-compose.dev.yml` - Desarrollo con Todo en Docker
+### 2. `docker-compose.full.yml` - Stack Completo en Docker
 
-**Uso:** Desarrollo con toda la aplicación en Docker
+**Uso:** Testing con toda la aplicación en Docker
 
 **Qué hace:**
 - ✅ Levanta PostgreSQL, Redis **Y la aplicación NestJS**
@@ -51,25 +52,28 @@ REDIS_HOST=localhost
 
 **Cuándo usarlo:**
 - Cuando quieres replicar el entorno de producción localmente
+- Para CI/CD o testing automatizado
 - Cuando trabajas en un equipo y todos necesitan el mismo entorno
 - Cuando no quieres instalar Node.js/pnpm en tu PC
 
 **Comando:**
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+# Levantar stack completo
+pnpm docker:full
+
+# Ver logs de la aplicación
+pnpm docker:full:logs
 
 # Rebuild después de cambios en código
-docker-compose -f docker-compose.dev.yml up -d --build
+docker-compose -f docker-compose.full.yml up -d --build
 
 # Detener
-docker-compose -f docker-compose.dev.yml down
+pnpm docker:full:down
 ```
 
-**Configuración `.env`:**
-```env
-DATABASE_URL=postgresql://music_user:music_password@postgres:5432/music_db?schema=public
-REDIS_HOST=redis
-```
+**Configuración (variables se pasan en el archivo):**
+- Usa hostnames internos de Docker (`postgres`, `redis`)
+- No necesitas `.env` porque las variables están en el archivo
 
 ---
 
@@ -79,7 +83,7 @@ REDIS_HOST=redis
 
 **Qué hace:**
 - ✅ Configuración optimizada para producción
-- ✅ NO expone PostgreSQL/Redis al exterior
+- ✅ NO expone PostgreSQL/Redis al exterior (seguridad)
 - ✅ Solo expone el puerto de la aplicación (4567)
 - ✅ Configuración de seguridad y performance
 
@@ -89,10 +93,14 @@ REDIS_HOST=redis
 
 **Comando:**
 ```bash
+# Con pnpm script
+pnpm docker:prod
+
+# O directamente
 docker-compose -f docker-compose.prod.yml up -d
 
 # Detener
-docker-compose -f docker-compose.prod.yml down
+pnpm docker:prod:down
 ```
 
 ---
@@ -109,12 +117,13 @@ docker-compose -f docker-compose.prod.yml down
 **Cuándo usarlo:**
 - Cuando has publicado la imagen en GitHub Container Registry
 - En servidores de producción sin código fuente
+- Para deployments rápidos
 
 ---
 
 ## Flujo de Trabajo Recomendado
 
-### Para Desarrollo Local (Día a día)
+### Para Desarrollo Local (Día a día) ⭐
 
 ```bash
 # 1. Primera vez - Setup
@@ -124,27 +133,32 @@ pnpm install
 cp .env.development.example .env
 # Editar .env: asegurar que tiene localhost
 
-# 2. Levantar solo servicios
-pnpm docker:services
+# 2. Levantar solo servicios (PostgreSQL + Redis)
+pnpm docker:up
+# o simplemente:
+docker-compose up -d
 
 # 3. Migraciones
 pnpm db:migrate
 
-# 4. Desarrollo
+# 4. Desarrollo (ejecutar desde tu PC)
 pnpm run start:dev
 ```
 
 ### Para Testing con Docker Completo
 
 ```bash
-# Levantar todo en Docker
-docker-compose -f docker-compose.dev.yml up -d
+# Levantar todo en Docker (PostgreSQL + Redis + App)
+pnpm docker:full
 
 # Ver logs
-docker-compose -f docker-compose.dev.yml logs -f app
+pnpm docker:full:logs
 
 # Rebuild después de cambios
-docker-compose -f docker-compose.dev.yml up -d --build
+docker-compose -f docker-compose.full.yml up -d --build
+
+# Detener
+pnpm docker:full:down
 ```
 
 ### Para Producción
@@ -152,39 +166,49 @@ docker-compose -f docker-compose.dev.yml up -d --build
 ```bash
 # En tu servidor
 git pull
-docker-compose -f docker-compose.prod.yml up -d --build
+pnpm docker:prod
+
+# O con imagen de GHCR
+docker-compose -f docker-compose.ghcr.yml up -d
 ```
 
 ---
 
 ## Comparación Rápida
 
-| Característica | services.yml | dev.yml | prod.yml |
-|----------------|--------------|---------|----------|
-| PostgreSQL | ✅ | ✅ | ✅ |
-| Redis | ✅ | ✅ | ✅ |
-| App NestJS | ❌ | ✅ | ✅ |
-| Puertos expuestos | DB + Redis | Todos | Solo App |
-| Hot reload | ✅ (local) | ❌ | ❌ |
-| Velocidad | ⚡ Rápido | 🐢 Lento | ⚡ Rápido |
-| Debug fácil | ✅ | ❌ | ❌ |
-| Configuración .env | localhost | postgres | postgres |
+| Característica | docker-compose.yml | docker-compose.full.yml | docker-compose.prod.yml |
+|----------------|--------------------|-----------------------|------------------------|
+| **Archivo por defecto** | ✅ Sí | ❌ No | ❌ No |
+| **PostgreSQL** | ✅ | ✅ | ✅ |
+| **Redis** | ✅ | ✅ | ✅ |
+| **App NestJS** | ❌ | ✅ | ✅ |
+| **Puertos expuestos** | DB + Redis | Todos | Solo App |
+| **Hot reload** | ✅ (local) | ❌ | ❌ |
+| **Velocidad** | ⚡ Rápido | 🐢 Lento | ⚡ Rápido |
+| **Debug fácil** | ✅ | ❌ | ❌ |
+| **Config .env** | localhost | postgres | postgres |
+| **Uso típico** | Desarrollo diario | Testing/CI | Producción |
 
 ---
 
 ## Scripts de pnpm Disponibles
 
 ```bash
-# Servicios solo (PostgreSQL + Redis)
-pnpm docker:services          # Levantar
-pnpm docker:services:down     # Detener
+# Desarrollo Local (servicios solo - PostgreSQL + Redis)
+pnpm docker:up              # Levantar
+pnpm docker:down            # Detener
+
+# Stack Completo (PostgreSQL + Redis + App)
+pnpm docker:full            # Levantar
+pnpm docker:full:down       # Detener
+pnpm docker:full:logs       # Ver logs
+
+# Producción
+pnpm docker:prod            # Levantar
+pnpm docker:prod:down       # Detener
 
 # Setup completo de desarrollo
-pnpm dev:setup                # services + migrate
-
-# Docker completo (legacy)
-pnpm docker:up                # Levantar todo
-pnpm docker:down              # Detener todo
+pnpm dev:setup              # docker:up + migrate
 ```
 
 ---
@@ -193,7 +217,7 @@ pnpm docker:down              # Detener todo
 
 ### Error: "Can't reach database server at postgres:5432"
 
-**Causa:** Estás usando `docker-compose.services.yml` pero tu `.env` tiene `postgres` en vez de `localhost`
+**Causa:** Estás usando `docker-compose.yml` (servicios solo) pero tu `.env` tiene `postgres` en vez de `localhost`
 
 **Solución:**
 ```bash
@@ -204,14 +228,18 @@ REDIS_HOST=localhost
 
 ### Error: "dumb-init /app/docker-entrypoint.sh: No such file or directory"
 
-**Causa:** Estás usando `docker-compose.dev.yml` y el build del contenedor tiene problemas
+**Causa:** Estás usando `docker-compose.full.yml` y el build del contenedor tiene problemas
 
-**Solución:**
-Usa `docker-compose.services.yml` en su lugar:
+**Solución 1 - Usar servicios solo (recomendado):**
 ```bash
-docker-compose -f docker-compose.dev.yml down
-pnpm docker:services
+docker-compose -f docker-compose.full.yml down
+pnpm docker:up
 pnpm run start:dev
+```
+
+**Solución 2 - Rebuild el contenedor:**
+```bash
+docker-compose -f docker-compose.full.yml up -d --build
 ```
 
 ### Error: "Port 3000 already in use"
@@ -230,10 +258,68 @@ lsof -ti:3000 | xargs kill -9
 PORT=3001
 ```
 
+### Ya tengo contenedores corriendo con los nombres antiguos
+
+**Solución:**
+```bash
+# Detener todos los contenedores
+docker-compose -f docker-compose.full.yml down
+
+# Levantar con la nueva configuración
+pnpm docker:up
+```
+
+---
+
+## Migración desde Versión Anterior
+
+Si ya tenías el proyecto con los archivos antiguos:
+
+```bash
+# Los archivos fueron renombrados:
+docker-compose.services.yml  →  docker-compose.yml
+docker-compose.dev.yml       →  docker-compose.full.yml
+
+# Los scripts cambiaron:
+pnpm docker:services         →  pnpm docker:up
+pnpm docker:services:down    →  pnpm docker:down
+# (antiguo docker:up)         →  pnpm docker:full
+```
+
+**Para migrar:**
+```bash
+# 1. Pull del repo actualizado
+git pull
+
+# 2. Detener contenedores antiguos
+docker-compose -f docker-compose.services.yml down 2>/dev/null || true
+docker-compose -f docker-compose.dev.yml down 2>/dev/null || true
+
+# 3. Levantar con nueva configuración
+pnpm docker:up
+```
+
 ---
 
 ## Resumen
 
-**Para desarrollo diario:** Usa `docker-compose.services.yml` con `pnpm docker:services`
-**Para testing completo:** Usa `docker-compose.dev.yml`
-**Para producción:** Usa `docker-compose.prod.yml` o `docker-compose.ghcr.yml`
+**Para desarrollo diario:**
+```bash
+pnpm docker:up          # Solo PostgreSQL + Redis
+pnpm run start:dev      # Backend en tu PC
+```
+
+**Para testing completo:**
+```bash
+pnpm docker:full        # Todo en Docker
+```
+
+**Para producción:**
+```bash
+pnpm docker:prod        # Producción optimizada
+```
+
+**Comando más simple (usa archivo por defecto):**
+```bash
+docker-compose up -d    # = pnpm docker:up
+```

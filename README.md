@@ -19,13 +19,27 @@ Music streaming server con arquitectura hexagonal construido con NestJS, Prisma 
 
 ## Setup Rápido (Docker)
 
-### Desarrollo
+### Desarrollo Local (Recomendado)
 ```bash
 # 1. Copiar variables de entorno
 cp .env.development.example .env
 
-# 2. Levantar todo (PostgreSQL + Redis + App)
-docker compose -f docker-compose.dev.yml up
+# 2. Levantar solo servicios (PostgreSQL + Redis)
+pnpm docker:up
+# o: docker compose up -d
+
+# 3. Ejecutar app en tu PC
+pnpm install
+pnpm db:migrate
+pnpm start:dev
+
+# Servidor: http://localhost:3000/api
+```
+
+### Stack Completo en Docker
+```bash
+# Levantar todo (PostgreSQL + Redis + App)
+pnpm docker:full
 
 # Servidor: http://localhost:3000/api
 ```
@@ -48,20 +62,24 @@ docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.ghcr.yml up -d
 ```
 
-## Setup Local (sin Docker)
+## Setup Completo (Paso a Paso)
+
+Ver guía detallada en **[INSTALACION.md](./INSTALACION.md)**
 
 ```bash
 # 1. Instalar dependencias
 pnpm install
 
-# 2. Levantar solo PostgreSQL + Redis
-docker compose -f docker-compose.dev.yml up postgres redis -d
+# 2. Configurar variables de entorno
+cp .env.development.example .env
+# Asegúrate que tenga localhost, no postgres
 
-# 3. Generar Prisma
-pnpm db:generate
+# 3. Levantar solo PostgreSQL + Redis
+pnpm docker:up
 
 # 4. Ejecutar migraciones
 pnpm db:migrate
+pnpm db:generate
 
 # 5. Iniciar desarrollo
 pnpm start:dev
@@ -88,12 +106,16 @@ El servidor estará disponible en `http://localhost:3000/api`
 - `pnpm test:cov` - Ejecuta tests con coverage
 
 ### Docker
-- `pnpm docker:up` - Levanta contenedores (PostgreSQL + Redis)
-- `pnpm docker:down` - Detiene contenedores
-- `pnpm docker:setup` - Setup completo (up + migraciones)
-- `docker compose -f docker-compose.dev.yml up` - Dev completo (puerto 3000)
-- `docker compose -f docker-compose.prod.yml up` - Prod completo (puerto 4567)
-- `docker compose -f docker-compose.ghcr.yml up` - Imagen pre-construida
+- `pnpm docker:up` - Solo servicios: PostgreSQL + Redis (desarrollo diario)
+- `pnpm docker:down` - Detiene servicios
+- `pnpm docker:full` - Stack completo en Docker (PostgreSQL + Redis + App)
+- `pnpm docker:full:down` - Detiene stack completo
+- `pnpm docker:full:logs` - Ver logs del stack completo
+- `pnpm docker:prod` - Producción optimizada (puerto 4567)
+- `pnpm docker:prod:down` - Detiene producción
+- `pnpm dev:setup` - Setup completo (up + migraciones)
+
+Ver **[DOCKER_COMPOSE_INFO.md](./DOCKER_COMPOSE_INFO.md)** para detalles completos
 
 ## Arquitectura
 
@@ -219,7 +241,9 @@ pnpm docker:setup
 
 ## Documentación Adicional
 
-- `DEPLOYMENT.md` - Guía de despliegue completa
-- `ENVIRONMENTS.md` - Configuración dev/prod
-- `DOCKER_REGISTRY.md` - Uso de GitHub Container Registry
-- `DOCKER.md` - Guía Docker detallada
+- **[INSTALACION.md](./INSTALACION.md)** - Guía de instalación paso a paso
+- **[DOCKER_COMPOSE_INFO.md](./DOCKER_COMPOSE_INFO.md)** - Guía completa de archivos docker-compose
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guía de despliegue en producción
+- **[ENVIRONMENTS.md](./ENVIRONMENTS.md)** - Configuración dev/prod
+- **[DOCKER_REGISTRY.md](./DOCKER_REGISTRY.md)** - Uso de GitHub Container Registry
+- **[DOCKER.md](./DOCKER.md)** - Guía Docker detallada
