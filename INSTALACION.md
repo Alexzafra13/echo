@@ -2,6 +2,28 @@
 
 Esta guía te ayuda a instalar y ejecutar el backend de Echo desde cero en un nuevo PC.
 
+## 🚀 Instalación Rápida (Recomendado)
+
+Si tienes Node.js, pnpm y Docker instalados, usa el script automatizado:
+
+```bash
+# Instalación completa (Backend + Frontend)
+pnpm setup
+
+# Solo backend
+pnpm setup:skip-frontend
+```
+
+El script verificará requisitos, instalará dependencias, configurará Docker y ejecutará migraciones automáticamente.
+
+**Ver:** [scripts/README.md](./scripts/README.md) para más opciones y troubleshooting.
+
+---
+
+## 📖 Instalación Manual (Paso a Paso)
+
+Si prefieres instalar manualmente o el script falla, sigue estos pasos:
+
 ## Requisitos Previos
 
 Antes de empezar, asegúrate de tener instalado:
