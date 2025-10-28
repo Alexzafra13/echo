@@ -27,10 +27,10 @@ git clone https://github.com/Alexzafra13/echo.git
 cd echo
 
 # Setup automático (Linux/macOS/Git Bash)
-pnpm setup
+pnpm install:first
 
 # Windows (PowerShell nativo)
-pnpm setup:windows
+pnpm install:first:windows
 ```
 
 El script automáticamente:
@@ -38,14 +38,15 @@ El script automáticamente:
 - ✅ Instala dependencias del backend y frontend
 - ✅ Configura variables de entorno (.env)
 - ✅ Levanta Docker (PostgreSQL + Redis)
+- ✅ Genera cliente Prisma
 - ✅ Ejecuta migraciones de Prisma
 - ✅ Deja todo listo para trabajar
 
 **Opciones disponibles:**
 ```bash
-pnpm setup --skip-frontend    # Solo backend
-pnpm setup --skip-docker       # Sin Docker
-pnpm setup --skip-backend      # Solo frontend
+pnpm install:first -- --skip-frontend    # Solo backend
+pnpm install:first -- --skip-docker      # Sin Docker
+pnpm install:first -- --skip-backend     # Solo frontend
 ```
 
 ### Manual Setup
@@ -72,16 +73,17 @@ pnpm dev
 Después del setup, puedes usar estos comandos desde el **ROOT**:
 
 ```bash
-pnpm dev              # Inicia backend + frontend juntos
+pnpm dev              # Inicia solo backend
+pnpm dev:all          # Inicia backend + frontend en paralelo
 pnpm dev:server       # Solo backend
 pnpm dev:frontend     # Solo frontend
-pnpm docker:up        # Levantar PostgreSQL + Redis
-pnpm docker:down      # Detener servicios
+pnpm docker:dev       # Levantar PostgreSQL + Redis (desarrollo)
+pnpm docker:dev:down  # Detener servicios de desarrollo
 ```
 
 ### Access
 
-- **Backend API**: http://localhost:3000/api (Swagger docs)
+- **Backend API**: http://localhost:4567/api (Swagger docs)
 - **Frontend**: http://localhost:5173
 
 ## 🐳 Docker Deployment (Production)
@@ -153,6 +155,7 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 
 ### Backend
 - **NestJS** - Framework with Hexagonal Architecture
+- **Fastify** - High-performance HTTP server
 - **Prisma** - ORM with PostgreSQL
 - **Redis** - Cache & Queue (BullMQ)
 - **JWT** - Authentication
@@ -162,9 +165,12 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 - **React 18** - UI Library
 - **TypeScript** - Type safety
 - **Vite** - Build tool
+- **Wouter** - Lightweight routing
 - **Zustand** - State management
-- **React Query** - Data fetching
-- **CSS Modules** - Styling
+- **Tanstack Query** - Data fetching & caching
+- **React Hook Form + Zod** - Form handling & validation
+- **CSS Modules** - Styling with design system
+- **Axios** - HTTP client with interceptors
 
 ## 🎯 Features
 
@@ -182,22 +188,24 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 ### Root (Monorepo)
 ```bash
 # Setup
-pnpm setup              # Instalación inicial automatizada
-pnpm setup:windows      # Setup para Windows PowerShell
+pnpm install:first         # Instalación inicial automatizada (Linux/macOS/Git Bash)
+pnpm install:first:windows # Setup para Windows PowerShell
 
 # Development
-pnpm dev                # Backend + Frontend en paralelo
+pnpm dev                # Solo backend
+pnpm dev:all            # Backend + Frontend en paralelo
 pnpm dev:server         # Solo backend
 pnpm dev:frontend       # Solo frontend
 
 # Build
-pnpm build              # Build de todo el proyecto
+pnpm build              # Build frontend + backend (en orden)
 pnpm build:server       # Build del backend
 pnpm build:frontend     # Build del frontend
 
 # Testing
+pnpm test               # Tests del backend
 pnpm test:server        # Tests del backend
-pnpm test:all           # Tests de todo el proyecto
+pnpm test:frontend      # Tests del frontend
 
 # Docker Development (solo DB + Redis)
 pnpm docker:dev         # Levantar PostgreSQL + Redis
@@ -213,6 +221,10 @@ pnpm docker:restart     # Reiniciar la app
 # Utilities
 pnpm install:all        # Instalar todas las dependencias
 pnpm clean              # Limpiar node_modules y builds
+pnpm lint:server        # Lint del backend
+pnpm lint:frontend      # Lint del frontend
+pnpm format:server      # Format del backend
+pnpm format:frontend    # Format del frontend
 ```
 
 ### Backend (server/)

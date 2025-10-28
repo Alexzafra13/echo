@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --help)
-      echo "Uso: pnpm setup [opciones]"
+      echo "Uso: pnpm install:first [opciones]"
       echo ""
       echo "Opciones:"
       echo "  --skip-docker     No levantar Docker"
@@ -344,15 +344,16 @@ echo -e "${GREEN}"
 echo "¡Todo listo! Ahora puedes:"
 echo ""
 echo "  Comandos desde el ROOT:"
-echo "    pnpm dev                 # Inicia backend + frontend en paralelo"
+echo "    pnpm dev                 # Inicia solo backend"
+echo "    pnpm dev:all             # Inicia backend + frontend en paralelo"
 echo "    pnpm dev:server          # Solo servidor de desarrollo"
 echo "    pnpm dev:frontend        # Solo frontend"
-echo "    pnpm build               # Build de todo"
-echo "    pnpm test:server         # Tests del backend"
+echo "    pnpm build               # Build frontend + backend"
+echo "    pnpm test                # Tests del backend"
 echo ""
 echo "  Backend (desde /server):"
 echo "    cd server"
-echo "    pnpm start:dev           # Servidor en http://localhost:3000"
+echo "    pnpm dev                 # Servidor en http://localhost:4567"
 echo "    pnpm test                # Tests"
 echo "    pnpm db:studio           # Prisma Studio"
 echo ""
@@ -364,19 +365,25 @@ if [ "$SKIP_FRONTEND" = false ]; then
   echo ""
 fi
 
-echo "  Docker:"
-echo "    pnpm docker:up           # Levantar PostgreSQL + Redis"
-echo "    pnpm docker:down         # Detener servicios"
+echo "  Docker (Desarrollo):"
+echo "    pnpm docker:dev          # Levantar PostgreSQL + Redis"
+echo "    pnpm docker:dev:down     # Detener servicios"
+echo ""
+echo "  Docker (Producción - Full Stack):"
+echo "    pnpm docker:build        # Build imagen completa"
+echo "    pnpm docker:up           # Levantar todo"
+echo "    pnpm docker:down         # Detener todo"
 echo ""
 echo "  Documentación:"
 echo "    README.md                # Guía general del monorepo"
-echo "    server/DOCKER_COMPOSE_INFO.md  # Guía de Docker"
+echo "    DOCKER.md                # Despliegue Docker full-stack"
+echo "    server/DOCKER_COMPOSE_INFO.md  # Guía de Docker del server"
 echo -e "${NC}"
 
-print_info "Swagger API: http://localhost:3000/api"
+print_info "Backend API: http://localhost:4567/api"
 
 if [ "$SKIP_FRONTEND" = false ]; then
-  print_info "Frontend: http://localhost:5173"
+  print_info "Frontend Dev: http://localhost:5173"
 fi
 
 echo ""
