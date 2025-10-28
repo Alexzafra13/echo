@@ -5,6 +5,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -72,16 +74,51 @@ async function bootstrap() {
     },
   });
 
+  // Serve Frontend Static Files (Production)
+  // Similar to Jellyfin/Navidrome: single container serves both API and frontend
+  const frontendPath = join(__dirname, '..', '..', 'frontend', 'dist');
+
+  if (existsSync(frontendPath)) {
+    console.log(`📦 Serving frontend from: ${frontendPath}`);
+
+    // Serve static assets (js, css, images, etc.)
+    app.useStaticAssets({
+      root: frontendPath,
+      prefix: '/',
+    });
+
+    // SPA fallback: todas las rutas no-API sirven index.html
+    app.setNotFoundHandler((request, reply) => {
+      const url = request.url;
+
+      // Si es una ruta API, devuelve 404 JSON
+      if (url.startsWith('/api/') || url.startsWith('/health')) {
+        reply.code(404).send({
+          statusCode: 404,
+          message: 'Not Found',
+          error: 'Not Found',
+        });
+      } else {
+        // Para cualquier otra ruta, sirve el index.html (SPA)
+        reply.sendFile('index.html', frontendPath);
+      }
+    });
+  } else {
+    console.log(`⚠️  Frontend not found at ${frontendPath}`);
+    console.log(`   Running in API-only mode (development)`);
+  }
+
   // Start server
   await app.listen(appConfig.port, '0.0.0.0');
 
   console.log(`
-🎵 Music Server Backend
+🎵 Echo Music Server
   🚀 Servidor corriendo en: http://localhost:${appConfig.port}
   📝 API Prefix: ${appConfig.api_prefix}
   📚 Swagger Docs: http://localhost:${appConfig.port}/api/docs
   🌍 CORS Origins: ${appConfig.cors_origins.join(', ')}
   🔒 Guards: MustChangePasswordGuard (Global)
+  ${existsSync(frontendPath) ? '🎨 Frontend: Served from single container (Jellyfin-style)' : ''}
   `);
 }
 
