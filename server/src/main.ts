@@ -7,7 +7,6 @@ import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { FastifyRequest, FastifyReply } from 'fastify';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -95,7 +94,7 @@ async function bootstrap() {
     // SPA fallback: todas las rutas no-API sirven index.html
     // Necesitamos acceder a la instancia de Fastify subyacente
     const fastifyInstance = app.getHttpAdapter().getInstance();
-    fastifyInstance.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) => {
+    fastifyInstance.setNotFoundHandler((request, reply) => {
       const url = request.url;
 
       // Si es una ruta API, devuelve 404 JSON
