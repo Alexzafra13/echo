@@ -1,0 +1,56 @@
+version: '3.8'
+
+# Docker Compose for Development Services Only
+# This file only starts PostgreSQL and Redis
+# Run your NestJS app from your local machine with `pnpm run start:dev`
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: music_user
+      POSTGRES_PASSWORD: music_password
+      POSTGRES_DB: music_db
+    ports:
+      - "5432:5432"  # Exposed for local development
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U music_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-network-dev
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis-dev
+    restart: unless-stopped
+    command: redis-server --requirepass dev_redis_password
+    ports:
+      - "6379:6379"  # Exposed for local development
+    volumes:
+      - redis-data-dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-network-dev
+
+volumes:
+  postgres-data-dev:
+    name: echo-postgres-data-dev
+  redis-data-dev:
+    name: echo-redis-data-dev
+
+networks:
+  echo-network-dev:
+    name: echo-network-dev
+    driver: bridge
