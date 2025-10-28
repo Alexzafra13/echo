@@ -37,17 +37,18 @@ Copia el archivo de ejemplo de desarrollo:
 cp .env.development.example .env
 ```
 
-Abre `.env` y revisa/ajusta las siguientes variables si es necesario:
+Abre `.env` y **IMPORTANTE**: cambia el hostname de la base de datos:
 
 ```env
 NODE_ENV=development
 PORT=3000
 
 # Base de datos PostgreSQL
-DATABASE_URL=postgresql://music_user:music_password@postgres:5432/music_db?schema=public
+# ⚠️ CAMBIA 'postgres' por 'localhost' si ejecutas desde tu PC (fuera de Docker)
+DATABASE_URL=postgresql://music_user:music_password@localhost:5432/music_db?schema=public
 
 # Redis (para caché y colas)
-REDIS_HOST=redis
+REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=dev_redis_password
 
@@ -58,7 +59,9 @@ JWT_SECRET=dev-jwt-secret-do-not-use-in-production
 MUSIC_LIBRARY_PATH=/music
 ```
 
-**Nota:** Para desarrollo local, estos valores por defecto funcionan bien con Docker Compose.
+**⚠️ IMPORTANTE:**
+- Usa `localhost` si ejecutas el backend **desde tu PC** (desarrollo normal)
+- Usa `postgres` y `redis` solo si ejecutas el backend **dentro de un contenedor Docker**
 
 ## Paso 4: Levantar Servicios con Docker Compose
 
@@ -209,20 +212,57 @@ Otro proceso está usando el puerto 3000. Opciones:
 1. Detener el proceso: `lsof -ti:3000 | xargs kill -9` (Mac/Linux)
 2. Cambiar el puerto en `.env`: `PORT=3001`
 
-### Error: "Can't reach database server"
+### Error: "Can't reach database server at `postgres:5432`"
 
-PostgreSQL no está corriendo. Ejecuta:
+Este error ocurre por dos razones:
+
+**1. Docker no está corriendo:**
 
 ```bash
-docker-compose -f docker-compose.dev.yml up -d postgres
+# Levantar Docker Compose
+docker-compose -f docker-compose.dev.yml up -d
+
+# Verificar que PostgreSQL está corriendo
+docker ps
 ```
+
+**2. Hostname incorrecto en DATABASE_URL:**
+
+Si ejecutas comandos desde tu PC (como `pnpm db:migrate` o `pnpm start:dev`), necesitas usar `localhost` en vez de `postgres`.
+
+Edita tu archivo `.env` y cambia:
+
+```env
+# ❌ NO funciona desde tu PC
+DATABASE_URL=postgresql://music_user:music_password@postgres:5432/music_db?schema=public
+
+# ✅ SÍ funciona desde tu PC
+DATABASE_URL=postgresql://music_user:music_password@localhost:5432/music_db?schema=public
+```
+
+**Regla:**
+- `localhost` → Cuando ejecutas código desde tu PC (desarrollo normal)
+- `postgres` → Solo cuando ejecutas código dentro de Docker
 
 ### Error: "Redis connection refused"
 
-Redis no está corriendo. Ejecuta:
+**1. Docker no está corriendo:**
 
 ```bash
-docker-compose -f docker-compose.dev.yml up -d redis
+# Levantar Docker Compose
+docker-compose -f docker-compose.dev.yml up -d
+
+# Verificar que Redis está corriendo
+docker ps
+```
+
+**2. Hostname incorrecto:**
+
+Asegúrate de que en `.env` tienes:
+
+```env
+REDIS_HOST=localhost  # Si ejecutas desde tu PC
+REDIS_PORT=6379
 ```
 
 ### Error al ejecutar migraciones
