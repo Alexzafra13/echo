@@ -13,18 +13,47 @@ echo/
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js >= 18
+- Node.js >= 22
 - pnpm >= 10
-- Docker & Docker Compose
+- Docker & Docker Compose (Docker Desktop para Windows)
 
-### Installation
+### Automated Setup (Recommended)
+
+El proyecto incluye un script de setup que instala todo automáticamente:
 
 ```bash
 # Clone repository
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
 
-# Backend setup
+# Setup automático (Linux/macOS/Git Bash)
+pnpm setup
+
+# Windows (PowerShell nativo)
+pnpm setup:windows
+```
+
+El script automáticamente:
+- ✅ Verifica requisitos (Node.js, pnpm, Docker)
+- ✅ Instala dependencias del backend y frontend
+- ✅ Configura variables de entorno (.env)
+- ✅ Levanta Docker (PostgreSQL + Redis)
+- ✅ Ejecuta migraciones de Prisma
+- ✅ Deja todo listo para trabajar
+
+**Opciones disponibles:**
+```bash
+pnpm setup --skip-frontend    # Solo backend
+pnpm setup --skip-docker       # Sin Docker
+pnpm setup --skip-backend      # Solo frontend
+```
+
+### Manual Setup
+
+Si prefieres instalarlo manualmente:
+
+```bash
+# Backend
 cd server
 pnpm install
 cp .env.development.example .env
@@ -32,10 +61,22 @@ docker-compose up -d
 pnpm db:migrate
 pnpm start:dev
 
-# Frontend setup (in another terminal)
+# Frontend (en otra terminal)
 cd frontend
 pnpm install
 pnpm dev
+```
+
+### Iniciar Desarrollo
+
+Después del setup, puedes usar estos comandos desde el **ROOT**:
+
+```bash
+pnpm dev              # Inicia backend + frontend juntos
+pnpm dev:server       # Solo backend
+pnpm dev:frontend     # Solo frontend
+pnpm docker:up        # Levantar PostgreSQL + Redis
+pnpm docker:down      # Detener servicios
 ```
 
 ### Access
@@ -84,22 +125,49 @@ pnpm dev
 
 ## 📦 Scripts
 
+### Root (Monorepo)
+```bash
+# Setup
+pnpm setup              # Instalación inicial automatizada
+pnpm setup:windows      # Setup para Windows PowerShell
+
+# Development
+pnpm dev                # Backend + Frontend en paralelo
+pnpm dev:server         # Solo backend
+pnpm dev:frontend       # Solo frontend
+
+# Build
+pnpm build              # Build de todo el proyecto
+pnpm build:server       # Build del backend
+pnpm build:frontend     # Build del frontend
+
+# Testing
+pnpm test:server        # Tests del backend
+pnpm test:all           # Tests de todo el proyecto
+
+# Docker
+pnpm docker:up          # Levantar PostgreSQL + Redis
+pnpm docker:down        # Detener servicios
+
+# Utilities
+pnpm install:all        # Instalar todas las dependencias
+pnpm clean              # Limpiar node_modules y builds
+```
+
 ### Backend (server/)
 ```bash
-pnpm start:dev        # Development mode
-pnpm build           # Build for production
-pnpm test            # Run tests
-pnpm db:migrate      # Run database migrations
-pnpm db:studio       # Open Prisma Studio
-docker-compose up -d # Start services
+pnpm start:dev          # Development mode
+pnpm build              # Build for production
+pnpm test               # Run tests
+pnpm db:migrate         # Run database migrations
+pnpm db:studio          # Open Prisma Studio
 ```
 
 ### Frontend (frontend/)
 ```bash
-pnpm dev             # Development mode
-pnpm build           # Build for production
-pnpm preview         # Preview production build
-pnpm test            # Run tests
+pnpm dev                # Development mode
+pnpm build              # Build for production
+pnpm preview            # Preview production build
 ```
 
 ## 🐳 Docker
