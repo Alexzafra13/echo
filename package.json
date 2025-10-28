@@ -24,9 +24,12 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
+    "docker:services": "docker-compose -f docker-compose.services.yml up -d",
+    "docker:services:down": "docker-compose -f docker-compose.services.yml down",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:setup": "npm run docker:up && sleep 5 && npm run db:migrate && npm run test:migrate",
+    "docker:setup": "npm run docker:services && sleep 5 && npm run db:migrate && npm run test:migrate",
+    "dev:setup": "npm run docker:services && sleep 5 && npm run db:migrate",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
   },
