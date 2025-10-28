@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
 import { join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 async function bootstrap() {
@@ -78,9 +78,13 @@ async function bootstrap() {
   // Serve Frontend Static Files (Production)
   // Similar to Jellyfin/Navidrome: single container serves both API and frontend
   const frontendPath = join(__dirname, '..', '..', 'frontend', 'dist');
+  const indexHtmlPath = join(frontendPath, 'index.html');
 
-  if (existsSync(frontendPath)) {
+  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
     console.log(`📦 Serving frontend from: ${frontendPath}`);
+
+    // Read index.html once at startup
+    const indexHtmlContent = readFileSync(indexHtmlPath, 'utf-8');
 
     // Serve static assets (js, css, images, etc.)
     app.useStaticAssets({
@@ -103,7 +107,7 @@ async function bootstrap() {
         });
       } else {
         // Para cualquier otra ruta, sirve el index.html (SPA)
-        reply.sendFile('index.html', frontendPath);
+        reply.type('text/html').send(indexHtmlContent);
       }
     });
   } else {
