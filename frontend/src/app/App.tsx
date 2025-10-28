@@ -1,14 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Route, Switch, Redirect } from 'wouter';
 import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <Switch>
+      <Route path="/login" component={LoginPage} />
+      <Route path="/">
+        <Redirect to="/login" />
+      </Route>
+    </Switch>
   );
 }
 

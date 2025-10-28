@@ -1,8 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, User, Lock } from 'lucide-react';
+import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
 import { Button, Input, Card } from '@shared/components/ui';
+import { useAuth } from '@shared/hooks';
 import styles from './LoginPage.module.css';
 
 // Validation schema
@@ -14,22 +15,18 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const { login, isLoggingIn, loginError } = useAuth();
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      console.log('Login data:', data);
-      // TODO: Implement login logic with API
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
-    } catch (error) {
-      console.error('Login error:', error);
-    }
+  const onSubmit = (data: LoginFormData) => {
+    login(data);
   };
 
   return (
@@ -76,6 +73,16 @@ export default function LoginPage() {
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+            {loginError && (
+              <div className={styles.errorAlert}>
+                <AlertCircle size={20} />
+                <span>
+                  {(loginError as any)?.response?.data?.message ||
+                    'Error al iniciar sesión. Verifica tus credenciales.'}
+                </span>
+              </div>
+            )}
+
             <Input
               {...register('username')}
               type="text"
@@ -101,7 +108,7 @@ export default function LoginPage() {
               variant="primary"
               size="lg"
               fullWidth
-              loading={isSubmitting}
+              loading={isLoggingIn}
               rightIcon={<ArrowRight size={20} />}
             >
               Entrar
