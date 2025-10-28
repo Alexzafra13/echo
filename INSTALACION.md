@@ -70,13 +70,13 @@ Para desarrollo local, solo necesitas PostgreSQL y Redis en Docker. **NO** neces
 ### Opción A: Usando el script de pnpm (Recomendado)
 
 ```bash
-pnpm docker:services
+pnpm docker:up
 ```
 
 ### Opción B: Usando docker-compose directamente
 
 ```bash
-docker-compose -f docker-compose.services.yml up -d
+docker-compose up -d
 ```
 
 Esto iniciará:
@@ -92,9 +92,9 @@ docker ps
 Deberías ver `echo-postgres-dev` y `echo-redis-dev` en la lista.
 
 **⚠️ IMPORTANTE:**
-- El archivo `docker-compose.services.yml` solo levanta PostgreSQL y Redis
-- El archivo `docker-compose.dev.yml` también intenta levantar la app (no lo necesitas para desarrollo local)
-- Ejecutarás el backend con `pnpm run start:dev` desde tu PC
+- El archivo `docker-compose.yml` solo levanta PostgreSQL y Redis (por defecto)
+- Si quieres levantar **toda la app en Docker**, usa `pnpm docker:full`
+- Para desarrollo normal, ejecutarás el backend con `pnpm run start:dev` desde tu PC
 
 ## Paso 5: Ejecutar Migraciones de Base de Datos
 
@@ -321,7 +321,7 @@ pnpm install
 cp .env.development.example .env
 
 # 4. Docker (solo PostgreSQL y Redis)
-pnpm docker:services
+pnpm docker:up
 
 # 5. Base de datos
 pnpm db:migrate
@@ -336,6 +336,15 @@ pnpm run start:dev
 ```bash
 # Setup completo (después de clonar y configurar .env)
 pnpm dev:setup && pnpm run start:dev
+```
+
+**Comandos Docker disponibles:**
+
+```bash
+pnpm docker:up          # Solo servicios (desarrollo diario)
+pnpm docker:down        # Detener servicios
+pnpm docker:full        # Stack completo (testing)
+pnpm docker:prod        # Producción
 ```
 
 ## Contacto
