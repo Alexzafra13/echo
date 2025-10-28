@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
-import { Button, Input, Card } from '@shared/components/ui';
+import { Button, Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
 import styles from './LoginPage.module.css';
 
@@ -16,7 +16,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login, isLoggingIn, loginError } = useAuth();
-
+  
   const {
     register,
     handleSubmit,
@@ -39,39 +39,19 @@ export default function LoginPage() {
         }}
       />
 
-      {/* Vinyl decorations */}
-      <div className={`${styles.vinylDecoration} ${styles.vinyl1}`} />
-      <div className={`${styles.vinylDecoration} ${styles.vinyl2}`} />
-
       {/* Content */}
       <div className={styles.content}>
-        {/* Logo card */}
-        <Card variant="white" padding="md" className={styles.logoCard}>
-          <div className={styles.logoContainer}>
-            <div className={styles.logoCircle}>
-              {/* Logo icon - Replace with your actual logo */}
-              <img
-                src="/images/logos/echo-icon.png"
-                alt="Echo Icon"
-                className={styles.logoImage}
-                onError={(e) => {
-                  // Fallback si no existe la imagen
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <span className={styles.logoBadge}>V1</span>
-            </div>
-            <h1 className={styles.logoText}>Echo</h1>
-          </div>
-        </Card>
+        {/* Logo */}
+        <div className={styles.logoContainer}>
+          <img
+            src="/images/logos/echo-icon.png"
+            alt="Echo"
+            className={styles.logo}
+          />
+        </div>
 
-        {/* Login form card */}
-        <Card variant="glass" padding="none" className={styles.formCard}>
-          <h2 className={styles.formTitle}>Iniciar Sesión</h2>
-          <p className={styles.formSubtitle}>
-            Bienvenido de nuevo a Echo
-          </p>
-
+        {/* Login form */}
+        <div className={styles.formCard}>
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
             {loginError && (
               <div className={styles.errorAlert}>
@@ -86,8 +66,8 @@ export default function LoginPage() {
             <Input
               {...register('username')}
               type="text"
-              label="Usuario"
-              placeholder="Introduce tu usuario"
+              label="Username"
+              placeholder=""
               error={errors.username?.message}
               leftIcon={<User size={20} />}
               autoComplete="username"
@@ -96,8 +76,8 @@ export default function LoginPage() {
             <Input
               {...register('password')}
               type="password"
-              label="Contraseña"
-              placeholder="Introduce tu contraseña"
+              label="Password"
+              placeholder=""
               error={errors.password?.message}
               leftIcon={<Lock size={20} />}
               autoComplete="current-password"
@@ -111,7 +91,7 @@ export default function LoginPage() {
               loading={isLoggingIn}
               rightIcon={<ArrowRight size={20} />}
             >
-              Entrar
+              Sing In
             </Button>
           </form>
 
@@ -120,7 +100,7 @@ export default function LoginPage() {
               ¿Has Olvidado Tu Contraseña?
             </a>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
