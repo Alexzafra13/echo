@@ -1,0 +1,40 @@
+{
+  "name": "echo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Echo - Music Streaming Platform (Monorepo)",
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.17.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "setup:skip-frontend": "bash scripts/setup.sh --skip-frontend",
+    "setup:skip-docker": "bash scripts/setup.sh --skip-docker",
+    "setup:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "install:all": "pnpm install --recursive",
+    "dev": "pnpm run --parallel dev:server dev:frontend",
+    "dev:server": "pnpm --filter echo-server-backend dev",
+    "dev:frontend": "pnpm --filter echo-frontend dev",
+    "build": "pnpm run --recursive build",
+    "build:server": "pnpm --filter echo-server-backend build",
+    "build:frontend": "pnpm --filter echo-frontend build",
+    "test:server": "pnpm --filter echo-server-backend test",
+    "test:all": "pnpm --recursive test",
+    "docker:up": "cd server && docker-compose up -d",
+    "docker:down": "cd server && docker-compose down",
+    "clean": "pnpm --recursive exec rm -rf node_modules dist coverage .next",
+    "lint:server": "pnpm --filter echo-server-backend lint",
+    "format:server": "pnpm --filter echo-server-backend format"
+  },
+  "keywords": [
+    "monorepo",
+    "music-streaming",
+    "nestjs",
+    "react",
+    "typescript"
+  ]
+}
