@@ -65,10 +65,18 @@ MUSIC_LIBRARY_PATH=/music
 
 ## Paso 4: Levantar Servicios con Docker Compose
 
-El proyecto incluye PostgreSQL y Redis en Docker Compose:
+Para desarrollo local, solo necesitas PostgreSQL y Redis en Docker. **NO** necesitas ejecutar el backend en Docker.
+
+### Opción A: Usando el script de pnpm (Recomendado)
 
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+pnpm docker:services
+```
+
+### Opción B: Usando docker-compose directamente
+
+```bash
+docker-compose -f docker-compose.services.yml up -d
 ```
 
 Esto iniciará:
@@ -81,7 +89,12 @@ Verifica que los contenedores estén corriendo:
 docker ps
 ```
 
-Deberías ver `postgres` y `redis` en la lista.
+Deberías ver `echo-postgres-dev` y `echo-redis-dev` en la lista.
+
+**⚠️ IMPORTANTE:**
+- El archivo `docker-compose.services.yml` solo levanta PostgreSQL y Redis
+- El archivo `docker-compose.dev.yml` también intenta levantar la app (no lo necesitas para desarrollo local)
+- Ejecutarás el backend con `pnpm run start:dev` desde tu PC
 
 ## Paso 5: Ejecutar Migraciones de Base de Datos
 
@@ -304,18 +317,25 @@ cd echo
 # 2. Instalar
 pnpm install
 
-# 3. Configurar
+# 3. Configurar (verifica que tenga localhost, no postgres)
 cp .env.development.example .env
 
-# 4. Docker
-docker-compose -f docker-compose.dev.yml up -d
+# 4. Docker (solo PostgreSQL y Redis)
+pnpm docker:services
 
 # 5. Base de datos
-npx prisma migrate dev
-npx prisma generate
+pnpm db:migrate
+pnpm db:generate
 
-# 6. Ejecutar
+# 6. Ejecutar backend desde tu PC
 pnpm run start:dev
+```
+
+**O todo en un solo comando:**
+
+```bash
+# Setup completo (después de clonar y configurar .env)
+pnpm dev:setup && pnpm run start:dev
 ```
 
 ## Contacto
