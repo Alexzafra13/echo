@@ -83,8 +83,19 @@ pnpm docker:dev:down  # Detener servicios de desarrollo
 
 ### Access
 
-- **Backend API**: http://localhost:4567/api (Swagger docs)
+- **Backend API**: http://localhost:4567/api (Swagger docs at /api/docs)
 - **Frontend**: http://localhost:5173
+
+### Development Notes
+
+**⚠️ "Frontend not found" warning in backend console:**
+This is **normal and expected** in development mode. The backend looks for `frontend/dist` to serve the built frontend in production (Jellyfin-style single container). In development:
+- Frontend is served by Vite at `localhost:5173`
+- Backend API runs at `localhost:4567`
+- Vite proxies `/api` requests to the backend
+- The warning is harmless and can be ignored
+
+The login is **fully functional** in development mode with proper integration between frontend and backend.
 
 ## 🐳 Docker Deployment (Production)
 
@@ -185,7 +196,7 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 - ✅ **Tests** - Unit & E2E tests
 
 ### Frontend
-- ✅ **Login Page** - Minimalist design with logo and form validation
+- ✅ **Login Page** - Minimalist design with logo and form validation (fully functional with backend integration)
 - 🚧 **HomePage** - Modern music streaming interface (in progress)
   - Hero section with featured album
   - Recently added albums grid
@@ -739,9 +750,21 @@ export const imageService = {
 };
 ```
 
+### Login Status
+
+✅ **Login está completamente funcional:**
+- **Backend Integration**: Conectado a `/api/auth/login` endpoint
+- **State Management**: Zustand store para user y tokens (access + refresh)
+- **Data Fetching**: TanStack Query para mutations con loading/error states
+- **Auto Token Refresh**: Axios interceptors refrescan token automáticamente en 401
+- **Validation**: React Hook Form + Zod para validación en tiempo real
+- **Error Handling**: Mensajes de error claros del backend
+- **Redirection**: Redirige a `/` después del login exitoso
+- **Protected Routes**: Guard global en backend para rutas protegidas
+
 ### Next Steps
 
-1. ✅ **LoginPage** - Completado (solo con logo)
+1. ✅ **LoginPage** - Completado (solo con logo, completamente funcional)
 2. 🚧 **HomePage** - Implementar estructura y componentes
 3. 🔜 **Album Detail Page** - Vista individual de álbum
 4. 🔜 **Artist Page** - Vista de artista con discografía
@@ -787,6 +810,59 @@ frontend/src/
 3. Commit your changes
 4. Push to the branch
 5. Open a Pull Request
+
+## 🐛 Troubleshooting
+
+### Backend Warning: "Frontend not found"
+**Síntoma**: `⚠️ Frontend not found at .../frontend/dist` en la consola del backend
+
+**Solución**: Esto es **normal en desarrollo**. El backend busca el build del frontend solo para producción. En desarrollo:
+- El frontend se sirve desde Vite (localhost:5173)
+- El backend está en modo API-only (localhost:4567)
+- Ignora este warning
+
+### Login No Funciona
+**Síntoma**: Error al hacer login o tokens no se guardan
+
+**Solución**:
+1. Verifica que Docker esté corriendo: `pnpm docker:dev`
+2. Verifica que el backend esté corriendo: `pnpm dev:server`
+3. Verifica que el frontend esté corriendo: `pnpm dev:frontend`
+4. Revisa las credenciales por defecto (admin/admin o user/user)
+5. Verifica la consola del navegador para errores
+
+### CORS Errors
+**Síntoma**: CORS policy errors en el navegador
+
+**Solución**: Verifica que:
+1. El backend acepte `localhost:5173` en CORS (ya configurado)
+2. Las variables de entorno estén correctas
+3. No estés usando el puerto 3000 por error
+
+### Database Connection Failed
+**Síntoma**: Error conectando a PostgreSQL
+
+**Solución**:
+1. Verifica que Docker esté corriendo: `docker ps`
+2. Verifica el archivo `.env` en `server/`:
+   - `DATABASE_URL` debe usar `localhost:5432` (no `postgres:5432`)
+3. Recrea los contenedores: `pnpm docker:dev:down && pnpm docker:dev`
+
+### Migrations Failed
+**Síntoma**: Error ejecutando migraciones de Prisma
+
+**Solución**:
+1. Espera unos segundos después de levantar Docker
+2. Ejecuta manualmente: `cd server && pnpm db:migrate`
+3. Si persiste, resetea la BD: `cd server && pnpm db:reset`
+
+### Frontend Build Failed
+**Síntoma**: Error al buildear el frontend
+
+**Solución**:
+1. Limpia node_modules: `pnpm clean && pnpm install:all`
+2. Verifica que los alias de TypeScript estén configurados
+3. Asegúrate de usar Node >= 22
 
 ## 📄 License
 
