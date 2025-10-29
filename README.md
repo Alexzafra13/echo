@@ -174,6 +174,7 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 
 ## 🎯 Features
 
+### Backend
 - ✅ **Authentication** - JWT with roles (user/admin)
 - ✅ **Music Library** - Albums, Artists, Tracks
 - ✅ **Playlists** - Create, edit, manage playlists
@@ -182,6 +183,18 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 - ✅ **Admin Panel** - User management
 - ✅ **Cache** - Redis caching layer
 - ✅ **Tests** - Unit & E2E tests
+
+### Frontend
+- ✅ **Login Page** - Minimalist design with logo and form validation
+- 🚧 **HomePage** - Modern music streaming interface (in progress)
+  - Hero section with featured album
+  - Recently added albums grid
+  - Daily mix recommendations
+  - Sidebar navigation
+  - Search functionality
+- 🔜 **Music Player** - Audio playback controls
+- 🔜 **Library Views** - Albums, Artists, Tracks browsing
+- 🔜 **Playlist Management** - Create, edit, and organize playlists
 
 ## 📦 Scripts
 
@@ -242,6 +255,501 @@ pnpm dev                # Development mode
 pnpm build              # Build for production
 pnpm preview            # Preview production build
 ```
+
+## 🎨 Frontend - HomePage Integration Guide
+
+### Overview
+
+Echo's HomePage es la página principal después del login, diseñada con un estilo moderno inspirado en Spotify/Apple Music. Presenta una interfaz limpia con:
+- **Hero Section**: Álbum destacado con imagen de fondo y controles de reproducción
+- **Sidebar Navigation**: Navegación fija con el logo de Echo y enlaces principales
+- **Album Grid**: Grid responsivo con álbumes recientes y daily mixes
+- **Search Bar**: Búsqueda global en el header
+
+### Design Philosophy
+
+El diseño sigue estos principios:
+- **Código limpio y modular**: Componentes pequeños con responsabilidades únicas
+- **Separación de concerns**: Lógica de negocio separada de presentación
+- **Reutilización**: Componentes compartidos en `@shared/components`
+- **Type-safety**: TypeScript en todos los componentes
+- **Responsive**: Mobile-first con breakpoints para tablet y desktop
+
+### Project Structure
+
+```
+frontend/src/
+├── features/
+│   ├── home/                          # HomePage feature
+│   │   ├── components/
+│   │   │   ├── HeroSection/          # Hero con álbum destacado
+│   │   │   │   ├── HeroSection.tsx
+│   │   │   │   └── HeroSection.module.css
+│   │   │   ├── AlbumCard/            # Card individual de álbum
+│   │   │   │   ├── AlbumCard.tsx
+│   │   │   │   └── AlbumCard.module.css
+│   │   │   ├── AlbumGrid/            # Grid de álbumes
+│   │   │   │   ├── AlbumGrid.tsx
+│   │   │   │   └── AlbumGrid.module.css
+│   │   │   └── Sidebar/              # Navegación lateral
+│   │   │       ├── Sidebar.tsx
+│   │   │       └── Sidebar.module.css
+│   │   ├── pages/
+│   │   │   └── HomePage/
+│   │   │       ├── HomePage.tsx       # Página principal
+│   │   │       └── HomePage.module.css
+│   │   ├── hooks/
+│   │   │   ├── useAlbums.ts          # Hook para obtener álbumes
+│   │   │   └── useFeaturedAlbum.ts   # Hook para álbum destacado
+│   │   ├── services/
+│   │   │   └── albums.service.ts     # API calls para álbumes
+│   │   └── types/
+│   │       └── album.types.ts        # TypeScript types
+│   │
+│   └── auth/                          # Existing auth feature
+│       └── pages/
+│           └── LoginPage/             # ✅ Solo con logo (implementado)
+│
+├── shared/
+│   ├── components/
+│   │   ├── ui/                        # Base UI components
+│   │   │   ├── Button/
+│   │   │   ├── Input/
+│   │   │   └── Card/
+│   │   └── layout/                    # Layout components
+│   │       ├── Header/                # Header con search y navegación
+│   │       └── MainLayout/            # Layout principal con sidebar
+│   └── styles/
+│       └── variables.css              # Design tokens
+│
+public/
+└── images/
+    ├── logos/
+    │   └── echo-icon.png              # Logo de Echo (100x100px)
+    ├── backgrounds/
+    │   └── login-bg.jpg               # Fondo de concierto
+    ├── albums/                        # Portadas de álbumes
+    │   ├── featured-album-cover.jpg   # 200x200px - Portada
+    │   ├── featured-album-bg.jpg      # 1920x1080px - Background hero
+    │   ├── featured-album-art.png     # 400xAuto - Arte lateral (opcional)
+    │   └── [album-id].jpg             # Portadas de otros álbumes
+    └── user-avatar.jpg                # Avatar del usuario (40x40px)
+```
+
+### Component Architecture
+
+#### 1. HomePage (Container)
+**Responsabilidad**: Orquestar componentes y manejar estado de la página
+
+```typescript
+// features/home/pages/HomePage/HomePage.tsx
+import { HeroSection, AlbumGrid, Sidebar } from '../../components';
+import { Header } from '@shared/components/layout';
+import { useFeaturedAlbum, useRecentAlbums } from '../../hooks';
+
+export default function HomePage() {
+  const { featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
+  const { recentAlbums, isLoading: loadingRecent } = useRecentAlbums();
+
+  return (
+    <div className={styles.container}>
+      <Sidebar />
+      <main className={styles.main}>
+        <Header />
+        <div className={styles.content}>
+          {!loadingFeatured && featuredAlbum && (
+            <HeroSection album={featuredAlbum} />
+          )}
+          {!loadingRecent && (
+            <>
+              <AlbumGrid title="Recientemente Añadidos" albums={recentAlbums} />
+              <AlbumGrid title="Daily Mix" albums={dailyMix} />
+            </>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+```
+
+#### 2. HeroSection (Presentational)
+**Responsabilidad**: Mostrar álbum destacado con controles
+
+```typescript
+// features/home/components/HeroSection/HeroSection.tsx
+interface HeroSectionProps {
+  album: Album;
+  onPlay?: () => void;
+}
+
+export function HeroSection({ album, onPlay }: HeroSectionProps) {
+  return (
+    <section className={styles.hero}>
+      <div
+        className={styles.heroBackground}
+        style={{ backgroundImage: `url(${album.backgroundImage})` }}
+      />
+      <div className={styles.heroContent}>
+        <img src={album.coverImage} alt={album.title} className={styles.albumCover} />
+        <div className={styles.albumInfo}>
+          <h1 className={styles.artistName}>{album.artist}</h1>
+          <h2 className={styles.albumTitle}>{album.title}</h2>
+          <p className={styles.albumMeta}>
+            {album.artist} • {album.title} - {album.year} • {album.totalTracks} Songs
+          </p>
+          <Button variant="primary" size="lg" onClick={onPlay}>
+            <Play size={24} /> Play
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+```
+
+#### 3. AlbumCard (Presentational)
+**Responsabilidad**: Mostrar un álbum individual con hover effects
+
+```typescript
+// features/home/components/AlbumCard/AlbumCard.tsx
+interface AlbumCardProps {
+  cover: string;
+  title: string;
+  artist: string;
+  onClick?: () => void;
+  onPlayClick?: () => void;
+}
+
+export function AlbumCard({ cover, title, artist, onClick, onPlayClick }: AlbumCardProps) {
+  return (
+    <article className={styles.card} onClick={onClick}>
+      <div className={styles.coverContainer}>
+        <img src={cover} alt={title} loading="lazy" />
+        <div className={styles.overlay}>
+          <button className={styles.playButton} onClick={(e) => {
+            e.stopPropagation();
+            onPlayClick?.();
+          }}>
+            <Play size={24} />
+          </button>
+        </div>
+      </div>
+      <h3 className={styles.title}>{title}</h3>
+      <p className={styles.artist}>{artist}</p>
+    </article>
+  );
+}
+```
+
+#### 4. AlbumGrid (Presentational)
+**Responsabilidad**: Layout de grid para múltiples álbumes
+
+```typescript
+// features/home/components/AlbumGrid/AlbumGrid.tsx
+interface AlbumGridProps {
+  title: string;
+  albums: Album[];
+}
+
+export function AlbumGrid({ title, albums }: AlbumGridProps) {
+  const navigate = useLocation()[1];
+
+  return (
+    <section className={styles.section}>
+      <h2 className={styles.sectionTitle}>{title}</h2>
+      <div className={styles.grid}>
+        {albums.map(album => (
+          <AlbumCard
+            key={album.id}
+            cover={album.coverImage}
+            title={album.title}
+            artist={album.artist}
+            onClick={() => navigate(`/album/${album.id}`)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+### Data Fetching Strategy
+
+#### Custom Hooks con TanStack Query
+
+```typescript
+// features/home/hooks/useAlbums.ts
+import { useQuery } from '@tanstack/react-query';
+import { albumsService } from '../services/albums.service';
+
+export function useRecentAlbums() {
+  return useQuery({
+    queryKey: ['albums', 'recent'],
+    queryFn: () => albumsService.getRecent(),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+}
+
+export function useFeaturedAlbum() {
+  return useQuery({
+    queryKey: ['albums', 'featured'],
+    queryFn: () => albumsService.getFeatured(),
+    staleTime: 10 * 60 * 1000, // 10 minutos
+  });
+}
+```
+
+#### Service Layer
+
+```typescript
+// features/home/services/albums.service.ts
+import { api } from '@shared/services/api';
+import type { Album } from '../types/album.types';
+
+export const albumsService = {
+  getRecent: async (): Promise<Album[]> => {
+    const { data } = await api.get('/albums/recent');
+    return data;
+  },
+
+  getFeatured: async (): Promise<Album> => {
+    const { data } = await api.get('/albums/featured');
+    return data;
+  },
+
+  getById: async (id: string): Promise<Album> => {
+    const { data } = await api.get(`/albums/${id}`);
+    return data;
+  },
+};
+```
+
+### TypeScript Types
+
+```typescript
+// features/home/types/album.types.ts
+export interface Album {
+  id: string;
+  title: string;
+  artist: string;
+  artistId: string;
+  coverImage: string;           // URL de la portada (200x200)
+  backgroundImage?: string;      // URL del background (para hero)
+  albumArt?: string;             // URL del arte lateral (opcional)
+  year: number;
+  totalTracks: number;
+  duration?: number;             // Duración total en segundos
+  genres?: string[];
+  addedAt: Date;
+}
+
+export interface AlbumCardProps {
+  cover: string;
+  title: string;
+  artist: string;
+  onClick?: () => void;
+  onPlayClick?: () => void;
+}
+
+export interface HeroAlbumData {
+  album: Album;
+  isPlaying?: boolean;
+}
+```
+
+### Image Management
+
+#### Recommended Image Sizes
+
+```
+logos/
+  └── echo-icon.png              (100x100px, PNG con transparencia)
+
+backgrounds/
+  └── login-bg.jpg               (1920x1080px, JPG optimizado)
+
+albums/
+  ├── [album-id]-cover.jpg       (200x200px, JPG - Para cards)
+  ├── [album-id]-bg.jpg          (1920x1080px, JPG - Para hero background)
+  └── [album-id]-art.png         (400xAuto, PNG - Arte opcional)
+```
+
+#### Image Loading Strategy
+
+```typescript
+// shared/components/ui/LazyImage/LazyImage.tsx
+export function LazyImage({ src, alt, fallback }: LazyImageProps) {
+  const [imgSrc, setImgSrc] = useState(fallback);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => setImgSrc(src);
+  }, [src]);
+
+  return <img src={imgSrc} alt={alt} loading="lazy" />;
+}
+```
+
+### Color System
+
+```css
+/* shared/styles/variables.css */
+:root {
+  /* Background Colors */
+  --color-bg-primary: #0a0e27;        /* Main background */
+  --color-bg-secondary: #14151f;      /* Sidebar background */
+  --color-bg-tertiary: #1e1f2e;       /* Card backgrounds */
+
+  /* Primary Colors */
+  --color-primary: #ff6b6b;           /* Coral/Orange - Brand color */
+  --color-primary-hover: #ff5252;
+  --color-primary-light: rgba(255, 107, 107, 0.15);
+
+  /* Accent Colors */
+  --color-accent: #ff3333;            /* Red - Album titles */
+  --color-accent-hover: #ff1a1a;
+
+  /* Text Colors */
+  --color-text-primary: #ffffff;      /* White - Headings */
+  --color-text-secondary: #b8bcc8;    /* Gray - Body text */
+  --color-text-tertiary: #6b7280;     /* Darker gray - Metadata */
+
+  /* Interactive */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-hover: rgba(255, 255, 255, 0.05);
+}
+```
+
+### Responsive Design
+
+```css
+/* Mobile First */
+.container {
+  display: flex;
+}
+
+.sidebar {
+  width: 80px;  /* Icon-only en mobile */
+}
+
+.main {
+  flex: 1;
+}
+
+/* Tablet (768px+) */
+@media (min-width: 768px) {
+  .sidebar {
+    width: 230px;  /* Full sidebar */
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+/* Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .hero {
+    height: 450px;
+  }
+}
+```
+
+### Integration Checklist
+
+- [ ] Crear estructura de carpetas en `features/home/`
+- [ ] Instalar `lucide-react` si no está instalado
+- [ ] Crear componentes base (HeroSection, AlbumCard, AlbumGrid, Sidebar)
+- [ ] Implementar custom hooks con TanStack Query
+- [ ] Crear service layer para API calls
+- [ ] Definir TypeScript types
+- [ ] Agregar rutas en `App.tsx`
+- [ ] Preparar imágenes en `public/images/`
+- [ ] Implementar responsive design
+- [ ] Agregar tests unitarios
+
+### Best Practices
+
+1. **Componente pequeño, responsabilidad única**: Cada componente hace una cosa bien
+2. **Separar lógica de presentación**: Hooks para lógica, componentes para UI
+3. **Types everywhere**: No usar `any`, definir interfaces claras
+4. **CSS Modules**: Evitar colisiones de estilos
+5. **Lazy loading**: Cargar imágenes progresivamente
+6. **Error boundaries**: Manejar errores gracefully
+7. **Loading states**: Mostrar skeletons mientras carga
+8. **Accessibility**: ARIA labels, keyboard navigation
+
+### API Integration Example
+
+```typescript
+// Backend debe proveer estos endpoints:
+
+GET /api/albums/recent
+Response: Album[]
+
+GET /api/albums/featured
+Response: Album
+
+GET /api/albums/:id
+Response: Album
+
+// Si las imágenes no están en public/images/,
+// el backend puede servir imágenes dinámicamente:
+
+GET /api/albums/:id/cover
+Response: Image binary (JPEG/PNG)
+
+GET /api/albums/:id/background
+Response: Image binary (JPEG)
+```
+
+### External API Integration (Optional)
+
+Si no tienes todas las imágenes, puedes usar APIs externas:
+
+```typescript
+// services/imageService.ts
+import axios from 'axios';
+
+export const imageService = {
+  // LastFM API para obtener imágenes de álbumes
+  async getAlbumImage(artist: string, album: string) {
+    const response = await axios.get('https://ws.audioscrobbler.com/2.0/', {
+      params: {
+        method: 'album.getinfo',
+        artist,
+        album,
+        api_key: process.env.VITE_LASTFM_API_KEY,
+        format: 'json',
+      },
+    });
+    return response.data.album.image[3]['#text']; // Large image
+  },
+
+  // Fallback a placeholder
+  getPlaceholder(title: string) {
+    return `https://via.placeholder.com/200/ff6b6b/ffffff?text=${encodeURIComponent(title)}`;
+  },
+};
+```
+
+### Next Steps
+
+1. ✅ **LoginPage** - Completado (solo con logo)
+2. 🚧 **HomePage** - Implementar estructura y componentes
+3. 🔜 **Album Detail Page** - Vista individual de álbum
+4. 🔜 **Artist Page** - Vista de artista con discografía
+5. 🔜 **Search Results** - Página de resultados de búsqueda
+6. 🔜 **Music Player** - Reproductor global
+7. 🔜 **Playlists** - CRUD de playlists
+
+---
 
 ## 🏗️ Architecture
 
