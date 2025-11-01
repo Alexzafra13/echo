@@ -1,0 +1,183 @@
+/* HeroSection Component Styles */
+
+.hero {
+  position: relative;
+  height: 450px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 40px;
+}
+
+.heroBackground {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(30px) brightness(0.4);
+  transform: scale(1.1);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  height: 100%;
+  padding: 50px;
+}
+
+.albumCover {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.albumInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.artistName {
+  font-size: 64px;
+  font-weight: 900;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.albumTitle {
+  font-size: 72px;
+  font-weight: 900;
+  color: var(--color-accent, #ff3333);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -2px;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.albumMeta {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+  font-weight: 500;
+}
+
+.playButton {
+  width: fit-content;
+  margin-top: 8px;
+}
+
+.albumArt {
+  height: 400px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+  flex-shrink: 0;
+}
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .hero {
+    height: 400px;
+  }
+
+  .heroContent {
+    padding: 40px;
+    gap: 30px;
+  }
+
+  .albumCover {
+    width: 180px;
+    height: 180px;
+  }
+
+  .artistName {
+    font-size: 48px;
+  }
+
+  .albumTitle {
+    font-size: 56px;
+  }
+
+  .albumArt {
+    height: 350px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hero {
+    height: 350px;
+  }
+
+  .heroContent {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 30px 20px;
+    gap: 20px;
+  }
+
+  .albumCover {
+    width: 150px;
+    height: 150px;
+  }
+
+  .artistName {
+    font-size: 32px;
+  }
+
+  .albumTitle {
+    font-size: 36px;
+  }
+
+  .albumMeta {
+    font-size: 12px;
+  }
+
+  .albumArt {
+    display: none; /* Hide on mobile */
+  }
+
+  .playButton {
+    margin: 0 auto;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .hero {
+    height: 300px;
+    margin-bottom: 24px;
+  }
+
+  .heroContent {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  .albumCover {
+    width: 120px;
+    height: 120px;
+  }
+
+  .artistName {
+    font-size: 24px;
+  }
+
+  .albumTitle {
+    font-size: 28px;
+  }
+}
