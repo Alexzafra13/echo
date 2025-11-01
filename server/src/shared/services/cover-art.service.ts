@@ -134,7 +134,8 @@ export class CoverArtService {
 
       return undefined;
     } catch (error) {
-      this.logger.warn(`⚠️ Error extrayendo cover de ${trackPath}:`, error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`⚠️ Error extrayendo cover de ${trackPath}:`, errorMessage);
       return undefined;
     }
   }

@@ -33,7 +33,7 @@ import { WsLoggingInterceptor } from './interceptors/ws-logging.interceptor';
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRATION', '24h'),
-        },
+        } as any,
       }),
     }),
   ],

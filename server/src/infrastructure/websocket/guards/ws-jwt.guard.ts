@@ -48,7 +48,8 @@ export class WsJwtGuard implements CanActivate {
       this.logger.debug(`✅ User ${payload.sub} authenticated via WebSocket`);
       return true;
     } catch (error) {
-      this.logger.warn(`❌ WebSocket authentication failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`❌ WebSocket authentication failed: ${errorMessage}`);
       // Si ya es una WsException, relanzarla directamente
       if (error instanceof WsException) {
         throw error;
