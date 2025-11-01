@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
-import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase } from '../../domain/use-cases';
-import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
+import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from '../../domain/use-cases';
+import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto, GetRecentAlbumsResponseDto } from '../dtos';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -20,7 +20,70 @@ export class AlbumsController {
     private readonly getAlbumUseCase: GetAlbumUseCase,
     private readonly getAlbumsUseCase: GetAlbumsUseCase,
     private readonly searchAlbumsUseCase: SearchAlbumsUseCase,
+    private readonly getRecentAlbumsUseCase: GetRecentAlbumsUseCase,
+    private readonly getFeaturedAlbumUseCase: GetFeaturedAlbumUseCase,
   ) {}
+
+  /**
+   * GET /albums/recent
+   * Obtener álbumes agregados recientemente
+   *
+   * Query params:
+   * - take: número de álbumes a traer (default: 12, máximo: 50)
+   */
+  @Get('recent')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener álbumes recientes',
+    description: 'Retorna los álbumes más recientemente agregados a la librería'
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Número de álbumes a retornar (1-50)',
+    example: 12
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes recientes obtenida exitosamente',
+    type: GetRecentAlbumsResponseDto
+  })
+  async getRecentAlbums(
+    @Query('take') take: string = '12',
+  ): Promise<GetRecentAlbumsResponseDto> {
+    const takeNum = Math.max(1, parseInt(take, 10) || 12);
+
+    const result = await this.getRecentAlbumsUseCase.execute({
+      take: takeNum,
+    });
+
+    return GetRecentAlbumsResponseDto.fromDomain(result);
+  }
+
+  /**
+   * GET /albums/featured
+   * Obtener álbum destacado para la sección hero
+   */
+  @Get('featured')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener álbum destacado',
+    description: 'Retorna el álbum destacado para mostrar en la sección hero (generalmente el más reproducido o más reciente)'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Álbum destacado obtenido exitosamente',
+    type: AlbumResponseDto
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No hay álbumes en la librería'
+  })
+  async getFeaturedAlbum(): Promise<AlbumResponseDto> {
+    const result = await this.getFeaturedAlbumUseCase.execute();
+    return AlbumResponseDto.fromDomain(result);
+  }
 
   /**
    * GET /albums/:id
