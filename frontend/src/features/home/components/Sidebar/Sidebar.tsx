@@ -38,7 +38,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className={styles.logoContainer}>
         <img
-          src="/images/logos/echo-icon.png"
+          src="/images/logos/echo-icon-sidebar-white.png"
           alt="Echo"
           className={styles.logo}
         />
