@@ -12,6 +12,7 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "build": "nest build",
+    "postinstall": "prisma generate || echo 'Warning: Prisma generation failed. This may cause build errors.'",
     "start": "nest start",
     "dev": "nest start --watch",
     "start:dev": "nest start --watch",
