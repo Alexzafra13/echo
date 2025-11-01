@@ -61,7 +61,7 @@ export class UsersController {
     @Body() dto: ChangePasswordRequestDto,
   ): Promise<void> {
     await this.changePasswordUseCase.execute({
-      userId: user.userId,
+      userId: user.id,
       currentPassword: dto.currentPassword,
       newPassword: dto.newPassword,
     });
@@ -92,7 +92,7 @@ export class UsersController {
     @Body() dto: UpdateProfileRequestDto,
   ): Promise<UserResponseDto> {
     const result = await this.updateProfileUseCase.execute({
-      userId: user.userId,
+      userId: user.id,
       name: dto.name,
       email: dto.email,
     });
@@ -124,7 +124,7 @@ export class UsersController {
     @Body() dto: ChangeThemeRequestDto,
   ): Promise<void> {
     await this.changeThemeUseCase.execute({
-      userId: user.userId,
+      userId: user.id,
       theme: dto.theme,
     });
   }
@@ -153,7 +153,7 @@ export class UsersController {
     @Body() dto: ChangeLanguageRequestDto,
   ): Promise<void> {
     await this.changeLanguageUseCase.execute({
-      userId: user.userId,
+      userId: user.id,
       language: dto.language,
     });
   }
