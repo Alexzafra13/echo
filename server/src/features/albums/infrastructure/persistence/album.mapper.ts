@@ -15,6 +15,7 @@ export class AlbumMapper {
       id: raw.id,
       name: raw.name,
       artistId: raw.artistId || undefined,
+      artistName: raw.artist?.name || undefined, // Extract artist name from relation
       albumArtistId: raw.albumArtistId || undefined,
       coverArtPath: raw.coverArtPath || undefined,
       year: raw.year || undefined,

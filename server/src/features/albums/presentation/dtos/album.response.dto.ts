@@ -11,6 +11,12 @@ export class AlbumResponseDto {
   name!: string;
 
   @Expose()
+  title?: string; // Alias for frontend compatibility
+
+  @Expose()
+  artist?: string; // Artist name for frontend
+
+  @Expose()
   artistId?: string;
 
   @Expose()
@@ -18,6 +24,9 @@ export class AlbumResponseDto {
 
   @Expose()
   coverArtPath?: string;
+
+  @Expose()
+  coverImage?: string; // Alias for frontend compatibility
 
   @Expose()
   year?: number;
@@ -32,6 +41,9 @@ export class AlbumResponseDto {
   songCount!: number;
 
   @Expose()
+  totalTracks?: number; // Alias for frontend compatibility
+
+  @Expose()
   duration!: number;
 
   @Expose()
@@ -44,23 +56,33 @@ export class AlbumResponseDto {
   createdAt!: Date;
 
   @Expose()
+  addedAt?: Date; // Alias for frontend compatibility
+
+  @Expose()
   updatedAt!: Date;
 
   static fromDomain(data: any): AlbumResponseDto {
     const dto = new AlbumResponseDto();
     dto.id = data.id;
     dto.name = data.name;
+    dto.title = data.name; // Alias for frontend
+    dto.artist = data.artistName || 'Unknown Artist'; // From aggregation
     dto.artistId = data.artistId;
     dto.albumArtistId = data.albumArtistId;
-    dto.coverArtPath = data.coverArtPath;
+    // Generate cover URL from album ID
+    const coverUrl = data.id ? `/api/albums/${data.id}/cover` : data.coverArtPath;
+    dto.coverArtPath = coverUrl;
+    dto.coverImage = coverUrl; // Alias for frontend compatibility
     dto.year = data.year;
     dto.releaseDate = data.releaseDate;
     dto.compilation = data.compilation;
     dto.songCount = data.songCount;
+    dto.totalTracks = data.songCount; // Alias for frontend
     dto.duration = data.duration;
     dto.size = data.size;
     dto.description = data.description;
     dto.createdAt = data.createdAt;
+    dto.addedAt = data.createdAt; // Alias for frontend
     dto.updatedAt = data.updatedAt;
     return dto;
   }
