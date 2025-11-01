@@ -1,0 +1,149 @@
+/* Sidebar Component Styles */
+
+.sidebar {
+  width: 230px;
+  height: 100vh;
+  background: var(--color-bg-secondary, #14151f);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 0 24px;
+}
+
+.logo {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+}
+
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px;
+  overflow-y: auto;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  color: var(--color-text-secondary, #b8bcc8);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  background: var(--color-hover, rgba(255, 255, 255, 0.05));
+  color: var(--color-text-primary, #ffffff);
+}
+
+.navItemActive {
+  background: var(--color-primary-light, rgba(255, 107, 107, 0.15));
+  color: var(--color-primary, #ff6b6b);
+}
+
+.navItemActive:hover {
+  background: var(--color-primary-light, rgba(255, 107, 107, 0.2));
+}
+
+.navIcon {
+  flex-shrink: 0;
+}
+
+.navLabel {
+  flex: 1;
+}
+
+.version {
+  text-align: center;
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .logoContainer {
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    width: 80px;
+  }
+}
+
+/* Mobile - Icon only sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 80px;
+    padding: 20px 0;
+  }
+
+  .logoContainer {
+    margin-bottom: 24px;
+    padding: 0 16px;
+  }
+
+  .logo {
+    width: 48px;
+  }
+
+  .nav {
+    padding: 0 8px;
+  }
+
+  .navItem {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .navLabel {
+    display: none;
+  }
+
+  .version {
+    font-size: 10px;
+  }
+}
+
+/* Custom scrollbar for nav */
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
