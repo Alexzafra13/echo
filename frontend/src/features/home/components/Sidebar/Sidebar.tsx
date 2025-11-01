@@ -20,7 +20,7 @@ import styles from './Sidebar.module.css';
 export function Sidebar() {
   const [location] = useLocation();
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
+  const isAdmin = user?.isAdmin === true;
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
