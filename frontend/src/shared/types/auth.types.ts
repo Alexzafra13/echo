@@ -6,12 +6,13 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  mustChangePassword: boolean;
   user: {
     id: string;
     username: string;
-    email: string;
-    role: string;
-    mustChangePassword?: boolean;
+    email?: string;
+    name?: string;
+    isAdmin: boolean;
   };
 }
 
