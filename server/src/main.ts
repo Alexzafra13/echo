@@ -5,14 +5,16 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
-import { BigIntTransformInterceptor } from '@shared/interceptors/bigint-transform.interceptor';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
 async function bootstrap() {
+  // Configure Fastify to handle BigInt serialization
+  const fastifyAdapter = new FastifyAdapter();
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    fastifyAdapter,
   );
 
   // CORS
@@ -33,9 +35,13 @@ async function bootstrap() {
     }),
   );
 
-  // BigInt Transform Interceptor Global
-  // Converts BigInt to string in JSON responses
-  app.useGlobalInterceptors(new BigIntTransformInterceptor());
+  // Configure BigInt serialization for JSON responses
+  // Add toJSON method to BigInt prototype so JSON.stringify handles it automatically
+  // This is the standard way to make a type JSON-serializable
+  // @ts-ignore - BigInt doesn't have toJSON in type definitions, but we can add it
+  BigInt.prototype.toJSON = function() {
+    return this.toString();
+  };
 
   // MustChangePasswordGuard Global
   const reflector = app.get(Reflector);
