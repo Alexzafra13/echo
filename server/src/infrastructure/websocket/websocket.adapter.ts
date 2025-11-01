@@ -36,7 +36,7 @@ export class WebSocketAdapter extends IoAdapter {
       .split(',') || ['*'];
 
     // Configuración del servidor Socket.IO
-    const serverOptions: ServerOptions = {
+    const serverOptions: Partial<ServerOptions> = {
       ...options,
       cors: {
         origin: corsOrigins,
