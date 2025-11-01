@@ -13,11 +13,13 @@ WORKDIR /app
 RUN npm install -g pnpm@10.18.3
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
-# Install dependencies (production only)
-RUN pnpm install --frozen-lockfile --prod=false
+# Install dependencies
+# Note: If pnpm-lock.yaml doesn't exist, it will be generated
+# In CI, use --no-frozen-lockfile to allow lock file updates
+RUN pnpm install --prod=false
 
 # Generate Prisma Client
 RUN pnpm db:generate || PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 pnpm db:generate
