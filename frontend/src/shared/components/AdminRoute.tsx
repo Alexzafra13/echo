@@ -17,8 +17,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
     return <Redirect to="/login" />;
   }
 
-  // Check if user is admin (role can be 'admin' or check isAdmin flag)
-  const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
+  // Check if user is admin
+  const isAdmin = user?.isAdmin === true;
 
   if (!isAdmin) {
     // If not admin, redirect to home
