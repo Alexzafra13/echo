@@ -339,7 +339,7 @@ echo ""
 # 8. Instalar Frontend
 # ==============================================
 if [ "$SKIP_FRONTEND" = false ]; then
-  print_header "7. Instalando Dependencias del Frontend"
+  print_header "8. Instalando Dependencias del Frontend"
 
   if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
     print_info "Navegando a: frontend/"

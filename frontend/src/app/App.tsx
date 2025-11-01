@@ -1,5 +1,6 @@
 import { Route, Switch, Redirect } from 'wouter';
 import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
+import FirstLoginPage from '@features/auth/pages/FirstLoginPage';
 import HomePage from '@features/home/pages/HomePage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { useAuthStore } from '@shared/store';
@@ -11,6 +12,13 @@ function App() {
     <Switch>
       {/* Login Route */}
       <Route path="/login" component={LoginPage} />
+
+      {/* First Login - Change Password (Protected) */}
+      <Route path="/first-login">
+        <ProtectedRoute>
+          <FirstLoginPage />
+        </ProtectedRoute>
+      </Route>
 
       {/* Home Route (Protected) */}
       <Route path="/home">
