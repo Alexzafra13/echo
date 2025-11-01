@@ -5,6 +5,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
+import { WebSocketAdapter } from '@infrastructure/websocket';
+import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -16,6 +18,10 @@ async function bootstrap() {
     AppModule,
     fastifyAdapter,
   );
+
+  // WebSocket Adapter
+  const configService = app.get(ConfigService);
+  app.useWebSocketAdapter(new WebSocketAdapter(app, configService));
 
   // CORS
   app.enableCors({
@@ -135,6 +141,7 @@ async function bootstrap() {
   📚 Swagger Docs: http://localhost:${appConfig.port}/api/docs
   🌍 CORS Origins: ${appConfig.cors_origins.join(', ')}
   🔒 Guards: MustChangePasswordGuard (Global)
+  🔌 WebSocket: Enabled on port ${appConfig.port}
   ${existsSync(frontendPath) ? '🎨 Frontend: Served from single container (Jellyfin-style)' : ''}
   `);
 }
