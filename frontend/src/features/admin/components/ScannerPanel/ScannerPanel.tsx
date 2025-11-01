@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
+import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
+import { useAuthStore } from '@features/auth/stores/authStore';
 import styles from './ScannerPanel.module.css';
 
 /**
@@ -15,8 +17,34 @@ import styles from './ScannerPanel.module.css';
  */
 export function ScannerPanel() {
   const [showHistory, setShowHistory] = useState(false);
+  const [currentScanId, setCurrentScanId] = useState<string | null>(null);
+
   const { data: history, isLoading: historyLoading, refetch } = useScannerHistory();
-  const { mutate: startScan, isPending: isScanning } = useStartScan();
+  const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
+  const { user } = useAuthStore();
+
+  // WebSocket para progreso en tiempo real
+  const { progress, errors, isCompleted, isConnected } = useScannerWebSocket(
+    currentScanId,
+    user?.accessToken || null
+  );
+
+  // Cuando se inicia un scan, guardar el ID para WebSocket
+  useEffect(() => {
+    if (scanResponse?.id) {
+      setCurrentScanId(scanResponse.id);
+    }
+  }, [scanResponse]);
+
+  // Cuando el scan se completa, refrescar historial
+  useEffect(() => {
+    if (isCompleted) {
+      setTimeout(() => {
+        refetch();
+        setCurrentScanId(null);
+      }, 2000);
+    }
+  }, [isCompleted, refetch]);
 
   const handleStartScan = () => {
     startScan(
@@ -92,8 +120,76 @@ export function ScannerPanel() {
         </Button>
       </div>
 
-      {/* Latest Scan Status */}
-      {latestScan && (
+      {/* Real-time Scan Progress */}
+      {progress && currentScanId && (
+        <div className={styles.statusCard}>
+          <div className={styles.statusHeader}>
+            <RefreshCw size={20} className={styles.statusIconRunning} />
+            <div className={styles.statusInfo}>
+              <h3 className={styles.statusTitle}>{progress.message || 'Escaneando...'}</h3>
+              <p className={styles.statusDate}>
+                {isConnected ? '🔌 Conectado' : '⚠️ Desconectado'}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progress.progress}%` }}
+            />
+            <span className={styles.progressText}>{progress.progress}%</span>
+          </div>
+
+          {/* Real-time Stats */}
+          <div className={styles.stats}>
+            <div className={styles.statItem}>
+              <Music size={16} className={styles.statIcon} />
+              <span className={styles.statValue}>{progress.tracksCreated}</span>
+              <span className={styles.statLabel}>Tracks</span>
+            </div>
+            <div className={styles.statItem}>
+              <Disc size={16} className={styles.statIcon} />
+              <span className={styles.statValue}>{progress.albumsCreated}</span>
+              <span className={styles.statLabel}>Álbumes</span>
+            </div>
+            <div className={styles.statItem}>
+              <User size={16} className={styles.statIcon} />
+              <span className={styles.statValue}>{progress.artistsCreated}</span>
+              <span className={styles.statLabel}>Artistas</span>
+            </div>
+            <div className={styles.statItem}>
+              <Image size={16} className={styles.statIcon} />
+              <span className={styles.statValue}>{progress.coversExtracted}</span>
+              <span className={styles.statLabel}>Covers</span>
+            </div>
+          </div>
+
+          {/* File Counter */}
+          <div className={styles.fileCounter}>
+            <span>
+              {progress.filesScanned} / {progress.totalFiles} archivos procesados
+            </span>
+            {progress.errors > 0 && (
+              <span className={styles.errorCount}>
+                <AlertCircle size={14} /> {progress.errors} errores
+              </span>
+            )}
+          </div>
+
+          {/* Current File */}
+          {progress.currentFile && (
+            <div className={styles.currentFile}>
+              <span className={styles.currentFileLabel}>Procesando:</span>
+              <span className={styles.currentFileName}>{progress.currentFile.split(/[/\\]/).pop()}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Latest Scan Status (when no active scan) */}
+      {!progress && latestScan && (
         <div className={styles.statusCard}>
           <div className={styles.statusHeader}>
             {getStatusIcon(latestScan.status)}

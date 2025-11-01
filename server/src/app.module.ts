@@ -5,6 +5,7 @@ import { PrismaModule } from './infrastructure/persistence/prisma.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
+import { WebSocketModule } from './infrastructure/websocket';
 
 // Features
 import { AuthModule } from './features/auth/auth.module';
@@ -30,6 +31,7 @@ import { ScannerModule } from './features/scanner/scanner.module';
     CacheModule,
     QueueModule,
     FilesystemModule,
+    WebSocketModule,
 
     // Features
     AuthModule,

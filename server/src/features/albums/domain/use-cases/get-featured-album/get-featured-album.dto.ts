@@ -5,6 +5,7 @@ export interface AlbumOutput {
   id: string;
   name: string;
   artistId?: string;
+  artistName?: string;
   albumArtistId?: string;
   coverArtPath?: string;
   year?: number;

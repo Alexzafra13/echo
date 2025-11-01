@@ -7,6 +7,7 @@ export interface AlbumProps {
   id: string;
   name: string;
   artistId?: string;
+  artistName?: string; // Artist name for display
   albumArtistId?: string;
   coverArtPath?: string;
   year?: number;
@@ -75,6 +76,10 @@ export class Album {
 
   get artistId(): string | undefined {
     return this.props.artistId;
+  }
+
+  get artistName(): string | undefined {
+    return this.props.artistName;
   }
 
   get albumArtistId(): string | undefined {

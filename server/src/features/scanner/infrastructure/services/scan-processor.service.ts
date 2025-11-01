@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import {
@@ -7,6 +7,10 @@ import {
 } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
 import { MetadataExtractorService } from './metadata-extractor.service';
+import { CoverArtService } from '@shared/services';
+import { generateUuid } from '@shared/utils';
+import { ScannerGateway } from '../gateways/scanner.gateway';
+import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import * as path from 'path';
 
 /**
@@ -18,6 +22,24 @@ import * as path from 'path';
  * - Actualizar estado del escaneo en BD
  * - Coordinar FileScannerService, MetadataExtractorService y BD
  */
+/**
+ * Helper class para trackear progreso del scan
+ */
+class ScanProgress {
+  filesScanned = 0;
+  totalFiles = 0;
+  tracksCreated = 0;
+  albumsCreated = 0;
+  artistsCreated = 0;
+  coversExtracted = 0;
+  errors = 0;
+
+  get progress(): number {
+    if (this.totalFiles === 0) return 0;
+    return Math.round((this.filesScanned / this.totalFiles) * 100);
+  }
+}
+
 @Injectable()
 export class ScanProcessorService implements OnModuleInit {
   private readonly QUEUE_NAME = 'library-scan';
@@ -30,6 +52,9 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly metadataExtractor: MetadataExtractorService,
+    private readonly coverArtService: CoverArtService,
+    @Inject(forwardRef(() => ScannerGateway))
+    private readonly scannerGateway: ScannerGateway,
   ) {}
 
   onModuleInit() {
@@ -67,6 +92,8 @@ export class ScanProcessorService implements OnModuleInit {
    */
   private async processScanning(data: any): Promise<void> {
     const { scanId, path: scanPath, recursive, pruneDeleted } = data;
+    const startTime = Date.now();
+    const tracker = new ScanProgress();
 
     console.log(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
 
@@ -76,9 +103,16 @@ export class ScanProcessorService implements OnModuleInit {
         status: 'running',
       } as any);
 
+      // Emitir evento: scan iniciado
+      this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Buscando archivos...');
+
       // 2. Escanear archivos
       const files = await this.fileScanner.scanDirectory(scanPath, recursive);
+      tracker.totalFiles = files.length;
       console.log(`📁 Encontrados ${files.length} archivos de música`);
+
+      // Emitir evento: archivos encontrados
+      this.emitProgress(scanId, tracker, ScanStatus.SCANNING, `Encontrados ${files.length} archivos`);
 
       // 3. Procesar cada archivo
       let tracksAdded = 0;
@@ -86,19 +120,50 @@ export class ScanProcessorService implements OnModuleInit {
       let tracksDeleted = 0;
 
       for (const filePath of files) {
-        const result = await this.processFile(filePath);
-        if (result === 'added') tracksAdded++;
-        if (result === 'updated') tracksUpdated++;
+        try {
+          const result = await this.processFile(filePath);
+          if (result === 'added') {
+            tracksAdded++;
+            tracker.tracksCreated++;
+          }
+          if (result === 'updated') tracksUpdated++;
+
+          tracker.filesScanned++;
+
+          // Emitir progreso cada 10 archivos o al 100%
+          if (tracker.filesScanned % 10 === 0 || tracker.filesScanned === tracker.totalFiles) {
+            this.emitProgress(
+              scanId,
+              tracker,
+              ScanStatus.SCANNING,
+              `Procesando ${path.basename(filePath)}`,
+              filePath
+            );
+          }
+        } catch (error) {
+          tracker.errors++;
+          this.scannerGateway.emitError({
+            scanId,
+            file: filePath,
+            error: (error as Error).message,
+            timestamp: new Date().toISOString(),
+          });
+        }
       }
 
       // 4. Si pruneDeleted está activado, eliminar tracks que ya no existen
       if (pruneDeleted) {
+        this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Eliminando archivos borrados...');
         tracksDeleted = await this.pruneDeletedTracks(files);
       }
 
       // 4.5 Agregar/Actualizar álbumes y artistas basados en los tracks
       console.log(`📊 Agregando álbumes y artistas...`);
-      await this.aggregateAlbumsAndArtists();
+      this.emitProgress(scanId, tracker, ScanStatus.AGGREGATING, 'Agregando álbumes y artistas...');
+
+      const { albumsCount, artistsCount } = await this.aggregateAlbumsAndArtists(scanId, tracker);
+      tracker.albumsCreated = albumsCount;
+      tracker.artistsCreated = artistsCount;
 
       // 5. Actualizar escaneo como completado
       await this.scannerRepository.update(scanId, {
@@ -108,6 +173,21 @@ export class ScanProcessorService implements OnModuleInit {
         tracksUpdated,
         tracksDeleted,
       } as any);
+
+      const duration = Date.now() - startTime;
+
+      // Emitir evento: completado
+      this.scannerGateway.emitCompleted({
+        scanId,
+        totalFiles: tracker.totalFiles,
+        tracksCreated: tracker.tracksCreated,
+        albumsCreated: tracker.albumsCreated,
+        artistsCreated: tracker.artistsCreated,
+        coversExtracted: tracker.coversExtracted,
+        errors: tracker.errors,
+        duration,
+        timestamp: new Date().toISOString(),
+      });
 
       console.log(
         `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted}`,
@@ -124,6 +204,32 @@ export class ScanProcessorService implements OnModuleInit {
 
       throw error;
     }
+  }
+
+  /**
+   * Helper para emitir progreso
+   */
+  private emitProgress(
+    scanId: string,
+    tracker: ScanProgress,
+    status: ScanStatus,
+    message: string,
+    currentFile?: string,
+  ): void {
+    this.scannerGateway.emitProgress({
+      scanId,
+      status,
+      progress: tracker.progress,
+      filesScanned: tracker.filesScanned,
+      totalFiles: tracker.totalFiles,
+      tracksCreated: tracker.tracksCreated,
+      albumsCreated: tracker.albumsCreated,
+      artistsCreated: tracker.artistsCreated,
+      coversExtracted: tracker.coversExtracted,
+      errors: tracker.errors,
+      currentFile,
+      message,
+    });
   }
 
   /**
@@ -242,7 +348,10 @@ export class ScanProcessorService implements OnModuleInit {
   /**
    * Agrega álbumes y artistas basados en los tracks escaneados
    */
-  private async aggregateAlbumsAndArtists(): Promise<void> {
+  private async aggregateAlbumsAndArtists(
+    scanId: string,
+    tracker: ScanProgress,
+  ): Promise<{ albumsCount: number; artistsCount: number }> {
     try {
       // 1. Obtener todos los tracks agrupados
       const tracks = await this.prisma.track.findMany({
@@ -328,8 +437,7 @@ export class ScanProcessorService implements OnModuleInit {
             size: BigInt(0),
             year: track.year,
             compilation: track.compilation,
-            hasCoverArt: track.hasCoverArt,
-            coverArtPath: track.hasCoverArt ? track.path : null,
+            firstTrackPath: track.path, // Guardar primer track para extraer cover
           });
         }
 
@@ -359,6 +467,20 @@ export class ScanProcessorService implements OnModuleInit {
           },
         });
 
+        // Determinar el ID del álbum (existente o nuevo)
+        const albumId = existingAlbum?.id || generateUuid();
+
+        // Extraer y cachear cover art
+        this.emitProgress(scanId, tracker, ScanStatus.EXTRACTING_COVERS, `Extrayendo cover de ${albumData.name}`);
+        const coverPath = await this.coverArtService.extractAndCacheCover(
+          existingAlbum?.id || albumId,
+          albumData.firstTrackPath,
+        );
+
+        if (coverPath) {
+          tracker.coversExtracted++;
+        }
+
         if (existingAlbum) {
           // Actualizar álbum existente
           await this.prisma.album.update({
@@ -369,13 +491,14 @@ export class ScanProcessorService implements OnModuleInit {
               size: albumData.size,
               year: albumData.year,
               compilation: albumData.compilation,
-              coverArtPath: albumData.coverArtPath,
+              coverArtPath: coverPath || existingAlbum.coverArtPath,
             },
           });
         } else {
           // Crear nuevo álbum
           await this.prisma.album.create({
             data: {
+              id: albumId,
               name: albumData.name,
               artistId: artist.id,
               albumArtistId: artist.id,
@@ -386,15 +509,17 @@ export class ScanProcessorService implements OnModuleInit {
               size: albumData.size,
               year: albumData.year,
               compilation: albumData.compilation,
-              coverArtPath: albumData.coverArtPath,
+              coverArtPath: coverPath,
             },
           });
         }
       }
 
       console.log(`✅ Agregados/actualizados ${artistsMap.size} artistas y ${albumsMap.size} álbumes`);
+      return { albumsCount: albumsMap.size, artistsCount: artistsMap.size };
     } catch (error) {
       console.error('❌ Error agregando álbumes y artistas:', error);
+      return { albumsCount: 0, artistsCount: 0 };
     }
   }
 }
