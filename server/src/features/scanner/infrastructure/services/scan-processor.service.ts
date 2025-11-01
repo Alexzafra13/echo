@@ -7,6 +7,8 @@ import {
 } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
 import { MetadataExtractorService } from './metadata-extractor.service';
+import { CoverArtService } from '@shared/services';
+import { generateUuid } from '@shared/utils';
 import * as path from 'path';
 
 /**
@@ -30,6 +32,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly metadataExtractor: MetadataExtractorService,
+    private readonly coverArtService: CoverArtService,
   ) {}
 
   onModuleInit() {
@@ -328,8 +331,7 @@ export class ScanProcessorService implements OnModuleInit {
             size: BigInt(0),
             year: track.year,
             compilation: track.compilation,
-            hasCoverArt: track.hasCoverArt,
-            coverArtPath: track.hasCoverArt ? track.path : null,
+            firstTrackPath: track.path, // Guardar primer track para extraer cover
           });
         }
 
@@ -359,6 +361,15 @@ export class ScanProcessorService implements OnModuleInit {
           },
         });
 
+        // Determinar el ID del álbum (existente o nuevo)
+        const albumId = existingAlbum?.id || generateUuid();
+
+        // Extraer y cachear cover art
+        const coverPath = await this.coverArtService.extractAndCacheCover(
+          existingAlbum?.id || albumId,
+          albumData.firstTrackPath,
+        );
+
         if (existingAlbum) {
           // Actualizar álbum existente
           await this.prisma.album.update({
@@ -369,13 +380,14 @@ export class ScanProcessorService implements OnModuleInit {
               size: albumData.size,
               year: albumData.year,
               compilation: albumData.compilation,
-              coverArtPath: albumData.coverArtPath,
+              coverArtPath: coverPath || existingAlbum.coverArtPath,
             },
           });
         } else {
           // Crear nuevo álbum
           await this.prisma.album.create({
             data: {
+              id: albumId,
               name: albumData.name,
               artistId: artist.id,
               albumArtistId: artist.id,
@@ -386,7 +398,7 @@ export class ScanProcessorService implements OnModuleInit {
               size: albumData.size,
               year: albumData.year,
               compilation: albumData.compilation,
-              coverArtPath: albumData.coverArtPath,
+              coverArtPath: coverPath,
             },
           });
         }

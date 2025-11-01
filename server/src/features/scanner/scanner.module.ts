@@ -23,6 +23,7 @@ import { PrismaScannerRepository } from './infrastructure/persistence/scanner.re
 import { FileScannerService } from './infrastructure/services/file-scanner.service';
 import { MetadataExtractorService } from './infrastructure/services/metadata-extractor.service';
 import { ScanProcessorService } from './infrastructure/services/scan-processor.service';
+import { CoverArtService } from '@shared/services';
 
 /**
  * ScannerModule - Módulo de escaneo de librería musical
@@ -61,6 +62,7 @@ import { ScanProcessorService } from './infrastructure/services/scan-processor.s
     FileScannerService,
     MetadataExtractorService,
     ScanProcessorService,
+    CoverArtService,
 
     // Port implementations
     {
