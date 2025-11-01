@@ -6,7 +6,6 @@ import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
 import { WebSocketAdapter } from '@infrastructure/websocket';
-import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -20,8 +19,7 @@ async function bootstrap() {
   );
 
   // WebSocket Adapter
-  const configService = app.get(ConfigService);
-  app.useWebSocketAdapter(new WebSocketAdapter(app, configService));
+  app.useWebSocketAdapter(new WebSocketAdapter(app));
 
   // CORS
   app.enableCors({

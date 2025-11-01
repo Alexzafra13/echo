@@ -1,6 +1,5 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { INestApplicationContext, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
 import { ServerOptions } from 'socket.io';
 
 /**
@@ -19,21 +18,12 @@ import { ServerOptions } from 'socket.io';
 export class WebSocketAdapter extends IoAdapter {
   private readonly logger = new Logger(WebSocketAdapter.name);
 
-  constructor(
-    private app: INestApplicationContext,
-    private configService?: ConfigService,
-  ) {
-    super(app);
-  }
-
   /**
    * Crea servidor de Socket.IO con configuración personalizada
    */
   createIOServer(port: number, options?: ServerOptions): any {
-    // Obtener configuración
-    const corsOrigins = this.configService
-      ?.get<string>('CORS_ORIGINS', '*')
-      .split(',') || ['*'];
+    // Obtener configuración desde variables de entorno
+    const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['*'];
 
     // Configuración del servidor Socket.IO
     const serverOptions: Partial<ServerOptions> = {
