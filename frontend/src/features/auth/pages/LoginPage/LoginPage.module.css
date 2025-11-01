@@ -37,14 +37,14 @@
 
 /* Logo */
 .logoContainer {
-  margin-bottom: -20px;
+  margin-bottom: -30px;
   display: flex;
   justify-content: center;
   z-index: 1;
 }
 
 .logo {
-  width: 200px;
+  width: 250px;
   height: auto;
   object-fit: contain;
 }
@@ -109,6 +109,6 @@
   }
 
   .logo {
-    width: 160px;
+    width: 200px;
   }
 }
