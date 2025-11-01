@@ -1,4 +1,4 @@
-import { api } from '@shared/services/api';
+import { apiClient } from '@shared/services/api';
 import type { Album } from '../types';
 
 /**
@@ -10,7 +10,7 @@ export const albumsService = {
    * Get recently added albums
    */
   getRecent: async (): Promise<Album[]> => {
-    const { data } = await api.get<Album[]>('/albums/recent');
+    const { data } = await apiClient.get<Album[]>('/albums/recent');
     return data;
   },
 
@@ -18,7 +18,7 @@ export const albumsService = {
    * Get featured album for hero section
    */
   getFeatured: async (): Promise<Album> => {
-    const { data } = await api.get<Album>('/albums/featured');
+    const { data } = await apiClient.get<Album>('/albums/featured');
     return data;
   },
 
@@ -26,7 +26,7 @@ export const albumsService = {
    * Get album by ID
    */
   getById: async (id: string): Promise<Album> => {
-    const { data } = await api.get<Album>(`/albums/${id}`);
+    const { data } = await apiClient.get<Album>(`/albums/${id}`);
     return data;
   },
 
@@ -34,7 +34,7 @@ export const albumsService = {
    * Get all albums with optional pagination
    */
   getAll: async (params?: { page?: number; limit?: number }): Promise<Album[]> => {
-    const { data } = await api.get<Album[]>('/albums', { params });
+    const { data } = await apiClient.get<Album[]>('/albums', { params });
     return data;
   },
 
@@ -42,7 +42,7 @@ export const albumsService = {
    * Search albums by query
    */
   search: async (query: string): Promise<Album[]> => {
-    const { data } = await api.get<Album[]>('/albums/search', {
+    const { data } = await apiClient.get<Album[]>('/albums/search', {
       params: { q: query },
     });
     return data;
