@@ -284,21 +284,30 @@ export class ScanProcessorService implements OnModuleInit {
 
       // 3. Crear/actualizar artistas
       for (const [artistName, artistData] of artistsMap) {
-        await this.prisma.artist.upsert({
+        const existingArtist = await this.prisma.artist.findFirst({
           where: { name: artistName },
-          create: {
-            name: artistName,
-            mbzArtistId: artistData.mbzArtistId,
-            albumCount: artistData.albums.size,
-            songCount: artistData.songCount,
-            size: artistData.size,
-          },
-          update: {
-            albumCount: artistData.albums.size,
-            songCount: artistData.songCount,
-            size: artistData.size,
-          },
         });
+
+        if (existingArtist) {
+          await this.prisma.artist.update({
+            where: { id: existingArtist.id },
+            data: {
+              albumCount: artistData.albums.size,
+              songCount: artistData.songCount,
+              size: artistData.size,
+            },
+          });
+        } else {
+          await this.prisma.artist.create({
+            data: {
+              name: artistName,
+              mbzArtistId: artistData.mbzArtistId,
+              albumCount: artistData.albums.size,
+              songCount: artistData.songCount,
+              size: artistData.size,
+            },
+          });
+        }
       }
 
       // 4. Agrupar por álbum
@@ -333,7 +342,7 @@ export class ScanProcessorService implements OnModuleInit {
       // 5. Crear/actualizar álbumes
       for (const [albumKey, albumData] of albumsMap) {
         // Buscar el artista
-        const artist = await this.prisma.artist.findUnique({
+        const artist = await this.prisma.artist.findFirst({
           where: { name: albumData.artistName },
         });
 
