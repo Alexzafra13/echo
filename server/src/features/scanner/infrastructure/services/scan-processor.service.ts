@@ -166,8 +166,13 @@ export class ScanProcessorService implements OnModuleInit {
         lyrics: metadata.lyrics,
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: metadata.musicBrainzAlbumId,
-        mbzArtistId: metadata.musicBrainzArtistId,
-        mbzAlbumArtistId: metadata.musicBrainzAlbumArtistId,
+        // MusicBrainz IDs can be arrays, but Prisma expects a single string
+        mbzArtistId: Array.isArray(metadata.musicBrainzArtistId)
+          ? metadata.musicBrainzArtistId[0]
+          : metadata.musicBrainzArtistId,
+        mbzAlbumArtistId: Array.isArray(metadata.musicBrainzAlbumArtistId)
+          ? metadata.musicBrainzAlbumArtistId[0]
+          : metadata.musicBrainzAlbumArtistId,
       };
 
       // 5. Si existe, actualizar; si no, crear
