@@ -45,14 +45,14 @@ export class WsLoggingInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: (response) => {
+        next: (response: any) => {
           const duration = Date.now() - now;
           this.logger.debug(
             `📤 Outgoing response: ${pattern} | Duration: ${duration}ms | User: ${userId}`,
             { response }
           );
         },
-        error: (error) => {
+        error: (error: any) => {
           const duration = Date.now() - now;
           this.logger.error(
             `❌ Event error: ${pattern} | Duration: ${duration}ms | User: ${userId}`,
