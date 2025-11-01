@@ -19,12 +19,14 @@
   align-items: center;
   margin-bottom: 40px;
   padding: 0 24px;
+  flex-shrink: 0;
 }
 
 .logo {
-  width: 100px;
+  width: 120px;
   height: auto;
   object-fit: contain;
+  display: block;
 }
 
 .nav {
@@ -89,10 +91,11 @@
 
   .logoContainer {
     margin-bottom: 32px;
+    padding: 0 16px;
   }
 
   .logo {
-    width: 80px;
+    width: 90px;
   }
 }
 

@@ -1,5 +1,6 @@
-import { forwardRef, InputHTMLAttributes, ReactNode } from 'react';
+import { forwardRef, InputHTMLAttributes, ReactNode, useState } from 'react';
 import clsx from 'clsx';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './Input.module.css';
 
 export interface InputProps
@@ -23,11 +24,29 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       size = 'md',
       className,
       id,
+      type,
       ...props
     },
     ref
   ) => {
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Si es tipo password, mostramos el botón de toggle
+    const isPasswordField = type === 'password';
+    const inputType = isPasswordField && showPassword ? 'text' : type;
+
+    // Si es password y no hay rightIcon, agregamos el toggle
+    const effectiveRightIcon = isPasswordField && !rightIcon ? (
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className={styles.passwordToggle}
+        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+      >
+        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    ) : rightIcon;
 
     return (
       <div
@@ -48,7 +67,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={clsx(
             styles.inputContainer,
             leftIcon && styles.withLeftIcon,
-            rightIcon && styles.withRightIcon
+            effectiveRightIcon && styles.withRightIcon
           )}
         >
           {leftIcon && <span className={styles.leftIcon}>{leftIcon}</span>}
@@ -56,6 +75,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            type={inputType}
             className={styles.input}
             aria-invalid={!!error}
             aria-describedby={
@@ -64,7 +84,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
-          {rightIcon && <span className={styles.rightIcon}>{rightIcon}</span>}
+          {effectiveRightIcon && <span className={styles.rightIcon}>{effectiveRightIcon}</span>}
         </div>
 
         {error && (
