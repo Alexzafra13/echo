@@ -49,15 +49,15 @@ export function Sidebar() {
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
-            <Link key={item.path} href={item.path}>
-              <a
-                className={`${styles.navItem} ${
-                  isActive(item.path) ? styles.navItemActive : ''
-                }`}
-              >
-                <Icon size={20} className={styles.navIcon} />
-                <span className={styles.navLabel}>{item.label}</span>
-              </a>
+            <Link
+              key={item.path}
+              href={item.path}
+              className={`${styles.navItem} ${
+                isActive(item.path) ? styles.navItemActive : ''
+              }`}
+            >
+              <Icon size={20} className={styles.navIcon} />
+              <span className={styles.navLabel}>{item.label}</span>
             </Link>
           );
         })}
