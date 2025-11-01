@@ -8,7 +8,9 @@ import {
   Calendar,
   Compass,
   Settings,
+  Shield,
 } from 'lucide-react';
+import { useAuthStore } from '@shared/store';
 import styles from './Sidebar.module.css';
 
 /**
@@ -17,8 +19,10 @@ import styles from './Sidebar.module.css';
  */
 export function Sidebar() {
   const [location] = useLocation();
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
 
-  const navItems = [
+  const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
     { icon: Disc, label: 'Albums', path: '/albums' },
     { icon: User, label: 'Artists', path: '/artists' },
@@ -28,6 +32,11 @@ export function Sidebar() {
     { icon: Compass, label: 'Explorar', path: '/explore' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
+
+  // Add Admin item if user is admin
+  const navItems = isAdmin
+    ? [...baseNavItems, { icon: Shield, label: 'Admin', path: '/admin' }]
+    : baseNavItems;
 
   const isActive = (path: string) => {
     return location === path || location.startsWith(path + '/');
