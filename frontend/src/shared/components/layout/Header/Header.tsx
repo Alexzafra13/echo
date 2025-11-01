@@ -83,7 +83,7 @@ export function Header() {
           <div className={styles.userDropdown}>
             <div className={styles.userInfo}>
               <p className={styles.userName}>{user?.username || 'User'}</p>
-              <p className={styles.userRole}>{user?.role || 'user'}</p>
+              <p className={styles.userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
             </div>
             <div className={styles.userDivider} />
             <button className={styles.userMenuItem} onClick={() => setLocation('/profile')}>
