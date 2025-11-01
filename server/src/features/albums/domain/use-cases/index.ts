@@ -6,3 +6,9 @@ export { GetAlbumsUseCase, type GetAlbumsInput, type GetAlbumsOutput, type Album
 
 // Buscar álbumes
 export { SearchAlbumsUseCase, type SearchAlbumsInput, type SearchAlbumsOutput } from './search-albums';
+
+// Obtener álbumes recientes
+export { GetRecentAlbumsUseCase, type GetRecentAlbumsInput, type GetRecentAlbumsOutput } from './get-recent-albums';
+
+// Obtener álbum destacado
+export { GetFeaturedAlbumUseCase, type GetFeaturedAlbumOutput } from './get-featured-album';
