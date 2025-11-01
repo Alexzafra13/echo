@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
+import { WebSocketModule } from '@infrastructure/websocket';
 
 // Presentation Layer
 import { ScannerController } from './presentation/controller/scanner.controller';
+import { ScannerGateway } from './infrastructure/gateways/scanner.gateway';
 
 // Domain Layer (Use Cases)
 import {
@@ -47,6 +49,7 @@ import { CoverArtService } from '@shared/services';
   imports: [
     PrismaModule, // Para acceso a BD
     QueueModule, // Para BullMQ
+    WebSocketModule, // Para WebSocket
   ],
   controllers: [ScannerController],
   providers: [
@@ -64,6 +67,9 @@ import { CoverArtService } from '@shared/services';
     ScanProcessorService,
     CoverArtService,
 
+    // Gateways (WebSocket)
+    ScannerGateway,
+
     // Port implementations
     {
       provide: SCANNER_REPOSITORY,
@@ -74,6 +80,6 @@ import { CoverArtService } from '@shared/services';
       useClass: ScanProcessorService,
     },
   ],
-  exports: [SCANNER_REPOSITORY],
+  exports: [SCANNER_REPOSITORY, ScannerGateway],
 })
 export class ScannerModule {}
