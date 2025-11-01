@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ScannerGateway } from './scanner.gateway';
 import { Server, Socket } from 'socket.io';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
+import { WsJwtGuard } from '../../../../infrastructure/websocket/guards/ws-jwt.guard';
+import { WsThrottlerGuard } from '../../../../infrastructure/websocket/guards/ws-throttler.guard';
 
 describe('ScannerGateway', () => {
   let gateway: ScannerGateway;
@@ -26,7 +28,12 @@ describe('ScannerGateway', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [ScannerGateway],
-    }).compile();
+    })
+      .overrideGuard(WsJwtGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .overrideGuard(WsThrottlerGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
     gateway = module.get<ScannerGateway>(ScannerGateway);
     gateway.server = mockServer as Server;
