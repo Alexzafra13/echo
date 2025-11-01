@@ -14,6 +14,19 @@ async function main() {
 
   if (existingAdmin) {
     console.log('✅ Admin user already exists');
+
+    // Actualizar mustChangePassword para poder probar el flujo de first login
+    await prisma.user.update({
+      where: { username: 'admin' },
+      data: { mustChangePassword: true },
+    });
+
+    console.log('🔄 Updated mustChangePassword flag to true');
+    console.log('');
+    console.log('📝 You can now test the first login flow:');
+    console.log('   Username: admin');
+    console.log('   Password: admin123');
+    console.log('');
     return;
   }
 
