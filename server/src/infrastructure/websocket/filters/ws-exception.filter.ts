@@ -37,7 +37,7 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
     let code = 'INTERNAL_ERROR';
 
     if (exception instanceof WsException) {
-      const error = exception.getError();
+      const error = (exception as WsException).getError();
       message = typeof error === 'string' ? error : (error as any).message;
       code = (error as any).code || 'WS_EXCEPTION';
     } else if (exception instanceof Error) {
