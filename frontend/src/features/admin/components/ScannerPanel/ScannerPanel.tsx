@@ -20,7 +20,7 @@ export function ScannerPanel() {
 
   const handleStartScan = () => {
     startScan(
-      { path: '/music', recursive: true, pruneDeleted: true },
+      { recursive: true, pruneDeleted: true },
       {
         onSuccess: () => {
           // Refrescar historial después de iniciar
@@ -143,10 +143,10 @@ export function ScannerPanel() {
       <div className={styles.infoBox}>
         <AlertCircle size={20} className={styles.infoIcon} />
         <div className={styles.infoContent}>
-          <p className={styles.infoTitle}>Ruta de música configurada:</p>
-          <code className={styles.infoPath}>/music</code>
+          <p className={styles.infoTitle}>Escaneo de música:</p>
           <p className={styles.infoHint}>
-            Asegúrate de que la carpeta contiene archivos MP3, FLAC, M4A u otros formatos soportados
+            El servidor escaneará la carpeta configurada en UPLOAD_PATH (por defecto: ./uploads/music).
+            Asegúrate de que la carpeta contiene archivos MP3, FLAC, M4A u otros formatos soportados.
           </p>
         </div>
       </div>
