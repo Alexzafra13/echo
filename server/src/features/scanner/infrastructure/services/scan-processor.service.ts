@@ -96,6 +96,10 @@ export class ScanProcessorService implements OnModuleInit {
         tracksDeleted = await this.pruneDeletedTracks(files);
       }
 
+      // 4.5 Agregar/Actualizar álbumes y artistas basados en los tracks
+      console.log(`📊 Agregando álbumes y artistas...`);
+      await this.aggregateAlbumsAndArtists();
+
       // 5. Actualizar escaneo como completado
       await this.scannerRepository.update(scanId, {
         status: 'completed',
@@ -232,6 +236,156 @@ export class ScanProcessorService implements OnModuleInit {
     } catch (error) {
       console.error('Error eliminando tracks obsoletos:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Agrega álbumes y artistas basados en los tracks escaneados
+   */
+  private async aggregateAlbumsAndArtists(): Promise<void> {
+    try {
+      // 1. Obtener todos los tracks agrupados
+      const tracks = await this.prisma.track.findMany({
+        select: {
+          artistName: true,
+          albumArtistName: true,
+          albumName: true,
+          duration: true,
+          size: true,
+          year: true,
+          compilation: true,
+          hasCoverArt: true,
+          path: true,
+          mbzArtistId: true,
+          mbzAlbumArtistId: true,
+          mbzAlbumId: true,
+        },
+      });
+
+      // 2. Agrupar por artista
+      const artistsMap = new Map<string, any>();
+      for (const track of tracks) {
+        const artistName = track.artistName || 'Unknown Artist';
+        if (!artistsMap.has(artistName)) {
+          artistsMap.set(artistName, {
+            name: artistName,
+            mbzArtistId: track.mbzArtistId,
+            albumCount: 0,
+            songCount: 0,
+            size: BigInt(0),
+            albums: new Set<string>(),
+          });
+        }
+        const artist = artistsMap.get(artistName)!;
+        artist.songCount++;
+        artist.size += track.size || BigInt(0);
+        artist.albums.add(track.albumName || 'Unknown Album');
+      }
+
+      // 3. Crear/actualizar artistas
+      for (const [artistName, artistData] of artistsMap) {
+        await this.prisma.artist.upsert({
+          where: { name: artistName },
+          create: {
+            name: artistName,
+            mbzArtistId: artistData.mbzArtistId,
+            albumCount: artistData.albums.size,
+            songCount: artistData.songCount,
+            size: artistData.size,
+          },
+          update: {
+            albumCount: artistData.albums.size,
+            songCount: artistData.songCount,
+            size: artistData.size,
+          },
+        });
+      }
+
+      // 4. Agrupar por álbum
+      const albumsMap = new Map<string, any>();
+      for (const track of tracks) {
+        const albumName = track.albumName || 'Unknown Album';
+        const albumArtistName = track.albumArtistName || track.artistName || 'Unknown Artist';
+        const albumKey = `${albumName}|${albumArtistName}`;
+
+        if (!albumsMap.has(albumKey)) {
+          albumsMap.set(albumKey, {
+            name: albumName,
+            artistName: albumArtistName,
+            mbzAlbumId: track.mbzAlbumId,
+            mbzAlbumArtistId: track.mbzAlbumArtistId,
+            songCount: 0,
+            duration: 0,
+            size: BigInt(0),
+            year: track.year,
+            compilation: track.compilation,
+            hasCoverArt: track.hasCoverArt,
+            coverArtPath: track.hasCoverArt ? track.path : null,
+          });
+        }
+
+        const album = albumsMap.get(albumKey)!;
+        album.songCount++;
+        album.duration += track.duration || 0;
+        album.size += track.size || BigInt(0);
+      }
+
+      // 5. Crear/actualizar álbumes
+      for (const [albumKey, albumData] of albumsMap) {
+        // Buscar el artista
+        const artist = await this.prisma.artist.findUnique({
+          where: { name: albumData.artistName },
+        });
+
+        if (!artist) {
+          console.warn(`⚠️ Artista no encontrado para álbum: ${albumData.name}`);
+          continue;
+        }
+
+        // Buscar si el álbum ya existe
+        const existingAlbum = await this.prisma.album.findFirst({
+          where: {
+            name: albumData.name,
+            artistId: artist.id,
+          },
+        });
+
+        if (existingAlbum) {
+          // Actualizar álbum existente
+          await this.prisma.album.update({
+            where: { id: existingAlbum.id },
+            data: {
+              songCount: albumData.songCount,
+              duration: albumData.duration,
+              size: albumData.size,
+              year: albumData.year,
+              compilation: albumData.compilation,
+              coverArtPath: albumData.coverArtPath,
+            },
+          });
+        } else {
+          // Crear nuevo álbum
+          await this.prisma.album.create({
+            data: {
+              name: albumData.name,
+              artistId: artist.id,
+              albumArtistId: artist.id,
+              mbzAlbumId: albumData.mbzAlbumId,
+              mbzAlbumArtistId: albumData.mbzAlbumArtistId,
+              songCount: albumData.songCount,
+              duration: albumData.duration,
+              size: albumData.size,
+              year: albumData.year,
+              compilation: albumData.compilation,
+              coverArtPath: albumData.coverArtPath,
+            },
+          });
+        }
+      }
+
+      console.log(`✅ Agregados/actualizados ${artistsMap.size} artistas y ${albumsMap.size} álbumes`);
+    } catch (error) {
+      console.error('❌ Error agregando álbumes y artistas:', error);
     }
   }
 }
