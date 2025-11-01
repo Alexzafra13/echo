@@ -4,7 +4,9 @@ import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { parseFile } from 'music-metadata';
+import { CoverArtService } from '@shared/services';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -26,6 +28,7 @@ export class AlbumsController {
     private readonly getRecentAlbumsUseCase: GetRecentAlbumsUseCase,
     private readonly getFeaturedAlbumUseCase: GetFeaturedAlbumUseCase,
     private readonly prisma: PrismaService,
+    private readonly coverArtService: CoverArtService,
   ) {}
 
   /**
@@ -126,7 +129,7 @@ export class AlbumsController {
   @Get(':id/cover')
   @ApiOperation({
     summary: 'Obtener cover art del álbum',
-    description: 'Extrae y retorna la imagen de portada del álbum desde el primer track'
+    description: 'Sirve la imagen de portada del álbum desde el caché'
   })
   @ApiParam({
     name: 'id',
@@ -150,44 +153,54 @@ export class AlbumsController {
     // 1. Buscar el álbum
     const album = await this.prisma.album.findUnique({
       where: { id },
-      include: {
-        tracks: {
-          take: 1,
-          orderBy: { trackNumber: 'asc' },
-        },
-      },
+      select: { coverArtPath: true },
     });
 
-    if (!album || !album.tracks || album.tracks.length === 0) {
-      throw new NotFoundException('Album or tracks not found');
+    if (!album) {
+      throw new NotFoundException('Album not found');
     }
 
-    // 2. Obtener el primer track del álbum
-    const firstTrack = album.tracks[0];
+    // 2. Obtener ruta absoluta del cover desde el caché
+    const coverPath = this.coverArtService.getCoverPath(album.coverArtPath);
+
+    if (!coverPath) {
+      throw new NotFoundException('No cover art found');
+    }
 
     try {
-      // 3. Extraer metadata del archivo de audio
-      const metadata = await parseFile(firstTrack.path);
+      // 3. Leer archivo de cover
+      const coverBuffer = await fs.readFile(coverPath);
 
-      // 4. Buscar la cover art
-      const picture = metadata.common.picture?.[0];
+      // 4. Determinar Content-Type desde la extensión
+      const ext = path.extname(coverPath).toLowerCase();
+      const contentType = this.getContentType(ext);
 
-      if (!picture || !picture.data) {
-        throw new NotFoundException('No cover art found');
-      }
-
-      // 5. Servir la imagen
+      // 5. Servir la imagen desde el caché
       res.headers({
-        'Content-Type': picture.format || 'image/jpeg',
-        'Content-Length': picture.data.length.toString(),
+        'Content-Type': contentType,
+        'Content-Length': coverBuffer.length.toString(),
         'Cache-Control': 'public, max-age=2592000', // 30 días
       });
 
-      res.send(picture.data);
+      res.send(coverBuffer);
     } catch (error) {
-      console.error(`Error extracting cover for album ${id}:`, error);
-      throw new NotFoundException('Could not extract cover art');
+      console.error(`Error serving cover for album ${id}:`, error);
+      throw new NotFoundException('Could not serve cover art');
     }
+  }
+
+  /**
+   * Mapea extensión de archivo a Content-Type
+   */
+  private getContentType(ext: string): string {
+    const contentTypes: Record<string, string> = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+    };
+    return contentTypes[ext] || 'image/jpeg';
   }
 
   /**
