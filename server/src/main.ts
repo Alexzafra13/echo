@@ -5,6 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
+import { BigIntTransformInterceptor } from '@shared/interceptors/bigint-transform.interceptor';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -31,6 +32,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // BigInt Transform Interceptor Global
+  // Converts BigInt to string in JSON responses
+  app.useGlobalInterceptors(new BigIntTransformInterceptor());
 
   // MustChangePasswordGuard Global
   const reflector = app.get(Reflector);
