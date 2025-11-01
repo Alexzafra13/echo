@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from '../../domain/use-cases';
-import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto, GetRecentAlbumsResponseDto } from '../dtos';
+import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -47,18 +47,18 @@ export class AlbumsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de álbumes recientes obtenida exitosamente',
-    type: GetRecentAlbumsResponseDto
+    type: [AlbumResponseDto]
   })
   async getRecentAlbums(
     @Query('take') take: string = '12',
-  ): Promise<GetRecentAlbumsResponseDto> {
+  ): Promise<AlbumResponseDto[]> {
     const takeNum = Math.max(1, parseInt(take, 10) || 12);
 
     const result = await this.getRecentAlbumsUseCase.execute({
       take: takeNum,
     });
 
-    return GetRecentAlbumsResponseDto.fromDomain(result);
+    return result.map((album) => AlbumResponseDto.fromDomain(album));
   }
 
   /**
