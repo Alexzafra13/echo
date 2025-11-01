@@ -33,25 +33,31 @@ export class ChangePasswordUseCase {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 3. Verificar contraseña actual
-    const isValidCurrent = await this.passwordService.compare(
-      input.currentPassword,
-      user.passwordHash,
-    );
-    if (!isValidCurrent) {
-      throw new UnauthorizedError('Current password is incorrect');
+    // 3. Verificar contraseña actual (solo si NO es primer login)
+    if (!user.mustChangePassword) {
+      if (!input.currentPassword) {
+        throw new ValidationError('Current password is required');
+      }
+
+      const isValidCurrent = await this.passwordService.compare(
+        input.currentPassword,
+        user.passwordHash,
+      );
+      if (!isValidCurrent) {
+        throw new UnauthorizedError('Current password is incorrect');
+      }
+
+      // Verificar que nueva contraseña sea diferente
+      const isSamePassword = await this.passwordService.compare(
+        input.newPassword,
+        user.passwordHash,
+      );
+      if (isSamePassword) {
+        throw new ValidationError('New password must be different from current password');
+      }
     }
 
-    // 4. Verificar que nueva contraseña sea diferente
-    const isSamePassword = await this.passwordService.compare(
-      input.newPassword,
-      user.passwordHash,
-    );
-    if (isSamePassword) {
-      throw new ValidationError('New password must be different from current password');
-    }
-
-    // 5. Hash de nueva contraseña
+    // 4. Hash de nueva contraseña
     const newPasswordHash = await this.passwordService.hash(input.newPassword);
 
     // 6. Actualizar contraseña
