@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
+import { WebSocketModule } from '@infrastructure/websocket';
 
 // Presentation Layer
 import { ScannerController } from './presentation/controller/scanner.controller';
+import { ScannerGateway } from './infrastructure/gateways/scanner.gateway';
 
 // Domain Layer (Use Cases)
 import {
@@ -23,6 +25,7 @@ import { PrismaScannerRepository } from './infrastructure/persistence/scanner.re
 import { FileScannerService } from './infrastructure/services/file-scanner.service';
 import { MetadataExtractorService } from './infrastructure/services/metadata-extractor.service';
 import { ScanProcessorService } from './infrastructure/services/scan-processor.service';
+import { CoverArtService } from '@shared/services';
 
 /**
  * ScannerModule - Módulo de escaneo de librería musical
@@ -46,6 +49,7 @@ import { ScanProcessorService } from './infrastructure/services/scan-processor.s
   imports: [
     PrismaModule, // Para acceso a BD
     QueueModule, // Para BullMQ
+    WebSocketModule, // Para WebSocket
   ],
   controllers: [ScannerController],
   providers: [
@@ -61,6 +65,10 @@ import { ScanProcessorService } from './infrastructure/services/scan-processor.s
     FileScannerService,
     MetadataExtractorService,
     ScanProcessorService,
+    CoverArtService,
+
+    // Gateways (WebSocket)
+    ScannerGateway,
 
     // Port implementations
     {
@@ -72,6 +80,6 @@ import { ScanProcessorService } from './infrastructure/services/scan-processor.s
       useClass: ScanProcessorService,
     },
   ],
-  exports: [SCANNER_REPOSITORY],
+  exports: [SCANNER_REPOSITORY, ScannerGateway],
 })
 export class ScannerModule {}

@@ -6,6 +6,7 @@ import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbums
 import { PrismaAlbumRepository } from './infrastructure/persistence/album.repository';
 import { CachedAlbumRepository } from './infrastructure/persistence/cached-album.repository';
 import { ALBUM_REPOSITORY } from './domain/ports/album-repository.port';
+import { CoverArtService } from '@shared/services';
 
 /**
  * AlbumsModule - Módulo de gestión de álbumes
@@ -45,6 +46,9 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
     // Repositories
     PrismaAlbumRepository, // Base repository (sin cache)
     CachedAlbumRepository, // Wrapper con cache
+
+    // Services
+    CoverArtService,
 
     // Implementación del port - CONFIGURABLE
     {
