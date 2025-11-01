@@ -16,7 +16,7 @@ describe('UsersController', () => {
   let mockChangeLanguageUseCase: any;
 
   const mockUser = {
-    userId: 'user-123',
+    id: 'user-123',
     username: 'testuser',
     isAdmin: false,
   };
@@ -95,7 +95,7 @@ describe('UsersController', () => {
       };
 
       const differentUser = {
-        userId: 'user-999',
+        id: 'user-999',
         username: 'otheruser',
         isAdmin: false,
       };

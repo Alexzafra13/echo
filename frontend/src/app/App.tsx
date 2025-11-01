@@ -2,7 +2,9 @@ import { Route, Switch, Redirect } from 'wouter';
 import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
 import FirstLoginPage from '@features/auth/pages/FirstLoginPage';
 import HomePage from '@features/home/pages/HomePage';
+import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
+import { AdminRoute } from '@shared/components/AdminRoute';
 import { useAuthStore } from '@shared/store';
 
 function App() {
@@ -25,6 +27,13 @@ function App() {
         <ProtectedRoute>
           <HomePage />
         </ProtectedRoute>
+      </Route>
+
+      {/* Admin Route (Protected - Admin Only) */}
+      <Route path="/admin">
+        <AdminRoute>
+          <AdminPage />
+        </AdminRoute>
       </Route>
 
       {/* Root - Redirect based on auth status */}
