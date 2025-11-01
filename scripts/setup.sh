@@ -312,10 +312,34 @@ fi
 echo ""
 
 # ==============================================
-# 7. Instalar Frontend
+# 7. Ejecutar Seed (Crear Usuario Admin)
+# ==============================================
+if [ "$SKIP_BACKEND" = false ] && [ "$SKIP_DOCKER" = false ]; then
+  print_header "7. Ejecutando Seed de Base de Datos"
+
+  cd server
+
+  print_info "Ejecutando: pnpm db:seed"
+
+  if pnpm db:seed; then
+    print_success "Seed ejecutado correctamente"
+    print_info "Usuario admin creado: admin / admin123"
+  else
+    print_warning "El seed falló o el usuario ya existe"
+  fi
+
+  cd ..
+else
+  print_info "Skipping seed"
+fi
+
+echo ""
+
+# ==============================================
+# 8. Instalar Frontend
 # ==============================================
 if [ "$SKIP_FRONTEND" = false ]; then
-  print_header "7. Instalando Dependencias del Frontend"
+  print_header "8. Instalando Dependencias del Frontend"
 
   if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
     print_info "Navegando a: frontend/"
