@@ -1,0 +1,134 @@
+/* AlbumCard Component Styles */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.coverContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover .coverContainer {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .cover {
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card:hover .overlay {
+  opacity: 1;
+}
+
+.playButton {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-primary, #ff6b6b);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.playButton:hover {
+  background: var(--color-primary-hover, #ff5252);
+  transform: scale(1.1);
+}
+
+.playButton:active {
+  transform: scale(0.95);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist {
+  font-size: 13px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .card {
+    gap: 8px;
+    padding: 4px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .artist {
+    font-size: 12px;
+  }
+
+  .playButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .playButton svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Touch devices: show overlay by default */
+@media (hover: none) {
+  .overlay {
+    opacity: 0.8;
+  }
+
+  .playButton {
+    background: rgba(255, 107, 107, 0.9);
+  }
+}
