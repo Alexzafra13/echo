@@ -85,6 +85,9 @@ export class PrismaAlbumRepository implements IAlbumRepository {
     const albums = await this.prisma.album.findMany({
       take,
       orderBy: { createdAt: 'desc' },
+      include: {
+        artist: true, // Include artist relation to get artist name
+      },
     });
 
     return AlbumMapper.toDomainArray(albums);
@@ -97,6 +100,9 @@ export class PrismaAlbumRepository implements IAlbumRepository {
     const albums = await this.prisma.album.findMany({
       take,
       orderBy: { songCount: 'desc' },
+      include: {
+        artist: true, // Include artist relation to get artist name
+      },
     });
 
     return AlbumMapper.toDomainArray(albums);
