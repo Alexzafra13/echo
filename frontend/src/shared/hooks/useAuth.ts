@@ -22,8 +22,8 @@ export const useAuth = () => {
       // Invalidate all queries to refetch with new auth
       queryClient.invalidateQueries();
 
-      // Redirect based on user state
-      if (data.user.mustChangePassword) {
+      // Redirect based on mustChangePassword flag
+      if (data.mustChangePassword) {
         setLocation('/first-login');
       } else {
         setLocation('/home');
