@@ -24,9 +24,9 @@ export const useAuth = () => {
 
       // Redirect based on user state
       if (data.user.mustChangePassword) {
-        setLocation('/change-password');
+        setLocation('/first-login');
       } else {
-        setLocation('/');
+        setLocation('/home');
       }
     },
   });
