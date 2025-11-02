@@ -21,12 +21,12 @@ export function ScannerPanel() {
 
   const { data: history, isLoading: historyLoading, refetch } = useScannerHistory();
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
-  const { user } = useAuthStore();
+  const { accessToken } = useAuthStore();
 
   // WebSocket para progreso en tiempo real
-  const { progress, errors, isCompleted, isConnected } = useScannerWebSocket(
+  const { progress, isCompleted, isConnected } = useScannerWebSocket(
     currentScanId,
-    user?.accessToken || null
+    accessToken
   );
 
   // Cuando se inicia un scan, guardar el ID para WebSocket

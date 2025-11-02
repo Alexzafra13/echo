@@ -50,7 +50,6 @@ export default function FirstLoginPage() {
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [passwordValue, setPasswordValue] = useState('');
 
   const {
     register,

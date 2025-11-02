@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 export interface User {
   id: string;
   username: string;
-  email: string;
+  email?: string;
   name?: string;
   isAdmin: boolean;
   mustChangePassword?: boolean;
