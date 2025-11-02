@@ -3,7 +3,7 @@ import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc,
 import { Button } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
-import { useAuthStore } from '@features/auth/stores/authStore';
+import { useAuthStore } from '@shared/store/authStore';
 import styles from './ScannerPanel.module.css';
 
 /**
