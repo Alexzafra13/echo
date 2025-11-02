@@ -51,10 +51,12 @@ export function useAutoRefreshOnScan() {
       console.warn('🎉🎉🎉 SCAN COMPLETADO - REFRESCANDO DATOS 🎉🎉🎉');
       console.log('Datos del scan:', data);
 
-      // Invalidar queries relacionadas con música
-      queryClient.invalidateQueries({ queryKey: ['albums'] });
-      queryClient.invalidateQueries({ queryKey: ['artists'] });
-      queryClient.invalidateQueries({ queryKey: ['tracks'] });
+      // REFETCH inmediato (no solo invalidar) para que aparezcan los nuevos álbumes
+      console.warn('🔄 Forzando refetch de queries...');
+
+      queryClient.refetchQueries({ queryKey: ['albums'] });
+      queryClient.refetchQueries({ queryKey: ['artists'] });
+      queryClient.refetchQueries({ queryKey: ['tracks'] });
 
       // Mostrar notificación
       console.warn(`✅ ${data.albumsCreated} álbum(es) nuevo(s) detectado(s)`);
