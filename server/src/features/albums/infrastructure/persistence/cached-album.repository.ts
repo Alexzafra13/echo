@@ -240,6 +240,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
   async invalidateListCaches(): Promise<void> {
     // Borrar todas las listas cacheadas usando pattern matching
     await Promise.all([
+      this.cache.delPattern(`${this.KEY_PREFIX}*`), // Invalida TODOS los álbumes individuales (album:*)
       this.cache.delPattern(`${this.LIST_KEY_PREFIX}recent:*`),
       this.cache.delPattern(`${this.LIST_KEY_PREFIX}most-played:*`),
       this.cache.delPattern(`${this.LIST_KEY_PREFIX}artist:*`),

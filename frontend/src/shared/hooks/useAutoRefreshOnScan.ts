@@ -49,5 +49,6 @@ export function useAutoRefreshOnScan() {
     return () => {
       socket.off('scan:completed', handleScanCompleted);
     };
-  }, [isAuthenticated, accessToken, queryClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, accessToken]);
 }
