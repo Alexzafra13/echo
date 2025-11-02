@@ -176,7 +176,6 @@ export default function FirstLoginPage() {
                 placeholder="Ingrese una contraseña segura"
                 error={errors.newPassword?.message}
                 autoComplete="new-password"
-                onChange={(e) => setPasswordValue(e.target.value)}
               />
             </div>
 
