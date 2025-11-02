@@ -50,7 +50,6 @@ export default function FirstLoginPage() {
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [passwordValue, setPasswordValue] = useState('');
 
   const {
     register,
@@ -177,7 +176,6 @@ export default function FirstLoginPage() {
                 placeholder="Ingrese una contraseña segura"
                 error={errors.newPassword?.message}
                 autoComplete="new-password"
-                onChange={(e) => setPasswordValue(e.target.value)}
               />
             </div>
 

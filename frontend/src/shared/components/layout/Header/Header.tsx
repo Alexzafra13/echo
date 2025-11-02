@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { ChevronLeft, ChevronRight, Search, User } from 'lucide-react';
-import { Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
 import styles from './Header.module.css';
 
