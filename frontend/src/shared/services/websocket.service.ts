@@ -22,7 +22,9 @@ export class WebSocketService {
 
   private constructor() {
     // Base URL del servidor WebSocket
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    // Remover /api si existe, ya que WebSocket no usa el prefix /api
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.baseUrl = apiUrl.replace(/\/api$/, '');
   }
 
   /**
