@@ -44,6 +44,7 @@ describe('CachedAlbumRepository', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
+      delPattern: jest.fn(), // For wildcard key deletion
     };
 
     // Create instance directly without TestingModule to avoid Prisma imports
@@ -281,7 +282,9 @@ describe('CachedAlbumRepository', () => {
 
       // Assert
       expect(baseRepository.create).toHaveBeenCalledWith(mockAlbum);
-      expect(cacheService.del).toHaveBeenCalledTimes(3);
+      // invalidateListCaches now uses: 3x delPattern() + 2x del()
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(3);
+      expect(cacheService.del).toHaveBeenCalledTimes(2);
       expect(result).toBe(mockAlbum);
     });
   });
@@ -298,7 +301,9 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.update).toHaveBeenCalledWith('album-1', updates);
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      expect(cacheService.del).toHaveBeenCalledTimes(4); // 1 specific + 3 list caches
+      // 1 specific del() + invalidateListCaches (3x delPattern + 2x del)
+      expect(cacheService.del).toHaveBeenCalledTimes(3);
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(3);
       expect(result).toBe(mockAlbum);
     });
 
@@ -326,7 +331,9 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.delete).toHaveBeenCalledWith('album-1');
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      expect(cacheService.del).toHaveBeenCalledTimes(4); // 1 specific + 3 list caches
+      // 1 specific del() + invalidateListCaches (3x delPattern + 2x del)
+      expect(cacheService.del).toHaveBeenCalledTimes(3);
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(3);
       expect(result).toBe(true);
     });
 
