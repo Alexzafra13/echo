@@ -16,7 +16,8 @@ export default function HomePage() {
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums();
 
-  // Mock daily mix data (TODO: Replace with real API call)
+  // Limitar a 12 álbumes (2 filas de 6)
+  const displayedRecentAlbums = recentAlbums?.slice(0, 12) || [];
   const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
 
   return (
@@ -59,11 +60,11 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-          ) : recentAlbums && recentAlbums.length > 0 ? (
+          ) : displayedRecentAlbums && displayedRecentAlbums.length > 0 ? (
             <>
               <AlbumGrid
                 title="Recientemente Añadidos"
-                albums={recentAlbums}
+                albums={displayedRecentAlbums}
               />
               {dailyMix.length > 0 && (
                 <AlbumGrid title="Daily Mix" albums={dailyMix} />
