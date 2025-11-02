@@ -1,21 +1,33 @@
+import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { ChevronLeft, Play, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList } from '../../components';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { Button } from '@shared/components/ui';
+import { extractDominantColor } from '@shared/utils/colorExtractor';
 import styles from './AlbumPage.module.css';
 
 /**
  * AlbumPage Component
- * Displays album details and track listing
+ * Displays album details and track listing with dynamic color from album cover
  */
 export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
+
+  // Extract dominant color from album cover
+  useEffect(() => {
+    if (album?.coverImage) {
+      extractDominantColor(album.coverImage).then(color => {
+        setDominantColor(color);
+      });
+    }
+  }, [album?.coverImage]);
 
   const handleBack = () => {
     setLocation('/home');
@@ -74,7 +86,15 @@ export default function AlbumPage() {
       <main className={styles.main}>
         <Header />
 
-        <div className={styles.content}>
+        <div
+          className={styles.content}
+          style={{
+            background: `linear-gradient(180deg,
+              rgba(${dominantColor}, 0.6) 0%,
+              rgba(${dominantColor}, 0.3) 25%,
+              rgba(10, 14, 39, 1) 60%)`
+          }}
+        >
           {/* Back button */}
           <button className={styles.backButton} onClick={handleBack}>
             <ChevronLeft size={20} />

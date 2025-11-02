@@ -97,38 +97,9 @@ export class AlbumsController {
   }
 
   /**
-   * GET /albums/:id
-   * Obtener UN álbum por su ID
-   */
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Obtener álbum por ID',
-    description: 'Retorna la información completa de un álbum específico por su identificador UUID'
-  })
-  @ApiParam({
-    name: 'id',
-    type: String,
-    description: 'UUID del álbum',
-    example: '123e4567-e89b-12d3-a456-426614174000'
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Álbum encontrado exitosamente',
-    type: AlbumResponseDto
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Álbum no encontrado'
-  })
-  async getAlbum(@Param('id') id: string): Promise<AlbumResponseDto> {
-    const result = await this.getAlbumUseCase.execute({ id });
-    return AlbumResponseDto.fromDomain(result);
-  }
-
-  /**
    * GET /albums/:id/tracks
    * Obtener todas las canciones de un álbum
+   * IMPORTANTE: Debe ir ANTES de @Get(':id') para que el router lo capture correctamente
    */
   @Get(':id/tracks')
   @HttpCode(HttpStatus.OK)
@@ -164,6 +135,7 @@ export class AlbumsController {
   /**
    * GET /albums/:id/cover
    * Obtener cover art del álbum
+   * IMPORTANTE: Debe ir ANTES de @Get(':id') para que el router lo capture correctamente
    */
   @Get(':id/cover')
   @ApiOperation({
@@ -240,6 +212,37 @@ export class AlbumsController {
       '.webp': 'image/webp',
     };
     return contentTypes[ext] || 'image/jpeg';
+  }
+
+  /**
+   * GET /albums/:id
+   * Obtener UN álbum por su ID
+   * IMPORTANTE: Debe ir DESPUÉS de rutas más específicas como /:id/tracks y /:id/cover
+   */
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener álbum por ID',
+    description: 'Retorna la información completa de un álbum específico por su identificador UUID'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del álbum',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Álbum encontrado exitosamente',
+    type: AlbumResponseDto
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Álbum no encontrado'
+  })
+  async getAlbum(@Param('id') id: string): Promise<AlbumResponseDto> {
+    const result = await this.getAlbumUseCase.execute({ id });
+    return AlbumResponseDto.fromDomain(result);
   }
 
   /**
