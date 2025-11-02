@@ -6,15 +6,34 @@
   z-index: 90;
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
   padding: 20px 30px;
-  background: var(--color-bg-primary, #0a0e27);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  /* Transparent initially, glassmorphism on scroll */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glassmorphism effect when scrolled */
+.header.scrolled {
+  background: rgba(10, 14, 39, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .navButtons {
   display: flex;
   gap: 8px;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .navButton {
@@ -37,8 +56,8 @@
 }
 
 .searchForm {
-  flex: 1;
   max-width: 600px;
+  min-width: 300px;
 }
 
 .searchWrapper {
