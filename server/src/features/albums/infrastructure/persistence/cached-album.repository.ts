@@ -237,13 +237,15 @@ export class CachedAlbumRepository implements IAlbumRepository {
    * Invalida todas las listas en cache
    * Se llama cuando hay escrituras (create, update, delete)
    */
-  private async invalidateListCaches(): Promise<void> {
-    // En Redis, podemos usar pattern matching para borrar múltiples keys
-    // Por simplicidad, borramos las keys más comunes
+  async invalidateListCaches(): Promise<void> {
+    // Borrar todas las listas cacheadas usando pattern matching
     await Promise.all([
-      this.cache.del(`${this.LIST_KEY_PREFIX}recent:*`),
-      this.cache.del(`${this.LIST_KEY_PREFIX}most-played:*`),
+      this.cache.delPattern(`${this.LIST_KEY_PREFIX}recent:*`),
+      this.cache.delPattern(`${this.LIST_KEY_PREFIX}most-played:*`),
+      this.cache.delPattern(`${this.LIST_KEY_PREFIX}artist:*`),
       this.cache.del(`${this.LIST_KEY_PREFIX}count`),
+      this.cache.del(`${this.LIST_KEY_PREFIX}featured`), // Si existe
     ]);
+    console.log('🗑️ Caché de álbumes invalidado');
   }
 }
