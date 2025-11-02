@@ -13,10 +13,13 @@ export default function AlbumsPage() {
   const [page, setPage] = useState(0);
   const pageSize = 24; // 4 rows of 6 albums
 
-  const { data: albums, isLoading, error } = useAlbums({
-    page: page * pageSize,
-    limit: pageSize,
+  const { data: response, isLoading, error } = useAlbums({
+    skip: page * pageSize,
+    take: pageSize,
   });
+
+  const albums = response?.data || [];
+  const hasMore = response?.hasMore || false;
 
   const handlePreviousPage = () => {
     if (page > 0) {
@@ -26,7 +29,7 @@ export default function AlbumsPage() {
   };
 
   const handleNextPage = () => {
-    if (albums && albums.length === pageSize) {
+    if (hasMore) {
       setPage(page + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -86,7 +89,7 @@ export default function AlbumsPage() {
 
                 <button
                   onClick={handleNextPage}
-                  disabled={!albums || albums.length < pageSize}
+                  disabled={!hasMore}
                   className={styles.pageButton}
                   aria-label="Next page"
                 >

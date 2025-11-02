@@ -33,8 +33,20 @@ export const albumsService = {
   /**
    * Get all albums with optional pagination
    */
-  getAll: async (params?: { page?: number; limit?: number }): Promise<Album[]> => {
-    const { data } = await apiClient.get<Album[]>('/albums', { params });
+  getAll: async (params?: { skip?: number; take?: number }): Promise<{
+    data: Album[];
+    total: number;
+    skip: number;
+    take: number;
+    hasMore: boolean;
+  }> => {
+    const { data } = await apiClient.get<{
+      data: Album[];
+      total: number;
+      skip: number;
+      take: number;
+      hasMore: boolean;
+    }>('/albums', { params });
     return data;
   },
 
