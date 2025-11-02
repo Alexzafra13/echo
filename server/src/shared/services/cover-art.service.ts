@@ -148,11 +148,39 @@ export class CoverArtService {
     const destFileName = `${albumId}${ext}`;
     const destPath = path.join(this.coversPath, destFileName);
 
-    // Copiar archivo
-    await fs.copyFile(sourcePath, destPath);
+    // Copiar archivo con retry (para Windows EPERM errors)
+    await this.copyFileWithRetry(sourcePath, destPath);
 
     this.logger.debug(`💾 Cover cacheada: ${destFileName}`);
     return destFileName;
+  }
+
+  /**
+   * Copia un archivo con retry mechanism para manejar EPERM en Windows
+   */
+  private async copyFileWithRetry(
+    source: string,
+    dest: string,
+    maxRetries = 3,
+    delay = 100,
+  ): Promise<void> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await fs.copyFile(source, dest);
+        return; // Éxito
+      } catch (error: any) {
+        // Si es un error de permisos (EPERM) en Windows, reintentar
+        if (error.code === 'EPERM' && attempt < maxRetries) {
+          this.logger.warn(
+            `⚠️ EPERM error copying ${path.basename(source)}, retrying (${attempt}/${maxRetries})...`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay * attempt));
+          continue;
+        }
+        // Si llegamos aquí, falló después de todos los reintentos o es otro error
+        throw error;
+      }
+    }
   }
 
   /**

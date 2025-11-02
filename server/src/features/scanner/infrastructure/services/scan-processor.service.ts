@@ -462,14 +462,23 @@ export class ScanProcessorService implements OnModuleInit {
 
       // 5. Crear/actualizar álbumes
       for (const [albumKey, albumData] of albumsMap) {
-        // Buscar el artista
-        const artist = await this.prisma.artist.findFirst({
+        // Buscar o crear el artista
+        let artist = await this.prisma.artist.findFirst({
           where: { name: albumData.artistName },
         });
 
         if (!artist) {
-          console.warn(`⚠️ Artista no encontrado para álbum: ${albumData.name}`);
-          continue;
+          // El artista no existe, crearlo
+          console.log(`🎤 Creando artista para álbum: ${albumData.artistName}`);
+          artist = await this.prisma.artist.create({
+            data: {
+              name: albumData.artistName,
+              mbzArtistId: albumData.mbzAlbumArtistId,
+              albumCount: 0, // Se actualizará después
+              songCount: 0,
+              size: BigInt(0),
+            },
+          });
         }
 
         // Buscar si el álbum ya existe
