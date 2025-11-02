@@ -1,4 +1,5 @@
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 
 /**
  * WebSocketService - Cliente WebSocket para conexión con el servidor
@@ -66,15 +67,15 @@ export class WebSocketService {
       console.log(`✅ WebSocket connected to /${namespace} (ID: ${socket.id})`);
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (reason: string) => {
       console.log(`❌ WebSocket disconnected from /${namespace}: ${reason}`);
     });
 
-    socket.on('error', (error) => {
+    socket.on('error', (error: Error) => {
       console.error(`❌ WebSocket error on /${namespace}:`, error);
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', (error: Error) => {
       console.error(`❌ WebSocket connection error on /${namespace}:`, error.message);
     });
 

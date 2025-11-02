@@ -61,10 +61,10 @@ export function useScanStatus(scanId?: string) {
       return response.data;
     },
     enabled: !!scanId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Si está running, refrescar cada 3 segundos
       // Cuando implementemos SSE, quitaremos esto
-      return data?.status === 'running' ? 3000 : false;
+      return query.state.data?.status === 'running' ? 3000 : false;
     },
   });
 }
