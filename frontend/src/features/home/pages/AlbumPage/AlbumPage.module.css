@@ -17,6 +17,7 @@
   flex: 1;
   padding: 24px 40px;
   overflow-y: auto;
+  transition: background 0.5s ease;
 }
 
 /* Back button */
@@ -46,11 +47,8 @@
   display: flex;
   gap: 32px;
   padding: 32px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 107, 107, 0.1) 0%,
-    rgba(10, 14, 39, 0.4) 100%
-  );
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
   margin-bottom: 32px;
 }
