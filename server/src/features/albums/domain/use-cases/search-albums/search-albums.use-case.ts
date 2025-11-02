@@ -24,6 +24,7 @@ export interface SearchAlbumsOutput {
     id: string;
     name: string;
     artistId?: string;
+    artistName?: string;
     albumArtistId?: string;
     coverArtPath?: string;
     year?: number;
@@ -77,6 +78,7 @@ export class SearchAlbumsUseCase {
         id: album.id,
         name: album.name,
         artistId: album.artistId,
+        artistName: album.artistName,
         albumArtistId: album.albumArtistId,
         coverArtPath: album.coverArtPath,
         year: album.year,
