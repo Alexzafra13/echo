@@ -5,6 +5,9 @@ build/
 # Dependencies
 node_modules/
 
+# Music files
+music/
+
 # Environment variables
 .env
 .env.local
