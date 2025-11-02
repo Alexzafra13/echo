@@ -38,10 +38,13 @@ export function useAlbum(id: string) {
 /**
  * Hook to fetch all albums
  */
-export function useAlbums(params?: { page?: number; limit?: number }) {
+export function useAlbums(params?: { skip?: number; take?: number }) {
   return useQuery({
     queryKey: ['albums', 'all', params],
-    queryFn: () => albumsService.getAll(params),
+    queryFn: async () => {
+      const response = await albumsService.getAll(params);
+      return response;
+    },
     staleTime: 5 * 60 * 1000,
   });
 }
