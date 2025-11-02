@@ -56,6 +56,6 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
       useClass: USE_CACHE ? CachedAlbumRepository : PrismaAlbumRepository,
     },
   ],
-  exports: [ALBUM_REPOSITORY],
+  exports: [ALBUM_REPOSITORY, CachedAlbumRepository],
 })
 export class AlbumsModule {}

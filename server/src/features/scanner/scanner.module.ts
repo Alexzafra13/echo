@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
+import { AlbumsModule } from '@features/albums/albums.module';
 
 // Presentation Layer
 import { ScannerController } from './presentation/controller/scanner.controller';
@@ -51,6 +52,7 @@ import { CoverArtService } from '@shared/services';
     PrismaModule, // Para acceso a BD
     QueueModule, // Para BullMQ
     WebSocketModule, // Para WebSocket
+    forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
   ],
   controllers: [ScannerController],
   providers: [
