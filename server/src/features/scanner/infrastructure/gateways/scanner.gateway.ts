@@ -221,7 +221,13 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    */
   emitCompleted(data: ScanCompletedDto): void {
     const room = `scan:${data.scanId}`;
+
+    // Emitir al room específico (para clientes suscritos a este scan)
     this.server.to(room).emit('scan:completed', data);
-    this.logger.log(`Emitted completed for scan ${data.scanId}`);
+
+    // TAMBIÉN emitir a todos los clientes del namespace (para auto-refresh global)
+    this.server.emit('scan:completed', data);
+
+    this.logger.log(`Emitted completed for scan ${data.scanId} (to room and broadcast)`);
   }
 }
