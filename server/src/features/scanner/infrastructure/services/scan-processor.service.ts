@@ -58,9 +58,17 @@ export class ScanProcessorService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    // Registrar procesador de jobs
+    // Registrar procesador de jobs para scan completo
     this.bullmq.registerProcessor(this.QUEUE_NAME, async (job) => {
       return await this.processScanning(job.data);
+    });
+
+    // Registrar procesador de jobs para scan incremental (file watcher)
+    this.bullmq.registerProcessor('scanner', async (job) => {
+      if (job.name === 'incremental-scan') {
+        return await this.processIncrementalScan(job.data);
+      }
+      return null;
     });
   }
 
@@ -520,6 +528,119 @@ export class ScanProcessorService implements OnModuleInit {
     } catch (error) {
       console.error('❌ Error agregando álbumes y artistas:', error);
       return { albumsCount: 0, artistsCount: 0 };
+    }
+  }
+
+  /**
+   * Procesa scan incremental de archivos específicos (desde file watcher)
+   * Mucho más rápido que scan completo - solo procesa archivos detectados
+   */
+  private async processIncrementalScan(data: any): Promise<void> {
+    const { files, source, timestamp } = data;
+    const scanId = generateUuid(); // ID único para tracking
+
+    console.log(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
+    console.log(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
+
+    // Emitir progreso inicial via WebSocket
+    this.scannerGateway.emitProgress({
+      scanId,
+      status: ScanStatus.SCANNING,
+      progress: 0,
+      filesScanned: 0,
+      totalFiles: files.length,
+      tracksCreated: 0,
+      albumsCreated: 0,
+      artistsCreated: 0,
+      coversExtracted: 0,
+      errors: 0,
+      message: `Auto-scan detectó ${files.length} archivo(s) nuevo(s)`,
+    });
+
+    const tracker = new ScanProgress();
+    tracker.totalFiles = files.length;
+
+    try {
+      // Procesar cada archivo detectado usando el método existente
+      for (const filePath of files) {
+        try {
+          console.log(`🎵 Procesando: ${path.basename(filePath)}`);
+
+          const result = await this.processFile(filePath);
+
+          if (result === 'added') {
+            tracker.tracksCreated++;
+          } else if (result === 'skipped') {
+            tracker.errors++;
+          }
+
+          tracker.filesScanned++;
+
+          // Emitir progreso cada 5 archivos o al final
+          if (tracker.filesScanned % 5 === 0 || tracker.filesScanned === tracker.totalFiles) {
+            this.scannerGateway.emitProgress({
+              scanId,
+              status: ScanStatus.SCANNING,
+              progress: tracker.progress,
+              filesScanned: tracker.filesScanned,
+              totalFiles: tracker.totalFiles,
+              tracksCreated: tracker.tracksCreated,
+              albumsCreated: 0,
+              artistsCreated: 0,
+              coversExtracted: 0,
+              errors: tracker.errors,
+              currentFile: path.basename(filePath),
+              message: `Auto-scan: ${tracker.filesScanned}/${tracker.totalFiles}`,
+            });
+          }
+        } catch (error) {
+          console.error(`❌ Error procesando ${filePath}:`, error);
+          tracker.errors++;
+        }
+      }
+
+      // Agregar álbumes y artistas
+      this.emitProgress(
+        scanId,
+        tracker,
+        ScanStatus.AGGREGATING,
+        'Agregando álbumes y artistas...',
+      );
+
+      const { albumsCount, artistsCount } = await this.aggregateAlbumsAndArtists(scanId, tracker);
+      tracker.albumsCreated = albumsCount;
+      tracker.artistsCreated = artistsCount;
+
+      // Scan completado
+      this.scannerGateway.emitCompleted({
+        scanId,
+        totalFiles: tracker.totalFiles,
+        tracksCreated: tracker.tracksCreated,
+        albumsCreated: tracker.albumsCreated,
+        artistsCreated: tracker.artistsCreated,
+        coversExtracted: tracker.coversExtracted,
+        errors: tracker.errors,
+        duration: 0, // No trackear duración en auto-scan
+        timestamp: new Date().toISOString(),
+      });
+
+      console.log(`✅ Auto-scan completado:`);
+      console.log(`   📁 Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
+      console.log(`   🎵 Tracks: ${tracker.tracksCreated}`);
+      console.log(`   💿 Álbumes: ${tracker.albumsCreated}`);
+      console.log(`   🎤 Artistas: ${tracker.artistsCreated}`);
+      console.log(`   📸 Covers: ${tracker.coversExtracted}`);
+      if (tracker.errors > 0) {
+        console.log(`   ⚠️ Errores: ${tracker.errors}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error en scan incremental:`, error);
+      this.scannerGateway.emitError({
+        scanId,
+        file: 'incremental-scan',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }
