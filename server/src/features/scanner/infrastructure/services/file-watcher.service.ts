@@ -1,8 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import chokidar, { FSWatcher } from 'chokidar';
-import { Queue } from 'bullmq';
-import { InjectQueue } from '@nestjs/bullmq';
+import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { join } from 'path';
 import { stat } from 'fs/promises';
 
@@ -28,7 +27,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly configService: ConfigService,
-    @InjectQueue('scanner') private scannerQueue: Queue,
+    private readonly bullmq: BullmqService,
   ) {}
 
   /**
@@ -220,11 +219,15 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Agregar job de escaneo incremental a la cola
-      await this.scannerQueue.add('incremental-scan', {
-        files: existingFiles,
-        source: 'file-watcher',
-        timestamp: new Date().toISOString(),
-      });
+      await this.bullmq.addJob(
+        'scanner',
+        'incremental-scan',
+        {
+          files: existingFiles,
+          source: 'file-watcher',
+          timestamp: new Date().toISOString(),
+        },
+      );
 
       this.logger.log(`✅ ${existingFiles.length} archivo(s) agregado(s) a cola de escaneo`);
     } catch (error) {
