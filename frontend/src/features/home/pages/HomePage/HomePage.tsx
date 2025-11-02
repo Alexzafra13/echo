@@ -1,6 +1,7 @@
 import { HeroSection, AlbumGrid, Sidebar } from '../../components';
 import { Header } from '@shared/components/layout/Header';
 import { useFeaturedAlbum, useRecentAlbums } from '../../hooks';
+import { useAutoRefreshOnScan } from '@shared/hooks';
 import type { Album } from '../../types';
 import styles from './HomePage.module.css';
 
@@ -9,6 +10,9 @@ import styles from './HomePage.module.css';
  * Main page after login - displays featured album, recent albums, and daily mixes
  */
 export default function HomePage() {
+  // Auto-refresh cuando se completa un scan ✨
+  useAutoRefreshOnScan();
+
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums();
 
