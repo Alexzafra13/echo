@@ -89,7 +89,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         .on('add', (filePath) => this.handleFileAdded(filePath))
         .on('change', (filePath) => this.handleFileChanged(filePath))
         .on('unlink', (filePath) => this.handleFileDeleted(filePath))
-        .on('error', (error) => this.handleError(error))
+        .on('error', (error) => this.handleError(error as Error))
         .on('ready', () => this.handleReady(path));
 
     } catch (error) {
