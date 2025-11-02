@@ -57,3 +57,15 @@ export function useAlbumSearch(query: string) {
     staleTime: 2 * 60 * 1000, // 2 minutos para búsquedas
   });
 }
+
+/**
+ * Hook to fetch tracks for a specific album
+ */
+export function useAlbumTracks(albumId: string) {
+  return useQuery({
+    queryKey: ['albums', albumId, 'tracks'],
+    queryFn: () => albumsService.getAlbumTracks(albumId),
+    enabled: !!albumId, // Solo ejecutar si hay albumId
+    staleTime: 5 * 60 * 1000,
+  });
+}
