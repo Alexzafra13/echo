@@ -3,6 +3,7 @@ import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
 import FirstLoginPage from '@features/auth/pages/FirstLoginPage';
 import HomePage from '@features/home/pages/HomePage';
 import { AlbumPage } from '@features/home/pages/AlbumPage';
+import { AlbumsPage } from '@features/home/pages/AlbumsPage';
 import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
@@ -27,6 +28,13 @@ function App() {
       <Route path="/home">
         <ProtectedRoute>
           <HomePage />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Albums List Route (Protected) */}
+      <Route path="/albums">
+        <ProtectedRoute>
+          <AlbumsPage />
         </ProtectedRoute>
       </Route>
 
