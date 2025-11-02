@@ -45,6 +45,7 @@ export class GetAlbumUseCase {
       id: album.id,
       name: album.name,
       artistId: album.artistId,
+      artistName: album.artistName,
       albumArtistId: album.albumArtistId,
       coverArtPath: album.coverArtPath,
       year: album.year,
