@@ -1,8 +1,11 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, StreamableFile, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, StreamableFile, NotFoundException, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
+import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
+import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { CoverArtService } from '@shared/services';
 import * as fs from 'fs/promises';
@@ -29,6 +32,7 @@ export class AlbumsController {
     private readonly getFeaturedAlbumUseCase: GetFeaturedAlbumUseCase,
     private readonly prisma: PrismaService,
     private readonly coverArtService: CoverArtService,
+    @Inject(TRACK_REPOSITORY) private readonly trackRepository: ITrackRepository,
   ) {}
 
   /**
@@ -120,6 +124,41 @@ export class AlbumsController {
   async getAlbum(@Param('id') id: string): Promise<AlbumResponseDto> {
     const result = await this.getAlbumUseCase.execute({ id });
     return AlbumResponseDto.fromDomain(result);
+  }
+
+  /**
+   * GET /albums/:id/tracks
+   * Obtener todas las canciones de un álbum
+   */
+  @Get(':id/tracks')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener canciones del álbum',
+    description: 'Retorna todas las canciones (tracks) de un álbum específico, ordenadas por disco y número de pista'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del álbum',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de canciones obtenida exitosamente',
+    type: [TrackResponseDto]
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Álbum no encontrado'
+  })
+  async getAlbumTracks(@Param('id') albumId: string): Promise<TrackResponseDto[]> {
+    // Verificar que el álbum existe
+    await this.getAlbumUseCase.execute({ id: albumId });
+
+    // Obtener las canciones del álbum
+    const tracks = await this.trackRepository.findByAlbumId(albumId);
+
+    return tracks.map((track) => TrackResponseDto.fromDomain(track));
   }
 
   /**

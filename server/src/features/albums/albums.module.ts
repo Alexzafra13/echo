@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { CacheModule } from '@infrastructure/cache/cache.module';
+import { TracksModule } from '@features/tracks/tracks.module';
 import { AlbumsController } from './presentation/controller/albums.controller';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from './domain/use-cases';
 import { PrismaAlbumRepository } from './infrastructure/persistence/album.repository';
@@ -33,6 +34,7 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
   imports: [
     PrismaModule,
     CacheModule, // Para RedisService
+    TracksModule, // Para acceder al repositorio de tracks
   ],
   controllers: [AlbumsController],
   providers: [

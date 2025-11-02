@@ -1,0 +1,277 @@
+/* AlbumPage Component Styles */
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary, #0a0e27);
+}
+
+.main {
+  flex: 1;
+  margin-left: 230px;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding: 24px 40px;
+  overflow-y: auto;
+}
+
+/* Back button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary, #ffffff);
+}
+
+/* Album Hero Section */
+.albumHero {
+  display: flex;
+  gap: 32px;
+  padding: 32px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(10, 14, 39, 0.4) 100%
+  );
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.albumCover {
+  width: 240px;
+  height: 240px;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.albumInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.albumType {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.albumTitle {
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.albumMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.albumArtist {
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.metaDivider {
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.moreButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary, #b8bcc8);
+  transition: all 0.2s ease;
+}
+
+.moreButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-primary, #ffffff);
+}
+
+/* Track Section */
+.trackSection {
+  padding: 0 32px;
+}
+
+/* Loading and Error States */
+.loadingState,
+.errorState,
+.loadingTracks,
+.emptyTracks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 400px;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.errorState {
+  min-height: 60vh;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .main {
+    margin-left: 200px;
+  }
+
+  .content {
+    padding: 20px 32px;
+  }
+
+  .albumHero {
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .albumCover {
+    width: 200px;
+    height: 200px;
+  }
+
+  .albumTitle {
+    font-size: 48px;
+  }
+
+  .trackSection {
+    padding: 0 24px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .main {
+    margin-left: 80px;
+  }
+
+  .content {
+    padding: 16px 20px;
+  }
+
+  .albumHero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .albumCover {
+    width: 180px;
+    height: 180px;
+  }
+
+  .albumInfo {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .albumTitle {
+    font-size: 36px;
+  }
+
+  .albumMeta {
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .actions {
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .trackSection {
+    padding: 0 16px;
+  }
+
+  .backButton {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .main {
+    margin-left: 0;
+    padding-top: 60px; /* Space for mobile header */
+  }
+
+  .content {
+    padding: 12px 16px;
+  }
+
+  .albumHero {
+    padding: 16px;
+  }
+
+  .albumCover {
+    width: 160px;
+    height: 160px;
+  }
+
+  .albumTitle {
+    font-size: 28px;
+  }
+
+  .albumMeta {
+    font-size: 12px;
+  }
+
+  .trackSection {
+    padding: 0 12px;
+  }
+
+  .backButton {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}

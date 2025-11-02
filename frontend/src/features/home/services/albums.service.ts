@@ -1,5 +1,5 @@
 import { apiClient } from '@shared/services/api';
-import type { Album } from '../types';
+import type { Album, Track } from '../types';
 
 /**
  * Albums API service
@@ -45,6 +45,14 @@ export const albumsService = {
     const { data } = await apiClient.get<Album[]>('/albums/search', {
       params: { q: query },
     });
+    return data;
+  },
+
+  /**
+   * Get all tracks for a specific album
+   */
+  getAlbumTracks: async (albumId: string): Promise<Track[]> => {
+    const { data } = await apiClient.get<Track[]>(`/albums/${albumId}/tracks`);
     return data;
   },
 };
