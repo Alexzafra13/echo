@@ -25,6 +25,7 @@ import { PrismaScannerRepository } from './infrastructure/persistence/scanner.re
 import { FileScannerService } from './infrastructure/services/file-scanner.service';
 import { MetadataExtractorService } from './infrastructure/services/metadata-extractor.service';
 import { ScanProcessorService } from './infrastructure/services/scan-processor.service';
+import { FileWatcherService } from './infrastructure/services/file-watcher.service';
 import { CoverArtService } from '@shared/services';
 
 /**
@@ -65,6 +66,7 @@ import { CoverArtService } from '@shared/services';
     FileScannerService,
     MetadataExtractorService,
     ScanProcessorService,
+    FileWatcherService,
     CoverArtService,
 
     // Gateways (WebSocket)

@@ -172,6 +172,9 @@ importers:
       cache-manager:
         specifier: ^7.2.4
         version: 7.2.4
+      chokidar:
+        specifier: ^4.0.3
+        version: 4.0.3
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -230,6 +233,9 @@ importers:
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
+      '@types/chokidar':
+        specifier: ^2.1.7
+        version: 2.1.7
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0
@@ -1519,6 +1525,10 @@ packages:
 
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
+
+  '@types/chokidar@2.1.7':
+    resolution: {integrity: sha512-A7/MFHf6KF7peCzjEC1BBTF8jpmZTokb3vr/A0NxRGfwRLK3Ws+Hq6ugVn6cJIMfM6wkCak/aplWrxbTcu8oig==}
+    deprecated: This is a stub types definition. chokidar provides its own type definitions, so you do not need this installed.
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -6228,6 +6238,10 @@ snapshots:
     dependencies:
       '@types/connect': 3.4.38
       '@types/node': 24.9.1
+
+  '@types/chokidar@2.1.7':
+    dependencies:
+      chokidar: 4.0.3
 
   '@types/connect@3.4.38':
     dependencies:
