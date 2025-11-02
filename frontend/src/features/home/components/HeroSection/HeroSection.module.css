@@ -2,10 +2,12 @@
 
 .hero {
   position: relative;
-  height: 450px;
-  width: 100%;
+  height: 520px;
+  width: calc(100% + 60px);
+  margin-left: -30px;
+  margin-top: -84px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
   margin-bottom: 40px;
 }
 
@@ -25,7 +27,7 @@
   align-items: center;
   gap: 40px;
   height: 100%;
-  padding: 50px;
+  padding: 134px 50px 50px 50px;
 }
 
 .albumCover {
@@ -89,11 +91,11 @@
 /* Tablet */
 @media (max-width: 1200px) {
   .hero {
-    height: 400px;
+    height: 470px;
   }
 
   .heroContent {
-    padding: 40px;
+    padding: 124px 40px 40px 40px;
     gap: 30px;
   }
 
@@ -118,7 +120,9 @@
 /* Mobile */
 @media (max-width: 768px) {
   .hero {
-    height: 350px;
+    height: 420px;
+    width: calc(100% + 32px);
+    margin-left: -16px;
   }
 
   .heroContent {
@@ -126,7 +130,7 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 30px 20px;
+    padding: 114px 20px 30px 20px;
     gap: 20px;
   }
 
@@ -159,12 +163,14 @@
 /* Small mobile */
 @media (max-width: 480px) {
   .hero {
-    height: 300px;
+    height: 370px;
+    width: calc(100% + 24px);
+    margin-left: -12px;
     margin-bottom: 24px;
   }
 
   .heroContent {
-    padding: 20px 16px;
+    padding: 104px 16px 20px 16px;
     gap: 16px;
   }
 
