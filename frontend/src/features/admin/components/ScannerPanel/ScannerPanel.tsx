@@ -3,7 +3,7 @@ import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc,
 import { Button } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
-import { useAuthStore } from '@shared/store/authStore';
+import { useAuthStore } from '@shared/store';
 import styles from './ScannerPanel.module.css';
 
 /**
@@ -21,12 +21,12 @@ export function ScannerPanel() {
 
   const { data: history, isLoading: historyLoading, refetch } = useScannerHistory();
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
-  const { user } = useAuthStore();
+  const { accessToken } = useAuthStore();
 
   // WebSocket para progreso en tiempo real
-  const { progress, errors, isCompleted, isConnected } = useScannerWebSocket(
+  const { progress, isCompleted, isConnected } = useScannerWebSocket(
     currentScanId,
-    user?.accessToken || null
+    accessToken
   );
 
   // Cuando se inicia un scan, guardar el ID para WebSocket
