@@ -537,7 +537,49 @@ export class ScanProcessorService implements OnModuleInit {
         }
       }
 
+      // 6. CRÍTICO: Vincular tracks con sus álbumes y artistas
+      console.log('🔗 Vinculando tracks con álbumes y artistas...');
+      let tracksLinked = 0;
+
+      for (const [albumKey, albumData] of albumsMap) {
+        // Buscar el álbum que acabamos de crear/actualizar
+        const artist = await this.prisma.artist.findFirst({
+          where: { name: albumData.artistName },
+        });
+
+        if (!artist) continue;
+
+        const album = await this.prisma.album.findFirst({
+          where: {
+            name: albumData.name,
+            artistId: artist.id,
+          },
+        });
+
+        if (!album) continue;
+
+        // Actualizar todas las tracks que coincidan con este álbum
+        const result = await this.prisma.track.updateMany({
+          where: {
+            albumName: albumData.name,
+            OR: [
+              { albumArtistName: albumData.artistName },
+              { artistName: albumData.artistName },
+            ],
+            albumId: null, // Solo actualizar tracks que aún no están vinculadas
+          },
+          data: {
+            albumId: album.id,
+            artistId: artist.id,
+            albumArtistId: artist.id,
+          },
+        });
+
+        tracksLinked += result.count;
+      }
+
       console.log(`✅ Agregados/actualizados ${artistsMap.size} artistas y ${albumsMap.size} álbumes`);
+      console.log(`🔗 Vinculadas ${tracksLinked} tracks con sus álbumes`);
       return { albumsCount: albumsMap.size, artistsCount: artistsMap.size };
     } catch (error) {
       console.error('❌ Error agregando álbumes y artistas:', error);
