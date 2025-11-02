@@ -21,6 +21,9 @@ export class PrismaAlbumRepository implements IAlbumRepository {
   async findById(id: string): Promise<Album | null> {
     const album = await this.prisma.album.findUnique({
       where: { id },
+      include: {
+        artist: true, // Include artist relation to get artist name
+      },
     });
 
     return album ? AlbumMapper.toDomain(album) : null;
@@ -34,6 +37,9 @@ export class PrismaAlbumRepository implements IAlbumRepository {
       skip,
       take,
       orderBy: { createdAt: 'desc' },
+      include: {
+        artist: true, // Include artist relation to get artist name
+      },
     });
 
     return AlbumMapper.toDomainArray(albums);
@@ -53,6 +59,9 @@ export class PrismaAlbumRepository implements IAlbumRepository {
       skip,
       take,
       orderBy: { name: 'asc' },
+      include: {
+        artist: true, // Include artist relation to get artist name
+      },
     });
 
     return AlbumMapper.toDomainArray(albums);
@@ -73,6 +82,9 @@ export class PrismaAlbumRepository implements IAlbumRepository {
       skip,
       take,
       orderBy: { year: 'desc' },
+      include: {
+        artist: true, // Include artist relation to get artist name
+      },
     });
 
     return AlbumMapper.toDomainArray(albums);
