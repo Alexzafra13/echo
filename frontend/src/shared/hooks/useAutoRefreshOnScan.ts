@@ -23,14 +23,21 @@ export function useAutoRefreshOnScan() {
   const { accessToken, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
+    console.log('[useAutoRefreshOnScan] Effect triggered', { isAuthenticated, hasToken: !!accessToken });
+
     // Solo conectar si el usuario está autenticado
     if (!isAuthenticated || !accessToken) {
+      console.log('[useAutoRefreshOnScan] Not connecting - user not authenticated');
       return;
     }
+
+    console.log('[useAutoRefreshOnScan] Connecting to scanner WebSocket...');
 
     // Conectar al namespace de scanner
     const wsService = WebSocketService;
     const socket = wsService.connect('scanner', accessToken);
+
+    console.log('[useAutoRefreshOnScan] Socket connected, listening for scan:completed...');
 
     // Handler para scan completado
     const handleScanCompleted = (data: any) => {
@@ -48,9 +55,18 @@ export function useAutoRefreshOnScan() {
     // Suscribirse al evento
     socket.on('scan:completed', handleScanCompleted);
 
+    // Test: Log all events to see what's coming
+    socket.onAny((eventName, ...args) => {
+      console.log(`[WebSocket Event] ${eventName}`, args);
+    });
+
+    console.log('[useAutoRefreshOnScan] Subscribed to scan:completed event');
+
     // Cleanup
     return () => {
+      console.log('[useAutoRefreshOnScan] Cleaning up...');
       socket.off('scan:completed', handleScanCompleted);
+      socket.offAny();
       // No desconectamos el socket para permitir otros hooks
     };
   }, [isAuthenticated, accessToken, queryClient]);
