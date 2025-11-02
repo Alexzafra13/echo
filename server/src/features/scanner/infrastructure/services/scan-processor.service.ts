@@ -11,6 +11,7 @@ import { CoverArtService } from '@shared/services';
 import { generateUuid } from '@shared/utils';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
+import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
 import * as path from 'path';
 
 /**
@@ -55,6 +56,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly coverArtService: CoverArtService,
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
+    private readonly cachedAlbumRepository: CachedAlbumRepository,
   ) {}
 
   onModuleInit() {
@@ -183,6 +185,9 @@ export class ScanProcessorService implements OnModuleInit {
       } as any);
 
       const duration = Date.now() - startTime;
+
+      // Invalidar caché para que los nuevos álbumes aparezcan inmediatamente
+      await this.cachedAlbumRepository.invalidateListCaches();
 
       // Emitir evento: completado
       this.scannerGateway.emitCompleted({
@@ -610,6 +615,9 @@ export class ScanProcessorService implements OnModuleInit {
       const { albumsCount, artistsCount } = await this.aggregateAlbumsAndArtists(scanId, tracker);
       tracker.albumsCreated = albumsCount;
       tracker.artistsCreated = artistsCount;
+
+      // Invalidar caché para que los nuevos álbumes aparezcan inmediatamente
+      await this.cachedAlbumRepository.invalidateListCaches();
 
       // Scan completado
       this.scannerGateway.emitCompleted({
