@@ -44,6 +44,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.redis.del(key);
   }
 
+  /**
+   * Borra todas las claves que coinciden con un patrón
+   * Ejemplo: delPattern('albums:recent:*')
+   */
+  async delPattern(pattern: string): Promise<void> {
+    const keys = await this.redis.keys(pattern);
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+    }
+  }
+
   async clear(): Promise<void> {
     await this.redis.flushdb();
   }
