@@ -1,5 +1,6 @@
 import { Play } from 'lucide-react';
 import type { AlbumCardProps } from '../../types';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import styles from './AlbumCard.module.css';
 
 /**
@@ -30,7 +31,13 @@ export function AlbumCard({
   return (
     <article className={styles.card} onClick={onClick}>
       <div className={styles.coverContainer}>
-        <img src={cover} alt={title} loading="lazy" className={styles.cover} />
+        <img
+          src={getCoverUrl(cover)}
+          alt={title}
+          loading="lazy"
+          className={styles.cover}
+          onError={handleImageError}
+        />
         <div className={styles.overlay}>
           <button
             className={styles.playButton}
