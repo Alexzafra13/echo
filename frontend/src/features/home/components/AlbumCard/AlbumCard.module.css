@@ -7,7 +7,7 @@
   cursor: pointer;
   transition: transform 0.2s ease;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 6px; /* Ajustado de 8px → 6px (consistencia) */
 }
 
 .card:hover {
@@ -18,7 +18,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: 6px; /* Reducido de 10px → 6px (más sutil) */
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: box-shadow 0.2s ease;
