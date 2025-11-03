@@ -1,4 +1,4 @@
-import { Play } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import type { HeroSectionProps } from '../../types';
@@ -6,12 +6,14 @@ import styles from './HeroSection.module.css';
 
 /**
  * HeroSection Component
- * Displays the featured album with large cover, background, and play button
+ * Displays the featured album with large cover, background, play button, and navigation
  *
  * @example
  * <HeroSection
  *   album={featuredAlbum}
  *   onPlay={() => playAlbum(album.id)}
+ *   onNext={() => nextFeatured()}
+ *   onPrevious={() => previousFeatured()}
  * />
  */
 export function HeroSection({ album, onPlay }: HeroSectionProps) {
@@ -19,6 +21,16 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
     onPlay?.();
     // TODO: Implement play functionality
     console.log('Playing album:', album.id);
+  };
+
+  const handleNext = () => {
+    // TODO: Implement navigation to next featured album
+    console.log('Next featured album');
+  };
+
+  const handlePrevious = () => {
+    // TODO: Implement navigation to previous featured album
+    console.log('Previous featured album');
   };
 
   const coverUrl = getCoverUrl(album.coverImage);
@@ -33,6 +45,23 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
           backgroundImage: `url(${backgroundUrl})`,
         }}
       />
+
+      {/* Navigation Buttons */}
+      <button
+        className={styles.heroSection__navButton}
+        onClick={handlePrevious}
+        aria-label="Previous featured album"
+      >
+        <ChevronLeft size={32} />
+      </button>
+
+      <button
+        className={`${styles.heroSection__navButton} ${styles['heroSection__navButton--next']}`}
+        onClick={handleNext}
+        aria-label="Next featured album"
+      >
+        <ChevronRight size={32} />
+      </button>
 
       <div className={styles.heroSection__content}>
         {/* Album Cover */}
