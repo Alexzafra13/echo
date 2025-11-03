@@ -44,7 +44,7 @@ export function AlbumCard({
             onClick={handlePlayClick}
             aria-label={`Play ${title}`}
           >
-            <Play size={24} />
+            <Play size={20} fill="currentColor" />
           </button>
         </div>
       </div>
