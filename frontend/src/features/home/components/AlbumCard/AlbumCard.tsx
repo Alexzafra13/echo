@@ -29,18 +29,18 @@ export function AlbumCard({
   };
 
   return (
-    <article className={styles.card} onClick={onClick}>
-      <div className={styles.coverContainer}>
+    <article className={styles.albumCard} onClick={onClick}>
+      <div className={styles.albumCard__coverContainer}>
         <img
           src={getCoverUrl(cover)}
           alt={title}
           loading="lazy"
-          className={styles.cover}
+          className={styles.albumCard__cover}
           onError={handleImageError}
         />
-        <div className={styles.overlay}>
+        <div className={styles.albumCard__overlay}>
           <button
-            className={styles.playButton}
+            className={styles.albumCard__playButton}
             onClick={handlePlayClick}
             aria-label={`Play ${title}`}
           >
@@ -48,8 +48,8 @@ export function AlbumCard({
           </button>
         </div>
       </div>
-      <h3 className={styles.title}>{title}</h3>
-      <p className={styles.artist}>{artist}</p>
+      <h3 className={styles.albumCard__title}>{title}</h3>
+      <p className={styles.albumCard__artist}>{artist}</p>
     </article>
   );
 }

@@ -36,33 +36,33 @@ export default function AlbumsPage() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.albumsPage}>
       <Sidebar />
 
-      <main className={styles.main}>
+      <main className={styles.albumsPage__main}>
         <Header />
 
-        <div className={styles.content}>
+        <div className={styles.albumsPage__content}>
           {/* Page Header */}
-          <div className={styles.pageHeader}>
-            <h1 className={styles.title}>Todos los Álbumes</h1>
-            <p className={styles.subtitle}>
+          <div className={styles.albumsPage__pageHeader}>
+            <h1 className={styles.albumsPage__title}>Todos los Álbumes</h1>
+            <p className={styles.albumsPage__subtitle}>
               Explora tu colección completa de música
             </p>
           </div>
 
           {/* Albums Grid */}
           {isLoading ? (
-            <div className={styles.loadingState}>
-              <div className={styles.spinner} />
+            <div className={styles.albumsPage__loadingState}>
+              <div className={styles.albumsPage__spinner} />
               <p>Cargando álbumes...</p>
             </div>
           ) : error ? (
-            <div className={styles.errorState}>
+            <div className={styles.albumsPage__errorState}>
               <p>Error al cargar los álbumes</p>
               <button
                 onClick={() => window.location.reload()}
-                className={styles.retryButton}
+                className={styles.albumsPage__retryButton}
               >
                 Reintentar
               </button>
@@ -72,25 +72,25 @@ export default function AlbumsPage() {
               <AlbumGrid title="" albums={albums} />
 
               {/* Pagination Controls */}
-              <div className={styles.pagination}>
+              <div className={styles.albumsPage__pagination}>
                 <button
                   onClick={handlePreviousPage}
                   disabled={page === 0}
-                  className={styles.pageButton}
+                  className={styles.albumsPage__pageButton}
                   aria-label="Previous page"
                 >
                   <ChevronLeft size={20} />
                   <span>Anterior</span>
                 </button>
 
-                <span className={styles.pageInfo}>
+                <span className={styles.albumsPage__pageInfo}>
                   Página {page + 1}
                 </span>
 
                 <button
                   onClick={handleNextPage}
                   disabled={!hasMore}
-                  className={styles.pageButton}
+                  className={styles.albumsPage__pageButton}
                   aria-label="Next page"
                 >
                   <span>Siguiente</span>
@@ -99,9 +99,9 @@ export default function AlbumsPage() {
               </div>
             </>
           ) : (
-            <div className={styles.emptyState}>
+            <div className={styles.albumsPage__emptyState}>
               <p>No se encontraron álbumes</p>
-              <p className={styles.emptyHint}>
+              <p className={styles.albumsPage__emptyHint}>
                 Agrega música a tu biblioteca para empezar
               </p>
             </div>
