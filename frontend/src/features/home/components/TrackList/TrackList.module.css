@@ -1,11 +1,12 @@
-/* TrackList Component Styles */
+/* TrackList Component Styles - BEM Naming Convention */
 
+/* Block: trackList */
 .trackList {
   width: 100%;
   margin-top: 32px;
 }
 
-.emptyState {
+.trackList__emptyState {
   padding: 40px;
   text-align: center;
   color: var(--color-text-tertiary, #6b7280);
@@ -13,7 +14,7 @@
 }
 
 /* Header */
-.header {
+.trackList__header {
   display: grid;
   grid-template-columns: 40px 1fr 140px 80px;
   gap: 16px;
@@ -26,29 +27,30 @@
   letter-spacing: 0.5px;
 }
 
-.headerNumber {
+.trackList__headerNumber {
   text-align: center;
 }
 
-.headerTitle {
+.trackList__headerTitle {
   padding-left: 8px;
 }
 
-.headerFormat {
+.trackList__headerFormat {
   text-align: right;
   padding-right: 8px;
 }
 
-.headerDuration {
+.trackList__headerDuration {
   text-align: right;
 }
 
-/* Tracks */
-.tracks {
+/* Tracks Container */
+.trackList__tracks {
   margin-top: 8px;
 }
 
-.track {
+/* Track Item */
+.trackList__track {
   display: grid;
   grid-template-columns: 40px 1fr 140px 40px 80px;
   gap: 16px;
@@ -59,29 +61,29 @@
   transition: background-color 0.2s ease;
 }
 
-.track:hover {
+.trackList__track:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.track:hover .playButton {
+.trackList__track:hover .trackList__playButton {
   opacity: 1;
 }
 
-.trackNumber {
+.trackList__trackNumber {
   text-align: center;
   font-size: 14px;
   color: var(--color-text-tertiary, #6b7280);
   font-variant-numeric: tabular-nums;
 }
 
-.trackInfo {
+.trackList__trackInfo {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0; /* Allow text truncation */
 }
 
-.trackTitle {
+.trackList__trackTitle {
   font-size: 15px;
   font-weight: 500;
   color: var(--color-text-primary, #ffffff);
@@ -90,7 +92,7 @@
   text-overflow: ellipsis;
 }
 
-.trackArtist {
+.trackList__trackArtist {
   font-size: 13px;
   color: var(--color-text-secondary, #b8bcc8);
   white-space: nowrap;
@@ -98,7 +100,7 @@
   text-overflow: ellipsis;
 }
 
-.trackFormat {
+.trackList__trackFormat {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -106,7 +108,7 @@
   padding-right: 8px;
 }
 
-.format {
+.trackList__format {
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary, #ffffff);
@@ -114,12 +116,12 @@
   letter-spacing: 0.5px;
 }
 
-.bitrate {
+.trackList__bitrate {
   font-size: 11px;
   color: var(--color-text-tertiary, #6b7280);
 }
 
-.playButton {
+.trackList__playButton {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -134,84 +136,86 @@
   transition: all 0.2s ease;
 }
 
-.playButton:hover {
+.trackList__playButton:hover {
   transform: scale(1.1);
   background: var(--color-primary-dark, #ff5252);
 }
 
-.trackDuration {
+.trackList__trackDuration {
   text-align: right;
   font-size: 14px;
   color: var(--color-text-tertiary, #6b7280);
   font-variant-numeric: tabular-nums;
 }
 
+/* ===== Responsive Design ===== */
+
 /* Mobile */
 @media (max-width: 768px) {
-  .header {
+  .trackList__header {
     grid-template-columns: 32px 1fr 60px;
     gap: 12px;
     padding: 8px 12px;
   }
 
-  .headerFormat {
-    display: none; /* Ocultar en móvil */
+  .trackList__headerFormat {
+    display: none; /* Hide on mobile */
   }
 
-  .track {
+  .trackList__track {
     grid-template-columns: 32px 1fr 36px 60px;
     gap: 12px;
     padding: 10px 12px;
   }
 
-  .trackFormat {
-    display: none; /* Ocultar en móvil */
+  .trackList__trackFormat {
+    display: none; /* Hide on mobile */
   }
 
-  .trackTitle {
+  .trackList__trackTitle {
     font-size: 14px;
   }
 
-  .trackArtist {
+  .trackList__trackArtist {
     font-size: 12px;
   }
 
-  .playButton {
+  .trackList__playButton {
     width: 28px;
     height: 28px;
     opacity: 1; /* Always visible on mobile */
   }
 }
 
-/* Small mobile */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .header {
+  .trackList__header {
     grid-template-columns: 28px 1fr 56px;
     gap: 8px;
     padding: 6px 8px;
     font-size: 11px;
   }
 
-  .track {
+  .trackList__track {
     grid-template-columns: 28px 1fr 32px 56px;
     gap: 8px;
     padding: 8px;
   }
 
-  .trackTitle {
+  .trackList__trackTitle {
     font-size: 13px;
   }
 
-  .trackArtist {
+  .trackList__trackArtist {
     font-size: 11px;
   }
 
-  .playButton {
+  .trackList__playButton {
     width: 24px;
     height: 24px;
   }
 
-  .playButton svg {
+  .trackList__playButton svg {
     width: 12px;
     height: 12px;
   }

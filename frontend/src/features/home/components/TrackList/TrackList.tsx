@@ -47,7 +47,7 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
 
   if (!tracks || tracks.length === 0) {
     return (
-      <div className={styles.emptyState}>
+      <div className={styles.trackList__emptyState}>
         <p>No se encontraron canciones en este álbum</p>
       </div>
     );
@@ -55,42 +55,42 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
 
   return (
     <div className={styles.trackList}>
-      <div className={styles.header}>
-        <span className={styles.headerNumber}>#</span>
-        <span className={styles.headerTitle}>Título</span>
-        <span className={styles.headerFormat}>Formato</span>
-        <span className={styles.headerDuration}>Duración</span>
+      <div className={styles.trackList__header}>
+        <span className={styles.trackList__headerNumber}>#</span>
+        <span className={styles.trackList__headerTitle}>Título</span>
+        <span className={styles.trackList__headerFormat}>Formato</span>
+        <span className={styles.trackList__headerDuration}>Duración</span>
       </div>
 
-      <div className={styles.tracks}>
+      <div className={styles.trackList__tracks}>
         {tracks.map((track, index) => (
           <div
             key={track.id}
-            className={styles.track}
+            className={styles.trackList__track}
             onClick={() => handlePlay(track)}
           >
-            <span className={styles.trackNumber}>
+            <span className={styles.trackList__trackNumber}>
               {track.trackNumber || index + 1}
             </span>
 
-            <div className={styles.trackInfo}>
-              <span className={styles.trackTitle}>{track.title}</span>
+            <div className={styles.trackList__trackInfo}>
+              <span className={styles.trackList__trackTitle}>{track.title}</span>
               {track.artistName && (
-                <span className={styles.trackArtist}>{track.artistName}</span>
+                <span className={styles.trackList__trackArtist}>{track.artistName}</span>
               )}
             </div>
 
-            <div className={styles.trackFormat}>
+            <div className={styles.trackList__trackFormat}>
               {formatFormat(track.suffix) && (
-                <span className={styles.format}>{formatFormat(track.suffix)}</span>
+                <span className={styles.trackList__format}>{formatFormat(track.suffix)}</span>
               )}
               {formatBitRate(track.bitRate) && (
-                <span className={styles.bitrate}>{formatBitRate(track.bitRate)}</span>
+                <span className={styles.trackList__bitrate}>{formatBitRate(track.bitRate)}</span>
               )}
             </div>
 
             <button
-              className={styles.playButton}
+              className={styles.trackList__playButton}
               onClick={(e) => {
                 e.stopPropagation();
                 handlePlay(track);
@@ -100,7 +100,7 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
               <Play size={16} fill="currentColor" />
             </button>
 
-            <span className={styles.trackDuration}>
+            <span className={styles.trackList__trackDuration}>
               {formatDuration(track.duration)}
             </span>
           </div>
