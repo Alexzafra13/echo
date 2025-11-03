@@ -8,7 +8,7 @@
   margin-left: -30px;
   margin-top: -84px;
   overflow: hidden;
-  border-radius: 0 0 12px 12px;
+  border-radius: 0;
   margin-bottom: 40px;
 }
 
@@ -19,6 +19,39 @@
   background-position: center;
   filter: blur(30px) brightness(0.4);
   transform: scale(1.1);
+}
+
+/* Navigation Buttons */
+.heroSection__navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 20px;
+  z-index: 2;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-primary, #ffffff);
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.heroSection__navButton:hover {
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.heroSection__navButton--next {
+  left: auto;
+  right: 20px;
 }
 
 .heroSection__content {
@@ -128,6 +161,16 @@
     margin-left: -16px;
   }
 
+  .heroSection__navButton {
+    width: 40px;
+    height: 40px;
+    left: 10px;
+  }
+
+  .heroSection__navButton--next {
+    right: 10px;
+  }
+
   .heroSection__content {
     flex-direction: column;
     justify-content: center;
@@ -170,6 +213,16 @@
     width: calc(100% + 24px);
     margin-left: -12px;
     margin-bottom: 24px;
+  }
+
+  .heroSection__navButton {
+    width: 36px;
+    height: 36px;
+    left: 8px;
+  }
+
+  .heroSection__navButton--next {
+    right: 8px;
   }
 
   .heroSection__content {

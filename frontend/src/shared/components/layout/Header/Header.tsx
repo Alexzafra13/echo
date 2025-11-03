@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { ChevronLeft, ChevronRight, Search, User, Sun, Moon } from 'lucide-react';
+import { Search, User, Sun, Moon } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
 import styles from './Header.module.css';
 
 /**
  * Header Component
- * Sticky header with navigation buttons, search bar, theme toggle, and user menu
+ * Sticky header with search bar, theme toggle, and user menu
  * Features: Transparent header that becomes glassmorphic on scroll
  */
 export function Header() {
@@ -34,14 +34,6 @@ export function Header() {
     }
   };
 
-  const handleBack = () => {
-    window.history.back();
-  };
-
-  const handleForward = () => {
-    window.history.forward();
-  };
-
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
@@ -49,25 +41,7 @@ export function Header() {
 
   return (
     <header className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}>
-      {/* Navigation buttons */}
-      <div className={styles.header__navButtons}>
-        <button
-          className={styles.header__navButton}
-          onClick={handleBack}
-          aria-label="Go back"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <button
-          className={styles.header__navButton}
-          onClick={handleForward}
-          aria-label="Go forward"
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
-
-      {/* Right section: Search + Theme toggle + User menu */}
+      {/* Search + Theme toggle + User menu */}
       <div className={styles.header__rightSection}>
         {/* Search bar */}
         <form className={styles.header__searchForm} onSubmit={handleSearchSubmit}>
