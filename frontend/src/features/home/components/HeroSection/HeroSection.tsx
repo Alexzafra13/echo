@@ -25,29 +25,29 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
   const backgroundUrl = album.backgroundImage || coverUrl;
 
   return (
-    <section className={styles.hero}>
+    <section className={styles.heroSection}>
       {/* Background Image with blur effect */}
       <div
-        className={styles.heroBackground}
+        className={styles.heroSection__background}
         style={{
           backgroundImage: `url(${backgroundUrl})`,
         }}
       />
 
-      <div className={styles.heroContent}>
+      <div className={styles.heroSection__content}>
         {/* Album Cover */}
         <img
           src={coverUrl}
           alt={album.title}
-          className={styles.albumCover}
+          className={styles.heroSection__albumCover}
           onError={handleImageError}
         />
 
         {/* Album Info */}
-        <div className={styles.albumInfo}>
-          <h1 className={styles.artistName}>{album.artist}</h1>
-          <h2 className={styles.albumTitle}>{album.title}</h2>
-          <p className={styles.albumMeta}>
+        <div className={styles.heroSection__info}>
+          <h1 className={styles.heroSection__artistName}>{album.artist}</h1>
+          <h2 className={styles.heroSection__albumTitle}>{album.title}</h2>
+          <p className={styles.heroSection__meta}>
             {album.artist} • {album.title} - {album.year}
             {album.totalTracks && ` • ${album.totalTracks} Songs`}
           </p>
@@ -57,7 +57,7 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
             size="lg"
             onClick={handlePlay}
             leftIcon={<Play size={24} fill="currentColor" />}
-            className={styles.playButton}
+            className={styles.heroSection__playButton}
           >
             Play
           </Button>
@@ -68,7 +68,7 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
           <img
             src={album.albumArt}
             alt={`${album.title} artwork`}
-            className={styles.albumArt}
+            className={styles.heroSection__albumArt}
           />
         )}
       </div>
