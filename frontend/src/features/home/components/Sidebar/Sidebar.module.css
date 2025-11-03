@@ -1,7 +1,7 @@
 /* Sidebar Component Styles */
 
 .sidebar {
-  width: 230px;
+  width: 200px; /* Reducido de 230px → 200px (más estrecho) */
   height: 100vh;
   background: var(--color-bg-secondary, #14151f);
   display: flex;
@@ -86,7 +86,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .sidebar {
-    width: 200px;
+    width: 180px; /* Ajustado proporcionalmente */
   }
 
   .logoContainer {
