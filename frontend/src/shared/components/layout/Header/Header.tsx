@@ -48,18 +48,18 @@ export function Header() {
   };
 
   return (
-    <header className={`${styles.header} ${isScrolled ? styles.scrolled : ''}`}>
+    <header className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}>
       {/* Navigation buttons */}
-      <div className={styles.navButtons}>
+      <div className={styles.header__navButtons}>
         <button
-          className={styles.navButton}
+          className={styles.header__navButton}
           onClick={handleBack}
           aria-label="Go back"
         >
           <ChevronLeft size={20} />
         </button>
         <button
-          className={styles.navButton}
+          className={styles.header__navButton}
           onClick={handleForward}
           aria-label="Go forward"
         >
@@ -68,24 +68,24 @@ export function Header() {
       </div>
 
       {/* Right section: Search + Theme toggle + User menu */}
-      <div className={styles.rightSection}>
+      <div className={styles.header__rightSection}>
         {/* Search bar */}
-        <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
-          <div className={styles.searchWrapper}>
-            <Search size={20} className={styles.searchIcon} />
+        <form className={styles.header__searchForm} onSubmit={handleSearchSubmit}>
+          <div className={styles.header__searchWrapper}>
+            <Search size={20} className={styles.header__searchIcon} />
             <input
               type="text"
               placeholder="Busca Artistas, Canciones, Álbumes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
+              className={styles.header__searchInput}
             />
           </div>
         </form>
 
         {/* Theme toggle */}
         <button
-          className={styles.themeToggle}
+          className={styles.header__themeToggle}
           onClick={toggleTheme}
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -94,9 +94,9 @@ export function Header() {
         </button>
 
         {/* User menu */}
-        <div className={styles.userMenu}>
+        <div className={styles.header__userMenu}>
           <button
-            className={styles.userButton}
+            className={styles.header__userButton}
             onClick={() => setShowUserMenu(!showUserMenu)}
             aria-label="User menu"
           >
@@ -104,21 +104,21 @@ export function Header() {
           </button>
 
           {showUserMenu && (
-            <div className={styles.userDropdown}>
-              <div className={styles.userInfo}>
-                <p className={styles.userName}>{user?.username || 'User'}</p>
-                <p className={styles.userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
+            <div className={styles.header__userDropdown}>
+              <div className={styles.header__userInfo}>
+                <p className={styles.header__userName}>{user?.username || 'User'}</p>
+                <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
               </div>
-              <div className={styles.userDivider} />
-              <button className={styles.userMenuItem} onClick={() => setLocation('/profile')}>
+              <div className={styles.header__userDivider} />
+              <button className={styles.header__userMenuItem} onClick={() => setLocation('/profile')}>
                 Profile
               </button>
-              <button className={styles.userMenuItem} onClick={() => setLocation('/settings')}>
+              <button className={styles.header__userMenuItem} onClick={() => setLocation('/settings')}>
                 Settings
               </button>
-              <div className={styles.userDivider} />
+              <div className={styles.header__userDivider} />
               <button
-                className={`${styles.userMenuItem} ${styles.userMenuItemDanger}`}
+                className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--danger']}`}
                 onClick={handleLogout}
               >
                 Logout
