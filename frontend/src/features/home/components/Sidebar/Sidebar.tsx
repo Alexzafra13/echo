@@ -71,9 +71,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      {/* Version Badge */}
-      <div className={styles.version}>V1</div>
     </aside>
   );
 }
