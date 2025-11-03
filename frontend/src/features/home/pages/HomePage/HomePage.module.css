@@ -1,26 +1,27 @@
-/* HomePage Component Styles */
+/* HomePage Component Styles - BEM Naming Convention */
 
-.container {
+/* Block: homePage */
+.homePage {
   display: flex;
   min-height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
 }
 
-.main {
+.homePage__main {
   flex: 1;
-  margin-left: 200px; /* Ajustado de 230px → 200px (coincide con sidebar) */
+  margin-left: 200px; /* Aligned with 200px sidebar width */
   display: flex;
   flex-direction: column;
 }
 
-.content {
+.homePage__content {
   flex: 1;
   padding: 0 30px 30px 30px;
   overflow-y: auto;
 }
 
 /* Empty State */
-.emptyState {
+.homePage__emptyState {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,8 +30,10 @@
   font-size: 16px;
 }
 
-/* Loading Skeletons */
-.heroSkeleton {
+/* ===== Loading States (formerly "skeletons") ===== */
+
+/* Hero Loading State */
+.hero--loading {
   display: flex;
   gap: 40px;
   height: 450px;
@@ -41,7 +44,7 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.skeletonCover {
+.hero__cover--loading {
   width: 200px;
   height: 200px;
   background: rgba(255, 255, 255, 0.05);
@@ -49,28 +52,28 @@
   flex-shrink: 0;
 }
 
-.skeletonInfo {
+.hero__info--loading {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.skeletonTitle {
+.hero__title--loading {
   height: 60px;
   width: 60%;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 }
 
-.skeletonSubtitle {
+.hero__subtitle--loading {
   height: 40px;
   width: 40%;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 }
 
-.skeletonButton {
+.hero__button--loading {
   height: 50px;
   width: 150px;
   background: rgba(255, 255, 255, 0.05);
@@ -78,11 +81,12 @@
   margin-top: 20px;
 }
 
-.gridSkeleton {
+/* Album Grid Loading State */
+.albumGrid--loading {
   margin-bottom: 40px;
 }
 
-.skeletonSectionTitle {
+.albumGrid__sectionTitle--loading {
   height: 32px;
   width: 300px;
   background: rgba(255, 255, 255, 0.05);
@@ -90,18 +94,19 @@
   margin: 0 20px 20px;
 }
 
-.skeletonGrid {
+.albumGrid__grid--loading {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 20px;
   padding: 0 20px;
 }
 
-.skeletonCard {
+/* Album Card Loading State */
+.albumCard--loading {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.skeletonCardCover {
+.albumCard__cover--loading {
   width: 100%;
   aspect-ratio: 1;
   background: rgba(255, 255, 255, 0.05);
@@ -109,7 +114,7 @@
   margin-bottom: 12px;
 }
 
-.skeletonCardTitle {
+.albumCard__title--loading {
   height: 20px;
   width: 80%;
   background: rgba(255, 255, 255, 0.05);
@@ -117,13 +122,14 @@
   margin-bottom: 8px;
 }
 
-.skeletonCardArtist {
+.albumCard__artist--loading {
   height: 16px;
   width: 60%;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
 }
 
+/* Pulse Animation */
 @keyframes pulse {
   0%,
   100% {
@@ -134,65 +140,67 @@
   }
 }
 
+/* ===== Responsive Design ===== */
+
 /* Tablet */
 @media (max-width: 1024px) {
-  .main {
+  .homePage__main {
     margin-left: 200px;
   }
 
-  .content {
+  .homePage__content {
     padding: 0 24px 24px 24px;
   }
 
-  .heroSkeleton {
+  .hero--loading {
     padding: 40px;
   }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
-  .main {
+  .homePage__main {
     margin-left: 80px;
   }
 
-  .content {
+  .homePage__content {
     padding: 0 16px 20px 16px;
   }
 
-  .heroSkeleton {
+  .hero--loading {
     flex-direction: column;
     height: auto;
     padding: 30px 20px;
   }
 
-  .skeletonCover {
+  .hero__cover--loading {
     width: 150px;
     height: 150px;
   }
 
-  .skeletonTitle,
-  .skeletonSubtitle {
+  .hero__title--loading,
+  .hero__subtitle--loading {
     width: 100%;
   }
 
-  .skeletonGrid {
+  .albumGrid__grid--loading {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
   }
 }
 
-/* Small mobile */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .main {
+  .homePage__main {
     margin-left: 0;
     padding-top: 60px; /* Space for mobile header */
   }
 
-  .content {
+  .homePage__content {
     padding: 0 12px 16px 12px;
   }
 
-  .skeletonGrid {
+  .albumGrid__grid--loading {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }

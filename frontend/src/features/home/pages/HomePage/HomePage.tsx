@@ -10,52 +10,52 @@ import styles from './HomePage.module.css';
  * Main page after login - displays featured album, recent albums, and daily mixes
  */
 export default function HomePage() {
-  // Auto-refresh cuando se completa un scan ✨
+  // Auto-refresh when scan completes ✨
   useAutoRefreshOnScan();
 
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums();
 
-  // Limitar a 12 álbumes (2 filas de 6)
+  // Limit to 12 albums (2 rows of 6)
   const displayedRecentAlbums = recentAlbums?.slice(0, 12) || [];
   const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
 
   return (
-    <div className={styles.container}>
+    <div className={styles.homePage}>
       <Sidebar />
 
-      <main className={styles.main}>
+      <main className={styles.homePage__main}>
         <Header />
 
-        <div className={styles.content}>
+        <div className={styles.homePage__content}>
           {/* Hero Section */}
           {loadingFeatured ? (
-            <div className={styles.heroSkeleton}>
-              <div className={styles.skeletonCover} />
-              <div className={styles.skeletonInfo}>
-                <div className={styles.skeletonTitle} />
-                <div className={styles.skeletonSubtitle} />
-                <div className={styles.skeletonButton} />
+            <div className={styles['hero--loading']}>
+              <div className={styles['hero__cover--loading']} />
+              <div className={styles['hero__info--loading']}>
+                <div className={styles['hero__title--loading']} />
+                <div className={styles['hero__subtitle--loading']} />
+                <div className={styles['hero__button--loading']} />
               </div>
             </div>
           ) : featuredAlbum ? (
             <HeroSection album={featuredAlbum} />
           ) : (
-            <div className={styles.emptyState}>
+            <div className={styles.homePage__emptyState}>
               <p>No featured album available</p>
             </div>
           )}
 
           {/* Recently Added Albums */}
           {loadingRecent ? (
-            <div className={styles.gridSkeleton}>
-              <div className={styles.skeletonSectionTitle} />
-              <div className={styles.skeletonGrid}>
+            <div className={styles['albumGrid--loading']}>
+              <div className={styles['albumGrid__sectionTitle--loading']} />
+              <div className={styles['albumGrid__grid--loading']}>
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className={styles.skeletonCard}>
-                    <div className={styles.skeletonCardCover} />
-                    <div className={styles.skeletonCardTitle} />
-                    <div className={styles.skeletonCardArtist} />
+                  <div key={i} className={styles['albumCard--loading']}>
+                    <div className={styles['albumCard__cover--loading']} />
+                    <div className={styles['albumCard__title--loading']} />
+                    <div className={styles['albumCard__artist--loading']} />
                   </div>
                 ))}
               </div>
@@ -71,7 +71,7 @@ export default function HomePage() {
               )}
             </>
           ) : (
-            <div className={styles.emptyState}>
+            <div className={styles.homePage__emptyState}>
               <p>No albums found. Start by adding some music!</p>
             </div>
           )}
