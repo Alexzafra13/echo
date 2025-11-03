@@ -3,6 +3,27 @@ import type { Track } from '../../types';
 import { formatDuration } from '../../types';
 import styles from './TrackList.module.css';
 
+/**
+ * Formatea el bitrate a kbps
+ * @param bitRate - Bitrate en bps
+ * @returns String formateado (ej: "320 kbps")
+ */
+function formatBitRate(bitRate?: number): string {
+  if (!bitRate) return '';
+  const kbps = Math.round(bitRate / 1000);
+  return `${kbps} kbps`;
+}
+
+/**
+ * Formatea el formato del archivo (extensión en mayúsculas)
+ * @param suffix - Extensión del archivo
+ * @returns String formateado (ej: "FLAC")
+ */
+function formatFormat(suffix?: string): string {
+  if (!suffix) return '';
+  return suffix.toUpperCase();
+}
+
 interface TrackListProps {
   tracks: Track[];
   onTrackPlay?: (track: Track) => void;
@@ -37,6 +58,7 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
       <div className={styles.header}>
         <span className={styles.headerNumber}>#</span>
         <span className={styles.headerTitle}>Título</span>
+        <span className={styles.headerFormat}>Formato</span>
         <span className={styles.headerDuration}>Duración</span>
       </div>
 
@@ -55,6 +77,15 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
               <span className={styles.trackTitle}>{track.title}</span>
               {track.artistName && (
                 <span className={styles.trackArtist}>{track.artistName}</span>
+              )}
+            </div>
+
+            <div className={styles.trackFormat}>
+              {formatFormat(track.suffix) && (
+                <span className={styles.format}>{formatFormat(track.suffix)}</span>
+              )}
+              {formatBitRate(track.bitRate) && (
+                <span className={styles.bitrate}>{formatBitRate(track.bitRate)}</span>
               )}
             </div>
 
