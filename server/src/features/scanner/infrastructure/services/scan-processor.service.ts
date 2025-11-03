@@ -131,7 +131,7 @@ export class ScanProcessorService implements OnModuleInit {
 
       for (const filePath of files) {
         try {
-          const result = await this.processFile(filePath);
+          const result = await this.processFile(filePath, tracker);
           if (result === 'added') {
             tracksAdded++;
             tracker.tracksCreated++;
@@ -167,13 +167,10 @@ export class ScanProcessorService implements OnModuleInit {
         tracksDeleted = await this.pruneDeletedTracks(files);
       }
 
-      // 4.5 Agregar/Actualizar álbumes y artistas basados en los tracks
-      console.log(`📊 Agregando álbumes y artistas...`);
-      this.emitProgress(scanId, tracker, ScanStatus.AGGREGATING, 'Agregando álbumes y artistas...');
-
-      const { albumsCount, artistsCount } = await this.aggregateAlbumsAndArtists(scanId, tracker);
-      tracker.albumsCreated = albumsCount;
-      tracker.artistsCreated = artistsCount;
+      // ⭐ NOTA: Con la nueva arquitectura atómica, los álbumes y artistas
+      // ya fueron creados/actualizados durante processFile().
+      // No necesitamos fase de agregación separada.
+      console.log(`✅ Álbumes y artistas ya procesados durante el escaneo`);
 
       // 5. Actualizar escaneo como completado
       await this.scannerRepository.update(scanId, {
@@ -246,34 +243,208 @@ export class ScanProcessorService implements OnModuleInit {
   }
 
   /**
-   * Procesa un archivo individual
+   * Busca o crea un artista de manera atómica
+   *
+   * Esta función garantiza que siempre retorne un artista válido con ID,
+   * creándolo si no existe. Sigue el patrón "find-or-create" de Navidrome.
+   *
+   * @param artistName - Nombre del artista
+   * @param mbzArtistId - MusicBrainz ID (opcional)
+   * @returns Artista existente o recién creado, con flag 'created'
+   */
+  private async findOrCreateArtist(
+    artistName: string,
+    mbzArtistId?: string,
+  ): Promise<{ id: string; name: string; created: boolean }> {
+    // Normalizar nombre (evitar duplicados por espacios, etc.)
+    const normalizedName = (artistName || 'Unknown Artist').trim();
+
+    // 1. Intentar buscar el artista existente
+    let artist = await this.prisma.artist.findFirst({
+      where: { name: normalizedName },
+      select: { id: true, name: true },
+    });
+
+    // 2. Si no existe, crearlo
+    if (!artist) {
+      artist = await this.prisma.artist.create({
+        data: {
+          name: normalizedName,
+          mbzArtistId: mbzArtistId || undefined,
+          albumCount: 0, // Se calculará después
+          songCount: 0,  // Se calculará después
+          size: BigInt(0), // Se calculará después
+        },
+        select: { id: true, name: true },
+      });
+      return { ...artist, created: true };
+    }
+
+    return { ...artist, created: false };
+  }
+
+  /**
+   * Busca o crea un álbum de manera atómica
+   *
+   * Esta función garantiza que siempre retorne un álbum válido con ID,
+   * creándolo si no existe y vinculándolo al artista correcto.
+   * Sigue el patrón "find-or-create" de Navidrome.
+   *
+   * @param albumName - Nombre del álbum
+   * @param artistId - ID del artista propietario
+   * @param metadata - Metadatos adicionales del álbum
+   * @param trackPath - Path del track (para extraer cover)
+   * @returns Álbum existente o recién creado, con flags 'created' y 'coverExtracted'
+   */
+  private async findOrCreateAlbum(
+    albumName: string,
+    artistId: string,
+    metadata: {
+      year?: number;
+      compilation?: boolean;
+      mbzAlbumId?: string;
+      mbzAlbumArtistId?: string;
+    },
+    trackPath: string,
+  ): Promise<{ id: string; name: string; artistId: string; created: boolean; coverExtracted: boolean }> {
+    // Normalizar nombre
+    const normalizedName = (albumName || 'Unknown Album').trim();
+
+    // 1. Intentar buscar el álbum existente
+    let album = await this.prisma.album.findFirst({
+      where: {
+        name: normalizedName,
+        artistId: artistId,
+      },
+      select: { id: true, name: true, artistId: true, coverArtPath: true },
+    });
+
+    // 2. Si no existe, crearlo
+    if (!album) {
+      const albumId = generateUuid();
+
+      // Extraer cover art del primer track
+      const coverPath = await this.coverArtService.extractAndCacheCover(
+        albumId,
+        trackPath,
+      );
+
+      album = await this.prisma.album.create({
+        data: {
+          id: albumId,
+          name: normalizedName,
+          artistId: artistId,
+          albumArtistId: artistId, // Por defecto, album artist = artist
+          year: metadata.year || undefined,
+          compilation: metadata.compilation || false,
+          mbzAlbumId: metadata.mbzAlbumId || undefined,
+          mbzAlbumArtistId: metadata.mbzAlbumArtistId || undefined,
+          coverArtPath: coverPath || undefined,
+          songCount: 0,    // Se actualizará con cada track
+          duration: 0,     // Se actualizará con cada track
+          size: BigInt(0), // Se actualizará con cada track
+        },
+        select: { id: true, name: true, artistId: true, coverArtPath: true },
+      });
+
+      return { ...album, created: true, coverExtracted: !!coverPath };
+    }
+
+    return { ...album, created: false, coverExtracted: false };
+  }
+
+  /**
+   * Procesa un archivo individual de manera ATÓMICA
+   *
+   * Siguiendo la arquitectura de Navidrome, este método:
+   * 1. Extrae metadatos del archivo
+   * 2. Busca o crea el artista
+   * 3. Busca o crea el álbum (vinculado al artista)
+   * 4. Crea o actualiza el track (vinculado al álbum y artista)
+   *
+   * Todo en una sola pasada, garantizando consistencia de datos.
+   * No hay fase de "agregación" ni "vinculación" posterior.
+   *
+   * @param filePath - Ruta del archivo de música
+   * @param tracker - (Opcional) Tracker para actualizar contadores
+   * @returns 'added' si se creó, 'updated' si se actualizó, 'skipped' si hubo error
    */
   private async processFile(
     filePath: string,
+    tracker?: ScanProgress,
   ): Promise<'added' | 'updated' | 'skipped'> {
     try {
-      // 1. Verificar si el track ya existe en la BD
-      const existingTrack = await this.prisma.track.findUnique({
-        where: { path: filePath },
-      });
-
-      // 2. Extraer metadatos
+      // ============================================================
+      // 1. EXTRAER METADATOS
+      // ============================================================
       const metadata = await this.metadataExtractor.extractMetadata(filePath);
       if (!metadata) {
         console.warn(`⚠️  No se pudieron extraer metadatos de ${filePath}`);
         return 'skipped';
       }
 
-      // 3. Obtener tamaño del archivo
       const stats = await this.fileScanner.getFileStats(filePath);
       const size = stats ? stats.size : 0;
 
-      // 4. Preparar datos del track
+      // ============================================================
+      // 2. BUSCAR O CREAR ARTISTA (atómico)
+      // ============================================================
+      const artistName = metadata.artist || 'Unknown Artist';
+      const mbzArtistId = Array.isArray(metadata.musicBrainzArtistId)
+        ? metadata.musicBrainzArtistId[0]
+        : metadata.musicBrainzArtistId;
+
+      const artist = await this.findOrCreateArtist(artistName, mbzArtistId);
+
+      // Trackear si se creó un nuevo artista
+      if (artist.created && tracker) {
+        tracker.artistsCreated++;
+      }
+
+      // ============================================================
+      // 3. BUSCAR O CREAR ÁLBUM (atómico, vinculado al artista)
+      // ============================================================
+      const albumName = metadata.album || 'Unknown Album';
+      const mbzAlbumId = metadata.musicBrainzAlbumId;
+      const mbzAlbumArtistId = Array.isArray(metadata.musicBrainzAlbumArtistId)
+        ? metadata.musicBrainzAlbumArtistId[0]
+        : metadata.musicBrainzAlbumArtistId;
+
+      const album = await this.findOrCreateAlbum(
+        albumName,
+        artist.id,
+        {
+          year: metadata.year,
+          compilation: metadata.compilation,
+          mbzAlbumId,
+          mbzAlbumArtistId,
+        },
+        filePath,
+      );
+
+      // Trackear si se creó un nuevo álbum o cover
+      if (tracker) {
+        if (album.created) tracker.albumsCreated++;
+        if (album.coverExtracted) tracker.coversExtracted++;
+      }
+
+      // ============================================================
+      // 4. CREAR O ACTUALIZAR TRACK (con IDs ya vinculados)
+      // ============================================================
+      const existingTrack = await this.prisma.track.findUnique({
+        where: { path: filePath },
+      });
+
       const trackData = {
         title: metadata.title || path.basename(filePath, path.extname(filePath)),
-        artistName: metadata.artist || 'Unknown Artist',
-        albumName: metadata.album || 'Unknown Album',
-        albumArtistName: metadata.albumArtist || metadata.artist || 'Unknown Artist',
+        artistName: artist.name,
+        albumName: album.name,
+        albumArtistName: metadata.albumArtist || artist.name,
+        // ⭐ CRITICAL: Vincular con IDs desde el inicio
+        artistId: artist.id,
+        albumId: album.id,
+        albumArtistId: artist.id,
+        // Metadatos del track
         trackNumber: metadata.trackNumber,
         discNumber: metadata.discNumber || 1,
         year: metadata.year,
@@ -288,33 +459,87 @@ export class ScanProcessorService implements OnModuleInit {
         comment: metadata.comment,
         lyrics: metadata.lyrics,
         mbzTrackId: metadata.musicBrainzTrackId,
-        mbzAlbumId: metadata.musicBrainzAlbumId,
-        // MusicBrainz IDs can be arrays, but Prisma expects a single string
-        mbzArtistId: Array.isArray(metadata.musicBrainzArtistId)
-          ? metadata.musicBrainzArtistId[0]
-          : metadata.musicBrainzArtistId,
-        mbzAlbumArtistId: Array.isArray(metadata.musicBrainzAlbumArtistId)
-          ? metadata.musicBrainzAlbumArtistId[0]
-          : metadata.musicBrainzAlbumArtistId,
+        mbzAlbumId: mbzAlbumId,
+        mbzArtistId: mbzArtistId,
+        mbzAlbumArtistId: mbzAlbumArtistId,
       };
 
-      // 5. Si existe, actualizar; si no, crear
       if (existingTrack) {
+        // Actualizar track existente
         await this.prisma.track.update({
           where: { id: existingTrack.id },
           data: trackData,
         });
+
+        // Actualizar contadores del álbum
+        await this.updateAlbumStats(album.id);
+        await this.updateArtistStats(artist.id);
+
         return 'updated';
       } else {
+        // Crear nuevo track
         await this.prisma.track.create({
           data: trackData,
         });
+
+        // Actualizar contadores del álbum
+        await this.updateAlbumStats(album.id);
+        await this.updateArtistStats(artist.id);
+
         return 'added';
       }
     } catch (error) {
       console.error(`❌ Error procesando ${filePath}:`, error);
       return 'skipped';
     }
+  }
+
+  /**
+   * Actualiza las estadísticas de un álbum (songCount, duration, size)
+   * basándose en sus tracks vinculados
+   */
+  private async updateAlbumStats(albumId: string): Promise<void> {
+    const stats = await this.prisma.track.aggregate({
+      where: { albumId },
+      _count: { id: true },
+      _sum: {
+        duration: true,
+        size: true,
+      },
+    });
+
+    await this.prisma.album.update({
+      where: { id: albumId },
+      data: {
+        songCount: stats._count.id,
+        duration: stats._sum.duration || 0,
+        size: stats._sum.size || BigInt(0),
+      },
+    });
+  }
+
+  /**
+   * Actualiza las estadísticas de un artista (albumCount, songCount, size)
+   * basándose en sus álbumes y tracks vinculados
+   */
+  private async updateArtistStats(artistId: string): Promise<void> {
+    const [albumCount, trackStats] = await Promise.all([
+      this.prisma.album.count({ where: { artistId } }),
+      this.prisma.track.aggregate({
+        where: { artistId },
+        _count: { id: true },
+        _sum: { size: true },
+      }),
+    ]);
+
+    await this.prisma.artist.update({
+      where: { id: artistId },
+      data: {
+        albumCount,
+        songCount: trackStats._count.id,
+        size: trackStats._sum.size || BigInt(0),
+      },
+    });
   }
 
   /**
@@ -358,235 +583,6 @@ export class ScanProcessorService implements OnModuleInit {
     }
   }
 
-  /**
-   * Agrega álbumes y artistas basados en los tracks escaneados
-   */
-  private async aggregateAlbumsAndArtists(
-    scanId: string,
-    tracker: ScanProgress,
-  ): Promise<{ albumsCount: number; artistsCount: number }> {
-    try {
-      // 1. Obtener todos los tracks agrupados
-      const tracks = await this.prisma.track.findMany({
-        select: {
-          artistName: true,
-          albumArtistName: true,
-          albumName: true,
-          duration: true,
-          size: true,
-          year: true,
-          compilation: true,
-          hasCoverArt: true,
-          path: true,
-          mbzArtistId: true,
-          mbzAlbumArtistId: true,
-          mbzAlbumId: true,
-        },
-      });
-
-      // 2. Agrupar por artista
-      const artistsMap = new Map<string, any>();
-      for (const track of tracks) {
-        const artistName = track.artistName || 'Unknown Artist';
-        if (!artistsMap.has(artistName)) {
-          artistsMap.set(artistName, {
-            name: artistName,
-            mbzArtistId: track.mbzArtistId,
-            albumCount: 0,
-            songCount: 0,
-            size: BigInt(0),
-            albums: new Set<string>(),
-          });
-        }
-        const artist = artistsMap.get(artistName)!;
-        artist.songCount++;
-        artist.size += track.size || BigInt(0);
-        artist.albums.add(track.albumName || 'Unknown Album');
-      }
-
-      // 3. Crear/actualizar artistas
-      for (const [artistName, artistData] of artistsMap) {
-        const existingArtist = await this.prisma.artist.findFirst({
-          where: { name: artistName },
-        });
-
-        if (existingArtist) {
-          await this.prisma.artist.update({
-            where: { id: existingArtist.id },
-            data: {
-              albumCount: artistData.albums.size,
-              songCount: artistData.songCount,
-              size: artistData.size,
-            },
-          });
-        } else {
-          await this.prisma.artist.create({
-            data: {
-              name: artistName,
-              mbzArtistId: artistData.mbzArtistId,
-              albumCount: artistData.albums.size,
-              songCount: artistData.songCount,
-              size: artistData.size,
-            },
-          });
-        }
-      }
-
-      // 4. Agrupar por álbum
-      const albumsMap = new Map<string, any>();
-      for (const track of tracks) {
-        const albumName = track.albumName || 'Unknown Album';
-        const albumArtistName = track.albumArtistName || track.artistName || 'Unknown Artist';
-        const albumKey = `${albumName}|${albumArtistName}`;
-
-        if (!albumsMap.has(albumKey)) {
-          albumsMap.set(albumKey, {
-            name: albumName,
-            artistName: albumArtistName,
-            mbzAlbumId: track.mbzAlbumId,
-            mbzAlbumArtistId: track.mbzAlbumArtistId,
-            songCount: 0,
-            duration: 0,
-            size: BigInt(0),
-            year: track.year,
-            compilation: track.compilation,
-            firstTrackPath: track.path, // Guardar primer track para extraer cover
-          });
-        }
-
-        const album = albumsMap.get(albumKey)!;
-        album.songCount++;
-        album.duration += track.duration || 0;
-        album.size += track.size || BigInt(0);
-      }
-
-      // 5. Crear/actualizar álbumes
-      for (const [albumKey, albumData] of albumsMap) {
-        // Buscar o crear el artista
-        let artist = await this.prisma.artist.findFirst({
-          where: { name: albumData.artistName },
-        });
-
-        if (!artist) {
-          // El artista no existe, crearlo
-          console.log(`🎤 Creando artista para álbum: ${albumData.artistName}`);
-          artist = await this.prisma.artist.create({
-            data: {
-              name: albumData.artistName,
-              mbzArtistId: albumData.mbzAlbumArtistId,
-              albumCount: 0, // Se actualizará después
-              songCount: 0,
-              size: BigInt(0),
-            },
-          });
-        }
-
-        // Buscar si el álbum ya existe
-        const existingAlbum = await this.prisma.album.findFirst({
-          where: {
-            name: albumData.name,
-            artistId: artist.id,
-          },
-        });
-
-        // Determinar el ID del álbum (existente o nuevo)
-        const albumId = existingAlbum?.id || generateUuid();
-
-        // Extraer y cachear cover art
-        this.emitProgress(scanId, tracker, ScanStatus.EXTRACTING_COVERS, `Extrayendo cover de ${albumData.name}`);
-        const coverPath = await this.coverArtService.extractAndCacheCover(
-          existingAlbum?.id || albumId,
-          albumData.firstTrackPath,
-        );
-
-        if (coverPath) {
-          tracker.coversExtracted++;
-        }
-
-        if (existingAlbum) {
-          // Actualizar álbum existente
-          await this.prisma.album.update({
-            where: { id: existingAlbum.id },
-            data: {
-              songCount: albumData.songCount,
-              duration: albumData.duration,
-              size: albumData.size,
-              year: albumData.year,
-              compilation: albumData.compilation,
-              coverArtPath: coverPath || existingAlbum.coverArtPath,
-            },
-          });
-        } else {
-          // Crear nuevo álbum
-          await this.prisma.album.create({
-            data: {
-              id: albumId,
-              name: albumData.name,
-              artistId: artist.id,
-              albumArtistId: artist.id,
-              mbzAlbumId: albumData.mbzAlbumId,
-              mbzAlbumArtistId: albumData.mbzAlbumArtistId,
-              songCount: albumData.songCount,
-              duration: albumData.duration,
-              size: albumData.size,
-              year: albumData.year,
-              compilation: albumData.compilation,
-              coverArtPath: coverPath,
-            },
-          });
-        }
-      }
-
-      // 6. CRÍTICO: Vincular tracks con sus álbumes y artistas
-      console.log('🔗 Vinculando tracks con álbumes y artistas...');
-      let tracksLinked = 0;
-
-      for (const [albumKey, albumData] of albumsMap) {
-        // Buscar el álbum que acabamos de crear/actualizar
-        const artist = await this.prisma.artist.findFirst({
-          where: { name: albumData.artistName },
-        });
-
-        if (!artist) continue;
-
-        const album = await this.prisma.album.findFirst({
-          where: {
-            name: albumData.name,
-            artistId: artist.id,
-          },
-        });
-
-        if (!album) continue;
-
-        // Actualizar todas las tracks que coincidan con este álbum
-        // Removemos la condición albumId: null para actualizar TODAS las tracks,
-        // incluso las que ya estaban vinculadas (por si cambiaron de álbum/artista)
-        const result = await this.prisma.track.updateMany({
-          where: {
-            albumName: albumData.name,
-            OR: [
-              { albumArtistName: albumData.artistName },
-              { artistName: albumData.artistName },
-            ],
-          },
-          data: {
-            albumId: album.id,
-            artistId: artist.id,
-            albumArtistId: artist.id,
-          },
-        });
-
-        tracksLinked += result.count;
-      }
-
-      console.log(`✅ Agregados/actualizados ${artistsMap.size} artistas y ${albumsMap.size} álbumes`);
-      console.log(`🔗 Vinculadas ${tracksLinked} tracks con sus álbumes`);
-      return { albumsCount: albumsMap.size, artistsCount: artistsMap.size };
-    } catch (error) {
-      console.error('❌ Error agregando álbumes y artistas:', error);
-      return { albumsCount: 0, artistsCount: 0 };
-    }
-  }
 
   /**
    * Procesa scan incremental de archivos específicos (desde file watcher)
@@ -623,7 +619,7 @@ export class ScanProcessorService implements OnModuleInit {
         try {
           console.log(`🎵 Procesando: ${path.basename(filePath)}`);
 
-          const result = await this.processFile(filePath);
+          const result = await this.processFile(filePath, tracker);
 
           if (result === 'added') {
             tracker.tracksCreated++;
@@ -656,17 +652,8 @@ export class ScanProcessorService implements OnModuleInit {
         }
       }
 
-      // Agregar álbumes y artistas
-      this.emitProgress(
-        scanId,
-        tracker,
-        ScanStatus.AGGREGATING,
-        'Agregando álbumes y artistas...',
-      );
-
-      const { albumsCount, artistsCount } = await this.aggregateAlbumsAndArtists(scanId, tracker);
-      tracker.albumsCreated = albumsCount;
-      tracker.artistsCreated = artistsCount;
+      // ⭐ Con la nueva arquitectura atómica, álbumes y artistas ya fueron
+      // creados durante processFile(). No necesitamos agregación separada.
 
       // Invalidar caché para que los nuevos álbumes aparezcan inmediatamente
       await this.cachedAlbumRepository.invalidateListCaches();
