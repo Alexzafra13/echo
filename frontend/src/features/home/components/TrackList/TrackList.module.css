@@ -15,7 +15,7 @@
 /* Header */
 .header {
   display: grid;
-  grid-template-columns: 40px 1fr 80px;
+  grid-template-columns: 40px 1fr 140px 80px;
   gap: 16px;
   padding: 8px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -34,6 +34,11 @@
   padding-left: 8px;
 }
 
+.headerFormat {
+  text-align: right;
+  padding-right: 8px;
+}
+
 .headerDuration {
   text-align: right;
 }
@@ -45,7 +50,7 @@
 
 .track {
   display: grid;
-  grid-template-columns: 40px 1fr 40px 80px;
+  grid-template-columns: 40px 1fr 140px 40px 80px;
   gap: 16px;
   align-items: center;
   padding: 12px 16px;
@@ -93,6 +98,27 @@
   text-overflow: ellipsis;
 }
 
+.trackFormat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+  padding-right: 8px;
+}
+
+.format {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bitrate {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
 .playButton {
   width: 32px;
   height: 32px;
@@ -128,10 +154,18 @@
     padding: 8px 12px;
   }
 
+  .headerFormat {
+    display: none; /* Ocultar en móvil */
+  }
+
   .track {
     grid-template-columns: 32px 1fr 36px 60px;
     gap: 12px;
     padding: 10px 12px;
+  }
+
+  .trackFormat {
+    display: none; /* Ocultar en móvil */
   }
 
   .trackTitle {

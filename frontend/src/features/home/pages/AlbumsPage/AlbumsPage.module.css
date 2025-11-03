@@ -8,7 +8,7 @@
 
 .main {
   flex: 1;
-  margin-left: 230px;
+  margin-left: 200px; /* Ajustado de 230px → 200px (coincide con sidebar) */
   display: flex;
   flex-direction: column;
 }
