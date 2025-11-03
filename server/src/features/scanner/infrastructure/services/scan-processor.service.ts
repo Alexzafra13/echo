@@ -559,6 +559,8 @@ export class ScanProcessorService implements OnModuleInit {
         if (!album) continue;
 
         // Actualizar todas las tracks que coincidan con este álbum
+        // Removemos la condición albumId: null para actualizar TODAS las tracks,
+        // incluso las que ya estaban vinculadas (por si cambiaron de álbum/artista)
         const result = await this.prisma.track.updateMany({
           where: {
             albumName: albumData.name,
@@ -566,7 +568,6 @@ export class ScanProcessorService implements OnModuleInit {
               { albumArtistName: albumData.artistName },
               { artistName: albumData.artistName },
             ],
-            albumId: null, // Solo actualizar tracks que aún no están vinculadas
           },
           data: {
             albumId: album.id,
