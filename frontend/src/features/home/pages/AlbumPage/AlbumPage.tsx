@@ -6,6 +6,7 @@ import { Sidebar, TrackList } from '../../components';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import styles from './AlbumPage.module.css';
 
 /**
@@ -23,7 +24,8 @@ export default function AlbumPage() {
   // Extract dominant color from album cover
   useEffect(() => {
     if (album?.coverImage) {
-      extractDominantColor(album.coverImage).then(color => {
+      const coverUrl = getCoverUrl(album.coverImage);
+      extractDominantColor(coverUrl).then(color => {
         setDominantColor(color);
       });
     }
@@ -105,9 +107,10 @@ export default function AlbumPage() {
           <div className={styles.albumHero}>
             {/* Album cover */}
             <img
-              src={album.coverImage}
+              src={getCoverUrl(album.coverImage)}
               alt={album.title}
               className={styles.albumCover}
+              onError={handleImageError}
             />
 
             {/* Album info */}

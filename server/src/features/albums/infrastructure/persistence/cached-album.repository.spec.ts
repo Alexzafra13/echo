@@ -282,8 +282,8 @@ describe('CachedAlbumRepository', () => {
 
       // Assert
       expect(baseRepository.create).toHaveBeenCalledWith(mockAlbum);
-      // invalidateListCaches now uses: 3x delPattern() + 2x del()
-      expect(cacheService.delPattern).toHaveBeenCalledTimes(3);
+      // invalidateListCaches now uses: 4x delPattern() (album:*, recent:*, most-played:*, artist:*) + 2x del()
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(4);
       expect(cacheService.del).toHaveBeenCalledTimes(2);
       expect(result).toBe(mockAlbum);
     });
@@ -301,9 +301,9 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.update).toHaveBeenCalledWith('album-1', updates);
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      // 1 specific del() + invalidateListCaches (3x delPattern + 2x del)
+      // 1 specific del() + invalidateListCaches (4x delPattern + 2x del)
       expect(cacheService.del).toHaveBeenCalledTimes(3);
-      expect(cacheService.delPattern).toHaveBeenCalledTimes(3);
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(4);
       expect(result).toBe(mockAlbum);
     });
 
@@ -331,9 +331,9 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.delete).toHaveBeenCalledWith('album-1');
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      // 1 specific del() + invalidateListCaches (3x delPattern + 2x del)
+      // 1 specific del() + invalidateListCaches (4x delPattern + 2x del)
       expect(cacheService.del).toHaveBeenCalledTimes(3);
-      expect(cacheService.delPattern).toHaveBeenCalledTimes(3);
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(4);
       expect(result).toBe(true);
     });
 
