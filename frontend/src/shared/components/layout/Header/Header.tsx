@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { ChevronLeft, ChevronRight, Search, User } from 'lucide-react';
-import { useAuth } from '@shared/hooks';
+import { ChevronLeft, ChevronRight, Search, User, Sun, Moon } from 'lucide-react';
+import { useAuth, useTheme } from '@shared/hooks';
 import styles from './Header.module.css';
 
 /**
  * Header Component
- * Sticky header with navigation buttons, search bar, and user menu
+ * Sticky header with navigation buttons, search bar, theme toggle, and user menu
  * Features: Transparent header that becomes glassmorphic on scroll
  */
 export function Header() {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -66,7 +67,7 @@ export function Header() {
         </button>
       </div>
 
-      {/* Right section: Search + User menu */}
+      {/* Right section: Search + Theme toggle + User menu */}
       <div className={styles.rightSection}>
         {/* Search bar */}
         <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
@@ -81,6 +82,16 @@ export function Header() {
             />
           </div>
         </form>
+
+        {/* Theme toggle */}
+        <button
+          className={styles.themeToggle}
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
 
         {/* User menu */}
         <div className={styles.userMenu}>
