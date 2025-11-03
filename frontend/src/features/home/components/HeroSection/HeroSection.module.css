@@ -1,6 +1,7 @@
-/* HeroSection Component Styles */
+/* HeroSection Component Styles - BEM Naming Convention */
 
-.hero {
+/* Block: heroSection */
+.heroSection {
   position: relative;
   height: 520px;
   width: calc(100% + 60px);
@@ -11,7 +12,7 @@
   margin-bottom: 40px;
 }
 
-.heroBackground {
+.heroSection__background {
   position: absolute;
   inset: 0;
   background-size: cover;
@@ -20,7 +21,7 @@
   transform: scale(1.1);
 }
 
-.heroContent {
+.heroSection__content {
   position: relative;
   z-index: 1;
   display: flex;
@@ -30,7 +31,7 @@
   padding: 134px 50px 50px 50px;
 }
 
-.albumCover {
+.heroSection__albumCover {
   width: 200px;
   height: 200px;
   border-radius: 10px;
@@ -39,14 +40,14 @@
   flex-shrink: 0;
 }
 
-.albumInfo {
+.heroSection__info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.artistName {
+.heroSection__artistName {
   font-size: 64px;
   font-weight: 900;
   color: var(--color-text-primary, #ffffff);
@@ -57,7 +58,7 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-.albumTitle {
+.heroSection__albumTitle {
   font-size: 72px;
   font-weight: 900;
   color: var(--color-accent, #ff3333);
@@ -68,19 +69,19 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-.albumMeta {
+.heroSection__meta {
   font-size: 14px;
   color: var(--color-text-secondary, #b8bcc8);
   margin: 0;
   font-weight: 500;
 }
 
-.playButton {
+.heroSection__playButton {
   width: fit-content;
   margin-top: 8px;
 }
 
-.albumArt {
+.heroSection__albumArt {
   height: 400px;
   width: auto;
   object-fit: contain;
@@ -88,44 +89,46 @@
   flex-shrink: 0;
 }
 
+/* ===== Responsive Design ===== */
+
 /* Tablet */
 @media (max-width: 1200px) {
-  .hero {
+  .heroSection {
     height: 470px;
   }
 
-  .heroContent {
+  .heroSection__content {
     padding: 124px 40px 40px 40px;
     gap: 30px;
   }
 
-  .albumCover {
+  .heroSection__albumCover {
     width: 180px;
     height: 180px;
   }
 
-  .artistName {
+  .heroSection__artistName {
     font-size: 48px;
   }
 
-  .albumTitle {
+  .heroSection__albumTitle {
     font-size: 56px;
   }
 
-  .albumArt {
+  .heroSection__albumArt {
     height: 350px;
   }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
-  .hero {
+  .heroSection {
     height: 420px;
     width: calc(100% + 32px);
     margin-left: -16px;
   }
 
-  .heroContent {
+  .heroSection__content {
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -134,56 +137,56 @@
     gap: 20px;
   }
 
-  .albumCover {
+  .heroSection__albumCover {
     width: 150px;
     height: 150px;
   }
 
-  .artistName {
+  .heroSection__artistName {
     font-size: 32px;
   }
 
-  .albumTitle {
+  .heroSection__albumTitle {
     font-size: 36px;
   }
 
-  .albumMeta {
+  .heroSection__meta {
     font-size: 12px;
   }
 
-  .albumArt {
+  .heroSection__albumArt {
     display: none; /* Hide on mobile */
   }
 
-  .playButton {
+  .heroSection__playButton {
     margin: 0 auto;
   }
 }
 
-/* Small mobile */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .hero {
+  .heroSection {
     height: 370px;
     width: calc(100% + 24px);
     margin-left: -12px;
     margin-bottom: 24px;
   }
 
-  .heroContent {
+  .heroSection__content {
     padding: 104px 16px 20px 16px;
     gap: 16px;
   }
 
-  .albumCover {
+  .heroSection__albumCover {
     width: 120px;
     height: 120px;
   }
 
-  .artistName {
+  .heroSection__artistName {
     font-size: 24px;
   }
 
-  .albumTitle {
+  .heroSection__albumTitle {
     font-size: 28px;
   }
 }

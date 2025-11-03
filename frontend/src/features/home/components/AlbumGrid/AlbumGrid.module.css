@@ -1,10 +1,11 @@
-/* AlbumGrid Component Styles */
+/* AlbumGrid Component Styles - BEM Naming Convention */
 
-.section {
+/* Block: albumGrid */
+.albumGrid {
   margin-bottom: 40px;
 }
 
-.sectionTitle {
+.albumGrid__title {
   font-size: 24px;
   font-weight: 700;
   color: var(--color-text-primary, #ffffff);
@@ -12,21 +13,23 @@
   padding: 0 20px;
 }
 
-.grid {
+.albumGrid__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Aumentado de 180px → 200px (más grande) */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   padding: 0 20px;
 }
 
+/* ===== Responsive Design ===== */
+
 /* Tablet */
 @media (max-width: 1200px) {
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Ajustado proporcionalmente */
+  .albumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px;
   }
 
-  .sectionTitle {
+  .albumGrid__title {
     font-size: 22px;
     margin-bottom: 16px;
   }
@@ -34,32 +37,32 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-  .section {
+  .albumGrid {
     margin-bottom: 32px;
   }
 
-  .sectionTitle {
+  .albumGrid__title {
     font-size: 20px;
     margin-bottom: 12px;
     padding: 0 16px;
   }
 
-  .grid {
+  .albumGrid__grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
     padding: 0 16px;
   }
 }
 
-/* Small mobile */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .grid {
+  .albumGrid__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     padding: 0 12px;
   }
 
-  .sectionTitle {
+  .albumGrid__title {
     font-size: 18px;
     padding: 0 12px;
   }

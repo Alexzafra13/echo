@@ -30,9 +30,9 @@ export function AlbumGrid({ title, albums }: AlbumGridProps) {
   }
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
-      <div className={styles.grid}>
+    <section className={styles.albumGrid}>
+      <h2 className={styles.albumGrid__title}>{title}</h2>
+      <div className={styles.albumGrid__grid}>
         {albums.map((album) => (
           <AlbumCard
             key={album.id}
