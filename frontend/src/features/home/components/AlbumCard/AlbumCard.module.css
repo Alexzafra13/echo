@@ -55,23 +55,24 @@
 
 .albumCard__playButton {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
-  width: 48px;
-  height: 48px;
+  bottom: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--color-primary, #1db954);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-left: 2px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: white;
   opacity: 0;
   transform: translateY(8px);
   pointer-events: auto;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .albumCard:hover .albumCard__playButton {
@@ -81,12 +82,12 @@
 
 .albumCard__playButton:hover {
   background: var(--color-primary-hover, #1ed760);
-  transform: scale(1.08);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
 }
 
 .albumCard__playButton:active {
-  transform: scale(1);
+  transform: scale(1.05);
 }
 
 .albumCard__title {
@@ -126,15 +127,15 @@
   }
 
   .albumCard__playButton {
-    width: 40px;
-    height: 40px;
-    bottom: 8px;
-    left: 8px;
+    width: 36px;
+    height: 36px;
+    bottom: 6px;
+    right: 6px;
   }
 
   .albumCard__playButton svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 }
 
