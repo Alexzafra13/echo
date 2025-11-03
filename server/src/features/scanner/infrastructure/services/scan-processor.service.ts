@@ -347,10 +347,22 @@ export class ScanProcessorService implements OnModuleInit {
         select: { id: true, name: true, artistId: true, coverArtPath: true },
       });
 
-      return { ...album, created: true, coverExtracted: !!coverPath };
+      return {
+        id: album.id,
+        name: album.name,
+        artistId: album.artistId!, // TypeScript: garantizamos que no es null porque acabamos de crearlo
+        created: true,
+        coverExtracted: !!coverPath
+      };
     }
 
-    return { ...album, created: false, coverExtracted: false };
+    return {
+      id: album.id,
+      name: album.name,
+      artistId: album.artistId!, // TypeScript: garantizamos que no es null porque filtramos por artistId
+      created: false,
+      coverExtracted: false
+    };
   }
 
   /**
