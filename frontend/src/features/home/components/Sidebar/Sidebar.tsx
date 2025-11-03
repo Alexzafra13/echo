@@ -45,28 +45,28 @@ export function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       {/* Logo */}
-      <div className={styles.logoContainer}>
+      <div className={styles.sidebar__logoContainer}>
         <img
           src="/images/logos/echo-icon-sidebar-white.png"
           alt="Echo"
-          className={styles.logo}
+          className={styles.sidebar__logo}
         />
       </div>
 
       {/* Navigation */}
-      <nav className={styles.nav}>
+      <nav className={styles.sidebar__nav}>
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.path}
               href={item.path}
-              className={`${styles.navItem} ${
-                isActive(item.path) ? styles.navItemActive : ''
+              className={`${styles.sidebar__navItem} ${
+                isActive(item.path) ? styles['sidebar__navItem--active'] : ''
               }`}
             >
-              <Icon size={20} className={styles.navIcon} />
-              <span className={styles.navLabel}>{item.label}</span>
+              <Icon size={20} className={styles.sidebar__navIcon} />
+              <span className={styles.sidebar__navLabel}>{item.label}</span>
             </Link>
           );
         })}
