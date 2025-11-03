@@ -1,5 +1,6 @@
 import { Play } from 'lucide-react';
 import { Button } from '@shared/components/ui';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
 
@@ -20,22 +21,26 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
     console.log('Playing album:', album.id);
   };
 
+  const coverUrl = getCoverUrl(album.coverImage);
+  const backgroundUrl = album.backgroundImage || coverUrl;
+
   return (
     <section className={styles.hero}>
       {/* Background Image with blur effect */}
       <div
         className={styles.heroBackground}
         style={{
-          backgroundImage: `url(${album.backgroundImage || album.coverImage})`,
+          backgroundImage: `url(${backgroundUrl})`,
         }}
       />
 
       <div className={styles.heroContent}>
         {/* Album Cover */}
         <img
-          src={album.coverImage}
+          src={coverUrl}
           alt={album.title}
           className={styles.albumCover}
+          onError={handleImageError}
         />
 
         {/* Album Info */}
