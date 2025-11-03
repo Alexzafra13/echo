@@ -47,12 +47,12 @@ export default function AlbumPage() {
 
   if (loadingAlbum) {
     return (
-      <div className={styles.container}>
+      <div className={styles.albumPage}>
         <Sidebar />
-        <main className={styles.main}>
+        <main className={styles.albumPage__main}>
           <Header />
-          <div className={styles.content}>
-            <div className={styles.loadingState}>
+          <div className={styles.albumPage__content}>
+            <div className={styles.albumPage__loadingState}>
               <p>Cargando álbum...</p>
             </div>
           </div>
@@ -63,12 +63,12 @@ export default function AlbumPage() {
 
   if (albumError || !album) {
     return (
-      <div className={styles.container}>
+      <div className={styles.albumPage}>
         <Sidebar />
-        <main className={styles.main}>
+        <main className={styles.albumPage__main}>
           <Header />
-          <div className={styles.content}>
-            <div className={styles.errorState}>
+          <div className={styles.albumPage__content}>
+            <div className={styles.albumPage__errorState}>
               <p>Error al cargar el álbum</p>
               <Button onClick={handleBack}>Volver al inicio</Button>
             </div>
@@ -82,14 +82,14 @@ export default function AlbumPage() {
   const totalMinutes = Math.floor(totalDuration / 60);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.albumPage}>
       <Sidebar />
 
-      <main className={styles.main}>
+      <main className={styles.albumPage__main}>
         <Header />
 
         <div
-          className={styles.content}
+          className={styles.albumPage__content}
           style={{
             background: `linear-gradient(180deg,
               rgba(${dominantColor}, 0.6) 0%,
@@ -98,41 +98,41 @@ export default function AlbumPage() {
           }}
         >
           {/* Back button */}
-          <button className={styles.backButton} onClick={handleBack}>
+          <button className={styles.albumPage__backButton} onClick={handleBack}>
             <ChevronLeft size={20} />
             <span>Volver</span>
           </button>
 
           {/* Album hero section */}
-          <div className={styles.albumHero}>
+          <div className={styles.albumPage__hero}>
             {/* Album cover */}
             <img
               src={getCoverUrl(album.coverImage)}
               alt={album.title}
-              className={styles.albumCover}
+              className={styles.albumPage__heroCover}
               onError={handleImageError}
             />
 
             {/* Album info */}
-            <div className={styles.albumInfo}>
-              <span className={styles.albumType}>Álbum</span>
-              <h1 className={styles.albumTitle}>{album.title}</h1>
-              <div className={styles.albumMeta}>
-                <span className={styles.albumArtist}>{album.artist}</span>
-                <span className={styles.metaDivider}>•</span>
+            <div className={styles.albumPage__heroInfo}>
+              <span className={styles.albumPage__heroType}>Álbum</span>
+              <h1 className={styles.albumPage__heroTitle}>{album.title}</h1>
+              <div className={styles.albumPage__heroMeta}>
+                <span className={styles.albumPage__heroArtist}>{album.artist}</span>
+                <span className={styles.albumPage__heroDivider}>•</span>
                 <span>{album.year}</span>
-                <span className={styles.metaDivider}>•</span>
+                <span className={styles.albumPage__heroDivider}>•</span>
                 <span>{album.totalTracks} canciones</span>
                 {totalMinutes > 0 && (
                   <>
-                    <span className={styles.metaDivider}>•</span>
+                    <span className={styles.albumPage__heroDivider}>•</span>
                     <span>{totalMinutes} min</span>
                   </>
                 )}
               </div>
 
               {/* Action buttons */}
-              <div className={styles.actions}>
+              <div className={styles.albumPage__heroActions}>
                 <Button
                   variant="primary"
                   size="lg"
@@ -141,7 +141,7 @@ export default function AlbumPage() {
                 >
                   Reproducir
                 </Button>
-                <button className={styles.moreButton} aria-label="More options">
+                <button className={styles.albumPage__heroMoreButton} aria-label="More options">
                   <MoreHorizontal size={24} />
                 </button>
               </div>
@@ -149,15 +149,15 @@ export default function AlbumPage() {
           </div>
 
           {/* Track listing */}
-          <div className={styles.trackSection}>
+          <div className={styles.albumPage__trackSection}>
             {loadingTracks ? (
-              <div className={styles.loadingTracks}>
+              <div className={styles.albumPage__loadingTracks}>
                 <p>Cargando canciones...</p>
               </div>
             ) : tracks && tracks.length > 0 ? (
               <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} />
             ) : (
-              <div className={styles.emptyTracks}>
+              <div className={styles.albumPage__emptyTracks}>
                 <p>No se encontraron canciones en este álbum</p>
               </div>
             )}

@@ -1,27 +1,28 @@
-/* AlbumPage Component Styles */
+/* AlbumPage Component Styles - BEM Naming Convention */
 
-.container {
+/* Block: albumPage */
+.albumPage {
   display: flex;
   min-height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
 }
 
-.main {
+.albumPage__main {
   flex: 1;
   margin-left: 200px; /* Ajustado de 230px → 200px (coincide con sidebar) */
   display: flex;
   flex-direction: column;
 }
 
-.content {
+.albumPage__content {
   flex: 1;
   padding: 24px 40px;
   overflow-y: auto;
   transition: background 0.5s ease;
 }
 
-/* Back button */
-.backButton {
+/* Back Button */
+.albumPage__backButton {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -37,13 +38,13 @@
   margin-bottom: 24px;
 }
 
-.backButton:hover {
+.albumPage__backButton:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary, #ffffff);
 }
 
 /* Album Hero Section */
-.albumHero {
+.albumPage__hero {
   display: flex;
   gap: 32px;
   padding: 32px;
@@ -53,7 +54,7 @@
   margin-bottom: 32px;
 }
 
-.albumCover {
+.albumPage__heroCover {
   width: 240px;
   height: 240px;
   border-radius: 8px;
@@ -62,7 +63,7 @@
   flex-shrink: 0;
 }
 
-.albumInfo {
+.albumPage__heroInfo {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -70,7 +71,7 @@
   gap: 12px;
 }
 
-.albumType {
+.albumPage__heroType {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -78,7 +79,7 @@
   color: var(--color-text-secondary, #b8bcc8);
 }
 
-.albumTitle {
+.albumPage__heroTitle {
   font-size: 56px;
   font-weight: 900;
   color: var(--color-text-primary, #ffffff);
@@ -87,7 +88,7 @@
   letter-spacing: -1px;
 }
 
-.albumMeta {
+.albumPage__heroMeta {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -96,23 +97,23 @@
   color: var(--color-text-secondary, #b8bcc8);
 }
 
-.albumArtist {
+.albumPage__heroArtist {
   font-weight: 600;
   color: var(--color-text-primary, #ffffff);
 }
 
-.metaDivider {
+.albumPage__heroDivider {
   color: var(--color-text-tertiary, #6b7280);
 }
 
-.actions {
+.albumPage__heroActions {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-top: 16px;
 }
 
-.moreButton {
+.albumPage__heroMoreButton {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -126,22 +127,22 @@
   transition: all 0.2s ease;
 }
 
-.moreButton:hover {
+.albumPage__heroMoreButton:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.3);
   color: var(--color-text-primary, #ffffff);
 }
 
 /* Track Section */
-.trackSection {
+.albumPage__trackSection {
   padding: 0 32px;
 }
 
 /* Loading and Error States */
-.loadingState,
-.errorState,
-.loadingTracks,
-.emptyTracks {
+.albumPage__loadingState,
+.albumPage__errorState,
+.albumPage__loadingTracks,
+.albumPage__emptyTracks {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -151,50 +152,52 @@
   color: var(--color-text-tertiary, #6b7280);
 }
 
-.errorState {
+.albumPage__errorState {
   min-height: 60vh;
 }
 
+/* ===== Responsive Design ===== */
+
 /* Tablet */
 @media (max-width: 1024px) {
-  .main {
+  .albumPage__main {
     margin-left: 200px;
   }
 
-  .content {
+  .albumPage__content {
     padding: 20px 32px;
   }
 
-  .albumHero {
+  .albumPage__hero {
     gap: 24px;
     padding: 24px;
   }
 
-  .albumCover {
+  .albumPage__heroCover {
     width: 200px;
     height: 200px;
   }
 
-  .albumTitle {
+  .albumPage__heroTitle {
     font-size: 48px;
   }
 
-  .trackSection {
+  .albumPage__trackSection {
     padding: 0 24px;
   }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
-  .main {
+  .albumPage__main {
     margin-left: 80px;
   }
 
-  .content {
+  .albumPage__content {
     padding: 16px 20px;
   }
 
-  .albumHero {
+  .albumPage__hero {
     flex-direction: column;
     align-items: center;
     text-align: center;
@@ -202,73 +205,73 @@
     padding: 20px;
   }
 
-  .albumCover {
+  .albumPage__heroCover {
     width: 180px;
     height: 180px;
   }
 
-  .albumInfo {
+  .albumPage__heroInfo {
     align-items: center;
     gap: 10px;
   }
 
-  .albumTitle {
+  .albumPage__heroTitle {
     font-size: 36px;
   }
 
-  .albumMeta {
+  .albumPage__heroMeta {
     justify-content: center;
     font-size: 13px;
   }
 
-  .actions {
+  .albumPage__heroActions {
     justify-content: center;
     margin-top: 12px;
   }
 
-  .trackSection {
+  .albumPage__trackSection {
     padding: 0 16px;
   }
 
-  .backButton {
+  .albumPage__backButton {
     font-size: 13px;
     padding: 6px 12px;
   }
 }
 
-/* Small mobile */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .main {
+  .albumPage__main {
     margin-left: 0;
     padding-top: 60px; /* Space for mobile header */
   }
 
-  .content {
+  .albumPage__content {
     padding: 12px 16px;
   }
 
-  .albumHero {
+  .albumPage__hero {
     padding: 16px;
   }
 
-  .albumCover {
+  .albumPage__heroCover {
     width: 160px;
     height: 160px;
   }
 
-  .albumTitle {
+  .albumPage__heroTitle {
     font-size: 28px;
   }
 
-  .albumMeta {
+  .albumPage__heroMeta {
     font-size: 12px;
   }
 
-  .trackSection {
+  .albumPage__trackSection {
     padding: 0 12px;
   }
 
-  .backButton {
+  .albumPage__backButton {
     padding: 4px 10px;
     font-size: 12px;
   }
