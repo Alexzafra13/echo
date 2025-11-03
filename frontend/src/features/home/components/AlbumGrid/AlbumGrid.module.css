@@ -14,7 +14,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Aumentado de 180px → 200px (más grande) */
   gap: 20px;
   padding: 0 20px;
 }
@@ -22,7 +22,7 @@
 /* Tablet */
 @media (max-width: 1200px) {
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Ajustado proporcionalmente */
     gap: 16px;
   }
 
