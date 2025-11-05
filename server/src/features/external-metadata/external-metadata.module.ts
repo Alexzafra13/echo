@@ -11,6 +11,7 @@ import { RateLimiterService } from './infrastructure/services/rate-limiter.servi
 import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
+import { CleanupService } from './infrastructure/services/cleanup.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -22,9 +23,13 @@ import { SettingsRepository } from './infrastructure/persistence/settings.reposi
 
 // Application
 import { ExternalMetadataService } from './application/external-metadata.service';
+import { ImageService } from './application/services/image.service';
 
 // Presentation
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
+import { ImagesController } from './presentation/images.controller';
+import { AdminSettingsController } from './presentation/admin-settings.controller';
+import { MaintenanceController } from './presentation/maintenance.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -63,6 +68,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     SettingsService,
     StorageService,
     ImageDownloadService,
+    CleanupService,
 
     // Persistence
     SettingsRepository,
@@ -72,15 +78,22 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     LastfmAgent,
     FanartTvAgent,
 
-    // Application service
+    // Application services
     ExternalMetadataService,
+    ImageService,
 
     // WebSocket gateway
     MetadataEnrichmentGateway,
   ],
-  controllers: [ExternalMetadataController],
+  controllers: [
+    ExternalMetadataController,
+    ImagesController,
+    AdminSettingsController,
+    MaintenanceController,
+  ],
   exports: [
     ExternalMetadataService,
+    ImageService,
     AgentRegistryService,
     MetadataCacheService,
     SettingsService,

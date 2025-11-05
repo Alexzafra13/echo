@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, forwardRef, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import {
@@ -12,6 +12,8 @@ import { generateUuid } from '@shared/utils';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
+import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import * as path from 'path';
 
 /**
@@ -43,6 +45,7 @@ class ScanProgress {
 
 @Injectable()
 export class ScanProcessorService implements OnModuleInit {
+  private readonly logger = new Logger(ScanProcessorService.name);
   private readonly QUEUE_NAME = 'library-scan';
   private readonly uploadPath = process.env.UPLOAD_PATH || './uploads/music';
 
@@ -57,6 +60,8 @@ export class ScanProcessorService implements OnModuleInit {
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
     private readonly cachedAlbumRepository: CachedAlbumRepository,
+    private readonly externalMetadataService: ExternalMetadataService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   onModuleInit() {
@@ -185,6 +190,9 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Invalidar caché para que los nuevos álbumes aparezcan inmediatamente
       await this.cachedAlbumRepository.invalidateListCaches();
+
+      // 6. Auto-enriquecer metadatos si está habilitado
+      await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
 
       // Emitir evento: completado
       this.scannerGateway.emitCompleted({
@@ -700,6 +708,145 @@ export class ScanProcessorService implements OnModuleInit {
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       });
+    }
+  }
+
+  /**
+   * Realiza auto-enriquecimiento de metadatos externos si está habilitado
+   * Se ejecuta después de completar un escaneo exitoso
+   */
+  private async performAutoEnrichment(
+    artistsCreated: number,
+    albumsCreated: number,
+  ): Promise<void> {
+    try {
+      // Verificar si el auto-enriquecimiento está habilitado
+      const autoEnrichEnabled = await this.settingsService.getBoolean(
+        'metadata.auto_enrich.enabled',
+        false,
+      );
+
+      if (!autoEnrichEnabled) {
+        this.logger.debug('Auto-enriquecimiento deshabilitado, omitiendo');
+        return;
+      }
+
+      const batchSize = await this.settingsService.getNumber(
+        'metadata.auto_enrich.batch_size',
+        10,
+      );
+
+      this.logger.log(
+        `Iniciando auto-enriquecimiento (batch size: ${batchSize})`,
+      );
+
+      // Obtener artistas recientes sin metadatos externos (ordenar por fecha de creación desc, limit por batch size)
+      const artistsToEnrich = await this.prisma.artist.findMany({
+        where: {
+          mbzArtistId: { not: null }, // Solo si tiene MusicBrainz ID
+          externalInfoUpdatedAt: null, // No enriquecido previamente
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: batchSize,
+        select: {
+          id: true,
+          name: true,
+          mbzArtistId: true,
+        },
+      });
+
+      // Enriquecer artistas en background (no esperar)
+      if (artistsToEnrich.length > 0) {
+        this.logger.log(
+          `Enriqueciendo ${artistsToEnrich.length} artistas en background`,
+        );
+
+        // Ejecutar en background sin bloquear
+        this.enrichArtistsInBackground(artistsToEnrich).catch((error) => {
+          this.logger.error(
+            `Error en auto-enriquecimiento de artistas: ${error.message}`,
+            error.stack,
+          );
+        });
+      }
+
+      // Obtener álbumes recientes sin portadas externas
+      const albumsToEnrich = await this.prisma.album.findMany({
+        where: {
+          mbzAlbumId: { not: null }, // Solo si tiene MusicBrainz ID
+          externalCoverPath: null, // No tiene portada externa
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: batchSize,
+        select: {
+          id: true,
+          name: true,
+          mbzAlbumId: true,
+        },
+      });
+
+      // Enriquecer álbumes en background (no esperar)
+      if (albumsToEnrich.length > 0) {
+        this.logger.log(
+          `Enriqueciendo ${albumsToEnrich.length} álbumes en background`,
+        );
+
+        // Ejecutar en background sin bloquear
+        this.enrichAlbumsInBackground(albumsToEnrich).catch((error) => {
+          this.logger.error(
+            `Error en auto-enriquecimiento de álbumes: ${error.message}`,
+            error.stack,
+          );
+        });
+      }
+
+      this.logger.log('Auto-enriquecimiento iniciado en background');
+    } catch (error) {
+      this.logger.error(
+        `Error al iniciar auto-enriquecimiento: ${error.message}`,
+        error.stack,
+      );
+      // No lanzar error para no afectar el escaneo principal
+    }
+  }
+
+  /**
+   * Enriquece artistas en background
+   */
+  private async enrichArtistsInBackground(
+    artists: Array<{ id: string; name: string; mbzArtistId: string | null }>,
+  ): Promise<void> {
+    for (const artist of artists) {
+      try {
+        await this.externalMetadataService.enrichArtist(artist.id, false);
+        this.logger.debug(`Artista enriquecido: ${artist.name}`);
+      } catch (error) {
+        this.logger.warn(
+          `Error enriqueciendo artista ${artist.name}: ${error.message}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Enriquece álbumes en background
+   */
+  private async enrichAlbumsInBackground(
+    albums: Array<{ id: string; name: string; mbzAlbumId: string | null }>,
+  ): Promise<void> {
+    for (const album of albums) {
+      try {
+        await this.externalMetadataService.enrichAlbum(album.id, false);
+        this.logger.debug(`Álbum enriquecido: ${album.name}`);
+      } catch (error) {
+        this.logger.warn(
+          `Error enriqueciendo álbum ${album.name}: ${error.message}`,
+        );
+      }
     }
   }
 }
