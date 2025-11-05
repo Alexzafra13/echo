@@ -94,14 +94,22 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Simular carpetas de artistas en disco
-      (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artist-orphan']) // artists directory
-        .mockResolvedValueOnce([]); // albums directory
-
-      (fs.readdir as jest.Mock).mockResolvedValueOnce([
-        { name: 'profile.jpg', isDirectory: () => false },
-      ] as any);
+      // Mock fs.readdir según el path y opciones
+      (fs.readdir as jest.Mock).mockImplementation(async (dirPath: string, options?: any) => {
+        if (dirPath.includes('/artists') && !options) {
+          // Primera llamada: listar directorios de artistas
+          return ['artist-orphan'];
+        }
+        if (dirPath.includes('/albums') && !options) {
+          // Segunda llamada: listar directorios de álbumes
+          return [];
+        }
+        if (dirPath.includes('artist-orphan') && options?.withFileTypes) {
+          // Tercera llamada: listar archivos dentro de artist-orphan
+          return [{ name: 'profile.jpg', isDirectory: () => false }];
+        }
+        return [];
+      });
 
       // Solo existe artist-123 en BD, artist-orphan es huérfano
       prisma.artist.findMany.mockResolvedValue([
@@ -127,10 +135,19 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artist-orphan']) // artists directory
-        .mockResolvedValueOnce([]) // albums directory
-        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }] as any);
+      // Mock fs.readdir según el path y opciones
+      (fs.readdir as jest.Mock).mockImplementation(async (dirPath: string, options?: any) => {
+        if (dirPath.includes('/artists') && !options) {
+          return ['artist-orphan'];
+        }
+        if (dirPath.includes('/albums') && !options) {
+          return [];
+        }
+        if (dirPath.includes('artist-orphan') && options?.withFileTypes) {
+          return [{ name: 'profile.jpg', isDirectory: () => false }];
+        }
+        return [];
+      });
 
       (fs.rm as jest.Mock).mockResolvedValue(undefined);
 
