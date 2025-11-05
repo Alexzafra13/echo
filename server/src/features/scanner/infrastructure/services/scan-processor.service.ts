@@ -409,7 +409,9 @@ export class ScanProcessorService implements OnModuleInit {
       // ============================================================
       // 2. BUSCAR O CREAR ARTISTA (atómico)
       // ============================================================
-      const artistName = metadata.artist || 'Unknown Artist';
+      // Use albumArtist if available to keep album under one artist,
+      // otherwise use artist field. This prevents album splitting when tracks have "feat."
+      const artistName = metadata.albumArtist || metadata.artist || 'Unknown Artist';
       const mbzArtistId = Array.isArray(metadata.musicBrainzArtistId)
         ? metadata.musicBrainzArtistId[0]
         : metadata.musicBrainzArtistId;
