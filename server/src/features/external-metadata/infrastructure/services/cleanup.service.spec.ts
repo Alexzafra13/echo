@@ -94,30 +94,11 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Contador para trackear llamadas a readdir
-      let readdirCallCount = 0;
-
-      // Mock fs.readdir con contador
-      (fs.readdir as jest.Mock).mockImplementation(async (dirPath: string, options?: any) => {
-        readdirCallCount++;
-
-        // Primera llamada: listado de artistas (sin opciones)
-        if (readdirCallCount === 1 && !options) {
-          return ['artist-orphan'];
-        }
-
-        // Segunda llamada: listado de álbumes (sin opciones)
-        if (readdirCallCount === 2 && !options) {
-          return [];
-        }
-
-        // Tercera llamada: archivos dentro de artist-orphan (con withFileTypes)
-        if (readdirCallCount === 3 && options?.withFileTypes) {
-          return [{ name: 'profile.jpg', isDirectory: () => false }];
-        }
-
-        return [];
-      });
+      // Mock fs.readdir usando mockResolvedValueOnce en secuencia
+      (fs.readdir as jest.Mock)
+        .mockResolvedValueOnce(['artist-orphan']) // Primera: listado de artists
+        .mockResolvedValueOnce([]) // Segunda: listado de albums
+        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }]); // Tercera: archivos en artist-orphan
 
       // Solo existe artist-123 en BD, artist-orphan es huérfano
       prisma.artist.findMany.mockResolvedValue([
@@ -143,30 +124,11 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Contador para trackear llamadas a readdir
-      let readdirCallCount = 0;
-
-      // Mock fs.readdir con contador
-      (fs.readdir as jest.Mock).mockImplementation(async (dirPath: string, options?: any) => {
-        readdirCallCount++;
-
-        // Primera llamada: listado de artistas (sin opciones)
-        if (readdirCallCount === 1 && !options) {
-          return ['artist-orphan'];
-        }
-
-        // Segunda llamada: listado de álbumes (sin opciones)
-        if (readdirCallCount === 2 && !options) {
-          return [];
-        }
-
-        // Tercera llamada: archivos dentro de artist-orphan (con withFileTypes)
-        if (readdirCallCount === 3 && options?.withFileTypes) {
-          return [{ name: 'profile.jpg', isDirectory: () => false }];
-        }
-
-        return [];
-      });
+      // Mock fs.readdir usando mockResolvedValueOnce en secuencia
+      (fs.readdir as jest.Mock)
+        .mockResolvedValueOnce(['artist-orphan']) // Primera: listado de artists
+        .mockResolvedValueOnce([]) // Segunda: listado de albums
+        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }]); // Tercera: archivos en artist-orphan
 
       (fs.rm as jest.Mock).mockResolvedValue(undefined);
 
