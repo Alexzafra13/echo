@@ -22,9 +22,12 @@ import { SettingsRepository } from './infrastructure/persistence/settings.reposi
 
 // Application
 import { ExternalMetadataService } from './application/external-metadata.service';
+import { ImageService } from './application/services/image.service';
 
 // Presentation
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
+import { ImagesController } from './presentation/images.controller';
+import { AdminSettingsController } from './presentation/admin-settings.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -72,15 +75,21 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     LastfmAgent,
     FanartTvAgent,
 
-    // Application service
+    // Application services
     ExternalMetadataService,
+    ImageService,
 
     // WebSocket gateway
     MetadataEnrichmentGateway,
   ],
-  controllers: [ExternalMetadataController],
+  controllers: [
+    ExternalMetadataController,
+    ImagesController,
+    AdminSettingsController,
+  ],
   exports: [
     ExternalMetadataService,
+    ImageService,
     AgentRegistryService,
     MetadataCacheService,
     SettingsService,
