@@ -190,6 +190,7 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 - ✅ **Music Library** - Albums, Artists, Tracks
 - ✅ **Playlists** - Create, edit, manage playlists
 - ✅ **Scanner** - Automatic music file scanning with metadata
+- ✅ **External Metadata** - Enrich library from Last.fm, Fanart.tv, Cover Art Archive
 - ✅ **Streaming** - Audio streaming
 - ✅ **Admin Panel** - User management
 - ✅ **Cache** - Redis caching layer
@@ -206,6 +207,103 @@ See [DOCKER.md](./DOCKER.md) for full documentation including:
 - 🔜 **Music Player** - Audio playback controls
 - 🔜 **Library Views** - Albums, Artists, Tracks browsing
 - 🔜 **Playlist Management** - Create, edit, and organize playlists
+
+## 🌐 External Metadata Enrichment
+
+Echo can automatically enrich your music library with high-quality metadata from external services.
+
+### 📋 Supported Services
+
+| Service | Purpose | API Key | Rate Limit |
+|---------|---------|---------|------------|
+| **Cover Art Archive** | Album covers (250px, 500px, 1200px) | ❌ Not required | 1 req/sec |
+| **Last.fm** | Artist biographies & profile images | ✅ Required (free) | 5 req/sec |
+| **Fanart.tv** | HD backgrounds, banners, logos | ✅ Required (free) | 2-10 req/sec |
+
+### 🔑 Quick Setup (5 minutes)
+
+**1. Copy the example environment file:**
+```bash
+cd server
+cp .env.example .env
+```
+
+**2. Get Last.fm API key (2 min, free):**
+- Visit: https://www.last.fm/api/account/create
+- Fill in: Application name: "Echo" or "Echo Development"
+- Copy your API key
+- Add to `.env`: `LASTFM_API_KEY=your_key_here`
+
+**3. Get Fanart.tv API key (2 min, free):**
+- Register at: https://fanart.tv
+- Request key at: https://fanart.tv/get-an-api-key/
+- Check your email for the key
+- Add to `.env`: `FANART_API_KEY=your_key_here`
+
+**4. Your `.env` should look like:**
+```bash
+LASTFM_API_KEY=abc123your_actual_key_here
+LASTFM_ENABLED=true
+
+FANART_API_KEY=xyz789your_actual_key_here
+FANART_ENABLED=true
+
+COVERART_ENABLED=true
+```
+
+### ✨ What Gets Enriched
+
+- **Artist Biographies**: Detailed artist information from Last.fm
+- **Profile Images**: Artist photos in multiple sizes
+- **HD Backgrounds**: 1920x1080 backgrounds for Hero sections (Fanart.tv)
+- **Banners**: Artist page banners (Fanart.tv)
+- **Logos**: Transparent logos for overlays (Fanart.tv)
+- **Album Covers**: Official releases in 3 sizes from Cover Art Archive
+
+### 🚀 Usage
+
+**Manual enrichment via API:**
+```bash
+# Enrich a single artist
+POST /api/metadata/artists/:id/enrich?forceRefresh=false
+
+# Enrich a single album
+POST /api/metadata/albums/:id/enrich?forceRefresh=false
+```
+
+**Real-time progress via WebSocket:**
+```javascript
+const socket = io('http://localhost:4567/metadata');
+socket.on('enrichment:progress', (data) => {
+  console.log(`${data.percentage}% - ${data.step}`);
+});
+```
+
+### 💾 Caching & Rate Limiting
+
+- **Smart caching**: All metadata cached for 30 days (configurable)
+- **Non-overwrite**: Only enriches missing data (use `?forceRefresh=true` to override)
+- **Rate limiting**: Automatically respects each API's limits
+- **Fallback chain**: Tries multiple sources in priority order
+
+### 🔒 Security Note
+
+**⚠️ NEVER commit your API keys to the repository!**
+
+- ✅ Use `.env` for your keys (already in `.gitignore`)
+- ✅ Share `.env.example` with placeholders only
+- ❌ Don't put real keys in `.env.example`
+- ❌ Don't share your keys publicly
+
+**Why each user needs their own keys:**
+- **Rate limits**: Shared keys = shared quotas (too slow)
+- **Security**: Public keys can be abused and get blocked
+- **Free**: All APIs offer free tiers with no credit card
+- **Fast**: Takes ~5 minutes total to get all keys
+
+### 📚 More Info
+
+See full documentation: [External Metadata README](./server/src/features/external-metadata/README.md)
 
 ## 📦 Scripts
 
