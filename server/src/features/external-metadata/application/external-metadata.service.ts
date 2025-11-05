@@ -8,13 +8,17 @@ import {
 import { ArtistBio, ArtistImages, AlbumCover } from '../domain/entities';
 import { AgentRegistryService } from '../infrastructure/services/agent-registry.service';
 import { MetadataCacheService } from '../infrastructure/services/metadata-cache.service';
+import { StorageService } from '../infrastructure/services/storage.service';
+import { ImageDownloadService } from '../infrastructure/services/image-download.service';
+import { SettingsService } from '../infrastructure/services/settings.service';
+import * as path from 'path';
 
 /**
  * External Metadata Service
  * Orchestrates metadata enrichment from multiple external sources
  *
  * Design Pattern: Facade Pattern + Chain of Responsibility
- * Purpose: Provide a unified interface for metadata enrichment
+ * Purpose: Provide a unified interface for metadata enrichment with local storage
  */
 @Injectable()
 export class ExternalMetadataService {
@@ -23,12 +27,15 @@ export class ExternalMetadataService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly agentRegistry: AgentRegistryService,
-    private readonly cache: MetadataCacheService
+    private readonly cache: MetadataCacheService,
+    private readonly storage: StorageService,
+    private readonly imageDownload: ImageDownloadService,
+    private readonly settings: SettingsService
   ) {}
 
   /**
    * Enrich an artist with external metadata
-   * Fetches biography and images from configured agents
+   * Fetches biography and images from configured agents and downloads them locally
    *
    * @param artistId Internal artist ID
    * @param forceRefresh Skip cache and force fresh API calls
@@ -60,13 +67,13 @@ export class ExternalMetadataService {
 
       // Enrich biography if not present or forceRefresh
       if (forceRefresh || !artist.biography) {
-        const bio = await this.getArtistBio(artist.mbid, artist.name, forceRefresh);
+        const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh);
         if (bio) {
           await this.prisma.artist.update({
             where: { id: artistId },
             data: {
               biography: bio.content,
-              biography_source: bio.source,
+              biographySource: bio.source,
             },
           });
           bioUpdated = true;
@@ -77,29 +84,42 @@ export class ExternalMetadataService {
       // Enrich images if not present or forceRefresh
       const needsImages =
         forceRefresh ||
-        !artist.image_url ||
-        !artist.background_image_url ||
-        !artist.banner_image_url ||
-        !artist.logo_image_url;
+        !artist.largeImageUrl ||
+        !artist.backgroundImageUrl ||
+        !artist.bannerImageUrl ||
+        !artist.logoImageUrl;
 
       if (needsImages) {
-        const images = await this.getArtistImages(artist.mbid, artist.name, forceRefresh);
+        const images = await this.getArtistImages(artist.mbzArtistId, artist.name, forceRefresh);
         if (images) {
+          // Download images locally
+          const localPaths = await this.downloadArtistImages(artistId, images);
+
           const updateData: any = {};
 
           // Only update null fields unless forceRefresh
-          if (forceRefresh || !artist.image_url) {
-            updateData.image_url = images.getBestProfileUrl();
+          if (forceRefresh || !artist.smallImageUrl) {
+            updateData.smallImageUrl = localPaths.smallUrl;
           }
-          if (forceRefresh || !artist.background_image_url) {
-            updateData.background_image_url = images.backgroundUrl;
+          if (forceRefresh || !artist.mediumImageUrl) {
+            updateData.mediumImageUrl = localPaths.mediumUrl;
           }
-          if (forceRefresh || !artist.banner_image_url) {
-            updateData.banner_image_url = images.bannerUrl;
+          if (forceRefresh || !artist.largeImageUrl) {
+            updateData.largeImageUrl = localPaths.largeUrl;
           }
-          if (forceRefresh || !artist.logo_image_url) {
-            updateData.logo_image_url = images.logoUrl;
+          if (forceRefresh || !artist.backgroundImageUrl) {
+            updateData.backgroundImageUrl = localPaths.backgroundUrl;
           }
+          if (forceRefresh || !artist.bannerImageUrl) {
+            updateData.bannerImageUrl = localPaths.bannerUrl;
+          }
+          if (forceRefresh || !artist.logoImageUrl) {
+            updateData.logoImageUrl = localPaths.logoUrl;
+          }
+
+          // Update storage size
+          updateData.metadataStorageSize = localPaths.totalSize;
+          updateData.externalInfoUpdatedAt = new Date();
 
           if (Object.keys(updateData).length > 0) {
             await this.prisma.artist.update({
@@ -107,7 +127,7 @@ export class ExternalMetadataService {
               data: updateData,
             });
             imagesUpdated = true;
-            this.logger.log(`Updated images for: ${artist.name}`);
+            this.logger.log(`Updated images for: ${artist.name} (${localPaths.totalSize} bytes)`);
           }
         }
       }
@@ -122,7 +142,7 @@ export class ExternalMetadataService {
 
   /**
    * Enrich an album with external metadata
-   * Fetches cover art from configured agents
+   * Fetches cover art from configured agents and downloads it locally
    *
    * @param albumId Internal album ID
    * @param forceRefresh Skip cache and force fresh API calls
@@ -149,26 +169,31 @@ export class ExternalMetadataService {
         throw new Error(`Album not found: ${albumId}`);
       }
 
-      this.logger.log(`Enriching album: ${album.title} by ${album.artist.name} (ID: ${albumId})`);
+      this.logger.log(`Enriching album: ${album.name} by ${album.artist.name} (ID: ${albumId})`);
 
       // Enrich cover if not present or forceRefresh
-      if (forceRefresh || !album.cover_image) {
+      if (forceRefresh || !album.coverArtPath) {
         const cover = await this.getAlbumCover(
-          album.mbid,
+          album.mbzAlbumId,
           album.artist.name,
-          album.title,
+          album.name,
           forceRefresh
         );
 
         if (cover) {
+          // Download cover locally
+          const localPath = await this.downloadAlbumCover(albumId, cover);
+
           await this.prisma.album.update({
             where: { id: albumId },
             data: {
-              cover_image: cover.largeUrl,
+              externalCoverPath: localPath,
+              externalCoverSource: cover.source,
+              externalInfoUpdatedAt: new Date(),
             },
           });
           coverUpdated = true;
-          this.logger.log(`Updated cover for: ${album.title}`);
+          this.logger.log(`Updated cover for: ${album.name}`);
         }
       }
 
@@ -181,17 +206,168 @@ export class ExternalMetadataService {
   }
 
   /**
+   * Download artist images from external URLs and save locally
+   * Returns local paths for all images
+   */
+  private async downloadArtistImages(
+    artistId: string,
+    images: ArtistImages
+  ): Promise<{
+    smallUrl: string | null;
+    mediumUrl: string | null;
+    largeUrl: string | null;
+    backgroundUrl: string | null;
+    bannerUrl: string | null;
+    logoUrl: string | null;
+    totalSize: number;
+  }> {
+    const basePath = await this.storage.getArtistMetadataPath(artistId);
+    let totalSize = 0;
+
+    const result = {
+      smallUrl: null as string | null,
+      mediumUrl: null as string | null,
+      largeUrl: null as string | null,
+      backgroundUrl: null as string | null,
+      bannerUrl: null as string | null,
+      logoUrl: null as string | null,
+      totalSize: 0,
+    };
+
+    // Download profile images (small, medium, large)
+    if (images.smallUrl) {
+      try {
+        const filePath = path.join(basePath, 'profile-small.jpg');
+        await this.imageDownload.downloadAndSave(images.smallUrl, filePath);
+        result.smallUrl = filePath;
+        totalSize += await this.storage.getFileSize(filePath);
+      } catch (error) {
+        this.logger.warn(`Failed to download small profile image: ${error.message}`);
+      }
+    }
+
+    if (images.mediumUrl) {
+      try {
+        const filePath = path.join(basePath, 'profile-medium.jpg');
+        await this.imageDownload.downloadAndSave(images.mediumUrl, filePath);
+        result.mediumUrl = filePath;
+        totalSize += await this.storage.getFileSize(filePath);
+      } catch (error) {
+        this.logger.warn(`Failed to download medium profile image: ${error.message}`);
+      }
+    }
+
+    if (images.largeUrl) {
+      try {
+        const filePath = path.join(basePath, 'profile-large.jpg');
+        await this.imageDownload.downloadAndSave(images.largeUrl, filePath);
+        result.largeUrl = filePath;
+        totalSize += await this.storage.getFileSize(filePath);
+      } catch (error) {
+        this.logger.warn(`Failed to download large profile image: ${error.message}`);
+      }
+    }
+
+    // Download background (for Hero section)
+    if (images.backgroundUrl) {
+      try {
+        const filePath = path.join(basePath, 'background.jpg');
+        await this.imageDownload.downloadAndSave(images.backgroundUrl, filePath);
+        result.backgroundUrl = filePath;
+        totalSize += await this.storage.getFileSize(filePath);
+      } catch (error) {
+        this.logger.warn(`Failed to download background image: ${error.message}`);
+      }
+    }
+
+    // Download banner
+    if (images.bannerUrl) {
+      try {
+        const filePath = path.join(basePath, 'banner.png');
+        await this.imageDownload.downloadAndSave(images.bannerUrl, filePath);
+        result.bannerUrl = filePath;
+        totalSize += await this.storage.getFileSize(filePath);
+      } catch (error) {
+        this.logger.warn(`Failed to download banner image: ${error.message}`);
+      }
+    }
+
+    // Download logo
+    if (images.logoUrl) {
+      try {
+        const filePath = path.join(basePath, 'logo.png');
+        await this.imageDownload.downloadAndSave(images.logoUrl, filePath);
+        result.logoUrl = filePath;
+        totalSize += await this.storage.getFileSize(filePath);
+      } catch (error) {
+        this.logger.warn(`Failed to download logo image: ${error.message}`);
+      }
+    }
+
+    result.totalSize = totalSize;
+    return result;
+  }
+
+  /**
+   * Download album cover and save it
+   * Saves to album folder as cover.jpg (if configured) or to metadata storage
+   */
+  private async downloadAlbumCover(
+    albumId: string,
+    cover: AlbumCover
+  ): Promise<string> {
+    const saveInFolder = await this.settings.getBoolean(
+      'metadata.download.save_in_album_folder',
+      true
+    );
+
+    let coverPath: string;
+
+    if (saveInFolder) {
+      // Get album to find its folder path
+      const album = await this.prisma.album.findUnique({
+        where: { id: albumId },
+        include: {
+          tracks: {
+            take: 1,
+            select: { path: true }
+          }
+        }
+      });
+
+      if (album && album.tracks.length > 0) {
+        // Get album folder from first track path
+        const albumFolder = path.dirname(album.tracks[0].path);
+        coverPath = path.join(albumFolder, 'cover.jpg');
+      } else {
+        // Fallback to metadata storage
+        const metadataPath = await this.storage.getAlbumMetadataPath(albumId);
+        coverPath = path.join(metadataPath, 'cover.jpg');
+      }
+    } else {
+      // Save to metadata storage
+      const metadataPath = await this.storage.getAlbumMetadataPath(albumId);
+      coverPath = path.join(metadataPath, 'cover.jpg');
+    }
+
+    // Download the best quality cover (large)
+    await this.imageDownload.downloadAndSave(cover.largeUrl, coverPath);
+
+    return coverPath;
+  }
+
+  /**
    * Get artist biography using agent chain
    * Tries each agent in priority order until one succeeds
    */
   private async getArtistBio(
-    mbid: string | null,
+    mbzArtistId: string | null,
     name: string,
     forceRefresh: boolean
   ): Promise<ArtistBio | null> {
     // Check cache first
     if (!forceRefresh) {
-      const cached = await this.cache.get('artist', mbid || name, 'bio');
+      const cached = await this.cache.get('artist', mbzArtistId || name, 'bio');
       if (cached) {
         return new ArtistBio(
           cached.content,
@@ -208,11 +384,11 @@ export class ExternalMetadataService {
     for (const agent of agents) {
       try {
         this.logger.debug(`Trying agent "${agent.name}" for bio: ${name}`);
-        const bio = await agent.getArtistBio(mbid, name);
+        const bio = await agent.getArtistBio(mbzArtistId, name);
 
         if (bio && bio.hasContent()) {
           // Cache the result
-          await this.cache.set('artist', mbid || name, 'bio', {
+          await this.cache.set('artist', mbzArtistId || name, 'bio', {
             content: bio.content,
             summary: bio.summary,
             url: bio.url,
@@ -235,13 +411,13 @@ export class ExternalMetadataService {
    * Tries each agent in priority order until one succeeds
    */
   private async getArtistImages(
-    mbid: string | null,
+    mbzArtistId: string | null,
     name: string,
     forceRefresh: boolean
   ): Promise<ArtistImages | null> {
     // Check cache first
     if (!forceRefresh) {
-      const cached = await this.cache.get('artist', mbid || name, 'images');
+      const cached = await this.cache.get('artist', mbzArtistId || name, 'images');
       if (cached) {
         return new ArtistImages(
           cached.smallUrl,
@@ -264,7 +440,7 @@ export class ExternalMetadataService {
     for (const agent of agents) {
       try {
         this.logger.debug(`Trying agent "${agent.name}" for images: ${name}`);
-        const images = await agent.getArtistImages(mbid, name);
+        const images = await agent.getArtistImages(mbzArtistId, name);
 
         if (images) {
           if (!mergedImages) {
@@ -294,7 +470,7 @@ export class ExternalMetadataService {
 
     if (mergedImages) {
       // Cache the merged result
-      await this.cache.set('artist', mbid || name, 'images', {
+      await this.cache.set('artist', mbzArtistId || name, 'images', {
         smallUrl: mergedImages.smallUrl,
         mediumUrl: mergedImages.mediumUrl,
         largeUrl: mergedImages.largeUrl,
@@ -316,14 +492,14 @@ export class ExternalMetadataService {
    * Tries each agent in priority order until one succeeds
    */
   private async getAlbumCover(
-    mbid: string | null,
+    mbzAlbumId: string | null,
     artist: string,
     album: string,
     forceRefresh: boolean
   ): Promise<AlbumCover | null> {
     // Check cache first
     if (!forceRefresh) {
-      const cached = await this.cache.get('album', mbid || `${artist}:${album}`, 'cover');
+      const cached = await this.cache.get('album', mbzAlbumId || `${artist}:${album}`, 'cover');
       if (cached) {
         return new AlbumCover(
           cached.smallUrl,
@@ -340,11 +516,11 @@ export class ExternalMetadataService {
     for (const agent of agents) {
       try {
         this.logger.debug(`Trying agent "${agent.name}" for cover: ${artist} - ${album}`);
-        const cover = await agent.getAlbumCover(mbid, artist, album);
+        const cover = await agent.getAlbumCover(mbzAlbumId, artist, album);
 
         if (cover) {
           // Cache the result
-          await this.cache.set('album', mbid || `${artist}:${album}`, 'cover', {
+          await this.cache.set('album', mbzAlbumId || `${artist}:${album}`, 'cover', {
             smallUrl: cover.smallUrl,
             mediumUrl: cover.mediumUrl,
             largeUrl: cover.largeUrl,
