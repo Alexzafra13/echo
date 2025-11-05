@@ -30,7 +30,7 @@ export class ArtistBio {
    * Check if biography has meaningful content
    */
   hasContent(): boolean {
-    return this.content && this.content.trim().length > 0;
+    return Boolean(this.content && this.content.trim().length > 0);
   }
 
   /**

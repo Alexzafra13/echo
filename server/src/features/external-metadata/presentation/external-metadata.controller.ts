@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ExternalMetadataService } from '../application/external-metadata.service';
 import { MetadataEnrichmentGateway } from './metadata-enrichment.gateway';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 
 /**
  * External Metadata Controller
@@ -100,14 +100,14 @@ export class ExternalMetadataController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error enriching artist ${artistId}: ${error.message}`, error.stack);
+      this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
 
       // Emit error event
       this.gateway.emitEnrichmentError({
         entityType: 'artist',
         entityId: artistId,
         entityName: 'Artist',
-        error: error.message,
+        error: (error as Error).message,
       });
 
       return {
@@ -115,7 +115,7 @@ export class ExternalMetadataController {
         artistId,
         bioUpdated: false,
         imagesUpdated: false,
-        errors: [error.message],
+        errors: [(error as Error).message],
         duration: Date.now() - startTime,
       };
     }
@@ -183,21 +183,21 @@ export class ExternalMetadataController {
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error enriching album ${albumId}: ${error.message}`, error.stack);
+      this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
 
       // Emit error event
       this.gateway.emitEnrichmentError({
         entityType: 'album',
         entityId: albumId,
         entityName: 'Album',
-        error: error.message,
+        error: (error as Error).message,
       });
 
       return {
         success: false,
         albumId,
         coverUpdated: false,
-        errors: [error.message],
+        errors: [(error as Error).message],
         duration: Date.now() - startTime,
       };
     }

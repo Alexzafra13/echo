@@ -21,7 +21,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { SettingsService } from '../infrastructure/services/settings.service';
 
@@ -29,15 +29,15 @@ import { SettingsService } from '../infrastructure/services/settings.service';
  * DTO para actualizar una configuración
  */
 class UpdateSettingDto {
-  value: string;
+  value!: string;
 }
 
 /**
  * DTO para validar API key
  */
 class ValidateApiKeyDto {
-  service: 'lastfm' | 'fanart';
-  apiKey: string;
+  service!: 'lastfm' | 'fanart';
+  apiKey!: string;
 }
 
 /**
@@ -99,7 +99,7 @@ export class AdminSettingsController {
 
       return settings;
     } catch (error) {
-      this.logger.error(`Error retrieving settings: ${error.message}`, error.stack);
+      this.logger.error(`Error retrieving settings: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -132,8 +132,8 @@ export class AdminSettingsController {
       return settings;
     } catch (error) {
       this.logger.error(
-        `Error retrieving settings for category ${category}: ${error.message}`,
-        error.stack,
+        `Error retrieving settings for category ${category}: ${(error as Error).message}`,
+        (error as Error).stack,
       );
       throw error;
     }
@@ -182,7 +182,7 @@ export class AdminSettingsController {
 
       return setting;
     } catch (error) {
-      this.logger.error(`Error retrieving setting ${key}: ${error.message}`, error.stack);
+      this.logger.error(`Error retrieving setting ${key}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -253,7 +253,7 @@ export class AdminSettingsController {
         newValue: dto.value,
       };
     } catch (error) {
-      this.logger.error(`Error updating setting ${key}: ${error.message}`, error.stack);
+      this.logger.error(`Error updating setting ${key}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -327,14 +327,14 @@ export class AdminSettingsController {
       }
     } catch (error) {
       this.logger.error(
-        `Error validating API key for ${dto.service}: ${error.message}`,
-        error.stack,
+        `Error validating API key for ${dto.service}: ${(error as Error).message}`,
+        (error as Error).stack,
       );
 
       return {
         valid: false,
         service: dto.service,
-        message: error.message || 'Validation failed',
+        message: (error as Error).message || 'Validation failed',
       };
     }
   }
@@ -390,7 +390,7 @@ export class AdminSettingsController {
         message: 'Setting deleted successfully',
       };
     } catch (error) {
-      this.logger.error(`Error deleting setting ${key}: ${error.message}`, error.stack);
+      this.logger.error(`Error deleting setting ${key}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -428,7 +428,7 @@ export class AdminSettingsController {
         message: 'Cache cleared successfully',
       };
     } catch (error) {
-      this.logger.error(`Error clearing cache: ${error.message}`, error.stack);
+      this.logger.error(`Error clearing cache: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }

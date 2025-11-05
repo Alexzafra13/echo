@@ -116,8 +116,8 @@ export class FanartTvAgent implements IArtistImageRetriever {
       );
     } catch (error) {
       this.logger.error(
-        `Error fetching Fanart.tv data for ${name}: ${error.message}`,
-        error.stack
+        `Error fetching Fanart.tv data for ${name}: ${(error as Error).message}`,
+        (error as Error).stack
       );
       return null;
     }

@@ -7,6 +7,8 @@ import { PrismaService } from '@infrastructure/persistence/prisma.service';
  *
  * Design Pattern: Cache-Aside Pattern
  * Purpose: Reduce external API calls by caching successful responses
+ *
+ * Schema: entityId + entityType + provider (composite key)
  */
 @Injectable()
 export class MetadataCacheService {
@@ -18,137 +20,130 @@ export class MetadataCacheService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Get cached metadata for a specific entity and type
-   * @param entityType Type of entity (artist, album, track)
-   * @param entityId ID of the entity
-   * @param metadataType Type of metadata (bio, images, cover)
-   * @returns Cached metadata or null if not found or expired
+   * Get cached metadata for a specific entity and provider
    */
   async get(
     entityType: string,
     entityId: string,
-    metadataType: string
+    provider: string
   ): Promise<any | null> {
     try {
-      const cacheKey = this.buildCacheKey(entityType, entityId, metadataType);
-
       const cached = await this.prisma.metadataCache.findUnique({
-        where: { cache_key: cacheKey },
+        where: {
+          entityId_entityType_provider: {
+            entityId,
+            entityType,
+            provider,
+          },
+        },
       });
 
       if (!cached) {
-        this.logger.debug(`Cache miss: ${cacheKey}`);
+        this.logger.debug(`Cache miss: ${entityType}:${entityId}:${provider}`);
         return null;
       }
 
       // Check if cache is expired
-      const ttlDays = cached.ttl_days || this.DEFAULT_TTL_DAYS;
-      const expirationDate = new Date(cached.created_at);
-      expirationDate.setDate(expirationDate.getDate() + ttlDays);
-
-      if (new Date() > expirationDate) {
-        this.logger.debug(`Cache expired: ${cacheKey}`);
-        await this.delete(entityType, entityId, metadataType);
+      if (cached.expiresAt && new Date() > cached.expiresAt) {
+        this.logger.debug(`Cache expired: ${entityType}:${entityId}:${provider}`);
+        await this.delete(entityType, entityId, provider);
         return null;
       }
 
-      this.logger.debug(`Cache hit: ${cacheKey}`);
-      return cached.metadata;
+      this.logger.debug(`Cache hit: ${entityType}:${entityId}:${provider}`);
+      return JSON.parse(cached.data);
     } catch (error) {
-      this.logger.error(`Error reading from cache: ${error.message}`, error.stack);
+      this.logger.error(`Error reading from cache: ${(error as Error).message}`, (error as Error).stack);
       return null;
     }
   }
 
   /**
    * Store metadata in cache
-   * @param entityType Type of entity (artist, album, track)
-   * @param entityId ID of the entity
-   * @param metadataType Type of metadata (bio, images, cover)
-   * @param metadata The metadata to cache
-   * @param source The source of the metadata (lastfm, fanart, coverart)
-   * @param ttlDays Optional TTL in days (defaults to 30)
    */
   async set(
     entityType: string,
     entityId: string,
-    metadataType: string,
+    provider: string,
     metadata: any,
-    source: string,
     ttlDays?: number
   ): Promise<void> {
     try {
-      const cacheKey = this.buildCacheKey(entityType, entityId, metadataType);
+      const ttl = ttlDays || this.DEFAULT_TTL_DAYS;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + ttl);
 
       await this.prisma.metadataCache.upsert({
-        where: { cache_key: cacheKey },
+        where: {
+          entityId_entityType_provider: {
+            entityId,
+            entityType,
+            provider,
+          },
+        },
         create: {
-          cache_key: cacheKey,
-          entity_type: entityType,
-          entity_id: entityId,
-          metadata_type: metadataType,
-          source,
-          metadata: metadata as any,
-          ttl_days: ttlDays || this.DEFAULT_TTL_DAYS,
+          entityId,
+          entityType,
+          provider,
+          data: JSON.stringify(metadata),
+          expiresAt,
         },
         update: {
-          source,
-          metadata: metadata as any,
-          ttl_days: ttlDays || this.DEFAULT_TTL_DAYS,
-          updated_at: new Date(),
+          data: JSON.stringify(metadata),
+          fetchedAt: new Date(),
+          expiresAt,
         },
       });
 
-      this.logger.debug(`Cached metadata: ${cacheKey} (source: ${source})`);
+      this.logger.debug(`Cached metadata: ${entityType}:${entityId}:${provider}`);
     } catch (error) {
-      this.logger.error(`Error writing to cache: ${error.message}`, error.stack);
+      this.logger.error(`Error writing to cache: ${(error as Error).message}`, (error as Error).stack);
     }
   }
 
   /**
    * Delete cached metadata
-   * @param entityType Type of entity
-   * @param entityId ID of the entity
-   * @param metadataType Type of metadata
    */
   async delete(
     entityType: string,
     entityId: string,
-    metadataType: string
+    provider: string
   ): Promise<void> {
     try {
-      const cacheKey = this.buildCacheKey(entityType, entityId, metadataType);
-
       await this.prisma.metadataCache.delete({
-        where: { cache_key: cacheKey },
+        where: {
+          entityId_entityType_provider: {
+            entityId,
+            entityType,
+            provider,
+          },
+        },
       });
 
-      this.logger.debug(`Deleted cache: ${cacheKey}`);
+      this.logger.debug(`Deleted cache: ${entityType}:${entityId}:${provider}`);
     } catch (error) {
       // Ignore if not found
-      if (error.code !== 'P2025') {
-        this.logger.error(`Error deleting cache: ${error.message}`, error.stack);
+      if ((error as any).code !== 'P2025') {
+        this.logger.error(`Error deleting cache: ${(error as Error).message}`, (error as Error).stack);
       }
     }
   }
 
   /**
    * Clear all cached metadata for an entity
-   * @param entityType Type of entity
-   * @param entityId ID of the entity
    */
   async clearEntity(entityType: string, entityId: string): Promise<void> {
     try {
       await this.prisma.metadataCache.deleteMany({
         where: {
-          entity_type: entityType,
-          entity_id: entityId,
+          entityType,
+          entityId,
         },
       });
 
       this.logger.debug(`Cleared all cache for ${entityType}:${entityId}`);
     } catch (error) {
-      this.logger.error(`Error clearing entity cache: ${error.message}`, error.stack);
+      this.logger.error(`Error clearing entity cache: ${(error as Error).message}`, (error as Error).stack);
     }
   }
 
@@ -158,37 +153,39 @@ export class MetadataCacheService {
    */
   async clearExpired(): Promise<number> {
     try {
-      const result = await this.prisma.$executeRaw`
-        DELETE FROM metadata_cache
-        WHERE created_at + (ttl_days || ' days')::interval < NOW()
-      `;
+      const result = await this.prisma.metadataCache.deleteMany({
+        where: {
+          expiresAt: {
+            lte: new Date(),
+          },
+        },
+      });
 
-      this.logger.log(`Cleared ${result} expired cache entries`);
-      return result as number;
+      this.logger.log(`Cleared ${result.count} expired cache entries`);
+      return result.count;
     } catch (error) {
-      this.logger.error(`Error clearing expired cache: ${error.message}`, error.stack);
+      this.logger.error(`Error clearing expired cache: ${(error as Error).message}`, (error as Error).stack);
       return 0;
     }
   }
 
   /**
    * Get cache statistics
-   * @returns Object with cache statistics
    */
   async getStats(): Promise<{
     total: number;
     byEntityType: Record<string, number>;
-    bySource: Record<string, number>;
+    byProvider: Record<string, number>;
   }> {
     try {
-      const [total, byEntityType, bySource] = await Promise.all([
+      const [total, byEntityType, byProvider] = await Promise.all([
         this.prisma.metadataCache.count(),
         this.prisma.metadataCache.groupBy({
-          by: ['entity_type'],
+          by: ['entityType'],
           _count: true,
         }),
         this.prisma.metadataCache.groupBy({
-          by: ['source'],
+          by: ['provider'],
           _count: true,
         }),
       ]);
@@ -196,27 +193,15 @@ export class MetadataCacheService {
       return {
         total,
         byEntityType: Object.fromEntries(
-          byEntityType.map((item) => [item.entity_type, item._count])
+          byEntityType.map((item) => [item.entityType, item._count])
         ),
-        bySource: Object.fromEntries(
-          bySource.map((item) => [item.source, item._count])
+        byProvider: Object.fromEntries(
+          byProvider.map((item) => [item.provider, item._count])
         ),
       };
     } catch (error) {
-      this.logger.error(`Error getting cache stats: ${error.message}`, error.stack);
-      return { total: 0, byEntityType: {}, bySource: {} };
+      this.logger.error(`Error getting cache stats: ${(error as Error).message}`, (error as Error).stack);
+      return { total: 0, byEntityType: {}, byProvider: {} };
     }
-  }
-
-  /**
-   * Build a cache key from entity and metadata type
-   * Format: {entityType}:{entityId}:{metadataType}
-   */
-  private buildCacheKey(
-    entityType: string,
-    entityId: string,
-    metadataType: string
-  ): string {
-    return `${entityType}:${entityId}:${metadataType}`;
   }
 }

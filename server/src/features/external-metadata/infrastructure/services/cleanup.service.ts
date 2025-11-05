@@ -99,8 +99,8 @@ export class CleanupService {
 
       return result;
     } catch (error) {
-      this.logger.error(`Cleanup failed: ${error.message}`, error.stack);
-      result.errors.push(error.message);
+      this.logger.error(`Cleanup failed: ${(error as Error).message}`, (error as Error).stack);
+      result.errors.push((error as Error).message);
       result.duration = Date.now() - startTime;
       return result;
     }
@@ -113,7 +113,7 @@ export class CleanupService {
     updated: number;
     errors: string[];
   }> {
-    const result = {
+    const result: { updated: number; errors: string[] } = {
       updated: 0,
       errors: [],
     };
@@ -151,7 +151,7 @@ export class CleanupService {
 
           result.updated++;
         } catch (error) {
-          const errorMsg = `Failed to update size for artist ${artist.name}: ${error.message}`;
+          const errorMsg = `Failed to update size for artist ${artist.name}: ${(error as Error).message}`;
           this.logger.warn(errorMsg);
           result.errors.push(errorMsg);
         }
@@ -161,8 +161,8 @@ export class CleanupService {
 
       return result;
     } catch (error) {
-      this.logger.error(`Failed to recalculate storage sizes: ${error.message}`, error.stack);
-      result.errors.push(error.message);
+      this.logger.error(`Failed to recalculate storage sizes: ${(error as Error).message}`, (error as Error).stack);
+      result.errors.push((error as Error).message);
       return result;
     }
   }
@@ -222,7 +222,7 @@ export class CleanupService {
         avgSizePerArtist,
       };
     } catch (error) {
-      this.logger.error(`Failed to get storage stats: ${error.message}`, error.stack);
+      this.logger.error(`Failed to get storage stats: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -235,7 +235,7 @@ export class CleanupService {
     missing: string[];
     errors: string[];
   }> {
-    const result = {
+    const result: { totalChecked: number; missing: string[]; errors: string[] } = {
       totalChecked: 0,
       missing: [],
       errors: [],
@@ -301,6 +301,8 @@ export class CleanupService {
       });
 
       for (const album of albums) {
+        if (!album.externalCoverPath) continue;
+
         result.totalChecked++;
         try {
           await fs.access(album.externalCoverPath);
@@ -315,8 +317,8 @@ export class CleanupService {
 
       return result;
     } catch (error) {
-      this.logger.error(`Failed to verify integrity: ${error.message}`, error.stack);
-      result.errors.push(error.message);
+      this.logger.error(`Failed to verify integrity: ${(error as Error).message}`, (error as Error).stack);
+      result.errors.push((error as Error).message);
       return result;
     }
   }
@@ -381,7 +383,7 @@ export class CleanupService {
               this.logger.debug(`Would remove: ${dirPath} (${files.length} files)`);
             }
           } catch (error) {
-            const errorMsg = `Failed to process ${dirPath}: ${error.message}`;
+            const errorMsg = `Failed to process ${dirPath}: ${(error as Error).message}`;
             this.logger.warn(errorMsg);
             result.errors.push(errorMsg);
           }
@@ -390,8 +392,8 @@ export class CleanupService {
 
       return result;
     } catch (error) {
-      this.logger.error(`Failed to cleanup artist files: ${error.message}`, error.stack);
-      result.errors.push(error.message);
+      this.logger.error(`Failed to cleanup artist files: ${(error as Error).message}`, (error as Error).stack);
+      result.errors.push((error as Error).message);
       return result;
     }
   }
@@ -452,7 +454,7 @@ export class CleanupService {
               this.logger.debug(`Would remove: ${dirPath} (${files.length} files)`);
             }
           } catch (error) {
-            const errorMsg = `Failed to process ${dirPath}: ${error.message}`;
+            const errorMsg = `Failed to process ${dirPath}: ${(error as Error).message}`;
             this.logger.warn(errorMsg);
             result.errors.push(errorMsg);
           }
@@ -461,8 +463,8 @@ export class CleanupService {
 
       return result;
     } catch (error) {
-      this.logger.error(`Failed to cleanup album files: ${error.message}`, error.stack);
-      result.errors.push(error.message);
+      this.logger.error(`Failed to cleanup album files: ${(error as Error).message}`, (error as Error).stack);
+      result.errors.push((error as Error).message);
       return result;
     }
   }
@@ -487,7 +489,7 @@ export class CleanupService {
         }
       }
     } catch (error) {
-      this.logger.warn(`Failed to list files in ${dirPath}: ${error.message}`);
+      this.logger.warn(`Failed to list files in ${dirPath}: ${(error as Error).message}`);
     }
 
     return files;
