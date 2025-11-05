@@ -1,0 +1,435 @@
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
+import { SettingsService } from '../infrastructure/services/settings.service';
+
+/**
+ * DTO para actualizar una configuración
+ */
+class UpdateSettingDto {
+  value: string;
+}
+
+/**
+ * DTO para validar API key
+ */
+class ValidateApiKeyDto {
+  service: 'lastfm' | 'fanart';
+  apiKey: string;
+}
+
+/**
+ * Admin Settings Controller
+ * HTTP endpoints for managing external metadata settings (admin only)
+ *
+ * Endpoints:
+ * - GET /api/admin/settings - Get all settings
+ * - GET /api/admin/settings/category/:category - Get settings by category
+ * - GET /api/admin/settings/:key - Get specific setting
+ * - PUT /api/admin/settings/:key - Update setting
+ * - POST /api/admin/settings/validate-api-key - Validate external API key
+ * - DELETE /api/admin/settings/:key - Delete setting (reset to default)
+ *
+ * All endpoints require admin privileges
+ */
+@ApiTags('admin-settings')
+@Controller('admin/settings')
+@UseGuards(JwtAuthGuard, AdminGuard)
+@ApiBearerAuth()
+export class AdminSettingsController {
+  private readonly logger = new Logger(AdminSettingsController.name);
+
+  constructor(private readonly settingsService: SettingsService) {}
+
+  /**
+   * Obtiene todas las configuraciones
+   * GET /api/admin/settings
+   */
+  @Get()
+  @ApiOperation({
+    summary: 'Get all settings',
+    description: 'Returns all configuration settings (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Settings retrieved successfully',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
+          value: { type: 'string' },
+          category: { type: 'string' },
+          type: { type: 'string' },
+          description: { type: 'string' },
+          isPublic: { type: 'boolean' },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async getAllSettings() {
+    try {
+      const settings = await this.settingsService.findAll();
+
+      this.logger.debug(`Retrieved ${settings.length} settings`);
+
+      return settings;
+    } catch (error) {
+      this.logger.error(`Error retrieving settings: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene configuraciones por categoría
+   * GET /api/admin/settings/category/:category
+   */
+  @Get('category/:category')
+  @ApiOperation({
+    summary: 'Get settings by category',
+    description: 'Returns all settings in a specific category (admin only)',
+  })
+  @ApiParam({
+    name: 'category',
+    description: 'Category name',
+    example: 'metadata.providers',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Settings retrieved successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async getSettingsByCategory(@Param('category') category: string) {
+    try {
+      const settings = await this.settingsService.findByCategory(category);
+
+      this.logger.debug(`Retrieved ${settings.length} settings for category ${category}`);
+
+      return settings;
+    } catch (error) {
+      this.logger.error(
+        `Error retrieving settings for category ${category}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene una configuración específica
+   * GET /api/admin/settings/:key
+   */
+  @Get(':key')
+  @ApiOperation({
+    summary: 'Get specific setting',
+    description: 'Returns a specific configuration setting by key (admin only)',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Setting key',
+    example: 'metadata.providers.coverart.enabled',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Setting retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string' },
+        value: { type: 'string' },
+        category: { type: 'string' },
+        type: { type: 'string' },
+        description: { type: 'string' },
+        isPublic: { type: 'boolean' },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Setting not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async getSetting(@Param('key') key: string) {
+    try {
+      const setting = await this.settingsService.findOne(key);
+
+      if (!setting) {
+        throw new BadRequestException(`Setting with key ${key} not found`);
+      }
+
+      this.logger.debug(`Retrieved setting: ${key}`);
+
+      return setting;
+    } catch (error) {
+      this.logger.error(`Error retrieving setting ${key}: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Actualiza una configuración
+   * PUT /api/admin/settings/:key
+   */
+  @Put(':key')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update setting',
+    description: 'Updates a configuration setting (admin only)',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Setting key',
+    example: 'metadata.providers.lastfm.enabled',
+  })
+  @ApiBody({
+    description: 'New value for the setting',
+    schema: {
+      type: 'object',
+      properties: {
+        value: { type: 'string', example: 'true' },
+      },
+      required: ['value'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Setting updated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        key: { type: 'string' },
+        oldValue: { type: 'string' },
+        newValue: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Setting not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async updateSetting(@Param('key') key: string, @Body() dto: UpdateSettingDto) {
+    try {
+      // Obtener valor actual
+      const currentSetting = await this.settingsService.findOne(key);
+
+      if (!currentSetting) {
+        throw new BadRequestException(`Setting with key ${key} not found`);
+      }
+
+      const oldValue = currentSetting.value;
+
+      // Actualizar
+      await this.settingsService.update(key, dto.value);
+
+      this.logger.log(`Setting ${key} updated from "${oldValue}" to "${dto.value}"`);
+
+      // Invalidar caché
+      this.settingsService.clearCache();
+
+      return {
+        success: true,
+        key,
+        oldValue,
+        newValue: dto.value,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating setting ${key}: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Valida una API key de un servicio externo
+   * POST /api/admin/settings/validate-api-key
+   */
+  @Post('validate-api-key')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Validate external API key',
+    description:
+      'Validates an API key for an external service (Last.fm or Fanart.tv) by making a test request (admin only)',
+  })
+  @ApiBody({
+    description: 'Service and API key to validate',
+    schema: {
+      type: 'object',
+      properties: {
+        service: {
+          type: 'string',
+          enum: ['lastfm', 'fanart'],
+          example: 'lastfm',
+        },
+        apiKey: { type: 'string', example: 'your-api-key-here' },
+      },
+      required: ['service', 'apiKey'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Validation result',
+    schema: {
+      type: 'object',
+      properties: {
+        valid: { type: 'boolean' },
+        service: { type: 'string' },
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid request' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async validateApiKey(@Body() dto: ValidateApiKeyDto) {
+    try {
+      if (!dto.service || !dto.apiKey) {
+        throw new BadRequestException('Service and apiKey are required');
+      }
+
+      if (!['lastfm', 'fanart'].includes(dto.service)) {
+        throw new BadRequestException('Service must be "lastfm" or "fanart"');
+      }
+
+      this.logger.log(`Validating API key for ${dto.service}`);
+
+      const isValid = await this.settingsService.validateApiKey(dto.service, dto.apiKey);
+
+      if (isValid) {
+        return {
+          valid: true,
+          service: dto.service,
+          message: 'API key is valid',
+        };
+      } else {
+        return {
+          valid: false,
+          service: dto.service,
+          message: 'API key is invalid or service is unavailable',
+        };
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error validating API key for ${dto.service}: ${error.message}`,
+        error.stack,
+      );
+
+      return {
+        valid: false,
+        service: dto.service,
+        message: error.message || 'Validation failed',
+      };
+    }
+  }
+
+  /**
+   * Elimina una configuración (reset a default)
+   * DELETE /api/admin/settings/:key
+   */
+  @Delete(':key')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete setting (reset to default)',
+    description:
+      'Deletes a configuration setting, resetting it to default value (admin only)',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Setting key',
+    example: 'metadata.providers.lastfm.api_key',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Setting deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        key: { type: 'string' },
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Setting not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async deleteSetting(@Param('key') key: string) {
+    try {
+      const setting = await this.settingsService.findOne(key);
+
+      if (!setting) {
+        throw new BadRequestException(`Setting with key ${key} not found`);
+      }
+
+      await this.settingsService.delete(key);
+
+      this.logger.log(`Setting ${key} deleted (reset to default)`);
+
+      // Invalidar caché
+      this.settingsService.clearCache();
+
+      return {
+        success: true,
+        key,
+        message: 'Setting deleted successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error deleting setting ${key}: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Limpia el caché de configuraciones
+   * POST /api/admin/settings/cache/clear
+   */
+  @Post('cache/clear')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Clear settings cache',
+    description: 'Clears the in-memory settings cache (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cache cleared successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async clearCache() {
+    try {
+      this.settingsService.clearCache();
+
+      this.logger.log('Settings cache cleared');
+
+      return {
+        success: true,
+        message: 'Cache cleared successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error clearing cache: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+}
