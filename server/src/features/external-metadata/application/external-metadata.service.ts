@@ -67,10 +67,20 @@ export class ExternalMetadataService {
 
       this.logger.log(`Enriching artist: ${artist.name} (ID: ${artistId})`);
 
-      // Enrich biography if not present or forceRefresh
-      if (forceRefresh || !artist.biography) {
-        const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh);
-        if (bio) {
+      // Enrich biography - Strategy based on source priority
+      const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh);
+      if (bio) {
+        const hasExistingBio = !!artist.biography;
+        const isMusicBrainzSource = bio.source === 'musicbrainz';
+
+        // Decision tree for applying vs creating conflict:
+        // 1. No existing bio → Apply directly
+        // 2. Has bio + forceRefresh → Apply directly (user explicitly requested)
+        // 3. Has bio + MusicBrainz source → Apply directly (highest priority)
+        // 4. Has bio + Other source (LastFM) → Create conflict for user review
+
+        if (!hasExistingBio || forceRefresh || isMusicBrainzSource) {
+          // Apply the biography directly
           await this.prisma.artist.update({
             where: { id: artistId },
             data: {
@@ -79,7 +89,26 @@ export class ExternalMetadataService {
             },
           });
           bioUpdated = true;
-          this.logger.log(`Updated biography for: ${artist.name}`);
+          this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
+        } else {
+          // Create conflict for user to review
+          await this.conflictService.createConflict({
+            entityId: artistId,
+            entityType: 'artist',
+            field: 'biography',
+            currentValue: artist.biography.substring(0, 200) + '...', // Preview only
+            suggestedValue: bio.content.substring(0, 200) + '...', // Preview only
+            source: bio.source as any,
+            priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
+            metadata: {
+              artistName: artist.name,
+              currentSource: artist.biographySource,
+              fullBioLength: bio.content.length,
+            },
+          });
+          this.logger.log(
+            `Created conflict for artist "${artist.name}": existing bio vs ${bio.source} suggestion`
+          );
         }
       }
 
@@ -174,23 +203,32 @@ export class ExternalMetadataService {
       const artistName = album.artist?.name || 'Unknown Artist';
       this.logger.log(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
-      // Enrich cover if not present or forceRefresh
-      if (forceRefresh || !album.externalCoverPath) {
-        // Validar que el álbum tenga MusicBrainz ID
-        if (!album.mbzAlbumId) {
-          this.logger.warn(
-            `Album "${album.name}" (ID: ${albumId}) does not have MusicBrainz ID, skipping external cover enrichment`
-          );
-        } else {
-          const cover = await this.getAlbumCover(
-            album.mbzAlbumId,
-            artistName,
-            album.name,
-            forceRefresh
-          );
+      // Enrich cover - Strategy based on source priority
+      // Validar que el álbum tenga MusicBrainz ID
+      if (!album.mbzAlbumId) {
+        this.logger.warn(
+          `Album "${album.name}" (ID: ${albumId}) does not have MusicBrainz ID, skipping external cover enrichment`
+        );
+      } else {
+        const cover = await this.getAlbumCover(
+          album.mbzAlbumId,
+          artistName,
+          album.name,
+          forceRefresh
+        );
 
-          if (cover) {
-            // Download cover locally
+        if (cover) {
+          const isMusicBrainzSource = cover.source === 'coverartarchive' || cover.source === 'musicbrainz';
+          const hasExistingCover = !!album.externalCoverPath;
+
+          // Decision tree for applying vs creating conflict:
+          // 1. No existing cover → Apply directly
+          // 2. Has cover + forceRefresh → Apply directly (user explicitly requested)
+          // 3. Has cover + MusicBrainz source → Apply directly (highest priority)
+          // 4. Has cover + Other source → Create conflict for user review
+
+          if (!hasExistingCover || forceRefresh || isMusicBrainzSource) {
+            // Apply the cover directly
             const localPath = await this.downloadAlbumCover(albumId, cover);
 
             await this.prisma.album.update({
@@ -202,7 +240,26 @@ export class ExternalMetadataService {
               },
             });
             coverUpdated = true;
-            this.logger.log(`Updated cover for: ${album.name}`);
+            this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
+          } else {
+            // Create conflict for user to review
+            await this.conflictService.createConflict({
+              entityId: albumId,
+              entityType: 'album',
+              field: 'externalCover',
+              currentValue: album.externalCoverPath,
+              suggestedValue: cover.url,
+              source: cover.source as any,
+              priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
+              metadata: {
+                albumName: album.name,
+                artistName,
+                currentSource: album.externalCoverSource,
+              },
+            });
+            this.logger.log(
+              `Created conflict for album "${album.name}": existing cover vs ${cover.source} suggestion`
+            );
           }
         }
       }

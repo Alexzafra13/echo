@@ -31,6 +31,7 @@ import { ExternalMetadataController } from './presentation/external-metadata.con
 import { ImagesController } from './presentation/images.controller';
 import { AdminSettingsController } from './presentation/admin-settings.controller';
 import { MaintenanceController } from './presentation/maintenance.controller';
+import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -92,6 +93,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     ImagesController,
     AdminSettingsController,
     MaintenanceController,
+    MetadataConflictsController,
   ],
   exports: [
     ExternalMetadataService,
