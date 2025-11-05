@@ -251,10 +251,27 @@ export class ScanProcessorService implements OnModuleInit {
   }
 
   /**
+   * Normaliza un string para comparación (sin acentos, minúsculas, sin espacios extra)
+   */
+  private normalizeForComparison(str: string): string {
+    return str
+      .normalize('NFD') // Descompone caracteres con acentos
+      .replace(/[\u0300-\u036f]/g, '') // Elimina marcas diacríticas (acentos)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' '); // Normaliza espacios múltiples a uno solo
+  }
+
+  /**
    * Busca o crea un artista de manera atómica
    *
    * Esta función garantiza que siempre retorne un artista válido con ID,
    * creándolo si no existe. Sigue el patrón "find-or-create" de Navidrome.
+   *
+   * Ahora con normalización de acentos para evitar duplicados:
+   * - "Dani Fernández" y "Dani Fernandez" se reconocen como el mismo artista
+   * - Se mantiene el nombre original (con acentos) del primer track encontrado
+   * - Usa orderArtistName para búsqueda eficiente sin acentos
    *
    * @param artistName - Nombre del artista
    * @param mbzArtistId - MusicBrainz ID (opcional)
@@ -266,29 +283,31 @@ export class ScanProcessorService implements OnModuleInit {
   ): Promise<{ id: string; name: string; created: boolean }> {
     // Normalizar nombre (evitar duplicados por espacios, etc.)
     const normalizedName = (artistName || 'Unknown Artist').trim();
+    const orderName = this.normalizeForComparison(normalizedName);
 
-    // 1. Intentar buscar el artista existente
+    // 1. Buscar artista por nombre normalizado (sin acentos)
     let artist = await this.prisma.artist.findFirst({
-      where: { name: normalizedName },
+      where: { orderArtistName: orderName },
       select: { id: true, name: true },
     });
 
-    // 2. Si no existe, crearlo
-    if (!artist) {
-      artist = await this.prisma.artist.create({
-        data: {
-          name: normalizedName,
-          mbzArtistId: mbzArtistId || undefined,
-          albumCount: 0, // Se calculará después
-          songCount: 0,  // Se calculará después
-          size: BigInt(0), // Se calculará después
-        },
-        select: { id: true, name: true },
-      });
-      return { ...artist, created: true };
+    if (artist) {
+      return { ...artist, created: false };
     }
 
-    return { ...artist, created: false };
+    // 2. Si no existe, crearlo con el nombre original (con acentos si los tiene)
+    artist = await this.prisma.artist.create({
+      data: {
+        name: normalizedName,
+        orderArtistName: orderName, // Guardar versión normalizada para búsquedas
+        mbzArtistId: mbzArtistId || undefined,
+        albumCount: 0, // Se calculará después
+        songCount: 0,  // Se calculará después
+        size: BigInt(0), // Se calculará después
+      },
+      select: { id: true, name: true },
+    });
+    return { ...artist, created: true };
   }
 
   /**
@@ -319,10 +338,12 @@ export class ScanProcessorService implements OnModuleInit {
     const normalizedName = (albumName || 'Unknown Album').trim();
 
     // 1. Intentar buscar el álbum existente
+    // Search by name and year only to prevent album splitting when tracks have collaborations
+    // This ensures all tracks from the same album stay under one album entity
     let album = await this.prisma.album.findFirst({
       where: {
         name: normalizedName,
-        artistId: artistId,
+        ...(metadata.year ? { year: metadata.year } : {}),
       },
       select: { id: true, name: true, artistId: true, coverArtPath: true },
     });
