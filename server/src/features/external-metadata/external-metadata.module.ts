@@ -10,6 +10,7 @@ import { MetadataCacheService } from './infrastructure/services/metadata-cache.s
 import { RateLimiterService } from './infrastructure/services/rate-limiter.service';
 import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
+import { ImageDownloadService } from './infrastructure/services/image-download.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -61,6 +62,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     RateLimiterService,
     SettingsService,
     StorageService,
+    ImageDownloadService,
 
     // Persistence
     SettingsRepository,
