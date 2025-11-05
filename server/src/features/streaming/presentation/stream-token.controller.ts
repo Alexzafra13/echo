@@ -33,7 +33,7 @@ export class StreamTokenController {
     },
   })
   async generateToken(@CurrentUser() user: any) {
-    const { token, expiresAt } = await this.streamTokenService.generateToken(user.userId);
+    const { token, expiresAt } = await this.streamTokenService.generateToken(user.id);
     return { token, expiresAt };
   }
 
@@ -62,10 +62,10 @@ export class StreamTokenController {
     description: 'No active token found',
   })
   async getCurrentToken(@CurrentUser() user: any) {
-    const tokenData = await this.streamTokenService.getUserToken(user.userId);
+    const tokenData = await this.streamTokenService.getUserToken(user.id);
     if (!tokenData) {
       // If no token exists, generate one
-      return this.streamTokenService.generateToken(user.userId);
+      return this.streamTokenService.generateToken(user.id);
     }
     return tokenData;
   }
@@ -85,6 +85,6 @@ export class StreamTokenController {
     description: 'Token revoked successfully',
   })
   async revokeToken(@CurrentUser() user: any) {
-    await this.streamTokenService.revokeToken(user.userId);
+    await this.streamTokenService.revokeToken(user.id);
   }
 }
