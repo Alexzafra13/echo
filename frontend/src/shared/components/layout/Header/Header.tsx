@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Search, User, Sun, Moon } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
+import { MetadataNotifications } from './MetadataNotifications';
 import styles from './Header.module.css';
 
 /**
@@ -11,7 +12,7 @@ import styles from './Header.module.css';
  */
 export function Header() {
   const [, setLocation] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -66,6 +67,9 @@ export function Header() {
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
+
+        {/* Metadata notifications (solo admin) */}
+        <MetadataNotifications token={token} isAdmin={user?.isAdmin || false} />
 
         {/* User menu */}
         <div className={styles.header__userMenu}>
