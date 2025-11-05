@@ -305,7 +305,7 @@ export class SettingsService {
    * Update a setting value (for admin panel)
    */
   async update(key: string, value: string) {
-    const result = await this.repository.update(key, { value });
+    const result = await this.repository.update(key, value);
     // Invalidate cache for this key
     this.cache.delete(key);
     return result;
