@@ -94,20 +94,28 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Mock fs.readdir según el path y opciones
+      // Contador para trackear llamadas a readdir
+      let readdirCallCount = 0;
+
+      // Mock fs.readdir con contador
       (fs.readdir as jest.Mock).mockImplementation(async (dirPath: string, options?: any) => {
-        if (dirPath.includes('/artists') && !options) {
-          // Primera llamada: listar directorios de artistas
+        readdirCallCount++;
+
+        // Primera llamada: listado de artistas (sin opciones)
+        if (readdirCallCount === 1 && !options) {
           return ['artist-orphan'];
         }
-        if (dirPath.includes('/albums') && !options) {
-          // Segunda llamada: listar directorios de álbumes
+
+        // Segunda llamada: listado de álbumes (sin opciones)
+        if (readdirCallCount === 2 && !options) {
           return [];
         }
-        if (dirPath.includes('artist-orphan') && options?.withFileTypes) {
-          // Tercera llamada: listar archivos dentro de artist-orphan
+
+        // Tercera llamada: archivos dentro de artist-orphan (con withFileTypes)
+        if (readdirCallCount === 3 && options?.withFileTypes) {
           return [{ name: 'profile.jpg', isDirectory: () => false }];
         }
+
         return [];
       });
 
@@ -135,17 +143,28 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Mock fs.readdir según el path y opciones
+      // Contador para trackear llamadas a readdir
+      let readdirCallCount = 0;
+
+      // Mock fs.readdir con contador
       (fs.readdir as jest.Mock).mockImplementation(async (dirPath: string, options?: any) => {
-        if (dirPath.includes('/artists') && !options) {
+        readdirCallCount++;
+
+        // Primera llamada: listado de artistas (sin opciones)
+        if (readdirCallCount === 1 && !options) {
           return ['artist-orphan'];
         }
-        if (dirPath.includes('/albums') && !options) {
+
+        // Segunda llamada: listado de álbumes (sin opciones)
+        if (readdirCallCount === 2 && !options) {
           return [];
         }
-        if (dirPath.includes('artist-orphan') && options?.withFileTypes) {
+
+        // Tercera llamada: archivos dentro de artist-orphan (con withFileTypes)
+        if (readdirCallCount === 3 && options?.withFileTypes) {
           return [{ name: 'profile.jpg', isDirectory: () => false }];
         }
+
         return [];
       });
 
