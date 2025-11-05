@@ -15,7 +15,7 @@ import { SettingsService } from './settings.service';
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private basePath: string;
+  private basePath: string = '';
   private initialized = false;
 
   constructor(
@@ -55,7 +55,7 @@ export class StorageService {
       this.initialized = true;
       this.logger.log(`Storage initialized at: ${this.basePath}`);
     } catch (error) {
-      this.logger.error(`Failed to initialize storage: ${error.message}`, error.stack);
+      this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -68,6 +68,13 @@ export class StorageService {
       await this.initialize();
     }
     return this.basePath;
+  }
+
+  /**
+   * Alias for getBasePath() - for compatibility
+   */
+  async getStoragePath(): Promise<string> {
+    return this.getBasePath();
   }
 
   /**
@@ -123,7 +130,7 @@ export class StorageService {
 
       this.logger.debug(`Saved image: ${filePath} (${buffer.length} bytes)`);
     } catch (error) {
-      this.logger.error(`Error saving image ${filePath}: ${error.message}`, error.stack);
+      this.logger.error(`Error saving image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -142,7 +149,7 @@ export class StorageService {
 
       return await fs.readFile(filePath);
     } catch (error) {
-      this.logger.error(`Error reading image ${filePath}: ${error.message}`, error.stack);
+      this.logger.error(`Error reading image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
       return null;
     }
   }
@@ -159,7 +166,7 @@ export class StorageService {
         this.logger.debug(`Deleted image: ${filePath}`);
       }
     } catch (error) {
-      this.logger.error(`Error deleting image ${filePath}: ${error.message}`, error.stack);
+      this.logger.error(`Error deleting image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -192,7 +199,7 @@ export class StorageService {
 
       return totalSize;
     } catch (error) {
-      this.logger.error(`Error calculating storage size for ${dirPath}: ${error.message}`, error.stack);
+      this.logger.error(`Error calculating storage size for ${dirPath}: ${(error as Error).message}`, (error as Error).stack);
       return 0;
     }
   }
@@ -211,7 +218,7 @@ export class StorageService {
 
       return currentSize > maxSizeBytes;
     } catch (error) {
-      this.logger.error(`Error checking storage limit: ${error.message}`, error.stack);
+      this.logger.error(`Error checking storage limit: ${(error as Error).message}`, (error as Error).stack);
       return false;
     }
   }
@@ -281,7 +288,7 @@ export class StorageService {
         this.logger.debug(`Deleted directory: ${dirPath}`);
       }
     } catch (error) {
-      this.logger.error(`Error deleting directory ${dirPath}: ${error.message}`, error.stack);
+      this.logger.error(`Error deleting directory ${dirPath}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -305,7 +312,7 @@ export class StorageService {
         return stats.isFile();
       });
     } catch (error) {
-      this.logger.error(`Error listing files in ${dirPath}: ${error.message}`, error.stack);
+      this.logger.error(`Error listing files in ${dirPath}: ${(error as Error).message}`, (error as Error).stack);
       return [];
     }
   }

@@ -134,8 +134,8 @@ export class ExternalMetadataService {
 
       return { bioUpdated, imagesUpdated, errors };
     } catch (error) {
-      this.logger.error(`Error enriching artist ${artistId}: ${error.message}`, error.stack);
-      errors.push(error.message);
+      this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
+      errors.push((error as Error).message);
       return { bioUpdated, imagesUpdated, errors };
     }
   }
@@ -169,13 +169,14 @@ export class ExternalMetadataService {
         throw new Error(`Album not found: ${albumId}`);
       }
 
-      this.logger.log(`Enriching album: ${album.name} by ${album.artist.name} (ID: ${albumId})`);
+      const artistName = album.artist?.name || 'Unknown Artist';
+      this.logger.log(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
       // Enrich cover if not present or forceRefresh
       if (forceRefresh || !album.coverArtPath) {
         const cover = await this.getAlbumCover(
           album.mbzAlbumId,
-          album.artist.name,
+          artistName,
           album.name,
           forceRefresh
         );
@@ -199,8 +200,8 @@ export class ExternalMetadataService {
 
       return { coverUpdated, errors };
     } catch (error) {
-      this.logger.error(`Error enriching album ${albumId}: ${error.message}`, error.stack);
-      errors.push(error.message);
+      this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
+      errors.push((error as Error).message);
       return { coverUpdated, errors };
     }
   }
@@ -242,7 +243,7 @@ export class ExternalMetadataService {
         result.smallUrl = filePath;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download small profile image: ${error.message}`);
+        this.logger.warn(`Failed to download small profile image: ${(error as Error).message}`);
       }
     }
 
@@ -253,7 +254,7 @@ export class ExternalMetadataService {
         result.mediumUrl = filePath;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download medium profile image: ${error.message}`);
+        this.logger.warn(`Failed to download medium profile image: ${(error as Error).message}`);
       }
     }
 
@@ -264,7 +265,7 @@ export class ExternalMetadataService {
         result.largeUrl = filePath;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download large profile image: ${error.message}`);
+        this.logger.warn(`Failed to download large profile image: ${(error as Error).message}`);
       }
     }
 
@@ -276,7 +277,7 @@ export class ExternalMetadataService {
         result.backgroundUrl = filePath;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download background image: ${error.message}`);
+        this.logger.warn(`Failed to download background image: ${(error as Error).message}`);
       }
     }
 
@@ -288,7 +289,7 @@ export class ExternalMetadataService {
         result.bannerUrl = filePath;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download banner image: ${error.message}`);
+        this.logger.warn(`Failed to download banner image: ${(error as Error).message}`);
       }
     }
 
@@ -300,7 +301,7 @@ export class ExternalMetadataService {
         result.logoUrl = filePath;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download logo image: ${error.message}`);
+        this.logger.warn(`Failed to download logo image: ${(error as Error).message}`);
       }
     }
 
@@ -398,7 +399,7 @@ export class ExternalMetadataService {
           return bio;
         }
       } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for bio ${name}: ${error.message}`);
+        this.logger.warn(`Agent "${agent.name}" failed for bio ${name}: ${(error as Error).message}`);
       }
     }
 
@@ -464,7 +465,7 @@ export class ExternalMetadataService {
           }
         }
       } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for images ${name}: ${error.message}`);
+        this.logger.warn(`Agent "${agent.name}" failed for images ${name}: ${(error as Error).message}`);
       }
     }
 
@@ -530,7 +531,7 @@ export class ExternalMetadataService {
           return cover;
         }
       } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for cover ${artist} - ${album}: ${error.message}`);
+        this.logger.warn(`Agent "${agent.name}" failed for cover ${artist} - ${album}: ${(error as Error).message}`);
       }
     }
 

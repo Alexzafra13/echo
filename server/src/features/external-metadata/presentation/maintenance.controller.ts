@@ -15,7 +15,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
 
@@ -80,7 +80,7 @@ export class MaintenanceController {
         avgSizePerArtistMB: stats.avgSizePerArtist / 1024 / 1024,
       };
     } catch (error) {
-      this.logger.error(`Error fetching storage stats: ${error.message}`, error.stack);
+      this.logger.error(`Error fetching storage stats: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -145,7 +145,7 @@ export class MaintenanceController {
         dryRun: isDryRun,
       };
     } catch (error) {
-      this.logger.error(`Error during cleanup: ${error.message}`, error.stack);
+      this.logger.error(`Error during cleanup: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -186,7 +186,7 @@ export class MaintenanceController {
         errors: result.errors,
       };
     } catch (error) {
-      this.logger.error(`Error recalculating storage: ${error.message}`, error.stack);
+      this.logger.error(`Error recalculating storage: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -234,7 +234,7 @@ export class MaintenanceController {
         errors: result.errors,
       };
     } catch (error) {
-      this.logger.error(`Error verifying integrity: ${error.message}`, error.stack);
+      this.logger.error(`Error verifying integrity: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }

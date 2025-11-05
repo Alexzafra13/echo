@@ -705,7 +705,7 @@ export class ScanProcessorService implements OnModuleInit {
       this.scannerGateway.emitError({
         scanId,
         file: 'incremental-scan',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? (error as Error).message : 'Unknown error',
         timestamp: new Date().toISOString(),
       });
     }
@@ -766,8 +766,8 @@ export class ScanProcessorService implements OnModuleInit {
         // Ejecutar en background sin bloquear
         this.enrichArtistsInBackground(artistsToEnrich).catch((error) => {
           this.logger.error(
-            `Error en auto-enriquecimiento de artistas: ${error.message}`,
-            error.stack,
+            `Error en auto-enriquecimiento de artistas: ${(error as Error).message}`,
+            (error as Error).stack,
           );
         });
       }
@@ -798,8 +798,8 @@ export class ScanProcessorService implements OnModuleInit {
         // Ejecutar en background sin bloquear
         this.enrichAlbumsInBackground(albumsToEnrich).catch((error) => {
           this.logger.error(
-            `Error en auto-enriquecimiento de álbumes: ${error.message}`,
-            error.stack,
+            `Error en auto-enriquecimiento de álbumes: ${(error as Error).message}`,
+            (error as Error).stack,
           );
         });
       }
@@ -807,8 +807,8 @@ export class ScanProcessorService implements OnModuleInit {
       this.logger.log('Auto-enriquecimiento iniciado en background');
     } catch (error) {
       this.logger.error(
-        `Error al iniciar auto-enriquecimiento: ${error.message}`,
-        error.stack,
+        `Error al iniciar auto-enriquecimiento: ${(error as Error).message}`,
+        (error as Error).stack,
       );
       // No lanzar error para no afectar el escaneo principal
     }
@@ -826,7 +826,7 @@ export class ScanProcessorService implements OnModuleInit {
         this.logger.debug(`Artista enriquecido: ${artist.name}`);
       } catch (error) {
         this.logger.warn(
-          `Error enriqueciendo artista ${artist.name}: ${error.message}`,
+          `Error enriqueciendo artista ${artist.name}: ${(error as Error).message}`,
         );
       }
     }
@@ -844,7 +844,7 @@ export class ScanProcessorService implements OnModuleInit {
         this.logger.debug(`Álbum enriquecido: ${album.name}`);
       } catch (error) {
         this.logger.warn(
-          `Error enriqueciendo álbum ${album.name}: ${error.message}`,
+          `Error enriqueciendo álbum ${album.name}: ${(error as Error).message}`,
         );
       }
     }
