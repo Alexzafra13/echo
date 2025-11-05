@@ -109,7 +109,10 @@ export class MetadataExtractorService {
 
       // Otros
       comment: this.extractComment(common.comment),
-      lyrics: common.lyrics?.[0] || undefined,
+      // Extract text from lyrics object: music-metadata returns {language, descriptor, text}
+      lyrics:
+        common.lyrics?.[0]?.text ||
+        (typeof common.lyrics?.[0] === 'string' ? common.lyrics[0] : undefined),
       compilation: common.compilation || false,
       coverArt: (common.picture?.length || 0) > 0,
     };
