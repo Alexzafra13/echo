@@ -86,12 +86,10 @@ export class StreamingController {
     const metadata = await this.streamTrackUseCase.execute({ trackId });
 
     // 2. Configurar headers
-    res.headers({
-      'Content-Type': metadata.mimeType,
-      'Content-Length': metadata.fileSize.toString(),
-      'Accept-Ranges': 'bytes',
-      'Cache-Control': 'public, max-age=31536000', // 1 año
-    });
+    res.header('Content-Type', metadata.mimeType);
+    res.header('Content-Length', metadata.fileSize.toString());
+    res.header('Accept-Ranges', 'bytes');
+    res.header('Cache-Control', 'public, max-age=31536000'); // 1 año
 
     // 3. Enviar solo headers (sin body)
     res.status(HttpStatus.OK).send();
@@ -156,24 +154,22 @@ export class StreamingController {
       // Validar rango
       if (start >= fileSize || end >= fileSize || start > end) {
         res.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
-        res.headers({
-          'Content-Range': `bytes */${fileSize}`,
-        });
+        res.header('Content-Range', `bytes */${fileSize}`);
         res.send();
         return;
       }
 
       const chunkSize = end - start + 1;
 
+      console.log('📤 [StreamTrack] Streaming range:', { start, end, chunkSize, fileSize });
+
       // Headers para partial content
       res.status(HttpStatus.PARTIAL_CONTENT);
-      res.headers({
-        'Content-Type': mimeType,
-        'Content-Length': chunkSize.toString(),
-        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=31536000',
-      });
+      res.header('Content-Type', mimeType);
+      res.header('Content-Length', chunkSize.toString());
+      res.header('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.header('Accept-Ranges', 'bytes');
+      res.header('Cache-Control', 'public, max-age=31536000');
 
       // Stream del rango solicitado
       const stream = fs.createReadStream(filePath, { start, end });
@@ -191,12 +187,10 @@ export class StreamingController {
       console.log('📤 [StreamTrack] Streaming full file:', { filePath, fileSize, mimeType });
 
       res.status(HttpStatus.OK);
-      res.headers({
-        'Content-Type': mimeType,
-        'Content-Length': fileSize.toString(),
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=31536000',
-      });
+      res.header('Content-Type', mimeType);
+      res.header('Content-Length', fileSize.toString());
+      res.header('Accept-Ranges', 'bytes');
+      res.header('Cache-Control', 'public, max-age=31536000');
 
       // Stream del archivo completo
       const stream = fs.createReadStream(filePath);
@@ -250,12 +244,10 @@ export class StreamingController {
     const { filePath, fileName, fileSize, mimeType } = metadata;
 
     // 2. Headers para descarga
-    res.headers({
-      'Content-Type': mimeType,
-      'Content-Length': fileSize.toString(),
-      'Content-Disposition': `attachment; filename="${fileName}"`,
-      'Cache-Control': 'public, max-age=31536000',
-    });
+    res.header('Content-Type', mimeType);
+    res.header('Content-Length', fileSize.toString());
+    res.header('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.header('Cache-Control', 'public, max-age=31536000');
 
     // 3. Stream del archivo
     const stream = fs.createReadStream(filePath);
