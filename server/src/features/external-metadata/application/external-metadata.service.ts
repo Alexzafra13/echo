@@ -92,12 +92,17 @@ export class ExternalMetadataService {
           this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
         } else {
           // Create conflict for user to review
+          const currentBioPreview = artist.biography
+            ? artist.biography.substring(0, 200) + '...'
+            : '';
+          const suggestedBioPreview = bio.content.substring(0, 200) + '...';
+
           await this.conflictService.createConflict({
             entityId: artistId,
             entityType: 'artist',
             field: 'biography',
-            currentValue: artist.biography.substring(0, 200) + '...', // Preview only
-            suggestedValue: bio.content.substring(0, 200) + '...', // Preview only
+            currentValue: currentBioPreview,
+            suggestedValue: suggestedBioPreview,
             source: bio.source as any,
             priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
             metadata: {
@@ -247,8 +252,8 @@ export class ExternalMetadataService {
               entityId: albumId,
               entityType: 'album',
               field: 'externalCover',
-              currentValue: album.externalCoverPath,
-              suggestedValue: cover.url,
+              currentValue: album.externalCoverPath ?? undefined,
+              suggestedValue: cover.largeUrl,
               source: cover.source as any,
               priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
               metadata: {
