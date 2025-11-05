@@ -97,8 +97,8 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
       );
     } catch (error) {
       this.logger.error(
-        `Error fetching cover art for ${artist} - ${album}: ${error.message}`,
-        error.stack
+        `Error fetching cover art for ${artist} - ${album}: ${(error as Error).message}`,
+        (error as Error).stack
       );
       return null;
     }

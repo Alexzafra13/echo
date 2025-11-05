@@ -18,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { ImageService, ArtistImageType } from '../application/services/image.service';
 
 /**
@@ -136,8 +136,8 @@ export class ImagesController {
       }
 
       this.logger.error(
-        `Error serving artist image ${artistId}/${imageType}: ${error.message}`,
-        error.stack,
+        `Error serving artist image ${artistId}/${imageType}: ${(error as Error).message}`,
+        (error as Error).stack,
       );
       throw new NotFoundException(
         `Unable to serve image for artist ${artistId}`,
@@ -196,8 +196,8 @@ export class ImagesController {
       }
 
       this.logger.error(
-        `Error serving album cover ${albumId}: ${error.message}`,
-        error.stack,
+        `Error serving album cover ${albumId}: ${(error as Error).message}`,
+        (error as Error).stack,
       );
       throw new NotFoundException(`Unable to serve cover for album ${albumId}`);
     }

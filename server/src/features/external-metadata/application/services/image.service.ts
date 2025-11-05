@@ -321,7 +321,7 @@ export class ImageService {
         lastModified: stats.mtime,
       };
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if ((error as any).code === 'ENOENT') {
         throw new NotFoundException(`Image file not found: ${filePath}`);
       }
       throw error;

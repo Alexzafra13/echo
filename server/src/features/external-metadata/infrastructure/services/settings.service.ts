@@ -158,7 +158,7 @@ export class SettingsService {
           throw new BadRequestException(`Unknown service: ${service}`);
       }
     } catch (error) {
-      this.logger.error(`Error validating ${service} API key: ${error.message}`, error.stack);
+      this.logger.error(`Error validating ${service} API key: ${(error as Error).message}`, (error as Error).stack);
       return false;
     }
   }
@@ -178,7 +178,7 @@ export class SettingsService {
       this.cacheInitialized = true;
       this.logger.log(`Initialized settings cache with ${allSettings.length} settings`);
     } catch (error) {
-      this.logger.error(`Error initializing settings cache: ${error.message}`, error.stack);
+      this.logger.error(`Error initializing settings cache: ${(error as Error).message}`, (error as Error).stack);
       this.cacheInitialized = false;
     }
   }
@@ -252,7 +252,7 @@ export class SettingsService {
       const data = await response.json();
       return !data.error;
     } catch (error) {
-      this.logger.error(`Last.fm API key validation failed: ${error.message}`);
+      this.logger.error(`Last.fm API key validation failed: ${(error as Error).message}`);
       return false;
     }
   }
@@ -275,8 +275,49 @@ export class SettingsService {
       // 200 = valid key, 401 = invalid key, 404 = valid key but artist not found
       return response.status === 200 || response.status === 404;
     } catch (error) {
-      this.logger.error(`Fanart.tv API key validation failed: ${error.message}`);
+      this.logger.error(`Fanart.tv API key validation failed: ${(error as Error).message}`);
       return false;
     }
+  }
+
+  /**
+   * Find a single setting by key (for admin panel)
+   */
+  async findOne(key: string) {
+    return this.repository.findOne(key);
+  }
+
+  /**
+   * Find all settings by category (for admin panel)
+   */
+  async findByCategory(category: string) {
+    return this.repository.findByCategory(category);
+  }
+
+  /**
+   * Find all settings (for admin panel)
+   */
+  async findAll() {
+    return this.repository.findAll();
+  }
+
+  /**
+   * Update a setting value (for admin panel)
+   */
+  async update(key: string, value: string) {
+    const result = await this.repository.update(key, { value });
+    // Invalidate cache for this key
+    this.cache.delete(key);
+    return result;
+  }
+
+  /**
+   * Delete a setting (for admin panel)
+   */
+  async delete(key: string) {
+    const result = await this.repository.delete(key);
+    // Invalidate cache for this key
+    this.cache.delete(key);
+    return result;
   }
 }
