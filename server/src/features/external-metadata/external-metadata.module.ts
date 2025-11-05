@@ -4,13 +4,20 @@ import { ConfigModule } from '@nestjs/config';
 // Domain
 // (Interfaces and entities are imported as needed, no providers for them)
 
-// Infrastructure
+// Infrastructure - Services
 import { AgentRegistryService } from './infrastructure/services/agent-registry.service';
 import { MetadataCacheService } from './infrastructure/services/metadata-cache.service';
 import { RateLimiterService } from './infrastructure/services/rate-limiter.service';
+import { SettingsService } from './infrastructure/services/settings.service';
+import { StorageService } from './infrastructure/services/storage.service';
+
+// Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
 import { LastfmAgent } from './infrastructure/agents/lastfm.agent';
 import { FanartTvAgent } from './infrastructure/agents/fanart-tv.agent';
+
+// Infrastructure - Persistence
+import { SettingsRepository } from './infrastructure/persistence/settings.repository';
 
 // Application
 import { ExternalMetadataService } from './application/external-metadata.service';
@@ -52,6 +59,11 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     AgentRegistryService,
     MetadataCacheService,
     RateLimiterService,
+    SettingsService,
+    StorageService,
+
+    // Persistence
+    SettingsRepository,
 
     // Agents
     CoverArtArchiveAgent,
@@ -69,6 +81,8 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     ExternalMetadataService,
     AgentRegistryService,
     MetadataCacheService,
+    SettingsService,
+    StorageService,
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {
@@ -76,6 +90,7 @@ export class ExternalMetadataModule implements OnModuleInit {
 
   constructor(
     private readonly agentRegistry: AgentRegistryService,
+    private readonly storageService: StorageService,
     private readonly coverArtAgent: CoverArtArchiveAgent,
     private readonly lastfmAgent: LastfmAgent,
     private readonly fanartAgent: FanartTvAgent
@@ -86,6 +101,13 @@ export class ExternalMetadataModule implements OnModuleInit {
    */
   async onModuleInit() {
     this.logger.log('Initializing External Metadata Module...');
+
+    // Initialize storage
+    try {
+      await this.storageService.initialize();
+    } catch (error) {
+      this.logger.error(`Failed to initialize storage: ${error.message}`, error.stack);
+    }
 
     // Register all agents
     this.agentRegistry.register(this.coverArtAgent);
