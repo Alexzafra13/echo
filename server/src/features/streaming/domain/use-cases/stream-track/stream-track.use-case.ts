@@ -26,36 +26,23 @@ export class StreamTrackUseCase {
       throw new NotFoundException('Track ID is required');
     }
 
-    console.log('🎵 [StreamTrack] Attempting to stream track:', input.trackId);
-
     // 2. Buscar track en BD
     const track = await this.trackRepository.findById(input.trackId);
 
     if (!track) {
-      console.error('❌ [StreamTrack] Track not found in database:', input.trackId);
       throw new NotFoundException(`Track with ID ${input.trackId} not found`);
     }
-
-    console.log('✅ [StreamTrack] Track found:', { id: track.id, title: track.title });
 
     // 3. Obtener path del archivo
     const filePath = track.path;
 
     if (!filePath) {
-      console.error('❌ [StreamTrack] Track has no file path:', track.id);
       throw new NotFoundException(`Track ${input.trackId} has no file path`);
     }
 
-    console.log('📂 [StreamTrack] File path from DB:', filePath);
-    console.log('📂 [StreamTrack] Current working directory:', process.cwd());
-    console.log('📂 [StreamTrack] Resolved path:', path.resolve(filePath));
-
     // 4. Verificar que el archivo existe
-    const fileExists = fs.existsSync(filePath);
-    console.log(`📂 [StreamTrack] File exists check: ${fileExists}`);
-
-    if (!fileExists) {
-      console.error('❌ [StreamTrack] Audio file not found at:', filePath);
+    if (!fs.existsSync(filePath)) {
+      console.error(`[StreamTrack] Audio file not found: ${filePath}`);
       throw new NotFoundException(`Audio file not found: ${filePath}`);
     }
 
@@ -63,7 +50,7 @@ export class StreamTrackUseCase {
     const stats = fs.statSync(filePath);
 
     if (!stats.isFile()) {
-      console.error('❌ [StreamTrack] Path is not a file:', filePath);
+      console.error(`[StreamTrack] Path is not a file: ${filePath}`);
       throw new NotFoundException(`Path is not a file: ${filePath}`);
     }
 
@@ -72,12 +59,6 @@ export class StreamTrackUseCase {
 
     // 7. Obtener nombre del archivo
     const fileName = path.basename(filePath);
-
-    console.log('✅ [StreamTrack] Ready to stream:', {
-      fileName,
-      fileSize: stats.size,
-      mimeType,
-    });
 
     // 8. Retornar
     return {

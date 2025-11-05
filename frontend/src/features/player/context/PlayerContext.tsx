@@ -85,7 +85,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (track) {
       // Play new track
       if (!streamTokenData?.token) {
-        console.error('❌ Stream token not available');
+        console.error('[Player] Stream token not available');
         return;
       }
 
@@ -93,28 +93,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
       const streamUrl = `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
 
-      console.log('🎵 Playing track:', {
-        trackId: track.id,
-        trackTitle: track.title,
-        streamUrl,
-        hasToken: !!streamTokenData?.token,
-      });
-
       audioRef.current.src = streamUrl;
       audioRef.current.load();
 
-      // Add error handler to debug loading issues
-      audioRef.current.onerror = (e) => {
-        console.error('❌ Audio loading error:', {
-          error: e,
-          src: audioRef.current?.src,
-          networkState: audioRef.current?.networkState,
-          readyState: audioRef.current?.readyState,
-        });
+      // Error handler for audio loading issues
+      audioRef.current.onerror = () => {
+        console.error('[Player] Failed to load audio track:', track.title);
       };
 
       audioRef.current.play().catch((error) => {
-        console.error('❌ Audio play error:', error);
+        console.error('[Player] Failed to play audio:', error.message);
       });
 
       setState(prev => ({
