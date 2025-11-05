@@ -202,6 +202,7 @@ describe('AdminSettingsController', () => {
       expect(result).toEqual({
         valid: true,
         service: 'lastfm',
+        message: 'API key is valid',
       });
       expect(settingsService.validateApiKey).toHaveBeenCalledWith('lastfm', 'valid-key');
     });
@@ -220,6 +221,7 @@ describe('AdminSettingsController', () => {
       expect(result).toEqual({
         valid: false,
         service: 'lastfm',
+        message: 'API key is invalid or service is unavailable',
       });
     });
 
@@ -237,21 +239,27 @@ describe('AdminSettingsController', () => {
       expect(result).toEqual({
         valid: true,
         service: 'fanart',
+        message: 'API key is valid',
       });
       expect(settingsService.validateApiKey).toHaveBeenCalledWith('fanart', 'valid-key');
     });
 
     it('debería manejar errores de validación', async () => {
-      // Arrange
+      // Arrange - El controller no lanza errores, los captura y retorna valid: false
       settingsService.validateApiKey.mockRejectedValue(new Error('Network error'));
 
-      // Act & Assert
-      await expect(
-        controller.validateApiKey({
-          service: 'lastfm',
-          apiKey: 'any-key',
-        })
-      ).rejects.toThrow('Network error');
+      // Act
+      const result = await controller.validateApiKey({
+        service: 'lastfm',
+        apiKey: 'any-key',
+      });
+
+      // Assert
+      expect(result).toEqual({
+        valid: false,
+        service: 'lastfm',
+        message: 'Network error',
+      });
     });
   });
 
@@ -303,7 +311,7 @@ describe('AdminSettingsController', () => {
       // Assert
       expect(result).toEqual({
         success: true,
-        message: 'Settings cache cleared successfully',
+        message: 'Cache cleared successfully',
       });
       expect(settingsService.clearCache).toHaveBeenCalled();
     });

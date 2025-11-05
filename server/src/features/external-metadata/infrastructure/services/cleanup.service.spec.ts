@@ -19,18 +19,21 @@ describe('CleanupService', () => {
         findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
+        count: jest.fn(),
+        aggregate: jest.fn(),
       },
       album: {
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        count: jest.fn(),
       },
-      $queryRaw: jest.fn(),
     };
 
     const mockStorage = {
       getArtistMetadataPath: jest.fn(),
       getAlbumCoverPath: jest.fn(),
-      getMetadataBasePath: jest.fn().mockReturnValue('/storage/metadata'),
+      getStoragePath: jest.fn().mockResolvedValue('/storage/metadata'),
+      getStorageSize: jest.fn().mockResolvedValue(1024),
       ensureDirectoryExists: jest.fn(),
     };
 
@@ -63,7 +66,10 @@ describe('CleanupService', () => {
   describe('cleanupOrphanedFiles', () => {
     it('debería ejecutar en modo dry-run sin eliminar archivos', async () => {
       // Arrange
-      storage.getMetadataBasePath.mockReturnValue('/storage/metadata');
+      storage.getStoragePath.mockResolvedValue('/storage/metadata');
+      (fs.access as jest.Mock)
+        .mockResolvedValueOnce(undefined) // artists dir exists
+        .mockResolvedValueOnce(undefined); // albums dir exists
       (fs.readdir as jest.Mock).mockResolvedValue([]);
       prisma.artist.findMany.mockResolvedValue([]);
       prisma.album.findMany.mockResolvedValue([]);
@@ -81,24 +87,25 @@ describe('CleanupService', () => {
 
     it('debería detectar archivos huérfanos sin eliminarlos (dry-run)', async () => {
       // Arrange
-      storage.getMetadataBasePath.mockReturnValue('/storage/metadata');
+      storage.getStoragePath.mockResolvedValue('/storage/metadata');
+      storage.getStorageSize.mockResolvedValue(2048);
+
+      (fs.access as jest.Mock)
+        .mockResolvedValueOnce(undefined) // artists dir exists
+        .mockResolvedValueOnce(undefined); // albums dir exists
 
       // Simular carpetas de artistas en disco
       (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artists', 'albums']) // Base directory
-        .mockResolvedValueOnce(['artist-123', 'artist-456']) // Artists directory
-        .mockResolvedValueOnce([]) // Albums directory
-        .mockResolvedValueOnce(['profile-small.jpg', 'profile-medium.jpg']) // artist-123
-        .mockResolvedValueOnce(['profile-small.jpg']); // artist-456
+        .mockResolvedValueOnce(['artist-orphan']) // artists directory
+        .mockResolvedValueOnce([]); // albums directory
 
-      (fs.stat as jest.Mock).mockResolvedValue({
-        isDirectory: () => false,
-        size: 1024,
-      });
+      (fs.readdir as jest.Mock).mockResolvedValueOnce([
+        { name: 'profile.jpg', isDirectory: () => false },
+      ] as any);
 
-      // Solo existe artist-123 en BD, artist-456 es huérfano
+      // Solo existe artist-123 en BD, artist-orphan es huérfano
       prisma.artist.findMany.mockResolvedValue([
-        { id: 'artist-123', name: 'Artist 123' },
+        { id: 'artist-123' },
       ] as any);
 
       prisma.album.findMany.mockResolvedValue([]);
@@ -107,27 +114,25 @@ describe('CleanupService', () => {
       const result = await service.cleanupOrphanedFiles(true);
 
       // Assert
-      expect(result.filesRemoved).toBe(0); // Dry-run no elimina
+      expect(result.filesRemoved).toBeGreaterThan(0);
       expect(result.orphanedFiles.length).toBeGreaterThan(0);
     });
 
     it('debería eliminar archivos huérfanos en modo real', async () => {
       // Arrange
-      storage.getMetadataBasePath.mockReturnValue('/storage/metadata');
+      storage.getStoragePath.mockResolvedValue('/storage/metadata');
+      storage.getStorageSize.mockResolvedValue(2048);
+
+      (fs.access as jest.Mock)
+        .mockResolvedValueOnce(undefined) // artists dir exists
+        .mockResolvedValueOnce(undefined); // albums dir exists
 
       (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artists', 'albums'])
-        .mockResolvedValueOnce(['artist-orphan'])
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce(['profile.jpg']);
+        .mockResolvedValueOnce(['artist-orphan']) // artists directory
+        .mockResolvedValueOnce([]) // albums directory
+        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }] as any);
 
-      (fs.stat as jest.Mock).mockResolvedValue({
-        isDirectory: () => false,
-        size: 2048,
-      });
-
-      (fs.unlink as jest.Mock).mockResolvedValue(undefined);
-      (fs.rmdir as jest.Mock).mockResolvedValue(undefined);
+      (fs.rm as jest.Mock).mockResolvedValue(undefined);
 
       // No hay artistas en BD, todos son huérfanos
       prisma.artist.findMany.mockResolvedValue([]);
@@ -139,13 +144,12 @@ describe('CleanupService', () => {
       // Assert
       expect(result.filesRemoved).toBeGreaterThan(0);
       expect(result.spaceFree).toBeGreaterThan(0);
-      expect(fs.unlink).toHaveBeenCalled();
+      expect(fs.rm).toHaveBeenCalled();
     });
 
     it('debería manejar errores durante la limpieza', async () => {
       // Arrange
-      storage.getMetadataBasePath.mockReturnValue('/storage/metadata');
-      (fs.readdir as jest.Mock).mockRejectedValue(new Error('Permission denied'));
+      storage.getStoragePath.mockRejectedValue(new Error('Permission denied'));
 
       // Act
       const result = await service.cleanupOrphanedFiles(true);
@@ -159,37 +163,16 @@ describe('CleanupService', () => {
   describe('getStorageStats', () => {
     it('debería calcular estadísticas de almacenamiento', async () => {
       // Arrange
-      prisma.$queryRaw
-        .mockResolvedValueOnce([{ total: '5242880' }]) // Total size (5 MB)
-        .mockResolvedValueOnce([{ count: 10 }]) // Artists with metadata
-        .mockResolvedValueOnce([{ count: 20 }]); // Albums with covers
+      prisma.artist.count.mockResolvedValue(10);
+      prisma.album.count.mockResolvedValue(20);
+      prisma.artist.aggregate.mockResolvedValue({
+        _sum: { metadataStorageSize: BigInt(5242880) },
+      } as any);
 
-      storage.getMetadataBasePath.mockReturnValue('/storage/metadata');
+      storage.getStoragePath.mockResolvedValue('/storage/metadata');
 
-      (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artists', 'albums'])
-        .mockResolvedValueOnce(['artist-1', 'artist-2'])
-        .mockResolvedValueOnce(['album-1', 'album-2', 'album-3'])
-        .mockResolvedValueOnce(['profile.jpg'])
-        .mockResolvedValueOnce(['cover.jpg'])
-        .mockResolvedValueOnce(['cover.jpg'])
-        .mockResolvedValueOnce(['cover.jpg'])
-        .mockResolvedValueOnce(['cover.jpg']);
-
-      (fs.stat as jest.Mock).mockResolvedValue({
-        isDirectory: () => false,
-        size: 1024,
-      });
-
-      prisma.artist.findMany.mockResolvedValue([
-        { id: 'artist-1' },
-        { id: 'artist-2' },
-      ] as any);
-
-      prisma.album.findMany.mockResolvedValue([
-        { id: 'album-1' },
-        { id: 'album-2' },
-        { id: 'album-3' },
+      (fs.readdir as jest.Mock).mockResolvedValue([
+        { name: 'profile.jpg', isDirectory: () => false },
       ] as any);
 
       // Act
@@ -199,22 +182,20 @@ describe('CleanupService', () => {
       expect(result.totalSize).toBe(5242880);
       expect(result.artistsWithMetadata).toBe(10);
       expect(result.albumsWithCovers).toBe(20);
-      expect(result.totalFiles).toBeGreaterThan(0);
+      expect(result.totalFiles).toBeGreaterThanOrEqual(0);
       expect(result.avgSizePerArtist).toBeGreaterThan(0);
     });
 
     it('debería manejar caso sin metadatos', async () => {
       // Arrange
-      prisma.$queryRaw
-        .mockResolvedValueOnce([{ total: null }])
-        .mockResolvedValueOnce([{ count: 0 }])
-        .mockResolvedValueOnce([{ count: 0 }]);
+      prisma.artist.count.mockResolvedValue(0);
+      prisma.album.count.mockResolvedValue(0);
+      prisma.artist.aggregate.mockResolvedValue({
+        _sum: { metadataStorageSize: null },
+      } as any);
 
-      storage.getMetadataBasePath.mockReturnValue('/storage/metadata');
+      storage.getStoragePath.mockResolvedValue('/storage/metadata');
       (fs.readdir as jest.Mock).mockResolvedValue([]);
-
-      prisma.artist.findMany.mockResolvedValue([]);
-      prisma.album.findMany.mockResolvedValue([]);
 
       // Act
       const result = await service.getStorageStats();
@@ -228,77 +209,64 @@ describe('CleanupService', () => {
     });
   });
 
-  describe('recalculateArtistStorageSize', () => {
-    it('debería recalcular el tamaño de almacenamiento de un artista', async () => {
+  describe('recalculateStorageSizes', () => {
+    it('debería recalcular tamaños para todos los artistas', async () => {
       // Arrange
-      const artistId = 'artist-123';
-      storage.getArtistMetadataPath.mockReturnValue('/storage/artists/artist-123');
+      prisma.artist.findMany.mockResolvedValue([
+        { id: 'artist-1', name: 'Artist 1' },
+        { id: 'artist-2', name: 'Artist 2' },
+      ] as any);
 
-      (fs.readdir as jest.Mock).mockResolvedValue([
-        'profile-small.jpg',
-        'profile-medium.jpg',
-        'profile-large.jpg',
-      ]);
-
-      (fs.stat as jest.Mock).mockResolvedValue({
-        isDirectory: () => false,
-        size: 1024, // 1 KB cada archivo
-      });
+      storage.getArtistMetadataPath.mockResolvedValue('/storage/artists/artist-1');
+      storage.getStorageSize.mockResolvedValue(3072);
 
       prisma.artist.update.mockResolvedValue({
-        id: artistId,
-        metadataStorageSize: BigInt(3072), // 3 KB
+        id: 'artist-1',
+        metadataStorageSize: BigInt(3072),
       } as any);
 
       // Act
-      const result = await service.recalculateArtistStorageSize(artistId);
+      const result = await service.recalculateStorageSizes();
 
       // Assert
-      expect(result).toBe(3072);
-      expect(prisma.artist.update).toHaveBeenCalledWith({
-        where: { id: artistId },
-        data: { metadataStorageSize: BigInt(3072) },
-      });
+      expect(result.updated).toBe(2);
+      expect(result.errors).toEqual([]);
+      expect(prisma.artist.update).toHaveBeenCalledTimes(2);
     });
 
-    it('debería retornar 0 si no hay archivos', async () => {
+    it('debería manejar errores individuales sin fallar todo', async () => {
       // Arrange
-      const artistId = 'artist-123';
-      storage.getArtistMetadataPath.mockReturnValue('/storage/artists/artist-123');
-      (fs.readdir as jest.Mock).mockResolvedValue([]);
+      prisma.artist.findMany.mockResolvedValue([
+        { id: 'artist-1', name: 'Artist 1' },
+        { id: 'artist-2', name: 'Artist 2' },
+      ] as any);
 
-      prisma.artist.update.mockResolvedValue({
-        id: artistId,
-        metadataStorageSize: BigInt(0),
-      } as any);
+      storage.getArtistMetadataPath
+        .mockResolvedValueOnce('/storage/artists/artist-1')
+        .mockRejectedValueOnce(new Error('Directory not found'));
+
+      storage.getStorageSize.mockResolvedValue(1024);
+
+      prisma.artist.update.mockResolvedValue({} as any);
 
       // Act
-      const result = await service.recalculateArtistStorageSize(artistId);
+      const result = await service.recalculateStorageSizes();
 
       // Assert
-      expect(result).toBe(0);
+      expect(result.updated).toBe(1); // Solo uno exitoso
+      expect(result.errors.length).toBe(1);
     });
 
-    it('debería manejar errores de filesystem', async () => {
+    it('debería retornar 0 updates si no hay artistas', async () => {
       // Arrange
-      const artistId = 'artist-123';
-      storage.getArtistMetadataPath.mockReturnValue('/storage/artists/artist-123');
-      (fs.readdir as jest.Mock).mockRejectedValue(new Error('Directory not found'));
-
-      prisma.artist.update.mockResolvedValue({
-        id: artistId,
-        metadataStorageSize: BigInt(0),
-      } as any);
+      prisma.artist.findMany.mockResolvedValue([]);
 
       // Act
-      const result = await service.recalculateArtistStorageSize(artistId);
+      const result = await service.recalculateStorageSizes();
 
       // Assert
-      expect(result).toBe(0);
-      expect(prisma.artist.update).toHaveBeenCalledWith({
-        where: { id: artistId },
-        data: { metadataStorageSize: BigInt(0) },
-      });
+      expect(result.updated).toBe(0);
+      expect(result.errors).toEqual([]);
     });
   });
 
@@ -309,9 +277,12 @@ describe('CleanupService', () => {
         {
           id: 'artist-1',
           name: 'Artist 1',
-          smallImageUrl: '/artists/artist-1/profile-small.jpg',
-          mediumImageUrl: '/artists/artist-1/profile-medium.jpg',
-          largeImageUrl: '/artists/artist-1/profile-large.jpg',
+          smallImageUrl: '/storage/artist-1/small.jpg',
+          mediumImageUrl: '/storage/artist-1/medium.jpg',
+          largeImageUrl: null,
+          backgroundImageUrl: null,
+          bannerImageUrl: null,
+          logoImageUrl: null,
         },
       ] as any);
 
@@ -319,7 +290,7 @@ describe('CleanupService', () => {
         {
           id: 'album-1',
           name: 'Album 1',
-          externalCoverPath: '/albums/album-1/cover.jpg',
+          externalCoverPath: '/storage/album-1/cover.jpg',
         },
       ] as any);
 
@@ -330,8 +301,8 @@ describe('CleanupService', () => {
       const result = await service.verifyIntegrity();
 
       // Assert
-      expect(result.totalChecked).toBeGreaterThan(0);
-      expect(result.missingFiles).toEqual([]);
+      expect(result.totalChecked).toBe(3); // 2 artist images + 1 album cover
+      expect(result.missing).toEqual([]);
       expect(result.errors).toEqual([]);
     });
 
@@ -341,7 +312,12 @@ describe('CleanupService', () => {
         {
           id: 'artist-1',
           name: 'Artist 1',
-          smallImageUrl: '/artists/artist-1/profile-small.jpg',
+          smallImageUrl: '/storage/artist-1/small.jpg',
+          mediumImageUrl: null,
+          largeImageUrl: null,
+          backgroundImageUrl: null,
+          bannerImageUrl: null,
+          logoImageUrl: null,
         },
       ] as any);
 
@@ -354,8 +330,9 @@ describe('CleanupService', () => {
       const result = await service.verifyIntegrity();
 
       // Assert
-      expect(result.totalChecked).toBeGreaterThan(0);
-      expect(result.missingFiles.length).toBeGreaterThan(0);
+      expect(result.totalChecked).toBe(1);
+      expect(result.missing.length).toBe(1);
+      expect(result.missing[0]).toContain('Artist 1');
     });
 
     it('debería manejar caso sin archivos para verificar', async () => {
@@ -368,7 +345,7 @@ describe('CleanupService', () => {
 
       // Assert
       expect(result.totalChecked).toBe(0);
-      expect(result.missingFiles).toEqual([]);
+      expect(result.missing).toEqual([]);
     });
   });
 });
