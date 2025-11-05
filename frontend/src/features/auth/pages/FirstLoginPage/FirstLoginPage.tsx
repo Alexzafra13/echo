@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Check, X, AlertCircle, ArrowRight } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
+import { useAuthStore } from '@shared/store';
 import { useLocation } from 'wouter';
 import apiClient from '@shared/services/api';
 import styles from './FirstLoginPage.module.css';
@@ -47,6 +48,7 @@ type FirstLoginFormData = z.infer<typeof firstLoginSchema>;
  */
 export default function FirstLoginPage() {
   const { user, logout } = useAuth();
+  const { updateUser } = useAuthStore();
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +84,9 @@ export default function FirstLoginPage() {
           username: data.username,
         });
       }
+
+      // Actualizar el usuario en el store para desactivar mustChangePassword
+      updateUser({ mustChangePassword: false });
 
       // Redirigir a home
       setLocation('/home');
