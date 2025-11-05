@@ -21,6 +21,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import { IsString, IsIn } from 'class-validator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { SettingsService } from '../infrastructure/services/settings.service';
@@ -29,6 +30,7 @@ import { SettingsService } from '../infrastructure/services/settings.service';
  * DTO para actualizar una configuración
  */
 class UpdateSettingDto {
+  @IsString()
   value!: string;
 }
 
@@ -36,7 +38,10 @@ class UpdateSettingDto {
  * DTO para validar API key
  */
 class ValidateApiKeyDto {
+  @IsIn(['lastfm', 'fanart'])
   service!: 'lastfm' | 'fanart';
+
+  @IsString()
   apiKey!: string;
 }
 
