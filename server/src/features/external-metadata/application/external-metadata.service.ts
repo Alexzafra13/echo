@@ -173,28 +173,35 @@ export class ExternalMetadataService {
       this.logger.log(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
       // Enrich cover if not present or forceRefresh
-      if (forceRefresh || !album.coverArtPath) {
-        const cover = await this.getAlbumCover(
-          album.mbzAlbumId,
-          artistName,
-          album.name,
-          forceRefresh
-        );
+      if (forceRefresh || !album.externalCoverPath) {
+        // Validar que el álbum tenga MusicBrainz ID
+        if (!album.mbzAlbumId) {
+          this.logger.warn(
+            `Album "${album.name}" (ID: ${albumId}) does not have MusicBrainz ID, skipping external cover enrichment`
+          );
+        } else {
+          const cover = await this.getAlbumCover(
+            album.mbzAlbumId,
+            artistName,
+            album.name,
+            forceRefresh
+          );
 
-        if (cover) {
-          // Download cover locally
-          const localPath = await this.downloadAlbumCover(albumId, cover);
+          if (cover) {
+            // Download cover locally
+            const localPath = await this.downloadAlbumCover(albumId, cover);
 
-          await this.prisma.album.update({
-            where: { id: albumId },
-            data: {
-              externalCoverPath: localPath,
-              externalCoverSource: cover.source,
-              externalInfoUpdatedAt: new Date(),
-            },
-          });
-          coverUpdated = true;
-          this.logger.log(`Updated cover for: ${album.name}`);
+            await this.prisma.album.update({
+              where: { id: albumId },
+              data: {
+                externalCoverPath: localPath,
+                externalCoverSource: cover.source,
+                externalInfoUpdatedAt: new Date(),
+              },
+            });
+            coverUpdated = true;
+            this.logger.log(`Updated cover for: ${album.name}`);
+          }
         }
       }
 
