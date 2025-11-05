@@ -841,11 +841,27 @@ export class ScanProcessorService implements OnModuleInit {
         });
       }
 
-      // Obtener álbumes recientes sin portadas externas
+      // Obtener álbumes recientes sin portadas externas o con enriquecimiento incompleto
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
       const albumsToEnrich = await this.prisma.album.findMany({
         where: {
           mbzAlbumId: { not: null }, // Solo si tiene MusicBrainz ID
-          externalCoverPath: null, // No tiene portada externa
+          OR: [
+            { externalCoverPath: null }, // No tiene portada externa
+            {
+              AND: [
+                { externalCoverPath: { not: null } }, // Tiene path
+                { externalInfoUpdatedAt: null }, // Pero nunca se completó el enriquecimiento
+              ]
+            },
+            {
+              AND: [
+                { externalCoverPath: { not: null } }, // Tiene path
+                { createdAt: { gte: oneDayAgo } }, // Creado recientemente (últimas 24h)
+              ]
+            },
+          ],
         },
         orderBy: {
           createdAt: 'desc',
@@ -855,13 +871,20 @@ export class ScanProcessorService implements OnModuleInit {
           id: true,
           name: true,
           mbzAlbumId: true,
+          externalCoverPath: true,
+          externalInfoUpdatedAt: true,
         },
       });
 
       // Enriquecer álbumes en background (no esperar)
       if (albumsToEnrich.length > 0) {
+        const withoutCover = albumsToEnrich.filter(a => !a.externalCoverPath).length;
+        const withIncomplete = albumsToEnrich.filter(a => a.externalCoverPath && !a.externalInfoUpdatedAt).length;
+        const recentWithCover = albumsToEnrich.filter(a => a.externalCoverPath && a.externalInfoUpdatedAt).length;
+
         this.logger.log(
-          `Enriqueciendo ${albumsToEnrich.length} álbumes en background`,
+          `Enriqueciendo ${albumsToEnrich.length} álbumes en background: ` +
+          `${withoutCover} sin cover, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
         );
 
         // Ejecutar en background sin bloquear
@@ -905,11 +928,36 @@ export class ScanProcessorService implements OnModuleInit {
    * Enriquece álbumes en background
    */
   private async enrichAlbumsInBackground(
-    albums: Array<{ id: string; name: string; mbzAlbumId: string | null }>,
+    albums: Array<{
+      id: string;
+      name: string;
+      mbzAlbumId: string | null;
+      externalCoverPath?: string | null;
+      externalInfoUpdatedAt?: Date | null;
+    }>,
   ): Promise<void> {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
     for (const album of albums) {
       try {
-        await this.externalMetadataService.enrichAlbum(album.id, false);
+        // Si tiene cover path, verificar si el archivo existe físicamente
+        let needsRefresh = false;
+        if (album.externalCoverPath) {
+          try {
+            const fullPath = path.join(process.cwd(), album.externalCoverPath);
+            await fs.access(fullPath);
+            // El archivo existe, no necesita refresh
+          } catch {
+            // El archivo no existe, necesita refresh
+            needsRefresh = true;
+            this.logger.debug(
+              `Cover file missing for album "${album.name}", will re-download`
+            );
+          }
+        }
+
+        await this.externalMetadataService.enrichAlbum(album.id, needsRefresh);
         this.logger.debug(`Álbum enriquecido: ${album.name}`);
       } catch (error) {
         this.logger.warn(
