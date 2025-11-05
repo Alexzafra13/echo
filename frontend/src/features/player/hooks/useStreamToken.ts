@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@shared/api/client';
+import { apiClient } from '@shared/services/api';
 
 interface StreamTokenResponse {
   token: string;
