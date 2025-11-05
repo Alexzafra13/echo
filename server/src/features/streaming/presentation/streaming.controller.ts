@@ -163,22 +163,32 @@ export class StreamingController {
 
       console.log('📤 [StreamTrack] Streaming range:', { start, end, chunkSize, fileSize });
 
-      // Headers para partial content
-      res.status(HttpStatus.PARTIAL_CONTENT);
-      res.header('Content-Type', mimeType);
-      res.header('Content-Length', chunkSize.toString());
-      res.header('Content-Range', `bytes ${start}-${end}/${fileSize}`);
-      res.header('Accept-Ranges', 'bytes');
-      res.header('Cache-Control', 'public, max-age=31536000');
+      // Para streaming con Fastify, necesitamos usar res.raw directamente
+      // y configurar headers en el objeto raw de Node.js
+      res.raw.writeHead(HttpStatus.PARTIAL_CONTENT, {
+        'Content-Type': mimeType,
+        'Content-Length': chunkSize.toString(),
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=31536000',
+      });
 
       // Stream del rango solicitado
       const stream = fs.createReadStream(filePath, { start, end });
 
       stream.on('error', (error) => {
         console.error('❌ [StreamTrack] Error reading file (range):', error);
-        if (!res.sent) {
-          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Error streaming file' });
+        if (!res.raw.destroyed) {
+          res.raw.destroy();
         }
+      });
+
+      stream.on('open', () => {
+        console.log('✅ [StreamTrack] Range stream opened');
+      });
+
+      stream.on('end', () => {
+        console.log('✅ [StreamTrack] Range stream ended');
       });
 
       stream.pipe(res.raw);
@@ -186,19 +196,22 @@ export class StreamingController {
       // 3. Sin Range header, enviar archivo completo
       console.log('📤 [StreamTrack] Streaming full file:', { filePath, fileSize, mimeType });
 
-      res.status(HttpStatus.OK);
-      res.header('Content-Type', mimeType);
-      res.header('Content-Length', fileSize.toString());
-      res.header('Accept-Ranges', 'bytes');
-      res.header('Cache-Control', 'public, max-age=31536000');
+      // Para streaming con Fastify, necesitamos usar res.raw directamente
+      // y configurar headers en el objeto raw de Node.js
+      res.raw.writeHead(HttpStatus.OK, {
+        'Content-Type': mimeType,
+        'Content-Length': fileSize.toString(),
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=31536000',
+      });
 
       // Stream del archivo completo
       const stream = fs.createReadStream(filePath);
 
       stream.on('error', (error) => {
         console.error('❌ [StreamTrack] Error reading file (full):', error);
-        if (!res.sent) {
-          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Error streaming file' });
+        if (!res.raw.destroyed) {
+          res.raw.destroy();
         }
       });
 
