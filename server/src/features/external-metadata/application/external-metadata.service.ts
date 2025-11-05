@@ -74,13 +74,12 @@ export class ExternalMetadataService {
         const isMusicBrainzSource = bio.source === 'musicbrainz';
 
         // Decision tree for applying vs creating conflict:
-        // 1. No existing bio → Apply directly
+        // 1. No existing bio → Apply directly (auto-fill empty fields)
         // 2. Has bio + forceRefresh → Apply directly (user explicitly requested)
-        // 3. Has bio + MusicBrainz source → Apply directly (highest priority)
-        // 4. Has bio + Other source (LastFM) → Create conflict for user review
+        // 3. Has bio → Create conflict for user review (ALL sources respect existing data)
 
-        if (!hasExistingBio || forceRefresh || isMusicBrainzSource) {
-          // Apply the biography directly
+        if (!hasExistingBio || forceRefresh) {
+          // Apply the biography directly - only for empty fields or explicit refresh
           await this.prisma.artist.update({
             where: { id: artistId },
             data: {
@@ -91,7 +90,7 @@ export class ExternalMetadataService {
           bioUpdated = true;
           this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
         } else {
-          // Create conflict for user to review
+          // Create conflict for user to review - respect existing data regardless of source
           const currentBioPreview = artist.biography
             ? artist.biography.substring(0, 200) + '...'
             : '';
@@ -227,13 +226,12 @@ export class ExternalMetadataService {
           const hasExistingCover = !!album.externalCoverPath;
 
           // Decision tree for applying vs creating conflict:
-          // 1. No existing cover → Apply directly
+          // 1. No existing cover → Apply directly (auto-fill empty fields)
           // 2. Has cover + forceRefresh → Apply directly (user explicitly requested)
-          // 3. Has cover + MusicBrainz source → Apply directly (highest priority)
-          // 4. Has cover + Other source → Create conflict for user review
+          // 3. Has cover → Create conflict for user review (ALL sources respect existing data)
 
-          if (!hasExistingCover || forceRefresh || isMusicBrainzSource) {
-            // Apply the cover directly
+          if (!hasExistingCover || forceRefresh) {
+            // Apply the cover directly - only for empty fields or explicit refresh
             const localPath = await this.downloadAlbumCover(albumId, cover);
 
             await this.prisma.album.update({
@@ -247,7 +245,7 @@ export class ExternalMetadataService {
             coverUpdated = true;
             this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
           } else {
-            // Create conflict for user to review
+            // Create conflict for user to review - respect existing data regardless of source
             await this.conflictService.createConflict({
               entityId: albumId,
               entityType: 'album',
