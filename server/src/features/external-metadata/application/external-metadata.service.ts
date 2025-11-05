@@ -389,12 +389,12 @@ export class ExternalMetadataService {
 
         if (bio && bio.hasContent()) {
           // Cache the result
-          await this.cache.set('artist', mbzArtistId || name, 'bio', {
+          await this.cache.set('artist', mbzArtistId || name, bio.source, {
             content: bio.content,
             summary: bio.summary,
             url: bio.url,
             source: bio.source,
-          }, bio.source);
+          });
 
           return bio;
         }
@@ -471,7 +471,7 @@ export class ExternalMetadataService {
 
     if (mergedImages) {
       // Cache the merged result
-      await this.cache.set('artist', mbzArtistId || name, 'images', {
+      await this.cache.set('artist', mbzArtistId || name, mergedImages.source, {
         smallUrl: mergedImages.smallUrl,
         mediumUrl: mergedImages.mediumUrl,
         largeUrl: mergedImages.largeUrl,
@@ -479,7 +479,7 @@ export class ExternalMetadataService {
         bannerUrl: mergedImages.bannerUrl,
         logoUrl: mergedImages.logoUrl,
         source: mergedImages.source,
-      }, mergedImages.source);
+      });
 
       return mergedImages;
     }
@@ -521,12 +521,12 @@ export class ExternalMetadataService {
 
         if (cover) {
           // Cache the result
-          await this.cache.set('album', mbzAlbumId || `${artist}:${album}`, 'cover', {
+          await this.cache.set('album', mbzAlbumId || `${artist}:${album}`, cover.source, {
             smallUrl: cover.smallUrl,
             mediumUrl: cover.mediumUrl,
             largeUrl: cover.largeUrl,
             source: cover.source,
-          }, cover.source);
+          });
 
           return cover;
         }
