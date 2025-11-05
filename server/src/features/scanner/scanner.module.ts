@@ -3,6 +3,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
 import { AlbumsModule } from '@features/albums/albums.module';
+import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 
 // Presentation Layer
 import { ScannerController } from './presentation/controller/scanner.controller';
@@ -53,6 +54,7 @@ import { CoverArtService } from '@shared/services';
     QueueModule, // Para BullMQ
     WebSocketModule, // Para WebSocket
     forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
+    ExternalMetadataModule, // Para auto-enriquecimiento de metadatos
   ],
   controllers: [ScannerController],
   providers: [
