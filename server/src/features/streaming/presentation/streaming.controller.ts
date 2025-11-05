@@ -20,6 +20,7 @@ import {
 import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from '../domain/stream-token.guard';
+import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 import * as fs from 'fs';
 
 /**
@@ -32,10 +33,14 @@ import * as fs from 'fs';
  *
  * Autenticación: Usa StreamTokenGuard que valida tokens de streaming
  * en query parameters (requerido para HTML5 audio element)
+ *
+ * MustChangePasswordGuard: Excluido vía @AllowChangePassword para permitir streaming
+ * incluso cuando el usuario debe cambiar su contraseña
  */
 @ApiTags('streaming')
 @Controller('tracks')
 @UseGuards(StreamTokenGuard)
+@AllowChangePassword() // Permitir streaming aunque usuario deba cambiar contraseña
 export class StreamingController {
   constructor(private readonly streamTrackUseCase: StreamTrackUseCase) {}
 
@@ -172,9 +177,19 @@ export class StreamingController {
 
       // Stream del rango solicitado
       const stream = fs.createReadStream(filePath, { start, end });
+
+      stream.on('error', (error) => {
+        console.error('❌ [StreamTrack] Error reading file (range):', error);
+        if (!res.sent) {
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Error streaming file' });
+        }
+      });
+
       stream.pipe(res.raw);
     } else {
       // 3. Sin Range header, enviar archivo completo
+      console.log('📤 [StreamTrack] Streaming full file:', { filePath, fileSize, mimeType });
+
       res.status(HttpStatus.OK);
       res.headers({
         'Content-Type': mimeType,
@@ -185,6 +200,22 @@ export class StreamingController {
 
       // Stream del archivo completo
       const stream = fs.createReadStream(filePath);
+
+      stream.on('error', (error) => {
+        console.error('❌ [StreamTrack] Error reading file (full):', error);
+        if (!res.sent) {
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Error streaming file' });
+        }
+      });
+
+      stream.on('open', () => {
+        console.log('✅ [StreamTrack] File stream opened successfully');
+      });
+
+      stream.on('end', () => {
+        console.log('✅ [StreamTrack] File stream ended successfully');
+      });
+
       stream.pipe(res.raw);
     }
   }
