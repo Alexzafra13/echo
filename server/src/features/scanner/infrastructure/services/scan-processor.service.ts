@@ -319,10 +319,12 @@ export class ScanProcessorService implements OnModuleInit {
     const normalizedName = (albumName || 'Unknown Album').trim();
 
     // 1. Intentar buscar el álbum existente
+    // Search by name and year only to prevent album splitting when tracks have collaborations
+    // This ensures all tracks from the same album stay under one album entity
     let album = await this.prisma.album.findFirst({
       where: {
         name: normalizedName,
-        artistId: artistId,
+        ...(metadata.year ? { year: metadata.year } : {}),
       },
       select: { id: true, name: true, artistId: true, coverArtPath: true },
     });
