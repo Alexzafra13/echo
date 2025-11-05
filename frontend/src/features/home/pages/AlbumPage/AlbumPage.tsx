@@ -42,8 +42,8 @@ export default function AlbumPage() {
     return apiTracks.map(track => ({
       id: track.id,
       title: track.title,
-      artist: track.artist?.name || album?.artist?.name || 'Unknown Artist',
-      albumName: album?.name,
+      artist: track.artistName || album?.artist || 'Unknown Artist',
+      albumName: album?.title,
       duration: track.duration || 0,
       coverImage: album?.coverImage,
     }));
