@@ -1,0 +1,263 @@
+import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
+import { Track, PlayerState, PlayerContextValue } from '../types';
+
+const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
+
+interface PlayerProviderProps {
+  children: ReactNode;
+}
+
+export function PlayerProvider({ children }: PlayerProviderProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [state, setState] = useState<PlayerState>({
+    currentTrack: null,
+    queue: [],
+    isPlaying: false,
+    volume: 0.7,
+    currentTime: 0,
+    duration: 0,
+    isShuffle: false,
+    repeatMode: 'off',
+  });
+
+  const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
+
+  // Initialize audio element
+  useEffect(() => {
+    const audio = new Audio();
+    audio.volume = state.volume;
+    audioRef.current = audio;
+
+    // Event listeners
+    const handleTimeUpdate = () => {
+      setState(prev => ({ ...prev, currentTime: audio.currentTime }));
+    };
+
+    const handleLoadedMetadata = () => {
+      setState(prev => ({ ...prev, duration: audio.duration }));
+    };
+
+    const handleEnded = () => {
+      handleTrackEnded();
+    };
+
+    const handlePlay = () => {
+      setState(prev => ({ ...prev, isPlaying: true }));
+    };
+
+    const handlePause = () => {
+      setState(prev => ({ ...prev, isPlaying: false }));
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.pause();
+    };
+  }, []);
+
+  // Handle track ended
+  const handleTrackEnded = () => {
+    if (state.repeatMode === 'one') {
+      audioRef.current?.play();
+    } else if (state.repeatMode === 'all' || currentQueueIndex < state.queue.length - 1) {
+      playNext();
+    } else {
+      setState(prev => ({ ...prev, isPlaying: false }));
+    }
+  };
+
+  // Play a track
+  const play = (track?: Track) => {
+    if (!audioRef.current) return;
+
+    if (track) {
+      // Play new track
+      const streamUrl = `${import.meta.env.VITE_API_BASE_URL}/tracks/${track.id}/stream`;
+      audioRef.current.src = streamUrl;
+      audioRef.current.load();
+      audioRef.current.play();
+      setState(prev => ({
+        ...prev,
+        currentTrack: track,
+        isPlaying: true,
+      }));
+    } else if (state.currentTrack) {
+      // Resume current track
+      audioRef.current.play();
+    }
+  };
+
+  // Pause
+  const pause = () => {
+    audioRef.current?.pause();
+  };
+
+  // Toggle play/pause
+  const togglePlayPause = () => {
+    if (state.isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  };
+
+  // Stop
+  const stop = () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    setState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
+  };
+
+  // Play next track in queue
+  const playNext = () => {
+    if (state.queue.length === 0) return;
+
+    let nextIndex: number;
+    if (state.isShuffle) {
+      nextIndex = Math.floor(Math.random() * state.queue.length);
+    } else {
+      nextIndex = currentQueueIndex + 1;
+      if (nextIndex >= state.queue.length) {
+        if (state.repeatMode === 'all') {
+          nextIndex = 0;
+        } else {
+          return;
+        }
+      }
+    }
+
+    setCurrentQueueIndex(nextIndex);
+    play(state.queue[nextIndex]);
+  };
+
+  // Play previous track in queue
+  const playPrevious = () => {
+    if (state.queue.length === 0) return;
+
+    // If more than 3 seconds played, restart current track
+    if (audioRef.current && audioRef.current.currentTime > 3) {
+      audioRef.current.currentTime = 0;
+      return;
+    }
+
+    let prevIndex = currentQueueIndex - 1;
+    if (prevIndex < 0) {
+      if (state.repeatMode === 'all') {
+        prevIndex = state.queue.length - 1;
+      } else {
+        prevIndex = 0;
+      }
+    }
+
+    setCurrentQueueIndex(prevIndex);
+    play(state.queue[prevIndex]);
+  };
+
+  // Add tracks to queue
+  const addToQueue = (track: Track | Track[]) => {
+    const tracks = Array.isArray(track) ? track : [track];
+    setState(prev => ({
+      ...prev,
+      queue: [...prev.queue, ...tracks],
+    }));
+  };
+
+  // Remove track from queue
+  const removeFromQueue = (index: number) => {
+    setState(prev => {
+      const newQueue = [...prev.queue];
+      newQueue.splice(index, 1);
+      return { ...prev, queue: newQueue };
+    });
+
+    if (index < currentQueueIndex) {
+      setCurrentQueueIndex(currentQueueIndex - 1);
+    } else if (index === currentQueueIndex) {
+      // If removed current track, play next
+      playNext();
+    }
+  };
+
+  // Clear queue
+  const clearQueue = () => {
+    setState(prev => ({ ...prev, queue: [] }));
+    setCurrentQueueIndex(-1);
+  };
+
+  // Play queue of tracks
+  const playQueue = (tracks: Track[], startIndex: number = 0) => {
+    setState(prev => ({ ...prev, queue: tracks }));
+    setCurrentQueueIndex(startIndex);
+    play(tracks[startIndex]);
+  };
+
+  // Seek to time
+  const seek = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setState(prev => ({ ...prev, currentTime: time }));
+    }
+  };
+
+  // Set volume
+  const setVolume = (volume: number) => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      setState(prev => ({ ...prev, volume }));
+    }
+  };
+
+  // Toggle shuffle
+  const toggleShuffle = () => {
+    setState(prev => ({ ...prev, isShuffle: !prev.isShuffle }));
+  };
+
+  // Toggle repeat
+  const toggleRepeat = () => {
+    setState(prev => {
+      const modes: Array<'off' | 'all' | 'one'> = ['off', 'all', 'one'];
+      const currentIndex = modes.indexOf(prev.repeatMode);
+      const nextMode = modes[(currentIndex + 1) % modes.length];
+      return { ...prev, repeatMode: nextMode };
+    });
+  };
+
+  const value: PlayerContextValue = {
+    ...state,
+    play,
+    pause,
+    togglePlayPause,
+    stop,
+    playNext,
+    playPrevious,
+    addToQueue,
+    removeFromQueue,
+    clearQueue,
+    playQueue,
+    seek,
+    setVolume,
+    toggleShuffle,
+    toggleRepeat,
+  };
+
+  return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
+}
+
+export function usePlayer() {
+  const context = useContext(PlayerContext);
+  if (context === undefined) {
+    throw new Error('usePlayer must be used within a PlayerProvider');
+  }
+  return context;
+}
