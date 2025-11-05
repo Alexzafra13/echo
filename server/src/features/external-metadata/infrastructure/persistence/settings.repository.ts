@@ -21,7 +21,7 @@ export class SettingsRepository {
         where: { key }
       });
     } catch (error) {
-      this.logger.error(`Error finding setting "${key}": ${error.message}`, error.stack);
+      this.logger.error(`Error finding setting "${key}": ${(error as Error).message}`, (error as Error).stack);
       return null;
     }
   }
@@ -36,7 +36,7 @@ export class SettingsRepository {
         orderBy: { key: 'asc' }
       });
     } catch (error) {
-      this.logger.error(`Error finding settings for category "${category}": ${error.message}`, error.stack);
+      this.logger.error(`Error finding settings for category "${category}": ${(error as Error).message}`, (error as Error).stack);
       return [];
     }
   }
@@ -50,7 +50,7 @@ export class SettingsRepository {
         orderBy: [{ category: 'asc' }, { key: 'asc' }]
       });
     } catch (error) {
-      this.logger.error(`Error finding all settings: ${error.message}`, error.stack);
+      this.logger.error(`Error finding all settings: ${(error as Error).message}`, (error as Error).stack);
       return [];
     }
   }
@@ -125,8 +125,8 @@ export class SettingsRepository {
         where: { key }
       });
     } catch (error) {
-      if (error.code !== 'P2025') {  // Not found error
-        this.logger.error(`Error deleting setting "${key}": ${error.message}`, error.stack);
+      if ((error as any).code !== 'P2025') {  // Not found error
+        this.logger.error(`Error deleting setting "${key}": ${(error as Error).message}`, (error as Error).stack);
         throw error;
       }
     }

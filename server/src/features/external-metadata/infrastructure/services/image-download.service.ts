@@ -71,7 +71,7 @@ export class ImageDownloadService {
       this.logger.debug(`Downloaded image: ${buffer.length} bytes`);
       return buffer;
     } catch (error) {
-      this.logger.error(`Error downloading image from ${url}: ${error.message}`, error.stack);
+      this.logger.error(`Error downloading image from ${url}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
@@ -88,8 +88,8 @@ export class ImageDownloadService {
       this.logger.log(`Downloaded and saved: ${destinationPath}`);
     } catch (error) {
       this.logger.error(
-        `Error downloading and saving image from ${url} to ${destinationPath}: ${error.message}`,
-        error.stack
+        `Error downloading and saving image from ${url} to ${destinationPath}: ${(error as Error).message}`,
+        (error as Error).stack
       );
       throw error;
     }
@@ -112,7 +112,7 @@ export class ImageDownloadService {
           const buffer = await this.downloadImage(url);
           return { url, buffer };
         } catch (error) {
-          this.logger.warn(`Failed to download ${url}: ${error.message}`);
+          this.logger.warn(`Failed to download ${url}: ${(error as Error).message}`);
           return { url, buffer: null };
         }
       });
@@ -158,7 +158,7 @@ export class ImageDownloadService {
         await this.downloadAndSave(urls.small, path);
         result.smallPath = path;
       } catch (error) {
-        this.logger.warn(`Failed to download small image: ${error.message}`);
+        this.logger.warn(`Failed to download small image: ${(error as Error).message}`);
       }
     }
 
@@ -169,7 +169,7 @@ export class ImageDownloadService {
         await this.downloadAndSave(urls.medium, path);
         result.mediumPath = path;
       } catch (error) {
-        this.logger.warn(`Failed to download medium image: ${error.message}`);
+        this.logger.warn(`Failed to download medium image: ${(error as Error).message}`);
       }
     }
 
@@ -180,7 +180,7 @@ export class ImageDownloadService {
         await this.downloadAndSave(urls.large, path);
         result.largePath = path;
       } catch (error) {
-        this.logger.warn(`Failed to download large image: ${error.message}`);
+        this.logger.warn(`Failed to download large image: ${(error as Error).message}`);
       }
     }
 

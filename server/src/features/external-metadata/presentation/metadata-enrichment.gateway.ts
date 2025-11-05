@@ -26,7 +26,7 @@ import { Server, Socket } from 'socket.io';
 })
 export class MetadataEnrichmentGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(MetadataEnrichmentGateway.name);
 

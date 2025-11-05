@@ -70,8 +70,8 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever {
       );
     } catch (error) {
       this.logger.error(
-        `Error fetching biography for ${name}: ${error.message}`,
-        error.stack
+        `Error fetching biography for ${name}: ${(error as Error).message}`,
+        (error as Error).stack
       );
       return null;
     }
@@ -123,8 +123,8 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever {
       );
     } catch (error) {
       this.logger.error(
-        `Error fetching images for ${name}: ${error.message}`,
-        error.stack
+        `Error fetching images for ${name}: ${(error as Error).message}`,
+        (error as Error).stack
       );
       return null;
     }

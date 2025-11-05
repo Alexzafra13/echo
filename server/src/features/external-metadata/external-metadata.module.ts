@@ -121,7 +121,7 @@ export class ExternalMetadataModule implements OnModuleInit {
     try {
       await this.storageService.initialize();
     } catch (error) {
-      this.logger.error(`Failed to initialize storage: ${error.message}`, error.stack);
+      this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
     }
 
     // Register all agents
