@@ -56,6 +56,7 @@ model Artist {
   songCount              Int       @default(0) @map("song_count")
   mbzArtistId            String?   @map("mbz_artist_id") @db.VarChar(36)
   biography              String?   @db.Text
+  biographySource        String?   @map("biography_source") @db.VarChar(50)
   smallImageUrl          String?   @map("small_image_url") @db.VarChar(512)
   mediumImageUrl         String?   @map("medium_image_url") @db.VarChar(512)
   largeImageUrl          String?   @map("large_image_url") @db.VarChar(512)
@@ -64,6 +65,7 @@ model Artist {
   logoImageUrl           String?   @map("logo_image_url") @db.VarChar(512)
   externalUrl            String?   @map("external_url") @db.VarChar(512)
   externalInfoUpdatedAt  DateTime? @map("external_info_updated_at")
+  metadataStorageSize    BigInt?   @default(0) @map("metadata_storage_size")
   orderArtistName        String?   @map("order_artist_name") @db.VarChar(255)
   size                   BigInt    @default(0)
   createdAt              DateTime  @default(now()) @map("created_at")
@@ -134,6 +136,8 @@ model Album {
   largeImageUrl           String?   @map("large_image_url") @db.VarChar(512)
   externalUrl             String?   @map("external_url") @db.VarChar(512)
   externalInfoUpdatedAt   DateTime? @map("external_info_updated_at")
+  externalCoverPath       String?   @map("external_cover_path") @db.VarChar(512)
+  externalCoverSource     String?   @map("external_cover_source") @db.VarChar(50)
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
 
@@ -526,4 +530,22 @@ model LibraryScan {
   errorMessage  String?   @map("error_message") @db.Text
 
   @@map("library_scans")
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+
+model Setting {
+  key         String   @id @db.VarChar(100)
+  value       String   @db.Text
+  category    String   @db.VarChar(50)
+  type        String   @default("string") @db.VarChar(20)
+  description String?  @db.Text
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("settings")
 }
