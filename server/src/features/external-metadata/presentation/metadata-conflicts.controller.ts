@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@infrastructure/auth/guards/jwt-auth.guard';
-import { AdminGuard } from '@infrastructure/auth/guards/admin.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
 import { MetadataConflictService } from '../infrastructure/services/metadata-conflict.service';
 import {
   GetConflictsQueryDto,
