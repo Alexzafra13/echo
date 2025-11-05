@@ -55,12 +55,12 @@ export function ProvidersTab() {
       });
 
       const parsedSettings = {
-        autoEnrichEnabled: settingsMap['auto-enrich-enabled'] === 'true',
+        autoEnrichEnabled: settingsMap['metadata.auto_enrich.enabled'] === 'true',
         coverArtArchiveEnabled: true, // Always enabled
-        lastfmEnabled: !!settingsMap['lastfm-api-key'],
-        lastfmApiKey: settingsMap['lastfm-api-key'] || '',
-        fanarttvEnabled: !!settingsMap['fanarttv-api-key'],
-        fanarttvApiKey: settingsMap['fanarttv-api-key'] || '',
+        lastfmEnabled: !!settingsMap['metadata.lastfm.api_key'],
+        lastfmApiKey: settingsMap['metadata.lastfm.api_key'] || '',
+        fanarttvEnabled: !!settingsMap['metadata.fanart.api_key'],
+        fanarttvApiKey: settingsMap['metadata.fanart.api_key'] || '',
       };
 
       setSettings(parsedSettings);
@@ -148,19 +148,19 @@ export function ProvidersTab() {
 
       // Actualizar API keys
       if (lastfmKey !== settings.lastfmApiKey) {
-        await apiClient.put('/admin/settings/lastfm-api-key', {
+        await apiClient.put('/admin/settings/metadata.lastfm.api_key', {
           value: lastfmKey,
         });
       }
 
       if (fanarttvKey !== settings.fanarttvApiKey) {
-        await apiClient.put('/admin/settings/fanarttv-api-key', {
+        await apiClient.put('/admin/settings/metadata.fanart.api_key', {
           value: fanarttvKey,
         });
       }
 
       // Actualizar auto-enrich
-      await apiClient.put('/admin/settings/auto-enrich-enabled', {
+      await apiClient.put('/admin/settings/metadata.auto_enrich.enabled', {
         value: settings.autoEnrichEnabled.toString(),
       });
 
