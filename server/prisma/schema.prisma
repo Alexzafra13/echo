@@ -533,6 +533,31 @@ model LibraryScan {
 }
 
 // ============================================
+// METADATA CONFLICTS
+// ============================================
+
+model MetadataConflict {
+  id              String   @id @default(uuid())
+  entityId        String   @map("entity_id") @db.VarChar(36)
+  entityType      String   @map("entity_type") @db.VarChar(20) // 'track', 'album', 'artist'
+  field           String   @db.VarChar(50) // 'cover', 'year', 'bio', etc.
+  currentValue    String?  @map("current_value") @db.Text
+  suggestedValue  String   @map("suggested_value") @db.Text
+  source          String   @db.VarChar(50) // 'musicbrainz', 'lastfm', 'fanart'
+  status          String   @default("pending") @db.VarChar(20) // 'pending', 'accepted', 'rejected', 'ignored'
+  priority        Int      @default(1) // 1=low, 2=medium, 3=high (MusicBrainz always high)
+  metadata        String?  @db.Text // JSON with additional context
+  createdAt       DateTime @default(now()) @map("created_at")
+  resolvedAt      DateTime? @map("resolved_at")
+  resolvedBy      String?  @map("resolved_by") @db.VarChar(36)
+
+  @@index([entityId, entityType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("metadata_conflicts")
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 
