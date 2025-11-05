@@ -69,6 +69,17 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // If error is 403 with mustChangePassword flag, redirect to first-login
+    if (error.response?.status === 403) {
+      const errorData = error.response?.data as any;
+      if (errorData?.mustChangePassword === true) {
+        // Update user in store to ensure mustChangePassword is true
+        useAuthStore.getState().updateUser({ mustChangePassword: true });
+        window.location.href = '/first-login';
+        return Promise.reject(error);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
