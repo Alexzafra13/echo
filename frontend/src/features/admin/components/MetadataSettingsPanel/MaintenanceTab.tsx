@@ -35,8 +35,18 @@ export function MaintenanceTab() {
   const loadStats = async () => {
     try {
       setIsLoadingStats(true);
-      const response = await apiClient.get('/admin/external-metadata/storage-stats');
-      setStats(response.data);
+      const response = await apiClient.get('/maintenance/storage/stats');
+
+      // Map response to expected format
+      const mappedStats = {
+        totalSize: response.data.totalSize || 0,
+        totalFiles: response.data.totalFiles || 0,
+        artistImages: response.data.artistsWithMetadata || 0,
+        albumImages: response.data.albumsWithCovers || 0,
+        orphanedFiles: response.data.orphanedFiles || 0,
+      };
+
+      setStats(mappedStats);
     } catch (error) {
       console.error('Error loading storage stats:', error);
     } finally {
@@ -63,7 +73,7 @@ export function MaintenanceTab() {
       setIsCleaning(true);
       setCleanupResult(null);
 
-      const response = await apiClient.post('/admin/external-metadata/cleanup');
+      const response = await apiClient.post('/maintenance/cleanup/orphaned?dryRun=false');
       setCleanupResult(response.data);
 
       // Refrescar estadísticas
@@ -82,7 +92,7 @@ export function MaintenanceTab() {
     }
 
     try {
-      await apiClient.delete('/admin/external-metadata/cache');
+      await apiClient.post('/admin/settings/cache/clear');
       alert('Caché limpiado correctamente');
     } catch (error: any) {
       console.error('Error clearing cache:', error);

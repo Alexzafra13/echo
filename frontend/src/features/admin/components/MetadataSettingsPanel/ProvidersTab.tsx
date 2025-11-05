@@ -45,12 +45,27 @@ export function ProvidersTab() {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/admin/external-metadata/settings');
+      const response = await apiClient.get('/admin/settings');
       const data = response.data;
 
-      setSettings(data);
-      setLastfmKey(data.lastfmApiKey || '');
-      setFanarttvKey(data.fanarttvApiKey || '');
+      // Convert array of settings to object
+      const settingsMap: any = {};
+      data.forEach((setting: any) => {
+        settingsMap[setting.key] = setting.value;
+      });
+
+      const parsedSettings = {
+        autoEnrichEnabled: settingsMap['auto-enrich-enabled'] === 'true',
+        coverArtArchiveEnabled: true, // Always enabled
+        lastfmEnabled: !!settingsMap['lastfm-api-key'],
+        lastfmApiKey: settingsMap['lastfm-api-key'] || '',
+        fanarttvEnabled: !!settingsMap['fanarttv-api-key'],
+        fanarttvApiKey: settingsMap['fanarttv-api-key'] || '',
+      };
+
+      setSettings(parsedSettings);
+      setLastfmKey(parsedSettings.lastfmApiKey);
+      setFanarttvKey(parsedSettings.fanarttvApiKey);
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -72,7 +87,7 @@ export function ProvidersTab() {
 
     try {
       setValidating('lastfm');
-      const response = await apiClient.post('/admin/external-metadata/validate-api-key', {
+      const response = await apiClient.post('/admin/settings/validate-api-key', {
         service: 'lastfm',
         apiKey: key,
       });
@@ -105,8 +120,8 @@ export function ProvidersTab() {
 
     try {
       setValidating('fanarttv');
-      const response = await apiClient.post('/admin/external-metadata/validate-api-key', {
-        service: 'fanarttv',
+      const response = await apiClient.post('/admin/settings/validate-api-key', {
+        service: 'fanart',
         apiKey: key,
       });
 
@@ -133,20 +148,20 @@ export function ProvidersTab() {
 
       // Actualizar API keys
       if (lastfmKey !== settings.lastfmApiKey) {
-        await apiClient.put('/admin/external-metadata/settings/lastfm-api-key', {
-          apiKey: lastfmKey,
+        await apiClient.put('/admin/settings/lastfm-api-key', {
+          value: lastfmKey,
         });
       }
 
       if (fanarttvKey !== settings.fanarttvApiKey) {
-        await apiClient.put('/admin/external-metadata/settings/fanarttv-api-key', {
-          apiKey: fanarttvKey,
+        await apiClient.put('/admin/settings/fanarttv-api-key', {
+          value: fanarttvKey,
         });
       }
 
       // Actualizar auto-enrich
-      await apiClient.put('/admin/external-metadata/settings/auto-enrich', {
-        enabled: settings.autoEnrichEnabled,
+      await apiClient.put('/admin/settings/auto-enrich-enabled', {
+        value: settings.autoEnrichEnabled.toString(),
       });
 
       // Recargar settings

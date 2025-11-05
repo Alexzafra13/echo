@@ -57,7 +57,33 @@
 .emptyText {
   font-size: 14px;
   color: var(--color-text-tertiary, #6b7280);
+  margin: 0 0 24px 0;
+}
+
+.infoBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.infoIcon {
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.infoText {
+  font-size: 13px;
+  color: var(--color-text-secondary, #b8bcc8);
   margin: 0;
+  line-height: 1.5;
+  text-align: left;
 }
 
 /* History List */
