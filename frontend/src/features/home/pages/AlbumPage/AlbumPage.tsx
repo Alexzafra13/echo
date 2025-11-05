@@ -4,6 +4,7 @@ import { ChevronLeft, Play, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList } from '../../components';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
+import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -17,6 +18,7 @@ export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
+  const { playQueue } = usePlayer();
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
@@ -35,14 +37,29 @@ export default function AlbumPage() {
     setLocation('/home');
   };
 
+  // Convert API tracks to Player tracks
+  const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
+    return apiTracks.map(track => ({
+      id: track.id,
+      title: track.title,
+      artist: track.artist?.name || album?.artist?.name || 'Unknown Artist',
+      albumName: album?.name,
+      duration: track.duration || 0,
+      coverImage: album?.coverImage,
+    }));
+  };
+
   const handlePlayAll = () => {
-    console.log('Playing all tracks from album:', id);
-    // TODO: Implement play all functionality
+    if (!tracks || tracks.length === 0) return;
+    const playerTracks = convertToPlayerTracks(tracks);
+    playQueue(playerTracks, 0);
   };
 
   const handleTrackPlay = (track: any) => {
-    console.log('Playing track:', track.id);
-    // TODO: Implement single track play functionality
+    if (!tracks) return;
+    const playerTracks = convertToPlayerTracks(tracks);
+    const trackIndex = tracks.findIndex(t => t.id === track.id);
+    playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };
 
   if (loadingAlbum) {
