@@ -7,6 +7,7 @@ import {
   Res,
   HttpStatus,
   StreamableFile,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,10 +15,11 @@ import {
   ApiParam,
   ApiHeader,
   ApiResponse,
-  ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
+import { StreamTokenGuard } from '../domain/stream-token.guard';
 import * as fs from 'fs';
 
 /**
@@ -27,10 +29,13 @@ import * as fs from 'fs';
  * - Streamear archivos de audio con soporte para HTTP Range requests
  * - Proporcionar metadata de archivos (HEAD)
  * - Manejar descarga completa de archivos
+ *
+ * Autenticación: Usa StreamTokenGuard que valida tokens de streaming
+ * en query parameters (requerido para HTML5 audio element)
  */
 @ApiTags('streaming')
-@ApiBearerAuth('JWT-auth')
 @Controller('tracks')
+@UseGuards(StreamTokenGuard)
 export class StreamingController {
   constructor(private readonly streamTrackUseCase: StreamTrackUseCase) {}
 
@@ -50,6 +55,13 @@ export class StreamingController {
     description: 'UUID del track',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
+  @ApiQuery({
+    name: 'token',
+    type: String,
+    description: 'Stream token for authentication',
+    required: true,
+    example: 'a1b2c3d4e5f6...',
+  })
   @ApiResponse({
     status: 200,
     description: 'Metadata obtenida exitosamente',
@@ -59,6 +71,7 @@ export class StreamingController {
       'Accept-Ranges': { description: 'Soporte de rangos', schema: { type: 'string' } },
     },
   })
+  @ApiResponse({ status: 401, description: 'Invalid or missing stream token' })
   @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   async getStreamMetadata(
     @Param('id') trackId: string,
@@ -95,6 +108,13 @@ export class StreamingController {
     description: 'UUID del track',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
+  @ApiQuery({
+    name: 'token',
+    type: String,
+    description: 'Stream token for authentication',
+    required: true,
+    example: 'a1b2c3d4e5f6...',
+  })
   @ApiHeader({
     name: 'Range',
     required: false,
@@ -109,6 +129,7 @@ export class StreamingController {
     status: 206,
     description: 'Streaming parcial (Partial Content)',
   })
+  @ApiResponse({ status: 401, description: 'Invalid or missing stream token' })
   @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   @ApiResponse({ status: 416, description: 'Range no satisfacible' })
   async streamTrack(

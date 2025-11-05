@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { Track, PlayerState, PlayerContextValue } from '../types';
+import { useStreamToken } from '../hooks/useStreamToken';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
@@ -9,6 +10,7 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { data: streamTokenData } = useStreamToken();
   const [state, setState] = useState<PlayerState>({
     currentTrack: null,
     queue: [],
@@ -82,7 +84,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     if (track) {
       // Play new track
-      const streamUrl = `${import.meta.env.VITE_API_BASE_URL}/tracks/${track.id}/stream`;
+      if (!streamTokenData?.token) {
+        console.error('Stream token not available');
+        return;
+      }
+
+      const streamUrl = `${import.meta.env.VITE_API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
       audioRef.current.src = streamUrl;
       audioRef.current.load();
       audioRef.current.play();
