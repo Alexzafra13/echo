@@ -12,6 +12,7 @@ import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
 import { CleanupService } from './infrastructure/services/cleanup.service';
+import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -30,6 +31,7 @@ import { ExternalMetadataController } from './presentation/external-metadata.con
 import { ImagesController } from './presentation/images.controller';
 import { AdminSettingsController } from './presentation/admin-settings.controller';
 import { MaintenanceController } from './presentation/maintenance.controller';
+import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -69,6 +71,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     StorageService,
     ImageDownloadService,
     CleanupService,
+    MetadataConflictService,
 
     // Persistence
     SettingsRepository,
@@ -90,6 +93,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     ImagesController,
     AdminSettingsController,
     MaintenanceController,
+    MetadataConflictsController,
   ],
   exports: [
     ExternalMetadataService,
@@ -98,6 +102,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     MetadataCacheService,
     SettingsService,
     StorageService,
+    MetadataConflictService,
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {
