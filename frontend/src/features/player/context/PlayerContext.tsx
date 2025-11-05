@@ -89,7 +89,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         return;
       }
 
-      const streamUrl = `${import.meta.env.VITE_API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
+      const streamUrl = `${import.meta.env.VITE_API_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
       audioRef.current.src = streamUrl;
       audioRef.current.load();
       audioRef.current.play();
