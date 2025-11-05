@@ -17,6 +17,7 @@ import { ArtistsModule } from './features/artists/artists.module';
 import { StreamingModule } from './features/streaming/streaming.module';
 import { PlaylistsModule } from './features/playlists/playlists.module';
 import { ScannerModule } from './features/scanner/scanner.module';
+import { ExternalMetadataModule } from './features/external-metadata/external-metadata.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ScannerModule } from './features/scanner/scanner.module';
     StreamingModule,
     PlaylistsModule,
     ScannerModule,
+    ExternalMetadataModule,
   ],
   controllers: [],
   providers: [],
