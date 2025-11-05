@@ -477,7 +477,11 @@ export class ScanProcessorService implements OnModuleInit {
         hasCoverArt: metadata.coverArt || false,
         compilation: metadata.compilation || false,
         comment: metadata.comment,
-        lyrics: metadata.lyrics,
+        // Extract text from lyrics object if it's an object, otherwise use as-is
+        lyrics:
+          typeof metadata.lyrics === 'object' && metadata.lyrics !== null
+            ? metadata.lyrics.text || null
+            : metadata.lyrics || null,
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: mbzAlbumId,
         mbzArtistId: mbzArtistId,
