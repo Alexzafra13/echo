@@ -94,11 +94,14 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Mock fs.readdir usando mockResolvedValueOnce en secuencia
+      // Orden correcto de llamadas a fs.readdir:
+      // 1. cleanupArtistFiles: fs.readdir(artistsPath) → ['artist-orphan']
+      // 2. listAllFiles: fs.readdir(dirPath, {withFileTypes: true}) → [{name: 'profile.jpg'}]
+      // 3. cleanupAlbumFiles: fs.readdir(albumsPath) → []
       (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artist-orphan']) // Primera: listado de artists
-        .mockResolvedValueOnce([]) // Segunda: listado de albums
-        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }]); // Tercera: archivos en artist-orphan
+        .mockResolvedValueOnce(['artist-orphan']) // 1: Lista artists
+        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }]) // 2: Lista archivos CON withFileTypes
+        .mockResolvedValueOnce([]); // 3: Lista albums
 
       // Solo existe artist-123 en BD, artist-orphan es huérfano
       prisma.artist.findMany.mockResolvedValue([
@@ -124,11 +127,14 @@ describe('CleanupService', () => {
         .mockResolvedValueOnce(undefined) // artists dir exists
         .mockResolvedValueOnce(undefined); // albums dir exists
 
-      // Mock fs.readdir usando mockResolvedValueOnce en secuencia
+      // Orden correcto de llamadas a fs.readdir:
+      // 1. cleanupArtistFiles: fs.readdir(artistsPath) → ['artist-orphan']
+      // 2. listAllFiles: fs.readdir(dirPath, {withFileTypes: true}) → [{name: 'profile.jpg'}]
+      // 3. cleanupAlbumFiles: fs.readdir(albumsPath) → []
       (fs.readdir as jest.Mock)
-        .mockResolvedValueOnce(['artist-orphan']) // Primera: listado de artists
-        .mockResolvedValueOnce([]) // Segunda: listado de albums
-        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }]); // Tercera: archivos en artist-orphan
+        .mockResolvedValueOnce(['artist-orphan']) // 1: Lista artists
+        .mockResolvedValueOnce([{ name: 'profile.jpg', isDirectory: () => false }]) // 2: Lista archivos CON withFileTypes
+        .mockResolvedValueOnce([]); // 3: Lista albums
 
       (fs.rm as jest.Mock).mockResolvedValue(undefined);
 
