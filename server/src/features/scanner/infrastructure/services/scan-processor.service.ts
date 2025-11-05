@@ -481,7 +481,9 @@ export class ScanProcessorService implements OnModuleInit {
 
       const trackData = {
         title: metadata.title || path.basename(filePath, path.extname(filePath)),
-        artistName: artist.name,
+        // Store the full artist name from metadata (includes "feat." collaborations)
+        // while the album stays associated with the main artist
+        artistName: metadata.artist || artist.name,
         albumName: album.name,
         albumArtistName: metadata.albumArtist || artist.name,
         // ⭐ CRITICAL: Vincular con IDs desde el inicio

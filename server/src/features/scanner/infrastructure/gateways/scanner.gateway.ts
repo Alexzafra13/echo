@@ -67,6 +67,9 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   private readonly logger = new Logger(ScannerGateway.name);
 
+  // Store latest progress for each active scan (for late subscribers)
+  private scanProgress = new Map<string, ScanProgressDto>();
+
   /**
    * Inicialización del gateway
    */
@@ -110,6 +113,14 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
       scanId: dto.scanId,
       message: 'Successfully subscribed to scan events',
     });
+
+    // Si hay progreso guardado para este scan, enviarlo inmediatamente
+    // Esto ayuda a clientes que se suscriben tarde (race condition)
+    const currentProgress = this.scanProgress.get(dto.scanId);
+    if (currentProgress) {
+      client.emit('scan:progress', currentProgress);
+      this.logger.debug(`Sent current progress to late subscriber for scan ${dto.scanId}`);
+    }
   }
 
   /**
@@ -203,7 +214,16 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    */
   emitProgress(data: ScanProgressDto): void {
     const room = `scan:${data.scanId}`;
+
+    // Store latest progress for late subscribers
+    this.scanProgress.set(data.scanId, data);
+
+    // Emit to specific room (for subscribed clients)
     this.server.to(room).emit('scan:progress', data);
+
+    // ALSO emit broadcast to all clients (for race condition mitigation)
+    this.server.emit('scan:progress', data);
+
     this.logger.debug(`Emitted progress for scan ${data.scanId}: ${data.progress}%`);
   }
 
@@ -212,7 +232,13 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    */
   emitError(data: ScanErrorDto): void {
     const room = `scan:${data.scanId}`;
+
+    // Emit to specific room (for subscribed clients)
     this.server.to(room).emit('scan:error', data);
+
+    // ALSO emit broadcast to all clients
+    this.server.emit('scan:error', data);
+
     this.logger.warn(`Emitted error for scan ${data.scanId}: ${data.error}`);
   }
 
@@ -221,6 +247,9 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    */
   emitCompleted(data: ScanCompletedDto): void {
     const room = `scan:${data.scanId}`;
+
+    // Clean up stored progress for this scan
+    this.scanProgress.delete(data.scanId);
 
     // Emitir al room específico (para clientes suscritos a este scan)
     this.server.to(room).emit('scan:completed', data);
