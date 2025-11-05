@@ -1,4 +1,5 @@
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
+import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import styles from './AdminPage.module.css';
 
 /**
@@ -18,6 +19,7 @@ export default function AdminPage() {
 
       <div className={styles.content}>
         <ScannerPanel />
+        <MetadataSettingsPanel />
       </div>
     </div>
   );
