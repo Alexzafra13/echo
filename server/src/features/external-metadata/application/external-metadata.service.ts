@@ -11,6 +11,7 @@ import { MetadataCacheService } from '../infrastructure/services/metadata-cache.
 import { StorageService } from '../infrastructure/services/storage.service';
 import { ImageDownloadService } from '../infrastructure/services/image-download.service';
 import { SettingsService } from '../infrastructure/services/settings.service';
+import { MetadataConflictService, ConflictPriority } from '../infrastructure/services/metadata-conflict.service';
 import * as path from 'path';
 
 /**
@@ -30,7 +31,8 @@ export class ExternalMetadataService {
     private readonly cache: MetadataCacheService,
     private readonly storage: StorageService,
     private readonly imageDownload: ImageDownloadService,
-    private readonly settings: SettingsService
+    private readonly settings: SettingsService,
+    private readonly conflictService: MetadataConflictService
   ) {}
 
   /**
