@@ -618,11 +618,54 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
+        console.log(`🗑️  Eliminados ${tracksToDelete.length} tracks obsoletos`);
+      }
+
+      // Eliminar álbumes huérfanos (sin tracks)
+      const orphanedAlbums = await this.prisma.album.findMany({
+        where: {
+          tracks: {
+            none: {},
+          },
+        },
+        select: { id: true },
+      });
+
+      if (orphanedAlbums.length > 0) {
+        await this.prisma.album.deleteMany({
+          where: {
+            id: {
+              in: orphanedAlbums.map(a => a.id),
+            },
+          },
+        });
+        console.log(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
+      }
+
+      // Eliminar artistas huérfanos (sin álbumes)
+      const orphanedArtists = await this.prisma.artist.findMany({
+        where: {
+          albums: {
+            none: {},
+          },
+        },
+        select: { id: true },
+      });
+
+      if (orphanedArtists.length > 0) {
+        await this.prisma.artist.deleteMany({
+          where: {
+            id: {
+              in: orphanedArtists.map(a => a.id),
+            },
+          },
+        });
+        console.log(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
       }
 
       return tracksToDelete.length;
     } catch (error) {
-      console.error('Error eliminando tracks obsoletos:', error);
+      console.error('Error eliminando registros obsoletos:', error);
       return 0;
     }
   }
