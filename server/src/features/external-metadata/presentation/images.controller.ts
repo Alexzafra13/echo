@@ -16,7 +16,7 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import { FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { ImageService, ArtistImageType } from '../application/services/image.service';
@@ -94,7 +94,7 @@ export class ImagesController {
   async getArtistImage(
     @Param('artistId') artistId: string,
     @Param('imageType') imageType: string,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     // Validar tipo de imagen
     const validImageTypes: ArtistImageType[] = [
@@ -173,7 +173,7 @@ export class ImagesController {
   @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
   async getAlbumCover(
     @Param('albumId') albumId: string,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     try {
       // Obtener información de la portada
@@ -337,25 +337,25 @@ export class ImagesController {
    * Configura headers de caché para la respuesta
    */
   private setCacheHeaders(
-    res: Response,
+    res: FastifyReply,
     lastModified: Date,
     mimeType: string,
   ): void {
     // Content-Type
-    res.setHeader('Content-Type', mimeType);
+    res.header('Content-Type', mimeType);
 
     // Last-Modified
-    res.setHeader('Last-Modified', lastModified.toUTCString());
+    res.header('Last-Modified', lastModified.toUTCString());
 
     // ETag basado en timestamp
     const etag = `"${lastModified.getTime()}"`;
-    res.setHeader('ETag', etag);
+    res.header('ETag', etag);
 
     // Cache-Control - cachear por 7 días
-    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    res.header('Cache-Control', 'public, max-age=604800, immutable');
 
     // Permitir CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   }
 }
