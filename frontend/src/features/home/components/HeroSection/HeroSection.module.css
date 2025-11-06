@@ -58,14 +58,14 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 50px;
   height: 100%;
   padding: 134px 50px 50px 50px;
 }
 
 .heroSection__albumCover {
-  width: 200px;
-  height: 200px;
+  width: 260px;
+  height: 260px;
   border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   object-fit: cover;
@@ -76,27 +76,28 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .heroSection__artistLogo {
-  max-height: 80px;
-  max-width: 500px;
+  max-height: 60px;
+  max-width: 400px;
   width: auto;
   height: auto;
   object-fit: contain;
+  object-position: left center;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .heroSection__artistName {
-  font-size: 64px;
+  font-size: 48px;
   font-weight: 900;
   color: var(--color-text-primary, #ffffff);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: -1px;
-  line-height: 1;
+  line-height: 1.1;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -114,13 +115,13 @@
 .heroSection__meta {
   font-size: 14px;
   color: var(--color-text-secondary, #b8bcc8);
-  margin: 0;
+  margin: 4px 0 0 0;
   font-weight: 500;
 }
 
 .heroSection__playButton {
   width: fit-content;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .heroSection__albumArt {
@@ -141,25 +142,25 @@
 
   .heroSection__content {
     padding: 124px 40px 40px 40px;
-    gap: 30px;
+    gap: 40px;
   }
 
   .heroSection__albumCover {
-    width: 180px;
-    height: 180px;
+    width: 220px;
+    height: 220px;
   }
 
   .heroSection__artistLogo {
-    max-height: 60px;
-    max-width: 400px;
+    max-height: 50px;
+    max-width: 350px;
   }
 
   .heroSection__artistName {
-    font-size: 48px;
+    font-size: 40px;
   }
 
   .heroSection__albumTitle {
-    font-size: 56px;
+    font-size: 60px;
   }
 
   .heroSection__albumArt {
@@ -196,13 +197,14 @@
   }
 
   .heroSection__albumCover {
-    width: 150px;
-    height: 150px;
+    width: 170px;
+    height: 170px;
   }
 
   .heroSection__artistLogo {
-    max-height: 50px;
-    max-width: 300px;
+    max-height: 45px;
+    max-width: 280px;
+    object-position: center center;
   }
 
   .heroSection__artistName {
@@ -252,13 +254,13 @@
   }
 
   .heroSection__albumCover {
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
   }
 
   .heroSection__artistLogo {
-    max-height: 40px;
-    max-width: 250px;
+    max-height: 35px;
+    max-width: 220px;
   }
 
   .heroSection__artistName {
