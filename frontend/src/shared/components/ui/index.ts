@@ -6,3 +6,5 @@ export type { InputProps } from './Input';
 
 export { default as Card } from './Card';
 export type { CardProps } from './Card';
+
+export { ToastContainer } from './Toast/ToastContainer';
