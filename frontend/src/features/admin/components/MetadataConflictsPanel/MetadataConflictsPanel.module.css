@@ -67,11 +67,25 @@
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-in;
 }
 
 .conflictCard:hover {
   border-color: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .conflictHeader {
@@ -201,21 +215,48 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+  padding: 1rem;
+  background: var(--surface-1);
+  border-radius: 0.5rem;
 }
 
 .comparisonColumn {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface-2);
+  border-radius: 0.375rem;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.comparisonColumn:first-child {
+  border-color: rgba(156, 163, 175, 0.3);
+}
+
+.comparisonColumn:last-child {
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .comparisonLabel {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comparisonColumn:first-child .comparisonLabel {
+  color: var(--text-secondary);
+}
+
+.comparisonColumn:last-child .comparisonLabel {
+  color: #3b82f6;
 }
 
 .imagePreview {
@@ -261,8 +302,10 @@
 .conflictActions {
   display: flex;
   gap: 0.75rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
+  padding: 1rem;
+  background: var(--surface-1);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
 }
 
 /* Empty State */
@@ -319,16 +362,17 @@
 .infoBox {
   display: flex;
   gap: 1rem;
-  padding: 1rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1.5px solid rgba(59, 130, 246, 0.25);
+  border-radius: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .infoIcon {
   color: #3b82f6;
   flex-shrink: 0;
-  margin-top: 0.125rem;
+  margin-top: 0.25rem;
 }
 
 .infoContent {
@@ -336,26 +380,31 @@
 }
 
 .infoTitle {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.75rem 0;
 }
 
 .infoList {
   margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.8125rem;
+  padding-left: 1.5rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .infoList li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .infoList li:last-child {
   margin-bottom: 0;
+}
+
+.infoList strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 /* Responsive */
