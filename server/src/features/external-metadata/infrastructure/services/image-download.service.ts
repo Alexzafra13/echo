@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { StorageService } from './storage.service';
-import * as probe from 'probe-image-size';
+import probe from 'probe-image-size';
 import * as fs from 'fs/promises';
 
 export interface ImageDimensions {
