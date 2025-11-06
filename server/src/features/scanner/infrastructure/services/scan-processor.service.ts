@@ -502,7 +502,11 @@ export class ScanProcessorService implements OnModuleInit {
         path: filePath,
         hasCoverArt: metadata.coverArt || false,
         compilation: metadata.compilation || false,
-        comment: metadata.comment,
+        comment: typeof metadata.comment === 'object' && metadata.comment?.text
+          ? metadata.comment.text
+          : typeof metadata.comment === 'string'
+            ? metadata.comment
+            : null,
         lyrics: metadata.lyrics,
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: mbzAlbumId,
