@@ -29,13 +29,13 @@ export default function HomePage() {
     return shuffled.slice(0, Math.min(10, recentAlbums.length));
   }, [recentAlbums]);
 
-  // Auto-rotate hero section every 8 seconds
+  // Auto-rotate hero section every 20 seconds
   useEffect(() => {
     if (featuredAlbumsPool.length <= 1) return;
 
     const interval = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % featuredAlbumsPool.length);
-    }, 8000); // Change album every 8 seconds
+    }, 20000); // Change album every 20 seconds
 
     return () => clearInterval(interval);
   }, [featuredAlbumsPool.length]);
@@ -80,6 +80,7 @@ export default function HomePage() {
             </div>
           ) : currentHeroAlbum ? (
             <HeroSection
+              key={currentHeroAlbum.id}
               album={currentHeroAlbum}
               onNext={handleNextHero}
               onPrevious={handlePreviousHero}
