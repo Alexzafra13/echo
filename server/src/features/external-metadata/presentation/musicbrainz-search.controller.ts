@@ -25,7 +25,7 @@ interface SelectMbidDto {
  * MusicBrainz Search Controller
  * Provides endpoints for searching MusicBrainz and updating entity MBIDs
  */
-@Controller('api/metadata/musicbrainz')
+@Controller('metadata/musicbrainz')
 @UseGuards(JwtAuthGuard)
 export class MusicBrainzSearchController {
   private readonly logger = new Logger(MusicBrainzSearchController.name);
