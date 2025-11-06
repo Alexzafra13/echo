@@ -69,6 +69,19 @@
   opacity: 1;
 }
 
+/* Active/Playing Track */
+.trackList__track__active {
+  background: rgba(255, 127, 80, 0.15);
+}
+
+.trackList__track__active .trackList__trackTitle {
+  color: var(--color-primary-500);
+}
+
+.trackList__track__active .trackList__playButton {
+  opacity: 1;
+}
+
 .trackList__trackNumber {
   text-align: center;
   font-size: 14px;
