@@ -84,10 +84,11 @@ export class FanartTvAgent implements IArtistImageRetriever {
       const banner = this.selectBestImage(data.musicbanner);
       const logo = this.selectBestImage(data.hdmusiclogo || data.musiclogo);
 
-      // For profile images, use thumbnails as small/medium/large
-      const smallUrl = artistThumb || null;
-      const mediumUrl = artistThumb || null;
-      const largeUrl = artistThumb || null;
+      // Fanart.tv only has ONE artistthumb size, so we only store it once in largeImageUrl
+      // Last.fm will provide the different sizes (small/medium/large)
+      const smallUrl = null; // Let Last.fm provide this
+      const mediumUrl = null; // Let Last.fm provide this
+      const largeUrl = artistThumb || null; // Use artistthumb only for large
 
       // For Hero section and artist pages
       const backgroundUrl = hdBackground || null;
@@ -95,7 +96,7 @@ export class FanartTvAgent implements IArtistImageRetriever {
       const logoUrl = logo || null;
 
       // Check if we have at least one image
-      if (!smallUrl && !backgroundUrl && !bannerUrl && !logoUrl) {
+      if (!largeUrl && !backgroundUrl && !bannerUrl && !logoUrl) {
         this.logger.debug(`No valid images found for: ${name}`);
         return null;
       }

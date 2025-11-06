@@ -61,6 +61,9 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
         className={styles.heroSection__background}
         style={{
           backgroundImage: `url(${backgroundUrl})`,
+          // If using Fanart background (artist photo), show top portion for faces
+          // If using album cover, keep centered
+          backgroundPosition: hasBackground ? 'center top' : 'center center',
         }}
       />
 
