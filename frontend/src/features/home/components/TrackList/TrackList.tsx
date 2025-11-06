@@ -27,6 +27,7 @@ function formatFormat(suffix?: string): string {
 interface TrackListProps {
   tracks: Track[];
   onTrackPlay?: (track: Track) => void;
+  currentTrackId?: string;
 }
 
 /**
@@ -39,7 +40,7 @@ interface TrackListProps {
  *   onTrackPlay={(track) => play(track.id)}
  * />
  */
-export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
+export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProps) {
   const handlePlay = (track: Track) => {
     onTrackPlay?.(track);
     console.log('Playing track:', track.id);
@@ -63,12 +64,14 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
       </div>
 
       <div className={styles.trackList__tracks}>
-        {tracks.map((track, index) => (
-          <div
-            key={track.id}
-            className={styles.trackList__track}
-            onClick={() => handlePlay(track)}
-          >
+        {tracks.map((track, index) => {
+          const isPlaying = currentTrackId === track.id;
+          return (
+            <div
+              key={track.id}
+              className={`${styles.trackList__track} ${isPlaying ? styles.trackList__track__active : ''}`}
+              onClick={() => handlePlay(track)}
+            >
             <span className={styles.trackList__trackNumber}>
               {track.trackNumber || index + 1}
             </span>
@@ -104,7 +107,8 @@ export function TrackList({ tracks, onTrackPlay }: TrackListProps) {
               {formatDuration(track.duration)}
             </span>
           </div>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

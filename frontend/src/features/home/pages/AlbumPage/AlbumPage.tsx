@@ -18,7 +18,7 @@ export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
-  const { playQueue } = usePlayer();
+  const { playQueue, currentTrack } = usePlayer();
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
@@ -172,7 +172,7 @@ export default function AlbumPage() {
                 <p>Cargando canciones...</p>
               </div>
             ) : tracks && tracks.length > 0 ? (
-              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} />
+              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} currentTrackId={currentTrack?.id} />
             ) : (
               <div className={styles.albumPage__emptyTracks}>
                 <p>No se encontraron canciones en este álbum</p>
