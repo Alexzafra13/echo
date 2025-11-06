@@ -17,7 +17,7 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(15px) brightness(0.5);
+  filter: blur(6px) brightness(0.4);
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
