@@ -19,42 +19,52 @@
   background-position: center;
   filter: blur(30px) brightness(0.4);
   transform: scale(1.1);
-  transition: opacity 0.8s ease-in-out;
+  transition: opacity 1.2s ease-in-out;
+  animation: fadeInBackground 1.2s ease-in-out;
+}
+
+@keyframes fadeInBackground {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Navigation Buttons */
 .heroSection__navButton {
   position: absolute;
-  top: 30px;
-  left: 20px;
-  z-index: 100;
-  width: 48px;
-  height: 48px;
+  top: 110px;
+  left: 30px;
+  z-index: 50;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-primary, #ffffff);
   transition: all 0.3s ease;
-  opacity: 0.8;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 .heroSection__navButton:hover {
-  background: rgba(0, 0, 0, 0.9);
-  border-color: rgba(255, 127, 80, 0.6);
-  transform: scale(1.1);
+  background: rgba(255, 127, 80, 0.9);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.15);
   opacity: 1;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(255, 127, 80, 0.4);
 }
 
 .heroSection__navButton--next {
   left: auto;
-  right: 20px;
+  right: 30px;
 }
 
 .heroSection__content {
@@ -65,15 +75,15 @@
   gap: 50px;
   height: 100%;
   padding: 134px 50px 50px 50px;
-  animation: fadeIn 0.8s ease-in-out;
+  animation: fadeInSlide 1.2s ease-in-out;
 }
 
-@keyframes fadeIn {
-  from {
+@keyframes fadeInSlide {
+  0% {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -86,6 +96,18 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   object-fit: cover;
   flex-shrink: 0;
+  animation: fadeInScale 1.2s ease-out;
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .heroSection__info {
