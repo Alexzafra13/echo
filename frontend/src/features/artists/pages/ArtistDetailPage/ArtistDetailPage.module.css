@@ -54,7 +54,7 @@
 .artistDetailPage__background {
   position: absolute;
   inset: 0;
-  background-size: cover;
+  background-size: 130%;
   /* background-position set dynamically in component based on image type */
   filter: blur(3px) brightness(0.4);
   transform: scale(1.1);
