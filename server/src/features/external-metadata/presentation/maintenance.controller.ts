@@ -18,6 +18,7 @@ import {
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
+import { PrismaService } from '@infrastructure/persistence/prisma.service';
 
 /**
  * Maintenance Controller
@@ -38,7 +39,10 @@ import { CleanupService } from '../infrastructure/services/cleanup.service';
 export class MaintenanceController {
   private readonly logger = new Logger(MaintenanceController.name);
 
-  constructor(private readonly cleanupService: CleanupService) {}
+  constructor(
+    private readonly cleanupService: CleanupService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Obtiene estadísticas de uso de almacenamiento
@@ -235,6 +239,139 @@ export class MaintenanceController {
       };
     } catch (error) {
       this.logger.error(`Error verifying integrity: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Migra las URLs de imágenes de artistas de rutas de archivo locales a URLs del API
+   * POST /api/maintenance/migrate/image-urls
+   */
+  @Post('migrate/image-urls')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Migrate artist image URLs',
+    description:
+      'Converts artist image URLs from local file paths (file://...) to API URLs (/api/images/...). ' +
+      'This is a one-time migration needed after updating the metadata service (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Migration result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        updated: { type: 'number', description: 'Number of artists updated' },
+        skipped: { type: 'number', description: 'Number of artists skipped (already using API URLs)' },
+        errors: { type: 'array', items: { type: 'string' } },
+        duration: { type: 'number', description: 'Duration in ms' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async migrateImageUrls() {
+    const startTime = Date.now();
+    const errors: string[] = [];
+    let updated = 0;
+    let skipped = 0;
+
+    try {
+      this.logger.log('Starting image URL migration');
+
+      // Get all artists with image URLs
+      const artists = await this.prisma.artist.findMany({
+        where: {
+          OR: [
+            { smallImageUrl: { not: null } },
+            { mediumImageUrl: { not: null } },
+            { largeImageUrl: { not: null } },
+            { backgroundImageUrl: { not: null } },
+            { bannerImageUrl: { not: null } },
+            { logoImageUrl: { not: null } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          smallImageUrl: true,
+          mediumImageUrl: true,
+          largeImageUrl: true,
+          backgroundImageUrl: true,
+          bannerImageUrl: true,
+          logoImageUrl: true,
+        },
+      });
+
+      this.logger.log(`Found ${artists.length} artists with images`);
+
+      // Migrate each artist
+      for (const artist of artists) {
+        try {
+          const updates: any = {};
+          let needsUpdate = false;
+
+          // Check and convert each image URL
+          if (artist.smallImageUrl && !artist.smallImageUrl.startsWith('/api/')) {
+            updates.smallImageUrl = `/api/images/artists/${artist.id}/profile-small`;
+            needsUpdate = true;
+          }
+
+          if (artist.mediumImageUrl && !artist.mediumImageUrl.startsWith('/api/')) {
+            updates.mediumImageUrl = `/api/images/artists/${artist.id}/profile-medium`;
+            needsUpdate = true;
+          }
+
+          if (artist.largeImageUrl && !artist.largeImageUrl.startsWith('/api/')) {
+            updates.largeImageUrl = `/api/images/artists/${artist.id}/profile-large`;
+            needsUpdate = true;
+          }
+
+          if (artist.backgroundImageUrl && !artist.backgroundImageUrl.startsWith('/api/')) {
+            updates.backgroundImageUrl = `/api/images/artists/${artist.id}/background`;
+            needsUpdate = true;
+          }
+
+          if (artist.bannerImageUrl && !artist.bannerImageUrl.startsWith('/api/')) {
+            updates.bannerImageUrl = `/api/images/artists/${artist.id}/banner`;
+            needsUpdate = true;
+          }
+
+          if (artist.logoImageUrl && !artist.logoImageUrl.startsWith('/api/')) {
+            updates.logoImageUrl = `/api/images/artists/${artist.id}/logo`;
+            needsUpdate = true;
+          }
+
+          if (needsUpdate) {
+            await this.prisma.artist.update({
+              where: { id: artist.id },
+              data: updates,
+            });
+            updated++;
+            this.logger.debug(`Updated: ${artist.name}`);
+          } else {
+            skipped++;
+          }
+        } catch (error) {
+          const errorMsg = `Failed to migrate artist ${artist.name}: ${(error as Error).message}`;
+          this.logger.error(errorMsg);
+          errors.push(errorMsg);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+
+      this.logger.log(`Migration completed: ${updated} updated, ${skipped} skipped, ${errors.length} errors in ${duration}ms`);
+
+      return {
+        success: errors.length === 0,
+        updated,
+        skipped,
+        errors,
+        duration,
+      };
+    } catch (error) {
+      this.logger.error(`Error during image URL migration: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
