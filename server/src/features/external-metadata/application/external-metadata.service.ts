@@ -309,7 +309,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'profile-small.jpg');
         await this.imageDownload.downloadAndSave(images.smallUrl, filePath);
-        result.smallUrl = filePath;
+        result.smallUrl = `/api/images/artists/${artistId}/profile-small`;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download small profile image: ${(error as Error).message}`);
@@ -320,7 +320,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'profile-medium.jpg');
         await this.imageDownload.downloadAndSave(images.mediumUrl, filePath);
-        result.mediumUrl = filePath;
+        result.mediumUrl = `/api/images/artists/${artistId}/profile-medium`;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download medium profile image: ${(error as Error).message}`);
@@ -331,7 +331,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'profile-large.jpg');
         await this.imageDownload.downloadAndSave(images.largeUrl, filePath);
-        result.largeUrl = filePath;
+        result.largeUrl = `/api/images/artists/${artistId}/profile-large`;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download large profile image: ${(error as Error).message}`);
@@ -343,7 +343,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'background.jpg');
         await this.imageDownload.downloadAndSave(images.backgroundUrl, filePath);
-        result.backgroundUrl = filePath;
+        result.backgroundUrl = `/api/images/artists/${artistId}/background`;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download background image: ${(error as Error).message}`);
@@ -355,7 +355,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'banner.png');
         await this.imageDownload.downloadAndSave(images.bannerUrl, filePath);
-        result.bannerUrl = filePath;
+        result.bannerUrl = `/api/images/artists/${artistId}/banner`;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download banner image: ${(error as Error).message}`);
@@ -367,7 +367,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'logo.png');
         await this.imageDownload.downloadAndSave(images.logoUrl, filePath);
-        result.logoUrl = filePath;
+        result.logoUrl = `/api/images/artists/${artistId}/logo`;
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download logo image: ${(error as Error).message}`);
