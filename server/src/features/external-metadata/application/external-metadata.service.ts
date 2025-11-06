@@ -4,6 +4,8 @@ import {
   IArtistBioRetriever,
   IArtistImageRetriever,
   IAlbumCoverRetriever,
+  MusicBrainzArtistMatch,
+  MusicBrainzAlbumMatch,
 } from '../domain/interfaces';
 import { ArtistBio, ArtistImages, AlbumCover } from '../domain/entities';
 import { AgentRegistryService } from '../infrastructure/services/agent-registry.service';
@@ -90,7 +92,7 @@ export class ExternalMetadataService {
             }
             // Create conflict for manual review if score is medium (70-89)
             else if (topMatch.score >= 70) {
-              const suggestions = mbMatches.slice(0, 3).map(m =>
+              const suggestions = mbMatches.slice(0, 3).map((m: MusicBrainzArtistMatch) =>
                 `${m.name}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
               ).join('\n');
 
@@ -289,7 +291,7 @@ export class ExternalMetadataService {
             }
             // Create conflict for manual review if score is medium (70-89)
             else if (topMatch.score >= 70) {
-              const suggestions = mbMatches.slice(0, 3).map(m =>
+              const suggestions = mbMatches.slice(0, 3).map((m: MusicBrainzAlbumMatch) =>
                 `${m.title} by ${m.artistName}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
               ).join('\n');
 
