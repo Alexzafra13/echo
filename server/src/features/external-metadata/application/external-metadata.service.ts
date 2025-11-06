@@ -332,6 +332,7 @@ export class ExternalMetadataService {
       if (album.mbzAlbumId) {
         const cover = await this.getAlbumCover(
           album.mbzAlbumId,
+          album.artist?.mbzArtistId || null, // Pass artist MBID for Fanart.tv
           artistName,
           album.name,
           forceRefresh
@@ -679,6 +680,7 @@ export class ExternalMetadataService {
    */
   private async getAlbumCover(
     mbzAlbumId: string | null,
+    mbzArtistId: string | null,
     artist: string,
     album: string,
     forceRefresh: boolean
@@ -702,6 +704,27 @@ export class ExternalMetadataService {
     for (const agent of agents) {
       try {
         this.logger.debug(`Trying agent "${agent.name}" for cover: ${artist} - ${album}`);
+
+        // Fanart.tv needs special handling - requires artist MBID
+        if (agent.name === 'fanart' && mbzArtistId && mbzAlbumId) {
+          const fanartAgent = agent as any;
+          if (fanartAgent.getAlbumCoverByArtist) {
+            const cover = await fanartAgent.getAlbumCoverByArtist(mbzArtistId, mbzAlbumId, artist, album);
+            if (cover) {
+              // Cache the result
+              await this.cache.set('album', mbzAlbumId || `${artist}:${album}`, cover.source, {
+                smallUrl: cover.smallUrl,
+                mediumUrl: cover.mediumUrl,
+                largeUrl: cover.largeUrl,
+                source: cover.source,
+              });
+              return cover;
+            }
+          }
+          continue; // Skip standard getAlbumCover for Fanart
+        }
+
+        // Standard agents (Cover Art Archive, etc.)
         const cover = await agent.getAlbumCover(mbzAlbumId, artist, album);
 
         if (cover) {

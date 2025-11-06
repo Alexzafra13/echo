@@ -126,28 +126,47 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
 
   /**
    * Get album cover art from Fanart.tv
-   * Returns cover in multiple sizes (small, medium, large)
+   * Note: This interface method is not directly usable for Fanart.tv
+   * Use getAlbumCoverByArtist() instead, as Fanart.tv requires artist MBID
    *
-   * @param mbid MusicBrainz Release-Group ID (required by Fanart.tv)
-   * @param artist Artist name (for logging only)
-   * @param album Album name (for logging only)
-   * @returns AlbumCover with multiple sizes or null
+   * @param mbid MusicBrainz Release-Group ID
+   * @param artist Artist name
+   * @param album Album name
+   * @returns null (not supported without artist MBID)
    */
   async getAlbumCover(
     mbid: string | null,
     artist: string,
     album: string
   ): Promise<AlbumCover | null> {
-    if (!mbid) {
-      this.logger.debug(`No MBID provided for album: ${artist} - ${album}. Fanart.tv requires MBID.`);
-      return null;
-    }
+    this.logger.debug(
+      `Fanart.tv album cover lookup requires artist MBID. ` +
+      `Use getAlbumCoverByArtist() instead. Skipping for: ${artist} - ${album}`
+    );
+    return null;
+  }
 
+  /**
+   * Get album cover art from Fanart.tv using Artist MBID
+   * Fanart.tv organizes all data (including album covers) by artist
+   *
+   * @param artistMbid MusicBrainz Artist ID (required by Fanart.tv)
+   * @param albumMbid MusicBrainz Release-Group ID to filter albums
+   * @param artistName Artist name (for logging)
+   * @param albumName Album name (for logging)
+   * @returns AlbumCover with multiple sizes or null
+   */
+  async getAlbumCoverByArtist(
+    artistMbid: string,
+    albumMbid: string,
+    artistName: string,
+    albumName: string
+  ): Promise<AlbumCover | null> {
     try {
       await this.rateLimiter.waitForRateLimit(this.name);
 
-      const url = `${this.baseUrl}/${mbid}`;
-      this.logger.debug(`Fetching Fanart.tv album cover for: ${artist} - ${album} (${mbid})`);
+      const url = `${this.baseUrl}/${artistMbid}`;
+      this.logger.debug(`Fetching Fanart.tv data for artist to find album: ${artistName} - ${albumName} (artist: ${artistMbid}, album: ${albumMbid})`);
 
       const response = await fetch(url, {
         headers: {
@@ -158,7 +177,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
 
       if (!response.ok) {
         if (response.status === 404) {
-          this.logger.debug(`No Fanart.tv data found for: ${artist} - ${album}`);
+          this.logger.debug(`No Fanart.tv data found for artist: ${artistName}`);
           return null;
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -166,17 +185,25 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
 
       const data = await response.json();
 
-      // Extract album cover - Fanart.tv returns covers in 'albumcover' or 'cdart'
-      const albumCover = this.selectBestImage(data.albumcover);
+      // Fanart.tv returns albums in 'albums' object, keyed by release-group MBID
+      if (!data.albums || !data.albums[albumMbid]) {
+        this.logger.debug(`No album data found for: ${artistName} - ${albumName} (${albumMbid})`);
+        return null;
+      }
+
+      const albumData = data.albums[albumMbid];
+
+      // Extract album cover - Fanart.tv returns covers in 'albumcover' array
+      const albumCover = this.selectBestImage(albumData.albumcover);
 
       if (!albumCover) {
-        this.logger.debug(`No album cover found for: ${artist} - ${album}`);
+        this.logger.debug(`No album cover image found for: ${artistName} - ${albumName}`);
         return null;
       }
 
       // Fanart.tv album covers come in one size, use it for all sizes
       this.logger.log(
-        `Retrieved album cover from Fanart.tv for: ${artist} - ${album}`
+        `Retrieved album cover from Fanart.tv for: ${artistName} - ${albumName}`
       );
 
       return new AlbumCover(
@@ -187,7 +214,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
       );
     } catch (error) {
       this.logger.error(
-        `Error fetching Fanart.tv album cover for ${artist} - ${album}: ${(error as Error).message}`,
+        `Error fetching Fanart.tv album cover for ${artistName} - ${albumName}: ${(error as Error).message}`,
         (error as Error).stack
       );
       return null;
