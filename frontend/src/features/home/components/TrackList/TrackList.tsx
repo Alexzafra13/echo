@@ -72,42 +72,47 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
               className={`${styles.trackList__track} ${isPlaying ? styles.trackList__track__active : ''}`}
               onClick={() => handlePlay(track)}
             >
-            <span className={styles.trackList__trackNumber}>
-              {track.trackNumber || index + 1}
-            </span>
+              {/* Track number / Play button container */}
+              <div className={styles.trackList__numberCell}>
+                <span className={styles.trackList__trackNumber}>
+                  {track.trackNumber || index + 1}
+                </span>
+                <button
+                  className={styles.trackList__playButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlay(track);
+                  }}
+                  aria-label={`Play ${track.title}`}
+                >
+                  <Play size={16} fill="currentColor" />
+                </button>
+              </div>
 
-            <div className={styles.trackList__trackInfo}>
-              <span className={styles.trackList__trackTitle}>{track.title}</span>
-              {track.artistName && (
-                <span className={styles.trackList__trackArtist}>{track.artistName}</span>
-              )}
+              {/* Track info (title + artist) */}
+              <div className={styles.trackList__trackInfo}>
+                <span className={styles.trackList__trackTitle}>{track.title}</span>
+                {track.artistName && (
+                  <span className={styles.trackList__trackArtist}>{track.artistName}</span>
+                )}
+              </div>
+
+              {/* Format info (format + bitrate) */}
+              <div className={styles.trackList__trackFormat}>
+                {formatFormat(track.suffix) && (
+                  <span className={styles.trackList__format}>{formatFormat(track.suffix)}</span>
+                )}
+                {formatBitRate(track.bitRate) && (
+                  <span className={styles.trackList__bitrate}>{formatBitRate(track.bitRate)}</span>
+                )}
+              </div>
+
+              {/* Duration */}
+              <span className={styles.trackList__trackDuration}>
+                {formatDuration(track.duration)}
+              </span>
             </div>
-
-            <div className={styles.trackList__trackFormat}>
-              {formatFormat(track.suffix) && (
-                <span className={styles.trackList__format}>{formatFormat(track.suffix)}</span>
-              )}
-              {formatBitRate(track.bitRate) && (
-                <span className={styles.trackList__bitrate}>{formatBitRate(track.bitRate)}</span>
-              )}
-            </div>
-
-            <button
-              className={styles.trackList__playButton}
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlay(track);
-              }}
-              aria-label={`Play ${track.title}`}
-            >
-              <Play size={16} fill="currentColor" />
-            </button>
-
-            <span className={styles.trackList__trackDuration}>
-              {formatDuration(track.duration)}
-            </span>
-          </div>
-        );
+          );
         })}
       </div>
     </div>
