@@ -67,6 +67,65 @@ export class ExternalMetadataService {
 
       this.logger.log(`Enriching artist: ${artist.name} (ID: ${artistId})`);
 
+      // Step 1: Try to find MBID if missing
+      if (!artist.mbzArtistId) {
+        this.logger.log(`Artist "${artist.name}" missing MBID, searching MusicBrainz...`);
+        try {
+          const mbMatches = await this.searchArtistMbid(artist.name);
+
+          if (mbMatches.length > 0) {
+            const topMatch = mbMatches[0];
+
+            // Auto-apply if score is very high (>90) - high confidence match
+            if (topMatch.score >= 90) {
+              await this.prisma.artist.update({
+                where: { id: artistId },
+                data: { mbzArtistId: topMatch.mbid },
+              });
+              this.logger.log(
+                `Auto-applied MBID for "${artist.name}": ${topMatch.mbid} (score: ${topMatch.score})`
+              );
+              // Update local reference
+              artist.mbzArtistId = topMatch.mbid;
+            }
+            // Create conflict for manual review if score is medium (70-89)
+            else if (topMatch.score >= 70) {
+              const suggestions = mbMatches.slice(0, 3).map(m =>
+                `${m.name}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
+              ).join('\n');
+
+              await this.conflictService.createConflict({
+                entityId: artistId,
+                entityType: 'artist',
+                field: 'artistName',
+                currentValue: artist.name,
+                suggestedValue: `${topMatch.name}${topMatch.disambiguation ? ` (${topMatch.disambiguation})` : ''}`,
+                source: 'musicbrainz' as any,
+                priority: ConflictPriority.MEDIUM,
+                metadata: {
+                  artistName: artist.name,
+                  suggestedMbid: topMatch.mbid,
+                  score: topMatch.score,
+                  allSuggestions: suggestions,
+                },
+              });
+              this.logger.log(
+                `Created MBID conflict for "${artist.name}": score ${topMatch.score}, needs manual review`
+              );
+            } else {
+              this.logger.log(
+                `Low confidence matches for "${artist.name}" (best: ${topMatch.score}), skipping MBID assignment`
+              );
+            }
+          } else {
+            this.logger.log(`No MusicBrainz matches found for "${artist.name}"`);
+          }
+        } catch (error) {
+          this.logger.warn(`Error searching MBID for "${artist.name}": ${(error as Error).message}`);
+          errors.push(`MBID search failed: ${(error as Error).message}`);
+        }
+      }
+
       // Enrich biography - Strategy based on source priority
       const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh);
       if (bio) {
@@ -207,13 +266,68 @@ export class ExternalMetadataService {
       const artistName = album.artist?.name || 'Unknown Artist';
       this.logger.log(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
-      // Enrich cover - Strategy based on source priority
-      // Validar que el álbum tenga MusicBrainz ID
+      // Step 1: Try to find MBID if missing
       if (!album.mbzAlbumId) {
-        this.logger.warn(
-          `Album "${album.name}" (ID: ${albumId}) does not have MusicBrainz ID, skipping external cover enrichment`
-        );
-      } else {
+        this.logger.log(`Album "${album.name}" missing MBID, searching MusicBrainz...`);
+        try {
+          const mbMatches = await this.searchAlbumMbid(album.name, artistName);
+
+          if (mbMatches.length > 0) {
+            const topMatch = mbMatches[0];
+
+            // Auto-apply if score is very high (>90) - high confidence match
+            if (topMatch.score >= 90) {
+              await this.prisma.album.update({
+                where: { id: albumId },
+                data: { mbzAlbumId: topMatch.mbid },
+              });
+              this.logger.log(
+                `Auto-applied MBID for "${album.name}": ${topMatch.mbid} (score: ${topMatch.score})`
+              );
+              // Update local reference
+              album.mbzAlbumId = topMatch.mbid;
+            }
+            // Create conflict for manual review if score is medium (70-89)
+            else if (topMatch.score >= 70) {
+              const suggestions = mbMatches.slice(0, 3).map(m =>
+                `${m.title} by ${m.artistName}${m.disambiguation ? ` (${m.disambiguation})` : ''} - MBID: ${m.mbid} (score: ${m.score})`
+              ).join('\n');
+
+              await this.conflictService.createConflict({
+                entityId: albumId,
+                entityType: 'album',
+                field: 'albumName',
+                currentValue: album.name,
+                suggestedValue: `${topMatch.title}${topMatch.disambiguation ? ` (${topMatch.disambiguation})` : ''}`,
+                source: 'musicbrainz' as any,
+                priority: ConflictPriority.MEDIUM,
+                metadata: {
+                  albumName: album.name,
+                  artistName,
+                  suggestedMbid: topMatch.mbid,
+                  score: topMatch.score,
+                  allSuggestions: suggestions,
+                },
+              });
+              this.logger.log(
+                `Created MBID conflict for "${album.name}": score ${topMatch.score}, needs manual review`
+              );
+            } else {
+              this.logger.log(
+                `Low confidence matches for "${album.name}" (best: ${topMatch.score}), skipping MBID assignment`
+              );
+            }
+          } else {
+            this.logger.log(`No MusicBrainz matches found for "${album.name}"`);
+          }
+        } catch (error) {
+          this.logger.warn(`Error searching MBID for "${album.name}": ${(error as Error).message}`);
+          errors.push(`MBID search failed: ${(error as Error).message}`);
+        }
+      }
+
+      // Enrich cover - Strategy based on source priority
+      if (album.mbzAlbumId) {
         const cover = await this.getAlbumCover(
           album.mbzAlbumId,
           artistName,
@@ -606,5 +720,43 @@ export class ExternalMetadataService {
 
     this.logger.debug(`No cover found for: ${artist} - ${album}`);
     return null;
+  }
+
+  /**
+   * Search for artist MBID in MusicBrainz
+   * Returns array of matches sorted by score
+   */
+  private async searchArtistMbid(artistName: string) {
+    const mbAgent = this.agentRegistry.getAgentsFor('IMusicBrainzSearch')[0];
+    if (!mbAgent || !mbAgent.isEnabled()) {
+      this.logger.debug('MusicBrainz search agent not available');
+      return [];
+    }
+
+    try {
+      return await (mbAgent as any).searchArtist(artistName, 5);
+    } catch (error) {
+      this.logger.error(`Error searching MusicBrainz for artist: ${(error as Error).message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Search for album MBID in MusicBrainz
+   * Returns array of matches sorted by score
+   */
+  private async searchAlbumMbid(albumTitle: string, artistName?: string) {
+    const mbAgent = this.agentRegistry.getAgentsFor('IMusicBrainzSearch')[0];
+    if (!mbAgent || !mbAgent.isEnabled()) {
+      this.logger.debug('MusicBrainz search agent not available');
+      return [];
+    }
+
+    try {
+      return await (mbAgent as any).searchAlbum(albumTitle, artistName, 5);
+    } catch (error) {
+      this.logger.error(`Error searching MusicBrainz for album: ${(error as Error).message}`);
+      return [];
+    }
   }
 }
