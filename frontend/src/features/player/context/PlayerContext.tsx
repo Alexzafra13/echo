@@ -24,6 +24,49 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
 
+  // Play next track in queue
+  const playNext = () => {
+    if (state.queue.length === 0) return;
+
+    let nextIndex: number;
+    if (state.isShuffle) {
+      nextIndex = Math.floor(Math.random() * state.queue.length);
+    } else {
+      nextIndex = currentQueueIndex + 1;
+      if (nextIndex >= state.queue.length) {
+        if (state.repeatMode === 'all') {
+          nextIndex = 0;
+        } else {
+          return;
+        }
+      }
+    }
+
+    setCurrentQueueIndex(nextIndex);
+    play(state.queue[nextIndex]);
+  };
+
+  // Handle track ended - needs to be updated when dependencies change
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      if (state.repeatMode === 'one') {
+        audio.play();
+      } else if (state.repeatMode === 'all' || currentQueueIndex < state.queue.length - 1) {
+        playNext();
+      } else {
+        setState(prev => ({ ...prev, isPlaying: false }));
+      }
+    };
+
+    audio.addEventListener('ended', handleEnded);
+    return () => {
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [state.repeatMode, currentQueueIndex, state.queue.length]);
+
   // Initialize audio element
   useEffect(() => {
     const audio = new Audio();
@@ -39,10 +82,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setState(prev => ({ ...prev, duration: audio.duration }));
     };
 
-    const handleEnded = () => {
-      handleTrackEnded();
-    };
-
     const handlePlay = () => {
       setState(prev => ({ ...prev, isPlaying: true }));
     };
@@ -53,30 +92,17 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.pause();
     };
   }, []);
-
-  // Handle track ended
-  const handleTrackEnded = () => {
-    if (state.repeatMode === 'one') {
-      audioRef.current?.play();
-    } else if (state.repeatMode === 'all' || currentQueueIndex < state.queue.length - 1) {
-      playNext();
-    } else {
-      setState(prev => ({ ...prev, isPlaying: false }));
-    }
-  };
 
   // Play a track
   const play = (track?: Track) => {
@@ -136,28 +162,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     audioRef.current.pause();
     audioRef.current.currentTime = 0;
     setState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
-  };
-
-  // Play next track in queue
-  const playNext = () => {
-    if (state.queue.length === 0) return;
-
-    let nextIndex: number;
-    if (state.isShuffle) {
-      nextIndex = Math.floor(Math.random() * state.queue.length);
-    } else {
-      nextIndex = currentQueueIndex + 1;
-      if (nextIndex >= state.queue.length) {
-        if (state.repeatMode === 'all') {
-          nextIndex = 0;
-        } else {
-          return;
-        }
-      }
-    }
-
-    setCurrentQueueIndex(nextIndex);
-    play(state.queue[nextIndex]);
   };
 
   // Play previous track in queue
