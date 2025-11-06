@@ -13,7 +13,8 @@ import styles from './ArtistCard.module.css';
  * />
  */
 export function ArtistCard({ artist, onClick }: ArtistCardProps) {
-  const avatarUrl = getArtistAvatarUrl(artist.id, 'medium');
+  // Prioritize database URLs first, then fallback to API URL generation
+  const avatarUrl = artist.mediumImageUrl || artist.largeImageUrl || artist.smallImageUrl || getArtistAvatarUrl(artist.id, 'medium');
   const initials = getArtistInitials(artist.name);
 
   return (
