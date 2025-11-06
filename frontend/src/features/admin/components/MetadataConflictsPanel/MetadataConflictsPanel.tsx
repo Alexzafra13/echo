@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Check, X, EyeOff, ArrowLeft } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import {
@@ -27,41 +27,29 @@ function SourceBadge({ source }: { source: string }) {
 }
 
 /**
- * Artist conflict group component - Groups conflicts by artist with collapsible section
+ * Sidebar artist item component
  */
-function ArtistConflictGroup({
+function ArtistSidebarItem({
   artistName,
-  conflicts,
+  conflictCount,
+  isSelected,
+  onClick,
 }: {
   artistName: string;
-  conflicts: MetadataConflict[];
+  conflictCount: number;
+  isSelected: boolean;
+  onClick: () => void;
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
-
   return (
-    <div className={styles.artistGroup}>
-      <button
-        className={styles.artistGroupHeader}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className={styles.artistGroupInfo}>
-          <span className={styles.artistGroupName}>{artistName}</span>
-          <span className={styles.artistGroupCount}>
-            {conflicts.length} {conflicts.length === 1 ? 'conflicto' : 'conflictos'}
-          </span>
-        </div>
-        <div className={styles.artistGroupToggle}>
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
-      </button>
-      {isExpanded && (
-        <div className={styles.artistGroupConflicts}>
-          {conflicts.map((conflict) => (
-            <ConflictCard key={conflict.id} conflict={conflict} />
-          ))}
-        </div>
-      )}
-    </div>
+    <button
+      className={`${styles.sidebarItem} ${isSelected ? styles.sidebarItemSelected : ''}`}
+      onClick={onClick}
+    >
+      <div className={styles.sidebarItemContent}>
+        <span className={styles.sidebarItemName}>{artistName}</span>
+        <span className={styles.sidebarItemCount}>{conflictCount}</span>
+      </div>
+    </button>
   );
 }
 
@@ -294,7 +282,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
 /**
  * MetadataConflictsPanel Component
- * Displays and manages pending metadata conflicts
+ * Displays and manages pending metadata conflicts with sidebar navigation
  */
 export function MetadataConflictsPanel() {
   const [, setLocation] = useLocation();
@@ -305,6 +293,34 @@ export function MetadataConflictsPanel() {
   };
 
   const { data, isLoading, error } = useMetadataConflicts(filters);
+
+  // Group conflicts by artist
+  const conflicts = data?.conflicts || [];
+  const total = data?.total || 0;
+
+  const groupedConflicts = conflicts.reduce((groups, conflict) => {
+    const artistName = conflict.metadata?.artistName || 'Sin Artista';
+    if (!groups[artistName]) {
+      groups[artistName] = [];
+    }
+    groups[artistName].push(conflict);
+    return groups;
+  }, {} as Record<string, MetadataConflict[]>);
+
+  // Sort artists by number of conflicts (descending)
+  const sortedArtists = Object.entries(groupedConflicts).sort(
+    ([, a], [, b]) => b.length - a.length
+  );
+
+  // Select first artist by default
+  const [selectedArtist, setSelectedArtist] = useState<string>(
+    sortedArtists.length > 0 ? sortedArtists[0][0] : ''
+  );
+
+  // Update selected artist if it becomes empty after actions
+  if (selectedArtist && !groupedConflicts[selectedArtist] && sortedArtists.length > 0) {
+    setSelectedArtist(sortedArtists[0][0]);
+  }
 
   if (isLoading) {
     return (
@@ -327,23 +343,7 @@ export function MetadataConflictsPanel() {
     );
   }
 
-  const conflicts = data?.conflicts || [];
-  const total = data?.total || 0;
-
-  // Group conflicts by artist
-  const groupedConflicts = conflicts.reduce((groups, conflict) => {
-    const artistName = conflict.metadata?.artistName || 'Sin Artista';
-    if (!groups[artistName]) {
-      groups[artistName] = [];
-    }
-    groups[artistName].push(conflict);
-    return groups;
-  }, {} as Record<string, MetadataConflict[]>);
-
-  // Sort artists by number of conflicts (descending)
-  const sortedArtists = Object.entries(groupedConflicts).sort(
-    ([, a], [, b]) => b.length - a.length
-  );
+  const selectedConflicts = selectedArtist ? groupedConflicts[selectedArtist] || [] : [];
 
   return (
     <div className={styles.panel}>
@@ -369,7 +369,7 @@ export function MetadataConflictsPanel() {
         )}
       </div>
 
-      {/* Conflicts List */}
+      {/* Main Content Area */}
       {conflicts.length === 0 ? (
         <div className={styles.emptyState}>
           <Check size={48} className={styles.emptyIcon} />
@@ -379,14 +379,47 @@ export function MetadataConflictsPanel() {
           </p>
         </div>
       ) : (
-        <div className={styles.artistGroups}>
-          {sortedArtists.map(([artistName, artistConflicts]) => (
-            <ArtistConflictGroup
-              key={artistName}
-              artistName={artistName}
-              conflicts={artistConflicts}
-            />
-          ))}
+        <div className={styles.contentLayout}>
+          {/* Sidebar - Artist List */}
+          <aside className={styles.sidebar}>
+            <div className={styles.sidebarHeader}>
+              <h3 className={styles.sidebarTitle}>Artistas</h3>
+              <span className={styles.sidebarCount}>{sortedArtists.length}</span>
+            </div>
+            <div className={styles.sidebarList}>
+              {sortedArtists.map(([artistName, artistConflicts]) => (
+                <ArtistSidebarItem
+                  key={artistName}
+                  artistName={artistName}
+                  conflictCount={artistConflicts.length}
+                  isSelected={selectedArtist === artistName}
+                  onClick={() => setSelectedArtist(artistName)}
+                />
+              ))}
+            </div>
+          </aside>
+
+          {/* Main Content - Conflict Details */}
+          <main className={styles.mainContent}>
+            {selectedArtist && (
+              <>
+                <div className={styles.detailHeader}>
+                  <div>
+                    <h3 className={styles.detailTitle}>{selectedArtist}</h3>
+                    <p className={styles.detailSubtitle}>
+                      {selectedConflicts.length}{' '}
+                      {selectedConflicts.length === 1 ? 'conflicto pendiente' : 'conflictos pendientes'}
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.conflictsList}>
+                  {selectedConflicts.map((conflict) => (
+                    <ConflictCard key={conflict.id} conflict={conflict} />
+                  ))}
+                </div>
+              </>
+            )}
+          </main>
         </div>
       )}
 
