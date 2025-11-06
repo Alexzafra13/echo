@@ -1,12 +1,14 @@
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { useArtistImages, getArtistImageUrl } from '../../hooks';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
 
 /**
  * HeroSection Component
  * Displays the featured album with large cover, background, play button, and navigation
+ * Uses Fanart.tv images when available (background and logo) with fallback to album cover
  *
  * @example
  * <HeroSection
@@ -17,6 +19,9 @@ import styles from './HeroSection.module.css';
  * />
  */
 export function HeroSection({ album, onPlay }: HeroSectionProps) {
+  // Fetch artist images from Fanart.tv
+  const { data: artistImages } = useArtistImages(album.artistId);
+
   const handlePlay = () => {
     onPlay?.();
     // TODO: Implement play functionality
@@ -34,7 +39,16 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
   };
 
   const coverUrl = getCoverUrl(album.coverImage);
-  const backgroundUrl = album.backgroundImage || coverUrl;
+
+  // Use Fanart.tv background if available, fallback to album cover
+  const hasBackground = artistImages?.images.background?.exists;
+  const backgroundUrl = hasBackground
+    ? getArtistImageUrl(album.artistId, 'background')
+    : (album.backgroundImage || coverUrl);
+
+  // Check if artist logo is available
+  const hasLogo = artistImages?.images.logo?.exists;
+  const logoUrl = hasLogo ? getArtistImageUrl(album.artistId, 'logo') : null;
 
   return (
     <section className={styles.heroSection}>
@@ -74,7 +88,30 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
 
         {/* Album Info */}
         <div className={styles.heroSection__info}>
-          <h1 className={styles.heroSection__artistName}>{album.artist}</h1>
+          {/* Artist name or logo */}
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={album.artist}
+              className={styles.heroSection__artistLogo}
+              onError={(e) => {
+                // Fallback to text if logo fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const textElement = target.nextElementSibling as HTMLElement;
+                if (textElement) {
+                  textElement.style.display = 'block';
+                }
+              }}
+            />
+          ) : null}
+          <h1
+            className={styles.heroSection__artistName}
+            style={{ display: logoUrl ? 'none' : 'block' }}
+          >
+            {album.artist}
+          </h1>
+
           <h2 className={styles.heroSection__albumTitle}>{album.title}</h2>
           <p className={styles.heroSection__meta}>
             {album.artist} • {album.title} - {album.year}
