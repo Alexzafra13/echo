@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import {
   useMetadataConflicts,
   useAcceptConflict,
@@ -44,6 +45,7 @@ function SourceBadge({ source }: { source: string }) {
 function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const [expanded, setExpanded] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
+  const { addToast } = useToast();
   const { mutate: accept, isPending: isAccepting } = useAcceptConflict();
   const { mutate: reject, isPending: isRejecting } = useRejectConflict();
   const { mutate: ignore, isPending: isIgnoring } = useIgnoreConflict();
@@ -51,42 +53,39 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const isProcessing = isAccepting || isRejecting || isIgnoring;
 
   const handleAccept = () => {
-    if (window.confirm('¿Aceptar esta sugerencia y aplicar los cambios?')) {
-      accept(conflict.id, {
-        onSuccess: () => {
-          setIsRemoved(true);
-        },
-        onError: (error) => {
-          alert('Error al aceptar la sugerencia: ' + (error as Error).message);
-        },
-      });
-    }
+    accept(conflict.id, {
+      onSuccess: () => {
+        setIsRemoved(true);
+        addToast('Sugerencia aceptada y cambios aplicados', 'success');
+      },
+      onError: (error) => {
+        addToast('Error al aceptar: ' + (error as Error).message, 'error');
+      },
+    });
   };
 
   const handleReject = () => {
-    if (window.confirm('¿Rechazar esta sugerencia y mantener los datos actuales?')) {
-      reject(conflict.id, {
-        onSuccess: () => {
-          setIsRemoved(true);
-        },
-        onError: (error) => {
-          alert('Error al rechazar la sugerencia: ' + (error as Error).message);
-        },
-      });
-    }
+    reject(conflict.id, {
+      onSuccess: () => {
+        setIsRemoved(true);
+        addToast('Sugerencia rechazada, datos actuales conservados', 'info');
+      },
+      onError: (error) => {
+        addToast('Error al rechazar: ' + (error as Error).message, 'error');
+      },
+    });
   };
 
   const handleIgnore = () => {
-    if (window.confirm('¿Ignorar permanentemente esta sugerencia?')) {
-      ignore(conflict.id, {
-        onSuccess: () => {
-          setIsRemoved(true);
-        },
-        onError: (error) => {
-          alert('Error al ignorar la sugerencia: ' + (error as Error).message);
-        },
-      });
-    }
+    ignore(conflict.id, {
+      onSuccess: () => {
+        setIsRemoved(true);
+        addToast('Sugerencia ignorada permanentemente', 'info');
+      },
+      onError: (error) => {
+        addToast('Error al ignorar: ' + (error as Error).message, 'error');
+      },
+    });
   };
 
   // Hide card with fade-out animation when removed

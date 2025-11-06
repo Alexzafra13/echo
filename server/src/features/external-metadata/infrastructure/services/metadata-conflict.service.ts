@@ -418,36 +418,53 @@ export class MetadataConflictService {
 
   /**
    * Enrich conflict with entity name
+   * First tries to get the name from conflict metadata, then falls back to database query
    */
   private async enrichConflictWithEntity(conflict: any): Promise<ConflictWithEntity> {
     let entityName = 'Unknown';
 
     try {
-      switch (conflict.entityType) {
-        case 'artist':
-          const artist = await this.prisma.artist.findUnique({
-            where: { id: conflict.entityId },
-            select: { name: true },
-          });
-          entityName = artist?.name || 'Unknown Artist';
-          break;
-        case 'album':
-          const album = await this.prisma.album.findUnique({
-            where: { id: conflict.entityId },
-            select: { name: true },
-          });
-          entityName = album?.name || 'Unknown Album';
-          break;
-        case 'track':
-          const track = await this.prisma.track.findUnique({
-            where: { id: conflict.entityId },
-            select: { title: true },
-          });
-          entityName = track?.title || 'Unknown Track';
-          break;
+      // First, try to get name from metadata (faster, no DB query needed)
+      const metadata = conflict.metadata ? JSON.parse(conflict.metadata) : null;
+
+      if (metadata) {
+        if (conflict.entityType === 'artist' && metadata.artistName) {
+          entityName = metadata.artistName;
+        } else if (conflict.entityType === 'album' && metadata.albumName) {
+          entityName = metadata.albumName;
+        } else if (conflict.entityType === 'track' && metadata.trackName) {
+          entityName = metadata.trackName;
+        }
+      }
+
+      // If not found in metadata, query the database
+      if (entityName === 'Unknown') {
+        switch (conflict.entityType) {
+          case 'artist':
+            const artist = await this.prisma.artist.findUnique({
+              where: { id: conflict.entityId },
+              select: { name: true },
+            });
+            entityName = artist?.name || 'Unknown Artist';
+            break;
+          case 'album':
+            const album = await this.prisma.album.findUnique({
+              where: { id: conflict.entityId },
+              select: { name: true },
+            });
+            entityName = album?.name || 'Unknown Album';
+            break;
+          case 'track':
+            const track = await this.prisma.track.findUnique({
+              where: { id: conflict.entityId },
+              select: { title: true },
+            });
+            entityName = track?.title || 'Unknown Track';
+            break;
+        }
       }
     } catch (error) {
-      this.logger.warn(`Failed to fetch entity name for conflict ${conflict.id}`);
+      this.logger.warn(`Failed to fetch entity name for conflict ${conflict.id}: ${(error as Error).message}`);
     }
 
     return this.mapConflictWithEntity(conflict, { name: entityName });
