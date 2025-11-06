@@ -54,6 +54,81 @@
   letter-spacing: 0.05em;
 }
 
+/* Artist Groups */
+.artistGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.artistGroup {
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.artistGroupHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface-2);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid transparent;
+}
+
+.artistGroupHeader:hover {
+  background: var(--surface-3);
+}
+
+.artistGroup:has(.artistGroupConflicts) .artistGroupHeader {
+  border-bottom-color: var(--border-color);
+}
+
+.artistGroupInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.artistGroupName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.artistGroupCount {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 127, 80, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 127, 80, 0.3);
+}
+
+.artistGroupToggle {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.artistGroupHeader:hover .artistGroupToggle {
+  color: var(--text-primary);
+}
+
+.artistGroupConflicts {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
 /* Conflicts List */
 .conflictsList {
   display: flex;
