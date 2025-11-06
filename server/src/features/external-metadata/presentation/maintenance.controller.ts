@@ -453,12 +453,12 @@ export class MaintenanceController {
           let hasUpdates = false;
 
           const imageFiles = [
-            { file: 'profile-small.jpg', field: 'smallImageUrl' },
-            { file: 'profile-medium.jpg', field: 'mediumImageUrl' },
-            { file: 'profile-large.jpg', field: 'largeImageUrl' },
-            { file: 'background.jpg', field: 'backgroundImageUrl' },
-            { file: 'banner.png', field: 'bannerImageUrl' },
-            { file: 'logo.png', field: 'logoImageUrl' },
+            { file: 'profile-small.jpg', field: 'smallImageUrl' as const },
+            { file: 'profile-medium.jpg', field: 'mediumImageUrl' as const },
+            { file: 'profile-large.jpg', field: 'largeImageUrl' as const },
+            { file: 'background.jpg', field: 'backgroundImageUrl' as const },
+            { file: 'banner.png', field: 'bannerImageUrl' as const },
+            { file: 'logo.png', field: 'logoImageUrl' as const },
           ];
 
           for (const { file, field } of imageFiles) {
@@ -468,7 +468,7 @@ export class MaintenanceController {
             if (exists) {
               filesFound++;
               // Only update if database field is null or empty
-              if (!artist[field]) {
+              if (!(artist as any)[field]) {
                 updates[field] = filePath;
                 hasUpdates = true;
               }
