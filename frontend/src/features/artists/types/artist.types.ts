@@ -17,6 +17,7 @@ export interface Artist {
  */
 export interface ArtistDetail extends Artist {
   biography?: string;
+  biographySource?: string;
   mbzArtistId?: string;
   externalUrl?: string;
   externalInfoUpdatedAt?: string;

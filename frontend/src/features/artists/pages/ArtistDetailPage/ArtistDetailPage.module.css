@@ -145,20 +145,103 @@
   margin-bottom: 48px;
 }
 
+.artistDetailPage__biographyHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.artistDetailPage__biographyIcon {
+  color: var(--color-accent, #ff7f50);
+  opacity: 0.8;
+}
+
 .artistDetailPage__sectionTitle {
   font-size: 28px;
   font-weight: 700;
   color: var(--color-text-primary, #ffffff);
-  margin: 0 0 20px 0;
+  margin: 0;
+}
+
+.artistDetailPage__biographyContent {
+  max-width: 900px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 28px 32px;
+  border-radius: 12px;
+  border-left: 3px solid rgba(255, 127, 80, 0.3);
+  position: relative;
 }
 
 .artistDetailPage__biographyText {
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.8;
   color: var(--color-text-secondary, #b8bcc8);
-  max-width: 900px;
   margin: 0;
   white-space: pre-wrap;
+  transition: max-height 0.3s ease;
+}
+
+/* Drop cap - Primera letra destacada */
+.artistDetailPage__biographyText::first-letter {
+  font-size: 3.5em;
+  line-height: 0.8;
+  float: left;
+  margin: 8px 10px 0 0;
+  font-weight: 700;
+  color: var(--color-accent, #ff7f50);
+}
+
+/* Texto colapsado con fade */
+.artistDetailPage__biographyText__collapsed {
+  max-height: 180px;
+  overflow: hidden;
+  position: relative;
+}
+
+.artistDetailPage__biographyText__collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(10, 14, 39, 0.9) 70%
+  );
+  pointer-events: none;
+}
+
+/* Botón Leer más/menos */
+.artistDetailPage__biographyToggle {
+  margin-top: 16px;
+  padding: 8px 20px;
+  background: rgba(255, 127, 80, 0.1);
+  border: 1px solid rgba(255, 127, 80, 0.3);
+  border-radius: 20px;
+  color: var(--color-accent, #ff7f50);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.artistDetailPage__biographyToggle:hover {
+  background: rgba(255, 127, 80, 0.2);
+  border-color: rgba(255, 127, 80, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Fuente de la biografía */
+.artistDetailPage__biographySource {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  color: var(--color-text-tertiary, #6b7280);
+  font-style: italic;
 }
 
 .artistDetailPage__biographyPlaceholder {
