@@ -751,6 +751,9 @@ export class ScanProcessorService implements OnModuleInit {
       // Invalidar caché para que los nuevos álbumes aparezcan inmediatamente
       await this.cachedAlbumRepository.invalidateListCaches();
 
+      // Auto-enriquecer metadatos si está habilitado
+      await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
+
       // Scan completado
       this.scannerGateway.emitCompleted({
         scanId,
