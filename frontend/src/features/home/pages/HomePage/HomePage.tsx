@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { HeroSection, AlbumGrid, Sidebar } from '../../components';
 import { Header } from '@shared/components/layout/Header';
 import { useFeaturedAlbum, useRecentAlbums } from '../../hooks';
@@ -16,6 +17,45 @@ export default function HomePage() {
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums();
 
+  // Hero section rotation state
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  // Create a pool of featured albums (random selection from recent albums)
+  const featuredAlbumsPool = useMemo(() => {
+    if (!recentAlbums || recentAlbums.length === 0) return [];
+
+    // Shuffle and take up to 10 random albums for the hero rotation
+    const shuffled = [...recentAlbums].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(10, recentAlbums.length));
+  }, [recentAlbums]);
+
+  // Auto-rotate hero section every 8 seconds
+  useEffect(() => {
+    if (featuredAlbumsPool.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % featuredAlbumsPool.length);
+    }, 8000); // Change album every 8 seconds
+
+    return () => clearInterval(interval);
+  }, [featuredAlbumsPool.length]);
+
+  // Navigation handlers
+  const handleNextHero = () => {
+    setCurrentHeroIndex((prev) => (prev + 1) % featuredAlbumsPool.length);
+  };
+
+  const handlePreviousHero = () => {
+    setCurrentHeroIndex((prev) =>
+      prev === 0 ? featuredAlbumsPool.length - 1 : prev - 1
+    );
+  };
+
+  // Current hero album (from pool or fallback to API featured)
+  const currentHeroAlbum = featuredAlbumsPool.length > 0
+    ? featuredAlbumsPool[currentHeroIndex]
+    : featuredAlbum;
+
   // Limit to 12 albums (2 rows of 6)
   const displayedRecentAlbums = recentAlbums?.slice(0, 12) || [];
   const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
@@ -29,7 +69,7 @@ export default function HomePage() {
 
         <div className={styles.homePage__content}>
           {/* Hero Section */}
-          {loadingFeatured ? (
+          {loadingFeatured || loadingRecent ? (
             <div className={styles['hero--loading']}>
               <div className={styles['hero__cover--loading']} />
               <div className={styles['hero__info--loading']}>
@@ -38,8 +78,12 @@ export default function HomePage() {
                 <div className={styles['hero__button--loading']} />
               </div>
             </div>
-          ) : featuredAlbum ? (
-            <HeroSection album={featuredAlbum} />
+          ) : currentHeroAlbum ? (
+            <HeroSection
+              album={currentHeroAlbum}
+              onNext={handleNextHero}
+              onPrevious={handlePreviousHero}
+            />
           ) : (
             <div className={styles.homePage__emptyState}>
               <p>No featured album available</p>
