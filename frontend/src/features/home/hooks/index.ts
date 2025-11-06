@@ -7,3 +7,4 @@ export {
 } from './useAlbums';
 
 export { useArtistImages, getArtistImageUrl } from './useArtistImages';
+export { useAutoEnrichArtist } from './useAutoEnrichArtist';
