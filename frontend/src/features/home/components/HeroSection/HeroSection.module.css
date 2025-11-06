@@ -38,10 +38,10 @@
   top: 95px;
   left: 30px;
   z-index: 50;
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.507);
   backdrop-filter: blur(10px);
   border: 2px solid rgba(255, 255, 255, 0.4);
   display: flex;
