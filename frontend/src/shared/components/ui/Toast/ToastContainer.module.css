@@ -1,0 +1,120 @@
+.toastContainer {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 420px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface-2, #1e293b);
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+  animation: slideIn 0.3s ease-out;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toastIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toastMessage {
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary, #f1f5f9);
+}
+
+.toastClose {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.toastClose:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* Toast variants */
+.toast--success {
+  border-left: 3px solid #10b981;
+}
+
+.toast--success .toastIcon {
+  color: #10b981;
+}
+
+.toast--error {
+  border-left: 3px solid #ef4444;
+}
+
+.toast--error .toastIcon {
+  color: #ef4444;
+}
+
+.toast--warning {
+  border-left: 3px solid #f59e0b;
+}
+
+.toast--warning .toastIcon {
+  color: #f59e0b;
+}
+
+.toast--info {
+  border-left: 3px solid #3b82f6;
+}
+
+.toast--info .toastIcon {
+  color: #3b82f6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .toastContainer {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+
+  .toast {
+    padding: 0.875rem 1rem;
+  }
+
+  .toastMessage {
+    font-size: 0.8125rem;
+  }
+}

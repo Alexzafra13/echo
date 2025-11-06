@@ -363,11 +363,16 @@ export class ExternalMetadataService {
             this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
           } else {
             // Create conflict for user to review - respect existing data regardless of source
+            // Generate API URL for current cover instead of file path for frontend display
+            const currentCoverUrl = album.externalCoverPath
+              ? `/api/images/albums/${albumId}/cover`
+              : undefined;
+
             await this.conflictService.createConflict({
               entityId: albumId,
               entityType: 'album',
               field: 'externalCover',
-              currentValue: album.externalCoverPath ?? undefined,
+              currentValue: currentCoverUrl,
               suggestedValue: cover.largeUrl,
               source: cover.source as any,
               priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
