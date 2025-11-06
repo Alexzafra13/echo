@@ -5,3 +5,5 @@ export {
   useAlbums,
   useAlbumSearch,
 } from './useAlbums';
+
+export { useArtistImages, getArtistImageUrl } from './useArtistImages';
