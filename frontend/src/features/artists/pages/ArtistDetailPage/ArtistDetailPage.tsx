@@ -103,7 +103,12 @@ export default function ArtistDetailPage() {
             {backgroundUrl && (
               <div
                 className={styles.artistDetailPage__background}
-                style={{ backgroundImage: `url(${backgroundUrl})` }}
+                style={{
+                  backgroundImage: `url(${backgroundUrl})`,
+                  // If using Fanart background (artist photo), show top portion for faces
+                  // If using album cover, keep centered
+                  backgroundPosition: hasBackground ? 'center top' : 'center center',
+                }}
               />
             )}
 
