@@ -4,6 +4,7 @@ import FirstLoginPage from '@features/auth/pages/FirstLoginPage';
 import HomePage from '@features/home/pages/HomePage';
 import { AlbumPage } from '@features/home/pages/AlbumPage';
 import { AlbumsPage } from '@features/home/pages/AlbumsPage';
+import ArtistsPage from '@features/artists/pages/ArtistsPage/ArtistsPage';
 import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
@@ -44,6 +45,13 @@ function App() {
         <Route path="/album/:id">
           <ProtectedRoute>
             <AlbumPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Artists List Route (Protected) */}
+        <Route path="/artists">
+          <ProtectedRoute>
+            <ArtistsPage />
           </ProtectedRoute>
         </Route>
 
