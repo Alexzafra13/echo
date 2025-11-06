@@ -75,9 +75,12 @@ export class ArtistResponseDto {
     dto.biography = data.biography;
 
     // Transform file paths to API URLs for frontend consumption
-    dto.smallImageUrl = data.smallImageUrl ? `/api/images/artists/${data.id}/profile-small` : undefined;
-    dto.mediumImageUrl = data.mediumImageUrl ? `/api/images/artists/${data.id}/profile-medium` : undefined;
-    dto.largeImageUrl = data.largeImageUrl ? `/api/images/artists/${data.id}/profile-large` : undefined;
+    // If ANY profile image exists in DB, generate URLs for all sizes
+    // ImageService will serve them if they exist physically, or return 404
+    const hasAnyProfileImage = data.smallImageUrl || data.mediumImageUrl || data.largeImageUrl;
+    dto.smallImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-small` : undefined;
+    dto.mediumImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-medium` : undefined;
+    dto.largeImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-large` : undefined;
 
     dto.externalUrl = data.externalUrl;
     dto.externalInfoUpdatedAt = data.externalInfoUpdatedAt;
