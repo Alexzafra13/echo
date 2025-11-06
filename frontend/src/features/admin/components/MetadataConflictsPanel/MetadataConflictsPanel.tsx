@@ -40,6 +40,45 @@ function SourceBadge({ source }: { source: string }) {
 }
 
 /**
+ * Artist conflict group component - Groups conflicts by artist with collapsible section
+ */
+function ArtistConflictGroup({
+  artistName,
+  conflicts,
+}: {
+  artistName: string;
+  conflicts: MetadataConflict[];
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  return (
+    <div className={styles.artistGroup}>
+      <button
+        className={styles.artistGroupHeader}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className={styles.artistGroupInfo}>
+          <span className={styles.artistGroupName}>{artistName}</span>
+          <span className={styles.artistGroupCount}>
+            {conflicts.length} {conflicts.length === 1 ? 'conflicto' : 'conflictos'}
+          </span>
+        </div>
+        <div className={styles.artistGroupToggle}>
+          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </div>
+      </button>
+      {isExpanded && (
+        <div className={styles.artistGroupConflicts}>
+          {conflicts.map((conflict) => (
+            <ConflictCard key={conflict.id} conflict={conflict} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Single conflict card component
  */
 function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
@@ -103,6 +142,15 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
   const isImage = conflict.field.includes('cover') || conflict.field.includes('Cover');
 
+  // Build complete image URLs
+  const currentImageUrl = isImage && conflict.currentValue
+    ? (conflict.currentValue.startsWith('http')
+        ? conflict.currentValue
+        : `${import.meta.env.VITE_API_URL || '/api'}${conflict.currentValue}`)
+    : conflict.currentValue;
+
+  const suggestedImageUrl = conflict.suggestedValue;
+
   return (
     <div className={styles.conflictCard}>
       <div className={styles.conflictHeader}>
@@ -134,9 +182,20 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
             {/* Current Value */}
             <div className={styles.comparisonColumn}>
               <h4 className={styles.comparisonLabel}>Actual</h4>
-              {isImage && conflict.currentValue ? (
+              {isImage && currentImageUrl ? (
                 <div className={styles.imagePreview}>
-                  <img src={conflict.currentValue} alt="Current cover" />
+                  <img
+                    src={currentImageUrl}
+                    alt="Current cover"
+                    onError={(e) => {
+                      console.error('Error loading current cover:', currentImageUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : isImage ? (
+                <div className={styles.textValue}>
+                  <em className={styles.emptyValue}>Sin cover</em>
                 </div>
               ) : (
                 <div className={styles.textValue}>
@@ -146,6 +205,9 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
               {conflict.metadata?.currentSource && (
                 <div className={styles.valueSource}>Fuente: {conflict.metadata.currentSource}</div>
               )}
+              {conflict.metadata?.currentResolution && (
+                <div className={styles.valueSource}>Resolución: {conflict.metadata.currentResolution}</div>
+              )}
             </div>
 
             {/* Suggested Value */}
@@ -153,7 +215,14 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
               <h4 className={styles.comparisonLabel}>Sugerencia</h4>
               {isImage ? (
                 <div className={styles.imagePreview}>
-                  <img src={conflict.suggestedValue} alt="Suggested cover" />
+                  <img
+                    src={suggestedImageUrl}
+                    alt="Suggested cover"
+                    onError={(e) => {
+                      console.error('Error loading suggested cover:', suggestedImageUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 </div>
               ) : (
                 <div className={styles.textValue}>{conflict.suggestedValue}</div>
@@ -161,6 +230,9 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
               <div className={styles.valueSource}>
                 Fuente: <SourceBadge source={conflict.source} />
               </div>
+              {conflict.metadata?.suggestedResolution && (
+                <div className={styles.valueSource}>Resolución: {conflict.metadata.suggestedResolution}</div>
+              )}
             </div>
           </div>
 
@@ -210,7 +282,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 export function MetadataConflictsPanel() {
   const filters = {
     skip: 0,
-    take: 20,
+    take: 100, // Increased to get all conflicts for grouping
   };
 
   const { data, isLoading, error } = useMetadataConflicts(filters);
@@ -238,6 +310,21 @@ export function MetadataConflictsPanel() {
 
   const conflicts = data?.conflicts || [];
   const total = data?.total || 0;
+
+  // Group conflicts by artist
+  const groupedConflicts = conflicts.reduce((groups, conflict) => {
+    const artistName = conflict.metadata?.artistName || 'Sin Artista';
+    if (!groups[artistName]) {
+      groups[artistName] = [];
+    }
+    groups[artistName].push(conflict);
+    return groups;
+  }, {} as Record<string, MetadataConflict[]>);
+
+  // Sort artists by number of conflicts (descending)
+  const sortedArtists = Object.entries(groupedConflicts).sort(
+    ([, a], [, b]) => b.length - a.length
+  );
 
   return (
     <div className={styles.panel}>
@@ -267,9 +354,13 @@ export function MetadataConflictsPanel() {
           </p>
         </div>
       ) : (
-        <div className={styles.conflictsList}>
-          {conflicts.map((conflict) => (
-            <ConflictCard key={conflict.id} conflict={conflict} />
+        <div className={styles.artistGroups}>
+          {sortedArtists.map(([artistName, artistConflicts]) => (
+            <ArtistConflictGroup
+              key={artistName}
+              artistName={artistName}
+              conflicts={artistConflicts}
+            />
           ))}
         </div>
       )}
