@@ -1,0 +1,149 @@
+/* ArtistsPage Styles */
+
+.artistsPage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary, #0a0e27);
+}
+
+.artistsPage__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.artistsPage__content {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.artistsPage__header {
+  margin-bottom: 32px;
+}
+
+.artistsPage__title {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0 0 8px 0;
+}
+
+.artistsPage__subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+}
+
+.artistsPage__searchContainer {
+  position: relative;
+  max-width: 500px;
+  margin-bottom: 40px;
+}
+
+.artistsPage__searchIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary, #6b7280);
+  pointer-events: none;
+}
+
+.artistsPage__searchInput {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px 0 48px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary, #ffffff);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.artistsPage__searchInput::placeholder {
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.artistsPage__searchInput:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-primary, #ff7f50);
+}
+
+.artistsPage__loading,
+.artistsPage__error,
+.artistsPage__empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 16px;
+}
+
+.artistsPage__error {
+  color: #ff6b6b;
+}
+
+.artistsPage__list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.artistsPage__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artistsPage__groupLetter {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary, #ff7f50);
+  margin: 0 0 12px 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(255, 127, 80, 0.3);
+}
+
+.artistsPage__groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .artistsPage__content {
+    padding: 24px;
+  }
+
+  .artistsPage__title {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .artistsPage__content {
+    padding: 20px 16px;
+  }
+
+  .artistsPage__title {
+    font-size: 32px;
+  }
+
+  .artistsPage__subtitle {
+    font-size: 14px;
+  }
+
+  .artistsPage__searchInput {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .artistsPage__groupLetter {
+    font-size: 20px;
+  }
+}
