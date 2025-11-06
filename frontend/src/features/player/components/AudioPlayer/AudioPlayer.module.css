@@ -60,7 +60,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 722px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -95,7 +95,7 @@
 }
 
 .controlButton.active {
-  color: #1ed760;
+  color: var(--color-primary-500);
 }
 
 .controlButtonSmall {
@@ -157,10 +157,10 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #1ed760 0%, #1db954 100%);
+  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
   border-radius: 4px;
   transition: width 0.1s linear;
-  box-shadow: 0 0 8px rgba(29, 185, 84, 0.4);
+  box-shadow: 0 0 8px rgba(255, 127, 80, 0.5);
 }
 
 .progressHandle {
@@ -248,7 +248,7 @@
 }
 
 .volumeSlider::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, #1ed760 0%, #1ed760 var(--volume-percent, 70%), rgba(255, 255, 255, 0.2) var(--volume-percent, 70%), rgba(255, 255, 255, 0.2) 100%);
+  background: linear-gradient(to right, var(--color-primary-500) 0%, var(--color-primary-500) var(--volume-percent, 70%), rgba(255, 255, 255, 0.2) var(--volume-percent, 70%), rgba(255, 255, 255, 0.2) 100%);
   height: 5px;
   border-radius: 3px;
 }
@@ -260,7 +260,7 @@
 }
 
 .volumeSlider::-moz-range-progress {
-  background: #1ed760;
+  background: var(--color-primary-500);
   height: 5px;
   border-radius: 3px;
 }
