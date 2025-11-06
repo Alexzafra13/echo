@@ -44,11 +44,12 @@ export default function ArtistDetailPage() {
   const hasLogo = artistImages?.images.logo?.exists;
   const logoUrl = hasLogo ? getArtistImageUrl(id!, 'logo') : null;
 
-  // Get profile image for avatar
-  const hasProfile = artistImages?.images.profileLarge?.exists || artistImages?.images.profileMedium?.exists;
-  const profileUrl = hasProfile
-    ? getArtistImageUrl(id!, artistImages?.images.profileLarge?.exists ? 'profile-large' : 'profile-medium')
-    : null;
+  // Get profile image for avatar (prioritize DB images first, then Fanart.tv)
+  const profileUrl = artist?.largeImageUrl ||
+                     artist?.mediumImageUrl ||
+                     artist?.smallImageUrl ||
+                     (artistImages?.images.profileLarge?.exists ? getArtistImageUrl(id!, 'profile-large') : null) ||
+                     (artistImages?.images.profileMedium?.exists ? getArtistImageUrl(id!, 'profile-medium') : null);
 
   const initials = artist ? getArtistInitials(artist.name) : '';
 
