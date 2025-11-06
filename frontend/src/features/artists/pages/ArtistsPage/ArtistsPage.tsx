@@ -19,7 +19,7 @@ export default function ArtistsPage() {
   const { data, isLoading, error } = useArtists({ skip: 0, take: 500 });
 
   // Filter artists by search query (client-side for now)
-  const filteredArtists = (data?.artists || []).filter(artist =>
+  const filteredArtists = (data?.data || []).filter(artist =>
     artist.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
