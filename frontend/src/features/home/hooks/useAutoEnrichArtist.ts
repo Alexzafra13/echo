@@ -6,6 +6,8 @@ import { apiClient } from '@shared/services/api';
  * Hook to automatically enrich an artist if they don't have external metadata
  * This runs once per artist when the HeroSection loads
  *
+ * Automatically downloads Fanart.tv images (backgrounds, banners, logos) when missing
+ *
  * @param artistId - The artist UUID
  * @param hasImages - Whether the artist already has images from Fanart.tv
  * @param enabled - Whether auto-enrichment should run
