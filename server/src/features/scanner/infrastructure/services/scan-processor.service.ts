@@ -817,9 +817,9 @@ export class ScanProcessorService implements OnModuleInit {
       );
 
       // Obtener artistas recientes sin metadatos externos (ordenar por fecha de creación desc, limit por batch size)
+      // Enriquecer tanto artistas con MBID (para Fanart.tv) como sin MBID (para buscar en MusicBrainz)
       const artistsToEnrich = await this.prisma.artist.findMany({
         where: {
-          mbzArtistId: { not: null }, // Solo si tiene MusicBrainz ID
           externalInfoUpdatedAt: null, // No enriquecido previamente
         },
         orderBy: {
@@ -853,7 +853,6 @@ export class ScanProcessorService implements OnModuleInit {
 
       const albumsToEnrich = await this.prisma.album.findMany({
         where: {
-          mbzAlbumId: { not: null }, // Solo si tiene MusicBrainz ID
           OR: [
             { externalCoverPath: null }, // No tiene portada externa
             {
