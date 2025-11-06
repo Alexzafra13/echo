@@ -26,7 +26,37 @@
 .content {
   display: flex;
   flex-direction: column;
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
   gap: 24px;
+}
+
+/* Placeholder for empty tabs */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  color: var(--color-text-tertiary, #6b7280);
+  gap: 16px;
+}
+
+.placeholder h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+}
+
+.placeholder p {
+  font-size: 15px;
+  margin: 0;
+  max-width: 400px;
 }
 
 /* Tablet */
