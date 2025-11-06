@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ImageDownloadService } from './image-download.service';
+import { StorageService } from './storage.service';
+import * as path from 'path';
 
 /**
  * Entity types that can have metadata conflicts
@@ -87,6 +89,7 @@ export class MetadataConflictService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly imageDownload: ImageDownloadService,
+    private readonly storage: StorageService,
   ) {}
 
   /**
@@ -363,25 +366,20 @@ export class MetadataConflictService {
         );
 
         try {
-          const localPath = await this.imageDownload.downloadAlbumCover(
-            conflict.entityId,
-            coverUrl,
-            conflict.source,
-          );
+          // Get album metadata path
+          const metadataPath = await this.storage.getAlbumMetadataPath(conflict.entityId);
+          const coverPath = path.join(metadataPath, 'cover.jpg');
 
-          if (localPath) {
-            updateData.externalCoverPath = localPath;
-            updateData.externalCoverSource = conflict.source;
-            updateData.externalInfoUpdatedAt = new Date();
-            this.logger.log(
-              `Successfully downloaded cover for album ${conflict.entityId}: ${localPath}`,
-            );
-          } else {
-            this.logger.warn(
-              `Failed to download cover for album ${conflict.entityId} from ${coverUrl}`,
-            );
-            throw new Error('Failed to download cover image');
-          }
+          // Download and save the cover
+          await this.imageDownload.downloadAndSave(coverUrl, coverPath);
+
+          updateData.externalCoverPath = coverPath;
+          updateData.externalCoverSource = conflict.source;
+          updateData.externalInfoUpdatedAt = new Date();
+
+          this.logger.log(
+            `Successfully downloaded cover for album ${conflict.entityId}: ${coverPath}`,
+          );
         } catch (error) {
           this.logger.error(
             `Error downloading cover for album ${conflict.entityId}: ${(error as Error).message}`,
