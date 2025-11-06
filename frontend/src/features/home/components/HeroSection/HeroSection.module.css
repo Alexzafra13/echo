@@ -16,7 +16,7 @@
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center;
+  background-position: center top; /* Show top portion of background instead of center */
   filter: blur(15px) brightness(0.5);
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
