@@ -79,6 +79,16 @@
   gap: 16px;
 }
 
+.heroSection__artistLogo {
+  max-height: 80px;
+  max-width: 500px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  margin-bottom: 8px;
+}
+
 .heroSection__artistName {
   font-size: 64px;
   font-weight: 900;
@@ -139,6 +149,11 @@
     height: 180px;
   }
 
+  .heroSection__artistLogo {
+    max-height: 60px;
+    max-width: 400px;
+  }
+
   .heroSection__artistName {
     font-size: 48px;
   }
@@ -183,6 +198,11 @@
   .heroSection__albumCover {
     width: 150px;
     height: 150px;
+  }
+
+  .heroSection__artistLogo {
+    max-height: 50px;
+    max-width: 300px;
   }
 
   .heroSection__artistName {
@@ -234,6 +254,11 @@
   .heroSection__albumCover {
     width: 120px;
     height: 120px;
+  }
+
+  .heroSection__artistLogo {
+    max-height: 40px;
+    max-width: 250px;
   }
 
   .heroSection__artistName {
