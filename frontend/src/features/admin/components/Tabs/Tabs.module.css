@@ -12,17 +12,6 @@
   gap: 8px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 32px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.tabs__nav::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tabs__nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
 }
 
 /* Tab Button */
