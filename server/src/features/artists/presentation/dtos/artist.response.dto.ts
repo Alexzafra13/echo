@@ -73,9 +73,12 @@ export class ArtistResponseDto {
     dto.songCount = data.songCount;
     dto.mbzArtistId = data.mbzArtistId;
     dto.biography = data.biography;
-    dto.smallImageUrl = data.smallImageUrl;
-    dto.mediumImageUrl = data.mediumImageUrl;
-    dto.largeImageUrl = data.largeImageUrl;
+
+    // Transform file paths to API URLs for frontend consumption
+    dto.smallImageUrl = data.smallImageUrl ? `/api/images/artists/${data.id}/profile-small` : undefined;
+    dto.mediumImageUrl = data.mediumImageUrl ? `/api/images/artists/${data.id}/profile-medium` : undefined;
+    dto.largeImageUrl = data.largeImageUrl ? `/api/images/artists/${data.id}/profile-large` : undefined;
+
     dto.externalUrl = data.externalUrl;
     dto.externalInfoUpdatedAt = data.externalInfoUpdatedAt;
     dto.orderArtistName = data.orderArtistName;
