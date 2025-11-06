@@ -311,30 +311,30 @@ export class ImagesController {
     // Transform ImageResult objects to ImageMetadataDto format
     const transformedImages: ArtistImagesDto['images'] = {};
 
-    if (images.profilesmall) {
+    if (images.profileSmall) {
       transformedImages.profileSmall = {
         exists: true,
-        size: images.profilesmall.size,
-        mimeType: images.profilesmall.mimeType,
-        lastModified: images.profilesmall.lastModified.toISOString(),
+        size: images.profileSmall.size,
+        mimeType: images.profileSmall.mimeType,
+        lastModified: images.profileSmall.lastModified.toISOString(),
       };
     }
 
-    if (images.profilemedium) {
+    if (images.profileMedium) {
       transformedImages.profileMedium = {
         exists: true,
-        size: images.profilemedium.size,
-        mimeType: images.profilemedium.mimeType,
-        lastModified: images.profilemedium.lastModified.toISOString(),
+        size: images.profileMedium.size,
+        mimeType: images.profileMedium.mimeType,
+        lastModified: images.profileMedium.lastModified.toISOString(),
       };
     }
 
-    if (images.profilelarge) {
+    if (images.profileLarge) {
       transformedImages.profileLarge = {
         exists: true,
-        size: images.profilelarge.size,
-        mimeType: images.profilelarge.mimeType,
-        lastModified: images.profilelarge.lastModified.toISOString(),
+        size: images.profileLarge.size,
+        mimeType: images.profileLarge.mimeType,
+        lastModified: images.profileLarge.lastModified.toISOString(),
       };
     }
 
