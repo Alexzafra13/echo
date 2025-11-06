@@ -130,14 +130,17 @@ export class ImageService {
     // Priorizar externalCoverPath sobre coverArtPath
     const coverPath = album.externalCoverPath || album.coverArtPath;
 
-    if (!coverPath) {
-      throw new NotFoundException(
-        `Album ${albumId} does not have a cover image`,
-      );
-    }
+    let imageResult: ImageResult;
 
-    // Verificar que el archivo existe y obtener metadata
-    const imageResult = await this.getImageFileInfo(coverPath);
+    if (!coverPath) {
+      // Usar imagen por defecto si no hay cover
+      this.logger.debug(`Album ${albumId} has no cover, using default image`);
+      const defaultCoverPath = 'defaults/album-cover-default.png';
+      imageResult = await this.getImageFileInfo(defaultCoverPath);
+    } else {
+      // Verificar que el archivo existe y obtener metadata
+      imageResult = await this.getImageFileInfo(coverPath);
+    }
 
     // Cachear resultado
     this.cacheImageResult(cacheKey, imageResult);
