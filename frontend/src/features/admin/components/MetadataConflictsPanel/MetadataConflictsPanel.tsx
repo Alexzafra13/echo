@@ -143,12 +143,38 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const isImage = conflict.field.includes('cover') || conflict.field.includes('Cover');
 
   // Build complete image URLs
-  const currentImageUrl = isImage && conflict.currentValue
-    ? (conflict.currentValue.startsWith('http')
-        ? conflict.currentValue
-        : `${import.meta.env.VITE_API_URL || '/api'}${conflict.currentValue}`)
-    : conflict.currentValue;
+  const buildImageUrl = (value: string | undefined): string | undefined => {
+    if (!value) return undefined;
 
+    // Already a complete URL (http/https)
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+
+    // API path (new format)
+    if (value.startsWith('/api/')) {
+      const baseUrl = import.meta.env.VITE_API_URL || '/api';
+      return `${baseUrl}${value.substring(4)}`; // Remove /api prefix and add baseUrl
+    }
+
+    // Old format: file path - construct API URL using entityId
+    // Examples: "uploads\music\..." or "/uploads/music/..."
+    if (value.includes('uploads') || value.includes('\\')) {
+      const baseUrl = import.meta.env.VITE_API_URL || '/api';
+      if (conflict.entityType === 'album') {
+        return `${baseUrl}/images/albums/${conflict.entityId}/cover`;
+      } else if (conflict.entityType === 'artist') {
+        // For artists, we'd need to know the image type
+        return `${baseUrl}/images/artists/${conflict.entityId}/profile-medium`;
+      }
+    }
+
+    // Default: treat as relative path
+    const baseUrl = import.meta.env.VITE_API_URL || '/api';
+    return `${baseUrl}${value.startsWith('/') ? value : '/' + value}`;
+  };
+
+  const currentImageUrl = isImage ? buildImageUrl(conflict.currentValue) : conflict.currentValue;
   const suggestedImageUrl = conflict.suggestedValue;
 
   return (
