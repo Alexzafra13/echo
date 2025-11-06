@@ -15,7 +15,7 @@
 .heroSection__background {
   position: absolute;
   inset: 0;
-  background-size: 130%;
+  background-size: 100%;
   /* background-position set dynamically in component based on image type */
   filter: blur(2px) brightness(0.5);
   transform: scale(1.1);
