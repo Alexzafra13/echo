@@ -188,11 +188,11 @@
 /* Drop cap - Primera letra destacada */
 .artistDetailPage__biographyText::first-letter {
   font-family: var(--font-display, 'Outfit', sans-serif);
-  font-size: 3.2em;
-  line-height: 1;
+  font-size: 3em;
+  line-height: 0.75;
   float: left;
   margin: 0 10px 0 0;
-  padding-top: 4px;
+  padding-top: 8px;
   font-weight: 700;
   color: var(--color-accent, #ff7f50);
 }
