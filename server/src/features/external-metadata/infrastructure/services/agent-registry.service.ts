@@ -108,6 +108,8 @@ export class AgentRegistryService implements IAgentRegistry {
         return 'getArtistImages' in agent;
       case 'IAlbumCoverRetriever':
         return 'getAlbumCover' in agent;
+      case 'IMusicBrainzSearch':
+        return 'searchArtist' in agent && 'searchAlbum' in agent;
       default:
         this.logger.warn(`Unknown interface: ${interfaceName}`);
         return false;
