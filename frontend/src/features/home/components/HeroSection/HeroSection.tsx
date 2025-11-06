@@ -19,7 +19,7 @@ import styles from './HeroSection.module.css';
  *   onPrevious={() => previousFeatured()}
  * />
  */
-export function HeroSection({ album, onPlay }: HeroSectionProps) {
+export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionProps) {
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(album.artistId);
 
@@ -31,18 +31,15 @@ export function HeroSection({ album, onPlay }: HeroSectionProps) {
 
   const handlePlay = () => {
     onPlay?.();
-    // TODO: Implement play functionality
     console.log('Playing album:', album.id);
   };
 
   const handleNext = () => {
-    // TODO: Implement navigation to next featured album
-    console.log('Next featured album');
+    onNext?.();
   };
 
   const handlePrevious = () => {
-    // TODO: Implement navigation to previous featured album
-    console.log('Previous featured album');
+    onPrevious?.();
   };
 
   const coverUrl = getCoverUrl(album.coverImage);
