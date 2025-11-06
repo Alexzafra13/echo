@@ -368,6 +368,38 @@ export class ExternalMetadataService {
               ? `/api/images/albums/${albumId}/cover`
               : undefined;
 
+            // Get dimensions of current and suggested covers
+            const currentDimensions = album.externalCoverPath
+              ? await this.imageDownload.getImageDimensionsFromFile(album.externalCoverPath)
+              : null;
+
+            const suggestedDimensions = await this.imageDownload.getImageDimensionsFromUrl(cover.largeUrl);
+
+            // Check if this is a quality improvement
+            const isQualityImprovement = currentDimensions && suggestedDimensions
+              ? this.imageDownload.isSignificantImprovement(currentDimensions, suggestedDimensions)
+              : false;
+
+            // Check if current cover is low quality (<500px)
+            const isLowQuality = currentDimensions
+              ? (currentDimensions.width < 500 || currentDimensions.height < 500)
+              : false;
+
+            // Format resolution strings
+            const currentResolution = currentDimensions
+              ? `${currentDimensions.width}×${currentDimensions.height}`
+              : undefined;
+
+            const suggestedResolution = suggestedDimensions
+              ? `${suggestedDimensions.width}×${suggestedDimensions.height}`
+              : 'Desconocida';
+
+            this.logger.log(
+              `Cover comparison for "${album.name}": ` +
+              `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution} ` +
+              `(Quality improvement: ${isQualityImprovement}, Low quality: ${isLowQuality})`
+            );
+
             await this.conflictService.createConflict({
               entityId: albumId,
               entityType: 'album',
@@ -380,6 +412,10 @@ export class ExternalMetadataService {
                 albumName: album.name,
                 artistName,
                 currentSource: album.externalCoverSource,
+                currentResolution,
+                suggestedResolution,
+                qualityImprovement: isQualityImprovement,
+                isLowQuality,
               },
             });
             this.logger.log(
