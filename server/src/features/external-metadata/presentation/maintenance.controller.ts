@@ -19,6 +19,9 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { StorageService } from '../infrastructure/services/storage.service';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 /**
  * Maintenance Controller
@@ -42,6 +45,7 @@ export class MaintenanceController {
   constructor(
     private readonly cleanupService: CleanupService,
     private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
   ) {}
 
   /**
@@ -367,6 +371,140 @@ export class MaintenanceController {
       };
     } catch (error) {
       this.logger.error(`Error during artist image URL cleanup: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Sincroniza la base de datos con los archivos físicos existentes en storage
+   * POST /api/maintenance/sync/artist-images
+   */
+  @Post('sync/artist-images')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Sync database with physical image files',
+    description:
+      'Scans the storage directory for existing image files and updates database with correct file paths. ' +
+      'Use this after cleaning to restore references to physically existing files (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sync result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        synced: { type: 'number', description: 'Number of artists synced' },
+        filesFound: { type: 'number', description: 'Total image files found' },
+        errors: { type: 'array', items: { type: 'string' } },
+        duration: { type: 'number', description: 'Duration in ms' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async syncArtistImages() {
+    const startTime = Date.now();
+    const errors: string[] = [];
+    let synced = 0;
+    let filesFound = 0;
+
+    try {
+      this.logger.log('Starting artist image synchronization');
+
+      // Get base storage path
+      const basePath = await this.storage.getBasePath();
+      const artistsPath = path.join(basePath, 'artists');
+
+      // Check if artists directory exists
+      const artistsDirExists = await this.storage.directoryExists(artistsPath);
+      if (!artistsDirExists) {
+        this.logger.warn('Artists directory does not exist in storage');
+        return {
+          success: true,
+          synced: 0,
+          filesFound: 0,
+          errors: [],
+          duration: Date.now() - startTime,
+        };
+      }
+
+      // Get all artist directories
+      const artistDirs = await fs.readdir(artistsPath, { withFileTypes: true });
+
+      for (const dir of artistDirs) {
+        if (!dir.isDirectory()) continue;
+
+        const artistId = dir.name;
+        const artistPath = path.join(artistsPath, artistId);
+
+        try {
+          // Check if artist exists in database
+          const artist = await this.prisma.artist.findUnique({
+            where: { id: artistId },
+          });
+
+          if (!artist) {
+            this.logger.debug(`Artist ${artistId} not found in database, skipping`);
+            continue;
+          }
+
+          // Check for image files
+          const updates: any = {};
+          let hasUpdates = false;
+
+          const imageFiles = [
+            { file: 'profile-small.jpg', field: 'smallImageUrl' },
+            { file: 'profile-medium.jpg', field: 'mediumImageUrl' },
+            { file: 'profile-large.jpg', field: 'largeImageUrl' },
+            { file: 'background.jpg', field: 'backgroundImageUrl' },
+            { file: 'banner.png', field: 'bannerImageUrl' },
+            { file: 'logo.png', field: 'logoImageUrl' },
+          ];
+
+          for (const { file, field } of imageFiles) {
+            const filePath = path.join(artistPath, file);
+            const exists = await this.storage.fileExists(filePath);
+
+            if (exists) {
+              filesFound++;
+              // Only update if database field is null or empty
+              if (!artist[field]) {
+                updates[field] = filePath;
+                hasUpdates = true;
+              }
+            }
+          }
+
+          if (hasUpdates) {
+            await this.prisma.artist.update({
+              where: { id: artistId },
+              data: updates,
+            });
+            synced++;
+            this.logger.debug(`Synced: ${artist.name} (${Object.keys(updates).length} images)`);
+          }
+        } catch (error) {
+          const errorMsg = `Failed to sync artist ${artistId}: ${(error as Error).message}`;
+          this.logger.error(errorMsg);
+          errors.push(errorMsg);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+
+      this.logger.log(
+        `Synchronization completed: ${synced} artists synced, ${filesFound} files found, ${errors.length} errors in ${duration}ms`
+      );
+
+      return {
+        success: errors.length === 0,
+        synced,
+        filesFound,
+        errors,
+        duration,
+      };
+    } catch (error) {
+      this.logger.error(`Error during image synchronization: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
