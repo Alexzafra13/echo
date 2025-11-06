@@ -10,7 +10,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   display: grid;
-  grid-template-columns: 280px 1fr 220px;
+  grid-template-columns: 320px 1fr 260px;
   align-items: center;
   padding: 0 var(--space-5);
   gap: var(--space-4);
