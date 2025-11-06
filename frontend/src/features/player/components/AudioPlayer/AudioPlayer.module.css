@@ -103,17 +103,21 @@
 
 .playButton {
   background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-  color: #000;
+  color: #000 !important;
   width: 42px;
   height: 42px;
   padding: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.playButton svg {
+  color: #000 !important;
+}
+
 .playButton:hover {
   transform: scale(1.08);
   background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-  color: #000;
+  color: #000 !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -138,7 +142,7 @@
 
 .progressBar {
   flex: 1;
-  height: 8px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   position: relative;
@@ -147,7 +151,7 @@
 }
 
 .progressBar:hover {
-  height: 10px;
+  height: 7px;
 }
 
 .progressBar:hover .progressHandle {
