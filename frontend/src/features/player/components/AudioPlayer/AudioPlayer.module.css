@@ -1,34 +1,37 @@
+/* ===== Audio Player ===== */
+
 .player {
   position: fixed;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  right: var(--space-4);
   height: 90px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.85));
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: grid;
   grid-template-columns: 280px 1fr 220px;
   align-items: center;
-  padding: 0 20px;
-  gap: 16px;
-  z-index: 1000;
-  backdrop-filter: blur(24px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 0 var(--space-5);
+  gap: var(--space-4);
+  z-index: var(--z-fixed);
+  backdrop-filter: blur(var(--blur-xl));
+  box-shadow: var(--shadow-2xl);
 }
 
-/* Track Info - Left side */
+/* ===== Track Info ===== */
+
 .trackInfo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-width: 0;
 }
 
 .trackCover {
   width: 56px;
   height: 56px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -39,27 +42,28 @@
 }
 
 .trackTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .trackArtist {
-  font-size: 12px;
-  color: #b3b3b3;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Player Controls - Center */
+/* ===== Player Controls ===== */
+
 .playerControls {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
 }
 
@@ -67,24 +71,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .controlButton {
   background: transparent;
   border: none;
-  color: #b3b3b3;
+  color: var(--text-tertiary);
   cursor: pointer;
-  padding: 10px;
+  padding: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  border-radius: 50%;
+  transition: all var(--transition-base);
+  border-radius: var(--radius-full);
 }
 
 .controlButton:hover {
-  color: #fff;
+  color: var(--text-primary);
   transform: scale(1.08);
   background: rgba(255, 255, 255, 0.1);
 }
@@ -98,44 +102,43 @@
 }
 
 .controlButtonSmall {
-  padding: 6px;
+  padding: var(--space-1);
 }
 
 .playButton {
-  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-  color: #000 !important;
+  background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
   width: 42px;
   height: 42px;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .playButton svg {
-  color: #000 !important;
+  fill: #000;
+  stroke: none;
 }
 
 .playButton:hover {
   transform: scale(1.08);
-  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
-  color: #000 !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-xl);
 }
 
 .playButton:active {
   transform: scale(0.96);
 }
 
-/* Progress bar */
+/* ===== Progress Bar ===== */
+
 .progressContainer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
 }
 
 .timeLabel {
   font-size: 11px;
-  color: #b3b3b3;
+  color: var(--text-tertiary);
   min-width: 40px;
   text-align: center;
 }
@@ -144,10 +147,10 @@
   flex: 1;
   height: 5px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   position: relative;
   cursor: pointer;
-  transition: height 0.2s ease;
+  transition: height var(--transition-base);
 }
 
 .progressBar:hover {
@@ -160,8 +163,8 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
-  border-radius: 4px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-sm);
   transition: width 0.1s linear;
   box-shadow: 0 0 8px rgba(255, 127, 80, 0.5);
 }
@@ -172,37 +175,38 @@
   transform: translate(-50%, -50%);
   width: 14px;
   height: 14px;
-  background: #fff;
-  border-radius: 50%;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-base);
   pointer-events: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
-/* Volume Control - Right side */
+/* ===== Volume Control ===== */
+
 .volumeControl {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
 }
 
 .volumeButton {
   background: transparent;
   border: none;
-  color: #b3b3b3;
+  color: var(--text-tertiary);
   cursor: pointer;
-  padding: 10px;
+  padding: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  border-radius: 50%;
+  transition: all var(--transition-base);
+  border-radius: var(--radius-full);
 }
 
 .volumeButton:hover {
-  color: #fff;
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
 }
@@ -210,8 +214,8 @@
 .volumeSlider {
   width: 100px;
   height: 5px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: transparent;
+  border-radius: var(--radius-sm);
   outline: none;
   -webkit-appearance: none;
   cursor: pointer;
@@ -222,12 +226,12 @@
   appearance: none;
   width: 14px;
   height: 14px;
-  background: #fff;
-  border-radius: 50%;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: opacity var(--transition-base);
+  box-shadow: var(--shadow-md);
   margin-top: -4.5px;
 }
 
@@ -238,13 +242,13 @@
 .volumeSlider::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  background: #fff;
-  border-radius: 50%;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
   cursor: pointer;
   border: none;
   opacity: 0;
-  transition: opacity 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: opacity var(--transition-base);
+  box-shadow: var(--shadow-md);
   margin-top: -4.5px;
 }
 
@@ -253,34 +257,41 @@
 }
 
 .volumeSlider::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, var(--color-primary-500) 0%, var(--color-primary-500) var(--volume-percent, 70%), rgba(255, 255, 255, 0.2) var(--volume-percent, 70%), rgba(255, 255, 255, 0.2) 100%);
+  background: linear-gradient(
+    to right,
+    var(--color-primary-500) 0%,
+    var(--color-primary-500) var(--volume-percent, 70%),
+    rgba(255, 255, 255, 0.2) var(--volume-percent, 70%),
+    rgba(255, 255, 255, 0.2) 100%
+  );
   height: 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 .volumeSlider::-moz-range-track {
   background: rgba(255, 255, 255, 0.2);
   height: 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 .volumeSlider::-moz-range-progress {
   background: var(--color-primary-500);
   height: 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
-/* Responsive */
+/* ===== Responsive ===== */
+
 @media (max-width: 768px) {
   .player {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     height: auto;
-    padding: 16px;
-    gap: 12px;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
+    padding: var(--space-4);
+    gap: var(--space-3);
+    bottom: var(--space-3);
+    left: var(--space-3);
+    right: var(--space-3);
   }
 
   .trackInfo {
