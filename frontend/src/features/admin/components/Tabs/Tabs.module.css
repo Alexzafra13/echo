@@ -1,0 +1,94 @@
+/* Tabs Component Styles */
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Tab Navigation */
+.tabs__nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 32px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tabs__nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs__nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* Tab Button */
+.tabs__button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
+}
+
+.tabs__button:hover {
+  color: var(--color-text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tabs__button__active {
+  color: var(--color-accent, #ff7f50);
+  border-bottom-color: var(--color-accent, #ff7f50);
+}
+
+.tabs__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabs__label {
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+/* Tab Content */
+.tabs__content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabs__button {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .tabs__nav {
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+}
