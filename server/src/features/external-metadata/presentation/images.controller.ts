@@ -302,7 +302,31 @@ export class ImagesController {
   @ApiResponse({
     status: 200,
     description: 'List of available images',
-    type: ArtistImagesDto,
+    schema: {
+      type: 'object',
+      properties: {
+        artistId: { type: 'string' },
+        images: {
+          type: 'object',
+          properties: {
+            profileSmall: {
+              type: 'object',
+              properties: {
+                exists: { type: 'boolean' },
+                size: { type: 'number' },
+                mimeType: { type: 'string' },
+                lastModified: { type: 'string' },
+              },
+            },
+            profileMedium: { type: 'object' },
+            profileLarge: { type: 'object' },
+            background: { type: 'object' },
+            banner: { type: 'object' },
+            logo: { type: 'object' },
+          },
+        },
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'Artist not found' })
   async getArtistImages(@Param('artistId') artistId: string): Promise<ArtistImagesDto> {
