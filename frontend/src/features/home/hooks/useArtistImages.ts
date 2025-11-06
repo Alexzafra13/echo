@@ -56,11 +56,14 @@ export function useArtistImages(artistId: string | undefined, enabled: boolean =
         throw new Error('Artist ID is required');
       }
 
+      console.log('[useArtistImages] Fetching images for artist:', artistId);
       const response = await apiClient.get(`/images/artists/${artistId}/all`);
+      console.log('[useArtistImages] Response:', response.data);
       return response.data;
     },
     enabled: enabled && !!artistId,
     staleTime: 1000 * 60 * 30, // 30 minutes - images don't change often
     gcTime: 1000 * 60 * 60,    // 1 hour cache time
+    retry: false, // Don't retry on error - if no images exist, that's expected
   });
 }
