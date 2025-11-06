@@ -174,20 +174,24 @@
 }
 
 .artistDetailPage__biographyText {
+  font-family: var(--font-biography, 'Lora', Georgia, serif);
   font-size: 16px;
   line-height: 1.8;
   color: var(--color-text-secondary, #b8bcc8);
   margin: 0;
   white-space: pre-wrap;
   transition: max-height 0.3s ease;
+  text-align: justify;
+  hyphens: auto;
 }
 
 /* Drop cap - Primera letra destacada */
 .artistDetailPage__biographyText::first-letter {
-  font-size: 3.5em;
-  line-height: 0.8;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  font-size: 4em;
+  line-height: 0.85;
   float: left;
-  margin: 8px 10px 0 0;
+  margin: 3px 12px -5px 0;
   font-weight: 700;
   color: var(--color-accent, #ff7f50);
 }
