@@ -43,6 +43,7 @@ function SourceBadge({ source }: { source: string }) {
  */
 function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const [expanded, setExpanded] = useState(false);
+  const [isRemoved, setIsRemoved] = useState(false);
   const { mutate: accept, isPending: isAccepting } = useAcceptConflict();
   const { mutate: reject, isPending: isRejecting } = useRejectConflict();
   const { mutate: ignore, isPending: isIgnoring } = useIgnoreConflict();
@@ -51,21 +52,47 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
   const handleAccept = () => {
     if (window.confirm('¿Aceptar esta sugerencia y aplicar los cambios?')) {
-      accept(conflict.id);
+      accept(conflict.id, {
+        onSuccess: () => {
+          setIsRemoved(true);
+        },
+        onError: (error) => {
+          alert('Error al aceptar la sugerencia: ' + (error as Error).message);
+        },
+      });
     }
   };
 
   const handleReject = () => {
     if (window.confirm('¿Rechazar esta sugerencia y mantener los datos actuales?')) {
-      reject(conflict.id);
+      reject(conflict.id, {
+        onSuccess: () => {
+          setIsRemoved(true);
+        },
+        onError: (error) => {
+          alert('Error al rechazar la sugerencia: ' + (error as Error).message);
+        },
+      });
     }
   };
 
   const handleIgnore = () => {
     if (window.confirm('¿Ignorar permanentemente esta sugerencia?')) {
-      ignore(conflict.id);
+      ignore(conflict.id, {
+        onSuccess: () => {
+          setIsRemoved(true);
+        },
+        onError: (error) => {
+          alert('Error al ignorar la sugerencia: ' + (error as Error).message);
+        },
+      });
     }
   };
+
+  // Hide card with fade-out animation when removed
+  if (isRemoved) {
+    return null;
+  }
 
   const fieldLabels: Record<string, string> = {
     externalCover: 'Cover Externa',
@@ -141,7 +168,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
           {/* Actions */}
           <div className={styles.conflictActions}>
             <Button
-              variant="success"
+              variant="primary"
               size="sm"
               onClick={handleAccept}
               loading={isAccepting}
@@ -151,7 +178,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
               Aceptar
             </Button>
             <Button
-              variant="danger"
+              variant="outline"
               size="sm"
               onClick={handleReject}
               loading={isRejecting}
@@ -182,10 +209,10 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
  * Displays and manages pending metadata conflicts
  */
 export function MetadataConflictsPanel() {
-  const [filters, setFilters] = useState({
+  const filters = {
     skip: 0,
     take: 20,
-  });
+  };
 
   const { data, isLoading, error } = useMetadataConflicts(filters);
 
