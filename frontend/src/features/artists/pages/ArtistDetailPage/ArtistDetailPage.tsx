@@ -1,5 +1,6 @@
 import { useParams, useLocation } from 'wouter';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BookOpen } from 'lucide-react';
+import { useState } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { useArtist } from '../../hooks';
@@ -15,6 +16,7 @@ import styles from './ArtistDetailPage.module.css';
 export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
 
   // Fetch artist details
   const { data: artist, isLoading: loadingArtist, error: artistError } = useArtist(id);
@@ -154,15 +156,45 @@ export default function ArtistDetailPage() {
           {/* Biography Section */}
           {artist.biography && (
             <section className={styles.artistDetailPage__biography}>
-              <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
-              <p className={styles.artistDetailPage__biographyText}>{artist.biography}</p>
+              <div className={styles.artistDetailPage__biographyHeader}>
+                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
+              </div>
+
+              <div className={styles.artistDetailPage__biographyContent}>
+                <div className={`${styles.artistDetailPage__biographyText} ${
+                  !isBioExpanded && artist.biography.length > 500 ? styles.artistDetailPage__biographyText__collapsed : ''
+                }`}>
+                  {artist.biography}
+                </div>
+
+                {artist.biography.length > 500 && (
+                  <button
+                    className={styles.artistDetailPage__biographyToggle}
+                    onClick={() => setIsBioExpanded(!isBioExpanded)}
+                  >
+                    {isBioExpanded ? 'Leer menos' : 'Leer más'}
+                  </button>
+                )}
+
+                {artist.biographySource && (
+                  <div className={styles.artistDetailPage__biographySource}>
+                    Fuente: {artist.biographySource === 'wikipedia' ? 'Wikipedia' :
+                            artist.biographySource === 'lastfm' ? 'Last.fm' :
+                            artist.biographySource}
+                  </div>
+                )}
+              </div>
             </section>
           )}
 
           {/* No Biography Placeholder */}
           {!artist.biography && (
             <section className={styles.artistDetailPage__biography}>
-              <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
+              <div className={styles.artistDetailPage__biographyHeader}>
+                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
+              </div>
               <p className={styles.artistDetailPage__biographyPlaceholder}>
                 No hay biografía disponible para este artista.
               </p>
