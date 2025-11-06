@@ -141,6 +141,7 @@ export function AudioPlayer() {
           value={volume}
           onChange={handleVolumeChange}
           className={styles.volumeSlider}
+          style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
         />
       </div>
     </div>
