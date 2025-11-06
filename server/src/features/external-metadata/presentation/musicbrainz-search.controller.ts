@@ -8,7 +8,7 @@ import {
   Logger,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { MusicBrainzAgent } from '../infrastructure/agents/musicbrainz.agent';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ExternalMetadataService } from '../application/external-metadata.service';
