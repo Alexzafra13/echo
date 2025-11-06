@@ -55,6 +55,19 @@ export default function ArtistDetailPage() {
 
   const initials = artist ? getArtistInitials(artist.name) : '';
 
+  // Helper to format biography with drop cap
+  const formatBiographyWithDropCap = (text: string) => {
+    if (!text || text.length === 0) return text;
+    const firstChar = text.charAt(0);
+    const restOfText = text.slice(1);
+    return (
+      <>
+        <span className={styles.artistDetailPage__dropCap}>{firstChar}</span>
+        {restOfText}
+      </>
+    );
+  };
+
   if (loadingArtist) {
     return (
       <div className={styles.artistDetailPage}>
@@ -165,7 +178,7 @@ export default function ArtistDetailPage() {
                 <div className={`${styles.artistDetailPage__biographyText} ${
                   !isBioExpanded && artist.biography.length > 500 ? styles.artistDetailPage__biographyText__collapsed : ''
                 }`}>
-                  {artist.biography}
+                  {formatBiographyWithDropCap(artist.biography)}
                 </div>
 
                 {artist.biography.length > 500 && (
