@@ -1,7 +1,7 @@
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { useArtistImages, getArtistImageUrl } from '../../hooks';
+import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '../../hooks';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
 
@@ -9,6 +9,7 @@ import styles from './HeroSection.module.css';
  * HeroSection Component
  * Displays the featured album with large cover, background, play button, and navigation
  * Uses Fanart.tv images when available (background and logo) with fallback to album cover
+ * Automatically enriches artist metadata if not already available
  *
  * @example
  * <HeroSection
@@ -21,6 +22,12 @@ import styles from './HeroSection.module.css';
 export function HeroSection({ album, onPlay }: HeroSectionProps) {
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(album.artistId);
+
+  // Check if artist has any hero images (background or logo)
+  const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.logo?.exists;
+
+  // Auto-enrich artist if they don't have hero images yet
+  useAutoEnrichArtist(album.artistId, hasHeroImages);
 
   const handlePlay = () => {
     onPlay?.();
