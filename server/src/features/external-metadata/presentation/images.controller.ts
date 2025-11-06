@@ -20,6 +20,7 @@ import { FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { ImageService, ArtistImageType } from '../application/services/image.service';
+import { ArtistImagesDto, ImageMetadataDto } from './dtos/artist-images.dto';
 
 /**
  * Images Controller
@@ -301,31 +302,72 @@ export class ImagesController {
   @ApiResponse({
     status: 200,
     description: 'List of available images',
-    schema: {
-      type: 'object',
-      properties: {
-        artistId: { type: 'string' },
-        images: {
-          type: 'object',
-          properties: {
-            profileSmall: { type: 'object' },
-            profileMedium: { type: 'object' },
-            profileLarge: { type: 'object' },
-            background: { type: 'object' },
-            banner: { type: 'object' },
-            logo: { type: 'object' },
-          },
-        },
-      },
-    },
+    type: ArtistImagesDto,
   })
   @ApiResponse({ status: 404, description: 'Artist not found' })
-  async getArtistImages(@Param('artistId') artistId: string) {
+  async getArtistImages(@Param('artistId') artistId: string): Promise<ArtistImagesDto> {
     const images = await this.imageService.getArtistImages(artistId);
+
+    // Transform ImageResult objects to ImageMetadataDto format
+    const transformedImages: ArtistImagesDto['images'] = {};
+
+    if (images.profilesmall) {
+      transformedImages.profileSmall = {
+        exists: true,
+        size: images.profilesmall.size,
+        mimeType: images.profilesmall.mimeType,
+        lastModified: images.profilesmall.lastModified.toISOString(),
+      };
+    }
+
+    if (images.profilemedium) {
+      transformedImages.profileMedium = {
+        exists: true,
+        size: images.profilemedium.size,
+        mimeType: images.profilemedium.mimeType,
+        lastModified: images.profilemedium.lastModified.toISOString(),
+      };
+    }
+
+    if (images.profilelarge) {
+      transformedImages.profileLarge = {
+        exists: true,
+        size: images.profilelarge.size,
+        mimeType: images.profilelarge.mimeType,
+        lastModified: images.profilelarge.lastModified.toISOString(),
+      };
+    }
+
+    if (images.background) {
+      transformedImages.background = {
+        exists: true,
+        size: images.background.size,
+        mimeType: images.background.mimeType,
+        lastModified: images.background.lastModified.toISOString(),
+      };
+    }
+
+    if (images.banner) {
+      transformedImages.banner = {
+        exists: true,
+        size: images.banner.size,
+        mimeType: images.banner.mimeType,
+        lastModified: images.banner.lastModified.toISOString(),
+      };
+    }
+
+    if (images.logo) {
+      transformedImages.logo = {
+        exists: true,
+        size: images.logo.size,
+        mimeType: images.logo.mimeType,
+        lastModified: images.logo.lastModified.toISOString(),
+      };
+    }
 
     return {
       artistId,
-      images,
+      images: transformedImages,
     };
   }
 
