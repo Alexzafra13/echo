@@ -139,7 +139,7 @@
 
 .progressBar {
   flex: 1;
-  height: 6px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   position: relative;
@@ -148,7 +148,7 @@
 }
 
 .progressBar:hover {
-  height: 8px;
+  height: 10px;
 }
 
 .progressBar:hover .progressHandle {
@@ -225,6 +225,7 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-top: -4.5px;
 }
 
 .volumeSlider:hover::-webkit-slider-thumb {
@@ -241,6 +242,7 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin-top: -4.5px;
 }
 
 .volumeSlider:hover::-moz-range-thumb {
