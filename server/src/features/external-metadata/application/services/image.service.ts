@@ -269,6 +269,7 @@ export class ImageService {
 
   /**
    * Mapea el tipo de imagen a la ruta en la base de datos
+   * Con fallback: si se pide small/medium y no existe, usa large
    */
   private getArtistImagePath(
     artist: {
@@ -283,11 +284,14 @@ export class ImageService {
   ): string | null {
     switch (imageType) {
       case 'profile-small':
-        return artist.smallImageUrl;
+        // Fallback: small -> medium -> large
+        return artist.smallImageUrl || artist.mediumImageUrl || artist.largeImageUrl;
       case 'profile-medium':
-        return artist.mediumImageUrl;
+        // Fallback: medium -> large -> small
+        return artist.mediumImageUrl || artist.largeImageUrl || artist.smallImageUrl;
       case 'profile-large':
-        return artist.largeImageUrl;
+        // Fallback: large -> medium -> small
+        return artist.largeImageUrl || artist.mediumImageUrl || artist.smallImageUrl;
       case 'background':
         return artist.backgroundImageUrl;
       case 'banner':
