@@ -19,6 +19,7 @@ import {
 import { FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { Public } from '@shared/decorators/public.decorator';
 import { ImageService, ArtistImageType } from '../application/services/image.service';
 import { ArtistImagesDto, ImageMetadataDto } from './dtos/artist-images.dto';
 
@@ -57,6 +58,7 @@ export class ImagesController {
    * - banner: Banner del artista (1000x185+)
    * - logo: Logo del artista con transparencia
    */
+  @Public()
   @Get('artists/:artistId/:imageType')
   @ApiOperation({
     summary: 'Serve artist image',
@@ -150,6 +152,7 @@ export class ImagesController {
    * Sirve la portada de un álbum
    * GET /api/images/albums/:albumId/cover
    */
+  @Public()
   @Get('albums/:albumId/cover')
   @ApiOperation({
     summary: 'Serve album cover',
