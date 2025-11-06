@@ -8,6 +8,7 @@
 
 .artistDetailPage__main {
   flex: 1;
+  margin-left: 200px; /* Compensate for fixed sidebar width */
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -241,6 +242,10 @@
 }
 
 @media (max-width: 768px) {
+  .artistDetailPage__main {
+    margin-left: 80px; /* Sidebar is narrower on mobile */
+  }
+
   .artistDetailPage__content {
     padding: 20px 16px;
   }
