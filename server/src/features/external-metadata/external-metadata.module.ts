@@ -18,6 +18,7 @@ import { MetadataConflictService } from './infrastructure/services/metadata-conf
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
 import { LastfmAgent } from './infrastructure/agents/lastfm.agent';
 import { FanartTvAgent } from './infrastructure/agents/fanart-tv.agent';
+import { MusicBrainzAgent } from './infrastructure/agents/musicbrainz.agent';
 
 // Infrastructure - Persistence
 import { SettingsRepository } from './infrastructure/persistence/settings.repository';
@@ -32,6 +33,7 @@ import { ImagesController } from './presentation/images.controller';
 import { AdminSettingsController } from './presentation/admin-settings.controller';
 import { MaintenanceController } from './presentation/maintenance.controller';
 import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
+import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -80,6 +82,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     CoverArtArchiveAgent,
     LastfmAgent,
     FanartTvAgent,
+    MusicBrainzAgent,
 
     // Application services
     ExternalMetadataService,
@@ -94,6 +97,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     AdminSettingsController,
     MaintenanceController,
     MetadataConflictsController,
+    MusicBrainzSearchController,
   ],
   exports: [
     ExternalMetadataService,
@@ -113,7 +117,8 @@ export class ExternalMetadataModule implements OnModuleInit {
     private readonly storageService: StorageService,
     private readonly coverArtAgent: CoverArtArchiveAgent,
     private readonly lastfmAgent: LastfmAgent,
-    private readonly fanartAgent: FanartTvAgent
+    private readonly fanartAgent: FanartTvAgent,
+    private readonly musicbrainzAgent: MusicBrainzAgent
   ) {}
 
   /**
@@ -133,6 +138,7 @@ export class ExternalMetadataModule implements OnModuleInit {
     this.agentRegistry.register(this.coverArtAgent);
     this.agentRegistry.register(this.lastfmAgent);
     this.agentRegistry.register(this.fanartAgent);
+    this.agentRegistry.register(this.musicbrainzAgent);
 
     // Log agent status
     const allAgents = this.agentRegistry.getAllAgents();
