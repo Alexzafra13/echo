@@ -42,6 +42,8 @@ export interface AlbumGridProps {
 export interface HeroSectionProps {
   album: Album;
   onPlay?: () => void;
+  onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 /**
