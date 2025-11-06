@@ -197,7 +197,6 @@ export class ImageDownloadService {
 
   /**
    * Get image dimensions from a local file
-   * Only reads the file headers, very fast
    * @param filePath Path to image file
    * @returns Image dimensions or null if file doesn't exist/invalid
    */
@@ -222,7 +221,6 @@ export class ImageDownloadService {
 
   /**
    * Get image dimensions from a URL
-   * Only downloads headers, very fast (~100 bytes)
    * @param url Image URL
    * @returns Image dimensions or null if failed
    */
