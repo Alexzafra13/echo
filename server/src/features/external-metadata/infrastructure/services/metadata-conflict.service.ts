@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { ImageDownloadService } from './image-download.service';
 
 /**
  * Entity types that can have metadata conflicts
@@ -83,7 +84,10 @@ export interface ConflictWithEntity {
 export class MetadataConflictService {
   private readonly logger = new Logger(MetadataConflictService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly imageDownload: ImageDownloadService,
+  ) {}
 
   /**
    * Create a new metadata conflict
@@ -352,8 +356,38 @@ export class MetadataConflictService {
 
     switch (conflict.field) {
       case 'externalCover':
-        updateData.externalCoverPath = conflict.suggestedValue;
-        updateData.externalCoverSource = conflict.source;
+        // Download the cover image from the URL
+        const coverUrl = conflict.suggestedValue;
+        this.logger.log(
+          `Downloading cover for album ${conflict.entityId} from ${conflict.source}: ${coverUrl}`,
+        );
+
+        try {
+          const localPath = await this.imageDownload.downloadAlbumCover(
+            conflict.entityId,
+            coverUrl,
+            conflict.source,
+          );
+
+          if (localPath) {
+            updateData.externalCoverPath = localPath;
+            updateData.externalCoverSource = conflict.source;
+            updateData.externalInfoUpdatedAt = new Date();
+            this.logger.log(
+              `Successfully downloaded cover for album ${conflict.entityId}: ${localPath}`,
+            );
+          } else {
+            this.logger.warn(
+              `Failed to download cover for album ${conflict.entityId} from ${coverUrl}`,
+            );
+            throw new Error('Failed to download cover image');
+          }
+        } catch (error) {
+          this.logger.error(
+            `Error downloading cover for album ${conflict.entityId}: ${(error as Error).message}`,
+          );
+          throw error;
+        }
         break;
       case 'year':
         updateData.year = parseInt(conflict.suggestedValue, 10);
