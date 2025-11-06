@@ -81,6 +81,7 @@
   --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-biography: 'Lora', Georgia, serif; /* Elegant serif for reading */
 
   /* Font Sizes */
   --text-xs: 0.75rem;     /* 12px */
