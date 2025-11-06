@@ -51,6 +51,10 @@ export class StorageService {
       await this.ensureDirectoryExists(this.basePath);
       await this.ensureDirectoryExists(path.join(this.basePath, 'artists'));
       await this.ensureDirectoryExists(path.join(this.basePath, 'albums'));
+      await this.ensureDirectoryExists(path.join(this.basePath, 'defaults'));
+
+      // Copy default images if they don't exist
+      await this.initializeDefaultImages();
 
       this.initialized = true;
       this.logger.log(`Storage initialized at: ${this.basePath}`);
@@ -328,6 +332,47 @@ export class StorageService {
       return stats.size;
     } catch {
       return 0;
+    }
+  }
+
+  /**
+   * Initialize default images (copy from frontend assets)
+   * This ensures default images are available even in production
+   */
+  private async initializeDefaultImages(): Promise<void> {
+    try {
+      const defaultCoverDest = path.join(this.basePath, 'defaults', 'album-cover-default.png');
+
+      // Check if default cover already exists
+      const exists = await this.fileExists(defaultCoverDest);
+      if (exists) {
+        this.logger.debug('Default album cover already exists');
+        return;
+      }
+
+      // Source path: frontend public images
+      const defaultCoverSrc = path.resolve(
+        process.cwd(),
+        '../frontend/public/images/empy_cover/empy_cover_default.png'
+      );
+
+      // Check if source exists
+      const srcExists = await this.fileExists(defaultCoverSrc);
+      if (!srcExists) {
+        this.logger.warn(
+          `Default cover source not found at ${defaultCoverSrc}. Default images will not be available.`
+        );
+        return;
+      }
+
+      // Copy default cover
+      await fs.copyFile(defaultCoverSrc, defaultCoverDest);
+      this.logger.log('Default album cover initialized');
+    } catch (error) {
+      this.logger.warn(
+        `Failed to initialize default images: ${(error as Error).message}. Default images may not be available.`
+      );
+      // Don't throw - this is not critical for app startup
     }
   }
 }
