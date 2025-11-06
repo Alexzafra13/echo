@@ -55,7 +55,7 @@
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center top; /* Show top portion of background instead of center */
+  /* background-position set dynamically in component based on image type */
   filter: blur(15px) brightness(0.4);
   transform: scale(1.1);
 }
@@ -79,6 +79,7 @@
   height: 240px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center top; /* Show face/head instead of cutting at middle */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   border: 4px solid rgba(255, 255, 255, 0.1);
 }
