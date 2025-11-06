@@ -244,42 +244,40 @@ export class MaintenanceController {
   }
 
   /**
-   * Migra las URLs de imágenes de artistas de rutas de archivo locales a URLs del API
-   * POST /api/maintenance/migrate/image-urls
+   * Limpia las URLs de imágenes incorrectas (file:// o /api/...) y permite re-enriquecimiento
+   * POST /api/maintenance/clean/artist-image-urls
    */
-  @Post('migrate/image-urls')
+  @Post('clean/artist-image-urls')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Migrate artist image URLs',
+    summary: 'Clean incorrect artist image URLs',
     description:
-      'Converts artist image URLs from local file paths (file://...) to API URLs (/api/images/...). ' +
-      'This is a one-time migration needed after updating the metadata service (admin only)',
+      'Removes incorrect image URLs (file:// paths or API URLs) from the database. ' +
+      'After cleaning, artists can be re-enriched to download images correctly (admin only)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Migration result',
+    description: 'Cleaning result',
     schema: {
       type: 'object',
       properties: {
         success: { type: 'boolean' },
-        updated: { type: 'number', description: 'Number of artists updated' },
-        skipped: { type: 'number', description: 'Number of artists skipped (already using API URLs)' },
+        cleaned: { type: 'number', description: 'Number of artists cleaned' },
         errors: { type: 'array', items: { type: 'string' } },
         duration: { type: 'number', description: 'Duration in ms' },
       },
     },
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  async migrateImageUrls() {
+  async cleanArtistImageUrls() {
     const startTime = Date.now();
     const errors: string[] = [];
-    let updated = 0;
-    let skipped = 0;
+    let cleaned = 0;
 
     try {
-      this.logger.log('Starting image URL migration');
+      this.logger.log('Starting artist image URL cleanup');
 
-      // Get all artists with image URLs
+      // Get all artists with incorrect image URLs
       const artists = await this.prisma.artist.findMany({
         where: {
           OR: [
@@ -303,57 +301,55 @@ export class MaintenanceController {
         },
       });
 
-      this.logger.log(`Found ${artists.length} artists with images`);
+      this.logger.log(`Found ${artists.length} artists with image URLs`);
 
-      // Migrate each artist
+      // Clean each artist that has incorrect URLs
       for (const artist of artists) {
         try {
           const updates: any = {};
-          let needsUpdate = false;
+          let needsCleaning = false;
 
-          // Check and convert each image URL
-          if (artist.smallImageUrl && !artist.smallImageUrl.startsWith('/api/')) {
-            updates.smallImageUrl = `/api/images/artists/${artist.id}/profile-small`;
-            needsUpdate = true;
+          // Clean URLs that start with file:// or /api/ (these are incorrect - should be file system paths)
+          if (artist.smallImageUrl && (artist.smallImageUrl.startsWith('file://') || artist.smallImageUrl.startsWith('/api/'))) {
+            updates.smallImageUrl = null;
+            needsCleaning = true;
           }
 
-          if (artist.mediumImageUrl && !artist.mediumImageUrl.startsWith('/api/')) {
-            updates.mediumImageUrl = `/api/images/artists/${artist.id}/profile-medium`;
-            needsUpdate = true;
+          if (artist.mediumImageUrl && (artist.mediumImageUrl.startsWith('file://') || artist.mediumImageUrl.startsWith('/api/'))) {
+            updates.mediumImageUrl = null;
+            needsCleaning = true;
           }
 
-          if (artist.largeImageUrl && !artist.largeImageUrl.startsWith('/api/')) {
-            updates.largeImageUrl = `/api/images/artists/${artist.id}/profile-large`;
-            needsUpdate = true;
+          if (artist.largeImageUrl && (artist.largeImageUrl.startsWith('file://') || artist.largeImageUrl.startsWith('/api/'))) {
+            updates.largeImageUrl = null;
+            needsCleaning = true;
           }
 
-          if (artist.backgroundImageUrl && !artist.backgroundImageUrl.startsWith('/api/')) {
-            updates.backgroundImageUrl = `/api/images/artists/${artist.id}/background`;
-            needsUpdate = true;
+          if (artist.backgroundImageUrl && (artist.backgroundImageUrl.startsWith('file://') || artist.backgroundImageUrl.startsWith('/api/'))) {
+            updates.backgroundImageUrl = null;
+            needsCleaning = true;
           }
 
-          if (artist.bannerImageUrl && !artist.bannerImageUrl.startsWith('/api/')) {
-            updates.bannerImageUrl = `/api/images/artists/${artist.id}/banner`;
-            needsUpdate = true;
+          if (artist.bannerImageUrl && (artist.bannerImageUrl.startsWith('file://') || artist.bannerImageUrl.startsWith('/api/'))) {
+            updates.bannerImageUrl = null;
+            needsCleaning = true;
           }
 
-          if (artist.logoImageUrl && !artist.logoImageUrl.startsWith('/api/')) {
-            updates.logoImageUrl = `/api/images/artists/${artist.id}/logo`;
-            needsUpdate = true;
+          if (artist.logoImageUrl && (artist.logoImageUrl.startsWith('file://') || artist.logoImageUrl.startsWith('/api/'))) {
+            updates.logoImageUrl = null;
+            needsCleaning = true;
           }
 
-          if (needsUpdate) {
+          if (needsCleaning) {
             await this.prisma.artist.update({
               where: { id: artist.id },
               data: updates,
             });
-            updated++;
-            this.logger.debug(`Updated: ${artist.name}`);
-          } else {
-            skipped++;
+            cleaned++;
+            this.logger.debug(`Cleaned: ${artist.name}`);
           }
         } catch (error) {
-          const errorMsg = `Failed to migrate artist ${artist.name}: ${(error as Error).message}`;
+          const errorMsg = `Failed to clean artist ${artist.name}: ${(error as Error).message}`;
           this.logger.error(errorMsg);
           errors.push(errorMsg);
         }
@@ -361,17 +357,16 @@ export class MaintenanceController {
 
       const duration = Date.now() - startTime;
 
-      this.logger.log(`Migration completed: ${updated} updated, ${skipped} skipped, ${errors.length} errors in ${duration}ms`);
+      this.logger.log(`Cleanup completed: ${cleaned} artists cleaned, ${errors.length} errors in ${duration}ms`);
 
       return {
         success: errors.length === 0,
-        updated,
-        skipped,
+        cleaned,
         errors,
         duration,
       };
     } catch (error) {
-      this.logger.error(`Error during image URL migration: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(`Error during artist image URL cleanup: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
