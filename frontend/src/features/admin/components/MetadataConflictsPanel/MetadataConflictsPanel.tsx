@@ -204,6 +204,19 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
       {expanded && (
         <div className={styles.conflictBody}>
+          {/* Quality Improvement Notice */}
+          {isImage && conflict.metadata?.qualityImprovement && (
+            <div className={styles.qualityNotice}>
+              <Check size={16} />
+              <span>Mejora de calidad: La nueva imagen tiene mayor resolución</span>
+            </div>
+          )}
+          {isImage && conflict.metadata?.isLowQuality && (
+            <div className={styles.lowQualityWarning}>
+              <AlertCircle size={16} />
+              <span>La cover actual tiene baja resolución (&lt;500px)</span>
+            </div>
+          )}
           <div className={styles.comparisonGrid}>
             {/* Current Value */}
             <div className={styles.comparisonColumn}>

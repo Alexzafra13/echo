@@ -1,5 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { StorageService } from './storage.service';
+import * as probe from 'probe-image-size';
+import * as fs from 'fs/promises';
+
+export interface ImageDimensions {
+  width: number;
+  height: number;
+  type: string;
+}
 
 /**
  * Image Download Service
@@ -185,6 +193,96 @@ export class ImageDownloadService {
     }
 
     return result;
+  }
+
+  /**
+   * Get image dimensions from a local file
+   * Only reads the file headers, very fast
+   * @param filePath Path to image file
+   * @returns Image dimensions or null if file doesn't exist/invalid
+   */
+  async getImageDimensionsFromFile(filePath: string): Promise<ImageDimensions | null> {
+    try {
+      const stream = await fs.open(filePath, 'r');
+      const fileStream = stream.createReadStream();
+
+      const result = await probe(fileStream);
+      await stream.close();
+
+      return {
+        width: result.width,
+        height: result.height,
+        type: result.type,
+      };
+    } catch (error) {
+      this.logger.warn(`Failed to get dimensions from file ${filePath}: ${(error as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get image dimensions from a URL
+   * Only downloads headers, very fast (~100 bytes)
+   * @param url Image URL
+   * @returns Image dimensions or null if failed
+   */
+  async getImageDimensionsFromUrl(url: string): Promise<ImageDimensions | null> {
+    try {
+      this.logger.debug(`Probing image dimensions from: ${url}`);
+
+      const result = await probe(url, {
+        timeout: 10000, // 10 second timeout
+      });
+
+      this.logger.debug(`Image dimensions: ${result.width}x${result.height} (${result.type})`);
+
+      return {
+        width: result.width,
+        height: result.height,
+        type: result.type,
+      };
+    } catch (error) {
+      this.logger.warn(`Failed to get dimensions from URL ${url}: ${(error as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Check if an image should be considered "high quality"
+   * Based on minimum resolution threshold
+   * @param dimensions Image dimensions
+   * @param minWidth Minimum width (default 1000px)
+   * @param minHeight Minimum height (default 1000px)
+   * @returns true if high quality
+   */
+  isHighQuality(
+    dimensions: ImageDimensions,
+    minWidth = 1000,
+    minHeight = 1000
+  ): boolean {
+    return dimensions.width >= minWidth && dimensions.height >= minHeight;
+  }
+
+  /**
+   * Compare two images and determine if the new one is significantly better
+   * @param currentDimensions Current image dimensions
+   * @param newDimensions New image dimensions
+   * @param improvementThreshold Minimum improvement percentage (default 50%)
+   * @returns true if new image is significantly better
+   */
+  isSignificantImprovement(
+    currentDimensions: ImageDimensions,
+    newDimensions: ImageDimensions,
+    improvementThreshold = 0.5 // 50% larger
+  ): boolean {
+    if (!currentDimensions || !newDimensions) return false;
+
+    const currentPixels = currentDimensions.width * currentDimensions.height;
+    const newPixels = newDimensions.width * newDimensions.height;
+
+    // New image has 50% more pixels
+    const improvement = (newPixels - currentPixels) / currentPixels;
+    return improvement >= improvementThreshold;
   }
 
   /**
