@@ -31,7 +31,7 @@ export interface TrackMetadata {
   musicBrainzAlbumArtistId?: string;
 
   // Otros
-  comment?: string;
+  comment?: string | { language?: string; descriptor?: string; text?: string };
   lyrics?: string;
   compilation?: boolean;
   coverArt?: boolean;
