@@ -29,10 +29,11 @@ export interface ArtistDetail extends Artist {
  * Paginated artists response
  */
 export interface PaginatedArtists {
-  artists: Artist[];
+  data: Artist[];
   total: number;
   skip: number;
   take: number;
+  hasMore: boolean;
 }
 
 /**
