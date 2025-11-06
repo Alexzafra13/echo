@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import {
@@ -10,20 +11,6 @@ import {
   type MetadataConflict,
 } from '../../hooks/useMetadataConflicts';
 import styles from './MetadataConflictsPanel.module.css';
-
-/**
- * Priority badge component
- */
-function PriorityBadge({ priority }: { priority: number }) {
-  const labels = ['', 'Baja', 'Media', 'Alta'];
-  const colors = ['', styles.priorityLow, styles.priorityMedium, styles.priorityHigh];
-
-  return (
-    <span className={`${styles.priorityBadge} ${colors[priority] || ''}`}>
-      {labels[priority] || 'Desconocida'}
-    </span>
-  );
-}
 
 /**
  * Source badge component
@@ -79,10 +66,9 @@ function ArtistConflictGroup({
 }
 
 /**
- * Single conflict card component
+ * Single conflict card component - Compact visual design
  */
 function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
-  const [expanded, setExpanded] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
   const { addToast } = useToast();
   const { mutate: accept, isPending: isAccepting } = useAcceptConflict();
@@ -179,124 +165,129 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
   return (
     <div className={styles.conflictCard}>
-      <div className={styles.conflictHeader}>
-        <div className={styles.conflictInfo}>
-          <div className={styles.conflictTitle}>
-            <AlertCircle size={20} className={styles.conflictIcon} />
-            <span className={styles.entityName}>{conflict.entity?.name || 'Desconocido'}</span>
-            <span className={styles.entityType}>({conflict.entityType})</span>
-          </div>
-          <div className={styles.conflictMeta}>
-            <span className={styles.fieldName}>{fieldLabels[conflict.field] || conflict.field}</span>
-            <SourceBadge source={conflict.source} />
-            <PriorityBadge priority={conflict.priority} />
-          </div>
+      {/* Card Header - Album/Entity Name */}
+      <div className={styles.conflictCardHeader}>
+        <div className={styles.conflictCardTitle}>
+          <span className={styles.entityName}>{conflict.entity?.name || 'Desconocido'}</span>
+          <span className={styles.fieldBadge}>{fieldLabels[conflict.field] || conflict.field}</span>
         </div>
-
-        <button
-          className={styles.expandButton}
-          onClick={() => setExpanded(!expanded)}
-          aria-label={expanded ? 'Contraer' : 'Expandir'}
-        >
-          {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </button>
+        <SourceBadge source={conflict.source} />
       </div>
 
-      {expanded && (
-        <div className={styles.conflictBody}>
-          <div className={styles.comparisonGrid}>
-            {/* Current Value */}
-            <div className={styles.comparisonColumn}>
-              <h4 className={styles.comparisonLabel}>Actual</h4>
-              {isImage && currentImageUrl ? (
-                <div className={styles.imagePreview}>
-                  <img
-                    src={currentImageUrl}
-                    alt="Current cover"
-                    onError={(e) => {
-                      console.error('Error loading current cover:', currentImageUrl);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ) : isImage ? (
-                <div className={styles.textValue}>
-                  <em className={styles.emptyValue}>Sin cover</em>
-                </div>
-              ) : (
-                <div className={styles.textValue}>
-                  {conflict.currentValue || <em className={styles.emptyValue}>Sin datos</em>}
-                </div>
-              )}
-              {conflict.metadata?.currentSource && (
-                <div className={styles.valueSource}>Fuente: {conflict.metadata.currentSource}</div>
-              )}
-              {conflict.metadata?.currentResolution && (
-                <div className={styles.valueSource}>Resolución: {conflict.metadata.currentResolution}</div>
-              )}
+      {/* Quality Notices */}
+      {isImage && (conflict.metadata?.qualityImprovement || conflict.metadata?.isLowQuality) && (
+        <div className={styles.qualityNotices}>
+          {conflict.metadata?.qualityImprovement && (
+            <div className={styles.qualityBadge}>
+              <Check size={14} />
+              <span>Mejora de calidad</span>
             </div>
-
-            {/* Suggested Value */}
-            <div className={styles.comparisonColumn}>
-              <h4 className={styles.comparisonLabel}>Sugerencia</h4>
-              {isImage ? (
-                <div className={styles.imagePreview}>
-                  <img
-                    src={suggestedImageUrl}
-                    alt="Suggested cover"
-                    onError={(e) => {
-                      console.error('Error loading suggested cover:', suggestedImageUrl);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className={styles.textValue}>{conflict.suggestedValue}</div>
-              )}
-              <div className={styles.valueSource}>
-                Fuente: <SourceBadge source={conflict.source} />
-              </div>
-              {conflict.metadata?.suggestedResolution && (
-                <div className={styles.valueSource}>Resolución: {conflict.metadata.suggestedResolution}</div>
-              )}
+          )}
+          {conflict.metadata?.isLowQuality && (
+            <div className={styles.lowQualityBadge}>
+              <AlertCircle size={14} />
+              <span>Baja resolución</span>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className={styles.conflictActions}>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleAccept}
-              loading={isAccepting}
-              disabled={isProcessing}
-              leftIcon={<Check size={16} />}
-            >
-              Aceptar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReject}
-              loading={isRejecting}
-              disabled={isProcessing}
-              leftIcon={<X size={16} />}
-            >
-              Rechazar
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleIgnore}
-              loading={isIgnoring}
-              disabled={isProcessing}
-              leftIcon={<EyeOff size={16} />}
-            >
-              Ignorar
-            </Button>
-          </div>
+          )}
         </div>
       )}
+
+      {/* Comparison View */}
+      <div className={styles.comparisonView}>
+        {/* Current Side */}
+        <div className={styles.comparisonSide}>
+          <div className={styles.comparisonLabel}>Actual</div>
+          {isImage && currentImageUrl ? (
+            <>
+              <div className={styles.imageCompact}>
+                <img
+                  src={currentImageUrl}
+                  alt="Current"
+                  onError={(e) => {
+                    console.error('Error loading current cover:', currentImageUrl);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+              {conflict.metadata?.currentResolution && (
+                <div className={styles.resolutionText}>{conflict.metadata.currentResolution}</div>
+              )}
+              {conflict.metadata?.currentSource && (
+                <div className={styles.sourceText}>{conflict.metadata.currentSource}</div>
+              )}
+            </>
+          ) : isImage ? (
+            <div className={styles.emptyImage}>Sin cover</div>
+          ) : (
+            <div className={styles.textPreview}>
+              {conflict.currentValue || <span className={styles.emptyText}>Sin datos</span>}
+            </div>
+          )}
+        </div>
+
+        {/* VS Divider */}
+        <div className={styles.vsDivider}>
+          <div className={styles.vsCircle}>VS</div>
+        </div>
+
+        {/* Suggested Side */}
+        <div className={styles.comparisonSide}>
+          <div className={styles.comparisonLabel}>Sugerida</div>
+          {isImage ? (
+            <>
+              <div className={styles.imageCompact}>
+                <img
+                  src={suggestedImageUrl}
+                  alt="Suggested"
+                  onError={(e) => {
+                    console.error('Error loading suggested cover:', suggestedImageUrl);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+              {conflict.metadata?.suggestedResolution && (
+                <div className={styles.resolutionText}>{conflict.metadata.suggestedResolution}</div>
+              )}
+            </>
+          ) : (
+            <div className={styles.textPreview}>{conflict.suggestedValue}</div>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className={styles.conflictCardActions}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={handleAccept}
+          loading={isAccepting}
+          disabled={isProcessing}
+          leftIcon={<Check size={16} />}
+        >
+          Aceptar
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReject}
+          loading={isRejecting}
+          disabled={isProcessing}
+          leftIcon={<X size={16} />}
+        >
+          Rechazar
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleIgnore}
+          loading={isIgnoring}
+          disabled={isProcessing}
+          leftIcon={<EyeOff size={16} />}
+        >
+          Ignorar
+        </Button>
+      </div>
     </div>
   );
 }
@@ -306,6 +297,8 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
  * Displays and manages pending metadata conflicts
  */
 export function MetadataConflictsPanel() {
+  const [, setLocation] = useLocation();
+
   const filters = {
     skip: 0,
     take: 100, // Increased to get all conflicts for grouping
@@ -354,6 +347,12 @@ export function MetadataConflictsPanel() {
 
   return (
     <div className={styles.panel}>
+      {/* Back Button */}
+      <button className={styles.backButton} onClick={() => setLocation('/admin')}>
+        <ArrowLeft size={20} />
+        <span>Volver al Panel de Admin</span>
+      </button>
+
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
