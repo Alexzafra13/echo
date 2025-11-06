@@ -19,6 +19,7 @@ import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.a
 import { LastfmAgent } from './infrastructure/agents/lastfm.agent';
 import { FanartTvAgent } from './infrastructure/agents/fanart-tv.agent';
 import { MusicBrainzAgent } from './infrastructure/agents/musicbrainz.agent';
+import { WikipediaAgent } from './infrastructure/agents/wikipedia.agent';
 
 // Infrastructure - Persistence
 import { SettingsRepository } from './infrastructure/persistence/settings.repository';
@@ -83,6 +84,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     LastfmAgent,
     FanartTvAgent,
     MusicBrainzAgent,
+    WikipediaAgent,
 
     // Application services
     ExternalMetadataService,
@@ -118,7 +120,8 @@ export class ExternalMetadataModule implements OnModuleInit {
     private readonly coverArtAgent: CoverArtArchiveAgent,
     private readonly lastfmAgent: LastfmAgent,
     private readonly fanartAgent: FanartTvAgent,
-    private readonly musicbrainzAgent: MusicBrainzAgent
+    private readonly musicbrainzAgent: MusicBrainzAgent,
+    private readonly wikipediaAgent: WikipediaAgent
   ) {}
 
   /**
@@ -139,6 +142,7 @@ export class ExternalMetadataModule implements OnModuleInit {
     this.agentRegistry.register(this.lastfmAgent);
     this.agentRegistry.register(this.fanartAgent);
     this.agentRegistry.register(this.musicbrainzAgent);
+    this.agentRegistry.register(this.wikipediaAgent);
 
     // Log agent status
     const allAgents = this.agentRegistry.getAllAgents();
