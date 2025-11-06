@@ -17,7 +17,7 @@
   inset: 0;
   background-size: cover;
   /* background-position set dynamically in component based on image type */
-  filter: blur(15px) brightness(0.5);
+  filter: blur(2px) brightness(0.5);
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;

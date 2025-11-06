@@ -56,7 +56,7 @@
   inset: 0;
   background-size: cover;
   /* background-position set dynamically in component based on image type */
-  filter: blur(15px) brightness(0.4);
+  filter: blur(3px) brightness(0.4);
   transform: scale(1.1);
 }
 
