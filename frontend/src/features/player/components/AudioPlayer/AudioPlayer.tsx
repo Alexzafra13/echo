@@ -47,13 +47,11 @@ export function AudioPlayer() {
     <div className={styles.player}>
       {/* Track info - Left side */}
       <div className={styles.trackInfo}>
-        {currentTrack.coverImage && (
-          <img
-            src={getCoverUrl(currentTrack.coverImage)}
-            alt={currentTrack.title}
-            className={styles.trackCover}
-          />
-        )}
+        <img
+          src={currentTrack.coverImage ? getCoverUrl(currentTrack.coverImage) : '/images/empy_cover/empy_cover_default.png'}
+          alt={currentTrack.title}
+          className={styles.trackCover}
+        />
         <div className={styles.trackDetails}>
           <div className={styles.trackTitle}>{currentTrack.title}</div>
           <div className={styles.trackArtist}>{currentTrack.artist}</div>

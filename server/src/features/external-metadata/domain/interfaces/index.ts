@@ -8,3 +8,4 @@ export * from './agent-registry.interface';
 export * from './artist-bio-retriever.interface';
 export * from './artist-image-retriever.interface';
 export * from './album-cover-retriever.interface';
+export * from './musicbrainz-search.interface';
