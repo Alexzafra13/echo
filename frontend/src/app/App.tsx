@@ -9,6 +9,8 @@ import ArtistsPage from '@features/artists/pages/ArtistsPage/ArtistsPage';
 import ArtistDetailPage from '@features/artists/pages/ArtistDetailPage/ArtistDetailPage';
 import { ProfilePage } from '@features/profile/pages/ProfilePage';
 import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
+import PlaylistsPage from '@features/playlists/pages/PlaylistsPage';
+import PlaylistDetailPage from '@features/playlists/pages/PlaylistDetailPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { useAuthStore } from '@shared/store';
@@ -76,6 +78,20 @@ function App() {
         <Route path="/artists/:id">
           <ProtectedRoute>
             <ArtistDetailPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Playlists List Route (Protected) */}
+        <Route path="/playlists">
+          <ProtectedRoute>
+            <PlaylistsPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Playlist Detail Route (Protected) */}
+        <Route path="/playlists/:id">
+          <ProtectedRoute>
+            <PlaylistDetailPage />
           </ProtectedRoute>
         </Route>
 
