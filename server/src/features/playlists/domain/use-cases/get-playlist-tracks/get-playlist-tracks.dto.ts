@@ -14,6 +14,9 @@ export interface TrackItem {
   albumId?: string;
   artistId?: string;
   bitRate?: number;
+  suffix?: string;
+  artistName?: string;
+  albumName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
