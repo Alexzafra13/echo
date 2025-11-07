@@ -1,8 +1,13 @@
 import { apiClient } from '@shared/services/api';
+import { User } from '@shared/store';
 
 export interface ChangePasswordDto {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface UpdateProfileDto {
+  name?: string;
 }
 
 /**
@@ -15,5 +20,13 @@ export const profileService = {
    */
   changePassword: async (data: ChangePasswordDto): Promise<void> => {
     await apiClient.put('/users/password', data);
+  },
+
+  /**
+   * Update user profile (name)
+   */
+  updateProfile: async (data: UpdateProfileDto): Promise<User> => {
+    const response = await apiClient.put<User>('/users/profile', data);
+    return response.data;
   },
 };
