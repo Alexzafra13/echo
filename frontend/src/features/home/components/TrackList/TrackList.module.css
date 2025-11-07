@@ -72,6 +72,11 @@
   display: flex;
 }
 
+/* Show options menu button on hover */
+.trackList__track:hover :global(.trackOptionsMenu__trigger) {
+  opacity: 1;
+}
+
 /* Active/Playing Track */
 .trackList__track__active {
   background: rgba(237, 104, 66, 0.15);
