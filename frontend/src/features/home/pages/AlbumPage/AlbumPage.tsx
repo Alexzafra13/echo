@@ -38,6 +38,12 @@ export default function AlbumPage() {
     setLocation('/home');
   };
 
+  const handleArtistClick = () => {
+    if (album?.artistId) {
+      setLocation(`/artists/${album.artistId}`);
+    }
+  };
+
   // Convert API tracks to Player tracks
   const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
     return apiTracks.map(track => ({
@@ -137,7 +143,13 @@ export default function AlbumPage() {
               <span className={styles.albumPage__heroType}>Álbum</span>
               <h1 className={styles.albumPage__heroTitle}>{album.title}</h1>
               <div className={styles.albumPage__heroMeta}>
-                <span className={styles.albumPage__heroArtist}>{album.artist}</span>
+                <button
+                  className={styles.albumPage__heroArtistButton}
+                  onClick={handleArtistClick}
+                  title={`Ver perfil de ${album.artist}`}
+                >
+                  {album.artist}
+                </button>
                 <span className={styles.albumPage__heroDivider}>•</span>
                 <span>{album.year}</span>
                 <span className={styles.albumPage__heroDivider}>•</span>

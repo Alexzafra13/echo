@@ -1,4 +1,5 @@
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '../../hooks';
@@ -20,6 +21,8 @@ import styles from './HeroSection.module.css';
  * />
  */
 export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionProps) {
+  const [, setLocation] = useLocation();
+
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(album.artistId);
 
@@ -40,6 +43,14 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
 
   const handlePrevious = () => {
     onPrevious?.();
+  };
+
+  const handleAlbumClick = () => {
+    setLocation(`/album/${album.id}`);
+  };
+
+  const handleArtistClick = () => {
+    setLocation(`/artists/${album.artistId}`);
   };
 
   const coverUrl = getCoverUrl(album.coverImage);
@@ -85,43 +96,55 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
       </button>
 
       <div className={styles.heroSection__content}>
-        {/* Album Cover */}
-        <img
-          src={coverUrl}
-          alt={album.title}
-          className={styles.heroSection__albumCover}
-          onError={handleImageError}
-        />
+        {/* Album Cover - Clickable */}
+        <button
+          onClick={handleAlbumClick}
+          className={styles.heroSection__albumCoverButton}
+          aria-label={`View ${album.title} album`}
+        >
+          <img
+            src={coverUrl}
+            alt={album.title}
+            className={styles.heroSection__albumCover}
+            onError={handleImageError}
+          />
+        </button>
 
         {/* Album Info */}
         <div className={styles.heroSection__info}>
-          {/* Artist name or logo */}
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={album.artist}
-              className={styles.heroSection__artistLogo}
-              onError={(e) => {
-                // Fallback to text if logo fails to load
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const textElement = target.nextElementSibling as HTMLElement;
-                if (textElement) {
-                  textElement.style.display = 'block';
-                }
-              }}
-            />
-          ) : null}
-          <h1
-            className={styles.heroSection__artistName}
-            style={{ display: logoUrl ? 'none' : 'block' }}
+          {/* Artist name or logo - Clickable */}
+          <button
+            onClick={handleArtistClick}
+            className={styles.heroSection__artistButton}
+            aria-label={`View ${album.artist} artist page`}
           >
-            {album.artist}
-          </h1>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={album.artist}
+                className={styles.heroSection__artistLogo}
+                onError={(e) => {
+                  // Fallback to text if logo fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const textElement = target.nextElementSibling as HTMLElement;
+                  if (textElement) {
+                    textElement.style.display = 'block';
+                  }
+                }}
+              />
+            ) : null}
+            <h1
+              className={styles.heroSection__artistName}
+              style={{ display: logoUrl ? 'none' : 'block' }}
+            >
+              {album.artist}
+            </h1>
+          </button>
 
           <h2 className={styles.heroSection__albumTitle}>{album.title}</h2>
           <p className={styles.heroSection__meta}>
-            {album.artist} • {album.title} - {album.year}
+            {album.year}
             {album.totalTracks && ` • ${album.totalTracks} Songs`}
           </p>
 
