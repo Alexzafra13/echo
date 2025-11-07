@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { Play } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { usePlayer } from '@features/player/context/PlayerContext';
 import type { Track } from '../../types';
 import { formatDuration } from '../../types';
+import { TrackOptionsMenu } from '../TrackOptionsMenu/TrackOptionsMenu';
 import styles from './TrackList.module.css';
 
 /**
@@ -41,9 +45,56 @@ interface TrackListProps {
  * />
  */
 export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProps) {
+  const [, setLocation] = useLocation();
+  const { addToQueue } = usePlayer();
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+
   const handlePlay = (track: Track) => {
     onTrackPlay?.(track);
     console.log('Playing track:', track.id);
+  };
+
+  // Track options handlers
+  const handleAddToPlaylist = (track: Track) => {
+    console.log('Add to playlist:', track.title);
+    // TODO: Implementar cuando tengamos la funcionalidad de playlists
+  };
+
+  const handleAddToQueue = (track: Track) => {
+    // Map track to player format
+    const playerTrack = {
+      id: track.id,
+      title: track.title,
+      artist: track.artistName || 'Unknown Artist',
+      albumName: track.albumName,
+      duration: track.duration || 0,
+      coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
+      trackNumber: track.trackNumber,
+    };
+    addToQueue(playerTrack);
+  };
+
+  const handlePlayNext = (track: Track) => {
+    console.log('Play next:', track.title);
+    // TODO: Implementar "play next" cuando tengamos esa función en el player
+  };
+
+  const handleGoToAlbum = (track: Track) => {
+    if (track.albumId) {
+      setLocation(`/album/${track.albumId}`);
+    }
+  };
+
+  const handleGoToArtist = (track: Track) => {
+    if (track.artistId) {
+      setLocation(`/artists/${track.artistId}`);
+    }
+  };
+
+  const handleShowInfo = (track: Track) => {
+    setSelectedTrack(track);
+    console.log('Show info for:', track.title);
+    // TODO: Implementar modal de información
   };
 
   if (!tracks || tracks.length === 0) {
@@ -111,6 +162,17 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
               <span className={styles.trackList__trackDuration}>
                 {formatDuration(track.duration)}
               </span>
+
+              {/* Options Menu */}
+              <TrackOptionsMenu
+                track={track}
+                onAddToPlaylist={handleAddToPlaylist}
+                onAddToQueue={handleAddToQueue}
+                onPlayNext={handlePlayNext}
+                onGoToAlbum={handleGoToAlbum}
+                onGoToArtist={handleGoToArtist}
+                onShowInfo={handleShowInfo}
+              />
             </div>
           );
         })}
