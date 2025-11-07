@@ -77,6 +77,15 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
     setShowResults(true);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // On Enter key, navigate to search page (not dropdown item)
+    if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
+      e.preventDefault();
+      setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowResults(false);
+    }
+  };
+
   const handleCloseResults = () => {
     setShowResults(false);
     setSearchQuery('');
@@ -106,6 +115,7 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
                 placeholder="Busca Artistas, Canciones, Álbumes..."
                 value={searchQuery}
                 onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
                 onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
                 className={styles.header__searchInput}
                 autoComplete="off"
