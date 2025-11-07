@@ -6,13 +6,13 @@ export class UpdateUserResponseDto {
     description: 'ID del usuario',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Username del usuario',
     example: 'jperez',
   })
-  username: string;
+  username!: string;
 
   @ApiProperty({
     description: 'Email del usuario',
@@ -32,13 +32,13 @@ export class UpdateUserResponseDto {
     description: 'Si el usuario es administrador',
     example: false,
   })
-  isAdmin: boolean;
+  isAdmin!: boolean;
 
   @ApiProperty({
     description: 'Si la cuenta está activa',
     example: true,
   })
-  isActive: boolean;
+  isActive!: boolean;
 
   static fromDomain(data: UpdateUserOutput): UpdateUserResponseDto {
     return {
