@@ -7,7 +7,8 @@
 }
 
 /* Trigger Button (3 dots) */
-.trackOptionsMenu__trigger {
+.trackOptionsMenu__trigger,
+:global(.trackOptionsMenu__trigger) {
   background: transparent;
   border: none;
   color: var(--text-tertiary, #6b7280);
@@ -21,18 +22,15 @@
   opacity: 0;
 }
 
-.trackOptionsMenu__trigger:hover {
+.trackOptionsMenu__trigger:hover,
+:global(.trackOptionsMenu__trigger):hover {
   color: var(--text-primary, #ffffff);
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Show trigger button on row hover */
-.trackList__track:hover .trackOptionsMenu__trigger {
-  opacity: 1;
-}
-
 /* Keep visible when menu is open */
-.trackOptionsMenu:has(.trackOptionsMenu__dropdown) .trackOptionsMenu__trigger {
+.trackOptionsMenu:has(.trackOptionsMenu__dropdown) .trackOptionsMenu__trigger,
+.trackOptionsMenu:has(.trackOptionsMenu__dropdown) :global(.trackOptionsMenu__trigger) {
   opacity: 1;
   color: var(--color-primary-500, #ed6842);
   background: rgba(237, 104, 66, 0.15);
