@@ -280,6 +280,57 @@
   border-radius: var(--radius-sm);
 }
 
+/* ===== Queue Control ===== */
+
+.queueContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.queueButton {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  border-radius: var(--radius-full);
+  position: relative;
+}
+
+.queueButton:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.queueButton_active {
+  color: var(--color-primary-500);
+  background: rgba(237, 104, 66, 0.15);
+}
+
+.queueButton__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--color-primary-500);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 /* ===== Responsive ===== */
 
 @media (max-width: 768px) {
