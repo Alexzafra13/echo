@@ -385,7 +385,7 @@ export function UsersPanel() {
       {totalUsers > 0 && (
         <div className={styles.pagination}>
           <div className={styles.paginationInfo}>
-            Mostrando {skip + 1} - {Math.min(skip + pageSize, totalUsers)} de {totalUsers}
+            Mostrando {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalUsers)} de {totalUsers}
           </div>
 
           <div className={styles.paginationControls}>
