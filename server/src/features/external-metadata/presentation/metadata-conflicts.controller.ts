@@ -49,6 +49,9 @@ export class MetadataConflictsController {
   async listConflicts(@Query() query: GetConflictsQueryDto): Promise<ConflictsListResponseDto> {
     const { skip = 0, take = 20, entityType, source, priority } = query;
 
+    // Clean up orphaned conflicts first (conflicts for deleted entities)
+    await this.conflictService.cleanupOrphanedConflicts();
+
     const result = await this.conflictService.getPendingConflicts(skip, take, {
       entityType: entityType as any,
       source: source as any,
