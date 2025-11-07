@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Search, User, Sun, Moon } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
 import { BackButton } from '@shared/components/ui';
 import { MetadataNotifications } from './MetadataNotifications';
+import { SearchResults } from './SearchResults';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -18,14 +19,18 @@ interface HeaderProps {
  * Sticky header with search bar, theme toggle, and user menu
  * Features: Transparent header that becomes glassmorphic on scroll
  * Supports admin mode with back navigation instead of search
+ * Live search results with debouncing (300ms)
  */
 export function Header({ adminMode = false, showBackButton = false }: HeaderProps) {
   const [, setLocation] = useLocation();
-  const { user, logout, token } = useAuth();
+  const { user, logout, token} = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [showResults, setShowResults] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // Detect scroll to apply glassmorphism effect
   useEffect(() => {
@@ -37,11 +42,42 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300); // Wait 300ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      setLocation(`/search?q=${encodeURIComponent(searchQuery)}`);
-    }
+    // Optional: navigate to dedicated search page
+    // setLocation(`/search?q=${encodeURIComponent(searchQuery)}`);
+    setShowResults(false);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setShowResults(true);
+  };
+
+  const handleCloseResults = () => {
+    setShowResults(false);
+    setSearchQuery('');
   };
 
   const handleLogout = () => {
@@ -60,17 +96,24 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
       <div className={styles.header__rightSection}>
         {/* Search bar (hidden in admin mode) */}
         {!adminMode && (
-          <form className={styles.header__searchForm} onSubmit={handleSearchSubmit}>
+          <form className={styles.header__searchForm} onSubmit={handleSearchSubmit} ref={searchRef}>
             <div className={styles.header__searchWrapper}>
               <Search size={20} className={styles.header__searchIcon} />
               <input
                 type="text"
                 placeholder="Busca Artistas, Canciones, Álbumes..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
+                onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
                 className={styles.header__searchInput}
+                autoComplete="off"
               />
             </div>
+
+            {/* Search Results Dropdown */}
+            {showResults && debouncedQuery.length > 0 && (
+              <SearchResults query={debouncedQuery} onClose={handleCloseResults} />
+            )}
           </form>
         )}
 
