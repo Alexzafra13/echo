@@ -1,8 +1,8 @@
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { Button } from '@shared/components/ui';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '../../hooks';
+import { usePlayer } from '@features/player';
+import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAlbumTracks } from '../../hooks';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
 
@@ -22,9 +22,13 @@ import styles from './HeroSection.module.css';
  */
 export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionProps) {
   const [, setLocation] = useLocation();
+  const { playQueue } = usePlayer();
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(album.artistId);
+
+  // Fetch album tracks
+  const { data: tracks } = useAlbumTracks(album.id);
 
   // Check if artist has any hero images (background or logo)
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.logo?.exists;
@@ -33,8 +37,16 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
   useAutoEnrichArtist(album.artistId, hasHeroImages);
 
   const handlePlay = () => {
+    // Call custom onPlay handler if provided
     onPlay?.();
-    console.log('Playing album:', album.id);
+
+    // Play album tracks if available
+    if (tracks && tracks.length > 0) {
+      playQueue(tracks, 0);
+      console.log('Playing album:', album.title, 'with', tracks.length, 'tracks');
+    } else {
+      console.warn('No tracks available for album:', album.id);
+    }
   };
 
   const handleNext = () => {
