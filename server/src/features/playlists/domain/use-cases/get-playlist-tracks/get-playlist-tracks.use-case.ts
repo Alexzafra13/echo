@@ -37,6 +37,9 @@ export class GetPlaylistTracksUseCase {
       albumId: track.albumId,
       artistId: track.artistId,
       bitRate: track.bitRate,
+      suffix: track.suffix,
+      artistName: track.artistName,
+      albumName: track.albumName,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     }));
