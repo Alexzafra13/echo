@@ -15,7 +15,10 @@ export class UserResponseDto {
   name?: string;
 
   @Expose()
-  isAdmin!: boolean; 
+  isAdmin!: boolean;
+
+  @Expose()
+  createdAt!: Date;
 }
 
 export class AuthResponseDto {
@@ -33,18 +36,19 @@ export class AuthResponseDto {
 
   static fromDomain(data: LoginOutput): AuthResponseDto {
     const dto = new AuthResponseDto();
-    
+
     dto.user = new UserResponseDto();
     dto.user.id = data.user.id;
     dto.user.username = data.user.username;
     dto.user.email = data.user.email;
     dto.user.name = data.user.name;
-    dto.user.isAdmin = data.user.isAdmin;  
-    
+    dto.user.isAdmin = data.user.isAdmin;
+    dto.user.createdAt = data.user.createdAt;
+
     dto.accessToken = data.accessToken;
     dto.refreshToken = data.refreshToken;
-    dto.mustChangePassword = data.mustChangePassword;  
-    
+    dto.mustChangePassword = data.mustChangePassword;
+
     return dto;
   }
 }
