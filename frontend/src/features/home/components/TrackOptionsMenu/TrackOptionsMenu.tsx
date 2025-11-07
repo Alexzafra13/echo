@@ -60,7 +60,7 @@ export function TrackOptionsMenu({
   return (
     <div className={styles.trackOptionsMenu} ref={menuRef}>
       <button
-        className={styles.trackOptionsMenu__trigger}
+        className={`${styles.trackOptionsMenu__trigger} trackOptionsMenu__trigger`}
         onClick={toggleMenu}
         aria-label="Opciones de la canción"
         title="Más opciones"
