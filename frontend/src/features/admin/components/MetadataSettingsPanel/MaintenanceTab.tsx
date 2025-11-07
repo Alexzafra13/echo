@@ -239,13 +239,13 @@ export function MaintenanceTab() {
               <p className={styles.resultTitle}>Limpieza completada</p>
               <div className={styles.resultStats}>
                 <span>
-                  <strong>{cleanupResult.deleted}</strong> archivos eliminados
+                  <strong>{cleanupResult.deleted || 0}</strong> archivos eliminados
                 </span>
                 <span className={styles.resultDivider}>•</span>
                 <span>
-                  <strong>{formatBytes(cleanupResult.reclaimed)}</strong> recuperados
+                  <strong>{formatBytes(cleanupResult.reclaimed || 0)}</strong> recuperados
                 </span>
-                {cleanupResult.missing > 0 && (
+                {(cleanupResult.missing || 0) > 0 && (
                   <>
                     <span className={styles.resultDivider}>•</span>
                     <span className={styles.resultWarning}>
