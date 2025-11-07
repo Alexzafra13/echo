@@ -25,9 +25,22 @@ export function AlbumGrid({ title, albums }: AlbumGridProps) {
 
   const handlePlayClick = async (albumId: string) => {
     try {
+      // Find the album to get its cover image
+      const album = albums.find(a => a.id === albumId);
+      const coverImage = album?.coverImage;
+
       const tracks = await albumsService.getAlbumTracks(albumId);
       if (tracks && tracks.length > 0) {
-        playQueue(tracks, 0);
+        // Map tracks to include cover image and artist info for the player
+        const tracksWithCover = tracks.map(track => ({
+          id: track.id,
+          title: track.title,
+          artist: track.artistName || album?.artist || 'Unknown Artist',
+          albumName: track.albumName || album?.title,
+          duration: track.duration || 0,
+          coverImage: coverImage,
+        }));
+        playQueue(tracksWithCover, 0);
       }
     } catch (error) {
       console.error('Failed to load album tracks:', error);
