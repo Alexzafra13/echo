@@ -132,17 +132,17 @@ export function ProfilePage() {
             <div className={styles.profilePage__cardBody}>
               {/* Username */}
               <div className={styles.profilePage__field}>
-                <label className={styles.profilePage__fieldLabel}>Usuario</label>
+                <label className={styles.profilePage__fieldLabel}>Nombre de usuario</label>
                 <div className={styles.profilePage__fieldValue}>
                   <User size={18} className={styles.profilePage__fieldIcon} />
                   <span>{user?.username}</span>
-                  <span className={styles.profilePage__fieldNote}>No se puede cambiar</span>
+                  <span className={styles.profilePage__fieldNote}>Para iniciar sesión, no se puede cambiar</span>
                 </div>
               </div>
 
               {/* Name - Editable */}
               <div className={styles.profilePage__field}>
-                <label className={styles.profilePage__fieldLabel}>Nombre</label>
+                <label className={styles.profilePage__fieldLabel}>Nombre para mostrar</label>
                 {isEditingName ? (
                   <div className={styles.profilePage__fieldEdit}>
                     <input
@@ -174,16 +174,21 @@ export function ProfilePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className={styles.profilePage__fieldValue}>
-                    <User size={18} className={styles.profilePage__fieldIcon} />
-                    <span>{user?.name || 'Sin nombre'}</span>
-                    <button
-                      onClick={() => setIsEditingName(true)}
-                      className={styles.profilePage__btnEdit}
-                    >
-                      Editar
-                    </button>
-                  </div>
+                  <>
+                    <div className={styles.profilePage__fieldValue}>
+                      <User size={18} className={styles.profilePage__fieldIcon} />
+                      <span>{user?.name || 'Sin nombre'}</span>
+                      <button
+                        onClick={() => setIsEditingName(true)}
+                        className={styles.profilePage__btnEdit}
+                      >
+                        Editar
+                      </button>
+                    </div>
+                    <p className={styles.profilePage__fieldHelper}>
+                      Opcional - Este es el nombre con el que aparecerás para otros usuarios
+                    </p>
+                  </>
                 )}
                 {profileSuccess && !isEditingName && (
                   <p className={styles.profilePage__successSmall}>✓ Nombre actualizado</p>
