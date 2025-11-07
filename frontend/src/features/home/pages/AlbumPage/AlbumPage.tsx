@@ -18,6 +18,7 @@ export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const { playQueue, currentTrack } = usePlayer();
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
@@ -128,6 +129,7 @@ export default function AlbumPage() {
               alt={album.title}
               className={styles.albumPage__heroCover}
               onError={handleImageError}
+              onClick={() => setIsImageModalOpen(true)}
             />
 
             {/* Album info */}
@@ -181,6 +183,23 @@ export default function AlbumPage() {
           </div>
         </div>
       </main>
+
+      {/* Image Modal/Lightbox */}
+      {isImageModalOpen && (
+        <div
+          className={styles.albumPage__imageModal}
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
+            <img
+              src={getCoverUrl(album.coverImage)}
+              alt={album.title}
+              className={styles.albumPage__imageModalImage}
+              onError={handleImageError}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
