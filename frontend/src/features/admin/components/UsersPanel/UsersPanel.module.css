@@ -266,7 +266,7 @@
 }
 
 .actionButton:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -279,6 +279,11 @@
   background: rgba(251, 191, 36, 0.15);
   border-color: rgba(251, 191, 36, 0.5);
   color: #fbbf24;
+}
+
+.actionButtonWarning:disabled {
+  border-color: rgba(251, 191, 36, 0.15);
+  color: rgba(251, 191, 36, 0.4);
 }
 
 .actionButtonDanger {
@@ -377,24 +382,36 @@
 
 .paginationSelect {
   padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding-right: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary, #ffffff);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
 
 .paginationSelect:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .paginationSelect:focus {
   outline: none;
   border-color: var(--color-primary, #ff7f50);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.paginationSelect option {
+  background: var(--color-bg-primary, #0a0b14);
+  color: var(--color-text-primary, #ffffff);
+  padding: 8px;
 }
 
 /* Empty State */

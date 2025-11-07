@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search } from 'lucide-react';
+import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser } from '../../hooks/useUsers';
@@ -353,25 +353,23 @@ export function UsersPanel() {
                         <Key size={14} />
                         Reset
                       </button>
-                      {user.isActive ? (
-                        <button
-                          className={`${styles.actionButton} ${styles.actionButtonWarning}`}
-                          onClick={() => handleDeleteClick(user)}
-                          title="Desactivar usuario (acción reversible)"
-                        >
-                          <Trash2 size={14} />
-                          Desactivar
-                        </button>
-                      ) : (
-                        <button
-                          className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                          onClick={() => handlePermanentlyDeleteClick(user)}
-                          title="Eliminar permanentemente (no se puede deshacer)"
-                        >
-                          <Trash2 size={14} />
-                          Eliminar
-                        </button>
-                      )}
+                      <button
+                        className={`${styles.actionButton} ${styles.actionButtonWarning}`}
+                        onClick={() => handleDeleteClick(user)}
+                        title="Desactivar usuario (acción reversible)"
+                        disabled={!user.isActive}
+                      >
+                        <UserX size={14} />
+                        Desactivar
+                      </button>
+                      <button
+                        className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+                        onClick={() => handlePermanentlyDeleteClick(user)}
+                        title="Eliminar permanentemente (no se puede deshacer)"
+                      >
+                        <Trash2 size={14} />
+                        Eliminar
+                      </button>
                     </div>
                   </td>
                 </tr>
