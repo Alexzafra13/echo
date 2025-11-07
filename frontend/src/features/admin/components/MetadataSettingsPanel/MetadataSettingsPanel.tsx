@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Settings, Database, History } from 'lucide-react';
+import { Settings, History } from 'lucide-react';
 import { ProvidersTab } from './ProvidersTab';
-import { MaintenanceTab } from './MaintenanceTab';
 import { HistoryTab } from './HistoryTab';
 import styles from './MetadataSettingsPanel.module.css';
 
-type Tab = 'providers' | 'maintenance' | 'history';
+type Tab = 'providers' | 'history';
 
 /**
  * MetadataSettingsPanel Component
@@ -13,7 +12,6 @@ type Tab = 'providers' | 'maintenance' | 'history';
  *
  * Features:
  * - Configuración de API keys (Last.fm, Fanart.tv)
- * - Mantenimiento (cleanup, storage stats)
  * - Historial de enriquecimientos
  */
 export function MetadataSettingsPanel() {
@@ -25,12 +23,6 @@ export function MetadataSettingsPanel() {
       label: 'Providers',
       icon: <Settings size={18} />,
       description: 'Configurar API keys y proveedores',
-    },
-    {
-      id: 'maintenance' as Tab,
-      label: 'Mantenimiento',
-      icon: <Database size={18} />,
-      description: 'Limpieza y estadísticas de almacenamiento',
     },
     {
       id: 'history' as Tab,
@@ -70,7 +62,6 @@ export function MetadataSettingsPanel() {
       {/* Tab Content */}
       <div className={styles.tabContent}>
         {activeTab === 'providers' && <ProvidersTab />}
-        {activeTab === 'maintenance' && <MaintenanceTab />}
         {activeTab === 'history' && <HistoryTab />}
       </div>
     </div>
