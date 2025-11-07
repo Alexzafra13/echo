@@ -54,10 +54,15 @@ export const albumsService = {
    * Search albums by query
    */
   search: async (query: string): Promise<Album[]> => {
-    const { data } = await apiClient.get<Album[]>('/albums/search', {
-      params: { q: query },
-    });
-    return data;
+    const response = await apiClient.get<{
+      data: Album[];
+      total: number;
+      skip: number;
+      take: number;
+      query: string;
+      hasMore: boolean;
+    }>(`/albums/search/${encodeURIComponent(query)}`);
+    return response.data.data; // Extract the albums array from the response
   },
 
   /**
