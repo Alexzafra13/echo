@@ -1,8 +1,9 @@
 import { useParams, useLocation } from 'wouter';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
+import { BackButton } from '@shared/components/ui';
 import { useArtist } from '../../hooks';
 import { useAlbums } from '@features/home/hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
@@ -89,7 +90,7 @@ export default function ArtistDetailPage() {
           <Header />
           <div className={styles.artistDetailPage__error}>
             Error al cargar artista
-            <button onClick={() => setLocation('/artists')}>Volver a artistas</button>
+            <BackButton text="Artistas" />
           </div>
         </main>
       </div>
@@ -105,13 +106,10 @@ export default function ArtistDetailPage() {
 
         <div className={styles.artistDetailPage__content}>
           {/* Back Button */}
-          <button
+          <BackButton
+            text="Artistas"
             className={styles.artistDetailPage__backButton}
-            onClick={() => setLocation('/artists')}
-          >
-            <ArrowLeft size={20} />
-            Artistas
-          </button>
+          />
 
           {/* Hero Section */}
           <section className={styles.artistDetailPage__hero}>

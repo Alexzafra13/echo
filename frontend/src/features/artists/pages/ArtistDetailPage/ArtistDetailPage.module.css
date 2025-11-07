@@ -21,24 +21,7 @@
 }
 
 .artistDetailPage__backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
   margin-bottom: 24px;
-  border: none;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text-secondary, #b8bcc8);
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.artistDetailPage__backButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary, #ffffff);
 }
 
 /* Hero Section */
