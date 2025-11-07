@@ -15,10 +15,9 @@
 }
 
 .artistDetailPage__content {
-  padding: 30px;
-  max-width: 1600px;
-  margin: 0 auto;
-  width: 100%;
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
 }
 
 .artistDetailPage__backButton {
