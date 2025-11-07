@@ -79,7 +79,7 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--color-primary, #ff7f50);
+  border-color: var(--color-primary, #ed6842);
   background: rgba(255, 255, 255, 0.12);
 }
 
@@ -127,7 +127,7 @@
 
 .filterSelect:focus {
   outline: none;
-  border-color: var(--color-primary, #ff7f50);
+  border-color: var(--color-primary, #ed6842);
   background-color: rgba(255, 255, 255, 0.12);
 }
 
@@ -214,9 +214,9 @@
 }
 
 .badgeAdmin {
-  background: rgba(255, 127, 80, 0.15);
-  color: var(--color-primary, #ff7f50);
-  border: 1px solid rgba(255, 127, 80, 0.3);
+  background: rgba(237, 104, 66, 0.15);
+  color: var(--color-primary, #ed6842);
+  border: 1px solid rgba(237, 104, 66, 0.3);
 }
 
 .badgeUser {
@@ -358,8 +358,8 @@
 }
 
 .paginationButtonActive {
-  background: var(--color-primary, #ff7f50);
-  border-color: var(--color-primary, #ff7f50);
+  background: var(--color-primary, #ed6842);
+  border-color: var(--color-primary, #ed6842);
   color: #ffffff;
 }
 
@@ -404,7 +404,7 @@
 
 .paginationSelect:focus {
   outline: none;
-  border-color: var(--color-primary, #ff7f50);
+  border-color: var(--color-primary, #ed6842);
   background-color: rgba(255, 255, 255, 0.12);
 }
 
@@ -426,7 +426,7 @@
 }
 
 .emptyIcon {
-  color: var(--color-primary, #ff7f50);
+  color: var(--color-primary, #ed6842);
   margin-bottom: 16px;
   opacity: 0.6;
 }

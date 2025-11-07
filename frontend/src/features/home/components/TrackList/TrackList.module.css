@@ -74,7 +74,7 @@
 
 /* Active/Playing Track */
 .trackList__track__active {
-  background: rgba(255, 127, 80, 0.15);
+  background: rgba(237, 104, 66, 0.15);
 }
 
 .trackList__track__active .trackList__trackTitle {
