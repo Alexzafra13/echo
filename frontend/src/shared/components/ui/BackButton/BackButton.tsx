@@ -34,7 +34,7 @@ export function BackButton({ text = 'Volver', onBack, className }: BackButtonPro
       aria-label="Go back"
     >
       <div className={styles.backButton__iconContainer}>
-        <ChevronLeft size={24} className={styles.backButton__icon} />
+        <ChevronLeft size={20} className={styles.backButton__icon} />
       </div>
       <span className={styles.backButton__text}>{text}</span>
     </button>
