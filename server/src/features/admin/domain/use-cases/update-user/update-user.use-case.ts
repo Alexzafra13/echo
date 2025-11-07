@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import {
   USER_REPOSITORY,
   IUserRepository,
+  UserUpdateableFields,
 } from '@features/auth/domain/ports';
 import { ConflictError, NotFoundError, ValidationError } from '@shared/errors';
 import { UpdateUserInput, UpdateUserOutput } from './update-user.dto';
@@ -39,7 +40,7 @@ export class UpdateUserUseCase {
     }
 
     // 4. Preparar datos de actualización
-    const updateData: any = {};
+    const updateData: Partial<UserUpdateableFields> = {};
     if (input.name !== undefined) updateData.name = input.name;
     if (input.email !== undefined) updateData.email = input.email;
     if (input.isAdmin !== undefined) updateData.isAdmin = input.isAdmin;
