@@ -24,27 +24,29 @@ export default function PlaylistDetailPage() {
 
   // Convert API tracks to Player tracks
   const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
-    return apiTracks.map(pt => ({
-      id: pt.track.id,
-      title: pt.track.title,
-      artist: pt.track.artistName || 'Unknown Artist',
-      albumName: pt.track.albumName,
-      duration: pt.track.duration || 0,
-      coverImage: pt.track.albumId ? `/api/albums/${pt.track.albumId}/cover` : undefined,
-      trackNumber: pt.track.trackNumber,
+    return apiTracks.map(track => ({
+      id: track.id,
+      title: track.title,
+      artist: track.artistName || 'Unknown Artist',
+      albumName: track.albumName,
+      duration: track.duration || 0,
+      coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
+      trackNumber: track.trackNumber,
     }));
   };
 
   const handlePlayAll = () => {
-    if (!playlistTracks || playlistTracks.length === 0) return;
-    const playerTracks = convertToPlayerTracks(playlistTracks);
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+    const playerTracks = convertToPlayerTracks(tracks);
     playQueue(playerTracks, 0);
   };
 
   const handleTrackPlay = (track: any) => {
-    if (!playlistTracks) return;
-    const playerTracks = convertToPlayerTracks(playlistTracks);
-    const trackIndex = playlistTracks.findIndex(pt => pt.track.id === track.id);
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+    const playerTracks = convertToPlayerTracks(tracks);
+    const trackIndex = tracks.findIndex(t => t.id === track.id);
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };
 
@@ -107,15 +109,7 @@ export default function PlaylistDetailPage() {
   }
 
   // Get tracks for the track list
-  const tracks = playlistTracks?.map(pt => ({
-    ...pt.track,
-    id: pt.track.id,
-    title: pt.track.title,
-    artistName: pt.track.artistName,
-    albumName: pt.track.albumName,
-    duration: pt.track.duration,
-    trackNumber: pt.track.trackNumber,
-  })) || [];
+  const tracks = playlistTracks?.tracks || [];
 
   return (
     <div className={styles.playlistDetailPage}>
@@ -167,7 +161,7 @@ export default function PlaylistDetailPage() {
                   size="lg"
                   onClick={handlePlayAll}
                   leftIcon={<Play size={20} fill="currentColor" />}
-                  disabled={!playlistTracks || playlistTracks.length === 0}
+                  disabled={!playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0}
                 >
                   Reproducir
                 </Button>

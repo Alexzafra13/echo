@@ -18,22 +18,22 @@ export interface Playlist {
 
 export interface PlaylistTrack {
   id: string;
-  playlistId: string;
-  trackId: string;
-  trackOrder: number;
+  title: string;
+  trackNumber?: number;
+  discNumber: number;
+  year?: number;
+  duration: number;
+  size: string;
+  path: string;
+  albumId?: string;
+  artistId?: string;
+  bitRate?: number;
   createdAt: string;
-  // Track details included when fetching playlist tracks
-  track?: {
-    id: string;
-    title: string;
-    artistName?: string;
-    albumName?: string;
-    albumId?: string;
-    duration?: number;
-    trackNumber?: number;
-    suffix?: string;
-    bitRate?: number;
-  };
+  updatedAt: string;
+  // Optional fields that might be populated
+  artistName?: string;
+  albumName?: string;
+  suffix?: string;
 }
 
 export interface CreatePlaylistDto {
