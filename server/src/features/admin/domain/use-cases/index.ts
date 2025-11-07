@@ -3,3 +3,4 @@ export { ListUsersUseCase, type ListUsersInput, type ListUsersOutput } from './l
 export { UpdateUserUseCase, type UpdateUserInput, type UpdateUserOutput } from './update-user';
 export { DeleteUserUseCase, type DeleteUserInput, type DeleteUserOutput } from './delete-user';
 export { ResetUserPasswordUseCase, type ResetUserPasswordInput, type ResetUserPasswordOutput } from './reset-user-password';
+export { PermanentlyDeleteUserUseCase, type PermanentlyDeleteUserInput, type PermanentlyDeleteUserOutput } from './permanently-delete-user';

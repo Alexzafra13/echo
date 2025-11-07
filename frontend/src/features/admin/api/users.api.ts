@@ -74,6 +74,13 @@ export const usersApi = {
   },
 
   /**
+   * Elimina permanentemente un usuario (hard delete)
+   */
+  async permanentlyDelete(id: string): Promise<void> {
+    await apiClient.delete(`/admin/users/${id}/permanently`);
+  },
+
+  /**
    * Resetea la contraseña de un usuario
    */
   async resetPassword(id: string): Promise<ResetPasswordResponse> {
