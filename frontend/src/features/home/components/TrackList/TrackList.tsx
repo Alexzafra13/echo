@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Play } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
 import type { Track } from '../../types';
 import { formatDuration } from '../../types';
 import { TrackOptionsMenu } from '../TrackOptionsMenu/TrackOptionsMenu';
@@ -47,7 +48,7 @@ interface TrackListProps {
 export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProps) {
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
 
   const handlePlay = (track: Track) => {
     onTrackPlay?.(track);
@@ -56,8 +57,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
 
   // Track options handlers
   const handleAddToPlaylist = (track: Track) => {
-    console.log('Add to playlist:', track.title);
-    // TODO: Implementar cuando tengamos la funcionalidad de playlists
+    setSelectedTrackForPlaylist(track);
   };
 
   const handleAddToQueue = (track: Track) => {
@@ -92,7 +92,6 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
   };
 
   const handleShowInfo = (track: Track) => {
-    setSelectedTrack(track);
     console.log('Show info for:', track.title);
     // TODO: Implementar modal de información
   };
@@ -177,6 +176,14 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
           );
         })}
       </div>
+
+      {/* Add to Playlist Modal */}
+      {selectedTrackForPlaylist && (
+        <AddToPlaylistModal
+          track={selectedTrackForPlaylist}
+          onClose={() => setSelectedTrackForPlaylist(null)}
+        />
+      )}
     </div>
   );
 }
