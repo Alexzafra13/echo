@@ -1,13 +1,29 @@
 /**
  * SearchResultsPage Styles
  * Full page search results with organized sections
+ * Follows the same layout pattern as HomePage and AlbumPage
  */
 
+/* Block: searchResultsPage */
 .searchResultsPage {
-  padding: 24px;
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary, #0a0e27);
+}
+
+.searchResultsPage__main {
+  flex: 1;
+  margin-left: 200px; /* Aligned with 200px sidebar width */
+  display: flex;
+  flex-direction: column;
+}
+
+.searchResultsPage__content {
+  flex: 1;
+  padding: 0 30px 30px 30px;
+  overflow-y: auto;
   max-width: 1400px;
-  margin: 0 auto;
-  min-height: calc(100vh - 200px);
+  width: 100%;
 }
 
 /* Header */
@@ -27,8 +43,8 @@
   color: var(--color-text-secondary);
 }
 
-/* Content */
-.searchResultsPage__content {
+/* Sections container */
+.searchResultsPage__sections {
   display: flex;
   flex-direction: column;
   gap: 48px;
@@ -224,8 +240,12 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .searchResultsPage {
-    padding: 16px;
+  .searchResultsPage__main {
+    margin-left: 0; /* Remove sidebar space on mobile */
+  }
+
+  .searchResultsPage__content {
+    padding: 0 16px 16px 16px;
   }
 
   .searchResultsPage__header h1 {
