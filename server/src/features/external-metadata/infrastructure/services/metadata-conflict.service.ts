@@ -94,26 +94,79 @@ export class MetadataConflictService {
 
   /**
    * Create a new metadata conflict
+   * For cover images, only keeps the highest resolution suggestion (avoids duplicates)
    *
    * @param data - Conflict data
    * @returns Created conflict
    */
   async createConflict(data: CreateConflictDto): Promise<ConflictWithEntity> {
-    // Don't create duplicate pending conflicts for same entity/field/source
-    const existing = await this.prisma.metadataConflict.findFirst({
-      where: {
-        entityId: data.entityId,
-        field: data.field,
-        source: data.source,
-        status: 'pending',
-      },
-    });
+    // For cover images: check if there's already a pending conflict for this entity/field (any source)
+    if (data.field === 'externalCover' || data.field === 'cover') {
+      const existingConflict = await this.prisma.metadataConflict.findFirst({
+        where: {
+          entityId: data.entityId,
+          field: data.field,
+          status: 'pending',
+        },
+      });
 
-    if (existing) {
-      this.logger.debug(
-        `Conflict already exists for ${data.entityType} ${data.entityId}, field ${data.field}`,
-      );
-      return this.mapConflictWithEntity(existing);
+      if (existingConflict) {
+        // Parse existing metadata
+        const existingMeta = existingConflict.metadata
+          ? JSON.parse(existingConflict.metadata)
+          : {};
+        const newMeta = data.metadata || {};
+
+        // Compare resolutions
+        const shouldReplace = this.shouldReplaceConflict(existingMeta, newMeta);
+
+        if (shouldReplace) {
+          // Update existing conflict with better resolution
+          const priority =
+            data.priority ??
+            (data.source === 'musicbrainz' || data.source === 'coverartarchive'
+              ? ConflictPriority.HIGH
+              : ConflictPriority.MEDIUM);
+
+          const updated = await this.prisma.metadataConflict.update({
+            where: { id: existingConflict.id },
+            data: {
+              suggestedValue: data.suggestedValue,
+              source: data.source,
+              priority,
+              metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
+            },
+          });
+
+          this.logger.log(
+            `Updated conflict ${existingConflict.id} with better resolution: ${newMeta.suggestedResolution} from ${data.source}`,
+          );
+
+          return this.mapConflictWithEntity(updated);
+        } else {
+          this.logger.debug(
+            `Keeping existing conflict for ${data.entityType} ${data.entityId}: existing resolution ${existingMeta.suggestedResolution} is better than ${newMeta.suggestedResolution}`,
+          );
+          return this.mapConflictWithEntity(existingConflict);
+        }
+      }
+    } else {
+      // For non-cover fields: don't create duplicate pending conflicts for same entity/field/source
+      const existing = await this.prisma.metadataConflict.findFirst({
+        where: {
+          entityId: data.entityId,
+          field: data.field,
+          source: data.source,
+          status: 'pending',
+        },
+      });
+
+      if (existing) {
+        this.logger.debug(
+          `Conflict already exists for ${data.entityType} ${data.entityId}, field ${data.field}`,
+        );
+        return this.mapConflictWithEntity(existing);
+      }
     }
 
     // Determine priority: MusicBrainz/CoverArtArchive always high, others medium
@@ -141,6 +194,39 @@ export class MetadataConflictService {
     );
 
     return this.mapConflictWithEntity(conflict);
+  }
+
+  /**
+   * Determine if a new conflict should replace an existing one
+   * Based on image resolution comparison
+   *
+   * @param existingMeta - Existing conflict metadata
+   * @param newMeta - New conflict metadata
+   * @returns true if new conflict has better resolution
+   */
+  private shouldReplaceConflict(existingMeta: any, newMeta: any): boolean {
+    const existingRes = existingMeta.suggestedResolution;
+    const newRes = newMeta.suggestedResolution;
+
+    // If either doesn't have resolution info, keep existing (cautious approach)
+    if (!existingRes || !newRes || newRes === 'Desconocida') {
+      return false;
+    }
+
+    // Parse resolutions (format: "1200×1200")
+    const parseResolution = (res: string): number => {
+      const parts = res.split('×');
+      if (parts.length !== 2) return 0;
+      const width = parseInt(parts[0], 10);
+      const height = parseInt(parts[1], 10);
+      return width * height; // Total pixels
+    };
+
+    const existingPixels = parseResolution(existingRes);
+    const newPixels = parseResolution(newRes);
+
+    // Replace if new has more pixels
+    return newPixels > existingPixels;
   }
 
   /**
