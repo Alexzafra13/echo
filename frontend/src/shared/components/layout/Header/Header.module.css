@@ -63,6 +63,7 @@
 }
 
 .header__searchForm {
+  position: relative; /* For search results dropdown positioning */
   max-width: 700px; /* Aumentado de 600px → 700px (más larga hacia la izquierda) */
   min-width: 400px; /* Aumentado de 300px → 400px (más visible en pantallas pequeñas) */
 }
