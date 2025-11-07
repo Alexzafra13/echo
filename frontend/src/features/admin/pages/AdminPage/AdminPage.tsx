@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Library, Music2, Wrench, Users } from 'lucide-react';
 import { Tabs, Tab } from '../../components/Tabs';
 import { Header } from '@shared/components/layout/Header';
+import { BackButton } from '@shared/components/ui';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
@@ -66,6 +67,7 @@ export default function AdminPage() {
       <Header adminMode />
       <div className={styles.container}>
         <div className={styles.header}>
+          <BackButton className={styles.backButton} />
           <h1 className={styles.title}>Panel de Administración</h1>
           <p className={styles.subtitle}>
             Gestiona tu librería musical y configuración del servidor
