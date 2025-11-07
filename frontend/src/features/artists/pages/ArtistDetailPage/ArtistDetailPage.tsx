@@ -17,6 +17,7 @@ export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   // Fetch artist details
   const { data: artist, isLoading: loadingArtist, error: artistError } = useArtist(id);
@@ -135,6 +136,7 @@ export default function ArtistDetailPage() {
                     src={profileUrl}
                     alt={artist.name}
                     className={styles.artistDetailPage__avatar}
+                    onClick={() => setIsAvatarModalOpen(true)}
                   />
                 ) : (
                   <div className={styles.artistDetailPage__avatarFallback}>
@@ -235,6 +237,22 @@ export default function ArtistDetailPage() {
           )}
         </div>
       </main>
+
+      {/* Avatar Modal/Lightbox */}
+      {isAvatarModalOpen && profileUrl && (
+        <div
+          className={styles.artistDetailPage__imageModal}
+          onClick={() => setIsAvatarModalOpen(false)}
+        >
+          <div className={styles.artistDetailPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
+            <img
+              src={profileUrl}
+              alt={artist.name}
+              className={styles.artistDetailPage__imageModalImage}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
