@@ -375,17 +375,39 @@ export class ExternalMetadataService {
           } else {
             // Create conflict for user to review - respect existing data regardless of source
 
-            // Verify current cover exists before creating conflict
+            // Get current cover from physical files (coverArtPath) - this is the REAL cover from embedded metadata
+            // NOT from external sources (externalCoverPath)
             let currentCoverUrl: string | undefined = undefined;
             let currentDimensions = null;
+            let currentCoverSource: 'physical' | 'external' | null = null;
 
-            if (album.externalCoverPath) {
-              // Try to get dimensions - this will return null if file doesn't exist
-              currentDimensions = await this.imageDownload.getImageDimensionsFromFile(album.externalCoverPath);
+            // Priority 1: Use cover from physical files (extracted from music files)
+            if (album.coverArtPath) {
+              currentDimensions = await this.imageDownload.getImageDimensionsFromFile(album.coverArtPath);
 
-              // Only include currentCoverUrl if the file actually exists
               if (currentDimensions) {
                 currentCoverUrl = `/api/images/albums/${albumId}/cover`;
+                currentCoverSource = 'physical';
+                this.logger.debug(
+                  `Using physical cover for "${album.name}": ${album.coverArtPath}`
+                );
+              } else {
+                this.logger.warn(
+                  `Album "${album.name}" has coverArtPath but file doesn't exist: ${album.coverArtPath}`
+                );
+              }
+            }
+
+            // Fallback: Use external cover if no physical cover exists
+            if (!currentDimensions && album.externalCoverPath) {
+              currentDimensions = await this.imageDownload.getImageDimensionsFromFile(album.externalCoverPath);
+
+              if (currentDimensions) {
+                currentCoverUrl = `/api/images/albums/${albumId}/cover`;
+                currentCoverSource = 'external';
+                this.logger.debug(
+                  `Using external cover for "${album.name}" (no physical cover): ${album.externalCoverPath}`
+                );
               } else {
                 this.logger.warn(
                   `Album "${album.name}" has externalCoverPath but file doesn't exist: ${album.externalCoverPath}`
@@ -458,7 +480,8 @@ export class ExternalMetadataService {
                   metadata: {
                     albumName: album.name,
                     artistName,
-                    currentSource: album.externalCoverSource,
+                    currentSource: currentCoverSource === 'physical' ? 'embedded' : (album.externalCoverSource || 'unknown'),
+                    currentCoverType: currentCoverSource, // 'physical' | 'external' | null
                     currentResolution,
                     suggestedResolution,
                     qualityImprovement: isQualityImprovement,
