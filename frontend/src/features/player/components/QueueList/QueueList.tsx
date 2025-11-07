@@ -59,6 +59,11 @@ export function QueueList({ onClose }: QueueListProps) {
               className={`${styles.queueList__item} ${isCurrentTrack ? styles.queueList__item_active : ''}`}
               onClick={() => handleTrackClick(index)}
             >
+              {track.trackNumber && (
+                <span className={styles.queueList__trackNumber}>
+                  {track.trackNumber}
+                </span>
+              )}
               <img
                 src={getCoverUrl(track.coverImage)}
                 alt={track.title}

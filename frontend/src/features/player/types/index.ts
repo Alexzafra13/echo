@@ -5,6 +5,7 @@ export interface Track {
   albumName?: string;
   duration: number;
   coverImage?: string;
+  trackNumber?: number;
 }
 
 export interface PlayerState {
