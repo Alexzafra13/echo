@@ -5,6 +5,7 @@ import { AdminHeader } from '../../components/AdminHeader';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
+import { MaintenanceTab } from '../../components/MetadataSettingsPanel/MaintenanceTab';
 import styles from './AdminPage.module.css';
 
 /**
@@ -43,11 +44,7 @@ export default function AdminPage() {
       icon: <Wrench size={20} />,
       content: (
         <div className={styles.tabContent}>
-          <div className={styles.placeholder}>
-            <Wrench size={48} />
-            <h3>Mantenimiento</h3>
-            <p>Herramientas de mantenimiento próximamente</p>
-          </div>
+          <MaintenanceTab />
         </div>
       ),
     },
