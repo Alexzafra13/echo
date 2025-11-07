@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key } from 'lucide-react';
 import { Button } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { useUsers, useDeleteUser, useResetPassword } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
@@ -19,6 +20,9 @@ export function UsersPanel() {
   const [credentialsData, setCredentialsData] = useState<{ username: string; password: string } | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [userToResetPassword, setUserToResetPassword] = useState<User | null>(null);
+
+  // Toast notifications
+  const { addToast } = useToast();
 
   // Queries
   const { data, isLoading, error } = useUsers();
@@ -45,9 +49,10 @@ export function UsersPanel() {
     try {
       await deleteUserMutation.mutateAsync(userToDelete.id);
       setUserToDelete(null);
+      addToast('Usuario desactivado correctamente', 'success');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error al eliminar usuario. Por favor intenta de nuevo.');
+      addToast('Error al eliminar usuario. Por favor intenta de nuevo.', 'error');
     }
   };
 
@@ -67,7 +72,7 @@ export function UsersPanel() {
       });
     } catch (error) {
       console.error('Error resetting password:', error);
-      alert('Error al resetear contraseña. Por favor intenta de nuevo.');
+      addToast('Error al resetear contraseña. Por favor intenta de nuevo.', 'error');
     }
   };
 
