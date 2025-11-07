@@ -63,3 +63,17 @@ export function useResetPassword() {
     mutationFn: (id: string) => usersApi.resetPassword(id),
   });
 }
+
+/**
+ * Hook para eliminar permanentemente un usuario (hard delete)
+ */
+export function usePermanentlyDeleteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => usersApi.permanentlyDelete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+  });
+}

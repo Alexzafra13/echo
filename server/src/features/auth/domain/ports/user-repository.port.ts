@@ -24,6 +24,7 @@ export interface IUserRepository {
   updatePartial(id: string, data: Partial<UserUpdateableFields>): Promise<User>;
   updatePassword(userId: string, newPasswordHash: string): Promise<void>;
   updateAdminStatus(userId: string, isAdmin: boolean): Promise<void>;
+  delete(userId: string): Promise<void>;
 }
 
 export const USER_REPOSITORY = 'IUserRepository';
