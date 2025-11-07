@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
-import { AlertCircle, Check, X, EyeOff, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Check, X, EyeOff } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import {
@@ -387,23 +386,8 @@ export function MetadataConflictsPanel() {
 
   const selectedConflicts = selectedArtist ? groupedConflicts[selectedArtist] || [] : [];
 
-  const handleBackNavigation = () => {
-    // Go back to previous page in history, or home if no history
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      setLocation('/');
-    }
-  };
-
   return (
     <div className={styles.panel}>
-      {/* Back Button */}
-      <button className={styles.backButton} onClick={handleBackNavigation}>
-        <ArrowLeft size={20} />
-        <span>Volver</span>
-      </button>
-
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
