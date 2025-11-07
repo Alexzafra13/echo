@@ -23,24 +23,7 @@
 
 /* Back Button */
 .albumPage__backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  color: var(--color-text-secondary, #b8bcc8);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
   margin-bottom: 24px;
-}
-
-.albumPage__backButton:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-text-primary, #ffffff);
 }
 
 /* Album Hero Section */
