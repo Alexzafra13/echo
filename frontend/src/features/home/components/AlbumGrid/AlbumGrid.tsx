@@ -1,6 +1,8 @@
 import { useLocation } from 'wouter';
 import { AlbumCard } from '../AlbumCard';
 import type { AlbumGridProps } from '../../types';
+import { albumsService } from '../../services';
+import { usePlayer } from '@features/player/context/PlayerContext';
 import styles from './AlbumGrid.module.css';
 
 /**
@@ -15,14 +17,21 @@ import styles from './AlbumGrid.module.css';
  */
 export function AlbumGrid({ title, albums }: AlbumGridProps) {
   const [, setLocation] = useLocation();
+  const { playQueue } = usePlayer();
 
   const handleAlbumClick = (albumId: string) => {
     setLocation(`/album/${albumId}`);
   };
 
-  const handlePlayClick = (albumId: string) => {
-    // TODO: Implement play functionality
-    console.log('Play album:', albumId);
+  const handlePlayClick = async (albumId: string) => {
+    try {
+      const tracks = await albumsService.getAlbumTracks(albumId);
+      if (tracks && tracks.length > 0) {
+        playQueue(tracks, 0);
+      }
+    } catch (error) {
+      console.error('Failed to load album tracks:', error);
+    }
   };
 
   if (!albums || albums.length === 0) {
