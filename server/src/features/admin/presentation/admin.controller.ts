@@ -2,23 +2,32 @@ import {
   Controller,
   Post,
   Get,
+  Put,
+  Delete,
   Body,
   Query,
+  Param,
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
+  UpdateUserUseCase,
+  DeleteUserUseCase,
+  ResetUserPasswordUseCase,
 } from '../domain/use-cases';
 import {
   CreateUserRequestDto,
   CreateUserResponseDto,
   ListUsersResponseDto,
+  UpdateUserRequestDto,
+  UpdateUserResponseDto,
+  ResetPasswordResponseDto,
 } from './dtos';
 
 @ApiTags('admin')
@@ -29,6 +38,9 @@ export class AdminController {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly listUsersUseCase: ListUsersUseCase,
+    private readonly updateUserUseCase: UpdateUserUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase,
+    private readonly resetUserPasswordUseCase: ResetUserPasswordUseCase,
   ) {}
 
   @Post()
@@ -109,5 +121,121 @@ export class AdminController {
     });
 
     return ListUsersResponseDto.fromDomain(result);
+  }
+
+  @Put(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Actualizar usuario (Admin)',
+    description: 'Actualiza la información de un usuario existente. Permite cambiar nombre, email, rol de admin y estado activo. Solo accesible por administradores.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del usuario a actualizar',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiBody({ type: UpdateUserRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario actualizado exitosamente',
+    type: UpdateUserResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Email ya existe o datos inválidos'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No tiene permisos de administrador'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado'
+  })
+  async updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserRequestDto,
+  ): Promise<UpdateUserResponseDto> {
+    const result = await this.updateUserUseCase.execute({
+      userId: id,
+      name: dto.name,
+      email: dto.email,
+      isAdmin: dto.isAdmin,
+      isActive: dto.isActive,
+    });
+
+    return UpdateUserResponseDto.fromDomain(result);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Desactivar usuario (Admin)',
+    description: 'Desactiva una cuenta de usuario (soft delete). El usuario ya no podrá iniciar sesión. No se puede eliminar el último administrador. Solo accesible por administradores.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del usuario a desactivar',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Usuario desactivado exitosamente'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No se puede eliminar el último administrador'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No tiene permisos de administrador'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado'
+  })
+  async deleteUser(@Param('id') id: string): Promise<void> {
+    await this.deleteUserUseCase.execute({ userId: id });
+  }
+
+  @Post(':id/reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Resetear contraseña de usuario (Admin)',
+    description: 'Genera una nueva contraseña temporal para el usuario. El usuario deberá cambiarla en su próximo login. Solo accesible por administradores.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del usuario',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Contraseña reseteada exitosamente. La nueva contraseña temporal debe ser comunicada al usuario.',
+    type: ResetPasswordResponseDto
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No tiene permisos de administrador'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado'
+  })
+  async resetUserPassword(@Param('id') id: string): Promise<ResetPasswordResponseDto> {
+    const result = await this.resetUserPasswordUseCase.execute({ userId: id });
+    return ResetPasswordResponseDto.fromDomain(result);
   }
 }
