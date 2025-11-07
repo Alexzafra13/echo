@@ -45,7 +45,8 @@ export function TrackOptionsMenu({
     }
   }, [isOpen]);
 
-  const handleOptionClick = (callback?: (track: Track) => void) => {
+  const handleOptionClick = (e: React.MouseEvent, callback?: (track: Track) => void) => {
+    e.stopPropagation();
     if (callback) {
       callback(track);
     }
@@ -73,7 +74,7 @@ export function TrackOptionsMenu({
           {onAddToPlaylist && (
             <button
               className={styles.trackOptionsMenu__option}
-              onClick={() => handleOptionClick(onAddToPlaylist)}
+              onClick={(e) => handleOptionClick(e, onAddToPlaylist)}
             >
               <ListPlus size={16} />
               <span>Agregar a playlist</span>
@@ -83,7 +84,7 @@ export function TrackOptionsMenu({
           {onAddToQueue && (
             <button
               className={styles.trackOptionsMenu__option}
-              onClick={() => handleOptionClick(onAddToQueue)}
+              onClick={(e) => handleOptionClick(e, onAddToQueue)}
             >
               <Plus size={16} />
               <span>Agregar a la cola</span>
@@ -93,7 +94,7 @@ export function TrackOptionsMenu({
           {onPlayNext && (
             <button
               className={styles.trackOptionsMenu__option}
-              onClick={() => handleOptionClick(onPlayNext)}
+              onClick={(e) => handleOptionClick(e, onPlayNext)}
             >
               <PlayCircle size={16} />
               <span>Reproducir siguiente</span>
@@ -105,7 +106,7 @@ export function TrackOptionsMenu({
           {onGoToAlbum && (
             <button
               className={styles.trackOptionsMenu__option}
-              onClick={() => handleOptionClick(onGoToAlbum)}
+              onClick={(e) => handleOptionClick(e, onGoToAlbum)}
             >
               <Disc size={16} />
               <span>Ir al álbum</span>
@@ -115,7 +116,7 @@ export function TrackOptionsMenu({
           {onGoToArtist && (
             <button
               className={styles.trackOptionsMenu__option}
-              onClick={() => handleOptionClick(onGoToArtist)}
+              onClick={(e) => handleOptionClick(e, onGoToArtist)}
             >
               <User size={16} />
               <span>Ir al artista</span>
@@ -127,7 +128,7 @@ export function TrackOptionsMenu({
               <div className={styles.trackOptionsMenu__separator} />
               <button
                 className={styles.trackOptionsMenu__option}
-                onClick={() => handleOptionClick(onShowInfo)}
+                onClick={(e) => handleOptionClick(e, onShowInfo)}
               >
                 <Info size={16} />
                 <span>Ver información</span>

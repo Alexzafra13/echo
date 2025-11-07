@@ -35,6 +35,15 @@ export class PlaylistTrackResponseDto {
   @ApiPropertyOptional({ example: 320 })
   bitRate?: number;
 
+  @ApiPropertyOptional({ example: 'mp3' })
+  suffix?: string;
+
+  @ApiPropertyOptional({ example: 'Queen' })
+  artistName?: string;
+
+  @ApiPropertyOptional({ example: 'A Night at the Opera' })
+  albumName?: string;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt!: Date;
 
@@ -54,6 +63,9 @@ export class PlaylistTrackResponseDto {
       albumId: item.albumId,
       artistId: item.artistId,
       bitRate: item.bitRate,
+      suffix: item.suffix,
+      artistName: item.artistName,
+      albumName: item.albumName,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     };

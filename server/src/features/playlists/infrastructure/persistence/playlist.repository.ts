@@ -154,7 +154,14 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
   async getPlaylistTracks(playlistId: string): Promise<Track[]> {
     const playlistTracks = await this.prisma.playlistTrack.findMany({
       where: { playlistId },
-      include: { track: true },
+      include: {
+        track: {
+          include: {
+            album: true,
+            artist: true
+          }
+        }
+      },
       orderBy: { trackOrder: 'asc' },
     });
 
