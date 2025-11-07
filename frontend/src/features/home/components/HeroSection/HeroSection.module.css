@@ -206,56 +206,35 @@
   overflow: hidden;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 160px;
   height: 50px;
   margin-top: 16px;
   padding: 0 16px;
-  border: 1px solid #a33518;
-  border-radius: 6px;
+  border: none;
+  border-radius: 8px;
   background: var(--color-primary-500, #ed6842);
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   outline: none;
   user-select: none;
-  transform: translateY(0);
-  transition: all 0.15s ease-in-out;
-  box-shadow:
-    inset 0 30px 30px -15px rgba(255, 255, 255, 0.15),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
-    inset 0 1px 20px rgba(0, 0, 0, 0),
-    0 4px 0 #a33518,
-    0 4px 3px rgba(0, 0, 0, 0.25),
-    0 6px 12px rgba(0, 0, 0, 0.15),
-    0 12px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .heroSection__playButton:hover {
-  box-shadow:
-    inset 0 30px 30px -15px rgba(255, 255, 255, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
-    inset 0 1px 20px rgba(0, 0, 0, 0),
-    0 4px 0 #a33518,
-    0 4px 3px rgba(0, 0, 0, 0.25),
-    0 6px 12px rgba(0, 0, 0, 0.2),
-    0 12px 24px rgba(0, 0, 0, 0.2);
+  background: var(--color-primary-600, #e04d28);
+  box-shadow: 0 6px 20px rgba(237, 104, 66, 0.4);
+  transform: translateY(-2px);
 }
 
 .heroSection__playButton:active {
-  transform: translateY(4px);
-  box-shadow:
-    inset 0 16px 2px -15px rgba(0, 0, 0, 0),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.15),
-    inset 0 1px 20px rgba(0, 0, 0, 0.15),
-    0 0 0 #a33518,
-    0 0 0 2px rgba(255, 255, 255, 0.3),
-    0 0 0 rgba(0, 0, 0, 0),
-    0 0 0 rgba(0, 0, 0, 0);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .heroSection__playIcon {
@@ -263,19 +242,21 @@
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .heroSection__playButton:hover .heroSection__playIcon {
-  transform: translateX(40px);
+  margin-right: 0;
+  transform: translateX(58px);
 }
 
 .heroSection__playText {
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .heroSection__playButton:hover .heroSection__playText {
-  transform: translateX(90px);
+  opacity: 0;
+  transform: translateX(120px);
 }
 
 .heroSection__albumArt {
