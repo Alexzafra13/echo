@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Search, User, Sun, Moon } from 'lucide-react';
+import { Search, User, Sun, Moon, ArrowLeft } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
 import { MetadataNotifications } from './MetadataNotifications';
 import styles from './Header.module.css';
+
+interface HeaderProps {
+  /** Enable admin mode: hides search, shows back button */
+  adminMode?: boolean;
+}
 
 /**
  * Header Component
  * Sticky header with search bar, theme toggle, and user menu
  * Features: Transparent header that becomes glassmorphic on scroll
+ * Supports admin mode with back navigation instead of search
  */
-export function Header() {
+export function Header({ adminMode = false }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { user, logout, token } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -40,23 +46,41 @@ export function Header() {
     setShowUserMenu(false);
   };
 
+  const handleBackNavigation = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      setLocation('/');
+    }
+  };
+
   return (
     <header className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}>
+      {/* Back button (admin mode only) */}
+      {adminMode && (
+        <button className={styles.header__backButton} onClick={handleBackNavigation}>
+          <ArrowLeft size={20} />
+          <span>Volver</span>
+        </button>
+      )}
+
       {/* Search + Theme toggle + User menu */}
       <div className={styles.header__rightSection}>
-        {/* Search bar */}
-        <form className={styles.header__searchForm} onSubmit={handleSearchSubmit}>
-          <div className={styles.header__searchWrapper}>
-            <Search size={20} className={styles.header__searchIcon} />
-            <input
-              type="text"
-              placeholder="Busca Artistas, Canciones, Álbumes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.header__searchInput}
-            />
-          </div>
-        </form>
+        {/* Search bar (hidden in admin mode) */}
+        {!adminMode && (
+          <form className={styles.header__searchForm} onSubmit={handleSearchSubmit}>
+            <div className={styles.header__searchWrapper}>
+              <Search size={20} className={styles.header__searchIcon} />
+              <input
+                type="text"
+                placeholder="Busca Artistas, Canciones, Álbumes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.header__searchInput}
+              />
+            </div>
+          </form>
+        )}
 
         {/* Theme toggle */}
         <button
