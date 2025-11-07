@@ -23,7 +23,7 @@ export class DeleteUserUseCase {
     // 2. Prevenir eliminación del usuario actual si es el único admin
     if (user.isAdmin) {
       const allUsers = await this.userRepository.findAll(0, 1000);
-      const adminCount = allUsers.filter(u => u.isAdmin).length;
+      const adminCount = allUsers.filter(u => u.isAdmin && u.isActive).length;
 
       if (adminCount <= 1) {
         throw new ValidationError('Cannot delete the last admin user');
