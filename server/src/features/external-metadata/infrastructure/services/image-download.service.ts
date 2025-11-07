@@ -307,8 +307,12 @@ export class ImageDownloadService {
         // Combine chunks into single buffer
         const buffer = Buffer.concat(chunks.map(chunk => Buffer.from(chunk)));
 
-        // Probe the buffer
-        const result = await probe(buffer);
+        // Create a stream from the buffer
+        const { Readable } = await import('stream');
+        const bufferStream = Readable.from(buffer);
+
+        // Probe the buffer stream
+        const result = await probe(bufferStream);
 
         this.logger.log(`✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
 

@@ -319,7 +319,7 @@ export class MetadataConflictService {
     }
 
     // Verify that the entity still exists before attempting to apply changes
-    const entityExists = await this.verifyEntityExists(conflict.entityType, conflict.entityId);
+    const entityExists = await this.verifyEntityExists(conflict.entityType as EntityType, conflict.entityId);
 
     if (!entityExists) {
       // Entity was deleted - mark conflict as rejected automatically
