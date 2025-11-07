@@ -90,7 +90,7 @@ export default function ArtistDetailPage() {
           <Header />
           <div className={styles.artistDetailPage__error}>
             Error al cargar artista
-            <BackButton text="Artistas" />
+            <BackButton />
           </div>
         </main>
       </div>
@@ -106,10 +106,7 @@ export default function ArtistDetailPage() {
 
         <div className={styles.artistDetailPage__content}>
           {/* Back Button */}
-          <BackButton
-            text="Artistas"
-            className={styles.artistDetailPage__backButton}
-          />
+          <BackButton className={styles.artistDetailPage__backButton} />
 
           {/* Hero Section */}
           <section className={styles.artistDetailPage__hero}>
