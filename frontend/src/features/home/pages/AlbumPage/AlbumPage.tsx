@@ -5,7 +5,7 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList } from '../../components';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { usePlayer, Track } from '@features/player';
-import { Button, BackButton } from '@shared/components/ui';
+import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import styles from './AlbumPage.module.css';
@@ -70,7 +70,7 @@ export default function AlbumPage() {
       <div className={styles.albumPage}>
         <Sidebar />
         <main className={styles.albumPage__main}>
-          <Header />
+          <Header showBackButton />
           <div className={styles.albumPage__content}>
             <div className={styles.albumPage__loadingState}>
               <p>Cargando álbum...</p>
@@ -86,11 +86,10 @@ export default function AlbumPage() {
       <div className={styles.albumPage}>
         <Sidebar />
         <main className={styles.albumPage__main}>
-          <Header />
+          <Header showBackButton />
           <div className={styles.albumPage__content}>
             <div className={styles.albumPage__errorState}>
               <p>Error al cargar el álbum</p>
-              <BackButton />
             </div>
           </div>
         </main>
@@ -106,7 +105,7 @@ export default function AlbumPage() {
       <Sidebar />
 
       <main className={styles.albumPage__main}>
-        <Header />
+        <Header showBackButton />
 
         <div
           className={styles.albumPage__content}
@@ -117,9 +116,6 @@ export default function AlbumPage() {
               rgba(10, 14, 39, 1) 60%)`
           }}
         >
-          {/* Back button */}
-          <BackButton className={styles.albumPage__backButton} />
-
           {/* Album hero section */}
           <div className={styles.albumPage__hero}>
             {/* Album cover */}
