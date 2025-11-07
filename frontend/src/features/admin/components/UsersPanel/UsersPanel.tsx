@@ -355,9 +355,9 @@ export function UsersPanel() {
                       </button>
                       {user.isActive ? (
                         <button
-                          className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+                          className={`${styles.actionButton} ${styles.actionButtonWarning}`}
                           onClick={() => handleDeleteClick(user)}
-                          title="Desactivar usuario"
+                          title="Desactivar usuario (acción reversible)"
                         >
                           <Trash2 size={14} />
                           Desactivar
