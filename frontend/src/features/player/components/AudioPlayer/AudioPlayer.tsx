@@ -1,6 +1,6 @@
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
-import { getCoverUrl } from '@shared/utils/cover.utils';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
 import styles from './AudioPlayer.module.css';
 
@@ -48,9 +48,10 @@ export function AudioPlayer() {
       {/* Track info - Left side */}
       <div className={styles.trackInfo}>
         <img
-          src={currentTrack.coverImage ? getCoverUrl(currentTrack.coverImage) : '/images/empy_cover/empy_cover_default.png'}
+          src={getCoverUrl(currentTrack.coverImage || '')}
           alt={currentTrack.title}
           className={styles.trackCover}
+          onError={handleImageError}
         />
         <div className={styles.trackDetails}>
           <div className={styles.trackTitle}>{currentTrack.title}</div>
