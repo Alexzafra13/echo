@@ -60,7 +60,7 @@ export function QueueList({ onClose }: QueueListProps) {
               onClick={() => handleTrackClick(index)}
             >
               <img
-                src={getCoverUrl(track.coverImage || '')}
+                src={getCoverUrl(track.coverImage)}
                 alt={track.title}
                 className={styles.queueList__cover}
                 onError={handleImageError}
