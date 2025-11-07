@@ -387,12 +387,21 @@ export function MetadataConflictsPanel() {
 
   const selectedConflicts = selectedArtist ? groupedConflicts[selectedArtist] || [] : [];
 
+  const handleBackNavigation = () => {
+    // Go back to previous page in history, or home if no history
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      setLocation('/');
+    }
+  };
+
   return (
     <div className={styles.panel}>
       {/* Back Button */}
-      <button className={styles.backButton} onClick={() => setLocation('/admin')}>
+      <button className={styles.backButton} onClick={handleBackNavigation}>
         <ArrowLeft size={20} />
-        <span>Volver al Panel de Admin</span>
+        <span>Volver</span>
       </button>
 
       {/* Header */}
