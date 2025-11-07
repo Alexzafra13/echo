@@ -1,1 +1,1 @@
-export { useChangePassword } from './useProfile';
+export { useChangePassword, useUpdateProfile } from './useProfile';

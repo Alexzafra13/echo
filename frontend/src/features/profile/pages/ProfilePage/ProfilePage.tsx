@@ -1,24 +1,58 @@
-import { useState } from 'react';
-import { User, Lock, Shield, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Lock, Calendar, Check, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
-import { useChangePassword } from '../../hooks';
+import { useAuthStore } from '@shared/store';
+import { useChangePassword, useUpdateProfile } from '../../hooks';
 import styles from './ProfilePage.module.css';
 
 /**
  * ProfilePage Component
- * User profile page with account information and password change
- * Follows the same layout pattern as HomePage and AlbumPage
+ * User profile page with account information, name editing, and password change
  */
 export function ProfilePage() {
   const { user } = useAuth();
-  const { mutate: changePassword, isPending, isSuccess, isError, error } = useChangePassword();
+  const updateUser = useAuthStore((state) => state.updateUser);
 
+  // Name editing
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [name, setName] = useState(user?.name || '');
+  const { mutate: updateProfile, isPending: isUpdatingProfile, isSuccess: profileSuccess } = useUpdateProfile();
+
+  // Password change
+  const { mutate: changePassword, isPending: isPendingPassword, isSuccess: passwordSuccess, isError: passwordError, error: passwordErrorObj } = useChangePassword();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [validationError, setValidationError] = useState('');
+
+  // Sync name with user
+  useEffect(() => {
+    setName(user?.name || '');
+  }, [user?.name]);
+
+  const handleNameSave = () => {
+    if (name.trim() === user?.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    updateProfile(
+      { name: name.trim() || undefined },
+      {
+        onSuccess: (updatedUser) => {
+          updateUser({ name: updatedUser.name });
+          setIsEditingName(false);
+        },
+      }
+    );
+  };
+
+  const handleNameCancel = () => {
+    setName(user?.name || '');
+    setIsEditingName(false);
+  };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,132 +112,190 @@ export function ProfilePage() {
         <Header showBackButton />
 
         <div className={styles.profilePage__content}>
+          {/* Header */}
           <div className={styles.profilePage__header}>
-            <h1>Mi Perfil</h1>
-            <p className={styles.profilePage__subtitle}>Gestiona tu cuenta y preferencias</p>
+            <div className={styles.profilePage__headerIcon}>
+              <User size={40} />
+            </div>
+            <div>
+              <h1>Mi Perfil</h1>
+              <p className={styles.profilePage__subtitle}>Gestiona tu información personal y seguridad</p>
+            </div>
           </div>
 
-          <div className={styles.profilePage__sections}>
-            {/* User Information Section */}
-            <section className={styles.profilePage__section}>
-              <div className={styles.profilePage__sectionHeader}>
-                <User size={24} />
-                <h2>Información de la cuenta</h2>
-              </div>
+          {/* Account Info Card */}
+          <div className={styles.profilePage__card}>
+            <div className={styles.profilePage__cardHeader}>
+              <h2>Información de la cuenta</h2>
+            </div>
 
-              <div className={styles.profilePage__infoGrid}>
-                <div className={styles.profilePage__infoItem}>
-                  <label className={styles.profilePage__infoLabel}>
-                    <User size={16} />
-                    Usuario
-                  </label>
-                  <p className={styles.profilePage__infoValue}>{user?.username}</p>
-                </div>
-
-                <div className={styles.profilePage__infoItem}>
-                  <label className={styles.profilePage__infoLabel}>
-                    <Shield size={16} />
-                    Rol
-                  </label>
-                  <p className={styles.profilePage__infoValue}>
-                    <span className={user?.isAdmin ? styles.profilePage__badge_admin : styles.profilePage__badge_user}>
-                      {user?.isAdmin ? 'Administrador' : 'Usuario'}
-                    </span>
-                  </p>
-                </div>
-
-                <div className={styles.profilePage__infoItem}>
-                  <label className={styles.profilePage__infoLabel}>
-                    <Calendar size={16} />
-                    Miembro desde
-                  </label>
-                  <p className={styles.profilePage__infoValue}>{formatDate(user?.createdAt)}</p>
+            <div className={styles.profilePage__cardBody}>
+              {/* Username */}
+              <div className={styles.profilePage__field}>
+                <label className={styles.profilePage__fieldLabel}>Usuario</label>
+                <div className={styles.profilePage__fieldValue}>
+                  <User size={18} className={styles.profilePage__fieldIcon} />
+                  <span>{user?.username}</span>
+                  <span className={styles.profilePage__fieldNote}>No se puede cambiar</span>
                 </div>
               </div>
-            </section>
 
-            {/* Change Password Section */}
-            <section className={styles.profilePage__section}>
-              <div className={styles.profilePage__sectionHeader}>
-                <Lock size={24} />
-                <h2>Cambiar contraseña</h2>
+              {/* Name - Editable */}
+              <div className={styles.profilePage__field}>
+                <label className={styles.profilePage__fieldLabel}>Nombre</label>
+                {isEditingName ? (
+                  <div className={styles.profilePage__fieldEdit}>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className={styles.profilePage__input}
+                      placeholder="Tu nombre"
+                      disabled={isUpdatingProfile}
+                      autoFocus
+                    />
+                    <div className={styles.profilePage__fieldActions}>
+                      <button
+                        onClick={handleNameSave}
+                        className={styles.profilePage__btnIcon_save}
+                        disabled={isUpdatingProfile}
+                        title="Guardar"
+                      >
+                        <Check size={18} />
+                      </button>
+                      <button
+                        onClick={handleNameCancel}
+                        className={styles.profilePage__btnIcon_cancel}
+                        disabled={isUpdatingProfile}
+                        title="Cancelar"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.profilePage__fieldValue}>
+                    <User size={18} className={styles.profilePage__fieldIcon} />
+                    <span>{user?.name || 'Sin nombre'}</span>
+                    <button
+                      onClick={() => setIsEditingName(true)}
+                      className={styles.profilePage__btnEdit}
+                    >
+                      Editar
+                    </button>
+                  </div>
+                )}
+                {profileSuccess && !isEditingName && (
+                  <p className={styles.profilePage__successSmall}>✓ Nombre actualizado</p>
+                )}
               </div>
 
+              {/* Role */}
+              <div className={styles.profilePage__field}>
+                <label className={styles.profilePage__fieldLabel}>Rol</label>
+                <div className={styles.profilePage__fieldValue}>
+                  <span className={user?.isAdmin ? styles.profilePage__badge_admin : styles.profilePage__badge_user}>
+                    {user?.isAdmin ? 'Administrador' : 'Usuario'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Member since */}
+              <div className={styles.profilePage__field}>
+                <label className={styles.profilePage__fieldLabel}>Miembro desde</label>
+                <div className={styles.profilePage__fieldValue}>
+                  <Calendar size={18} className={styles.profilePage__fieldIcon} />
+                  <span>{formatDate(user?.createdAt)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Card - Change Password */}
+          <div className={styles.profilePage__card}>
+            <div className={styles.profilePage__cardHeader}>
+              <h2>
+                <Lock size={20} />
+                Seguridad
+              </h2>
+            </div>
+
+            <div className={styles.profilePage__cardBody}>
               <form onSubmit={handlePasswordSubmit} className={styles.profilePage__form}>
-                <div className={styles.profilePage__formGroup}>
-                  <label htmlFor="currentPassword" className={styles.profilePage__label}>
-                    Contraseña actual
-                  </label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className={styles.profilePage__input}
-                    placeholder="Ingresa tu contraseña actual"
-                    disabled={isPending}
-                  />
+                <p className={styles.profilePage__formDescription}>
+                  Cambia tu contraseña regularmente para mantener tu cuenta segura
+                </p>
+
+                <div className={styles.profilePage__formGrid}>
+                  <div className={styles.profilePage__formGroup}>
+                    <label htmlFor="currentPassword">Contraseña actual</label>
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className={styles.profilePage__input}
+                      placeholder="••••••••"
+                      disabled={isPendingPassword}
+                    />
+                  </div>
+
+                  <div className={styles.profilePage__formGroup}>
+                    <label htmlFor="newPassword">Nueva contraseña</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className={styles.profilePage__input}
+                      placeholder="Mínimo 8 caracteres"
+                      disabled={isPendingPassword}
+                    />
+                  </div>
+
+                  <div className={styles.profilePage__formGroup}>
+                    <label htmlFor="confirmPassword">Confirmar contraseña</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={styles.profilePage__input}
+                      placeholder="Repite la nueva contraseña"
+                      disabled={isPendingPassword}
+                    />
+                  </div>
                 </div>
 
-                <div className={styles.profilePage__formGroup}>
-                  <label htmlFor="newPassword" className={styles.profilePage__label}>
-                    Nueva contraseña
-                  </label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className={styles.profilePage__input}
-                    placeholder="Mínimo 8 caracteres"
-                    disabled={isPending}
-                  />
-                </div>
-
-                <div className={styles.profilePage__formGroup}>
-                  <label htmlFor="confirmPassword" className={styles.profilePage__label}>
-                    Confirmar nueva contraseña
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={styles.profilePage__input}
-                    placeholder="Repite la nueva contraseña"
-                    disabled={isPending}
-                  />
-                </div>
-
-                {/* Error Messages */}
+                {/* Messages */}
                 {validationError && (
-                  <div className={styles.profilePage__error}>
+                  <div className={styles.profilePage__alert_error}>
                     {validationError}
                   </div>
                 )}
 
-                {isError && (
-                  <div className={styles.profilePage__error}>
-                    {error instanceof Error ? error.message : 'Error al cambiar la contraseña. Verifica que la contraseña actual sea correcta.'}
+                {passwordError && (
+                  <div className={styles.profilePage__alert_error}>
+                    {passwordErrorObj instanceof Error ? passwordErrorObj.message : 'Error al cambiar la contraseña. Verifica que la contraseña actual sea correcta.'}
                   </div>
                 )}
 
-                {/* Success Message */}
-                {isSuccess && (
-                  <div className={styles.profilePage__success}>
-                    ✓ Contraseña cambiada exitosamente
+                {passwordSuccess && (
+                  <div className={styles.profilePage__alert_success}>
+                    <Check size={18} />
+                    Contraseña cambiada exitosamente
                   </div>
                 )}
 
                 <button
                   type="submit"
                   className={styles.profilePage__submitButton}
-                  disabled={isPending}
+                  disabled={isPendingPassword}
                 >
-                  {isPending ? 'Cambiando...' : 'Cambiar contraseña'}
+                  {isPendingPassword ? 'Cambiando...' : 'Cambiar contraseña'}
                 </button>
               </form>
-            </section>
+            </div>
           </div>
         </div>
       </main>
