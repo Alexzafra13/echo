@@ -21,7 +21,7 @@ export default function PlaylistsPage() {
   const createPlaylistMutation = useCreatePlaylist();
   const deletePlaylistMutation = useDeletePlaylist();
 
-  const playlists = playlistsData?.data || [];
+  const playlists = playlistsData?.items || [];
 
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
