@@ -1,0 +1,249 @@
+/**
+ * ProfilePage Styles
+ * User profile page with account info and password change
+ * Follows the same layout pattern as HomePage and AlbumPage
+ */
+
+/* Block: profilePage */
+.profilePage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary, #0a0e27);
+}
+
+.profilePage__main {
+  flex: 1;
+  margin-left: 200px; /* Aligned with 200px sidebar width */
+  display: flex;
+  flex-direction: column;
+}
+
+.profilePage__content {
+  flex: 1;
+  padding: 0 30px 30px 30px;
+  overflow-y: auto;
+  max-width: 900px;
+  width: 100%;
+}
+
+/* Header */
+.profilePage__header {
+  margin-bottom: 32px;
+}
+
+.profilePage__header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-text-primary);
+}
+
+.profilePage__subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+
+/* Sections */
+.profilePage__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.profilePage__section {
+  background: var(--color-surface-secondary);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.profilePage__sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.profilePage__sectionHeader h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.profilePage__sectionHeader svg {
+  color: var(--color-primary-500);
+}
+
+/* Info Grid */
+.profilePage__infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.profilePage__infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profilePage__infoLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profilePage__infoLabel svg {
+  opacity: 0.7;
+}
+
+.profilePage__infoValue {
+  font-size: 16px;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Badges */
+.profilePage__badge_admin,
+.profilePage__badge_user {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profilePage__badge_admin {
+  background: rgba(237, 104, 66, 0.15);
+  color: var(--color-primary-500);
+}
+
+.profilePage__badge_user {
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366f1;
+}
+
+/* Form */
+.profilePage__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+}
+
+.profilePage__formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profilePage__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.profilePage__input {
+  padding: 12px 16px;
+  background: var(--color-surface-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.profilePage__input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  background: var(--color-surface-secondary);
+}
+
+.profilePage__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profilePage__input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Messages */
+.profilePage__error {
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 14px;
+}
+
+.profilePage__success {
+  padding: 12px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  color: #4ade80;
+  font-size: 14px;
+}
+
+/* Submit Button */
+.profilePage__submitButton {
+  padding: 12px 24px;
+  background: var(--color-primary-500);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.profilePage__submitButton:hover:not(:disabled) {
+  background: var(--color-primary-600);
+  transform: translateY(-1px);
+}
+
+.profilePage__submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.profilePage__submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profilePage__main {
+    margin-left: 0; /* Remove sidebar space on mobile */
+  }
+
+  .profilePage__content {
+    padding: 0 16px 16px 16px;
+  }
+
+  .profilePage__header h1 {
+    font-size: 24px;
+  }
+
+  .profilePage__infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profilePage__section {
+    padding: 16px;
+  }
+}

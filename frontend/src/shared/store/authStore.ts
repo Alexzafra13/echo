@@ -8,6 +8,7 @@ export interface User {
   name?: string;
   isAdmin: boolean;
   mustChangePassword?: boolean;
+  createdAt?: string;
 }
 
 interface AuthState {
