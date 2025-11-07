@@ -6,13 +6,13 @@
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .albumCard:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px) scale(1.02);
 }
 
 /* Elements */
@@ -20,17 +20,16 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.3s ease;
   border: 1px solid var(--border-base);
   background: var(--bg-surface);
 }
 
 .albumCard:hover .albumCard__coverContainer {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  border-color: var(--color-primary-500);
 }
 
 .albumCard__cover {
@@ -41,7 +40,7 @@
 }
 
 .albumCard:hover .albumCard__cover {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .albumCard__overlay {
