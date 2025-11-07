@@ -6,6 +6,8 @@ export interface UserUpdateableFields {
   email?: string;
   theme?: string;
   language?: string;
+  isAdmin?: boolean;
+  isActive?: boolean;
   mustChangePassword?: boolean;
   lastLoginAt?: Date;
   lastAccessAt?: Date;

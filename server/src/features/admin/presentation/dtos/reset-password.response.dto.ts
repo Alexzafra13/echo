@@ -6,7 +6,7 @@ export class ResetPasswordResponseDto {
     description: 'Contraseña temporal generada que el administrador debe comunicar al usuario',
     example: 'X7h4Km2p',
   })
-  temporaryPassword: string;
+  temporaryPassword!: string;
 
   static fromDomain(data: ResetUserPasswordOutput): ResetPasswordResponseDto {
     return {
