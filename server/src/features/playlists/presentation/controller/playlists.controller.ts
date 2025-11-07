@@ -75,7 +75,7 @@ export class PlaylistsController {
     @Body() dto: CreatePlaylistDto,
     @Req() req: any,
   ): Promise<PlaylistResponseDto> {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     const result = await this.createPlaylistUseCase.execute({
       name: dto.name,
@@ -143,7 +143,7 @@ export class PlaylistsController {
     @Query('publicOnly') publicOnly?: boolean,
     @Req() req?: any,
   ): Promise<PlaylistsListResponseDto> {
-    const userId = req?.user?.userId;
+    const userId = req?.user?.id;
 
     const result = await this.getPlaylistsUseCase.execute({
       ownerId: publicOnly ? undefined : userId,
