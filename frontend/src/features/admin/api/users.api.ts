@@ -1,0 +1,85 @@
+import { apiClient } from '@shared/api/client';
+
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  name?: string;
+  isAdmin: boolean;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface CreateUserRequest {
+  username: string;
+  email?: string;
+  name?: string;
+  isAdmin: boolean;
+}
+
+export interface CreateUserResponse {
+  user: User;
+  temporaryPassword: string;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  isAdmin?: boolean;
+  isActive?: boolean;
+}
+
+export interface ListUsersResponse {
+  users: User[];
+  total: number;
+}
+
+export interface ResetPasswordResponse {
+  temporaryPassword: string;
+}
+
+export const usersApi = {
+  /**
+   * Lista todos los usuarios con paginación
+   */
+  async list(skip: number = 0, take: number = 100): Promise<ListUsersResponse> {
+    const response = await apiClient.get<ListUsersResponse>(
+      `/admin/users?skip=${skip}&take=${take}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Crea un nuevo usuario
+   */
+  async create(data: CreateUserRequest): Promise<CreateUserResponse> {
+    const response = await apiClient.post<CreateUserResponse>('/admin/users', data);
+    return response.data;
+  },
+
+  /**
+   * Actualiza un usuario existente
+   */
+  async update(id: string, data: UpdateUserRequest): Promise<User> {
+    const response = await apiClient.put<User>(`/admin/users/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Desactiva un usuario (soft delete)
+   */
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/admin/users/${id}`);
+  },
+
+  /**
+   * Resetea la contraseña de un usuario
+   */
+  async resetPassword(id: string): Promise<ResetPasswordResponse> {
+    const response = await apiClient.post<ResetPasswordResponse>(
+      `/admin/users/${id}/reset-password`
+    );
+    return response.data;
+  },
+};
