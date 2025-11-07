@@ -202,11 +202,20 @@ export class ImageDownloadService {
    */
   async getImageDimensionsFromFile(filePath: string): Promise<ImageDimensions | null> {
     try {
+      // First, check if file exists
+      const stats = await fs.stat(filePath);
+      if (!stats.isFile()) {
+        this.logger.warn(`Path is not a file: ${filePath}`);
+        return null;
+      }
+
       const stream = await fs.open(filePath, 'r');
       const fileStream = stream.createReadStream();
 
       const result = await probe(fileStream);
       await stream.close();
+
+      this.logger.log(`✓ Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`);
 
       return {
         width: result.width,
@@ -214,7 +223,12 @@ export class ImageDownloadService {
         type: result.type,
       };
     } catch (error) {
-      this.logger.warn(`Failed to get dimensions from file ${filePath}: ${(error as Error).message}`);
+      const errorCode = (error as any).code;
+      if (errorCode === 'ENOENT') {
+        this.logger.warn(`✗ File not found: ${filePath}`);
+      } else {
+        this.logger.warn(`✗ Failed to get dimensions from file ${filePath}: ${(error as Error).message}`);
+      }
       return null;
     }
   }
