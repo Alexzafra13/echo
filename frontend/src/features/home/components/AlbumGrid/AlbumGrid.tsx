@@ -39,6 +39,7 @@ export function AlbumGrid({ title, albums }: AlbumGridProps) {
           albumName: track.albumName || album?.title,
           duration: track.duration || 0,
           coverImage: coverImage,
+          trackNumber: track.trackNumber,
         }));
         playQueue(tracksWithCover, 0);
       }
