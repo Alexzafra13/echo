@@ -142,7 +142,7 @@
 }
 
 .artistDetailPage__biographyIcon {
-  color: var(--color-accent, #ff7f50);
+  color: var(--color-accent, #ed6842);
   opacity: 0.8;
 }
 
@@ -158,7 +158,7 @@
   background: rgba(255, 255, 255, 0.02);
   padding: 28px 32px;
   border-radius: 12px;
-  border-left: 3px solid rgba(255, 127, 80, 0.3);
+  border-left: 3px solid rgba(237, 104, 66, 0.3);
   position: relative;
 }
 
@@ -183,7 +183,7 @@
   margin-top: -0.1em;
   margin-right: 5px;
   font-weight: 700;
-  color: var(--color-accent, #ff7f50);
+  color: var(--color-accent, #ed6842);
 }
 
 /* Texto colapsado con fade */
@@ -212,10 +212,10 @@
 .artistDetailPage__biographyToggle {
   margin-top: 16px;
   padding: 8px 20px;
-  background: rgba(255, 127, 80, 0.1);
-  border: 1px solid rgba(255, 127, 80, 0.3);
+  background: rgba(237, 104, 66, 0.1);
+  border: 1px solid rgba(237, 104, 66, 0.3);
   border-radius: 20px;
-  color: var(--color-accent, #ff7f50);
+  color: var(--color-accent, #ed6842);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -223,8 +223,8 @@
 }
 
 .artistDetailPage__biographyToggle:hover {
-  background: rgba(255, 127, 80, 0.2);
-  border-color: rgba(255, 127, 80, 0.5);
+  background: rgba(237, 104, 66, 0.2);
+  border-color: rgba(237, 104, 66, 0.5);
   transform: translateY(-1px);
 }
 
@@ -276,7 +276,7 @@
 
 .artistDetailPage__error button {
   padding: 10px 24px;
-  background: var(--color-primary, #ff7f50);
+  background: var(--color-primary, #ed6842);
   color: white;
   border: none;
   border-radius: 20px;

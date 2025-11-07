@@ -148,15 +148,13 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
             {album.totalTracks && ` • ${album.totalTracks} Songs`}
           </p>
 
-          <Button
-            variant="primary"
-            size="lg"
+          <button
             onClick={handlePlay}
-            leftIcon={<Play size={24} fill="currentColor" />}
             className={styles.heroSection__playButton}
+            aria-label="Play album"
           >
-            Play
-          </Button>
+            <Play size={28} fill="currentColor" strokeWidth={0} />
+          </button>
         </div>
 
         {/* Optional: Album Art (side image) */}
