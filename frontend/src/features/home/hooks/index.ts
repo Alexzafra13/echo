@@ -4,6 +4,7 @@ export {
   useAlbum,
   useAlbums,
   useAlbumSearch,
+  useAlbumTracks,
 } from './useAlbums';
 
 export { useArtistImages, getArtistImageUrl } from './useArtistImages';
