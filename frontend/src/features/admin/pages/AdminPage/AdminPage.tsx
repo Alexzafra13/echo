@@ -6,6 +6,7 @@ import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
 import { MaintenanceTab } from '../../components/MetadataSettingsPanel/MaintenanceTab';
+import { UsersPanel } from '../../components/UsersPanel';
 import styles from './AdminPage.module.css';
 
 /**
@@ -54,11 +55,7 @@ export default function AdminPage() {
       icon: <Users size={20} />,
       content: (
         <div className={styles.tabContent}>
-          <div className={styles.placeholder}>
-            <Users size={48} />
-            <h3>Gestión de Usuarios</h3>
-            <p>Panel de gestión de usuarios próximamente</p>
-          </div>
+          <UsersPanel />
         </div>
       ),
     },

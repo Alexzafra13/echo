@@ -5,6 +5,9 @@ import { AdminController } from './presentation/admin.controller';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
+  UpdateUserUseCase,
+  DeleteUserUseCase,
+  ResetUserPasswordUseCase,
 } from './domain/use-cases';
 
 @Module({
@@ -13,6 +16,9 @@ import {
   providers: [
     CreateUserUseCase,
     ListUsersUseCase,
+    UpdateUserUseCase,
+    DeleteUserUseCase,
+    ResetUserPasswordUseCase,
   ],
 })
 export class AdminModule {}
