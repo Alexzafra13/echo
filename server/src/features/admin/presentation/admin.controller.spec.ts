@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
-import { CreateUserUseCase, ListUsersUseCase } from '../domain/use-cases';
+import {
+  CreateUserUseCase,
+  ListUsersUseCase,
+  UpdateUserUseCase,
+  DeleteUserUseCase,
+  ResetUserPasswordUseCase,
+} from '../domain/use-cases';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 
@@ -8,6 +14,9 @@ describe('AdminController', () => {
   let controller: AdminController;
   let mockCreateUserUseCase: any;
   let mockListUsersUseCase: any;
+  let mockUpdateUserUseCase: any;
+  let mockDeleteUserUseCase: any;
+  let mockResetUserPasswordUseCase: any;
 
   beforeEach(async () => {
     mockCreateUserUseCase = {
@@ -15,6 +24,18 @@ describe('AdminController', () => {
     };
 
     mockListUsersUseCase = {
+      execute: jest.fn(),
+    };
+
+    mockUpdateUserUseCase = {
+      execute: jest.fn(),
+    };
+
+    mockDeleteUserUseCase = {
+      execute: jest.fn(),
+    };
+
+    mockResetUserPasswordUseCase = {
       execute: jest.fn(),
     };
 
@@ -28,6 +49,18 @@ describe('AdminController', () => {
         {
           provide: ListUsersUseCase,
           useValue: mockListUsersUseCase,
+        },
+        {
+          provide: UpdateUserUseCase,
+          useValue: mockUpdateUserUseCase,
+        },
+        {
+          provide: DeleteUserUseCase,
+          useValue: mockDeleteUserUseCase,
+        },
+        {
+          provide: ResetUserPasswordUseCase,
+          useValue: mockResetUserPasswordUseCase,
         },
       ],
     })
@@ -294,6 +327,211 @@ describe('AdminController', () => {
       // Assert
       expect(result.users).toHaveLength(0);
       expect(result.total).toBe(0);
+    });
+  });
+
+  describe('PUT /admin/users/:id - updateUser', () => {
+    it('debería actualizar un usuario correctamente', async () => {
+      // Arrange
+      const userId = 'user-123';
+      const dto = {
+        name: 'Juan Pérez Updated',
+        email: 'juan.updated@test.com',
+      };
+
+      const useCaseResponse = {
+        id: userId,
+        username: 'juanperez',
+        email: 'juan.updated@test.com',
+        name: 'Juan Pérez Updated',
+        isAdmin: false,
+        isActive: true,
+      };
+
+      mockUpdateUserUseCase.execute.mockResolvedValue(useCaseResponse);
+
+      // Act
+      const result = await controller.updateUser(userId, dto);
+
+      // Assert
+      expect(mockUpdateUserUseCase.execute).toHaveBeenCalledWith({
+        userId,
+        ...dto,
+      });
+      expect(result.id).toBe(userId);
+      expect(result.name).toBe('Juan Pérez Updated');
+      expect(result.email).toBe('juan.updated@test.com');
+    });
+
+    it('debería actualizar el rol de admin de un usuario', async () => {
+      // Arrange
+      const userId = 'user-456';
+      const dto = {
+        isAdmin: true,
+      };
+
+      const useCaseResponse = {
+        id: userId,
+        username: 'maria',
+        email: 'maria@test.com',
+        name: 'María García',
+        isAdmin: true,
+        isActive: true,
+      };
+
+      mockUpdateUserUseCase.execute.mockResolvedValue(useCaseResponse);
+
+      // Act
+      const result = await controller.updateUser(userId, dto);
+
+      // Assert
+      expect(mockUpdateUserUseCase.execute).toHaveBeenCalledWith({
+        userId,
+        isAdmin: true,
+      });
+      expect(result.isAdmin).toBe(true);
+    });
+
+    it('debería actualizar el estado activo de un usuario', async () => {
+      // Arrange
+      const userId = 'user-789';
+      const dto = {
+        isActive: false,
+      };
+
+      const useCaseResponse = {
+        id: userId,
+        username: 'pedro',
+        email: 'pedro@test.com',
+        name: 'Pedro López',
+        isAdmin: false,
+        isActive: false,
+      };
+
+      mockUpdateUserUseCase.execute.mockResolvedValue(useCaseResponse);
+
+      // Act
+      const result = await controller.updateUser(userId, dto);
+
+      // Assert
+      expect(result.isActive).toBe(false);
+    });
+
+    it('debería propagar error del use case', async () => {
+      // Arrange
+      const userId = 'user-123';
+      const dto = { name: 'Test' };
+
+      mockUpdateUserUseCase.execute.mockRejectedValue(
+        new Error('User not found')
+      );
+
+      // Act & Assert
+      await expect(controller.updateUser(userId, dto)).rejects.toThrow(
+        'User not found'
+      );
+    });
+  });
+
+  describe('DELETE /admin/users/:id - deleteUser', () => {
+    it('debería desactivar un usuario correctamente', async () => {
+      // Arrange
+      const userId = 'user-123';
+
+      mockDeleteUserUseCase.execute.mockResolvedValue({
+        success: true,
+      });
+
+      // Act
+      await controller.deleteUser(userId);
+
+      // Assert
+      expect(mockDeleteUserUseCase.execute).toHaveBeenCalledWith({
+        userId,
+      });
+    });
+
+    it('debería propagar error si intenta eliminar el último admin', async () => {
+      // Arrange
+      const userId = 'admin-123';
+
+      mockDeleteUserUseCase.execute.mockRejectedValue(
+        new Error('Cannot delete the last admin user')
+      );
+
+      // Act & Assert
+      await expect(controller.deleteUser(userId)).rejects.toThrow(
+        'Cannot delete the last admin user'
+      );
+    });
+
+    it('debería propagar error si el usuario no existe', async () => {
+      // Arrange
+      const userId = 'nonexistent-123';
+
+      mockDeleteUserUseCase.execute.mockRejectedValue(
+        new Error('User not found')
+      );
+
+      // Act & Assert
+      await expect(controller.deleteUser(userId)).rejects.toThrow(
+        'User not found'
+      );
+    });
+  });
+
+  describe('POST /admin/users/:id/reset-password - resetUserPassword', () => {
+    it('debería resetear la contraseña de un usuario correctamente', async () => {
+      // Arrange
+      const userId = 'user-123';
+
+      const useCaseResponse = {
+        temporaryPassword: 'A7h4Km2p',
+      };
+
+      mockResetUserPasswordUseCase.execute.mockResolvedValue(useCaseResponse);
+
+      // Act
+      const result = await controller.resetUserPassword(userId);
+
+      // Assert
+      expect(mockResetUserPasswordUseCase.execute).toHaveBeenCalledWith({
+        userId,
+      });
+      expect(result.temporaryPassword).toBe('A7h4Km2p');
+      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
+    });
+
+    it('debería generar una contraseña temporal alfanumérica', async () => {
+      // Arrange
+      const userId = 'user-456';
+
+      const useCaseResponse = {
+        temporaryPassword: 'X9pM3qR7',
+      };
+
+      mockResetUserPasswordUseCase.execute.mockResolvedValue(useCaseResponse);
+
+      // Act
+      const result = await controller.resetUserPassword(userId);
+
+      // Assert
+      expect(result.temporaryPassword).toHaveLength(8);
+      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]+$/);
+    });
+
+    it('debería propagar error si el usuario no existe', async () => {
+      // Arrange
+      const userId = 'nonexistent-123';
+
+      mockResetUserPasswordUseCase.execute.mockRejectedValue(
+        new Error('User not found')
+      );
+
+      // Act & Assert
+      await expect(controller.resetUserPassword(userId)).rejects.toThrow(
+        'User not found'
+      );
     });
   });
 });
