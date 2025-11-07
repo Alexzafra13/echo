@@ -363,15 +363,24 @@ export class ExternalMetadataService {
             this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
           } else {
             // Create conflict for user to review - respect existing data regardless of source
-            // Generate API URL for current cover instead of file path for frontend display
-            const currentCoverUrl = album.externalCoverPath
-              ? `/api/images/albums/${albumId}/cover`
-              : undefined;
 
-            // Get dimensions of current and suggested covers
-            const currentDimensions = album.externalCoverPath
-              ? await this.imageDownload.getImageDimensionsFromFile(album.externalCoverPath)
-              : null;
+            // Verify current cover exists before creating conflict
+            let currentCoverUrl: string | undefined = undefined;
+            let currentDimensions = null;
+
+            if (album.externalCoverPath) {
+              // Try to get dimensions - this will return null if file doesn't exist
+              currentDimensions = await this.imageDownload.getImageDimensionsFromFile(album.externalCoverPath);
+
+              // Only include currentCoverUrl if the file actually exists
+              if (currentDimensions) {
+                currentCoverUrl = `/api/images/albums/${albumId}/cover`;
+              } else {
+                this.logger.warn(
+                  `Album "${album.name}" has externalCoverPath but file doesn't exist: ${album.externalCoverPath}`
+                );
+              }
+            }
 
             const suggestedDimensions = await this.imageDownload.getImageDimensionsFromUrl(cover.largeUrl);
 

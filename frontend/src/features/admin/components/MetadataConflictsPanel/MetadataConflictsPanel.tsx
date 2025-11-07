@@ -116,15 +116,25 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
   const isImage = conflict.field.includes('cover') || conflict.field.includes('Cover');
 
-  // Debug logging for metadata
-  if (isImage && !conflict.metadata?.suggestedResolution) {
-    console.warn('⚠️ Conflict missing resolution data:', {
-      id: conflict.id,
-      entity: conflict.entity?.name,
-      source: conflict.source,
-      hasMetadata: !!conflict.metadata,
-      metadata: conflict.metadata,
-    });
+  // Debug logging for metadata and missing covers
+  if (isImage) {
+    if (!conflict.metadata?.suggestedResolution) {
+      console.warn('⚠️ Conflict missing suggested resolution data:', {
+        id: conflict.id,
+        entity: conflict.entity?.name,
+        source: conflict.source,
+        hasMetadata: !!conflict.metadata,
+        metadata: conflict.metadata,
+      });
+    }
+
+    if (!conflict.currentValue) {
+      console.info('ℹ️ Conflict has no current cover (file may have been deleted):', {
+        id: conflict.id,
+        entity: conflict.entity?.name,
+        source: conflict.source,
+      });
+    }
   }
 
   // Build complete image URLs
@@ -199,8 +209,14 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
                   src={currentImageUrl}
                   alt="Current"
                   onError={(e) => {
-                    console.error('Error loading current cover:', currentImageUrl, 'for conflict:', conflict.id);
+                    console.warn('⚠️ Current cover failed to load (404 or network error):', currentImageUrl, 'for conflict:', conflict.id);
+                    // Hide the broken image
                     e.currentTarget.style.display = 'none';
+                    // Show message in container
+                    const container = e.currentTarget.parentElement;
+                    if (container) {
+                      container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:0.875rem;font-style:italic;text-align:center;padding:1rem;">Archivo no encontrado</div>';
+                    }
                   }}
                   onLoad={() => {
                     console.log('✓ Current cover loaded:', currentImageUrl);
@@ -219,7 +235,12 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
               )}
             </>
           ) : isImage ? (
-            <div className={styles.emptyImage}>Sin cover</div>
+            <div className={styles.emptyImage}>
+              <div>Sin carátula actual</div>
+              <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', opacity: 0.7 }}>
+                (archivo eliminado o no encontrado)
+              </div>
+            </div>
           ) : (
             <div className={styles.textPreview}>
               {conflict.currentValue || <span className={styles.emptyText}>Sin datos</span>}
