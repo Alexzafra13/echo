@@ -116,27 +116,6 @@ export function UsersPanel() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className={styles.panel}>
-        <div className={styles.loadingState}>
-          <p>Cargando usuarios...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.panel}>
-        <div className={styles.errorState}>
-          <p>Error al cargar usuarios</p>
-          <p>{error.message}</p>
-        </div>
-      </div>
-    );
-  }
-
   const allUsers = data?.users || [];
 
   // Apply search and filters
@@ -207,6 +186,27 @@ export function UsersPanel() {
     setStatusFilter(status);
     setCurrentPage(1); // Reset to first page when filtering
   };
+
+  if (isLoading) {
+    return (
+      <div className={styles.panel}>
+        <div className={styles.loadingState}>
+          <p>Cargando usuarios...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.panel}>
+        <div className={styles.errorState}>
+          <p>Error al cargar usuarios</p>
+          <p>{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.panel}>
