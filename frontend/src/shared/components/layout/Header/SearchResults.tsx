@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'wouter';
+import { useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music } from 'lucide-react';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
@@ -17,7 +17,7 @@ interface SearchResultsProps {
  * with live search as user types (debounced)
  */
 export function SearchResults({ query, onClose }: SearchResultsProps) {
-  const [, setLocation] = useState();
+  const [, setLocation] = useLocation();
 
   // Fetch results from all three sources
   const { data: artists = [], isLoading: loadingArtists } = useArtistSearch(query, { take: 3 });
