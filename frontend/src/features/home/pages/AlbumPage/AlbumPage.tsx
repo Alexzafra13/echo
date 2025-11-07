@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { ChevronLeft, Play, MoreHorizontal } from 'lucide-react';
+import { Play, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList } from '../../components';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { usePlayer, Track } from '@features/player';
-import { Button } from '@shared/components/ui';
+import { Button, BackButton } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import styles from './AlbumPage.module.css';
@@ -33,10 +33,6 @@ export default function AlbumPage() {
       });
     }
   }, [album?.coverImage]);
-
-  const handleBack = () => {
-    setLocation('/home');
-  };
 
   const handleArtistClick = () => {
     if (album?.artistId) {
@@ -94,7 +90,7 @@ export default function AlbumPage() {
           <div className={styles.albumPage__content}>
             <div className={styles.albumPage__errorState}>
               <p>Error al cargar el álbum</p>
-              <Button onClick={handleBack}>Volver al inicio</Button>
+              <BackButton />
             </div>
           </div>
         </main>
@@ -122,10 +118,7 @@ export default function AlbumPage() {
           }}
         >
           {/* Back button */}
-          <button className={styles.albumPage__backButton} onClick={handleBack}>
-            <ChevronLeft size={20} />
-            <span>Volver</span>
-          </button>
+          <BackButton className={styles.albumPage__backButton} />
 
           {/* Album hero section */}
           <div className={styles.albumPage__hero}>
