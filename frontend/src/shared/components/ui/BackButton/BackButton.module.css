@@ -2,14 +2,14 @@
 
 .backButton {
   position: relative;
-  width: 192px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  color: var(--color-text-primary, #ffffff);
-  font-size: 16px;
-  font-weight: 600;
+  width: 140px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -20,17 +20,18 @@
 
 .backButton:hover {
   border-color: var(--color-primary, #ff7f50);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-primary, #ffffff);
 }
 
 .backButton__iconContainer {
   position: absolute;
-  left: 4px;
-  top: 4px;
-  width: 48px;
-  height: 48px;
+  left: 3px;
+  top: 3px;
+  width: 38px;
+  height: 38px;
   background: var(--color-primary, #ff7f50);
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,7 +40,7 @@
 }
 
 .backButton:hover .backButton__iconContainer {
-  width: 184px;
+  width: 134px;
 }
 
 .backButton__icon {
@@ -65,39 +66,34 @@
 /* Responsive */
 @media (max-width: 768px) {
   .backButton {
-    width: 160px;
-    height: 48px;
-    font-size: 14px;
+    width: 120px;
+    height: 40px;
+    font-size: 13px;
   }
 
   .backButton__iconContainer {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
   }
 
   .backButton:hover .backButton__iconContainer {
-    width: 152px;
-  }
-
-  .backButton__icon {
-    width: 20px;
-    height: 20px;
+    width: 114px;
   }
 }
 
 @media (max-width: 480px) {
   .backButton {
-    width: 140px;
-    height: 44px;
-    font-size: 13px;
+    width: 110px;
+    height: 36px;
+    font-size: 12px;
   }
 
   .backButton__iconContainer {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
 
   .backButton:hover .backButton__iconContainer {
-    width: 132px;
+    width: 104px;
   }
 }
