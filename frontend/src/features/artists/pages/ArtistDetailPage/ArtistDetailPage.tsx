@@ -3,7 +3,6 @@ import { BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
-import { BackButton } from '@shared/components/ui';
 import { useArtist } from '../../hooks';
 import { useAlbums } from '@features/home/hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
@@ -75,7 +74,7 @@ export default function ArtistDetailPage() {
       <div className={styles.artistDetailPage}>
         <Sidebar />
         <main className={styles.artistDetailPage__main}>
-          <Header />
+          <Header showBackButton />
           <div className={styles.artistDetailPage__loading}>Cargando artista...</div>
         </main>
       </div>
@@ -87,10 +86,9 @@ export default function ArtistDetailPage() {
       <div className={styles.artistDetailPage}>
         <Sidebar />
         <main className={styles.artistDetailPage__main}>
-          <Header />
+          <Header showBackButton />
           <div className={styles.artistDetailPage__error}>
             Error al cargar artista
-            <BackButton />
           </div>
         </main>
       </div>
@@ -102,12 +100,9 @@ export default function ArtistDetailPage() {
       <Sidebar />
 
       <main className={styles.artistDetailPage__main}>
-        <Header />
+        <Header showBackButton />
 
         <div className={styles.artistDetailPage__content}>
-          {/* Back Button */}
-          <BackButton className={styles.artistDetailPage__backButton} />
-
           {/* Hero Section */}
           <section className={styles.artistDetailPage__hero}>
             {/* Background */}
