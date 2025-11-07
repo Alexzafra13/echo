@@ -10,6 +10,7 @@ export interface LoginOutput {
     email?: string;
     name?: string;
     isAdmin: boolean;
+    createdAt: Date;
   };
   accessToken: string;
   refreshToken: string;

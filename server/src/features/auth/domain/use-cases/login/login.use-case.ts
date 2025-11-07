@@ -67,6 +67,7 @@ export class LoginUseCase {
         email: user.email,
         name: user.name,
         isAdmin: user.isAdmin,
+        createdAt: user.createdAt,
       },
       accessToken,
       refreshToken,
