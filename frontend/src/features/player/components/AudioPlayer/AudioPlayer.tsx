@@ -1,5 +1,7 @@
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
+import { QueueList } from '../QueueList/QueueList';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
 import styles from './AudioPlayer.module.css';
@@ -13,6 +15,7 @@ export function AudioPlayer() {
     volume,
     isShuffle,
     repeatMode,
+    queue,
     togglePlayPause,
     playNext,
     playPrevious,
@@ -21,6 +24,25 @@ export function AudioPlayer() {
     toggleShuffle,
     toggleRepeat,
   } = usePlayer();
+
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const queueRef = useRef<HTMLDivElement>(null);
+
+  // Close queue dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (queueRef.current && !queueRef.current.contains(event.target as Node)) {
+        setIsQueueOpen(false);
+      }
+    };
+
+    if (isQueueOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isQueueOpen]);
 
   if (!currentTrack) {
     return null; // No mostrar barra si no hay track
@@ -41,6 +63,10 @@ export function AudioPlayer() {
 
   const toggleMute = () => {
     setVolume(volume === 0 ? 0.7 : 0);
+  };
+
+  const toggleQueue = () => {
+    setIsQueueOpen(!isQueueOpen);
   };
 
   return (
@@ -142,6 +168,22 @@ export function AudioPlayer() {
           className={styles.volumeSlider}
           style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
         />
+
+        {/* Queue button and dropdown */}
+        <div className={styles.queueContainer} ref={queueRef}>
+          <button
+            className={`${styles.queueButton} ${isQueueOpen ? styles.queueButton_active : ''}`}
+            onClick={toggleQueue}
+            title="Lista de reproducción"
+          >
+            <ListMusic size={20} />
+            {queue.length > 0 && (
+              <span className={styles.queueButton__badge}>{queue.length}</span>
+            )}
+          </button>
+
+          {isQueueOpen && <QueueList onClose={() => setIsQueueOpen(false)} />}
+        </div>
       </div>
     </div>
   );
