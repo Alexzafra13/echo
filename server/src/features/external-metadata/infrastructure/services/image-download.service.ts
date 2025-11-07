@@ -229,10 +229,14 @@ export class ImageDownloadService {
       this.logger.debug(`Probing image dimensions from: ${url}`);
 
       const result = await probe(url, {
-        timeout: 10000, // 10 second timeout
+        timeout: 20000, // 20 second timeout (increased for slow servers)
+        headers: {
+          'User-Agent': 'Echo-Music-Server/1.0.0',
+          'Accept': 'image/*',
+        },
       });
 
-      this.logger.debug(`Image dimensions: ${result.width}x${result.height} (${result.type})`);
+      this.logger.log(`✓ Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
 
       return {
         width: result.width,
@@ -240,7 +244,25 @@ export class ImageDownloadService {
         type: result.type,
       };
     } catch (error) {
-      this.logger.warn(`Failed to get dimensions from URL ${url}: ${(error as Error).message}`);
+      this.logger.error(`✗ Failed to probe dimensions from URL: ${(error as Error).message} - ${url.substring(0, 80)}...`);
+
+      // Try fallback: make a HEAD request to at least confirm the image exists
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          headers: {
+            'User-Agent': 'Echo-Music-Server/1.0.0',
+          },
+        });
+
+        if (response.ok) {
+          const contentType = response.headers.get('content-type');
+          this.logger.warn(`Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`);
+        }
+      } catch (fetchError) {
+        this.logger.error(`Image URL not accessible: ${(fetchError as Error).message}`);
+      }
+
       return null;
     }
   }

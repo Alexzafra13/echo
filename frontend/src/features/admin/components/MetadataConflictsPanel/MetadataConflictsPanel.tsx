@@ -116,6 +116,17 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
 
   const isImage = conflict.field.includes('cover') || conflict.field.includes('Cover');
 
+  // Debug logging for metadata
+  if (isImage && !conflict.metadata?.suggestedResolution) {
+    console.warn('⚠️ Conflict missing resolution data:', {
+      id: conflict.id,
+      entity: conflict.entity?.name,
+      source: conflict.source,
+      hasMetadata: !!conflict.metadata,
+      metadata: conflict.metadata,
+    });
+  }
+
   // Build complete image URLs
   const buildImageUrl = (value: string | undefined): string | undefined => {
     if (!value) return undefined;
@@ -125,27 +136,23 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
       return value;
     }
 
-    // API path (new format)
+    // API path (new format) - just use it directly, the proxy will handle it
     if (value.startsWith('/api/')) {
-      const baseUrl = import.meta.env.VITE_API_URL || '/api';
-      return `${baseUrl}${value.substring(4)}`; // Remove /api prefix and add baseUrl
+      return value;
     }
 
     // Old format: file path - construct API URL using entityId
     // Examples: "uploads\music\..." or "/uploads/music/..."
     if (value.includes('uploads') || value.includes('\\')) {
-      const baseUrl = import.meta.env.VITE_API_URL || '/api';
       if (conflict.entityType === 'album') {
-        return `${baseUrl}/images/albums/${conflict.entityId}/cover`;
+        return `/api/images/albums/${conflict.entityId}/cover`;
       } else if (conflict.entityType === 'artist') {
-        // For artists, we'd need to know the image type
-        return `${baseUrl}/images/artists/${conflict.entityId}/profile-medium`;
+        return `/api/images/artists/${conflict.entityId}/profile-medium`;
       }
     }
 
-    // Default: treat as relative path
-    const baseUrl = import.meta.env.VITE_API_URL || '/api';
-    return `${baseUrl}${value.startsWith('/') ? value : '/' + value}`;
+    // Default: treat as relative API path
+    return `/api${value.startsWith('/') ? value : '/' + value}`;
   };
 
   const currentImageUrl = isImage ? buildImageUrl(conflict.currentValue) : conflict.currentValue;
@@ -192,13 +199,20 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
                   src={currentImageUrl}
                   alt="Current"
                   onError={(e) => {
-                    console.error('Error loading current cover:', currentImageUrl);
+                    console.error('Error loading current cover:', currentImageUrl, 'for conflict:', conflict.id);
                     e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✓ Current cover loaded:', currentImageUrl);
                   }}
                 />
               </div>
-              {conflict.metadata?.currentResolution && (
+              {conflict.metadata?.currentResolution ? (
                 <div className={styles.resolutionText}>{conflict.metadata.currentResolution}</div>
+              ) : (
+                <div className={styles.sourceText} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                  Resolución no disponible
+                </div>
               )}
               {conflict.metadata?.currentSource && (
                 <div className={styles.sourceText}>{conflict.metadata.currentSource}</div>
@@ -228,13 +242,20 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
                   src={suggestedImageUrl}
                   alt="Suggested"
                   onError={(e) => {
-                    console.error('Error loading suggested cover:', suggestedImageUrl);
+                    console.error('Error loading suggested cover:', suggestedImageUrl, 'for conflict:', conflict.id);
                     e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✓ Suggested cover loaded:', suggestedImageUrl);
                   }}
                 />
               </div>
-              {conflict.metadata?.suggestedResolution && (
+              {conflict.metadata?.suggestedResolution && conflict.metadata.suggestedResolution !== 'Desconocida' ? (
                 <div className={styles.resolutionText}>{conflict.metadata.suggestedResolution}</div>
+              ) : (
+                <div className={styles.sourceText} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                  Resolución no disponible
+                </div>
               )}
             </>
           ) : (
