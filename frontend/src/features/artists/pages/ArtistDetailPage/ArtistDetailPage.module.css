@@ -82,6 +82,13 @@
   object-position: center top; /* Show face/head instead of cutting at middle */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   border: 4px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.artistDetailPage__avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
 }
 
 .artistDetailPage__avatarFallback {
@@ -389,4 +396,60 @@
   .artistDetailPage__biographyText {
     font-size: 14px;
   }
+}
+
+/* Image Modal/Lightbox */
+.artistDetailPage__imageModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: pointer;
+  animation: fadeIn 0.2s ease;
+  padding: 40px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.artistDetailPage__imageModalContent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.artistDetailPage__imageModalImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  object-fit: contain;
 }
