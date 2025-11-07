@@ -4,6 +4,7 @@ import FirstLoginPage from '@features/auth/pages/FirstLoginPage';
 import HomePage from '@features/home/pages/HomePage';
 import { AlbumPage } from '@features/home/pages/AlbumPage';
 import { AlbumsPage } from '@features/home/pages/AlbumsPage';
+import { SearchResultsPage } from '@features/home/pages/SearchResultsPage';
 import ArtistsPage from '@features/artists/pages/ArtistsPage/ArtistsPage';
 import ArtistDetailPage from '@features/artists/pages/ArtistDetailPage/ArtistDetailPage';
 import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
@@ -32,6 +33,13 @@ function App() {
         <Route path="/home">
           <ProtectedRoute>
             <HomePage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Search Results Route (Protected) */}
+        <Route path="/search">
+          <ProtectedRoute>
+            <SearchResultsPage />
           </ProtectedRoute>
         </Route>
 
