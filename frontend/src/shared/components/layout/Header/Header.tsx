@@ -65,9 +65,11 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Optional: navigate to dedicated search page
-    // setLocation(`/search?q=${encodeURIComponent(searchQuery)}`);
-    setShowResults(false);
+    // Navigate to dedicated search page on Enter press
+    if (searchQuery.trim().length >= 2) {
+      setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowResults(false);
+    }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
