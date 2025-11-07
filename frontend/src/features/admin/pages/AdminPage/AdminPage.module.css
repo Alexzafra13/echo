@@ -3,7 +3,10 @@
 .container {
   padding: 40px 48px;
   max-width: 1400px;
+  width: 100%; /* Force consistent width */
   margin: 0 auto;
+  box-sizing: border-box; /* Include padding in width */
+  overflow-x: hidden; /* Prevent content from pushing width */
 }
 
 .header {
@@ -26,6 +29,9 @@
 .content {
   display: flex;
   flex-direction: column;
+  width: 100%; /* Match container width */
+  max-width: 100%; /* Prevent overflow */
+  overflow-x: hidden; /* Ensure no horizontal scroll */
 }
 
 .tabContent {
@@ -34,6 +40,8 @@
   gap: 24px;
   min-height: 600px; /* Ensures consistent height across all tabs */
   width: 100%; /* Ensures full width utilization */
+  max-width: 100%; /* Prevent child content from exceeding */
+  overflow-x: hidden; /* Clip any overflowing content */
 }
 
 /* Placeholder for empty tabs */
