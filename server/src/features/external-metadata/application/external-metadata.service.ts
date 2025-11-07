@@ -395,78 +395,81 @@ export class ExternalMetadataService {
 
             const suggestedDimensions = await this.imageDownload.getImageDimensionsFromUrl(cover.largeUrl);
 
-            // Skip if we couldn't detect the suggested resolution
+            // Only create conflict if suggested resolution was detected and meets quality criteria
             if (!suggestedDimensions) {
               this.logger.warn(
                 `Skipping cover conflict for "${album.name}": couldn't detect resolution of suggested cover from ${cover.source}`
               );
-              continue;
+            } else {
+              // Check if this is a quality improvement
+              const isQualityImprovement = currentDimensions && suggestedDimensions
+                ? this.imageDownload.isSignificantImprovement(currentDimensions, suggestedDimensions)
+                : false;
+
+              // Check if current cover is low quality (<500px)
+              const isLowQuality = currentDimensions
+                ? (currentDimensions.width < 500 || currentDimensions.height < 500)
+                : false;
+
+              // Format resolution strings
+              const currentResolution = currentDimensions
+                ? `${currentDimensions.width}×${currentDimensions.height}`
+                : undefined;
+
+              const suggestedResolution = `${suggestedDimensions.width}×${suggestedDimensions.height}`;
+
+              // Check if should skip this suggestion
+              let shouldSkip = false;
+              let skipReason = '';
+
+              // Skip if resolutions are identical
+              if (currentResolution && currentResolution === suggestedResolution) {
+                shouldSkip = true;
+                skipReason = `resolutions are identical (${currentResolution})`;
+              }
+              // Skip if current resolution is better or equal (and not low quality)
+              else if (currentDimensions && !isQualityImprovement && !isLowQuality) {
+                const currentPixels = currentDimensions.width * currentDimensions.height;
+                const suggestedPixels = suggestedDimensions.width * suggestedDimensions.height;
+                shouldSkip = true;
+                skipReason = `current resolution (${currentResolution}, ${currentPixels}px) is equal or better than suggested (${suggestedResolution}, ${suggestedPixels}px)`;
+              }
+
+              if (shouldSkip) {
+                this.logger.debug(
+                  `Skipping cover conflict for "${album.name}": ${skipReason} from ${cover.source}`
+                );
+              } else {
+                // Create the conflict - this is a genuine quality improvement
+                this.logger.log(
+                  `Cover comparison for "${album.name}": ` +
+                  `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution} ` +
+                  `(Quality improvement: ${isQualityImprovement}, Low quality: ${isLowQuality})`
+                );
+
+                await this.conflictService.createConflict({
+                  entityId: albumId,
+                  entityType: 'album',
+                  field: 'externalCover',
+                  currentValue: currentCoverUrl,
+                  suggestedValue: cover.largeUrl,
+                  source: cover.source as any,
+                  priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
+                  metadata: {
+                    albumName: album.name,
+                    artistName,
+                    currentSource: album.externalCoverSource,
+                    currentResolution,
+                    suggestedResolution,
+                    qualityImprovement: isQualityImprovement,
+                    isLowQuality,
+                  },
+                });
+                this.logger.log(
+                  `Created conflict for album "${album.name}": existing cover vs ${cover.source} suggestion`
+                );
+              }
             }
-
-            // Check if this is a quality improvement
-            const isQualityImprovement = currentDimensions && suggestedDimensions
-              ? this.imageDownload.isSignificantImprovement(currentDimensions, suggestedDimensions)
-              : false;
-
-            // Check if current cover is low quality (<500px)
-            const isLowQuality = currentDimensions
-              ? (currentDimensions.width < 500 || currentDimensions.height < 500)
-              : false;
-
-            // Format resolution strings
-            const currentResolution = currentDimensions
-              ? `${currentDimensions.width}×${currentDimensions.height}`
-              : undefined;
-
-            const suggestedResolution = `${suggestedDimensions.width}×${suggestedDimensions.height}`;
-
-            // Skip if resolutions are identical
-            if (currentResolution && currentResolution === suggestedResolution) {
-              this.logger.debug(
-                `Skipping cover conflict for "${album.name}": resolutions are identical (${currentResolution}) from ${cover.source}`
-              );
-              continue;
-            }
-
-            // Skip if current resolution is better or equal (and not low quality)
-            if (currentDimensions && !isQualityImprovement && !isLowQuality) {
-              const currentPixels = currentDimensions.width * currentDimensions.height;
-              const suggestedPixels = suggestedDimensions.width * suggestedDimensions.height;
-
-              this.logger.debug(
-                `Skipping cover conflict for "${album.name}": current resolution (${currentResolution}, ${currentPixels}px) ` +
-                `is equal or better than suggested (${suggestedResolution}, ${suggestedPixels}px) from ${cover.source}`
-              );
-              continue;
-            }
-
-            this.logger.log(
-              `Cover comparison for "${album.name}": ` +
-              `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution} ` +
-              `(Quality improvement: ${isQualityImprovement}, Low quality: ${isLowQuality})`
-            );
-
-            await this.conflictService.createConflict({
-              entityId: albumId,
-              entityType: 'album',
-              field: 'externalCover',
-              currentValue: currentCoverUrl,
-              suggestedValue: cover.largeUrl,
-              source: cover.source as any,
-              priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
-              metadata: {
-                albumName: album.name,
-                artistName,
-                currentSource: album.externalCoverSource,
-                currentResolution,
-                suggestedResolution,
-                qualityImprovement: isQualityImprovement,
-                isLowQuality,
-              },
-            });
-            this.logger.log(
-              `Created conflict for album "${album.name}": existing cover vs ${cover.source} suggestion`
-            );
           }
         }
       }
