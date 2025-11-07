@@ -32,6 +32,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 600px; /* Ensures consistent height across all tabs */
+  width: 100%; /* Ensures full width utilization */
 }
 
 /* Placeholder for empty tabs */
