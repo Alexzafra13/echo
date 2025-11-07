@@ -71,6 +71,21 @@
   text-align: left;
 }
 
+.queueList__trackNumber {
+  min-width: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary, #6b7280);
+  text-align: center;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.queueList__item_active .queueList__trackNumber {
+  color: var(--color-primary-500, #ed6842);
+  font-weight: 600;
+}
+
 .queueList__item:hover {
   background: rgba(255, 255, 255, 0.05);
 }
