@@ -1,7 +1,7 @@
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { usePlayer } from '@features/player';
+import { usePlayer, Track } from '@features/player';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAlbumTracks } from '../../hooks';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
@@ -36,13 +36,26 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
   // Auto-enrich artist if they don't have hero images yet
   useAutoEnrichArtist(album.artistId, hasHeroImages);
 
+  // Convert API tracks to Player tracks with album cover
+  const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
+    return apiTracks.map(track => ({
+      id: track.id,
+      title: track.title,
+      artist: track.artistName || album.artist || 'Unknown Artist',
+      albumName: album.title,
+      duration: track.duration || 0,
+      coverImage: album.coverImage, // Add album cover to each track
+    }));
+  };
+
   const handlePlay = () => {
     // Call custom onPlay handler if provided
     onPlay?.();
 
     // Play album tracks if available
     if (tracks && tracks.length > 0) {
-      playQueue(tracks, 0);
+      const playerTracks = convertToPlayerTracks(tracks);
+      playQueue(playerTracks, 0);
       console.log('Playing album:', album.title, 'with', tracks.length, 'tracks');
     } else {
       console.warn('No tracks available for album:', album.id);
