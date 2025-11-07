@@ -63,23 +63,24 @@
 .searchInput {
   width: 100%;
   padding: 10px 12px 10px 40px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
+  font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .searchInput::placeholder {
   color: var(--color-text-secondary, #b8bcc8);
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .searchInput:focus {
   outline: none;
   border-color: var(--color-primary, #ff7f50);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .filters {
@@ -103,24 +104,37 @@
 
 .filterSelect {
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 120px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
 }
 
 .filterSelect:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .filterSelect:focus {
   outline: none;
   border-color: var(--color-primary, #ff7f50);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.filterSelect option {
+  background: var(--color-bg-primary, #0a0b14);
+  color: var(--color-text-primary, #ffffff);
+  padding: 8px;
 }
 
 /* Table Styles */
@@ -256,14 +270,26 @@
   cursor: not-allowed;
 }
 
+.actionButtonWarning {
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.actionButtonWarning:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
 .actionButtonDanger {
   border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
 }
 
-.actionButtonDanger:hover {
-  background: rgba(239, 68, 68, 0.1);
+.actionButtonDanger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
 }
 
 /* Pagination */
