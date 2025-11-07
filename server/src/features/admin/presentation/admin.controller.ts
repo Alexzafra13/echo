@@ -20,6 +20,7 @@ import {
   UpdateUserUseCase,
   DeleteUserUseCase,
   ResetUserPasswordUseCase,
+  PermanentlyDeleteUserUseCase,
 } from '../domain/use-cases';
 import {
   CreateUserRequestDto,
@@ -41,6 +42,7 @@ export class AdminController {
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly resetUserPasswordUseCase: ResetUserPasswordUseCase,
+    private readonly permanentlyDeleteUserUseCase: PermanentlyDeleteUserUseCase,
   ) {}
 
   @Post()
@@ -204,6 +206,41 @@ export class AdminController {
   })
   async deleteUser(@Param('id') id: string): Promise<void> {
     await this.deleteUserUseCase.execute({ userId: id });
+  }
+
+  @Delete(':id/permanently')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Eliminar usuario permanentemente (Admin)',
+    description: 'Elimina permanentemente una cuenta de usuario (hard delete). Esta acción es IRREVERSIBLE. No se puede eliminar el último administrador activo. Solo accesible por administradores.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del usuario a eliminar permanentemente',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Usuario eliminado permanentemente'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No se puede eliminar el último administrador activo'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No tiene permisos de administrador'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado'
+  })
+  async permanentlyDeleteUser(@Param('id') id: string): Promise<void> {
+    await this.permanentlyDeleteUserUseCase.execute({ userId: id });
   }
 
   @Post(':id/reset-password')

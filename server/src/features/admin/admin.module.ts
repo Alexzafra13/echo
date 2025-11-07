@@ -8,6 +8,7 @@ import {
   UpdateUserUseCase,
   DeleteUserUseCase,
   ResetUserPasswordUseCase,
+  PermanentlyDeleteUserUseCase,
 } from './domain/use-cases';
 
 @Module({
@@ -19,6 +20,7 @@ import {
     UpdateUserUseCase,
     DeleteUserUseCase,
     ResetUserPasswordUseCase,
+    PermanentlyDeleteUserUseCase,
   ],
 })
 export class AdminModule {}
