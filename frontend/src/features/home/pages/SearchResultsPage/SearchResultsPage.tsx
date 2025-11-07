@@ -1,15 +1,17 @@
-import { useSearch } from 'wouter';
+import { useSearch, useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music } from 'lucide-react';
+import { Header } from '@shared/components/layout/Header';
+import { Sidebar } from '../../components';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
-import { useLocation } from 'wouter';
 import styles from './SearchResultsPage.module.css';
 
 /**
  * SearchResultsPage Component
  * Full page displaying all search results organized by category
+ * Follows the same layout pattern as HomePage and AlbumPage
  */
 export function SearchResultsPage() {
   const [, setLocation] = useLocation();
@@ -36,48 +38,44 @@ export function SearchResultsPage() {
     }
   };
 
-  if (!query || query.length < 2) {
-    return (
-      <div className={styles.searchResultsPage}>
+  // Render content based on state
+  const renderContent = () => {
+    if (!query || query.length < 2) {
+      return (
         <div className={styles.searchResultsPage__empty}>
           <Music size={64} />
           <h2>Buscar música</h2>
           <p>Escribe al menos 2 caracteres para buscar artistas, álbumes y canciones</p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (isLoading) {
-    return (
-      <div className={styles.searchResultsPage}>
+    if (isLoading) {
+      return (
         <div className={styles.searchResultsPage__loading}>
           <p>Buscando resultados para "{query}"...</p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (!hasResults) {
-    return (
-      <div className={styles.searchResultsPage}>
+    if (!hasResults) {
+      return (
         <div className={styles.searchResultsPage__empty}>
           <Music size={64} />
           <h2>No se encontraron resultados</h2>
           <p>No hay resultados para "{query}". Intenta con otro término de búsqueda.</p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return (
-    <div className={styles.searchResultsPage}>
-      <div className={styles.searchResultsPage__header}>
-        <h1>Resultados de búsqueda</h1>
-        <p className={styles.searchResultsPage__query}>"{query}"</p>
-      </div>
+    return (
+      <>
+        <div className={styles.searchResultsPage__header}>
+          <h1>Resultados de búsqueda</h1>
+          <p className={styles.searchResultsPage__query}>"{query}"</p>
+        </div>
 
-      <div className={styles.searchResultsPage__content}>
+        <div className={styles.searchResultsPage__sections}>
         {/* Artists Section */}
         {artists.length > 0 && (
           <section className={styles.searchResultsPage__section}>
@@ -181,7 +179,22 @@ export function SearchResultsPage() {
             </div>
           </section>
         )}
-      </div>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <div className={styles.searchResultsPage}>
+      <Sidebar />
+
+      <main className={styles.searchResultsPage__main}>
+        <Header showBackButton />
+
+        <div className={styles.searchResultsPage__content}>
+          {renderContent()}
+        </div>
+      </main>
     </div>
   );
 }
