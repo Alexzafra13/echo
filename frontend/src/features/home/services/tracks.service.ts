@@ -10,9 +10,16 @@ export const tracksService = {
    * Search tracks by query
    */
   search: async (query: string, params?: { skip?: number; take?: number }): Promise<Track[]> => {
-    const { data } = await apiClient.get<Track[]>(`/tracks/search/${encodeURIComponent(query)}`, {
+    const response = await apiClient.get<{
+      data: Track[];
+      total: number;
+      skip: number;
+      take: number;
+      query: string;
+      hasMore: boolean;
+    }>(`/tracks/search/${encodeURIComponent(query)}`, {
       params,
     });
-    return data;
+    return response.data.data; // Extract the tracks array from the response
   },
 };

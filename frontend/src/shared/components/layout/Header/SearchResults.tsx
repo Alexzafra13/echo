@@ -20,9 +20,12 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
   const [, setLocation] = useLocation();
 
   // Fetch results from all three sources
-  const { data: artists = [], isLoading: loadingArtists } = useArtistSearch(query, { take: 3 });
+  const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 3 });
   const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(query);
   const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(query, { take: 5 });
+
+  // Extract artists array from paginated response
+  const artists = artistData?.data || [];
 
   const isLoading = loadingArtists || loadingAlbums || loadingTracks;
   const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0;
