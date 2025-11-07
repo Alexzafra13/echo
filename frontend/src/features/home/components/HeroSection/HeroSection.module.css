@@ -55,11 +55,11 @@
 }
 
 .heroSection__navButton:hover {
-  background: rgba(255, 127, 80, 0.9);
+  background: rgba(237, 104, 66, 0.9);
   border-color: rgba(255, 255, 255, 0.8);
   transform: scale(1.15);
   opacity: 1;
-  box-shadow: 0 8px 24px rgba(255, 127, 80, 0.4);
+  box-shadow: 0 8px 24px rgba(237, 104, 66, 0.4);
 }
 
 .heroSection__navButton--next {
@@ -169,7 +169,7 @@
 }
 
 .heroSection__artistButton:hover .heroSection__artistLogo {
-  filter: drop-shadow(0 2px 12px rgba(255, 127, 80, 0.6));
+  filter: drop-shadow(0 2px 12px rgba(237, 104, 66, 0.6));
 }
 
 .heroSection__artistName {
@@ -202,8 +202,68 @@
 }
 
 .heroSection__playButton {
-  width: fit-content;
-  margin-top: 12px;
+  position: relative;
+  width: 68px;
+  height: 68px;
+  margin-top: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-primary-500, #ed6842);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.heroSection__playButton::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg,
+    var(--color-primary-500, #ed6842),
+    var(--color-primary-600, #e04d28));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+}
+
+.heroSection__playButton:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.08);
+  box-shadow:
+    0 12px 32px rgba(237, 104, 66, 0.4),
+    0 0 40px rgba(237, 104, 66, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.heroSection__playButton:hover::before {
+  opacity: 1;
+}
+
+.heroSection__playButton:active {
+  transform: scale(1.02);
+  transition: transform 0.1s ease;
+}
+
+.heroSection__playButton svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: filter 0.3s ease;
+}
+
+.heroSection__playButton:hover svg {
+  filter: drop-shadow(0 4px 8px rgba(237, 104, 66, 0.4));
 }
 
 .heroSection__albumArt {
@@ -318,7 +378,9 @@
   }
 
   .heroSection__playButton {
-    margin: 0 auto;
+    width: 60px;
+    height: 60px;
+    margin: 8px auto 0;
   }
 }
 
@@ -367,5 +429,16 @@
 
   .heroSection__albumTitle {
     font-size: 28px;
+  }
+
+  .heroSection__playButton {
+    width: 56px;
+    height: 56px;
+    margin: 6px auto 0;
+  }
+
+  .heroSection__playButton svg {
+    width: 24px;
+    height: 24px;
   }
 }

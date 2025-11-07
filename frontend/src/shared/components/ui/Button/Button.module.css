@@ -68,7 +68,7 @@
 }
 
 .outline:hover:not(:disabled) {
-  background: rgba(255, 127, 80, 0.1);
+  background: rgba(237, 104, 66, 0.1);
   border-color: var(--color-primary-400);
 }
 
@@ -78,7 +78,7 @@
 }
 
 .ghost:hover:not(:disabled) {
-  background: rgba(255, 127, 80, 0.1);
+  background: rgba(237, 104, 66, 0.1);
 }
 
 /* Sizes */

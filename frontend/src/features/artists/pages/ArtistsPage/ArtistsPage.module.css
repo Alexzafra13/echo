@@ -72,7 +72,7 @@
 .artistsPage__searchInput:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-primary, #ff7f50);
+  border-color: var(--color-primary, #ed6842);
 }
 
 .artistsPage__loading,
@@ -103,10 +103,10 @@
 .artistsPage__groupLetter {
   font-size: 24px;
   font-weight: 700;
-  color: var(--color-primary, #ff7f50);
+  color: var(--color-primary, #ed6842);
   margin: 0 0 12px 12px;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(255, 127, 80, 0.3);
+  border-bottom: 2px solid rgba(237, 104, 66, 0.3);
 }
 
 .artistsPage__groupList {

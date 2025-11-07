@@ -39,8 +39,8 @@
 }
 
 .tabs__button__active {
-  color: var(--color-accent, #ff7f50);
-  border-bottom-color: var(--color-accent, #ff7f50);
+  color: var(--color-accent, #ed6842);
+  border-bottom-color: var(--color-accent, #ed6842);
 }
 
 .tabs__icon {

@@ -166,7 +166,7 @@
   background: var(--gradient-primary);
   border-radius: var(--radius-sm);
   transition: width 0.1s linear;
-  box-shadow: 0 0 8px rgba(255, 127, 80, 0.5);
+  box-shadow: 0 0 8px rgba(237, 104, 66, 0.5);
 }
 
 .progressHandle {

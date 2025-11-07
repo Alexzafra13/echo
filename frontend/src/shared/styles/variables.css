@@ -12,11 +12,11 @@
   --color-primary-200: #ffd4c7;
   --color-primary-300: #ffb8a3;
   --color-primary-400: #ff9270;
-  --color-primary-500: #ff7f50; /* Main coral */
-  --color-primary-600: #ff6633;
-  --color-primary-700: #e84a1a;
-  --color-primary-800: #c43d15;
-  --color-primary-900: #a03316;
+  --color-primary-500: #ed6842; /* Main coral - darker, more elegant */
+  --color-primary-600: #e04d28;
+  --color-primary-700: #c6401d;
+  --color-primary-800: #a33518;
+  --color-primary-900: #872d16;
 
   /* Secondary Colors - Teal/Cyan */
   --color-secondary-50: #ecfeff;
@@ -144,7 +144,7 @@
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 
   /* Glow Effects */
-  --shadow-glow-primary: 0 0 20px rgba(255, 127, 80, 0.3), 0 0 40px rgba(255, 127, 80, 0.1);
+  --shadow-glow-primary: 0 0 20px rgba(237, 104, 66, 0.3), 0 0 40px rgba(237, 104, 66, 0.1);
   --shadow-glow-secondary: 0 0 20px rgba(34, 211, 238, 0.3), 0 0 40px rgba(34, 211, 238, 0.1);
 
   /* ===== Gradients ===== */
@@ -199,7 +199,7 @@
   /* Input */
   --input-bg: #ffffff;
   --input-border: var(--color-slate-300);
-  --input-focus-ring: 0 0 0 3px rgba(255, 127, 80, 0.2);
+  --input-focus-ring: 0 0 0 3px rgba(237, 104, 66, 0.2);
 
   /* Button */
   --button-shadow: var(--shadow-md);
@@ -210,7 +210,7 @@
   --color-primary: var(--color-primary-500);
   --color-primary-hover: var(--color-primary-600);
   --color-primary-dark: var(--color-primary-700);
-  --color-primary-light: rgba(255, 127, 80, 0.15);
+  --color-primary-light: rgba(237, 104, 66, 0.15);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -258,7 +258,7 @@
   --shadow-inner: inset 0 2px 4px 0 rgba(41, 37, 36, 0.06);
 
   /* Glow Effects - Adapted for light theme */
-  --shadow-glow-primary: 0 0 20px rgba(255, 127, 80, 0.15), 0 0 40px rgba(255, 127, 80, 0.06);
+  --shadow-glow-primary: 0 0 20px rgba(237, 104, 66, 0.15), 0 0 40px rgba(237, 104, 66, 0.06);
   --shadow-glow-secondary: 0 0 20px rgba(34, 211, 238, 0.15), 0 0 40px rgba(34, 211, 238, 0.06);
 
   /* Gradients - Tonos cálidos coherentes */
@@ -284,7 +284,7 @@
 
   --input-bg: #fafaf9;
   --input-border: #d6d3d1; /* Stone 300 */
-  --input-focus-ring: 0 0 0 3px rgba(255, 127, 80, 0.15);
+  --input-focus-ring: 0 0 0 3px rgba(237, 104, 66, 0.15);
 
   --button-shadow: var(--shadow-md);
   --button-shadow-hover: var(--shadow-lg);
@@ -299,5 +299,5 @@
   --color-bg-tertiary: var(--bg-surface);
 
   --color-hover: rgba(41, 37, 36, 0.05);
-  --color-primary-light: rgba(255, 127, 80, 0.08);
+  --color-primary-light: rgba(237, 104, 66, 0.08);
 }
