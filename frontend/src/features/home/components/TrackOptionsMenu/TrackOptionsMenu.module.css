@@ -1,0 +1,106 @@
+/* TrackOptionsMenu Component Styles - BEM Naming Convention */
+
+.trackOptionsMenu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Trigger Button (3 dots) */
+.trackOptionsMenu__trigger {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary, #6b7280);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  opacity: 0;
+}
+
+.trackOptionsMenu__trigger:hover {
+  color: var(--text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Show trigger button on row hover */
+.trackList__track:hover .trackOptionsMenu__trigger {
+  opacity: 1;
+}
+
+/* Keep visible when menu is open */
+.trackOptionsMenu:has(.trackOptionsMenu__dropdown) .trackOptionsMenu__trigger {
+  opacity: 1;
+  color: var(--color-primary-500, #ed6842);
+  background: rgba(237, 104, 66, 0.15);
+}
+
+/* Dropdown Menu */
+.trackOptionsMenu__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 200px;
+  background: var(--bg-elevated, #1e293b);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 100;
+  padding: 4px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Menu Option */
+.trackOptionsMenu__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+  color: var(--text-primary, #ffffff);
+  font-size: 14px;
+}
+
+.trackOptionsMenu__option:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.trackOptionsMenu__option:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.trackOptionsMenu__option svg {
+  color: var(--text-tertiary, #6b7280);
+  flex-shrink: 0;
+}
+
+.trackOptionsMenu__option:hover svg {
+  color: var(--color-primary-500, #ed6842);
+}
+
+/* Separator */
+.trackOptionsMenu__separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
