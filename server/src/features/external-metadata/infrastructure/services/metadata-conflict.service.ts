@@ -318,19 +318,49 @@ export class MetadataConflictService {
       throw new Error(`Conflict ${conflictId} is already ${conflict.status}`);
     }
 
+    // Verify that the entity still exists before attempting to apply changes
+    const entityExists = await this.verifyEntityExists(conflict.entityType, conflict.entityId);
+
+    if (!entityExists) {
+      // Entity was deleted - mark conflict as rejected automatically
+      await this.prisma.metadataConflict.update({
+        where: { id: conflictId },
+        data: {
+          status: 'rejected',
+          resolvedAt: new Date(),
+          resolvedBy: 'system',
+        },
+      });
+
+      this.logger.warn(
+        `Conflict ${conflictId} rejected automatically: ${conflict.entityType} ${conflict.entityId} no longer exists (orphaned conflict)`,
+      );
+
+      throw new Error(
+        `Cannot accept conflict: ${conflict.entityType} with ID ${conflict.entityId} no longer exists. The conflict has been automatically rejected.`,
+      );
+    }
+
     // Apply the change based on entity type
     let updatedEntity;
 
-    switch (conflict.entityType) {
-      case 'artist':
-        updatedEntity = await this.applyArtistChange(conflict);
-        break;
-      case 'album':
-        updatedEntity = await this.applyAlbumChange(conflict);
-        break;
-      case 'track':
-        updatedEntity = await this.applyTrackChange(conflict);
-        break;
+    try {
+      switch (conflict.entityType) {
+        case 'artist':
+          updatedEntity = await this.applyArtistChange(conflict);
+          break;
+        case 'album':
+          updatedEntity = await this.applyAlbumChange(conflict);
+          break;
+        case 'track':
+          updatedEntity = await this.applyTrackChange(conflict);
+          break;
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error applying conflict ${conflictId}: ${(error as Error).message}`,
+      );
+      throw error;
     }
 
     // Mark conflict as accepted
@@ -500,6 +530,87 @@ export class MetadataConflictService {
       where: { id: conflict.entityId },
       data: updateData,
     });
+  }
+
+  /**
+   * Verify if an entity still exists in the database
+   * @param entityType - Type of entity (artist, album, track)
+   * @param entityId - ID of the entity
+   * @returns true if entity exists, false otherwise
+   */
+  private async verifyEntityExists(entityType: EntityType, entityId: string): Promise<boolean> {
+    try {
+      switch (entityType) {
+        case 'artist':
+          const artist = await this.prisma.artist.findUnique({
+            where: { id: entityId },
+            select: { id: true },
+          });
+          return !!artist;
+        case 'album':
+          const album = await this.prisma.album.findUnique({
+            where: { id: entityId },
+            select: { id: true },
+          });
+          return !!album;
+        case 'track':
+          const track = await this.prisma.track.findUnique({
+            where: { id: entityId },
+            select: { id: true },
+          });
+          return !!track;
+        default:
+          return false;
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error verifying entity existence: ${(error as Error).message}`,
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Clean up orphaned conflicts (conflicts referencing deleted entities)
+   * @returns Number of orphaned conflicts rejected
+   */
+  async cleanupOrphanedConflicts(): Promise<number> {
+    const pendingConflicts = await this.prisma.metadataConflict.findMany({
+      where: { status: 'pending' },
+      select: { id: true, entityType: true, entityId: true },
+    });
+
+    let orphanedCount = 0;
+
+    for (const conflict of pendingConflicts) {
+      const exists = await this.verifyEntityExists(
+        conflict.entityType as EntityType,
+        conflict.entityId,
+      );
+
+      if (!exists) {
+        // Mark as rejected
+        await this.prisma.metadataConflict.update({
+          where: { id: conflict.id },
+          data: {
+            status: 'rejected',
+            resolvedAt: new Date(),
+            resolvedBy: 'system-cleanup',
+          },
+        });
+
+        orphanedCount++;
+        this.logger.debug(
+          `Cleaned up orphaned conflict ${conflict.id} for deleted ${conflict.entityType} ${conflict.entityId}`,
+        );
+      }
+    }
+
+    if (orphanedCount > 0) {
+      this.logger.log(`Cleaned up ${orphanedCount} orphaned conflicts`);
+    }
+
+    return orphanedCount;
   }
 
   /**
