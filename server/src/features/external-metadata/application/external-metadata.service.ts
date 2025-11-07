@@ -152,28 +152,39 @@ export class ExternalMetadataService {
           this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
         } else {
           // Create conflict for user to review - respect existing data regardless of source
-          const currentBioPreview = artist.biography
-            ? artist.biography.substring(0, 200) + '...'
-            : '';
-          const suggestedBioPreview = bio.content.substring(0, 200) + '...';
 
-          await this.conflictService.createConflict({
-            entityId: artistId,
-            entityType: 'artist',
-            field: 'biography',
-            currentValue: currentBioPreview,
-            suggestedValue: suggestedBioPreview,
-            source: bio.source as any,
-            priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
-            metadata: {
-              artistName: artist.name,
-              currentSource: artist.biographySource,
-              fullBioLength: bio.content.length,
-            },
-          });
-          this.logger.log(
-            `Created conflict for artist "${artist.name}": existing bio vs ${bio.source} suggestion`
-          );
+          // Skip if biography content is identical
+          const currentBio = artist.biography || '';
+          const suggestedBio = bio.content || '';
+
+          if (currentBio.trim() === suggestedBio.trim()) {
+            this.logger.debug(
+              `Skipping biography conflict for "${artist.name}": content is identical (source: ${bio.source})`
+            );
+          } else {
+            const currentBioPreview = currentBio
+              ? currentBio.substring(0, 200) + '...'
+              : '';
+            const suggestedBioPreview = suggestedBio.substring(0, 200) + '...';
+
+            await this.conflictService.createConflict({
+              entityId: artistId,
+              entityType: 'artist',
+              field: 'biography',
+              currentValue: currentBioPreview,
+              suggestedValue: suggestedBioPreview,
+              source: bio.source as any,
+              priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
+              metadata: {
+                artistName: artist.name,
+                currentSource: artist.biographySource,
+                fullBioLength: bio.content.length,
+              },
+            });
+            this.logger.log(
+              `Created conflict for artist "${artist.name}": existing bio vs ${bio.source} suggestion`
+            );
+          }
         }
       }
 
@@ -384,6 +395,14 @@ export class ExternalMetadataService {
 
             const suggestedDimensions = await this.imageDownload.getImageDimensionsFromUrl(cover.largeUrl);
 
+            // Skip if we couldn't detect the suggested resolution
+            if (!suggestedDimensions) {
+              this.logger.warn(
+                `Skipping cover conflict for "${album.name}": couldn't detect resolution of suggested cover from ${cover.source}`
+              );
+              continue;
+            }
+
             // Check if this is a quality improvement
             const isQualityImprovement = currentDimensions && suggestedDimensions
               ? this.imageDownload.isSignificantImprovement(currentDimensions, suggestedDimensions)
@@ -399,9 +418,27 @@ export class ExternalMetadataService {
               ? `${currentDimensions.width}×${currentDimensions.height}`
               : undefined;
 
-            const suggestedResolution = suggestedDimensions
-              ? `${suggestedDimensions.width}×${suggestedDimensions.height}`
-              : 'Desconocida';
+            const suggestedResolution = `${suggestedDimensions.width}×${suggestedDimensions.height}`;
+
+            // Skip if resolutions are identical
+            if (currentResolution && currentResolution === suggestedResolution) {
+              this.logger.debug(
+                `Skipping cover conflict for "${album.name}": resolutions are identical (${currentResolution}) from ${cover.source}`
+              );
+              continue;
+            }
+
+            // Skip if current resolution is better or equal (and not low quality)
+            if (currentDimensions && !isQualityImprovement && !isLowQuality) {
+              const currentPixels = currentDimensions.width * currentDimensions.height;
+              const suggestedPixels = suggestedDimensions.width * suggestedDimensions.height;
+
+              this.logger.debug(
+                `Skipping cover conflict for "${album.name}": current resolution (${currentResolution}, ${currentPixels}px) ` +
+                `is equal or better than suggested (${suggestedResolution}, ${suggestedPixels}px) from ${cover.source}`
+              );
+              continue;
+            }
 
             this.logger.log(
               `Cover comparison for "${album.name}": ` +
