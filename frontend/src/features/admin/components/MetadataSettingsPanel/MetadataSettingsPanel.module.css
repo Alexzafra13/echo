@@ -76,6 +76,7 @@
 /* Tab Content */
 .tabContent {
   animation: fadeIn 0.3s ease;
+  min-height: 400px; /* Prevent layout shift between tabs */
 }
 
 @keyframes fadeIn {
