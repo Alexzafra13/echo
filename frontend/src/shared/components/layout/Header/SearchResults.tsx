@@ -35,6 +35,15 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
     onClose();
   };
 
+  // Handle avatar image error - fallback to default avatar
+  const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const defaultAvatar = '/images/empy_cover/empy_cover_default.png'; // Use same placeholder or create specific avatar placeholder
+    if (img.src !== defaultAvatar) {
+      img.src = defaultAvatar;
+    }
+  };
+
   if (query.length < 2) {
     return (
       <div className={styles.searchResults}>
@@ -82,7 +91,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
                 src={getArtistImageUrl(artist.id, 'thumb')}
                 alt={artist.name}
                 className={styles.searchResults__avatar}
-                onError={handleImageError}
+                onError={handleAvatarError}
               />
               <div className={styles.searchResults__info}>
                 <p className={styles.searchResults__name}>{artist.name}</p>
@@ -135,7 +144,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
               onClick={() => handleNavigate(`/album/${track.albumId}`)}
             >
               <img
-                src={getCoverUrl(track.albumCoverImage || track.coverImage)}
+                src={getCoverUrl(track.albumId ? `/api/albums/${track.albumId}/cover` : undefined)}
                 alt={track.title}
                 className={styles.searchResults__cover}
                 onError={handleImageError}
