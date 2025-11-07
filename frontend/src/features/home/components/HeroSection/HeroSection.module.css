@@ -89,14 +89,34 @@
   }
 }
 
+.heroSection__albumCoverButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  animation: fadeInScale 1.2s ease-out;
+}
+
+.heroSection__albumCoverButton:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.heroSection__albumCoverButton:active {
+  transform: scale(1.02);
+}
+
 .heroSection__albumCover {
   width: 260px;
   height: 260px;
   border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   object-fit: cover;
-  flex-shrink: 0;
-  animation: fadeInScale 1.2s ease-out;
+  display: block;
 }
 
 @keyframes fadeInScale {
@@ -117,6 +137,25 @@
   gap: 8px;
 }
 
+.heroSection__artistButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  width: fit-content;
+}
+
+.heroSection__artistButton:hover {
+  opacity: 0.8;
+  transform: translateX(4px);
+}
+
+.heroSection__artistButton:active {
+  opacity: 0.7;
+}
+
 .heroSection__artistLogo {
   max-height: 60px;
   max-width: 400px;
@@ -126,6 +165,11 @@
   object-position: left center;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
   margin-bottom: 4px;
+  transition: filter 0.3s ease;
+}
+
+.heroSection__artistButton:hover .heroSection__artistLogo {
+  filter: drop-shadow(0 2px 12px rgba(255, 127, 80, 0.6));
 }
 
 .heroSection__artistName {
@@ -183,6 +227,10 @@
     gap: 40px;
   }
 
+  .heroSection__albumCoverButton {
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6);
+  }
+
   .heroSection__albumCover {
     width: 220px;
     height: 220px;
@@ -234,9 +282,17 @@
     gap: 20px;
   }
 
+  .heroSection__albumCoverButton {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  }
+
   .heroSection__albumCover {
     width: 170px;
     height: 170px;
+  }
+
+  .heroSection__artistButton {
+    text-align: center;
   }
 
   .heroSection__artistLogo {
@@ -289,6 +345,10 @@
   .heroSection__content {
     padding: 104px 16px 20px 16px;
     gap: 16px;
+  }
+
+  .heroSection__albumCoverButton {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
   }
 
   .heroSection__albumCover {
