@@ -58,7 +58,7 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
     }
   };
 
-  const playlists = playlistsData?.data || [];
+  const playlists = playlistsData?.items || [];
 
   return (
     <div className={styles.overlay} onClick={onClose}>
