@@ -4,6 +4,9 @@
   flex-direction: column;
   gap: 1.5rem;
   width: 100%; /* Ensure full width in admin container */
+  max-width: 100%; /* Prevent overflow */
+  box-sizing: border-box; /* Include padding/borders in width */
+  overflow-x: hidden; /* Clip overflowing content */
 }
 
 /* Back Button */
@@ -84,6 +87,9 @@
   grid-template-columns: 300px 1fr;
   gap: 2rem;
   min-height: 600px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Sidebar Styles */
