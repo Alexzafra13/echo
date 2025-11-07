@@ -258,26 +258,87 @@ export class ImageDownloadService {
         type: result.type,
       };
     } catch (error) {
-      this.logger.error(`✗ Failed to probe dimensions from URL: ${(error as Error).message} - ${url.substring(0, 80)}...`);
+      this.logger.warn(`⚠️ Direct probe failed: ${(error as Error).message} - trying buffer probe fallback...`);
 
-      // Try fallback: make a HEAD request to at least confirm the image exists
+      // Fallback 1: Download first ~50KB and probe the buffer
+      // This works better for URLs with redirects or special handling
       try {
+        this.logger.debug(`Fetching partial content from: ${url.substring(0, 80)}...`);
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
         const response = await fetch(url, {
-          method: 'HEAD',
+          signal: controller.signal,
           headers: {
             'User-Agent': 'Echo-Music-Server/1.0.0',
+            'Accept': 'image/*',
           },
         });
 
-        if (response.ok) {
-          const contentType = response.headers.get('content-type');
-          this.logger.warn(`Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`);
-        }
-      } catch (fetchError) {
-        this.logger.error(`Image URL not accessible: ${(fetchError as Error).message}`);
-      }
+        clearTimeout(timeout);
 
-      return null;
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        // Read first 50KB (enough for dimension detection)
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        const chunks: Uint8Array[] = [];
+        let totalLength = 0;
+        const maxBytes = 50 * 1024; // 50KB
+
+        while (totalLength < maxBytes) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            chunks.push(value);
+            totalLength += value.length;
+          }
+        }
+
+        // Cancel the rest of the download
+        reader.cancel();
+
+        // Combine chunks into single buffer
+        const buffer = Buffer.concat(chunks.map(chunk => Buffer.from(chunk)));
+
+        // Probe the buffer
+        const result = await probe(buffer);
+
+        this.logger.log(`✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
+
+        return {
+          width: result.width,
+          height: result.height,
+          type: result.type,
+        };
+      } catch (bufferError) {
+        this.logger.error(`✗ Buffer probe also failed: ${(bufferError as Error).message}`);
+
+        // Fallback 2: make a HEAD request to at least confirm the image exists
+        try {
+          const response = await fetch(url, {
+            method: 'HEAD',
+            headers: {
+              'User-Agent': 'Echo-Music-Server/1.0.0',
+            },
+          });
+
+          if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            this.logger.warn(`✗ Image exists (${contentType}) but couldn't probe dimensions - ${url.substring(0, 80)}...`);
+          }
+        } catch (fetchError) {
+          this.logger.error(`✗ Image URL not accessible: ${(fetchError as Error).message}`);
+        }
+
+        return null;
+      }
     }
   }
 
