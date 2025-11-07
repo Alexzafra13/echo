@@ -64,7 +64,7 @@ describe('CreateUserUseCase', () => {
       expect(result.user.name).toBe('Juan Pérez');
       expect(result.user.isAdmin).toBe(false);
       expect(result.temporaryPassword).toBeDefined();
-      expect(result.temporaryPassword).toMatch(/^\d{6}$/);
+      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
     });
 
     it('debería crear un usuario admin', async () => {
@@ -239,8 +239,8 @@ describe('CreateUserUseCase', () => {
       const result = await useCase.execute(input);
 
       // Assert
-      expect(result.temporaryPassword).toMatch(/^\d{6}$/);
-      expect(result.temporaryPassword.length).toBe(6);
+      expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
+      expect(result.temporaryPassword.length).toBe(8);
     });
   });
 });
