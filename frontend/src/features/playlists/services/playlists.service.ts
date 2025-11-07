@@ -21,13 +21,13 @@ export const playlistsService = {
     take?: number;
     publicOnly?: boolean;
   }): Promise<{
-    data: Playlist[];
+    items: Playlist[];
     total: number;
     skip: number;
     take: number;
   }> => {
     const { data } = await apiClient.get<{
-      data: Playlist[];
+      items: Playlist[];
       total: number;
       skip: number;
       take: number;
