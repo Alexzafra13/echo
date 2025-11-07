@@ -74,7 +74,7 @@ export function AudioPlayer() {
       {/* Track info - Left side */}
       <div className={styles.trackInfo}>
         <img
-          src={getCoverUrl(currentTrack.coverImage || '')}
+          src={getCoverUrl(currentTrack.coverImage)}
           alt={currentTrack.title}
           className={styles.trackCover}
           onError={handleImageError}
@@ -151,6 +151,22 @@ export function AudioPlayer() {
 
       {/* Volume control - Right side */}
       <div className={styles.volumeControl}>
+        {/* Queue button and dropdown */}
+        <div className={styles.queueContainer} ref={queueRef}>
+          <button
+            className={`${styles.queueButton} ${isQueueOpen ? styles.queueButton_active : ''}`}
+            onClick={toggleQueue}
+            title="Lista de reproducción"
+          >
+            <ListMusic size={20} />
+            {queue.length > 0 && (
+              <span className={styles.queueButton__badge}>{queue.length}</span>
+            )}
+          </button>
+
+          {isQueueOpen && <QueueList onClose={() => setIsQueueOpen(false)} />}
+        </div>
+
         <button
           className={styles.volumeButton}
           onClick={toggleMute}
@@ -168,22 +184,6 @@ export function AudioPlayer() {
           className={styles.volumeSlider}
           style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
         />
-
-        {/* Queue button and dropdown */}
-        <div className={styles.queueContainer} ref={queueRef}>
-          <button
-            className={`${styles.queueButton} ${isQueueOpen ? styles.queueButton_active : ''}`}
-            onClick={toggleQueue}
-            title="Lista de reproducción"
-          >
-            <ListMusic size={20} />
-            {queue.length > 0 && (
-              <span className={styles.queueButton__badge}>{queue.length}</span>
-            )}
-          </button>
-
-          {isQueueOpen && <QueueList onClose={() => setIsQueueOpen(false)} />}
-        </div>
       </div>
     </div>
   );
