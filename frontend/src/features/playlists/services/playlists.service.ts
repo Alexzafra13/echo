@@ -69,8 +69,18 @@ export const playlistsService = {
   /**
    * Get all tracks in a playlist
    */
-  getPlaylistTracks: async (id: string): Promise<PlaylistTrack[]> => {
-    const { data } = await apiClient.get<PlaylistTrack[]>(`/playlists/${id}/tracks`);
+  getPlaylistTracks: async (id: string): Promise<{
+    playlistId: string;
+    playlistName: string;
+    tracks: PlaylistTrack[];
+    total: number;
+  }> => {
+    const { data } = await apiClient.get<{
+      playlistId: string;
+      playlistName: string;
+      tracks: PlaylistTrack[];
+      total: number;
+    }>(`/playlists/${id}/tracks`);
     return data;
   },
 
