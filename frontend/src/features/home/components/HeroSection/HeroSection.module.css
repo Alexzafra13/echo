@@ -203,67 +203,79 @@
 
 .heroSection__playButton {
   position: relative;
-  width: 68px;
-  height: 68px;
-  margin-top: 16px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--color-primary-500, #ed6842);
-  cursor: pointer;
-  display: flex;
+  overflow: hidden;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.1);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.heroSection__playButton::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  padding: 2px;
-  background: linear-gradient(135deg,
-    var(--color-primary-500, #ed6842),
-    var(--color-primary-600, #e04d28));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.6;
-  transition: opacity 0.4s ease;
+  width: 160px;
+  height: 50px;
+  margin-top: 16px;
+  padding: 0 16px;
+  border: 1px solid #a33518;
+  border-radius: 6px;
+  background: var(--color-primary-500, #ed6842);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transform: translateY(0);
+  transition: all 0.15s ease-in-out;
+  box-shadow:
+    inset 0 30px 30px -15px rgba(255, 255, 255, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 1px 20px rgba(0, 0, 0, 0),
+    0 4px 0 #a33518,
+    0 4px 3px rgba(0, 0, 0, 0.25),
+    0 6px 12px rgba(0, 0, 0, 0.15),
+    0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
 .heroSection__playButton:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: scale(1.08);
   box-shadow:
-    0 12px 32px rgba(237, 104, 66, 0.4),
-    0 0 40px rgba(237, 104, 66, 0.25),
-    inset 0 1px 2px rgba(255, 255, 255, 0.15);
-}
-
-.heroSection__playButton:hover::before {
-  opacity: 1;
+    inset 0 30px 30px -15px rgba(255, 255, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 20px rgba(0, 0, 0, 0),
+    0 4px 0 #a33518,
+    0 4px 3px rgba(0, 0, 0, 0.25),
+    0 6px 12px rgba(0, 0, 0, 0.2),
+    0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
 .heroSection__playButton:active {
-  transform: scale(1.02);
-  transition: transform 0.1s ease;
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 16px 2px -15px rgba(0, 0, 0, 0),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 20px rgba(0, 0, 0, 0.15),
+    0 0 0 #a33518,
+    0 0 0 2px rgba(255, 255, 255, 0.3),
+    0 0 0 rgba(0, 0, 0, 0),
+    0 0 0 rgba(0, 0, 0, 0);
 }
 
-.heroSection__playButton svg {
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-  transition: filter 0.3s ease;
+.heroSection__playIcon {
+  margin-right: 10px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.heroSection__playButton:hover svg {
-  filter: drop-shadow(0 4px 8px rgba(237, 104, 66, 0.4));
+.heroSection__playButton:hover .heroSection__playIcon {
+  transform: translateX(40px);
+}
+
+.heroSection__playText {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heroSection__playButton:hover .heroSection__playText {
+  transform: translateX(90px);
 }
 
 .heroSection__albumArt {
@@ -378,9 +390,16 @@
   }
 
   .heroSection__playButton {
-    width: 60px;
-    height: 60px;
-    margin: 8px auto 0;
+    width: 140px;
+    height: 46px;
+    margin: 12px auto 0;
+    font-size: 14px;
+  }
+
+  .heroSection__playIcon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
   }
 }
 
@@ -432,13 +451,15 @@
   }
 
   .heroSection__playButton {
-    width: 56px;
-    height: 56px;
-    margin: 6px auto 0;
+    width: 130px;
+    height: 44px;
+    margin: 8px auto 0;
+    font-size: 13px;
   }
 
-  .heroSection__playButton svg {
-    width: 24px;
-    height: 24px;
+  .heroSection__playIcon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
   }
 }
