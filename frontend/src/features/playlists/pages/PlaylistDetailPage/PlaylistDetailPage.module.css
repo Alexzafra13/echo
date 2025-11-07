@@ -8,6 +8,7 @@
 
 .playlistDetailPage__main {
   flex: 1;
+  margin-left: 200px; /* Sidebar width */
   display: flex;
   flex-direction: column;
   overflow: hidden;
