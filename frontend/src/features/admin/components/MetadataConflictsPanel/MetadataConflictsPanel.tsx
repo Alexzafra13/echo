@@ -326,8 +326,6 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
  * Displays and manages pending metadata conflicts with sidebar navigation
  */
 export function MetadataConflictsPanel() {
-  const [, setLocation] = useLocation();
-
   const filters = {
     skip: 0,
     take: 100, // Increased to get all conflicts for grouping
