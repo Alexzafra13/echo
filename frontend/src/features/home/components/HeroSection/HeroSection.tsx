@@ -153,7 +153,8 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
             className={styles.heroSection__playButton}
             aria-label="Play album"
           >
-            <Play size={28} fill="currentColor" strokeWidth={0} />
+            <Play size={24} fill="currentColor" strokeWidth={0} className={styles.heroSection__playIcon} />
+            <span className={styles.heroSection__playText}>Reproducir</span>
           </button>
         </div>
 
