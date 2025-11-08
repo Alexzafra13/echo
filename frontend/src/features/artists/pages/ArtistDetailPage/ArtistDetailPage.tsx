@@ -263,7 +263,12 @@ export default function ArtistDetailPage() {
           artistId={artist.id}
           artistName={artist.name}
           onClose={() => setIsAvatarSelectorOpen(false)}
-          onSuccess={() => window.location.reload()}
+          onSuccess={() => {
+            // Force hard reload with cache busting to show new avatar
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('_refresh', Date.now().toString());
+            window.location.href = currentUrl.toString();
+          }}
         />
       )}
     </div>
