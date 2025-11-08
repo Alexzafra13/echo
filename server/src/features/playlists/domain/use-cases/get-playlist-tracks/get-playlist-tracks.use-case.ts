@@ -40,6 +40,7 @@ export class GetPlaylistTracksUseCase {
       suffix: track.suffix,
       artistName: track.artistName,
       albumName: track.albumName,
+      playlistOrder: (track as any).playlistOrder,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     }));

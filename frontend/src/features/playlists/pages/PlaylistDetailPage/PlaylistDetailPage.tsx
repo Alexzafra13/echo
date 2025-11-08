@@ -7,6 +7,7 @@ import { TrackList } from '@features/home/components';
 import { usePlaylist, usePlaylistTracks, useRemoveTrackFromPlaylist } from '../../hooks/usePlaylists';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
+import { PlaylistCoverMosaic } from '../../components';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -111,6 +112,11 @@ export default function PlaylistDetailPage() {
   // Get tracks for the track list
   const tracks = playlistTracks?.tracks || [];
 
+  // Extract unique album IDs for the mosaic
+  const albumIds = tracks
+    .map((track) => track.albumId)
+    .filter((id): id is string => !!id);
+
   return (
     <div className={styles.playlistDetailPage}>
       <Sidebar />
@@ -122,17 +128,8 @@ export default function PlaylistDetailPage() {
           {/* Playlist hero section */}
           <div className={styles.playlistDetailPage__hero}>
             {/* Playlist cover */}
-            <div
-              className={styles.playlistDetailPage__heroCover}
-              onClick={() => playlist.coverImageUrl && setIsImageModalOpen(true)}
-            >
-              {playlist.coverImageUrl ? (
-                <img src={playlist.coverImageUrl} alt={playlist.name} />
-              ) : (
-                <div className={styles.playlistDetailPage__heroCoverPlaceholder}>
-                  <Music size={80} />
-                </div>
-              )}
+            <div className={styles.playlistDetailPage__heroCover}>
+              <PlaylistCoverMosaic albumIds={albumIds} playlistName={playlist.name} />
             </div>
 
             {/* Playlist info */}
