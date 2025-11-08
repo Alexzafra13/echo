@@ -53,6 +53,10 @@ export class StorageService {
       await this.ensureDirectoryExists(path.join(this.basePath, 'albums'));
       await this.ensureDirectoryExists(path.join(this.basePath, 'defaults'));
 
+      // User storage (separate from metadata)
+      const userStoragePath = path.resolve(process.cwd(), 'storage', 'users');
+      await this.ensureDirectoryExists(userStoragePath);
+
       // Copy default images if they don't exist
       await this.initializeDefaultImages();
 
@@ -117,6 +121,27 @@ export class StorageService {
     // albumPath should be the path field from the album record
     // It typically points to a track, so we get its directory
     return path.dirname(albumPath);
+  }
+
+  /**
+   * Get storage path for a user
+   * Returns: /storage/users/{user-id}/
+   * This is separate from metadata storage
+   */
+  async getUserStoragePath(userId: string): Promise<string> {
+    const userStorageBase = path.resolve(process.cwd(), 'storage', 'users');
+    const userPath = path.join(userStorageBase, userId);
+    await this.ensureDirectoryExists(userPath);
+    return userPath;
+  }
+
+  /**
+   * Get avatar path for a user
+   * Returns: /storage/users/{user-id}/avatar.{ext}
+   */
+  async getUserAvatarPath(userId: string, extension: string): Promise<string> {
+    const userPath = await this.getUserStoragePath(userId);
+    return path.join(userPath, `avatar.${extension}`);
   }
 
   /**

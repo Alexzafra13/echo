@@ -1,12 +1,20 @@
 import {
   Controller,
   Put,
+  Post,
+  Delete,
   Body,
   HttpCode,
   HttpStatus,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
@@ -15,6 +23,8 @@ import {
   UpdateProfileUseCase,
   ChangeThemeUseCase,
   ChangeLanguageUseCase,
+  UploadAvatarUseCase,
+  DeleteAvatarUseCase,
 } from '../domain/use-cases';
 import {
   ChangePasswordRequestDto,
@@ -34,6 +44,8 @@ export class UsersController {
     private readonly updateProfileUseCase: UpdateProfileUseCase,
     private readonly changeThemeUseCase: ChangeThemeUseCase,
     private readonly changeLanguageUseCase: ChangeLanguageUseCase,
+    private readonly uploadAvatarUseCase: UploadAvatarUseCase,
+    private readonly deleteAvatarUseCase: DeleteAvatarUseCase,
   ) {}
 
   @Put('password')
@@ -155,6 +167,89 @@ export class UsersController {
     await this.changeLanguageUseCase.execute({
       userId: user.id,
       language: dto.language,
+    });
+  }
+
+  @Post('avatar')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Subir avatar de usuario',
+    description: 'Sube una imagen de avatar para el usuario. Tamaño máximo: 5MB. Formatos permitidos: JPEG, PNG, WebP.'
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Archivo de imagen (JPEG, PNG, o WebP)'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Avatar subido exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        avatarPath: { type: 'string' },
+        avatarSize: { type: 'number' },
+        avatarMimeType: { type: 'string' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Archivo inválido (tamaño, tipo, o contenido)'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  async uploadAvatar(
+    @CurrentUser() user: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return await this.uploadAvatarUseCase.execute({
+      userId: user.id,
+      file: {
+        buffer: file.buffer,
+        mimetype: file.mimetype,
+        size: file.size,
+        originalname: file.originalname,
+      },
+    });
+  }
+
+  @Delete('avatar')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Eliminar avatar de usuario',
+    description: 'Elimina el avatar actual del usuario'
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Avatar eliminado exitosamente'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  async deleteAvatar(@CurrentUser() user: any): Promise<void> {
+    await this.deleteAvatarUseCase.execute({
+      userId: user.id,
     });
   }
 }

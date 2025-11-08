@@ -149,6 +149,49 @@ export class ImageService {
   }
 
   /**
+   * Obtiene el avatar de un usuario
+   */
+  async getUserAvatar(userId: string): Promise<ImageResult> {
+    const cacheKey = `user:${userId}:avatar`;
+
+    // Verificar caché
+    const cached = this.imageCache.get(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for ${cacheKey}`);
+      return cached;
+    }
+
+    // Obtener usuario de la base de datos
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        avatarPath: true,
+        avatarMimeType: true,
+        avatarSize: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    if (!user.avatarPath) {
+      throw new NotFoundException(
+        `User ${userId} does not have an avatar`,
+      );
+    }
+
+    // Verificar que el archivo existe y obtener metadata
+    const imageResult = await this.getImageFileInfo(user.avatarPath);
+
+    // Cachear resultado
+    this.cacheImageResult(cacheKey, imageResult);
+
+    return imageResult;
+  }
+
+  /**
    * Verifica si un artista tiene una imagen específica
    */
   async hasArtistImage(
@@ -249,6 +292,15 @@ export class ImageService {
     const cacheKey = `album:${albumId}:cover`;
     this.imageCache.delete(cacheKey);
     this.logger.debug(`Album cache invalidated for ${albumId}`);
+  }
+
+  /**
+   * Invalida el caché de avatar de un usuario
+   */
+  invalidateUserAvatarCache(userId: string): void {
+    const cacheKey = `user:${userId}:avatar`;
+    this.imageCache.delete(cacheKey);
+    this.logger.debug(`User avatar cache invalidated for ${userId}`);
   }
 
   /**
