@@ -16,7 +16,7 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
   const coverUrl = getCoverUrl(album.coverImage);
 
   const formatFileSize = (bytes: number): string => {
-    if (!bytes || bytes === 0) return 'Desconocido';
+    if (!bytes || bytes === 0 || !isFinite(bytes)) return 'Desconocido';
 
     const kb = bytes / 1024;
     const mb = kb / 1024;
@@ -28,7 +28,10 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
     if (mb >= 1) {
       return `${mb.toFixed(2)} MB`;
     }
-    return `${kb.toFixed(2)} KB`;
+    if (kb >= 1) {
+      return `${kb.toFixed(2)} KB`;
+    }
+    return `${bytes} bytes`;
   };
 
   const formatDuration = (seconds: number): string => {
@@ -50,12 +53,30 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
 
   // Calculate total size and duration from tracks
   const totalSize = tracks.reduce((acc, track) => {
-    const size = track.size || 0;
+    if (!track.size) return acc;
+
     // Convert BigInt to number if needed
-    const sizeNumber = typeof size === 'bigint' ? Number(size) : size;
+    let sizeNumber: number;
+    if (typeof track.size === 'bigint') {
+      sizeNumber = Number(track.size);
+    } else {
+      sizeNumber = track.size;
+    }
+
+    // Safety check for NaN or Infinity
+    if (!isFinite(sizeNumber)) {
+      console.warn('Invalid track size:', track.size, 'for track:', track.title);
+      return acc;
+    }
+
     return acc + sizeNumber;
   }, 0);
   const totalDuration = tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
+
+  // Debug logging
+  console.log('Album tracks:', tracks.length);
+  console.log('Total size calculated:', totalSize);
+  console.log('First track size:', tracks[0]?.size, 'type:', typeof tracks[0]?.size);
 
   // Get unique formats from tracks
   const formats = [...new Set(tracks.map(t => t.suffix?.toUpperCase()).filter(Boolean))];
