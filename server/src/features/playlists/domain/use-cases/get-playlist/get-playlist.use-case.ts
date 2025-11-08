@@ -1,5 +1,6 @@
 import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
+import { IUserRepository, USER_REPOSITORY } from '@features/auth/domain/ports/user-repository.port';
 import { GetPlaylistInput, GetPlaylistOutput } from './get-playlist.dto';
 
 @Injectable()
@@ -7,6 +8,8 @@ export class GetPlaylistUseCase {
   constructor(
     @Inject(PLAYLIST_REPOSITORY)
     private readonly playlistRepository: IPlaylistRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository,
   ) {}
 
   async execute(input: GetPlaylistInput): Promise<GetPlaylistOutput> {
@@ -22,7 +25,11 @@ export class GetPlaylistUseCase {
       throw new NotFoundException(`Playlist with ID ${input.id} not found`);
     }
 
-    // 3. Retornar output
+    // 3. Obtener nombre del usuario owner
+    const owner = await this.userRepository.findById(playlist.ownerId);
+    const ownerName = owner?.username;
+
+    // 4. Retornar output
     return {
       id: playlist.id,
       name: playlist.name,
@@ -31,6 +38,7 @@ export class GetPlaylistUseCase {
       duration: playlist.duration,
       size: playlist.size,
       ownerId: playlist.ownerId,
+      ownerName,
       public: playlist.public,
       songCount: playlist.songCount,
       path: playlist.path,
