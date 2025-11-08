@@ -115,6 +115,9 @@ importers:
       '@fastify/helmet':
         specifier: ^13.0.2
         version: 13.0.2
+      '@fastify/multipart':
+        specifier: ^9.3.0
+        version: 9.3.0
       '@fastify/static':
         specifier: ^8.3.0
         version: 8.3.0
