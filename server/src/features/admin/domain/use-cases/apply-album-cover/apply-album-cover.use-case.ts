@@ -88,14 +88,13 @@ export class ApplyAlbumCoverUseCase {
       throw error;
     }
 
-    // Update database
+    // Update database (updatedAt will be automatically updated by Prisma)
     await this.prisma.album.update({
       where: { id: input.albumId },
       data: {
         externalCoverPath: coverPath,
         externalCoverSource: input.provider,
         externalInfoUpdatedAt: new Date(),
-        coverUpdatedAt: new Date(), // Update version timestamp for cache busting
       },
     });
 

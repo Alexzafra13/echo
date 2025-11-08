@@ -91,7 +91,6 @@ model Artist {
   logoImageUrl           String?   @map("logo_image_url") @db.VarChar(512)
   externalUrl            String?   @map("external_url") @db.VarChar(512)
   externalInfoUpdatedAt  DateTime? @map("external_info_updated_at")
-  imagesUpdatedAt        DateTime? @map("images_updated_at")
   metadataStorageSize    BigInt?   @default(0) @map("metadata_storage_size")
   orderArtistName        String?   @map("order_artist_name") @db.VarChar(255)
   size                   BigInt    @default(0)
@@ -186,7 +185,6 @@ model Album {
   externalInfoUpdatedAt   DateTime? @map("external_info_updated_at")
   externalCoverPath       String?   @map("external_cover_path") @db.VarChar(512)
   externalCoverSource     String?   @map("external_cover_source") @db.VarChar(50)
-  coverUpdatedAt          DateTime? @map("cover_updated_at")
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
 
