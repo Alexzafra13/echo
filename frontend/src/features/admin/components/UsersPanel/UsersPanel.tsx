@@ -127,8 +127,7 @@ export function UsersPanel() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(user =>
         user.username.toLowerCase().includes(query) ||
-        user.name?.toLowerCase().includes(query) ||
-        user.email?.toLowerCase().includes(query)
+        user.name?.toLowerCase().includes(query)
       );
     }
 
@@ -236,7 +235,7 @@ export function UsersPanel() {
           <Search size={18} className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Buscar por nombre, usuario o email..."
+            placeholder="Buscar por nombre o usuario..."
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             className={styles.searchInput}
@@ -307,10 +306,7 @@ export function UsersPanel() {
                       <div className={styles.userName}>
                         {user.name || user.username}
                       </div>
-                      {user.email && (
-                        <div className={styles.userEmail}>{user.email}</div>
-                      )}
-                      {!user.name && (
+                      {user.name && (
                         <div className={styles.userEmail}>@{user.username}</div>
                       )}
                     </div>
