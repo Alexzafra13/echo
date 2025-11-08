@@ -15,6 +15,7 @@ export interface ListUsersOutput {
     mustChangePassword: boolean;
     lastLoginAt?: Date;
     createdAt: Date;
+    isSystemAdmin: boolean;
   }>;
   total: number;
 }

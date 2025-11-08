@@ -202,6 +202,20 @@
   line-height: 1.5;
 }
 
+.infoBox {
+  padding: 12px 16px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  color: #ffd700;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.infoBox p {
+  margin: 0;
+}
+
 /* Actions */
 .actions {
   display: flex;
