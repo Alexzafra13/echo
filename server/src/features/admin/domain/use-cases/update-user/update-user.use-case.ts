@@ -21,7 +21,20 @@ export class UpdateUserUseCase {
       throw new NotFoundError('User not found');
     }
 
-    // 2. Si se está actualizando el email, verificar que no exista
+    // 2. Si se está actualizando el username, verificar que no exista
+    if (input.username !== undefined && input.username !== user.username) {
+      if (!input.username || input.username.trim().length === 0) {
+        throw new ValidationError('Username cannot be empty');
+      }
+      const existingUserByUsername = await this.userRepository.findByUsername(
+        input.username,
+      );
+      if (existingUserByUsername && existingUserByUsername.id !== user.id) {
+        throw new ConflictError('Username already exists');
+      }
+    }
+
+    // 3. Si se está actualizando el email, verificar que no exista
     if (input.email !== undefined && input.email !== user.email) {
       const existingUserByEmail = await this.userRepository.findByEmail(
         input.email,
@@ -31,7 +44,7 @@ export class UpdateUserUseCase {
       }
     }
 
-    // 3. Validar email si se proporciona
+    // 4. Validar email si se proporciona
     if (input.email !== undefined && input.email.length > 0) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(input.email)) {
@@ -39,20 +52,21 @@ export class UpdateUserUseCase {
       }
     }
 
-    // 4. Preparar datos de actualización
+    // 5. Preparar datos de actualización
     const updateData: Partial<UserUpdateableFields> = {};
+    if (input.username !== undefined) updateData.username = input.username;
     if (input.name !== undefined) updateData.name = input.name;
     if (input.email !== undefined) updateData.email = input.email;
     if (input.isAdmin !== undefined) updateData.isAdmin = input.isAdmin;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
 
-    // 5. Actualizar usuario
+    // 6. Actualizar usuario
     const updatedUser = await this.userRepository.updatePartial(
       input.userId,
       updateData,
     );
 
-    // 6. Retornar usuario actualizado
+    // 7. Retornar usuario actualizado
     return {
       id: updatedUser.id,
       username: updatedUser.username,

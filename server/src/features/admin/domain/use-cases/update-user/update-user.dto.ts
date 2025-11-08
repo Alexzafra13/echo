@@ -1,5 +1,6 @@
 export interface UpdateUserInput {
   userId: string;
+  username?: string;
   name?: string;
   email?: string;
   isAdmin?: boolean;
