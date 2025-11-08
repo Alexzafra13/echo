@@ -59,6 +59,14 @@
   margin: 0;
 }
 
+/* Avatar Section */
+.profilePage__avatarSection {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+  margin-bottom: 24px;
+}
+
 /* Card */
 .profilePage__card {
   background: var(--bg-elevated);
