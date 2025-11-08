@@ -88,8 +88,10 @@ export default function AlbumPage() {
   };
 
   const handleCoverChanged = () => {
-    // Refetch album data to show the new cover
-    window.location.reload();
+    // Force hard reload with cache busting to show new cover
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('_refresh', Date.now().toString());
+    window.location.href = currentUrl.toString();
   };
 
   if (loadingAlbum) {

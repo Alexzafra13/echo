@@ -479,8 +479,8 @@ export class ImagesController {
     const etag = `"${lastModified.getTime()}"`;
     res.header('ETag', etag);
 
-    // Cache-Control - cachear por 7 días
-    res.header('Cache-Control', 'public, max-age=604800, immutable');
+    // Cache-Control - cachear pero revalidar con ETag
+    res.header('Cache-Control', 'public, max-age=3600, must-revalidate');
 
     // Permitir CORS
     res.header('Access-Control-Allow-Origin', '*');
