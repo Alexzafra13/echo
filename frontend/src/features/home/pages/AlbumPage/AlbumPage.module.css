@@ -101,11 +101,22 @@
   color: var(--color-text-primary, #ffffff);
   cursor: pointer;
   transition: opacity 0.2s ease, text-decoration 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .albumPage__heroArtistButton:hover {
   opacity: 0.8;
   text-decoration: underline;
+}
+
+.albumPage__heroArtistAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .albumPage__heroDivider {
@@ -120,11 +131,11 @@
 }
 
 .albumPage__heroMoreButton {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
