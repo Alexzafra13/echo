@@ -5,7 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist } from '../../hooks/usePlaylists';
-import { PlaylistCoverMosaic } from '../../components';
+import { PlaylistCoverMosaic, CreatePlaylistModal } from '../../components';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -14,9 +14,7 @@ import styles from './PlaylistsPage.module.css';
  */
 export default function PlaylistsPage() {
   const [, setLocation] = useLocation();
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newPlaylistName, setNewPlaylistName] = useState('');
-  const [error, setError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: playlistsData, isLoading } = usePlaylists();
   const createPlaylistMutation = useCreatePlaylist();
@@ -24,25 +22,11 @@ export default function PlaylistsPage() {
 
   const playlists = playlistsData?.items || [];
 
-  const handleCreatePlaylist = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!newPlaylistName.trim()) {
-      setError('El nombre de la playlist es obligatorio');
-      return;
-    }
-
-    try {
-      await createPlaylistMutation.mutateAsync({
-        name: newPlaylistName.trim(),
-        public: false,
-      });
-      setNewPlaylistName('');
-      setShowCreateForm(false);
-      setError('');
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Error al crear la playlist');
-    }
+  const handleCreatePlaylist = async (name: string) => {
+    await createPlaylistMutation.mutateAsync({
+      name,
+      public: false,
+    });
   };
 
   const handleDeletePlaylist = async (playlistId: string, playlistName: string) => {
@@ -86,51 +70,12 @@ export default function PlaylistsPage() {
             </div>
             <Button
               variant="primary"
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              disabled={createPlaylistMutation.isPending}
+              onClick={() => setShowCreateModal(true)}
             >
               <Plus size={20} />
               Nueva Playlist
             </Button>
           </div>
-
-          {/* Create Playlist Form */}
-          {showCreateForm && (
-            <div className={styles.playlistsPage__createForm}>
-              <form onSubmit={handleCreatePlaylist}>
-                <input
-                  type="text"
-                  className={styles.playlistsPage__input}
-                  value={newPlaylistName}
-                  onChange={(e) => setNewPlaylistName(e.target.value)}
-                  placeholder="Nombre de la playlist..."
-                  autoFocus
-                />
-                <div className={styles.playlistsPage__formActions}>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setNewPlaylistName('');
-                      setError('');
-                    }}
-                    disabled={createPlaylistMutation.isPending}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={createPlaylistMutation.isPending}
-                  >
-                    {createPlaylistMutation.isPending ? 'Creando...' : 'Crear'}
-                  </Button>
-                </div>
-                {error && <p className={styles.playlistsPage__error}>{error}</p>}
-              </form>
-            </div>
-          )}
 
           {/* Playlists Grid */}
           {isLoading ? (
@@ -208,6 +153,15 @@ export default function PlaylistsPage() {
           )}
         </div>
       </main>
+
+      {/* Create Playlist Modal */}
+      {showCreateModal && (
+        <CreatePlaylistModal
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreatePlaylist}
+          isLoading={createPlaylistMutation.isPending}
+        />
+      )}
     </div>
   );
 }
