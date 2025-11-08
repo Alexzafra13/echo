@@ -104,10 +104,31 @@ model Artist {
   tracksAsAlbumArtist Track[]       @relation("AlbumArtistTracks")
   trackArtists        TrackArtist[]
   genres              ArtistGenre[]
+  banners             ArtistBanner[] // Multiple banner images
 
   @@index([name], map: "idx_artists_name")
   @@index([albumCount(sort: Desc)], map: "idx_artists_album_count")
   @@map("artists")
+}
+
+// ============================================
+// ARTIST BANNERS (Multiple banners per artist)
+// ============================================
+
+model ArtistBanner {
+  id        String   @id @default(uuid())
+  artistId  String   @map("artist_id") @db.VarChar(36)
+  imageUrl  String   @map("image_url") @db.VarChar(512)
+  provider  String   @db.VarChar(50) // 'fanart', 'lastfm', etc.
+  order     Int      @default(0) // Order in carousel
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relación
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([artistId])
+  @@index([artistId, order])
+  @@map("artist_banners")
 }
 
 // ============================================
@@ -597,6 +618,7 @@ model EnrichmentLog {
   status        String   @db.VarChar(20) // 'success', 'partial', 'error'
   fieldsUpdated String[] @map("fields_updated") // Array of field names that were updated
   errorMessage  String?  @map("error_message") @db.Text
+  previewUrl    String?  @map("preview_url") @db.VarChar(512) // URL for image preview (for covers/avatars)
   userId        String?  @map("user_id") @db.VarChar(36) // Who triggered it (null if automatic)
   processingTime Int?    @map("processing_time") // In milliseconds
   createdAt     DateTime @default(now()) @map("created_at")

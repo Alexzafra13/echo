@@ -259,6 +259,7 @@ export class ExternalMetadataService {
               status: 'success',
               fieldsUpdated: Object.keys(updateData).filter(key => key.includes('Url') || key === 'metadataStorageSize'),
               processingTime: Date.now() - startTime,
+              previewUrl: `/api/artists/${artistId}/profile-small`,
             });
           }
         }
@@ -446,6 +447,7 @@ export class ExternalMetadataService {
               status: 'success',
               fieldsUpdated: ['externalCoverPath', 'externalCoverSource'],
               processingTime: Date.now() - startTime,
+              previewUrl: `/api/albums/${albumId}/cover`,
             });
           } else {
             // Create conflict for user to review - respect existing data regardless of source
@@ -1023,6 +1025,7 @@ export class ExternalMetadataService {
     status: 'success' | 'partial' | 'error';
     fieldsUpdated: string[];
     errorMessage?: string;
+    previewUrl?: string;
     processingTime?: number;
   }): Promise<void> {
     try {
@@ -1036,6 +1039,7 @@ export class ExternalMetadataService {
           status: data.status,
           fieldsUpdated: data.fieldsUpdated,
           errorMessage: data.errorMessage,
+          previewUrl: data.previewUrl,
           processingTime: data.processingTime,
         },
       });

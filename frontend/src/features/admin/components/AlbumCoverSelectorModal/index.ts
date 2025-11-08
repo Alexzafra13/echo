@@ -1,0 +1,1 @@
+export { AlbumCoverSelectorModal } from './AlbumCoverSelectorModal';
