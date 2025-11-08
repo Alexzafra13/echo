@@ -65,6 +65,10 @@ export class ArtistResponseDto {
   @Expose()
   updatedAt!: Date;
 
+  @ApiProperty({ required: false })
+  @Expose()
+  imagesUpdatedAt?: Date;
+
   static fromDomain(data: any): ArtistResponseDto {
     const dto = new ArtistResponseDto();
     dto.id = data.id;
@@ -74,16 +78,19 @@ export class ArtistResponseDto {
     dto.mbzArtistId = data.mbzArtistId;
     dto.biography = data.biography;
 
-    // Transform file paths to API URLs for frontend consumption
-    // If ANY profile image exists in DB, generate URLs for all sizes
-    // ImageService will serve them if they exist physically, or return 404
+    // Transform file paths to API URLs for frontend consumption with version for cache busting
     const hasAnyProfileImage = data.smallImageUrl || data.mediumImageUrl || data.largeImageUrl;
-    dto.smallImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-small` : undefined;
-    dto.mediumImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-medium` : undefined;
-    dto.largeImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-large` : undefined;
+
+    // Add version parameter if imagesUpdatedAt exists (for proper cache busting)
+    const versionParam = data.imagesUpdatedAt ? `?v=${new Date(data.imagesUpdatedAt).getTime()}` : '';
+
+    dto.smallImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-small${versionParam}` : undefined;
+    dto.mediumImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-medium${versionParam}` : undefined;
+    dto.largeImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-large${versionParam}` : undefined;
 
     dto.externalUrl = data.externalUrl;
     dto.externalInfoUpdatedAt = data.externalInfoUpdatedAt;
+    dto.imagesUpdatedAt = data.imagesUpdatedAt;
     dto.orderArtistName = data.orderArtistName;
     dto.size = data.size;
     dto.createdAt = data.createdAt;

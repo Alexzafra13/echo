@@ -114,6 +114,7 @@ export class ApplyArtistAvatarUseCase {
             mediumImageUrl: mediumPath,
             largeImageUrl: imagePath,
             externalInfoUpdatedAt: new Date(),
+            imagesUpdatedAt: new Date(), // Update version timestamp for cache busting
           },
         });
       } catch (error) {
@@ -129,6 +130,7 @@ export class ApplyArtistAvatarUseCase {
         data: {
           [dbField]: imagePath,
           externalInfoUpdatedAt: new Date(),
+          imagesUpdatedAt: new Date(), // Update version timestamp for cache busting
         },
       });
     }

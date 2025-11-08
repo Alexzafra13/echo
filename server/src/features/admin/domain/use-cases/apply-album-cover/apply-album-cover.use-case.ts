@@ -95,6 +95,7 @@ export class ApplyAlbumCoverUseCase {
         externalCoverPath: coverPath,
         externalCoverSource: input.provider,
         externalInfoUpdatedAt: new Date(),
+        coverUpdatedAt: new Date(), // Update version timestamp for cache busting
       },
     });
 

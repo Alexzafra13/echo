@@ -15,7 +15,6 @@ const DEFAULT_AVATAR_PLACEHOLDER = '/images/avatar-default.png';
  *
  * @param userId - ID del usuario
  * @param hasAvatar - Indica si el usuario tiene avatar (opcional)
- * @param bustCache - Si es true, agrega timestamp para evitar caché (default: true si hay ?_refresh en URL)
  * @returns URL válida del avatar o placeholder por defecto
  *
  * @example
@@ -23,28 +22,19 @@ const DEFAULT_AVATAR_PLACEHOLDER = '/images/avatar-default.png';
  * const avatarUrl = getUserAvatarUrl(user.id);
  * <img src={avatarUrl} alt={user.name} />
  * ```
+ *
+ * Note: El backend puede incluir un parámetro ?v=timestamp cuando
+ * la imagen cambia, por lo que no necesitamos cache busting manual aquí.
  */
-export function getUserAvatarUrl(userId?: string | null, hasAvatar?: boolean, bustCache?: boolean): string {
+export function getUserAvatarUrl(userId?: string | null, hasAvatar?: boolean): string {
   // Si no hay userId o explícitamente no tiene avatar, usar placeholder
   if (!userId || hasAvatar === false) {
     return DEFAULT_AVATAR_PLACEHOLDER;
   }
 
   // Construir URL del endpoint de avatar
-  const baseUrl = `/api/images/users/${userId}/avatar`;
-
-  // Auto-detect cache busting from URL params
-  if (bustCache === undefined) {
-    bustCache = new URLSearchParams(window.location.search).has('_refresh');
-  }
-
-  // Add cache busting parameter if needed
-  if (bustCache) {
-    const timestamp = new URLSearchParams(window.location.search).get('_refresh') || Date.now().toString();
-    return `${baseUrl}?_t=${timestamp}`;
-  }
-
-  return baseUrl;
+  // El backend incluye ?v=timestamp para cache busting automático
+  return `/api/images/users/${userId}/avatar`;
 }
 
 /**
