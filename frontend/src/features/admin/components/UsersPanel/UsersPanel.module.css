@@ -254,6 +254,13 @@
   border: 1px solid rgba(237, 104, 66, 0.3);
 }
 
+.badgeSystemAdmin {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  font-weight: 700;
+}
+
 .badgeUser {
   background: rgba(59, 130, 246, 0.15);
   color: #3b82f6;

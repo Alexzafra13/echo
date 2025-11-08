@@ -76,6 +76,14 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {user.isSystemAdmin && (
+            <div className={styles.infoBox}>
+              <p>
+                Este es el administrador principal del sistema. Solo se puede cambiar el nombre de usuario.
+              </p>
+            </div>
+          )}
+
           <div className={styles.formGroup}>
             <label htmlFor="username" className={styles.label}>
               Nombre de usuario (para iniciar sesión)
@@ -106,6 +114,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, isAdmin: e.target.checked })
                 }
+                disabled={user.isSystemAdmin}
               />
               <span>Permisos de Administrador</span>
             </label>
@@ -123,6 +132,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, isActive: e.target.checked })
                 }
+                disabled={user.isSystemAdmin}
               />
               <span>Cuenta Activa</span>
             </label>
