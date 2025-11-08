@@ -120,7 +120,10 @@ export function ProfilePage() {
         <div className={styles.profilePage__content}>
           {/* Header with Avatar */}
           <div className={styles.profilePage__header}>
-            <div className={styles.profilePage__avatarContainer}>
+            <div
+              className={styles.profilePage__avatarContainer}
+              onClick={() => setShowAvatarModal(true)}
+            >
               {getUserAvatarUrl(user?.id) ? (
                 <img
                   src={getUserAvatarUrl(user?.id)}
@@ -133,13 +136,9 @@ export function ProfilePage() {
                   {getUserInitials(user?.name, user?.username)}
                 </div>
               )}
-              <button
-                className={styles.profilePage__avatarEditButton}
-                onClick={() => setShowAvatarModal(true)}
-                title="Editar foto de perfil"
-              >
-                <Edit3 size={16} />
-              </button>
+              <div className={styles.profilePage__avatarOverlay}>
+                <span>Editar foto</span>
+              </div>
             </div>
             <div>
               <h1>Perfil</h1>
