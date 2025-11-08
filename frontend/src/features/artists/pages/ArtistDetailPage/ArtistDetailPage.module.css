@@ -53,6 +53,7 @@
 }
 
 .artistDetailPage__avatarContainer {
+  position: relative;
   flex-shrink: 0;
 }
 
@@ -87,6 +88,30 @@
   text-transform: uppercase;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   border: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.artistDetailPage__changeAvatarBtn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary-600);
+  border: 2px solid white;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.artistDetailPage__changeAvatarBtn:hover {
+  background: var(--color-primary-700);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .artistDetailPage__info {
