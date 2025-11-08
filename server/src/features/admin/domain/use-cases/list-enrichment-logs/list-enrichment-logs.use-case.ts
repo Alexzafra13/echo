@@ -75,6 +75,7 @@ export class ListEnrichmentLogsUseCase {
       status: log.status,
       fieldsUpdated: log.fieldsUpdated,
       errorMessage: log.errorMessage || undefined,
+      previewUrl: log.previewUrl || undefined,
       userId: log.userId || undefined,
       processingTime: log.processingTime || undefined,
       createdAt: log.createdAt,

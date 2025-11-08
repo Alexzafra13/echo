@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, Info, ListPlus, Download } from 'lucide-react';
+import { MoreHorizontal, Info, ListPlus, Download, Image } from 'lucide-react';
+import { useAuth } from '@shared/hooks';
 import styles from './AlbumOptionsMenu.module.css';
 
 interface AlbumOptionsMenuProps {
   onShowInfo?: () => void;
   onAddToPlaylist?: () => void;
   onDownload?: () => void;
+  onChangeCover?: () => void;
 }
 
 /**
@@ -16,9 +18,11 @@ export function AlbumOptionsMenu({
   onShowInfo,
   onAddToPlaylist,
   onDownload,
+  onChangeCover,
 }: AlbumOptionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -79,6 +83,16 @@ export function AlbumOptionsMenu({
             >
               <ListPlus size={16} />
               <span>Agregar a playlist</span>
+            </button>
+          )}
+
+          {user?.isAdmin && onChangeCover && (
+            <button
+              className={styles.albumOptionsMenu__option}
+              onClick={(e) => handleOptionClick(e, onChangeCover)}
+            >
+              <Image size={16} />
+              <span>Cambiar carátula</span>
             </button>
           )}
 
