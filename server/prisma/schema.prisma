@@ -28,6 +28,10 @@ model User {
   mustChangePassword Boolean  @default(true) @map("must_change_password")
   lastLoginAt       DateTime? @map("last_login_at")
   lastAccessAt      DateTime? @map("last_access_at")
+  avatarPath        String?   @map("avatar_path") @db.VarChar(512)
+  avatarMimeType    String?   @map("avatar_mime_type") @db.VarChar(50)
+  avatarSize        BigInt?   @map("avatar_size")
+  avatarUpdatedAt   DateTime? @map("avatar_updated_at")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 

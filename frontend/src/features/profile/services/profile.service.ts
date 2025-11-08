@@ -29,4 +29,26 @@ export const profileService = {
     const response = await apiClient.put<User>('/users/profile', data);
     return response.data;
   },
+
+  /**
+   * Upload user avatar
+   */
+  uploadAvatar: async (file: File): Promise<{ avatarPath: string; avatarSize: number; avatarMimeType: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/users/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Delete user avatar
+   */
+  deleteAvatar: async (): Promise<void> => {
+    await apiClient.delete('/users/avatar');
+  },
 };

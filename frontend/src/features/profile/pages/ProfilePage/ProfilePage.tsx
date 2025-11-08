@@ -5,6 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
+import { AvatarUpload } from '../../components/AvatarUpload';
 import styles from './ProfilePage.module.css';
 
 /**
@@ -120,6 +121,16 @@ export function ProfilePage() {
             <div>
               <h1>Mi Perfil</h1>
               <p className={styles.profilePage__subtitle}>Gestiona tu información personal y seguridad</p>
+            </div>
+          </div>
+
+          {/* Avatar Upload Card */}
+          <div className={styles.profilePage__card}>
+            <div className={styles.profilePage__cardHeader}>
+              <h2>Foto de perfil</h2>
+            </div>
+            <div className={styles.profilePage__cardBody}>
+              <AvatarUpload />
             </div>
           </div>
 
