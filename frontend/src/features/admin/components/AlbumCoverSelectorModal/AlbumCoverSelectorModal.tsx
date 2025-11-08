@@ -24,6 +24,7 @@ export function AlbumCoverSelectorModal({
 }: AlbumCoverSelectorModalProps) {
   const [selectedCover, setSelectedCover] = useState<CoverOption | null>(null);
   const [providerFilter, setProviderFilter] = useState<string>('');
+  const [applyError, setApplyError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useSearchAlbumCovers(albumId);
   const { mutate: applyCover, isPending: isApplying } = useApplyAlbumCover();
@@ -42,6 +43,7 @@ export function AlbumCoverSelectorModal({
   const handleApply = () => {
     if (!selectedCover) return;
 
+    setApplyError(null);
     applyCover(
       {
         albumId,
@@ -50,8 +52,13 @@ export function AlbumCoverSelectorModal({
       },
       {
         onSuccess: () => {
+          console.log('Cover applied successfully');
           onSuccess?.();
           onClose();
+        },
+        onError: (error: any) => {
+          console.error('Error applying cover:', error);
+          setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la carátula');
         },
       },
     );
@@ -177,6 +184,14 @@ export function AlbumCoverSelectorModal({
             </>
           )}
         </div>
+
+        {/* Error message */}
+        {applyError && (
+          <div className={styles.errorMessage}>
+            <AlertCircle size={16} />
+            <span>{applyError}</span>
+          </div>
+        )}
 
         {/* Footer */}
         {!isLoading && !error && covers.length > 0 && (

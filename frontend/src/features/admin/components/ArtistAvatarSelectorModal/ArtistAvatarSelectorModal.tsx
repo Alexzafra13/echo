@@ -25,6 +25,7 @@ export function ArtistAvatarSelectorModal({
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarOption | null>(null);
   const [providerFilter, setProviderFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
+  const [applyError, setApplyError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useSearchArtistAvatars(artistId);
   const { mutate: applyAvatar, isPending: isApplying } = useApplyArtistAvatar();
@@ -46,6 +47,7 @@ export function ArtistAvatarSelectorModal({
   const handleApply = () => {
     if (!selectedAvatar || !selectedAvatar.type) return;
 
+    setApplyError(null);
     applyAvatar(
       {
         artistId,
@@ -55,8 +57,13 @@ export function ArtistAvatarSelectorModal({
       },
       {
         onSuccess: () => {
+          console.log('Avatar applied successfully');
           onSuccess?.();
           onClose();
+        },
+        onError: (error: any) => {
+          console.error('Error applying avatar:', error);
+          setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la imagen');
         },
       },
     );
@@ -226,6 +233,14 @@ export function ArtistAvatarSelectorModal({
             </>
           )}
         </div>
+
+        {/* Error message */}
+        {applyError && (
+          <div className={styles.errorMessage}>
+            <AlertCircle size={16} />
+            <span>{applyError}</span>
+          </div>
+        )}
 
         {/* Footer */}
         {!isLoading && !error && avatars.length > 0 && (
