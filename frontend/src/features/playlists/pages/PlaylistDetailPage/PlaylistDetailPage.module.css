@@ -107,6 +107,16 @@
   color: var(--text-primary, #ffffff);
 }
 
+.playlistDetailPage__heroOwner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.playlistDetailPage__heroOwnerIcon {
+  flex-shrink: 0;
+}
+
 .playlistDetailPage__heroDivider {
   opacity: 0.5;
 }
