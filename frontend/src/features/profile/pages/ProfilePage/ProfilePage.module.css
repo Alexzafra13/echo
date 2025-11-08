@@ -34,16 +34,60 @@
   margin-bottom: 32px;
 }
 
-.profilePage__headerIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.profilePage__avatarContainer {
+  position: relative;
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  overflow: hidden;
+  border: 3px solid var(--primary-color, #ff6b6b);
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+  flex-shrink: 0;
+}
+
+.profilePage__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profilePage__avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  background: linear-gradient(135deg,
+    rgba(255, 107, 107, 0.2) 0%,
+    rgba(255, 107, 107, 0.1) 100%);
+  text-transform: uppercase;
+}
+
+.profilePage__avatarEditButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-color, #ff6b6b);
+  border: 2px solid var(--bg-primary, #0a0e27);
   color: white;
-  box-shadow: 0 8px 24px rgba(237, 104, 66, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+}
+
+.profilePage__avatarEditButton:hover {
+  background: var(--primary-hover, #ff5252);
+  transform: scale(1.1);
 }
 
 .profilePage__header h1 {
@@ -54,17 +98,10 @@
 }
 
 .profilePage__subtitle {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-secondary);
   margin: 0;
-}
-
-/* Avatar Section */
-.profilePage__avatarSection {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0;
-  margin-bottom: 24px;
+  font-weight: 500;
 }
 
 /* Card */
