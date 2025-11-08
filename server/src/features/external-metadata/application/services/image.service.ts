@@ -130,6 +130,8 @@ export class ImageService {
     // Priorizar externalCoverPath sobre coverArtPath
     const coverPath = album.externalCoverPath || album.coverArtPath;
 
+    this.logger.debug(`Album ${albumId}: externalCoverPath=${album.externalCoverPath}, coverArtPath=${album.coverArtPath}, using: ${coverPath}`);
+
     let imageResult: ImageResult;
 
     if (!coverPath) {
@@ -138,8 +140,16 @@ export class ImageService {
       const defaultCoverPath = 'defaults/album-cover-default.png';
       imageResult = await this.getImageFileInfo(defaultCoverPath);
     } else {
+      // Si coverPath no tiene path absoluto ni relativo (solo nombre de archivo),
+      // asumir que está en uploads/covers/
+      let fullPath = coverPath;
+      if (!coverPath.includes('/') && !coverPath.includes('\\')) {
+        fullPath = `uploads/covers/${coverPath}`;
+        this.logger.debug(`Converted relative cover path to: ${fullPath}`);
+      }
+
       // Verificar que el archivo existe y obtener metadata
-      imageResult = await this.getImageFileInfo(coverPath);
+      imageResult = await this.getImageFileInfo(fullPath);
     }
 
     // Cachear resultado
