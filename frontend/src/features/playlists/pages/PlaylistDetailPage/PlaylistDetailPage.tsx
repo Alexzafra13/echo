@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
 import { Play, Music, Trash2, Edit2, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
@@ -8,6 +8,7 @@ import { usePlaylist, usePlaylistTracks, useRemoveTrackFromPlaylist } from '../.
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic } from '../../components';
+import { extractDominantColor } from '@shared/utils/colorExtractor';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -18,10 +19,24 @@ export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { playQueue, currentTrack } = usePlayer();
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
   const removeTrackMutation = useRemoveTrackFromPlaylist();
+
+  // Extract dominant color from first album cover in playlist
+  useEffect(() => {
+    const tracks = playlistTracks?.tracks || [];
+    const firstAlbumId = tracks.find((track) => track.albumId)?.albumId;
+
+    if (firstAlbumId) {
+      const coverUrl = `/api/albums/${firstAlbumId}/cover`;
+      extractDominantColor(coverUrl).then((color) => {
+        setDominantColor(color);
+      });
+    }
+  }, [playlistTracks]);
 
   // Convert API tracks to Player tracks
   const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
@@ -124,7 +139,15 @@ export default function PlaylistDetailPage() {
       <main className={styles.playlistDetailPage__main}>
         <Header showBackButton />
 
-        <div className={styles.playlistDetailPage__content}>
+        <div
+          className={styles.playlistDetailPage__content}
+          style={{
+            background: `linear-gradient(180deg,
+              rgba(${dominantColor}, 0.6) 0%,
+              rgba(${dominantColor}, 0.3) 25%,
+              rgba(10, 14, 39, 1) 60%)`
+          }}
+        >
           {/* Playlist hero section */}
           <div className={styles.playlistDetailPage__hero}>
             {/* Playlist cover */}

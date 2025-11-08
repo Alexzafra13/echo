@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ListPlus, Plus, X, Loader2, Music } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { usePlaylists, useCreatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
+import { PlaylistCoverMosaic } from '../PlaylistCoverMosaic/PlaylistCoverMosaic';
 import type { Track } from '@features/home/types';
 import styles from './AddToPlaylistModal.module.css';
 
@@ -153,8 +154,11 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
                     onClick={() => handleAddToPlaylist(playlist.id)}
                     disabled={addTrackMutation.isPending}
                   >
-                    <div className={styles.playlistIcon}>
-                      <Music size={20} />
+                    <div className={styles.playlistCover}>
+                      <PlaylistCoverMosaic
+                        albumIds={playlist.albumIds || []}
+                        playlistName={playlist.name}
+                      />
                     </div>
                     <div className={styles.playlistInfo}>
                       <p className={styles.playlistName}>{playlist.name}</p>
