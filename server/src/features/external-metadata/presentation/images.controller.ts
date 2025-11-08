@@ -479,8 +479,10 @@ export class ImagesController {
     const etag = `"${lastModified.getTime()}"`;
     res.header('ETag', etag);
 
-    // Cache-Control - cachear pero revalidar con ETag
-    res.header('Cache-Control', 'public, max-age=3600, must-revalidate');
+    // Cache-Control - forzar revalidación en cada request
+    // Usa no-cache para que el browser SIEMPRE verifique con el servidor
+    // pero puede usar cache si el ETag coincide (304 Not Modified)
+    res.header('Cache-Control', 'no-cache, must-revalidate');
 
     // Permitir CORS
     res.header('Access-Control-Allow-Origin', '*');
