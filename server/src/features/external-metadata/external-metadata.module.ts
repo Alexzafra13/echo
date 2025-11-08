@@ -108,6 +108,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     MetadataCacheService,
     SettingsService,
     StorageService,
+    ImageDownloadService,
     MetadataConflictService,
   ],
 })
