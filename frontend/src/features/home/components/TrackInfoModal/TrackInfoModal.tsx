@@ -16,13 +16,22 @@ interface TrackInfoModalProps {
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   const coverUrl = track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined;
 
-  const formatFileSize = (bytes?: number): string => {
+  const formatFileSize = (bytes?: number | bigint): string => {
     if (!bytes) return 'Desconocido';
-    const mb = bytes / (1024 * 1024);
+
+    // Convert BigInt to number if needed
+    const bytesNumber = typeof bytes === 'bigint' ? Number(bytes) : bytes;
+
+    const kb = bytesNumber / 1024;
+    const mb = kb / 1024;
+    const gb = mb / 1024;
+
+    if (gb >= 1) {
+      return `${gb.toFixed(2)} GB`;
+    }
     if (mb >= 1) {
       return `${mb.toFixed(2)} MB`;
     }
-    const kb = bytes / 1024;
     return `${kb.toFixed(2)} KB`;
   };
 
