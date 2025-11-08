@@ -27,6 +27,9 @@ export class PlaylistResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   ownerId!: string;
 
+  @ApiPropertyOptional({ example: 'johndoe' })
+  ownerName?: string;
+
   @ApiProperty({ example: false })
   public!: boolean;
 
@@ -57,6 +60,7 @@ export class PlaylistResponseDto {
       duration: output.duration,
       size: output.size.toString(),
       ownerId: output.ownerId,
+      ownerName: output.ownerName,
       public: output.public,
       songCount: output.songCount,
       path: output.path,

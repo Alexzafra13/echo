@@ -39,12 +39,12 @@ export class AddTrackToPlaylistUseCase {
     // 4. Verificar que el track no está ya en la playlist
     const isInPlaylist = await this.playlistRepository.isTrackInPlaylist(input.playlistId, input.trackId);
     if (isInPlaylist) {
-      throw new ConflictException(`Track ${input.trackId} is already in playlist ${input.playlistId}`);
+      throw new ConflictException('Esta canción ya está en la playlist');
     }
 
-    // 5. Obtener el siguiente orden (último + 1)
+    // 5. Obtener el siguiente orden (último + 1), empezando desde 1
     const existingTracks = await this.playlistRepository.getPlaylistTracks(input.playlistId);
-    const nextOrder = existingTracks.length;
+    const nextOrder = existingTracks.length + 1;
 
     // 6. Crear PlaylistTrack
     const playlistTrack = PlaylistTrack.create({
