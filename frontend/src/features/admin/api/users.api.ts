@@ -10,6 +10,7 @@ export interface User {
   avatarPath?: string;
   createdAt: string;
   lastLoginAt?: string;
+  isSystemAdmin: boolean;
 }
 
 export interface CreateUserRequest {

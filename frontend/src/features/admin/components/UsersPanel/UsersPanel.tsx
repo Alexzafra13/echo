@@ -329,13 +329,19 @@ export function UsersPanel() {
                     </div>
                   </td>
                   <td>
-                    <span
-                      className={`${styles.badge} ${
-                        user.isAdmin ? styles.badgeAdmin : styles.badgeUser
-                      }`}
-                    >
-                      {user.isAdmin ? 'Admin' : 'Usuario'}
-                    </span>
+                    {user.isSystemAdmin ? (
+                      <span className={`${styles.badge} ${styles.badgeSystemAdmin}`}>
+                        Administrador Principal
+                      </span>
+                    ) : (
+                      <span
+                        className={`${styles.badge} ${
+                          user.isAdmin ? styles.badgeAdmin : styles.badgeUser
+                        }`}
+                      >
+                        {user.isAdmin ? 'Admin' : 'Usuario'}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <span
@@ -369,8 +375,8 @@ export function UsersPanel() {
                       <button
                         className={`${styles.actionButton} ${styles.actionButtonWarning}`}
                         onClick={() => handleDeleteClick(user)}
-                        title="Desactivar usuario (acción reversible)"
-                        disabled={!user.isActive}
+                        title={user.isSystemAdmin ? "No se puede desactivar al administrador principal" : "Desactivar usuario (acción reversible)"}
+                        disabled={!user.isActive || user.isSystemAdmin}
                       >
                         <UserX size={14} />
                         Desactivar
@@ -378,7 +384,8 @@ export function UsersPanel() {
                       <button
                         className={`${styles.actionButton} ${styles.actionButtonDanger}`}
                         onClick={() => handlePermanentlyDeleteClick(user)}
-                        title="Eliminar permanentemente (no se puede deshacer)"
+                        title={user.isSystemAdmin ? "No se puede eliminar al administrador principal" : "Eliminar permanentemente (no se puede deshacer)"}
+                        disabled={user.isSystemAdmin}
                       >
                         <Trash2 size={14} />
                         Eliminar

@@ -26,6 +26,15 @@ export class ListUsersUseCase {
       this.userRepository.count(),
     ]);
 
+    // Obtener todos los admins para identificar al primero (system admin)
+    const allUsers = await this.userRepository.findAll(0, 1000);
+    const adminUsers = allUsers.filter(u => u.isAdmin);
+    const systemAdmin = adminUsers.length > 0
+      ? adminUsers.reduce((oldest, current) =>
+          current.createdAt < oldest.createdAt ? current : oldest
+        )
+      : null;
+
     // Mapear entidades del domain a DTOs
     const users = usersEntities.map((user) => ({
       id: user.id,
@@ -38,6 +47,7 @@ export class ListUsersUseCase {
       mustChangePassword: user.mustChangePassword,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
+      isSystemAdmin: systemAdmin ? user.id === systemAdmin.id : false,
     }));
 
     return { users, total };
