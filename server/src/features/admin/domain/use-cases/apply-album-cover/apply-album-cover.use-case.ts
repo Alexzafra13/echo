@@ -88,7 +88,7 @@ export class ApplyAlbumCoverUseCase {
       throw error;
     }
 
-    // Update database
+    // Update database (updatedAt will be automatically updated by Prisma)
     await this.prisma.album.update({
       where: { id: input.albumId },
       data: {
