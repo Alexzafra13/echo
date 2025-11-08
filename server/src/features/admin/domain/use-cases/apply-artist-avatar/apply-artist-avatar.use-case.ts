@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -21,6 +22,7 @@ export class ApplyArtistAvatarUseCase {
     private readonly prisma: PrismaService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
+    private readonly imageService: ImageService,
   ) {}
 
   async execute(input: ApplyArtistAvatarInput): Promise<ApplyArtistAvatarOutput> {
@@ -132,6 +134,10 @@ export class ApplyArtistAvatarUseCase {
         },
       });
     }
+
+    // Invalidate server-side image cache to force reload of new images
+    this.imageService.invalidateArtistCache(input.artistId);
+    this.logger.debug(`Invalidated image cache for artist ${input.artistId}`);
 
     return {
       success: true,
