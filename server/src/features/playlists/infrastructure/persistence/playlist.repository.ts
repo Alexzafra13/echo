@@ -166,10 +166,11 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
     });
 
     // Map tracks and attach trackOrder to each track
-    return playlistTracks.map((pt) => {
+    // Use index + 1 to ensure display always starts from 1
+    return playlistTracks.map((pt, index) => {
       const track = TrackMapper.toDomain(pt.track);
-      // Attach trackOrder as a custom property
-      (track as any).playlistOrder = pt.trackOrder;
+      // Attach trackOrder as a custom property (1-indexed for display)
+      (track as any).playlistOrder = index + 1;
       return track;
     });
   }
