@@ -1,0 +1,275 @@
+/* TrackInfoModal Styles */
+
+.trackInfoModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.trackInfoModal__content {
+  background: var(--color-bg-secondary, #1e293b);
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.trackInfoModal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trackInfoModal__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+}
+
+.trackInfoModal__closeButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #b8bcc8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trackInfoModal__closeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary, #ffffff);
+}
+
+/* Hero Section */
+.trackInfoModal__hero {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.15), rgba(237, 104, 66, 0.05));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trackInfoModal__cover {
+  width: 140px;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.trackInfoModal__coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trackInfoModal__coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.3), rgba(237, 104, 66, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: var(--color-primary, #ed6842);
+  opacity: 0.5;
+}
+
+.trackInfoModal__heroInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.trackInfoModal__trackTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.trackInfoModal__artist {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+}
+
+.trackInfoModal__album {
+  font-size: 14px;
+  color: var(--color-text-tertiary, #6b7280);
+  margin: 0;
+}
+
+/* Info Sections */
+.trackInfoModal__sections {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.trackInfoModal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trackInfoModal__sectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary, #ed6842);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(237, 104, 66, 0.2);
+}
+
+.trackInfoModal__infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trackInfoModal__infoRow {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.trackInfoModal__infoLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #6b7280);
+  text-align: right;
+}
+
+.trackInfoModal__infoValue {
+  font-size: 14px;
+  color: var(--color-text-primary, #ffffff);
+  word-break: break-word;
+}
+
+/* Lyrics */
+.trackInfoModal__lyrics {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #b8bcc8);
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Comment */
+.trackInfoModal__comment {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+/* Scrollbar */
+.trackInfoModal__content::-webkit-scrollbar,
+.trackInfoModal__lyrics::-webkit-scrollbar {
+  width: 8px;
+}
+
+.trackInfoModal__content::-webkit-scrollbar-track,
+.trackInfoModal__lyrics::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trackInfoModal__content::-webkit-scrollbar-thumb,
+.trackInfoModal__lyrics::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.trackInfoModal__content::-webkit-scrollbar-thumb:hover,
+.trackInfoModal__lyrics::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trackInfoModal {
+    padding: 0;
+  }
+
+  .trackInfoModal__content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .trackInfoModal__hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .trackInfoModal__cover {
+    width: 180px;
+    height: 180px;
+  }
+
+  .trackInfoModal__infoRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .trackInfoModal__infoLabel {
+    text-align: left;
+    font-size: 12px;
+  }
+}
