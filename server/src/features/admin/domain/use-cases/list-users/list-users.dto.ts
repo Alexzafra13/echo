@@ -11,6 +11,7 @@ export interface ListUsersOutput {
     name?: string;
     isAdmin: boolean;
     isActive: boolean;
+    avatarPath?: string;
     mustChangePassword: boolean;
     lastLoginAt?: Date;
     createdAt: Date;

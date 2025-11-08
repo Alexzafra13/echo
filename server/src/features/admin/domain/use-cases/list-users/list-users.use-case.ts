@@ -34,6 +34,7 @@ export class ListUsersUseCase {
       name: user.name,
       isAdmin: user.isAdmin,
       isActive: user.isActive,
+      avatarPath: user.avatarPath,
       mustChangePassword: user.mustChangePassword,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,

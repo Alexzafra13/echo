@@ -7,6 +7,7 @@ export interface User {
   name?: string;
   isAdmin: boolean;
   isActive: boolean;
+  avatarPath?: string;
   createdAt: string;
   lastLoginAt?: string;
 }
