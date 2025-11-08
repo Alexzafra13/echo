@@ -18,6 +18,13 @@ async function bootstrap() {
     fastifyAdapter,
   );
 
+  // Register multipart/form-data support for file uploads
+  await app.register(require('@fastify/multipart'), {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max (covers both avatars 5MB and covers 10MB)
+    },
+  });
+
   // WebSocket Adapter
   app.useWebSocketAdapter(new WebSocketAdapter(app));
 
