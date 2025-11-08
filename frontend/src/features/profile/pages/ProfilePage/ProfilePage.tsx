@@ -124,14 +124,9 @@ export function ProfilePage() {
             </div>
           </div>
 
-          {/* Avatar Upload Card */}
-          <div className={styles.profilePage__card}>
-            <div className={styles.profilePage__cardHeader}>
-              <h2>Foto de perfil</h2>
-            </div>
-            <div className={styles.profilePage__cardBody}>
-              <AvatarUpload />
-            </div>
+          {/* Avatar Upload */}
+          <div className={styles.profilePage__avatarSection}>
+            <AvatarUpload />
           </div>
 
           {/* Account Info Card */}
