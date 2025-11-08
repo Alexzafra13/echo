@@ -3,6 +3,7 @@ import { Play } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
+import { TrackInfoModal } from '../TrackInfoModal';
 import type { Track } from '../../types';
 import { formatDuration } from '../../types';
 import { TrackOptionsMenu } from '../TrackOptionsMenu/TrackOptionsMenu';
@@ -49,6 +50,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
+  const [selectedTrackForInfo, setSelectedTrackForInfo] = useState<Track | null>(null);
 
   const handlePlay = (track: Track) => {
     onTrackPlay?.(track);
@@ -74,11 +76,6 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
     addToQueue(playerTrack);
   };
 
-  const handlePlayNext = (track: Track) => {
-    console.log('Play next:', track.title);
-    // TODO: Implementar "play next" cuando tengamos esa función en el player
-  };
-
   const handleGoToAlbum = (track: Track) => {
     if (track.albumId) {
       setLocation(`/album/${track.albumId}`);
@@ -92,8 +89,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
   };
 
   const handleShowInfo = (track: Track) => {
-    console.log('Show info for:', track.title);
-    // TODO: Implementar modal de información
+    setSelectedTrackForInfo(track);
   };
 
   if (!tracks || tracks.length === 0) {
@@ -181,7 +177,6 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
                 track={track}
                 onAddToPlaylist={handleAddToPlaylist}
                 onAddToQueue={handleAddToQueue}
-                onPlayNext={handlePlayNext}
                 onGoToAlbum={handleGoToAlbum}
                 onGoToArtist={handleGoToArtist}
                 onShowInfo={handleShowInfo}
@@ -196,6 +191,14 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
         <AddToPlaylistModal
           track={selectedTrackForPlaylist}
           onClose={() => setSelectedTrackForPlaylist(null)}
+        />
+      )}
+
+      {/* Track Info Modal */}
+      {selectedTrackForInfo && (
+        <TrackInfoModal
+          track={selectedTrackForInfo}
+          onClose={() => setSelectedTrackForInfo(null)}
         />
       )}
     </div>

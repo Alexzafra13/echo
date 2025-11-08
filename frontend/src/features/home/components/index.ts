@@ -4,3 +4,4 @@ export { HeroSection } from './HeroSection';
 export { Sidebar } from './Sidebar';
 export { TrackList } from './TrackList';
 export { TrackOptionsMenu } from './TrackOptionsMenu/TrackOptionsMenu';
+export { TrackInfoModal } from './TrackInfoModal';
