@@ -165,6 +165,12 @@ export default function PlaylistDetailPage() {
                 </p>
               )}
               <div className={styles.playlistDetailPage__heroMeta}>
+                {playlist.ownerName && (
+                  <>
+                    <span>{playlist.ownerName}</span>
+                    <span className={styles.playlistDetailPage__heroDivider}>•</span>
+                  </>
+                )}
                 <span>{playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}</span>
                 {playlist.duration > 0 && (
                   <>
