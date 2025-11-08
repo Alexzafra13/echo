@@ -27,6 +27,7 @@ export function HistoryTab() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [statsPeriod, setStatsPeriod] = useState<'today' | 'week' | 'month' | 'all'>('week');
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Queries
   const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useEnrichmentLogs(filters);
@@ -263,7 +264,12 @@ export function HistoryTab() {
                 </thead>
                 <tbody>
                   {logs.map((log) => (
-                    <tr key={log.id}>
+                    <tr
+                      key={log.id}
+                      className={log.previewUrl ? styles.clickableRow : ''}
+                      onClick={() => log.previewUrl && setPreviewImage(log.previewUrl)}
+                      title={log.previewUrl ? 'Clic para ver imagen' : ''}
+                    >
                       <td>{formatDate(log.createdAt)}</td>
                       <td>
                         <div className={styles.entityCell}>
@@ -340,6 +346,25 @@ export function HistoryTab() {
           </>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className={styles.imageModal} onClick={() => setPreviewImage(null)}>
+          <div className={styles.imageModalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.imageModalClose} onClick={() => setPreviewImage(null)}>
+              ×
+            </button>
+            <img
+              src={previewImage}
+              alt="Preview"
+              className={styles.imageModalImage}
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-album.png';
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

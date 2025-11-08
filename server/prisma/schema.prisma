@@ -597,6 +597,7 @@ model EnrichmentLog {
   status        String   @db.VarChar(20) // 'success', 'partial', 'error'
   fieldsUpdated String[] @map("fields_updated") // Array of field names that were updated
   errorMessage  String?  @map("error_message") @db.Text
+  previewUrl    String?  @map("preview_url") @db.VarChar(512) // URL for image preview (for covers/avatars)
   userId        String?  @map("user_id") @db.VarChar(36) // Who triggered it (null if automatic)
   processingTime Int?    @map("processing_time") // In milliseconds
   createdAt     DateTime @default(now()) @map("created_at")

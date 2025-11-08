@@ -10,6 +10,7 @@ export interface EnrichmentLog {
   status: 'success' | 'partial' | 'error';
   fieldsUpdated: string[];
   errorMessage?: string;
+  previewUrl?: string;
   userId?: string;
   processingTime?: number;
   createdAt: string;

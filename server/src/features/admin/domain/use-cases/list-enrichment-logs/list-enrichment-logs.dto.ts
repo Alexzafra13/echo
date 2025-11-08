@@ -21,6 +21,7 @@ export interface EnrichmentLogItem {
   status: string;
   fieldsUpdated: string[];
   errorMessage?: string;
+  previewUrl?: string;
   userId?: string;
   processingTime?: number;
   createdAt: Date;
