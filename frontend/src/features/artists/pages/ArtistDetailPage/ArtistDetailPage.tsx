@@ -1,11 +1,13 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Image } from 'lucide-react';
 import { useState } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
+import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { useArtist } from '../../hooks';
 import { useAlbums } from '@features/home/hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
+import { useAuth } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
 import styles from './ArtistDetailPage.module.css';
 
@@ -18,6 +20,8 @@ export default function ArtistDetailPage() {
   const [, setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
+  const { user } = useAuth();
 
   // Fetch artist details
   const { data: artist, isLoading: loadingArtist, error: artistError } = useArtist(id);
@@ -133,6 +137,15 @@ export default function ArtistDetailPage() {
                     {initials}
                   </div>
                 )}
+                {user?.isAdmin && (
+                  <button
+                    className={styles.artistDetailPage__changeAvatarBtn}
+                    onClick={() => setIsAvatarSelectorOpen(true)}
+                    title="Cambiar imagen del artista"
+                  >
+                    <Image size={16} />
+                  </button>
+                )}
               </div>
 
               {/* Artist Info */}
@@ -242,6 +255,16 @@ export default function ArtistDetailPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Avatar Selector Modal */}
+      {isAvatarSelectorOpen && artist && (
+        <ArtistAvatarSelectorModal
+          artistId={artist.id}
+          artistName={artist.name}
+          onClose={() => setIsAvatarSelectorOpen(false)}
+          onSuccess={() => window.location.reload()}
+        />
       )}
     </div>
   );

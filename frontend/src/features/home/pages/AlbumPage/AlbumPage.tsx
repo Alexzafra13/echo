@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'wouter';
 import { Play } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../components';
+import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSelectorModal';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
@@ -21,6 +22,7 @@ export default function AlbumPage() {
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const { playQueue, currentTrack } = usePlayer();
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
@@ -79,6 +81,15 @@ export default function AlbumPage() {
   const handleDownloadAlbum = () => {
     // TODO: Implement download album
     console.log('Download album - to be implemented');
+  };
+
+  const handleChangeCover = () => {
+    setIsCoverSelectorOpen(true);
+  };
+
+  const handleCoverChanged = () => {
+    // Refetch album data to show the new cover
+    window.location.reload();
   };
 
   if (loadingAlbum) {
@@ -191,6 +202,7 @@ export default function AlbumPage() {
                   onShowInfo={handleShowAlbumInfo}
                   onAddToPlaylist={handleAddAlbumToPlaylist}
                   onDownload={handleDownloadAlbum}
+                  onChangeCover={handleChangeCover}
                 />
               </div>
             </div>
@@ -236,6 +248,16 @@ export default function AlbumPage() {
           album={album}
           tracks={tracks || []}
           onClose={() => setIsInfoModalOpen(false)}
+        />
+      )}
+
+      {/* Album Cover Selector Modal */}
+      {isCoverSelectorOpen && album && (
+        <AlbumCoverSelectorModal
+          albumId={album.id}
+          albumName={album.title}
+          onClose={() => setIsCoverSelectorOpen(false)}
+          onSuccess={handleCoverChanged}
         />
       )}
     </div>
