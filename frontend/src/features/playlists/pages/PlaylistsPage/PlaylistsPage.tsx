@@ -5,6 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist } from '../../hooks/usePlaylists';
+import { PlaylistCoverMosaic } from '../../components';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -151,13 +152,10 @@ export default function PlaylistsPage() {
                   onClick={() => setLocation(`/playlists/${playlist.id}`)}
                 >
                   <div className={styles.playlistCard__cover}>
-                    {playlist.coverImageUrl ? (
-                      <img src={playlist.coverImageUrl} alt={playlist.name} />
-                    ) : (
-                      <div className={styles.playlistCard__coverPlaceholder}>
-                        <Music size={48} />
-                      </div>
-                    )}
+                    <PlaylistCoverMosaic
+                      albumIds={playlist.albumIds || []}
+                      playlistName={playlist.name}
+                    />
                   </div>
 
                   <div className={styles.playlistCard__info}>

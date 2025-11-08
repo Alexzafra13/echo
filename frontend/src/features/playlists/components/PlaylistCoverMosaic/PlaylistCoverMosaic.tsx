@@ -53,9 +53,12 @@ export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMos
   }
 
   // For 2, 3, or 4 albums, show grid
+  // Determine the grid class based on count
+  const gridClass = uniqueAlbumIds.length >= 4 ? 'mosaic__grid_4' : `mosaic__grid_${uniqueAlbumIds.length}`;
+
   return (
     <div className={styles.mosaic}>
-      <div className={`${styles.mosaic__grid} ${styles[`mosaic__grid_${uniqueAlbumIds.length}`]}`}>
+      <div className={`${styles.mosaic__grid} ${styles[gridClass]}`}>
         {uniqueAlbumIds.map((albumId, index) => (
           <div key={albumId} className={styles.mosaic__gridItem}>
             <img
@@ -66,14 +69,6 @@ export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMos
                 e.currentTarget.src = '/placeholder-album.png';
               }}
             />
-          </div>
-        ))}
-        {/* Fill remaining slots with placeholder for 2 or 3 albums */}
-        {uniqueAlbumIds.length < 4 && Array.from({ length: 4 - uniqueAlbumIds.length }).map((_, index) => (
-          <div key={`placeholder-${index}`} className={styles.mosaic__gridItem}>
-            <div className={styles.mosaic__gridPlaceholder}>
-              <Music size={24} />
-            </div>
           </div>
         ))}
       </div>

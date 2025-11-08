@@ -17,6 +17,7 @@ export interface IPlaylistRepository {
   addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack>;
   removeTrack(playlistId: string, trackId: string): Promise<boolean>;
   getPlaylistTracks(playlistId: string): Promise<Track[]>;
+  getPlaylistAlbumIds(playlistId: string): Promise<string[]>;
   reorderTracks(playlistId: string, trackOrders: Array<{ trackId: string; order: number }>): Promise<boolean>;
   isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean>;
 }
