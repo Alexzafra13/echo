@@ -7,13 +7,10 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
@@ -172,7 +169,6 @@ export class UsersController {
 
   @Post('avatar')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Subir avatar de usuario',
@@ -211,24 +207,41 @@ export class UsersController {
     description: 'No autenticado'
   })
   async uploadAvatar(
+    @Req() request: FastifyRequest,
     @CurrentUser() user: any,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-        ],
-      }),
-    )
-    file: Express.Multer.File,
   ) {
+    // Fastify multipart - get uploaded file
+    const data = await request.file();
+
+    if (!data) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Validate file size (5MB max for avatars)
+    const MAX_SIZE = 5 * 1024 * 1024;
+
+    // Convert stream to buffer
+    const buffer = await data.toBuffer();
+
+    if (buffer.length > MAX_SIZE) {
+      throw new BadRequestException(`File size exceeds maximum allowed size of 5MB`);
+    }
+
+    // Validate MIME type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(data.mimetype)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
+      );
+    }
+
     return await this.uploadAvatarUseCase.execute({
       userId: user.id,
       file: {
-        buffer: file.buffer,
-        mimetype: file.mimetype,
-        size: file.size,
-        originalname: file.originalname,
+        buffer,
+        mimetype: data.mimetype,
+        size: buffer.length,
+        originalname: data.filename,
       },
     });
   }
