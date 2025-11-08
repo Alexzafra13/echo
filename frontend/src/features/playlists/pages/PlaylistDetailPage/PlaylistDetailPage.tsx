@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
-import { Play, Music, Trash2, Edit2, MoreHorizontal, User } from 'lucide-react';
+import { Play, Music, Trash2, Edit2, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
@@ -9,6 +9,7 @@ import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic } from '../../components';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
+import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -168,7 +169,12 @@ export default function PlaylistDetailPage() {
                 {playlist.ownerName && (
                   <>
                     <span className={styles.playlistDetailPage__heroOwner}>
-                      <User size={16} className={styles.playlistDetailPage__heroOwnerIcon} />
+                      <img
+                        src={getUserAvatarUrl(playlist.ownerId)}
+                        alt={playlist.ownerName}
+                        className={styles.playlistDetailPage__heroOwnerAvatar}
+                        onError={handleAvatarError}
+                      />
                       {playlist.ownerName}
                     </span>
                     <span className={styles.playlistDetailPage__heroDivider}>•</span>

@@ -5,6 +5,7 @@ import { useAuth, useTheme } from '@shared/hooks';
 import { BackButton } from '@shared/components/ui';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchResults } from './SearchResults';
+import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -149,14 +150,27 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
             onClick={() => setShowUserMenu(!showUserMenu)}
             aria-label="User menu"
           >
-            <User size={20} />
+            <img
+              src={getUserAvatarUrl(user?.id)}
+              alt={user?.username || 'User'}
+              className={styles.header__userAvatar}
+              onError={handleAvatarError}
+            />
           </button>
 
           {showUserMenu && (
             <div className={styles.header__userDropdown}>
               <div className={styles.header__userInfo}>
-                <p className={styles.header__userName}>{user?.username || 'User'}</p>
-                <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
+                <img
+                  src={getUserAvatarUrl(user?.id)}
+                  alt={user?.username || 'User'}
+                  className={styles.header__userAvatarLarge}
+                  onError={handleAvatarError}
+                />
+                <div>
+                  <p className={styles.header__userName}>{user?.username || 'User'}</p>
+                  <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
+                </div>
               </div>
               <div className={styles.header__userDivider} />
               <button className={styles.header__userMenuItem} onClick={() => setLocation('/profile')}>
