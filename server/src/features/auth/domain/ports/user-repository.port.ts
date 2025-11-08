@@ -2,6 +2,7 @@
 import { User } from '../entities/user.entity';
 
 export interface UserUpdateableFields {
+  username?: string;
   name?: string;
   email?: string;
   theme?: string;

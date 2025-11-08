@@ -12,7 +12,7 @@ interface EditUserModalProps {
 
 export function EditUserModal({ user, onClose }: EditUserModalProps) {
   const [formData, setFormData] = useState({
-    name: user.name || '',
+    username: user.username,
     isAdmin: user.isAdmin,
     isActive: user.isActive,
   });
@@ -22,6 +22,11 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    if (!formData.username || formData.username.trim().length === 0) {
+      newErrors.username = 'El nombre de usuario es obligatorio';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -35,7 +40,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
       await updateUserMutation.mutateAsync({
         id: user.id,
         data: {
-          name: formData.name || undefined,
+          username: formData.username,
           isAdmin: formData.isAdmin,
           isActive: formData.isActive,
         },
@@ -61,7 +66,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
             <div>
               <h2 className={styles.title}>Editar Usuario</h2>
               <p className={styles.subtitle}>
-                Editando: @{user.username}
+                ID: {user.id}
               </p>
             </div>
           </div>
@@ -72,20 +77,23 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
-            <label htmlFor="name" className={styles.label}>
-              Nombre Completo
+            <label htmlFor="username" className={styles.label}>
+              Nombre de usuario (para iniciar sesión)
             </label>
             <input
-              id="name"
+              id="username"
               type="text"
-              className={styles.input}
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Juan Pérez"
+              className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              placeholder="usuario123"
               autoFocus
             />
+            {errors.username && (
+              <span className={styles.errorText}>{errors.username}</span>
+            )}
             <p className={styles.helpText}>
-              Nombre para mostrar en la aplicación. El nombre de usuario (@{user.username}) no se puede cambiar.
+              El nombre de usuario debe ser único en el sistema
             </p>
           </div>
 
