@@ -39,23 +39,29 @@ export class GetPlaylistsUseCase {
       throw new BadRequestException('Must specify ownerId or publicOnly filter');
     }
 
-    // 3. Mapear a output
-    const items: PlaylistListItem[] = playlists.map((playlist) => ({
-      id: playlist.id,
-      name: playlist.name,
-      description: playlist.description,
-      coverImageUrl: playlist.coverImageUrl,
-      duration: playlist.duration,
-      size: playlist.size,
-      ownerId: playlist.ownerId,
-      public: playlist.public,
-      songCount: playlist.songCount,
-      createdAt: playlist.createdAt,
-      updatedAt: playlist.updatedAt,
-    }));
+    // 3. Obtener album IDs para cada playlist
+    const playlistsWithAlbums = await Promise.all(
+      playlists.map(async (playlist) => {
+        const albumIds = await this.playlistRepository.getPlaylistAlbumIds(playlist.id);
+        return {
+          id: playlist.id,
+          name: playlist.name,
+          description: playlist.description,
+          coverImageUrl: playlist.coverImageUrl,
+          duration: playlist.duration,
+          size: playlist.size,
+          ownerId: playlist.ownerId,
+          public: playlist.public,
+          songCount: playlist.songCount,
+          albumIds,
+          createdAt: playlist.createdAt,
+          updatedAt: playlist.updatedAt,
+        };
+      }),
+    );
 
     return {
-      items,
+      items: playlistsWithAlbums,
       total,
       skip,
       take,
