@@ -10,6 +10,7 @@ export interface GetPlaylistOutput {
   duration: number;
   size: bigint;
   ownerId: string;
+  ownerName?: string;
   public: boolean;
   songCount: number;
   path?: string;
