@@ -458,3 +458,71 @@
     padding: 10px 12px;
   }
 }
+
+/* Clickable row */
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* Image Preview Modal */
+.imageModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.imageModalContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: var(--color-bg-tertiary, #1f2937);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.imageModalClose {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-bg-primary, #0a0e27);
+  border: 2px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-primary, #ffffff);
+  font-size: 24px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10001;
+}
+
+.imageModalClose:hover {
+  background: var(--color-error, #ef4444);
+  border-color: var(--color-error, #ef4444);
+  transform: scale(1.1);
+}
+
+.imageModalImage {
+  max-width: 100%;
+  max-height: calc(90vh - 32px);
+  border-radius: 8px;
+  display: block;
+  object-fit: contain;
+}

@@ -30,6 +30,9 @@ export class EnrichmentLogItemDto {
   errorMessage?: string;
 
   @Expose()
+  previewUrl?: string;
+
+  @Expose()
   userId?: string;
 
   @Expose()
@@ -60,6 +63,7 @@ export class ListEnrichmentLogsResponseDto {
       logDto.status = log.status;
       logDto.fieldsUpdated = log.fieldsUpdated;
       logDto.errorMessage = log.errorMessage;
+      logDto.previewUrl = log.previewUrl;
       logDto.userId = log.userId;
       logDto.processingTime = log.processingTime;
       logDto.createdAt = log.createdAt;
