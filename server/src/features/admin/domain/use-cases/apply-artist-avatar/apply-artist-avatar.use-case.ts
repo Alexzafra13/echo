@@ -106,7 +106,7 @@ export class ApplyArtistAvatarUseCase {
         const mediumPath = path.join(basePath, 'profile-medium.jpg');
         await this.imageDownload.downloadAndSave(input.avatarUrl, mediumPath);
 
-        // Update all profile image fields
+        // Update all profile image fields (updatedAt will be automatically updated by Prisma)
         await this.prisma.artist.update({
           where: { id: input.artistId },
           data: {
@@ -114,7 +114,6 @@ export class ApplyArtistAvatarUseCase {
             mediumImageUrl: mediumPath,
             largeImageUrl: imagePath,
             externalInfoUpdatedAt: new Date(),
-            imagesUpdatedAt: new Date(), // Update version timestamp for cache busting
           },
         });
       } catch (error) {
@@ -124,13 +123,12 @@ export class ApplyArtistAvatarUseCase {
         // Continue anyway with large image
       }
     } else {
-      // Update single field for other types
+      // Update single field for other types (updatedAt will be automatically updated by Prisma)
       await this.prisma.artist.update({
         where: { id: input.artistId },
         data: {
           [dbField]: imagePath,
           externalInfoUpdatedAt: new Date(),
-          imagesUpdatedAt: new Date(), // Update version timestamp for cache busting
         },
       });
     }
