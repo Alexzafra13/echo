@@ -119,7 +119,7 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 24px;
-  background: var(--primary-color, #ff6b6b);
+  background: var(--color-secondary-400, #22d3ee);
   color: white;
   border: none;
   border-radius: 8px;
@@ -131,7 +131,7 @@
 }
 
 .modal__button:hover:not(:disabled) {
-  background: var(--primary-hover, #ff5252);
+  background: #06b6d4;
   transform: translateY(-1px);
 }
 

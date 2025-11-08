@@ -36,13 +36,20 @@
 
 .profilePage__avatarContainer {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   overflow: hidden;
   border: 3px solid var(--primary-color, #ff6b6b);
   box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
   flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.profilePage__avatarContainer:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 32px rgba(255, 107, 107, 0.4);
 }
 
 .profilePage__avatar {
@@ -58,7 +65,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
   background: linear-gradient(135deg,
@@ -67,27 +74,29 @@
   text-transform: uppercase;
 }
 
-.profilePage__avatarEditButton {
+.profilePage__avatarOverlay {
   position: absolute;
-  bottom: 0;
+  top: 0;
+  left: 0;
   right: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--primary-color, #ff6b6b);
-  border: 2px solid var(--bg-primary, #0a0e27);
-  color: white;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.profilePage__avatarEditButton:hover {
-  background: var(--primary-hover, #ff5252);
-  transform: scale(1.1);
+.profilePage__avatarContainer:hover .profilePage__avatarOverlay {
+  opacity: 1;
+}
+
+.profilePage__avatarOverlay span {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .profilePage__header h1 {
