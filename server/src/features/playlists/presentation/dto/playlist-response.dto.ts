@@ -33,6 +33,9 @@ export class PlaylistResponseDto {
   @ApiProperty({ example: 10 })
   songCount!: number;
 
+  @ApiPropertyOptional({ type: [String], example: ['album-id-1', 'album-id-2'], description: 'Unique album IDs in the playlist' })
+  albumIds?: string[];
+
   @ApiPropertyOptional({ example: '/music/playlists/my-playlist' })
   path?: string;
 
@@ -74,6 +77,7 @@ export class PlaylistResponseDto {
       ownerId: item.ownerId,
       public: item.public,
       songCount: item.songCount,
+      albumIds: item.albumIds,
       path: undefined,
       sync: false,
       createdAt: item.createdAt,

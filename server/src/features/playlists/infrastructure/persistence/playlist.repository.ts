@@ -174,6 +174,28 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
     });
   }
 
+  async getPlaylistAlbumIds(playlistId: string): Promise<string[]> {
+    const playlistTracks = await this.prisma.playlistTrack.findMany({
+      where: { playlistId },
+      include: {
+        track: {
+          select: {
+            albumId: true,
+          }
+        }
+      },
+      orderBy: { trackOrder: 'asc' },
+    });
+
+    // Get unique album IDs, filter out nulls
+    const albumIds = playlistTracks
+      .map((pt) => pt.track.albumId)
+      .filter((id): id is string => id !== null && id !== undefined);
+
+    // Return unique album IDs
+    return Array.from(new Set(albumIds));
+  }
+
   async reorderTracks(
     playlistId: string,
     trackOrders: Array<{ trackId: string; order: number }>,
