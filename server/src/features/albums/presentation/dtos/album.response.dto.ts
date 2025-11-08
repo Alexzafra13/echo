@@ -71,12 +71,18 @@ export class AlbumResponseDto {
     dto.albumArtistId = data.albumArtistId;
 
     // Generate cover URL with version parameter for cache busting
-    // Use updatedAt timestamp since it changes whenever album metadata is updated
+    // Use externalInfoUpdatedAt if available (more accurate), fallback to updatedAt
     let coverUrl = data.id ? `/api/images/albums/${data.id}/cover` : data.coverArtPath;
 
-    if (data.id && data.updatedAt) {
-      const version = new Date(data.updatedAt).getTime();
-      coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
+    if (data.id) {
+      // Prefer externalInfoUpdatedAt (updates when cover changes) over updatedAt (updates on any change)
+      const timestamp = data.externalInfoUpdatedAt || data.updatedAt;
+      if (timestamp) {
+        const version = new Date(timestamp).getTime();
+        coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
+        // Debug logging
+        console.log(`[AlbumDTO] Album: ${data.name}, externalInfoUpdatedAt: ${data.externalInfoUpdatedAt}, updatedAt: ${data.updatedAt}, version: ${version}, coverUrl: ${coverUrl}`);
+      }
     }
 
     dto.coverArtPath = coverUrl;
