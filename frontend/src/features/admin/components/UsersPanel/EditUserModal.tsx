@@ -13,7 +13,6 @@ interface EditUserModalProps {
 export function EditUserModal({ user, onClose }: EditUserModalProps) {
   const [formData, setFormData] = useState({
     name: user.name || '',
-    email: user.email || '',
     isAdmin: user.isAdmin,
     isActive: user.isActive,
   });
@@ -23,12 +22,6 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    // Email opcional pero debe ser válido
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -43,7 +36,6 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
         id: user.id,
         data: {
           name: formData.name || undefined,
-          email: formData.email || undefined,
           isAdmin: formData.isAdmin,
           isActive: formData.isActive,
         },
@@ -92,23 +84,9 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
               placeholder="Juan Pérez"
               autoFocus
             />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="email" className={styles.label}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="juan@example.com"
-            />
-            {errors.email && (
-              <span className={styles.errorText}>{errors.email}</span>
-            )}
+            <p className={styles.helpText}>
+              Nombre para mostrar en la aplicación. El nombre de usuario (@{user.username}) no se puede cambiar.
+            </p>
           </div>
 
           <div className={styles.formGroup}>

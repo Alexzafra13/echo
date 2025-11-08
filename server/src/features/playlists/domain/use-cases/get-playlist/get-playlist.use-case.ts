@@ -25,9 +25,9 @@ export class GetPlaylistUseCase {
       throw new NotFoundException(`Playlist with ID ${input.id} not found`);
     }
 
-    // 3. Obtener nombre del usuario owner
+    // 3. Obtener nombre del usuario owner (preferir name, si no username)
     const owner = await this.userRepository.findById(playlist.ownerId);
-    const ownerName = owner?.username;
+    const ownerName = owner?.name || owner?.username;
 
     // 4. Retornar output
     return {
