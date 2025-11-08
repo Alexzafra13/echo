@@ -305,7 +305,7 @@ export function UsersPanel() {
                   <td>
                     <div className={styles.userInfo}>
                       <div className={styles.userAvatar}>
-                        {getUserAvatarUrl(user.id) ? (
+                        {user.avatarPath ? (
                           <img
                             src={getUserAvatarUrl(user.id)}
                             alt={user.name || user.username}
