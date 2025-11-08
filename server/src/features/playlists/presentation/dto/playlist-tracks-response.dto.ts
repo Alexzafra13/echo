@@ -44,6 +44,9 @@ export class PlaylistTrackResponseDto {
   @ApiPropertyOptional({ example: 'A Night at the Opera' })
   albumName?: string;
 
+  @ApiPropertyOptional({ example: 1, description: 'Orden en la playlist' })
+  playlistOrder?: number;
+
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt!: Date;
 
@@ -66,6 +69,7 @@ export class PlaylistTrackResponseDto {
       suffix: item.suffix,
       artistName: item.artistName,
       albumName: item.albumName,
+      playlistOrder: item.playlistOrder,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
     };

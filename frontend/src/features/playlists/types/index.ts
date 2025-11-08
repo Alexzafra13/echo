@@ -34,6 +34,7 @@ export interface PlaylistTrack {
   artistName?: string;
   albumName?: string;
   suffix?: string;
+  playlistOrder?: number;
 }
 
 export interface CreatePlaylistDto {

@@ -17,6 +17,7 @@ export interface TrackItem {
   suffix?: string;
   artistName?: string;
   albumName?: string;
+  playlistOrder?: number;
   createdAt: Date;
   updatedAt: Date;
 }
