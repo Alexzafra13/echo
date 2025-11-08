@@ -38,7 +38,7 @@ export function ConfirmDialog({
             Cancelar
           </Button>
           <Button
-            variant="danger"
+            variant="primary"
             onClick={onConfirm}
             disabled={isLoading}
           >

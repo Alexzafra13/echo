@@ -40,7 +40,6 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
       await updateUserMutation.mutateAsync({
         id: user.id,
         data: {
-          username: formData.username,
           isAdmin: formData.isAdmin,
           isActive: formData.isActive,
         },

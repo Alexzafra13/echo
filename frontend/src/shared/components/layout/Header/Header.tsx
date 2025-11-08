@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Search, User, Sun, Moon } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
+import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchResults } from './SearchResults';
@@ -24,14 +25,15 @@ interface HeaderProps {
  */
 export function Header({ adminMode = false, showBackButton = false }: HeaderProps) {
   const [, setLocation] = useLocation();
-  const { user, logout, token} = useAuth();
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const accessToken = useAuthStore((state) => state.accessToken);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLFormElement>(null);
 
   // Detect scroll to apply glassmorphism effect
   useEffect(() => {
@@ -141,7 +143,7 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
         </button>
 
         {/* Metadata notifications (solo admin) */}
-        <MetadataNotifications token={token} isAdmin={user?.isAdmin || false} />
+        <MetadataNotifications token={accessToken} isAdmin={user?.isAdmin || false} />
 
         {/* User menu */}
         <div className={styles.header__userMenu}>
