@@ -16,12 +16,19 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
   const coverUrl = getCoverUrl(album.coverImage);
 
   const formatFileSize = (bytes: number): string => {
-    const mb = bytes / (1024 * 1024);
+    if (!bytes || bytes === 0) return 'Desconocido';
+
+    const kb = bytes / 1024;
+    const mb = kb / 1024;
     const gb = mb / 1024;
+
     if (gb >= 1) {
       return `${gb.toFixed(2)} GB`;
     }
-    return `${mb.toFixed(2)} MB`;
+    if (mb >= 1) {
+      return `${mb.toFixed(2)} MB`;
+    }
+    return `${kb.toFixed(2)} KB`;
   };
 
   const formatDuration = (seconds: number): string => {
@@ -42,7 +49,12 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
   };
 
   // Calculate total size and duration from tracks
-  const totalSize = tracks.reduce((acc, track) => acc + (track.size || 0), 0);
+  const totalSize = tracks.reduce((acc, track) => {
+    const size = track.size || 0;
+    // Convert BigInt to number if needed
+    const sizeNumber = typeof size === 'bigint' ? Number(size) : size;
+    return acc + sizeNumber;
+  }, 0);
   const totalDuration = tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
 
   // Get unique formats from tracks
