@@ -116,6 +116,10 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
       <div className={styles.trackList__tracks}>
         {tracks.map((track, index) => {
           const isPlaying = currentTrackId === track.id;
+          const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
+          // Use playlistOrder if available (for playlists), otherwise use trackNumber
+          const displayNumber = (track as any).playlistOrder || track.trackNumber || index + 1;
+
           return (
             <div
               key={track.id}
@@ -125,7 +129,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
               {/* Track number / Play button container */}
               <div className={styles.trackList__numberCell}>
                 <span className={styles.trackList__trackNumber}>
-                  {track.trackNumber || index + 1}
+                  {displayNumber}
                 </span>
                 <button
                   className={styles.trackList__playButton}
@@ -139,12 +143,22 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
                 </button>
               </div>
 
-              {/* Track info (title + artist) */}
+              {/* Track info (cover + title + artist) */}
               <div className={styles.trackList__trackInfo}>
-                <span className={styles.trackList__trackTitle}>{track.title}</span>
-                {track.artistName && (
-                  <span className={styles.trackList__trackArtist}>{track.artistName}</span>
-                )}
+                <img
+                  src={coverUrl}
+                  alt={track.albumName || track.title}
+                  className={styles.trackList__trackCover}
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder-album.png';
+                  }}
+                />
+                <div className={styles.trackList__trackText}>
+                  <span className={styles.trackList__trackTitle}>{track.title}</span>
+                  {track.artistName && (
+                    <span className={styles.trackList__trackArtist}>{track.artistName}</span>
+                  )}
+                </div>
               </div>
 
               {/* Format info (format + bitrate) */}
