@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, ListPlus, Plus, PlayCircle, Disc, User, Info } from 'lucide-react';
+import { MoreVertical, ListPlus, Plus, Disc, User, Info } from 'lucide-react';
 import type { Track } from '../../types';
 import styles from './TrackOptionsMenu.module.css';
 
@@ -7,7 +7,6 @@ interface TrackOptionsMenuProps {
   track: Track;
   onAddToPlaylist?: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
-  onPlayNext?: (track: Track) => void;
   onGoToAlbum?: (track: Track) => void;
   onGoToArtist?: (track: Track) => void;
   onShowInfo?: (track: Track) => void;
@@ -21,7 +20,6 @@ export function TrackOptionsMenu({
   track,
   onAddToPlaylist,
   onAddToQueue,
-  onPlayNext,
   onGoToAlbum,
   onGoToArtist,
   onShowInfo,
@@ -88,16 +86,6 @@ export function TrackOptionsMenu({
             >
               <Plus size={16} />
               <span>Agregar a la cola</span>
-            </button>
-          )}
-
-          {onPlayNext && (
-            <button
-              className={styles.trackOptionsMenu__option}
-              onClick={(e) => handleOptionClick(e, onPlayNext)}
-            >
-              <PlayCircle size={16} />
-              <span>Reproducir siguiente</span>
             </button>
           )}
 
