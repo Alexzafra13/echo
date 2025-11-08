@@ -8,6 +8,7 @@ import { CreateUserModal } from './CreateUserModal';
 import { EditUserModal } from './EditUserModal';
 import { CredentialsModal } from './CredentialsModal';
 import { ConfirmDialog } from './ConfirmDialog';
+import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import styles from './UsersPanel.module.css';
 
 /**
@@ -303,12 +304,28 @@ export function UsersPanel() {
                 <tr key={user.id}>
                   <td>
                     <div className={styles.userInfo}>
-                      <div className={styles.userName}>
-                        {user.name || user.username}
+                      <div className={styles.userAvatar}>
+                        {getUserAvatarUrl(user.id) ? (
+                          <img
+                            src={getUserAvatarUrl(user.id)}
+                            alt={user.name || user.username}
+                            className={styles.userAvatarImage}
+                            onError={handleAvatarError}
+                          />
+                        ) : (
+                          <div className={styles.userAvatarPlaceholder}>
+                            {getUserInitials(user.name, user.username)}
+                          </div>
+                        )}
                       </div>
-                      {user.name && (
-                        <div className={styles.userEmail}>@{user.username}</div>
-                      )}
+                      <div className={styles.userDetails}>
+                        <div className={styles.userName}>
+                          {user.name || user.username}
+                        </div>
+                        {user.name && (
+                          <div className={styles.userEmail}>@{user.username}</div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td>
