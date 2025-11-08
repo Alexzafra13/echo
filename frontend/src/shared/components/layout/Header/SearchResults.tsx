@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Disc, User as UserIcon, Music } from 'lucide-react';
+import { Disc, User as UserIcon, Music, ListMusic } from 'lucide-react';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
+import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
+import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
 import styles from './SearchResults.module.css';
@@ -19,16 +22,27 @@ interface SearchResultsProps {
 export function SearchResults({ query, onClose }: SearchResultsProps) {
   const [, setLocation] = useLocation();
 
-  // Fetch results from all three sources
+  // Fetch results from all sources
   const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 3 });
   const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(query);
   const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(query, { take: 5 });
+  const { data: playlistsData, isLoading: loadingPlaylists } = usePlaylists({ take: 50 });
 
   // Extract artists array from paginated response
   const artists = artistData?.data || [];
 
-  const isLoading = loadingArtists || loadingAlbums || loadingTracks;
-  const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0;
+  // Filter playlists by query
+  const playlists = useMemo(() => {
+    if (!playlistsData?.items || query.length < 2) return [];
+    return playlistsData.items
+      .filter((playlist) =>
+        playlist.name.toLowerCase().includes(query.toLowerCase())
+      )
+      .slice(0, 3);
+  }, [playlistsData?.items, query]);
+
+  const isLoading = loadingArtists || loadingAlbums || loadingTracks || loadingPlaylists;
+  const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0 || playlists.length > 0;
 
   const handleNavigate = (path: string) => {
     setLocation(path);
@@ -124,6 +138,37 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
               <div className={styles.searchResults__info}>
                 <p className={styles.searchResults__name}>{album.title}</p>
                 <p className={styles.searchResults__meta}>{album.artist}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Playlists Section */}
+      {playlists.length > 0 && (
+        <div className={styles.searchResults__section}>
+          <h3 className={styles.searchResults__sectionTitle}>
+            <ListMusic size={16} />
+            Playlists
+          </h3>
+          {playlists.map((playlist: any) => (
+            <button
+              key={playlist.id}
+              className={styles.searchResults__item}
+              onClick={() => handleNavigate(`/playlists/${playlist.id}`)}
+            >
+              <div className={styles.searchResults__playlistCover}>
+                <PlaylistCoverMosaic
+                  albumIds={playlist.albumIds || []}
+                  playlistName={playlist.name}
+                />
+              </div>
+              <div className={styles.searchResults__info}>
+                <p className={styles.searchResults__name}>{playlist.name}</p>
+                <p className={styles.searchResults__meta}>
+                  {playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}
+                  {playlist.ownerName && ` • ${playlist.ownerName}`}
+                </p>
               </div>
             </button>
           ))}
