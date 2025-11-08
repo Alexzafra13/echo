@@ -12,6 +12,7 @@ export interface Playlist {
   ownerId: string;
   public: boolean;
   songCount: number;
+  albumIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
