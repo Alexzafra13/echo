@@ -25,10 +25,24 @@ interface ImageMetadata {
 
 /**
  * Get artist images URL from artist ID and image type
+ * @param bustCache - Si es true, agrega timestamp para evitar caché (default: true si hay ?_refresh en URL)
  */
-export function getArtistImageUrl(artistId: string, imageType: string): string {
+export function getArtistImageUrl(artistId: string, imageType: string, bustCache?: boolean): string {
   const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-  return `${API_BASE_URL}/images/artists/${artistId}/${imageType}`;
+  const baseUrl = `${API_BASE_URL}/images/artists/${artistId}/${imageType}`;
+
+  // Auto-detect cache busting from URL params
+  if (bustCache === undefined) {
+    bustCache = new URLSearchParams(window.location.search).has('_refresh');
+  }
+
+  // Add cache busting parameter if needed
+  if (bustCache) {
+    const timestamp = new URLSearchParams(window.location.search).get('_refresh') || Date.now().toString();
+    return `${baseUrl}?_t=${timestamp}`;
+  }
+
+  return baseUrl;
 }
 
 /**
