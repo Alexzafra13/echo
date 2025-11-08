@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, X, User, Trash2 } from 'lucide-react';
+import { Camera, X, User, Trash2, Check } from 'lucide-react';
 import { useAuth } from '@shared/hooks';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';
@@ -97,9 +97,22 @@ export function AvatarUpload() {
 
   return (
     <div className={styles.avatarUpload}>
-      <div className={styles.avatarUpload__preview}>
-        {/* Avatar Display */}
-        <div className={styles.avatarUpload__avatarContainer}>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        onChange={handleFileSelect}
+        className={styles.avatarUpload__input}
+      />
+
+      {/* Avatar with hover overlay */}
+      <div className={styles.avatarUpload__container}>
+        <div
+          className={styles.avatarUpload__avatarWrapper}
+          onClick={openFileDialog}
+        >
+          {/* Avatar Display */}
           {previewUrl ? (
             <img
               src={previewUrl}
@@ -112,70 +125,55 @@ export function AvatarUpload() {
               alt={user?.name || user?.username}
               className={styles.avatarUpload__avatar}
               onError={handleAvatarError}
-              key={Date.now()} // Force reload on update
+              key={Date.now()}
             />
           ) : (
             <div className={styles.avatarUpload__avatarPlaceholder}>
-              <User size={48} />
+              {initials}
+            </div>
+          )}
+
+          {/* Hover overlay */}
+          {!selectedFile && (
+            <div className={styles.avatarUpload__overlay}>
+              <Camera size={32} />
+              <span>Cambiar foto</span>
             </div>
           )}
         </div>
 
-        {/* User Initials Badge */}
-        {!previewUrl && !avatarUrl && (
-          <div className={styles.avatarUpload__initials}>
-            {initials}
-          </div>
-        )}
-      </div>
-
-      <div className={styles.avatarUpload__controls}>
-        {!selectedFile ? (
-          <>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp"
-              onChange={handleFileSelect}
-              className={styles.avatarUpload__input}
-            />
-            <button
-              onClick={openFileDialog}
-              className={styles.avatarUpload__button}
-              disabled={isUploading || isDeleting}
-            >
-              <Upload size={18} />
-              Subir foto
-            </button>
-            {avatarUrl && (
-              <button
-                onClick={handleDelete}
-                className={styles.avatarUpload__buttonDelete}
-                disabled={isUploading || isDeleting}
-              >
-                <Trash2 size={18} />
-                Eliminar
-              </button>
-            )}
-          </>
-        ) : (
-          <>
+        {/* Action buttons when file is selected */}
+        {selectedFile && (
+          <div className={styles.avatarUpload__actions}>
             <button
               onClick={handleUpload}
-              className={styles.avatarUpload__buttonPrimary}
+              className={styles.avatarUpload__actionButton}
               disabled={isUploading}
+              title="Guardar"
             >
-              {isUploading ? 'Subiendo...' : 'Guardar'}
+              <Check size={20} />
             </button>
             <button
               onClick={handleCancel}
-              className={styles.avatarUpload__buttonSecondary}
+              className={styles.avatarUpload__actionCancel}
               disabled={isUploading}
+              title="Cancelar"
             >
-              <X size={18} />
-              Cancelar
+              <X size={20} />
             </button>
-          </>
+          </div>
+        )}
+
+        {/* Delete button - only show if user has avatar and no file selected */}
+        {avatarUrl && !selectedFile && (
+          <button
+            onClick={handleDelete}
+            className={styles.avatarUpload__deleteButton}
+            disabled={isDeleting}
+            title="Eliminar avatar"
+          >
+            <Trash2 size={18} />
+          </button>
         )}
       </div>
 

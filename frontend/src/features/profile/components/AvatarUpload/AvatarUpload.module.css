@@ -3,33 +3,41 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 1.5rem;
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
 }
 
-.avatarUpload__preview {
+.avatarUpload__input {
+  display: none;
+}
+
+.avatarUpload__container {
   position: relative;
-  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.avatarUpload__avatarContainer {
-  width: 120px;
-  height: 120px;
+.avatarUpload__avatarWrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid var(--primary-color);
-  background: var(--bg-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  cursor: pointer;
+  border: 3px solid var(--primary-color, #ff6b6b);
+  transition: all 0.3s ease;
+}
+
+.avatarUpload__avatarWrapper:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
 }
 
 .avatarUpload__avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .avatarUpload__avatarPlaceholder {
@@ -38,137 +46,136 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  background: var(--bg-tertiary);
-}
-
-.avatarUpload__initials {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 600;
-  color: var(--text-primary);
-  pointer-events: none;
+  color: var(--text-primary, #ffffff);
+  background: linear-gradient(135deg,
+    rgba(255, 107, 107, 0.2) 0%,
+    rgba(255, 107, 107, 0.1) 100%);
+  text-transform: uppercase;
 }
 
-.avatarUpload__controls {
+/* Hover overlay */
+.avatarUpload__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.avatarUpload__avatarWrapper:hover .avatarUpload__overlay {
+  opacity: 1;
+}
+
+/* Action buttons (when file is selected) */
+.avatarUpload__actions {
   display: flex;
   gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  margin-top: 0.5rem;
 }
 
-.avatarUpload__input {
-  display: none;
-}
-
-.avatarUpload__button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.avatarUpload__button:hover:not(:disabled) {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
-.avatarUpload__button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.avatarUpload__buttonDelete {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: transparent;
-  color: var(--error-color, #ef4444);
-  border: 1px solid var(--error-color, #ef4444);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.avatarUpload__buttonDelete:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.avatarUpload__buttonDelete:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.avatarUpload__buttonPrimary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.5rem;
+.avatarUpload__actionButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   background: var(--success-color, #10b981);
-  color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.avatarUpload__buttonPrimary:hover:not(:disabled) {
-  background: #059669;
-  transform: translateY(-1px);
-}
-
-.avatarUpload__buttonPrimary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.avatarUpload__buttonSecondary {
+  color: white;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.avatarUpload__buttonSecondary:hover:not(:disabled) {
-  background: var(--bg-tertiary);
+.avatarUpload__actionButton:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
-.avatarUpload__buttonSecondary:disabled {
+.avatarUpload__actionButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.avatarUpload__actionCancel {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary, #b8bcc8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.avatarUpload__actionCancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary, #ffffff);
+}
+
+.avatarUpload__actionCancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Delete button */
+.avatarUpload__deleteButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--error-color, #ef4444);
+  border: 3px solid var(--bg-primary, #0a0e27);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.avatarUpload__deleteButton:hover:not(:disabled) {
+  background: #dc2626;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.avatarUpload__deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Helper text */
 .avatarUpload__helper {
   font-size: 0.75rem;
-  color: var(--text-tertiary);
+  color: var(--text-tertiary, #6b7280);
   margin: 0;
   text-align: center;
 }
 
+/* Error message */
 .avatarUpload__error {
   padding: 0.75rem 1rem;
   background: rgba(239, 68, 68, 0.1);
@@ -176,6 +183,6 @@
   border-radius: 8px;
   color: var(--error-color, #ef4444);
   font-size: 0.875rem;
-  width: 100%;
   text-align: center;
+  max-width: 300px;
 }
