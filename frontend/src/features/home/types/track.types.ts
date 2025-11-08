@@ -14,7 +14,7 @@ export interface Track {
   duration?: number; // in seconds
   path: string;
   bitRate?: number;
-  size?: number | bigint; // File size in bytes (can be BigInt for large files)
+  size?: number; // File size in bytes
   suffix?: string;
   lyrics?: string;
   comment?: string;

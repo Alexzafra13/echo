@@ -160,8 +160,13 @@ export class Track {
   /**
    * Retorna todas las propiedades del track como un objeto plano
    * Útil para mapear a Prisma o DTOs
+   * IMPORTANT: Converts BigInt to number for JSON serialization
    */
-  toPrimitives(): TrackProps {
-    return { ...this.props };
+  toPrimitives(): Omit<TrackProps, 'size'> & { size?: number } {
+    return {
+      ...this.props,
+      // Convert BigInt to number for JSON serialization
+      size: this.props.size !== undefined ? Number(this.props.size) : undefined,
+    };
   }
 }
