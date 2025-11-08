@@ -1,0 +1,1 @@
+export { AvatarEditModal } from './AvatarEditModal';

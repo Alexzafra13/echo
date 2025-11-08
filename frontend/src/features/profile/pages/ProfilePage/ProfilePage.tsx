@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { User, Lock, Calendar, Check, X } from 'lucide-react';
+import { User, Lock, Calendar, Check, X, Edit3 } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
 import { AvatarUpload } from '../../components/AvatarUpload';
+import { AvatarEditModal } from '../../components/AvatarEditModal';
+import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import styles from './ProfilePage.module.css';
 
 /**
@@ -15,6 +17,9 @@ import styles from './ProfilePage.module.css';
 export function ProfilePage() {
   const { user } = useAuth();
   const updateUser = useAuthStore((state) => state.updateUser);
+
+  // Avatar modal
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   // Name editing
   const [isEditingName, setIsEditingName] = useState(false);
@@ -113,20 +118,33 @@ export function ProfilePage() {
         <Header showBackButton />
 
         <div className={styles.profilePage__content}>
-          {/* Header */}
+          {/* Header with Avatar */}
           <div className={styles.profilePage__header}>
-            <div className={styles.profilePage__headerIcon}>
-              <User size={40} />
+            <div className={styles.profilePage__avatarContainer}>
+              {getUserAvatarUrl(user?.id) ? (
+                <img
+                  src={getUserAvatarUrl(user?.id)}
+                  alt={user?.name || user?.username}
+                  className={styles.profilePage__avatar}
+                  onError={handleAvatarError}
+                />
+              ) : (
+                <div className={styles.profilePage__avatarPlaceholder}>
+                  {getUserInitials(user?.name, user?.username)}
+                </div>
+              )}
+              <button
+                className={styles.profilePage__avatarEditButton}
+                onClick={() => setShowAvatarModal(true)}
+                title="Editar foto de perfil"
+              >
+                <Edit3 size={16} />
+              </button>
             </div>
             <div>
-              <h1>Mi Perfil</h1>
-              <p className={styles.profilePage__subtitle}>Gestiona tu información personal y seguridad</p>
+              <h1>Perfil</h1>
+              <p className={styles.profilePage__subtitle}>{user?.name || user?.username}</p>
             </div>
-          </div>
-
-          {/* Avatar Upload */}
-          <div className={styles.profilePage__avatarSection}>
-            <AvatarUpload />
           </div>
 
           {/* Account Info Card */}
@@ -310,6 +328,11 @@ export function ProfilePage() {
           </div>
         </div>
       </main>
+
+      {/* Avatar Edit Modal */}
+      {showAvatarModal && (
+        <AvatarEditModal onClose={() => setShowAvatarModal(false)} />
+      )}
     </div>
   );
 }
