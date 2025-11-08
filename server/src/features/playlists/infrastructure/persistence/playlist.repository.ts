@@ -165,7 +165,13 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
       orderBy: { trackOrder: 'asc' },
     });
 
-    return playlistTracks.map((pt) => TrackMapper.toDomain(pt.track));
+    // Map tracks and attach trackOrder to each track
+    return playlistTracks.map((pt) => {
+      const track = TrackMapper.toDomain(pt.track);
+      // Attach trackOrder as a custom property
+      (track as any).playlistOrder = pt.trackOrder;
+      return track;
+    });
   }
 
   async reorderTracks(

@@ -115,9 +115,26 @@
 
 .trackList__trackInfo {
   display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  min-width: 0; /* Allow text truncation */
+}
+
+.trackList__trackCover {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.trackList__trackText {
+  display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0; /* Allow text truncation */
+  min-width: 0;
+  flex: 1;
 }
 
 .trackList__trackTitle {
