@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { Play, MoreHorizontal } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
-import { Sidebar, TrackList } from '../../components';
+import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../components';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { getArtistImageUrl } from '../../hooks';
 import styles from './AlbumPage.module.css';
 
 /**
@@ -19,6 +20,7 @@ export default function AlbumPage() {
   const [, setLocation] = useLocation();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const { playQueue, currentTrack } = usePlayer();
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
@@ -63,6 +65,20 @@ export default function AlbumPage() {
     const playerTracks = convertToPlayerTracks(tracks);
     const trackIndex = tracks.findIndex(t => t.id === track.id);
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
+  };
+
+  const handleShowAlbumInfo = () => {
+    setIsInfoModalOpen(true);
+  };
+
+  const handleAddAlbumToPlaylist = () => {
+    // TODO: Implement add album to playlist
+    console.log('Add album to playlist - to be implemented');
+  };
+
+  const handleDownloadAlbum = () => {
+    // TODO: Implement download album
+    console.log('Download album - to be implemented');
   };
 
   if (loadingAlbum) {
@@ -137,6 +153,16 @@ export default function AlbumPage() {
                   onClick={handleArtistClick}
                   title={`Ver perfil de ${album.artist}`}
                 >
+                  {album.artistId && (
+                    <img
+                      src={getArtistImageUrl(album.artistId, 'profile-small')}
+                      alt={album.artist}
+                      className={styles.albumPage__heroArtistAvatar}
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/empy_cover/empy_cover_default.png';
+                      }}
+                    />
+                  )}
                   {album.artist}
                 </button>
                 <span className={styles.albumPage__heroDivider}>•</span>
@@ -161,9 +187,11 @@ export default function AlbumPage() {
                 >
                   Reproducir
                 </Button>
-                <button className={styles.albumPage__heroMoreButton} aria-label="More options">
-                  <MoreHorizontal size={24} />
-                </button>
+                <AlbumOptionsMenu
+                  onShowInfo={handleShowAlbumInfo}
+                  onAddToPlaylist={handleAddAlbumToPlaylist}
+                  onDownload={handleDownloadAlbum}
+                />
               </div>
             </div>
           </div>
@@ -175,7 +203,7 @@ export default function AlbumPage() {
                 <p>Cargando canciones...</p>
               </div>
             ) : tracks && tracks.length > 0 ? (
-              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} currentTrackId={currentTrack?.id} />
+              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} currentTrackId={currentTrack?.id} hideGoToAlbum={true} />
             ) : (
               <div className={styles.albumPage__emptyTracks}>
                 <p>No se encontraron canciones en este álbum</p>
@@ -200,6 +228,15 @@ export default function AlbumPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Album Info Modal */}
+      {isInfoModalOpen && album && (
+        <AlbumInfoModal
+          album={album}
+          tracks={tracks || []}
+          onClose={() => setIsInfoModalOpen(false)}
+        />
       )}
     </div>
   );

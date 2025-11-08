@@ -34,6 +34,7 @@ interface TrackListProps {
   tracks: Track[];
   onTrackPlay?: (track: Track) => void;
   currentTrackId?: string;
+  hideGoToAlbum?: boolean; // Hide "Go to Album" option when already in album view
 }
 
 /**
@@ -46,7 +47,7 @@ interface TrackListProps {
  *   onTrackPlay={(track) => play(track.id)}
  * />
  */
-export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProps) {
+export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false }: TrackListProps) {
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
@@ -177,7 +178,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
                 track={track}
                 onAddToPlaylist={handleAddToPlaylist}
                 onAddToQueue={handleAddToQueue}
-                onGoToAlbum={handleGoToAlbum}
+                onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
                 onGoToArtist={handleGoToArtist}
                 onShowInfo={handleShowInfo}
               />
