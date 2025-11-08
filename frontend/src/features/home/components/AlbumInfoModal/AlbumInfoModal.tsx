@@ -53,30 +53,17 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
 
   // Calculate total size and duration from tracks
   const totalSize = tracks.reduce((acc, track) => {
-    if (!track.size) return acc;
-
-    // Convert BigInt to number if needed
-    let sizeNumber: number;
-    if (typeof track.size === 'bigint') {
-      sizeNumber = Number(track.size);
-    } else {
-      sizeNumber = track.size;
-    }
+    const size = track.size || 0;
 
     // Safety check for NaN or Infinity
-    if (!isFinite(sizeNumber)) {
-      console.warn('Invalid track size:', track.size, 'for track:', track.title);
+    if (!isFinite(size)) {
+      console.warn('Invalid track size:', size, 'for track:', track.title);
       return acc;
     }
 
-    return acc + sizeNumber;
+    return acc + size;
   }, 0);
   const totalDuration = tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
-
-  // Debug logging
-  console.log('Album tracks:', tracks.length);
-  console.log('Total size calculated:', totalSize);
-  console.log('First track size:', tracks[0]?.size, 'type:', typeof tracks[0]?.size);
 
   // Get unique formats from tracks
   const formats = [...new Set(tracks.map(t => t.suffix?.toUpperCase()).filter(Boolean))];
