@@ -77,8 +77,9 @@ export class ArtistResponseDto {
     // Transform file paths to API URLs for frontend consumption with version for cache busting
     const hasAnyProfileImage = data.smallImageUrl || data.mediumImageUrl || data.largeImageUrl;
 
-    // Add version parameter using updatedAt timestamp (changes when artist metadata is updated)
-    const versionParam = data.updatedAt ? `?v=${new Date(data.updatedAt).getTime()}` : '';
+    // Add version parameter using externalInfoUpdatedAt if available (more accurate), fallback to updatedAt
+    const timestamp = data.externalInfoUpdatedAt || data.updatedAt;
+    const versionParam = timestamp ? `?v=${new Date(timestamp).getTime()}` : '';
 
     dto.smallImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-small${versionParam}` : undefined;
     dto.mediumImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-medium${versionParam}` : undefined;
