@@ -16,13 +16,10 @@ interface TrackInfoModalProps {
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   const coverUrl = track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined;
 
-  const formatFileSize = (bytes?: number | bigint): string => {
-    if (!bytes) return 'Desconocido';
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes || !isFinite(bytes)) return 'Desconocido';
 
-    // Convert BigInt to number if needed
-    const bytesNumber = typeof bytes === 'bigint' ? Number(bytes) : bytes;
-
-    const kb = bytesNumber / 1024;
+    const kb = bytes / 1024;
     const mb = kb / 1024;
     const gb = mb / 1024;
 
@@ -32,7 +29,10 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
     if (mb >= 1) {
       return `${mb.toFixed(2)} MB`;
     }
-    return `${kb.toFixed(2)} KB`;
+    if (kb >= 1) {
+      return `${kb.toFixed(2)} KB`;
+    }
+    return `${bytes} bytes`;
   };
 
   const formatBitrate = (bitrate?: number): string => {
