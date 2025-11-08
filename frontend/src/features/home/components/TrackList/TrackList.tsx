@@ -35,6 +35,7 @@ interface TrackListProps {
   onTrackPlay?: (track: Track) => void;
   currentTrackId?: string;
   hideGoToAlbum?: boolean; // Hide "Go to Album" option when already in album view
+  hideAlbumCover?: boolean; // Hide album cover icon when in album view (only useful in playlists)
 }
 
 /**
@@ -47,7 +48,7 @@ interface TrackListProps {
  *   onTrackPlay={(track) => play(track.id)}
  * />
  */
-export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false }: TrackListProps) {
+export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false }: TrackListProps) {
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
@@ -142,14 +143,16 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
               {/* Track info (cover + title + artist) */}
               <div className={styles.trackList__trackInfo}>
-                <img
-                  src={coverUrl}
-                  alt={track.albumName || track.title}
-                  className={styles.trackList__trackCover}
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder-album.png';
-                  }}
-                />
+                {!hideAlbumCover && (
+                  <img
+                    src={coverUrl}
+                    alt={track.albumName || track.title}
+                    className={styles.trackList__trackCover}
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder-album.png';
+                    }}
+                  />
+                )}
                 <div className={styles.trackList__trackText}>
                   <span className={styles.trackList__trackTitle}>{track.title}</span>
                   {track.artistName && (
