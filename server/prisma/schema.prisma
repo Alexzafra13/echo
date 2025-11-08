@@ -584,6 +584,32 @@ model MetadataConflict {
 }
 
 // ============================================
+// ENRICHMENT LOG
+// ============================================
+
+model EnrichmentLog {
+  id            String   @id @default(uuid())
+  entityId      String   @map("entity_id") @db.VarChar(36)
+  entityType    String   @map("entity_type") @db.VarChar(20) // 'artist' or 'album'
+  entityName    String   @map("entity_name") @db.VarChar(255)
+  provider      String   @db.VarChar(50) // 'lastfm', 'fanart', 'musicbrainz', etc.
+  metadataType  String   @map("metadata_type") @db.VarChar(50) // 'biography', 'images', 'album_info', etc.
+  status        String   @db.VarChar(20) // 'success', 'partial', 'error'
+  fieldsUpdated String[] @map("fields_updated") // Array of field names that were updated
+  errorMessage  String?  @map("error_message") @db.Text
+  userId        String?  @map("user_id") @db.VarChar(36) // Who triggered it (null if automatic)
+  processingTime Int?    @map("processing_time") // In milliseconds
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([entityId, entityType])
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("enrichment_logs")
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 

@@ -4,3 +4,7 @@ export * from './list-users.response.dto';
 export * from './update-user.request.dto';
 export * from './update-user.response.dto';
 export * from './reset-password.response.dto';
+export * from './list-enrichment-logs.request.dto';
+export * from './list-enrichment-logs.response.dto';
+export * from './get-enrichment-stats.request.dto';
+export * from './get-enrichment-stats.response.dto';
