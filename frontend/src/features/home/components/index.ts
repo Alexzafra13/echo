@@ -5,3 +5,5 @@ export { Sidebar } from './Sidebar';
 export { TrackList } from './TrackList';
 export { TrackOptionsMenu } from './TrackOptionsMenu/TrackOptionsMenu';
 export { TrackInfoModal } from './TrackInfoModal';
+export { AlbumOptionsMenu } from './AlbumOptionsMenu';
+export { AlbumInfoModal } from './AlbumInfoModal';
