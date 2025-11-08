@@ -110,10 +110,15 @@
 .playlistDetailPage__heroOwner {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.playlistDetailPage__heroOwnerIcon {
+.playlistDetailPage__heroOwnerAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
 }
 
