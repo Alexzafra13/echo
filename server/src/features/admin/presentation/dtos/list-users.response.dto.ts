@@ -21,6 +21,9 @@ export class UserItemDto {
   isActive!: boolean;
 
   @Expose()
+  avatarPath?: string;
+
+  @Expose()
   mustChangePassword!: boolean;
 
   @Expose()
@@ -48,6 +51,7 @@ export class ListUsersResponseDto {
       userDto.name = user.name;
       userDto.isAdmin = user.isAdmin;
       userDto.isActive = user.isActive;
+      userDto.avatarPath = user.avatarPath;
       userDto.mustChangePassword = user.mustChangePassword;
       userDto.lastLoginAt = user.lastLoginAt;
       userDto.createdAt = user.createdAt;
