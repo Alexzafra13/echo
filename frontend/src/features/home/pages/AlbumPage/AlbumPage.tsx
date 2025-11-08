@@ -159,7 +159,7 @@ export default function AlbumPage() {
                       alt={album.artist}
                       className={styles.albumPage__heroArtistAvatar}
                       onError={(e) => {
-                        e.currentTarget.src = '/images/empy_cover/empy_cover_default.png';
+                        e.currentTarget.src = '/images/avatar-default.svg';
                       }}
                     />
                   )}
@@ -203,7 +203,7 @@ export default function AlbumPage() {
                 <p>Cargando canciones...</p>
               </div>
             ) : tracks && tracks.length > 0 ? (
-              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} currentTrackId={currentTrack?.id} hideGoToAlbum={true} />
+              <TrackList tracks={tracks} onTrackPlay={handleTrackPlay} currentTrackId={currentTrack?.id} hideGoToAlbum={true} hideAlbumCover={true} />
             ) : (
               <div className={styles.albumPage__emptyTracks}>
                 <p>No se encontraron canciones en este álbum</p>
