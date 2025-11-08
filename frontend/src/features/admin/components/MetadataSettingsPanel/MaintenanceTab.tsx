@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
+import { useToast } from '@shared/context/ToastContext';
 import styles from './MaintenanceTab.module.css';
 
 interface StorageStats {
@@ -27,6 +29,9 @@ export function MaintenanceTab() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isCleaning, setIsCleaning] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+  const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
+  const [showCacheConfirm, setShowCacheConfirm] = useState(false);
+  const { addToast } = useToast();
 
   useEffect(() => {
     loadStats();
@@ -64,14 +69,15 @@ export function MaintenanceTab() {
     return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
 
-  const runCleanup = async () => {
-    if (!confirm('¿Estás seguro de que deseas limpiar archivos huérfanos y obsoletos?')) {
-      return;
-    }
+  const handleCleanupClick = () => {
+    setShowCleanupConfirm(true);
+  };
 
+  const runCleanup = async () => {
     try {
       setIsCleaning(true);
       setCleanupResult(null);
+      setShowCleanupConfirm(false);
 
       const response = await apiClient.post('/maintenance/cleanup/orphaned?dryRun=false');
       setCleanupResult(response.data);
@@ -80,23 +86,24 @@ export function MaintenanceTab() {
       await loadStats();
     } catch (error: any) {
       console.error('Error running cleanup:', error);
-      alert(error.response?.data?.message || 'Error al ejecutar limpieza');
+      addToast(error.response?.data?.message || 'Error al ejecutar limpieza', 'error');
     } finally {
       setIsCleaning(false);
     }
   };
 
-  const clearCache = async () => {
-    if (!confirm('¿Estás seguro de que deseas limpiar el caché de metadata?')) {
-      return;
-    }
+  const handleCacheClick = () => {
+    setShowCacheConfirm(true);
+  };
 
+  const clearCache = async () => {
     try {
+      setShowCacheConfirm(false);
       await apiClient.post('/admin/settings/cache/clear');
-      alert('Caché limpiado correctamente');
+      addToast('Caché limpiado correctamente', 'success');
     } catch (error: any) {
       console.error('Error clearing cache:', error);
-      alert(error.response?.data?.message || 'Error al limpiar caché');
+      addToast(error.response?.data?.message || 'Error al limpiar caché', 'error');
     }
   };
 
@@ -201,7 +208,7 @@ export function MaintenanceTab() {
             <Button
               variant="outline"
               size="md"
-              onClick={runCleanup}
+              onClick={handleCleanupClick}
               loading={isCleaning}
               disabled={isCleaning}
               leftIcon={<Trash2 size={18} />}
@@ -223,7 +230,7 @@ export function MaintenanceTab() {
             <Button
               variant="outline"
               size="md"
-              onClick={clearCache}
+              onClick={handleCacheClick}
               leftIcon={<RefreshCw size={18} />}
             >
               Limpiar Caché
@@ -271,6 +278,29 @@ export function MaintenanceTab() {
           </p>
         </div>
       </div>
+
+      {/* Modals */}
+      {showCleanupConfirm && (
+        <ConfirmDialog
+          title="Limpiar Archivos Huérfanos"
+          message="¿Estás seguro de que deseas limpiar archivos huérfanos y obsoletos? Esta acción no se puede deshacer."
+          confirmText="Ejecutar Limpieza"
+          onConfirm={runCleanup}
+          onCancel={() => setShowCleanupConfirm(false)}
+          isLoading={isCleaning}
+        />
+      )}
+
+      {showCacheConfirm && (
+        <ConfirmDialog
+          title="Limpiar Caché de Metadata"
+          message="¿Estás seguro de que deseas limpiar el caché de metadata? El caché se reconstruirá automáticamente cuando sea necesario."
+          confirmText="Limpiar Caché"
+          onConfirm={clearCache}
+          onCancel={() => setShowCacheConfirm(false)}
+          isLoading={false}
+        />
+      )}
     </div>
   );
 }
