@@ -9,6 +9,10 @@ export interface UserUpdateableFields {
   isAdmin?: boolean;
   isActive?: boolean;
   mustChangePassword?: boolean;
+  avatarPath?: string | null;
+  avatarMimeType?: string | null;
+  avatarSize?: bigint | null;
+  avatarUpdatedAt?: Date | null;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
 }
