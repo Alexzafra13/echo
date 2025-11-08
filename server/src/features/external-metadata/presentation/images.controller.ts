@@ -293,6 +293,65 @@ export class ImagesController {
   }
 
   /**
+   * Sirve el avatar de un usuario
+   * GET /api/images/users/:userId/avatar
+   */
+  @Public()
+  @Get('users/:userId/avatar')
+  @ApiOperation({
+    summary: 'Serve user avatar',
+    description:
+      'Returns a user avatar image file with appropriate cache headers.',
+  })
+  @ApiParam({
+    name: 'userId',
+    description: 'User UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Avatar image returned successfully',
+    content: {
+      'image/jpeg': {},
+      'image/png': {},
+      'image/webp': {},
+    },
+  })
+  @ApiResponse({ status: 404, description: 'User or avatar not found' })
+  @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
+  async getUserAvatar(
+    @Param('userId') userId: string,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<StreamableFile> {
+    try {
+      // Obtener información del avatar
+      const imageResult = await this.imageService.getUserAvatar(userId);
+
+      // Configurar headers de caché
+      this.setCacheHeaders(res, imageResult.lastModified, imageResult.mimeType);
+
+      // Crear stream del archivo
+      const fileStream = createReadStream(imageResult.filePath);
+
+      this.logger.debug(
+        `Serving user avatar: ${userId} (${imageResult.size} bytes)`,
+      );
+
+      return new StreamableFile(fileStream);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Error serving user avatar ${userId}: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+      throw new NotFoundException(`Unable to serve avatar for user ${userId}`);
+    }
+  }
+
+  /**
    * Obtiene todas las imágenes disponibles de un artista
    * GET /api/images/artists/:artistId/all
    */
