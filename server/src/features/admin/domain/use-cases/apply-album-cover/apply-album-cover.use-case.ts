@@ -3,6 +3,7 @@ import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -23,6 +24,7 @@ export class ApplyAlbumCoverUseCase {
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly settings: SettingsService,
+    private readonly imageService: ImageService,
   ) {}
 
   async execute(input: ApplyAlbumCoverInput): Promise<ApplyAlbumCoverOutput> {
@@ -97,6 +99,10 @@ export class ApplyAlbumCoverUseCase {
         externalInfoUpdatedAt: new Date(),
       },
     });
+
+    // Invalidate server-side image cache to force reload of new cover
+    this.imageService.invalidateAlbumCache(input.albumId);
+    this.logger.debug(`Invalidated image cache for album ${input.albumId}`);
 
     return {
       success: true,
