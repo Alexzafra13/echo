@@ -53,6 +53,7 @@ export class ExternalMetadataService {
     imagesUpdated: boolean;
     errors: string[];
   }> {
+    const startTime = Date.now();
     const errors: string[] = [];
     let bioUpdated = false;
     let imagesUpdated = false;
@@ -150,6 +151,18 @@ export class ExternalMetadataService {
           });
           bioUpdated = true;
           this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
+
+          // Log enrichment
+          await this.createEnrichmentLog({
+            entityId: artistId,
+            entityType: 'artist',
+            entityName: artist.name,
+            provider: bio.source,
+            metadataType: 'biography',
+            status: 'success',
+            fieldsUpdated: ['biography', 'biographySource'],
+            processingTime: Date.now() - startTime,
+          });
         } else {
           // Create conflict for user to review - respect existing data regardless of source
 
@@ -235,14 +248,63 @@ export class ExternalMetadataService {
             });
             imagesUpdated = true;
             this.logger.log(`Updated images for: ${artist.name} (${localPaths.totalSize} bytes)`);
+
+            // Log enrichment
+            await this.createEnrichmentLog({
+              entityId: artistId,
+              entityType: 'artist',
+              entityName: artist.name,
+              provider: images.source,
+              metadataType: 'images',
+              status: 'success',
+              fieldsUpdated: Object.keys(updateData).filter(key => key.includes('Url') || key === 'metadataStorageSize'),
+              processingTime: Date.now() - startTime,
+            });
           }
         }
+      }
+
+      // Log if there were errors but some operations succeeded
+      if (errors.length > 0 && (bioUpdated || imagesUpdated)) {
+        await this.createEnrichmentLog({
+          entityId: artistId,
+          entityType: 'artist',
+          entityName: artist.name,
+          provider: 'multiple',
+          metadataType: 'mixed',
+          status: 'partial',
+          fieldsUpdated: [],
+          errorMessage: errors.join('; '),
+          processingTime: Date.now() - startTime,
+        });
       }
 
       return { bioUpdated, imagesUpdated, errors };
     } catch (error) {
       this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
       errors.push((error as Error).message);
+
+      // Log the error
+      try {
+        const artist = await this.prisma.artist.findUnique({
+          where: { id: artistId },
+          select: { name: true },
+        });
+        await this.createEnrichmentLog({
+          entityId: artistId,
+          entityType: 'artist',
+          entityName: artist?.name || 'Unknown',
+          provider: 'multiple',
+          metadataType: 'mixed',
+          status: 'error',
+          fieldsUpdated: [],
+          errorMessage: (error as Error).message,
+          processingTime: Date.now() - startTime,
+        });
+      } catch (logError) {
+        // Ignore logging errors
+      }
+
       return { bioUpdated, imagesUpdated, errors };
     }
   }
@@ -262,6 +324,7 @@ export class ExternalMetadataService {
     coverUpdated: boolean;
     errors: string[];
   }> {
+    const startTime = Date.now();
     const errors: string[] = [];
     let coverUpdated = false;
 
@@ -372,6 +435,18 @@ export class ExternalMetadataService {
             });
             coverUpdated = true;
             this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
+
+            // Log enrichment
+            await this.createEnrichmentLog({
+              entityId: albumId,
+              entityType: 'album',
+              entityName: album.name,
+              provider: cover.source,
+              metadataType: 'cover',
+              status: 'success',
+              fieldsUpdated: ['externalCoverPath', 'externalCoverSource'],
+              processingTime: Date.now() - startTime,
+            });
           } else {
             // Create conflict for user to review - respect existing data regardless of source
 
@@ -497,10 +572,47 @@ export class ExternalMetadataService {
         }
       }
 
+      // Log if there were errors but some operations succeeded
+      if (errors.length > 0 && coverUpdated) {
+        await this.createEnrichmentLog({
+          entityId: albumId,
+          entityType: 'album',
+          entityName: album.name,
+          provider: 'multiple',
+          metadataType: 'cover',
+          status: 'partial',
+          fieldsUpdated: [],
+          errorMessage: errors.join('; '),
+          processingTime: Date.now() - startTime,
+        });
+      }
+
       return { coverUpdated, errors };
     } catch (error) {
       this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
       errors.push((error as Error).message);
+
+      // Log the error
+      try {
+        const album = await this.prisma.album.findUnique({
+          where: { id: albumId },
+          select: { name: true },
+        });
+        await this.createEnrichmentLog({
+          entityId: albumId,
+          entityType: 'album',
+          entityName: album?.name || 'Unknown',
+          provider: 'multiple',
+          metadataType: 'cover',
+          status: 'error',
+          fieldsUpdated: [],
+          errorMessage: (error as Error).message,
+          processingTime: Date.now() - startTime,
+        });
+      } catch (logError) {
+        // Ignore logging errors
+      }
+
       return { coverUpdated, errors };
     }
   }
@@ -895,6 +1007,41 @@ export class ExternalMetadataService {
     } catch (error) {
       this.logger.error(`Error searching MusicBrainz for album: ${(error as Error).message}`);
       return [];
+    }
+  }
+
+  /**
+   * Create an enrichment log entry
+   * Records metadata enrichment operations for tracking and analytics
+   */
+  private async createEnrichmentLog(data: {
+    entityId: string;
+    entityType: 'artist' | 'album';
+    entityName: string;
+    provider: string;
+    metadataType: string;
+    status: 'success' | 'partial' | 'error';
+    fieldsUpdated: string[];
+    errorMessage?: string;
+    processingTime?: number;
+  }): Promise<void> {
+    try {
+      await this.prisma.enrichmentLog.create({
+        data: {
+          entityId: data.entityId,
+          entityType: data.entityType,
+          entityName: data.entityName,
+          provider: data.provider,
+          metadataType: data.metadataType,
+          status: data.status,
+          fieldsUpdated: data.fieldsUpdated,
+          errorMessage: data.errorMessage,
+          processingTime: data.processingTime,
+        },
+      });
+    } catch (error) {
+      // Don't throw - logging failure shouldn't break the enrichment process
+      this.logger.error(`Failed to create enrichment log: ${(error as Error).message}`);
     }
   }
 }
