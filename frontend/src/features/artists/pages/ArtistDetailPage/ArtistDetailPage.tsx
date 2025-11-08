@@ -264,10 +264,9 @@ export default function ArtistDetailPage() {
           artistName={artist.name}
           onClose={() => setIsAvatarSelectorOpen(false)}
           onSuccess={() => {
-            // Force hard reload with cache busting to show new avatar
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('_refresh', Date.now().toString());
-            window.location.href = currentUrl.toString();
+            // Force hard reload to fetch updated artist data with new image version
+            // The backend automatically includes version timestamp in the URL
+            window.location.reload();
           }}
         />
       )}

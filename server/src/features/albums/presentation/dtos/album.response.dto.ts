@@ -69,8 +69,22 @@ export class AlbumResponseDto {
     dto.artist = data.artistName || 'Unknown Artist'; // From aggregation
     dto.artistId = data.artistId;
     dto.albumArtistId = data.albumArtistId;
-    // Generate cover URL from album ID
-    const coverUrl = data.id ? `/api/albums/${data.id}/cover` : data.coverArtPath;
+
+    // Generate cover URL with version parameter for cache busting
+    // Use externalInfoUpdatedAt if available (more accurate), fallback to updatedAt
+    let coverUrl = data.id ? `/api/images/albums/${data.id}/cover` : data.coverArtPath;
+
+    if (data.id) {
+      // Prefer externalInfoUpdatedAt (updates when cover changes) over updatedAt (updates on any change)
+      const timestamp = data.externalInfoUpdatedAt || data.updatedAt;
+      if (timestamp) {
+        const version = new Date(timestamp).getTime();
+        coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
+        // Debug logging
+        console.log(`[AlbumDTO] Album: ${data.name}, externalInfoUpdatedAt: ${data.externalInfoUpdatedAt}, updatedAt: ${data.updatedAt}, version: ${version}, coverUrl: ${coverUrl}`);
+      }
+    }
+
     dto.coverArtPath = coverUrl;
     dto.coverImage = coverUrl; // Alias for frontend compatibility
     dto.year = data.year;
