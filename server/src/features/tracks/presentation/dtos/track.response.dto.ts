@@ -51,7 +51,7 @@ export class TrackResponseDto {
 
   @ApiProperty({ example: 10485760, description: 'File size in bytes', required: false })
   @Expose()
-  size?: bigint;
+  size?: number;
 
   @ApiProperty({ example: 'mp3', required: false })
   @Expose()
@@ -89,7 +89,10 @@ export class TrackResponseDto {
   @Expose()
   updatedAt!: Date;
 
-  static fromDomain(data: any): TrackResponseDto {
+  static fromDomain(track: any): TrackResponseDto {
+    // Convert to primitives if it's a Track entity (has toPrimitives method)
+    const data = track.toPrimitives ? track.toPrimitives() : track;
+
     const dto = new TrackResponseDto();
     dto.id = data.id;
     dto.title = data.title;
@@ -102,7 +105,7 @@ export class TrackResponseDto {
     dto.duration = data.duration;
     dto.path = data.path;
     dto.bitRate = data.bitRate;
-    dto.size = data.size;
+    dto.size = data.size; // Now correctly a number from toPrimitives()
     dto.suffix = data.suffix;
     dto.lyrics = data.lyrics;
     dto.comment = data.comment;
