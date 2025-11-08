@@ -5,6 +5,7 @@ import { ExternalMetadataModule } from '@features/external-metadata/external-met
 import { AdminController } from './presentation/admin.controller';
 import { EnrichmentHistoryController } from './presentation/enrichment-history.controller';
 import { AlbumCoversController } from './presentation/album-covers.controller';
+import { ArtistAvatarsController } from './presentation/artist-avatars.controller';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -17,10 +18,12 @@ import {
 } from './domain/use-cases';
 import { SearchAlbumCoversUseCase } from './domain/use-cases/search-album-covers';
 import { ApplyAlbumCoverUseCase } from './domain/use-cases/apply-album-cover';
+import { SearchArtistAvatarsUseCase } from './domain/use-cases/search-artist-avatars';
+import { ApplyArtistAvatarUseCase } from './domain/use-cases/apply-artist-avatar';
 
 @Module({
   imports: [AuthModule, PrismaModule, ExternalMetadataModule],
-  controllers: [AdminController, EnrichmentHistoryController, AlbumCoversController],
+  controllers: [AdminController, EnrichmentHistoryController, AlbumCoversController, ArtistAvatarsController],
   providers: [
     CreateUserUseCase,
     ListUsersUseCase,
@@ -32,6 +35,8 @@ import { ApplyAlbumCoverUseCase } from './domain/use-cases/apply-album-cover';
     GetEnrichmentStatsUseCase,
     SearchAlbumCoversUseCase,
     ApplyAlbumCoverUseCase,
+    SearchArtistAvatarsUseCase,
+    ApplyArtistAvatarUseCase,
   ],
 })
 export class AdminModule {}
