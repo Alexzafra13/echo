@@ -31,6 +31,9 @@ export class UserItemDto {
 
   @Expose()
   createdAt!: Date;
+
+  @Expose()
+  isSystemAdmin!: boolean;
 }
 
 export class ListUsersResponseDto {
@@ -55,6 +58,7 @@ export class ListUsersResponseDto {
       userDto.mustChangePassword = user.mustChangePassword;
       userDto.lastLoginAt = user.lastLoginAt;
       userDto.createdAt = user.createdAt;
+      userDto.isSystemAdmin = user.isSystemAdmin;
       return userDto;
     });
     dto.total = data.total;
