@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt.guard';
-import { AdminGuard } from '@features/auth/infrastructure/guards/admin.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
 import { ManageArtistBannersUseCase } from '../domain/use-cases/manage-artist-banners';
 
 interface AddBannerDto {
