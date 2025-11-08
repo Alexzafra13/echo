@@ -118,7 +118,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId }: TrackListProp
           const isPlaying = currentTrackId === track.id;
           const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
           // Use playlistOrder if available (for playlists), otherwise use trackNumber
-          const displayNumber = (track as any).playlistOrder || track.trackNumber || index + 1;
+          const displayNumber = track.playlistOrder !== undefined ? track.playlistOrder : (track.trackNumber || index + 1);
 
           return (
             <div

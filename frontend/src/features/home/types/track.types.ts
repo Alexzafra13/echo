@@ -22,6 +22,7 @@ export interface Track {
   artistName?: string;
   albumArtistName?: string;
   compilation: boolean;
+  playlistOrder?: number; // Order in playlist (when track is from a playlist)
   createdAt: Date;
   updatedAt: Date;
 }
