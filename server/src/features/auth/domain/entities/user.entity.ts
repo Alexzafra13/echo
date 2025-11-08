@@ -11,7 +11,11 @@ export interface UserProps {
   isAdmin: boolean;
   theme: string;
   language: string;
-  mustChangePassword: boolean;  // ← NUEVO
+  mustChangePassword: boolean;
+  avatarPath?: string;
+  avatarMimeType?: string;
+  avatarSize?: bigint;
+  avatarUpdatedAt?: Date;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
   createdAt: Date;
@@ -85,8 +89,24 @@ export class User {
     return this.props.language;
   }
 
-  get mustChangePassword(): boolean {  // ← NUEVO
+  get mustChangePassword(): boolean {
     return this.props.mustChangePassword;
+  }
+
+  get avatarPath(): string | undefined {
+    return this.props.avatarPath;
+  }
+
+  get avatarMimeType(): string | undefined {
+    return this.props.avatarMimeType;
+  }
+
+  get avatarSize(): bigint | undefined {
+    return this.props.avatarSize;
+  }
+
+  get avatarUpdatedAt(): Date | undefined {
+    return this.props.avatarUpdatedAt;
   }
 
   get lastLoginAt(): Date | undefined {

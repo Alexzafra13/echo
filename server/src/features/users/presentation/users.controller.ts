@@ -11,6 +11,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
+import { MultipartFile } from '@fastify/multipart';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
@@ -207,7 +208,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async uploadAvatar(
-    @Req() request: FastifyRequest,
+    @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> },
     @CurrentUser() user: any,
   ) {
     // Fastify multipart - get uploaded file
