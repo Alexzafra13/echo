@@ -61,6 +61,9 @@ export class AlbumResponseDto {
   @Expose()
   updatedAt!: Date;
 
+  @Expose()
+  coverUpdatedAt?: Date;
+
   static fromDomain(data: any): AlbumResponseDto {
     const dto = new AlbumResponseDto();
     dto.id = data.id;
@@ -69,10 +72,19 @@ export class AlbumResponseDto {
     dto.artist = data.artistName || 'Unknown Artist'; // From aggregation
     dto.artistId = data.artistId;
     dto.albumArtistId = data.albumArtistId;
-    // Generate cover URL from album ID
-    const coverUrl = data.id ? `/api/albums/${data.id}/cover` : data.coverArtPath;
+
+    // Generate cover URL with version parameter for cache busting
+    let coverUrl = data.id ? `/api/images/albums/${data.id}/cover` : data.coverArtPath;
+
+    // Add version parameter if coverUpdatedAt exists (for proper cache busting)
+    if (data.coverUpdatedAt && data.id) {
+      const version = new Date(data.coverUpdatedAt).getTime();
+      coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
+    }
+
     dto.coverArtPath = coverUrl;
     dto.coverImage = coverUrl; // Alias for frontend compatibility
+    dto.coverUpdatedAt = data.coverUpdatedAt;
     dto.year = data.year;
     dto.releaseDate = data.releaseDate;
     dto.compilation = data.compilation;
