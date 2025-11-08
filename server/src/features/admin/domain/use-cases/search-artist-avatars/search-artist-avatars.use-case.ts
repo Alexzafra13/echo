@@ -68,7 +68,7 @@ export class SearchArtistAvatarsUseCase {
               avatars.push({
                 provider: agent.name,
                 url: images.mediumUrl,
-                thumbnailUrl: images.smallUrl,
+                thumbnailUrl: images.smallUrl || undefined,
                 type: 'profile',
                 width: 300,
                 height: 300,
@@ -79,7 +79,7 @@ export class SearchArtistAvatarsUseCase {
               avatars.push({
                 provider: agent.name,
                 url: images.largeUrl,
-                thumbnailUrl: images.mediumUrl || images.smallUrl,
+                thumbnailUrl: images.mediumUrl || images.smallUrl || undefined,
                 type: 'profile',
                 width: 500,
                 height: 500,
@@ -91,7 +91,7 @@ export class SearchArtistAvatarsUseCase {
               avatars.push({
                 provider: agent.name,
                 url: images.backgroundUrl,
-                thumbnailUrl: images.mediumUrl || images.smallUrl,
+                thumbnailUrl: images.mediumUrl || images.smallUrl || undefined,
                 type: 'background',
                 width: 1920,
                 height: 1080,
@@ -103,7 +103,7 @@ export class SearchArtistAvatarsUseCase {
               avatars.push({
                 provider: agent.name,
                 url: images.bannerUrl,
-                thumbnailUrl: images.mediumUrl || images.smallUrl,
+                thumbnailUrl: images.mediumUrl || images.smallUrl || undefined,
                 type: 'banner',
                 width: 1000,
                 height: 185,

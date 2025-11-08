@@ -47,6 +47,7 @@
     "typescript"
   ],
   "dependencies": {
+    "@fastify/multipart": "^9.3.0",
     "@nestjs/platform-socket.io": "^11.1.8",
     "@nestjs/websockets": "^11.1.8",
     "socket.io": "^4.8.1"

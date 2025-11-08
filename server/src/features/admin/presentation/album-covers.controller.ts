@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt.guard';
-import { AdminGuard } from '@features/auth/infrastructure/guards/admin.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
 import { SearchAlbumCoversUseCase } from '../domain/use-cases/search-album-covers';
 import { ApplyAlbumCoverUseCase } from '../domain/use-cases/apply-album-cover';
 import { SearchAlbumCoversResponseDto } from './dtos/search-album-covers.response.dto';
