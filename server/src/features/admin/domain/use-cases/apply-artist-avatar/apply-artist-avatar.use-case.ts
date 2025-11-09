@@ -76,11 +76,13 @@ export class ApplyArtistAvatarUseCase {
 
     const imagePath = path.join(basePath, filename);
 
-    // Delete old image if exists
+    // Delete old image if exists (need to construct full path from DB value)
     if (oldPath) {
       try {
-        await fs.unlink(oldPath);
-        this.logger.debug(`Deleted old image: ${oldPath}`);
+        // If oldPath is just a filename, construct full path
+        const fullOldPath = oldPath.includes(path.sep) ? oldPath : path.join(basePath, oldPath);
+        await fs.unlink(fullOldPath);
+        this.logger.debug(`Deleted old image: ${fullOldPath}`);
       } catch (error) {
         this.logger.warn(
           `Failed to delete old image: ${(error as Error).message}`,
@@ -110,11 +112,11 @@ export class ApplyArtistAvatarUseCase {
         const mediumPath = path.join(basePath, 'profile-medium.jpg');
         await this.imageDownload.downloadAndSave(input.avatarUrl, mediumPath);
 
-        // Update all profile image fields (updatedAt will be automatically updated by Prisma)
+        // Store only filenames in DB (not full paths) - service will construct full path dynamically
         const updateData = {
-          smallImageUrl: smallPath,
-          mediumImageUrl: mediumPath,
-          largeImageUrl: imagePath,
+          smallImageUrl: 'profile-small.jpg',
+          mediumImageUrl: 'profile-medium.jpg',
+          largeImageUrl: filename,
           externalInfoUpdatedAt: new Date(),
         };
         this.logger.debug(`Updating artist ${input.artistId} with profile data:`, JSON.stringify(updateData));
@@ -132,9 +134,9 @@ export class ApplyArtistAvatarUseCase {
         // Continue anyway with large image
       }
     } else {
-      // Update single field for other types (updatedAt will be automatically updated by Prisma)
+      // Store only filename in DB (not full path) - service will construct full path dynamically
       const updateData = {
-        [dbField]: imagePath,
+        [dbField]: filename,
         externalInfoUpdatedAt: new Date(),
       };
       this.logger.debug(`Updating artist ${input.artistId} with data:`, JSON.stringify(updateData));
