@@ -95,17 +95,36 @@ export class SearchAlbumCoversUseCase {
               urlsToProbe.push({ url: cover.largeUrl, sizeLabel: 'large' });
             }
 
+            this.logger.debug(
+              `Agent "${agent.name}" returned ${urlsToProbe.length} URLs to probe: ${urlsToProbe.map(u => `${u.sizeLabel} (${u.url.substring(0, 60)}...)`).join(', ')}`
+            );
+
             // Get real dimensions for each URL
             const covers: CoverOption[] = [];
             const seenDimensions = new Set<string>(); // Track seen dimensions to filter duplicates
+            const seenUrls = new Set<string>(); // Also track URLs to avoid probing duplicates
 
             for (const { url, sizeLabel } of urlsToProbe) {
+              // Skip if we've already probed this exact URL
+              if (seenUrls.has(url)) {
+                this.logger.debug(
+                  `Skipping duplicate URL from ${agent.name} (${sizeLabel}): ${url.substring(0, 60)}...`
+                );
+                continue;
+              }
+              seenUrls.add(url);
+
               try {
+                this.logger.debug(`Probing ${agent.name} (${sizeLabel}): ${url.substring(0, 80)}...`);
                 const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
 
                 if (dimensions) {
                   // Create unique key for these dimensions
                   const dimensionKey = `${dimensions.width}x${dimensions.height}`;
+
+                  this.logger.debug(
+                    `Got dimensions for ${agent.name} (${sizeLabel}): ${dimensionKey}`
+                  );
 
                   // Only add if we haven't seen this exact dimension yet
                   if (!seenDimensions.has(dimensionKey)) {
@@ -119,6 +138,10 @@ export class SearchAlbumCoversUseCase {
                       width: dimensions.width,
                       height: dimensions.height,
                     });
+
+                    this.logger.log(
+                      `✓ Added ${agent.name} cover: ${dimensionKey} from ${sizeLabel}`
+                    );
                   } else {
                     this.logger.debug(
                       `Skipping duplicate dimensions ${dimensionKey} from ${agent.name} (${sizeLabel})`
@@ -133,6 +156,10 @@ export class SearchAlbumCoversUseCase {
                 );
               }
             }
+
+            this.logger.log(
+              `Agent "${agent.name}" contributed ${covers.length} unique covers (from ${urlsToProbe.length} URLs)`
+            );
 
             return covers;
           }

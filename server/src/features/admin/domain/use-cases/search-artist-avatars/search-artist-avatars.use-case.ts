@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { AgentRegistryService } from '@features/external-metadata/infrastructure/services/agent-registry.service';
+import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { IArtistImageRetriever } from '@features/external-metadata/domain/interfaces';
 import {
   SearchArtistAvatarsInput,
@@ -19,6 +20,7 @@ export class SearchArtistAvatarsUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly agentRegistry: AgentRegistryService,
+    private readonly imageDownload: ImageDownloadService,
   ) {}
 
   async execute(input: SearchArtistAvatarsInput): Promise<SearchArtistAvatarsOutput> {
@@ -52,74 +54,103 @@ export class SearchArtistAvatarsUseCase {
 
           if (images) {
             const avatars: AvatarOption[] = [];
+            const seenDimensions = new Map<string, Set<string>>(); // Track dimensions per type
+            const seenUrls = new Set<string>(); // Track all URLs to avoid duplicate probes
 
-            // Profile images
-            if (images.smallUrl) {
-              avatars.push({
-                provider: agent.name,
-                url: images.smallUrl,
-                type: 'profile',
-                width: 174,
-                height: 174,
-              });
-            }
+            // Helper function to add image with real dimensions
+            const addImage = async (
+              url: string | null,
+              type: 'profile' | 'background' | 'banner' | 'logo',
+              sizeLabel: string,
+              thumbnailUrl?: string
+            ) => {
+              if (!url) return;
 
-            if (images.mediumUrl) {
-              avatars.push({
-                provider: agent.name,
-                url: images.mediumUrl,
-                thumbnailUrl: images.smallUrl || undefined,
-                type: 'profile',
-                width: 300,
-                height: 300,
-              });
-            }
+              // Skip if we've already probed this URL
+              if (seenUrls.has(url)) {
+                this.logger.debug(
+                  `Skipping duplicate URL from ${agent.name} (${type}/${sizeLabel})`
+                );
+                return;
+              }
+              seenUrls.add(url);
 
-            if (images.largeUrl) {
-              avatars.push({
-                provider: agent.name,
-                url: images.largeUrl,
-                thumbnailUrl: images.mediumUrl || images.smallUrl || undefined,
-                type: 'profile',
-                width: 500,
-                height: 500,
-              });
-            }
+              try {
+                this.logger.debug(
+                  `Probing ${agent.name} ${type} (${sizeLabel}): ${url.substring(0, 80)}...`
+                );
+                const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
+
+                if (dimensions) {
+                  const dimensionKey = `${dimensions.width}x${dimensions.height}`;
+
+                  // Initialize set for this type if needed
+                  if (!seenDimensions.has(type)) {
+                    seenDimensions.set(type, new Set<string>());
+                  }
+
+                  const typeDimensions = seenDimensions.get(type)!;
+
+                  // Only add if we haven't seen this dimension for this type
+                  if (!typeDimensions.has(dimensionKey)) {
+                    typeDimensions.add(dimensionKey);
+
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      thumbnailUrl: thumbnailUrl,
+                      type: type,
+                      width: dimensions.width,
+                      height: dimensions.height,
+                    });
+
+                    this.logger.log(
+                      `✓ Added ${agent.name} ${type}: ${dimensionKey} from ${sizeLabel}`
+                    );
+                  } else {
+                    this.logger.debug(
+                      `Skipping duplicate ${type} dimensions ${dimensionKey} from ${agent.name} (${sizeLabel})`
+                    );
+                  }
+                } else {
+                  this.logger.warn(
+                    `Could not get dimensions for ${type} from ${agent.name} (${sizeLabel})`
+                  );
+                }
+              } catch (error) {
+                this.logger.warn(
+                  `Failed to probe ${type} from ${agent.name} (${sizeLabel}): ${(error as Error).message}`
+                );
+              }
+            };
+
+            // Profile images (small, medium, large)
+            await addImage(images.smallUrl, 'profile', 'small');
+            await addImage(images.mediumUrl, 'profile', 'medium', images.smallUrl || undefined);
+            await addImage(images.largeUrl, 'profile', 'large', images.mediumUrl || images.smallUrl || undefined);
 
             // Background
-            if (images.backgroundUrl) {
-              avatars.push({
-                provider: agent.name,
-                url: images.backgroundUrl,
-                thumbnailUrl: images.mediumUrl || images.smallUrl || undefined,
-                type: 'background',
-                width: 1920,
-                height: 1080,
-              });
-            }
+            await addImage(
+              images.backgroundUrl,
+              'background',
+              'hd',
+              images.mediumUrl || images.smallUrl || undefined
+            );
 
             // Banner
-            if (images.bannerUrl) {
-              avatars.push({
-                provider: agent.name,
-                url: images.bannerUrl,
-                thumbnailUrl: images.mediumUrl || images.smallUrl || undefined,
-                type: 'banner',
-                width: 1000,
-                height: 185,
-              });
-            }
+            await addImage(
+              images.bannerUrl,
+              'banner',
+              'banner',
+              images.mediumUrl || images.smallUrl || undefined
+            );
 
             // Logo
-            if (images.logoUrl) {
-              avatars.push({
-                provider: agent.name,
-                url: images.logoUrl,
-                type: 'logo',
-                width: 400,
-                height: 155,
-              });
-            }
+            await addImage(images.logoUrl, 'logo', 'logo');
+
+            this.logger.log(
+              `Agent "${agent.name}" contributed ${avatars.length} unique avatars`
+            );
 
             return avatars;
           }
