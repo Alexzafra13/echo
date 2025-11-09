@@ -156,7 +156,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
       if (conflict.entityType === 'album') {
         return `/api/images/albums/${conflict.entityId}/cover`;
       } else if (conflict.entityType === 'artist') {
-        return `/api/images/artists/${conflict.entityId}/profile-medium`;
+        return `/api/images/artists/${conflict.entityId}/profile`;
       }
     }
 

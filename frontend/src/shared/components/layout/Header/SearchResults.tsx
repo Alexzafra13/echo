@@ -102,7 +102,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
               onClick={() => handleNavigate(`/artists/${artist.id}`)}
             >
               <img
-                src={getArtistImageUrl(artist.id, 'profile-small')}
+                src={getArtistImageUrl(artist.id, 'profile')}
                 alt={artist.name}
                 className={styles.searchResults__avatar}
                 onError={handleAvatarError}

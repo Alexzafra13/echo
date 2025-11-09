@@ -48,18 +48,14 @@ export default function ArtistDetailPage() {
   // Filter albums by this artist
   const artistAlbums = allAlbumsData?.data.filter(album => album.artistId === id) || [];
 
-  // Timestamp for cache busting (prefer externalInfoUpdatedAt, fallback to updatedAt)
-  const artistTimestamp = artist?.externalInfoUpdatedAt || artist?.updatedAt;
-  console.log('[ArtistDetailPage] Artist timestamp:', {
-    externalInfoUpdatedAt: artist?.externalInfoUpdatedAt,
-    updatedAt: artist?.updatedAt,
-    timestampMs: artistTimestamp ? new Date(artistTimestamp).getTime() : null
-  });
-
-  // Get background image with aggressive cache busting
+  // Get background image with tag-based cache busting (V2)
   const hasBackground = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
+  const backgroundImageType = artistImages?.images.background?.exists ? 'background' : 'banner';
+  const backgroundTag = artistImages?.images.background?.exists
+    ? artistImages?.images.background?.tag
+    : artistImages?.images.banner?.tag;
   const backgroundUrl = hasBackground
-    ? getArtistImageUrl(id!, artistImages?.images.background?.exists ? 'background' : 'banner', artistTimestamp)
+    ? getArtistImageUrl(id!, backgroundImageType, backgroundTag)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
 
   console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
@@ -81,16 +77,14 @@ export default function ArtistDetailPage() {
     }
   }, [backgroundUrl]);
 
-  // Get logo or use text
+  // Get logo with tag-based cache busting (V2)
   const hasLogo = artistImages?.images.logo?.exists;
-  const logoUrl = hasLogo ? getArtistImageUrl(id!, 'logo', artistTimestamp) : null;
+  const logoUrl = hasLogo ? getArtistImageUrl(id!, 'logo', artistImages?.images.logo?.tag) : null;
 
-  // Get profile image for avatar (prioritize DB images first, then Fanart.tv)
-  const profileUrl = artist?.largeImageUrl ||
-                     artist?.mediumImageUrl ||
-                     artist?.smallImageUrl ||
-                     (artistImages?.images.profileLarge?.exists ? getArtistImageUrl(id!, 'profile-large', artistTimestamp) : null) ||
-                     (artistImages?.images.profileMedium?.exists ? getArtistImageUrl(id!, 'profile-medium', artistTimestamp) : null);
+  // Get profile image with tag-based cache busting (V2 - unified profile)
+  const profileUrl = artistImages?.images.profile?.exists
+    ? getArtistImageUrl(id!, 'profile', artistImages?.images.profile?.tag)
+    : null;
 
   const initials = artist ? getArtistInitials(artist.name) : '';
 
