@@ -349,3 +349,19 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
   object-fit: contain;
 }
+
+.albumPage__imageDimensions {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #b8bcc8);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
