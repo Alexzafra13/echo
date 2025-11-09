@@ -14,10 +14,16 @@ export default function HomePage() {
   // Auto-refresh when scan completes ✨
   useAutoRefreshOnScan();
 
+  // Calculate how many albums we need for 2 rows dynamically
+  const { itemsPerPage: neededAlbums } = useGridDimensions({
+    maxRows: 2,
+    headerHeight: 450,
+  });
+
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
-  // Pedir 12 álbumes (2 filas de ~6 en resoluciones estándar)
-  // CSS auto-fill distribuirá responsivamente: desktop 6 cols, laptop 5 cols, tablet 4 cols, mobile 3 cols
-  const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(12);
+  const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
+    Math.min(neededAlbums, 50) // Backend max is 50
+  );
 
   // Hero section rotation state
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -58,8 +64,8 @@ export default function HomePage() {
     ? featuredAlbumsPool[currentHeroIndex]
     : featuredAlbum;
 
-  // Mostrar todos los álbumes recientes (CSS auto-fill los distribuirá)
-  const displayedRecentAlbums = recentAlbums || [];
+  // Display albums based on calculated grid size (2 rows that fill the screen width)
+  const displayedRecentAlbums = recentAlbums?.slice(0, neededAlbums) || [];
   const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
 
   return (
