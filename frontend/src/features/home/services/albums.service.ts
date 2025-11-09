@@ -9,8 +9,10 @@ export const albumsService = {
   /**
    * Get recently added albums
    */
-  getRecent: async (): Promise<Album[]> => {
-    const { data } = await apiClient.get<Album[]>('/albums/recent');
+  getRecent: async (take?: number): Promise<Album[]> => {
+    const { data } = await apiClient.get<Album[]>('/albums/recent', {
+      params: take ? { take } : undefined,
+    });
     return data;
   },
 
