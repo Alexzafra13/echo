@@ -142,7 +142,7 @@ export class LocalImageProvider {
       if ((error as any).code === 'ENOENT') {
         this.logger.debug(`Folder does not exist: ${artistFolderPath}`);
       } else {
-        this.logger.error(`Error scanning folder ${artistFolderPath}: ${error.message}`);
+        this.logger.error(`Error scanning folder ${artistFolderPath}: ${(error as Error).message}`);
       }
       return {};
     }

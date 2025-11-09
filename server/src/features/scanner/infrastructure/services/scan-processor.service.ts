@@ -820,7 +820,13 @@ export class ScanProcessorService implements OnModuleInit {
       // Enriquecer tanto artistas con MBID (para Fanart.tv) como sin MBID (para buscar en MusicBrainz)
       const artistsToEnrich = await this.prisma.artist.findMany({
         where: {
-          externalInfoUpdatedAt: null, // No enriquecido previamente
+          // V2: No enriquecido si no tiene ninguna external image timestamp
+          AND: [
+            { externalProfileUpdatedAt: null },
+            { externalBackgroundUpdatedAt: null },
+            { externalBannerUpdatedAt: null },
+            { externalLogoUpdatedAt: null },
+          ],
         },
         orderBy: {
           createdAt: 'desc',
