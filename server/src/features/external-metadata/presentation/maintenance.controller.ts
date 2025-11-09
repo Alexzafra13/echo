@@ -285,23 +285,19 @@ export class MaintenanceController {
       const artists = await this.prisma.artist.findMany({
         where: {
           OR: [
-            { smallImageUrl: { not: null } },
-            { mediumImageUrl: { not: null } },
-            { largeImageUrl: { not: null } },
-            { backgroundImageUrl: { not: null } },
-            { bannerImageUrl: { not: null } },
-            { logoImageUrl: { not: null } },
+            { externalProfilePath: { not: null } },
+            { externalBackgroundPath: { not: null } },
+            { externalBannerPath: { not: null } },
+            { externalLogoPath: { not: null } },
           ],
         },
         select: {
           id: true,
           name: true,
-          smallImageUrl: true,
-          mediumImageUrl: true,
-          largeImageUrl: true,
-          backgroundImageUrl: true,
-          bannerImageUrl: true,
-          logoImageUrl: true,
+          externalProfilePath: true,
+          externalBackgroundPath: true,
+          externalBannerPath: true,
+          externalLogoPath: true,
         },
       });
 
@@ -314,33 +310,23 @@ export class MaintenanceController {
           let needsCleaning = false;
 
           // Clean URLs that start with file:// or /api/ (these are incorrect - should be file system paths)
-          if (artist.smallImageUrl && (artist.smallImageUrl.startsWith('file://') || artist.smallImageUrl.startsWith('/api/'))) {
-            updates.smallImageUrl = null;
+          if (artist.externalProfilePath && (artist.externalProfilePath.startsWith('file://') || artist.externalProfilePath.startsWith('/api/'))) {
+            updates.externalProfilePath = null;
             needsCleaning = true;
           }
 
-          if (artist.mediumImageUrl && (artist.mediumImageUrl.startsWith('file://') || artist.mediumImageUrl.startsWith('/api/'))) {
-            updates.mediumImageUrl = null;
+          if (artist.externalBackgroundPath && (artist.externalBackgroundPath.startsWith('file://') || artist.externalBackgroundPath.startsWith('/api/'))) {
+            updates.externalBackgroundPath = null;
             needsCleaning = true;
           }
 
-          if (artist.largeImageUrl && (artist.largeImageUrl.startsWith('file://') || artist.largeImageUrl.startsWith('/api/'))) {
-            updates.largeImageUrl = null;
+          if (artist.externalBannerPath && (artist.externalBannerPath.startsWith('file://') || artist.externalBannerPath.startsWith('/api/'))) {
+            updates.externalBannerPath = null;
             needsCleaning = true;
           }
 
-          if (artist.backgroundImageUrl && (artist.backgroundImageUrl.startsWith('file://') || artist.backgroundImageUrl.startsWith('/api/'))) {
-            updates.backgroundImageUrl = null;
-            needsCleaning = true;
-          }
-
-          if (artist.bannerImageUrl && (artist.bannerImageUrl.startsWith('file://') || artist.bannerImageUrl.startsWith('/api/'))) {
-            updates.bannerImageUrl = null;
-            needsCleaning = true;
-          }
-
-          if (artist.logoImageUrl && (artist.logoImageUrl.startsWith('file://') || artist.logoImageUrl.startsWith('/api/'))) {
-            updates.logoImageUrl = null;
+          if (artist.externalLogoPath && (artist.externalLogoPath.startsWith('file://') || artist.externalLogoPath.startsWith('/api/'))) {
+            updates.externalLogoPath = null;
             needsCleaning = true;
           }
 
@@ -453,12 +439,10 @@ export class MaintenanceController {
           let hasUpdates = false;
 
           const imageFiles = [
-            { file: 'profile-small.jpg', field: 'smallImageUrl' as const },
-            { file: 'profile-medium.jpg', field: 'mediumImageUrl' as const },
-            { file: 'profile-large.jpg', field: 'largeImageUrl' as const },
-            { file: 'background.jpg', field: 'backgroundImageUrl' as const },
-            { file: 'banner.png', field: 'bannerImageUrl' as const },
-            { file: 'logo.png', field: 'logoImageUrl' as const },
+            { file: 'profile.jpg', field: 'externalProfilePath' as const },
+            { file: 'background.jpg', field: 'externalBackgroundPath' as const },
+            { file: 'banner.png', field: 'externalBannerPath' as const },
+            { file: 'logo.png', field: 'externalLogoPath' as const },
           ];
 
           for (const { file, field } of imageFiles) {

@@ -1,100 +1,83 @@
 import { PrismaClient } from '@prisma/client';
 
 /**
- * Script to migrate artist image URLs from local file paths to API URLs
+ * Script to verify artist image paths in V2 schema
  *
- * Converts:
- *   file:///C:/Users/.../storage/metadata/artists/{id}/profile-large.jpg
- * To:
- *   /api/images/artists/{id}/profile-large
+ * V2 schema uses filenames (profile.jpg, background.jpg, etc.) instead of full paths or URLs.
+ * This script checks if any artists have invalid path formats and can clean them up.
+ *
+ * @deprecated This script is for V1 to V2 migration. Use the SQL migration instead.
  */
 
 const prisma = new PrismaClient();
 
 async function migrateImageUrls() {
-  console.log('🔄 Starting artist image URL migration...\n');
+  console.log('🔄 Checking artist image paths (V2 schema)...\n');
 
   try {
-    // Get all artists with image URLs
+    // Get all artists with external images
     const artists = await prisma.artist.findMany({
       where: {
         OR: [
-          { smallImageUrl: { not: null } },
-          { mediumImageUrl: { not: null } },
-          { largeImageUrl: { not: null } },
-          { backgroundImageUrl: { not: null } },
-          { bannerImageUrl: { not: null } },
-          { logoImageUrl: { not: null } },
+          { externalProfilePath: { not: null } },
+          { externalBackgroundPath: { not: null } },
+          { externalBannerPath: { not: null } },
+          { externalLogoPath: { not: null } },
         ],
       },
       select: {
         id: true,
         name: true,
-        smallImageUrl: true,
-        mediumImageUrl: true,
-        largeImageUrl: true,
-        backgroundImageUrl: true,
-        bannerImageUrl: true,
-        logoImageUrl: true,
+        externalProfilePath: true,
+        externalBackgroundPath: true,
+        externalBannerPath: true,
+        externalLogoPath: true,
       },
     });
 
     console.log(`📊 Found ${artists.length} artists with images\n`);
 
-    let updatedCount = 0;
-    let skippedCount = 0;
+    let validCount = 0;
+    let invalidCount = 0;
 
     for (const artist of artists) {
-      const updates: any = {};
-      let needsUpdate = false;
+      const issues: string[] = [];
 
-      // Check and convert each image URL
-      if (artist.smallImageUrl && !artist.smallImageUrl.startsWith('/api/')) {
-        updates.smallImageUrl = `/api/images/artists/${artist.id}/profile-small`;
-        needsUpdate = true;
-      }
+      // V2 schema expects just filenames (profile.jpg, background.jpg, etc.), not full paths
+      // Check each field to ensure it's just a filename
+      const validatePath = (path: string | null, expectedFilename: string, fieldName: string) => {
+        if (!path) return true;
 
-      if (artist.mediumImageUrl && !artist.mediumImageUrl.startsWith('/api/')) {
-        updates.mediumImageUrl = `/api/images/artists/${artist.id}/profile-medium`;
-        needsUpdate = true;
-      }
+        // Should be just a filename, not a full path or URL
+        if (path.includes('/') || path.includes('\\') || path.startsWith('http') || path.startsWith('file:')) {
+          issues.push(`${fieldName}: "${path}" (expected: "${expectedFilename}")`);
+          return false;
+        }
+        return true;
+      };
 
-      if (artist.largeImageUrl && !artist.largeImageUrl.startsWith('/api/')) {
-        updates.largeImageUrl = `/api/images/artists/${artist.id}/profile-large`;
-        needsUpdate = true;
-      }
+      validatePath(artist.externalProfilePath, 'profile.jpg', 'externalProfilePath');
+      validatePath(artist.externalBackgroundPath, 'background.jpg', 'externalBackgroundPath');
+      validatePath(artist.externalBannerPath, 'banner.png', 'externalBannerPath');
+      validatePath(artist.externalLogoPath, 'logo.png', 'externalLogoPath');
 
-      if (artist.backgroundImageUrl && !artist.backgroundImageUrl.startsWith('/api/')) {
-        updates.backgroundImageUrl = `/api/images/artists/${artist.id}/background`;
-        needsUpdate = true;
-      }
-
-      if (artist.bannerImageUrl && !artist.bannerImageUrl.startsWith('/api/')) {
-        updates.bannerImageUrl = `/api/images/artists/${artist.id}/banner`;
-        needsUpdate = true;
-      }
-
-      if (artist.logoImageUrl && !artist.logoImageUrl.startsWith('/api/')) {
-        updates.logoImageUrl = `/api/images/artists/${artist.id}/logo`;
-        needsUpdate = true;
-      }
-
-      if (needsUpdate) {
-        await prisma.artist.update({
-          where: { id: artist.id },
-          data: updates,
-        });
-        updatedCount++;
-        console.log(`✅ Updated: ${artist.name}`);
+      if (issues.length > 0) {
+        invalidCount++;
+        console.log(`❌ ${artist.name} has invalid paths:`);
+        issues.forEach(issue => console.log(`   - ${issue}`));
       } else {
-        skippedCount++;
-        console.log(`⏭️  Skipped: ${artist.name} (already using API URLs)`);
+        validCount++;
+        console.log(`✅ ${artist.name} - all paths valid`);
       }
     }
 
-    console.log(`\n✨ Migration completed!`);
-    console.log(`   Updated: ${updatedCount} artists`);
-    console.log(`   Skipped: ${skippedCount} artists`);
+    console.log(`\n✨ Verification completed!`);
+    console.log(`   Valid: ${validCount} artists`);
+    console.log(`   Invalid: ${invalidCount} artists`);
+
+    if (invalidCount > 0) {
+      console.log(`\n⚠️  Note: Run the SQL migration to fix invalid paths automatically.`);
+    }
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;

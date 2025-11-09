@@ -127,7 +127,8 @@ export class ImageService {
     }
 
     // PRIORIDAD 2: External image (descargada de proveedores)
-    const externalFilename = artist[`external${this.capitalize(imageType)}Path`];
+    const capitalizedType = this.capitalize(imageType);
+    const externalFilename = artist[`external${capitalizedType}Path` as keyof typeof artist];
     if (externalFilename) {
       const fullPath = path.join(
         await this.storage.getArtistMetadataPath(artistId),
@@ -472,7 +473,7 @@ export class ImageService {
       });
       this.logger.debug(`Cleared local ${imageType} reference for artist ${artistId}`);
     } catch (error) {
-      this.logger.error(`Failed to clear local ${imageType} for ${artistId}: ${error.message}`);
+      this.logger.error(`Failed to clear local ${imageType} for ${artistId}: ${(error as Error).message}`);
     }
   }
 
@@ -492,7 +493,7 @@ export class ImageService {
       });
       this.logger.debug(`Cleared external ${imageType} reference for artist ${artistId}`);
     } catch (error) {
-      this.logger.error(`Failed to clear external ${imageType} for ${artistId}: ${error.message}`);
+      this.logger.error(`Failed to clear external ${imageType} for ${artistId}: ${(error as Error).message}`);
     }
   }
 
