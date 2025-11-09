@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { AgentRegistryService } from '@features/external-metadata/infrastructure/services/agent-registry.service';
+import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { IAlbumCoverRetriever } from '@features/external-metadata/domain/interfaces';
 import {
   SearchAlbumCoversInput,
@@ -19,6 +20,7 @@ export class SearchAlbumCoversUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly agentRegistry: AgentRegistryService,
+    private readonly imageDownload: ImageDownloadService,
   ) {}
 
   async execute(input: SearchAlbumCoversInput): Promise<SearchAlbumCoversOutput> {
@@ -80,38 +82,56 @@ export class SearchAlbumCoversUseCase {
           }
 
           if (cover) {
-            // Add all available sizes
-            const covers: CoverOption[] = [];
+            // Collect all URLs to probe
+            const urlsToProbe: Array<{ url: string; sizeLabel: string }> = [];
 
             if (cover.smallUrl) {
-              covers.push({
-                provider: agent.name,
-                url: cover.smallUrl,
-                size: 'small',
-                width: 250,
-                height: 250,
-              });
+              urlsToProbe.push({ url: cover.smallUrl, sizeLabel: 'small' });
             }
-
             if (cover.mediumUrl) {
-              covers.push({
-                provider: agent.name,
-                url: cover.mediumUrl,
-                size: 'medium',
-                width: 500,
-                height: 500,
-              });
+              urlsToProbe.push({ url: cover.mediumUrl, sizeLabel: 'medium' });
+            }
+            if (cover.largeUrl) {
+              urlsToProbe.push({ url: cover.largeUrl, sizeLabel: 'large' });
             }
 
-            if (cover.largeUrl) {
-              covers.push({
-                provider: agent.name,
-                url: cover.largeUrl,
-                thumbnailUrl: cover.mediumUrl || cover.smallUrl,
-                size: 'large',
-                width: 1200,
-                height: 1200,
-              });
+            // Get real dimensions for each URL
+            const covers: CoverOption[] = [];
+            const seenDimensions = new Set<string>(); // Track seen dimensions to filter duplicates
+
+            for (const { url, sizeLabel } of urlsToProbe) {
+              try {
+                const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
+
+                if (dimensions) {
+                  // Create unique key for these dimensions
+                  const dimensionKey = `${dimensions.width}x${dimensions.height}`;
+
+                  // Only add if we haven't seen this exact dimension yet
+                  if (!seenDimensions.has(dimensionKey)) {
+                    seenDimensions.add(dimensionKey);
+
+                    covers.push({
+                      provider: agent.name,
+                      url: url,
+                      thumbnailUrl: sizeLabel === 'large' ? (cover.mediumUrl || cover.smallUrl) : undefined,
+                      size: `${dimensions.width}x${dimensions.height}`, // Show real dimensions
+                      width: dimensions.width,
+                      height: dimensions.height,
+                    });
+                  } else {
+                    this.logger.debug(
+                      `Skipping duplicate dimensions ${dimensionKey} from ${agent.name} (${sizeLabel})`
+                    );
+                  }
+                } else {
+                  this.logger.warn(`Could not get dimensions for ${url} from ${agent.name}`);
+                }
+              } catch (error) {
+                this.logger.warn(
+                  `Failed to probe ${url} from ${agent.name}: ${(error as Error).message}`
+                );
+              }
             }
 
             return covers;
