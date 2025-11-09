@@ -134,41 +134,30 @@ export class SearchArtistAvatarsUseCase {
               );
 
               if (variants) {
-                // Process all artist thumbs as profile images
-                for (let i = 0; i < variants.artistthumbs.length; i++) {
-                  await addImage(
-                    variants.artistthumbs[i],
-                    'profile',
-                    `thumb-${i + 1}`
-                  );
-                }
+                // Helper to process images in parallel chunks
+                const processInParallel = async (
+                  urls: string[],
+                  type: 'profile' | 'background' | 'banner' | 'logo',
+                  label: string
+                ) => {
+                  const chunkSize = 5; // Process 5 images at a time
+                  for (let i = 0; i < urls.length; i += chunkSize) {
+                    const chunk = urls.slice(i, i + chunkSize);
+                    await Promise.all(
+                      chunk.map((url, idx) =>
+                        addImage(url, type, `${label}-${i + idx + 1}`)
+                      )
+                    );
+                  }
+                };
 
-                // Process all backgrounds
-                for (let i = 0; i < variants.backgrounds.length; i++) {
-                  await addImage(
-                    variants.backgrounds[i],
-                    'background',
-                    `background-${i + 1}`
-                  );
-                }
-
-                // Process all banners
-                for (let i = 0; i < variants.banners.length; i++) {
-                  await addImage(
-                    variants.banners[i],
-                    'banner',
-                    `banner-${i + 1}`
-                  );
-                }
-
-                // Process all logos
-                for (let i = 0; i < variants.logos.length; i++) {
-                  await addImage(
-                    variants.logos[i],
-                    'logo',
-                    `logo-${i + 1}`
-                  );
-                }
+                // Process all variants in parallel by type
+                await Promise.all([
+                  processInParallel(variants.artistthumbs, 'profile', 'thumb'),
+                  processInParallel(variants.backgrounds, 'background', 'background'),
+                  processInParallel(variants.banners, 'banner', 'banner'),
+                  processInParallel(variants.logos, 'logo', 'logo'),
+                ]);
 
                 this.logger.log(
                   `Agent "${agent.name}" contributed ${avatars.length} unique avatars from all variants`
