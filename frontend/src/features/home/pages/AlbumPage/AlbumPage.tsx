@@ -167,7 +167,7 @@ export default function AlbumPage() {
                 >
                   {album.artistId && (
                     <img
-                      src={getArtistImageUrl(album.artistId, 'profile-small')}
+                      src={getArtistImageUrl(album.artistId, 'profile')}
                       alt={album.artist}
                       className={styles.albumPage__heroArtistAvatar}
                       onError={(e) => {
