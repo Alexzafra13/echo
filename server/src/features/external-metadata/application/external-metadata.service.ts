@@ -653,7 +653,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'profile-small.jpg');
         await this.imageDownload.downloadAndSave(images.smallUrl, filePath);
-        result.smallUrl = filePath; // Store file path in DB
+        result.smallUrl = 'profile-small.jpg'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download small profile image: ${(error as Error).message}`);
@@ -664,7 +664,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'profile-medium.jpg');
         await this.imageDownload.downloadAndSave(images.mediumUrl, filePath);
-        result.mediumUrl = filePath; // Store file path in DB
+        result.mediumUrl = 'profile-medium.jpg'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download medium profile image: ${(error as Error).message}`);
@@ -675,7 +675,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'profile-large.jpg');
         await this.imageDownload.downloadAndSave(images.largeUrl, filePath);
-        result.largeUrl = filePath; // Store file path in DB
+        result.largeUrl = 'profile-large.jpg'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download large profile image: ${(error as Error).message}`);
@@ -687,7 +687,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'background.jpg');
         await this.imageDownload.downloadAndSave(images.backgroundUrl, filePath);
-        result.backgroundUrl = filePath; // Store file path in DB
+        result.backgroundUrl = 'background.jpg'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download background image: ${(error as Error).message}`);
@@ -699,7 +699,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'banner.png');
         await this.imageDownload.downloadAndSave(images.bannerUrl, filePath);
-        result.bannerUrl = filePath; // Store file path in DB
+        result.bannerUrl = 'banner.png'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download banner image: ${(error as Error).message}`);
@@ -711,7 +711,7 @@ export class ExternalMetadataService {
       try {
         const filePath = path.join(basePath, 'logo.png');
         await this.imageDownload.downloadAndSave(images.logoUrl, filePath);
-        result.logoUrl = filePath; // Store file path in DB
+        result.logoUrl = 'logo.png'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
         this.logger.warn(`Failed to download logo image: ${(error as Error).message}`);
