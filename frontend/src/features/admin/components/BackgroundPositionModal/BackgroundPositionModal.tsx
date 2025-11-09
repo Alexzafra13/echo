@@ -28,6 +28,7 @@ export function BackgroundPositionModal({
 }: BackgroundPositionModalProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
 
@@ -64,6 +65,9 @@ export function BackgroundPositionModal({
           renderWidth = containerWidth;
           renderHeight = renderWidth / imageRatio;
         }
+
+        // Save calculated dimensions
+        setImageDimensions({ width: renderWidth, height: renderHeight });
 
         // Parse background-position to calculate initial offset
         const parts = initialPosition.split(' ');
@@ -325,6 +329,8 @@ export function BackgroundPositionModal({
                   alt={artistName}
                   className={styles.preview__image}
                   style={{
+                    width: `${imageDimensions.width}px`,
+                    height: `${imageDimensions.height}px`,
                     transform: `translate(${imagePosition.x}px, ${imagePosition.y}px)`,
                   }}
                   draggable={false}
