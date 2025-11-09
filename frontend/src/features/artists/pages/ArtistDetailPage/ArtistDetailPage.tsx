@@ -1,6 +1,6 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen, Image } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { BookOpen, Image, MoreVertical, ImageIcon, Frame, Layers, Tag } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
@@ -21,10 +21,13 @@ export default function ArtistDetailPage() {
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
+  const [selectedImageType, setSelectedImageType] = useState<'profile' | 'background' | 'banner' | 'logo'>('profile');
+  const [isImageMenuOpen, setIsImageMenuOpen] = useState(false);
   const [imageRenderKey, setImageRenderKey] = useState(0);
   const [logoRenderKey, setLogoRenderKey] = useState(0);
   const [profileRenderKey, setProfileRenderKey] = useState(0);
   const { user } = useAuth();
+  const imageMenuRef = useRef<HTMLDivElement>(null);
 
   // Real-time synchronization via WebSocket for artist images and album covers
   useArtistMetadataSync(id);
@@ -114,6 +117,27 @@ export default function ArtistDetailPage() {
     }
   }, [profileUrl]);
 
+  // Close image menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (imageMenuRef.current && !imageMenuRef.current.contains(event.target as Node)) {
+        setIsImageMenuOpen(false);
+      }
+    }
+
+    if (isImageMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isImageMenuOpen]);
+
+  // Handlers for image menu
+  const handleChangeImage = (type: 'profile' | 'background' | 'banner' | 'logo') => {
+    setSelectedImageType(type);
+    setIsImageMenuOpen(false);
+    setIsAvatarSelectorOpen(true);
+  };
+
   // Helper to format biography with drop cap
   const formatBiographyWithDropCap = (text: string) => {
     if (!text || text.length === 0) return text;
@@ -194,13 +218,47 @@ export default function ArtistDetailPage() {
                   </div>
                 )}
                 {user?.isAdmin && (
-                  <button
-                    className={styles.artistDetailPage__changeAvatarBtn}
-                    onClick={() => setIsAvatarSelectorOpen(true)}
-                    title="Cambiar imagen del artista"
-                  >
-                    <Image size={16} />
-                  </button>
+                  <div className={styles.artistDetailPage__imageMenuContainer} ref={imageMenuRef}>
+                    <button
+                      className={styles.artistDetailPage__changeAvatarBtn}
+                      onClick={() => setIsImageMenuOpen(!isImageMenuOpen)}
+                      title="Cambiar imágenes del artista"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+                    {isImageMenuOpen && (
+                      <div className={styles.artistDetailPage__imageMenu}>
+                        <button
+                          className={styles.artistDetailPage__imageMenuItem}
+                          onClick={() => handleChangeImage('profile')}
+                        >
+                          <ImageIcon size={14} />
+                          <span>Cambiar perfil</span>
+                        </button>
+                        <button
+                          className={styles.artistDetailPage__imageMenuItem}
+                          onClick={() => handleChangeImage('background')}
+                        >
+                          <Frame size={14} />
+                          <span>Cambiar fondo</span>
+                        </button>
+                        <button
+                          className={styles.artistDetailPage__imageMenuItem}
+                          onClick={() => handleChangeImage('banner')}
+                        >
+                          <Layers size={14} />
+                          <span>Cambiar banner</span>
+                        </button>
+                        <button
+                          className={styles.artistDetailPage__imageMenuItem}
+                          onClick={() => handleChangeImage('logo')}
+                        >
+                          <Tag size={14} />
+                          <span>Cambiar logo</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -319,6 +377,7 @@ export default function ArtistDetailPage() {
         <ArtistAvatarSelectorModal
           artistId={artist.id}
           artistName={artist.name}
+          defaultType={selectedImageType}
           onClose={() => setIsAvatarSelectorOpen(false)}
           onSuccess={() => {
             // WebSocket will automatically sync the changes via useArtistMetadataSync

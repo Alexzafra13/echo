@@ -9,6 +9,7 @@ import styles from './ArtistAvatarSelectorModal.module.css';
 interface ArtistAvatarSelectorModalProps {
   artistId: string;
   artistName: string;
+  defaultType?: 'profile' | 'background' | 'banner' | 'logo'; // Pre-select image type
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -20,12 +21,13 @@ interface ArtistAvatarSelectorModalProps {
 export function ArtistAvatarSelectorModal({
   artistId,
   artistName,
+  defaultType,
   onClose,
   onSuccess,
 }: ArtistAvatarSelectorModalProps) {
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarOption | null>(null);
   const [providerFilter, setProviderFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>(defaultType || ''); // Use defaultType if provided
   const [applyError, setApplyError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
