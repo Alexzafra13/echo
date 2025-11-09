@@ -83,14 +83,38 @@ model Artist {
   mbzArtistId            String?   @map("mbz_artist_id") @db.VarChar(36)
   biography              String?   @db.Text
   biographySource        String?   @map("biography_source") @db.VarChar(50)
-  smallImageUrl          String?   @map("small_image_url") @db.VarChar(512)
-  mediumImageUrl         String?   @map("medium_image_url") @db.VarChar(512)
-  largeImageUrl          String?   @map("large_image_url") @db.VarChar(512)
-  backgroundImageUrl     String?   @map("background_image_url") @db.VarChar(512)
-  bannerImageUrl         String?   @map("banner_image_url") @db.VarChar(512)
-  logoImageUrl           String?   @map("logo_image_url") @db.VarChar(512)
+
+  // === IMAGE SYSTEM V2 - Jellyfin-style Local + External ===
+  // Profile/Thumb Images
+  profileImagePath       String?   @map("profile_image_path") @db.VarChar(512)
+  profileImageUpdatedAt  DateTime? @map("profile_image_updated_at")
+  externalProfilePath    String?   @map("external_profile_path") @db.VarChar(512)
+  externalProfileSource  String?   @map("external_profile_source") @db.VarChar(50)
+  externalProfileUpdatedAt DateTime? @map("external_profile_updated_at")
+
+  // Background Images
+  backgroundImagePath    String?   @map("background_image_path") @db.VarChar(512)
+  backgroundUpdatedAt    DateTime? @map("background_updated_at")
+  externalBackgroundPath String?   @map("external_background_path") @db.VarChar(512)
+  externalBackgroundSource String? @map("external_background_source") @db.VarChar(50)
+  externalBackgroundUpdatedAt DateTime? @map("external_background_updated_at")
+
+  // Banner Images
+  bannerImagePath        String?   @map("banner_image_path") @db.VarChar(512)
+  bannerUpdatedAt        DateTime? @map("banner_updated_at")
+  externalBannerPath     String?   @map("external_banner_path") @db.VarChar(512)
+  externalBannerSource   String?   @map("external_banner_source") @db.VarChar(50)
+  externalBannerUpdatedAt DateTime? @map("external_banner_updated_at")
+
+  // Logo Images
+  logoImagePath          String?   @map("logo_image_path") @db.VarChar(512)
+  logoUpdatedAt          DateTime? @map("logo_updated_at")
+  externalLogoPath       String?   @map("external_logo_path") @db.VarChar(512)
+  externalLogoSource     String?   @map("external_logo_source") @db.VarChar(50)
+  externalLogoUpdatedAt  DateTime? @map("external_logo_updated_at")
+
+  // Other metadata
   externalUrl            String?   @map("external_url") @db.VarChar(512)
-  externalInfoUpdatedAt  DateTime? @map("external_info_updated_at")
   metadataStorageSize    BigInt?   @default(0) @map("metadata_storage_size")
   orderArtistName        String?   @map("order_artist_name") @db.VarChar(255)
   size                   BigInt    @default(0)
