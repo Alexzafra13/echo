@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
@@ -21,6 +22,7 @@ export class ApplyArtistAvatarUseCase {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
@@ -152,6 +154,11 @@ export class ApplyArtistAvatarUseCase {
     // Invalidate server-side image cache to force reload of new images
     this.imageService.invalidateArtistCache(input.artistId);
     this.logger.debug(`Invalidated image cache for artist ${input.artistId}`);
+
+    // CRITICAL: Invalidate Redis cache to ensure GET /artists/:id returns fresh data
+    const redisCacheKey = `artist:${input.artistId}`;
+    await this.redis.del(redisCacheKey);
+    this.logger.debug(`Invalidated Redis cache for key: ${redisCacheKey}`);
 
     // Get updated artist data to return and for WebSocket notification
     const finalArtist = await this.prisma.artist.findUnique({
