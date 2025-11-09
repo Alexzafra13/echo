@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Check, Loader, AlertCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@shared/components/ui';
 import { useSearchArtistAvatars, useApplyArtistAvatar } from '../../hooks/useArtistAvatars';
 import { AvatarOption } from '../../api/artist-avatars.api';
@@ -27,6 +28,7 @@ export function ArtistAvatarSelectorModal({
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [applyError, setApplyError] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useSearchArtistAvatars(artistId);
   const { mutate: applyAvatar, isPending: isApplying } = useApplyArtistAvatar();
 
@@ -56,13 +58,40 @@ export function ArtistAvatarSelectorModal({
         type: selectedAvatar.type as 'profile' | 'background' | 'banner' | 'logo',
       },
       {
-        onSuccess: () => {
-          console.log('Avatar applied successfully');
+        onSuccess: async () => {
+          console.log('[ArtistAvatarSelector] ✅ Avatar applied successfully');
+
+          // FALLBACK: Force manual refetch in case WebSocket fails
+          // This ensures the UI updates even if the WebSocket event doesn't arrive
+          console.log('[ArtistAvatarSelector] Forcing manual refetch as fallback...');
+
+          // Immediate refetch
+          await queryClient.refetchQueries({
+            queryKey: ['artists', artistId],
+            type: 'active'
+          });
+
+          // Refetch artist images
+          await queryClient.refetchQueries({
+            queryKey: ['artist-images', artistId],
+            type: 'active'
+          });
+
+          // Delayed refetch to ensure backend has fully processed the image
+          setTimeout(() => {
+            console.log('[ArtistAvatarSelector] Secondary refetch after 1s...');
+            queryClient.refetchQueries({
+              queryKey: ['artists', artistId],
+              type: 'active'
+            });
+          }, 1000);
+
+          console.log('[ArtistAvatarSelector] Manual refetch completed');
           onSuccess?.();
           onClose();
         },
         onError: (error: any) => {
-          console.error('Error applying avatar:', error);
+          console.error('[ArtistAvatarSelector] ❌ Error applying avatar:', error);
           setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la imagen');
         },
       },
