@@ -13,8 +13,14 @@ import {
 } from './apply-artist-avatar.dto';
 
 /**
- * ApplyArtistAvatarUseCase
- * Downloads and applies a selected artist image (profile, background, banner, or logo)
+ * ApplyArtistAvatarUseCase V2
+ * Downloads and applies a selected artist image using new architecture
+ *
+ * Changes in V2:
+ * - Uses new schema fields (externalProfilePath, externalBackgroundPath, etc.)
+ * - Per-image timestamps (externalProfileUpdatedAt, etc.)
+ * - Optional replaceLocal flag to clear local image references
+ * - Single profile image (no more small/medium/large variants)
  */
 @Injectable()
 export class ApplyArtistAvatarUseCase {
@@ -33,6 +39,15 @@ export class ApplyArtistAvatarUseCase {
     // Get artist from database
     const artist = await this.prisma.artist.findUnique({
       where: { id: input.artistId },
+      select: {
+        id: true,
+        name: true,
+        // Old external paths (for deletion)
+        externalProfilePath: true,
+        externalBackgroundPath: true,
+        externalBannerPath: true,
+        externalLogoPath: true,
+      },
     });
 
     if (!artist) {
@@ -46,49 +61,20 @@ export class ApplyArtistAvatarUseCase {
     // Get storage path for artist
     const basePath = await this.storage.getArtistMetadataPath(input.artistId);
 
-    // Determine filename and field to update based on type
-    let filename: string;
-    let dbField: string;
-    let oldPath: string | null = null;
-
-    switch (input.type) {
-      case 'profile':
-        filename = 'profile-large.jpg';
-        dbField = 'largeImageUrl';
-        oldPath = artist.largeImageUrl;
-        break;
-      case 'background':
-        filename = 'background.jpg';
-        dbField = 'backgroundImageUrl';
-        oldPath = artist.backgroundImageUrl;
-        break;
-      case 'banner':
-        filename = 'banner.png';
-        dbField = 'bannerImageUrl';
-        oldPath = artist.bannerImageUrl;
-        break;
-      case 'logo':
-        filename = 'logo.png';
-        dbField = 'logoImageUrl';
-        oldPath = artist.logoImageUrl;
-        break;
-      default:
-        throw new BadRequestException(`Invalid image type: ${input.type}`);
-    }
-
+    // Determine filename and fields based on type
+    const typeConfig = this.getTypeConfig(input.type);
+    const filename = typeConfig.filename;
     const imagePath = path.join(basePath, filename);
 
-    // Delete old image if exists (need to construct full path from DB value)
+    // Delete old EXTERNAL image if exists
+    const oldPath = artist[typeConfig.oldPathField];
     if (oldPath) {
       try {
-        // If oldPath is just a filename, construct full path
-        const fullOldPath = oldPath.includes(path.sep) ? oldPath : path.join(basePath, oldPath);
+        const fullOldPath = path.join(basePath, oldPath);
         await fs.unlink(fullOldPath);
-        this.logger.debug(`Deleted old image: ${fullOldPath}`);
+        this.logger.debug(`Deleted old external image: ${fullOldPath}`);
       } catch (error) {
-        this.logger.warn(
-          `Failed to delete old image: ${(error as Error).message}`,
-        );
+        this.logger.warn(`Failed to delete old image: ${(error as Error).message}`);
       }
     }
 
@@ -97,86 +83,126 @@ export class ApplyArtistAvatarUseCase {
       await this.imageDownload.downloadAndSave(input.avatarUrl, imagePath);
       this.logger.log(`Downloaded image to: ${imagePath}`);
     } catch (error) {
-      this.logger.error(
-        `Failed to download image: ${(error as Error).message}`,
-      );
+      this.logger.error(`Failed to download image: ${(error as Error).message}`);
       throw error;
     }
 
-    // For profile images, also download smaller sizes
-    if (input.type === 'profile') {
-      try {
-        // Download small
-        const smallPath = path.join(basePath, 'profile-small.jpg');
-        await this.imageDownload.downloadAndSave(input.avatarUrl, smallPath);
+    // Build update data for new schema
+    const updateData: any = {
+      [typeConfig.externalPathField]: filename,
+      [typeConfig.externalSourceField]: input.provider,
+      [typeConfig.externalUpdatedField]: new Date(),
+    };
 
-        // Download medium
-        const mediumPath = path.join(basePath, 'profile-medium.jpg');
-        await this.imageDownload.downloadAndSave(input.avatarUrl, mediumPath);
-
-        // Store only filenames in DB (not full paths) - service will construct full path dynamically
-        const updateData = {
-          smallImageUrl: 'profile-small.jpg',
-          mediumImageUrl: 'profile-medium.jpg',
-          largeImageUrl: filename,
-          externalInfoUpdatedAt: new Date(),
-        };
-        this.logger.debug(`Updating artist ${input.artistId} with profile data:`, JSON.stringify(updateData));
-
-        const updatedArtist = await this.prisma.artist.update({
-          where: { id: input.artistId },
-          data: updateData,
-        });
-
-        this.logger.debug(`Artist updated. externalInfoUpdatedAt is now: ${updatedArtist.externalInfoUpdatedAt}`);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to download profile variants: ${(error as Error).message}`,
-        );
-        // Continue anyway with large image
-      }
-    } else {
-      // Store only filename in DB (not full path) - service will construct full path dynamically
-      const updateData = {
-        [dbField]: filename,
-        externalInfoUpdatedAt: new Date(),
-      };
-      this.logger.debug(`Updating artist ${input.artistId} with data:`, JSON.stringify(updateData));
-
-      const updatedArtist = await this.prisma.artist.update({
-        where: { id: input.artistId },
-        data: updateData,
-      });
-
-      this.logger.debug(`Artist updated. externalInfoUpdatedAt is now: ${updatedArtist.externalInfoUpdatedAt}`);
+    // Optional: Clear local image reference (user explicitly wants to replace local with external)
+    if (input.replaceLocal !== false) {  // Default to true if not specified
+      updateData[typeConfig.localPathField] = null;
+      updateData[typeConfig.localUpdatedField] = null;
+      this.logger.debug(`Clearing local ${input.type} reference (replaceLocal=${input.replaceLocal !== false})`);
     }
 
-    // Invalidate server-side image cache to force reload of new images
+    this.logger.debug(
+      `Updating artist ${input.artistId} with ${input.type} data:`,
+      JSON.stringify(updateData, null, 2)
+    );
+
+    const updatedArtist = await this.prisma.artist.update({
+      where: { id: input.artistId },
+      data: updateData,
+    });
+
+    this.logger.debug(
+      `Artist updated. ${typeConfig.externalUpdatedField} is now: ${updatedArtist[typeConfig.externalUpdatedField]}`
+    );
+
+    // Invalidate server-side image cache
     this.imageService.invalidateArtistCache(input.artistId);
     this.logger.debug(`Invalidated image cache for artist ${input.artistId}`);
 
-    // CRITICAL: Invalidate Redis cache to ensure GET /artists/:id returns fresh data
+    // Invalidate Redis cache
     const redisCacheKey = `artist:${input.artistId}`;
     await this.redis.del(redisCacheKey);
     this.logger.debug(`Invalidated Redis cache for key: ${redisCacheKey}`);
 
-    // Get updated artist data to return and for WebSocket notification
+    // Get updated artist for WebSocket notification
     const finalArtist = await this.prisma.artist.findUnique({
       where: { id: input.artistId },
+      select: {
+        externalProfileUpdatedAt: true,
+        externalBackgroundUpdatedAt: true,
+        externalBannerUpdatedAt: true,
+        externalLogoUpdatedAt: true,
+      },
     });
 
-    // Emit WebSocket event to notify all connected clients about the update
+    // Emit WebSocket event
+    const updatedAt = finalArtist?.[typeConfig.externalUpdatedField] || new Date();
     this.metadataGateway.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: artist.name,
       imageType: input.type,
-      updatedAt: finalArtist?.externalInfoUpdatedAt || new Date(),
+      updatedAt,
     });
+
+    this.logger.log(
+      `✅ Successfully applied ${input.type} image for ${artist.name} (tag will change with new timestamp)`
+    );
 
     return {
       success: true,
       message: `${input.type} image successfully applied from ${input.provider}`,
       imagePath,
     };
+  }
+
+  /**
+   * Get configuration for each image type (V2 schema fields)
+   */
+  private getTypeConfig(type: string) {
+    const configs = {
+      profile: {
+        filename: 'profile.jpg',
+        localPathField: 'profileImagePath',
+        localUpdatedField: 'profileImageUpdatedAt',
+        externalPathField: 'externalProfilePath',
+        externalSourceField: 'externalProfileSource',
+        externalUpdatedField: 'externalProfileUpdatedAt',
+        oldPathField: 'externalProfilePath',
+      },
+      background: {
+        filename: 'background.jpg',
+        localPathField: 'backgroundImagePath',
+        localUpdatedField: 'backgroundUpdatedAt',
+        externalPathField: 'externalBackgroundPath',
+        externalSourceField: 'externalBackgroundSource',
+        externalUpdatedField: 'externalBackgroundUpdatedAt',
+        oldPathField: 'externalBackgroundPath',
+      },
+      banner: {
+        filename: 'banner.png',
+        localPathField: 'bannerImagePath',
+        localUpdatedField: 'bannerUpdatedAt',
+        externalPathField: 'externalBannerPath',
+        externalSourceField: 'externalBannerSource',
+        externalUpdatedField: 'externalBannerUpdatedAt',
+        oldPathField: 'externalBannerPath',
+      },
+      logo: {
+        filename: 'logo.png',
+        localPathField: 'logoImagePath',
+        localUpdatedField: 'logoUpdatedAt',
+        externalPathField: 'externalLogoPath',
+        externalSourceField: 'externalLogoSource',
+        externalUpdatedField: 'externalLogoUpdatedAt',
+        oldPathField: 'externalLogoPath',
+      },
+    };
+
+    const config = configs[type];
+    if (!config) {
+      throw new BadRequestException(`Invalid image type: ${type}`);
+    }
+
+    return config;
   }
 }
