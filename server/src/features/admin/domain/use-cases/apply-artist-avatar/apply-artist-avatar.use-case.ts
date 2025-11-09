@@ -67,7 +67,7 @@ export class ApplyArtistAvatarUseCase {
     const imagePath = path.join(basePath, filename);
 
     // Delete old EXTERNAL image if exists
-    const oldPath = artist[typeConfig.oldPathField];
+    const oldPath = artist[typeConfig.oldPathField as keyof typeof artist] as string | null;
     if (oldPath) {
       try {
         const fullOldPath = path.join(basePath, oldPath);
@@ -112,7 +112,7 @@ export class ApplyArtistAvatarUseCase {
     });
 
     this.logger.debug(
-      `Artist updated. ${typeConfig.externalUpdatedField} is now: ${updatedArtist[typeConfig.externalUpdatedField]}`
+      `Artist updated. ${typeConfig.externalUpdatedField} is now: ${updatedArtist[typeConfig.externalUpdatedField as keyof typeof updatedArtist]}`
     );
 
     // Invalidate server-side image cache
@@ -136,7 +136,7 @@ export class ApplyArtistAvatarUseCase {
     });
 
     // Emit WebSocket event
-    const updatedAt = finalArtist?.[typeConfig.externalUpdatedField] || new Date();
+    const updatedAt = (finalArtist?.[typeConfig.externalUpdatedField as keyof typeof finalArtist] as Date) || new Date();
     this.metadataGateway.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: artist.name,
@@ -158,8 +158,24 @@ export class ApplyArtistAvatarUseCase {
   /**
    * Get configuration for each image type (V2 schema fields)
    */
-  private getTypeConfig(type: string) {
-    const configs = {
+  private getTypeConfig(type: string): {
+    filename: string;
+    localPathField: string;
+    localUpdatedField: string;
+    externalPathField: string;
+    externalSourceField: string;
+    externalUpdatedField: string;
+    oldPathField: string;
+  } {
+    const configs: Record<string, {
+      filename: string;
+      localPathField: string;
+      localUpdatedField: string;
+      externalPathField: string;
+      externalSourceField: string;
+      externalUpdatedField: string;
+      oldPathField: string;
+    }> = {
       profile: {
         filename: 'profile.jpg',
         localPathField: 'profileImagePath',
