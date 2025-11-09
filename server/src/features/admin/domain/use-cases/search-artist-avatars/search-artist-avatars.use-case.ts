@@ -50,80 +50,139 @@ export class SearchArtistAvatarsUseCase {
         try {
           this.logger.debug(`Trying agent "${agent.name}" for avatars`);
 
+          const avatars: AvatarOption[] = [];
+          const seenDimensions = new Map<string, Set<string>>(); // Track dimensions per type
+          const seenUrls = new Set<string>(); // Track all URLs to avoid duplicate probes
+
+          // Helper function to add image with real dimensions
+          const addImage = async (
+            url: string | null,
+            type: 'profile' | 'background' | 'banner' | 'logo',
+            sizeLabel: string,
+            thumbnailUrl?: string
+          ) => {
+            if (!url) return;
+
+            // Skip if we've already probed this URL
+            if (seenUrls.has(url)) {
+              this.logger.debug(
+                `Skipping duplicate URL from ${agent.name} (${type}/${sizeLabel})`
+              );
+              return;
+            }
+            seenUrls.add(url);
+
+            try {
+              this.logger.debug(
+                `Probing ${agent.name} ${type} (${sizeLabel}): ${url.substring(0, 80)}...`
+              );
+              const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
+
+              if (dimensions) {
+                const dimensionKey = `${dimensions.width}x${dimensions.height}`;
+
+                // Initialize set for this type if needed
+                if (!seenDimensions.has(type)) {
+                  seenDimensions.set(type, new Set<string>());
+                }
+
+                const typeDimensions = seenDimensions.get(type)!;
+
+                // Only add if we haven't seen this dimension for this type
+                if (!typeDimensions.has(dimensionKey)) {
+                  typeDimensions.add(dimensionKey);
+
+                  avatars.push({
+                    provider: agent.name,
+                    url: url,
+                    thumbnailUrl: thumbnailUrl,
+                    type: type,
+                    width: dimensions.width,
+                    height: dimensions.height,
+                  });
+
+                  this.logger.log(
+                    `✓ Added ${agent.name} ${type}: ${dimensionKey} from ${sizeLabel}`
+                  );
+                } else {
+                  this.logger.debug(
+                    `Skipping duplicate ${type} dimensions ${dimensionKey} from ${agent.name} (${sizeLabel})`
+                  );
+                }
+              } else {
+                this.logger.warn(
+                  `Could not get dimensions for ${type} from ${agent.name} (${sizeLabel})`
+                );
+              }
+            } catch (error) {
+              this.logger.warn(
+                `Failed to probe ${type} from ${agent.name} (${sizeLabel}): ${(error as Error).message}`
+              );
+            }
+          };
+
+          // Special handling for Fanart.tv to get ALL variants
+          if (agent.name === 'fanart' && mbzArtistId) {
+            const fanartAgent = agent as any;
+
+            if (fanartAgent.getAllArtistImageVariants) {
+              this.logger.debug(`Getting ALL Fanart.tv variants for ${artist.name}`);
+
+              const variants = await fanartAgent.getAllArtistImageVariants(
+                mbzArtistId,
+                artist.name
+              );
+
+              if (variants) {
+                // Process all artist thumbs as profile images
+                for (let i = 0; i < variants.artistthumbs.length; i++) {
+                  await addImage(
+                    variants.artistthumbs[i],
+                    'profile',
+                    `thumb-${i + 1}`
+                  );
+                }
+
+                // Process all backgrounds
+                for (let i = 0; i < variants.backgrounds.length; i++) {
+                  await addImage(
+                    variants.backgrounds[i],
+                    'background',
+                    `background-${i + 1}`
+                  );
+                }
+
+                // Process all banners
+                for (let i = 0; i < variants.banners.length; i++) {
+                  await addImage(
+                    variants.banners[i],
+                    'banner',
+                    `banner-${i + 1}`
+                  );
+                }
+
+                // Process all logos
+                for (let i = 0; i < variants.logos.length; i++) {
+                  await addImage(
+                    variants.logos[i],
+                    'logo',
+                    `logo-${i + 1}`
+                  );
+                }
+
+                this.logger.log(
+                  `Agent "${agent.name}" contributed ${avatars.length} unique avatars from all variants`
+                );
+
+                return avatars;
+              }
+            }
+          }
+
+          // Standard handling for other agents (Last.fm, etc.)
           const images = await agent.getArtistImages(mbzArtistId, artist.name);
 
           if (images) {
-            const avatars: AvatarOption[] = [];
-            const seenDimensions = new Map<string, Set<string>>(); // Track dimensions per type
-            const seenUrls = new Set<string>(); // Track all URLs to avoid duplicate probes
-
-            // Helper function to add image with real dimensions
-            const addImage = async (
-              url: string | null,
-              type: 'profile' | 'background' | 'banner' | 'logo',
-              sizeLabel: string,
-              thumbnailUrl?: string
-            ) => {
-              if (!url) return;
-
-              // Skip if we've already probed this URL
-              if (seenUrls.has(url)) {
-                this.logger.debug(
-                  `Skipping duplicate URL from ${agent.name} (${type}/${sizeLabel})`
-                );
-                return;
-              }
-              seenUrls.add(url);
-
-              try {
-                this.logger.debug(
-                  `Probing ${agent.name} ${type} (${sizeLabel}): ${url.substring(0, 80)}...`
-                );
-                const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
-
-                if (dimensions) {
-                  const dimensionKey = `${dimensions.width}x${dimensions.height}`;
-
-                  // Initialize set for this type if needed
-                  if (!seenDimensions.has(type)) {
-                    seenDimensions.set(type, new Set<string>());
-                  }
-
-                  const typeDimensions = seenDimensions.get(type)!;
-
-                  // Only add if we haven't seen this dimension for this type
-                  if (!typeDimensions.has(dimensionKey)) {
-                    typeDimensions.add(dimensionKey);
-
-                    avatars.push({
-                      provider: agent.name,
-                      url: url,
-                      thumbnailUrl: thumbnailUrl,
-                      type: type,
-                      width: dimensions.width,
-                      height: dimensions.height,
-                    });
-
-                    this.logger.log(
-                      `✓ Added ${agent.name} ${type}: ${dimensionKey} from ${sizeLabel}`
-                    );
-                  } else {
-                    this.logger.debug(
-                      `Skipping duplicate ${type} dimensions ${dimensionKey} from ${agent.name} (${sizeLabel})`
-                    );
-                  }
-                } else {
-                  this.logger.warn(
-                    `Could not get dimensions for ${type} from ${agent.name} (${sizeLabel})`
-                  );
-                }
-              } catch (error) {
-                this.logger.warn(
-                  `Failed to probe ${type} from ${agent.name} (${sizeLabel}): ${(error as Error).message}`
-                );
-              }
-            };
-
             // Profile images (small, medium, large)
             await addImage(images.smallUrl, 'profile', 'small');
             await addImage(images.mediumUrl, 'profile', 'medium', images.smallUrl || undefined);
