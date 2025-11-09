@@ -18,7 +18,12 @@ export function useArtists(params?: { skip?: number; take?: number }) {
 export function useArtist(id: string | undefined) {
   return useQuery({
     queryKey: ['artists', id],
-    queryFn: () => artistsService.getById(id!),
+    queryFn: async () => {
+      console.log('[useArtist] Fetching artist:', id);
+      const result = await artistsService.getById(id!);
+      console.log('[useArtist] Response:', { id: result.id, externalInfoUpdatedAt: result.externalInfoUpdatedAt, updatedAt: result.updatedAt });
+      return result;
+    },
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
