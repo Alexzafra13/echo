@@ -2,14 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@shared/services/api';
 
 /**
- * Artist images metadata from API
+ * Artist images metadata from API (V2 with tag and source)
  */
 export interface ArtistImages {
   artistId: string;
   images: {
-    profileSmall?: ImageMetadata;
-    profileMedium?: ImageMetadata;
-    profileLarge?: ImageMetadata;
+    profile?: ImageMetadata;      // Unified profile image (replaces small/medium/large)
     background?: ImageMetadata;
     banner?: ImageMetadata;
     logo?: ImageMetadata;
@@ -21,22 +19,23 @@ interface ImageMetadata {
   size?: number;
   mimeType?: string;
   lastModified?: string;
+  tag?: string;                   // MD5 hash for cache-busting
+  source?: 'local' | 'external';  // Image source
 }
 
 /**
- * Get artist images URL from artist ID and image type
+ * Get artist images URL from artist ID and image type (V2 with tag-based cache)
  * @param artistId - The artist ID
- * @param imageType - Type of image (background, banner, logo, profile-small, etc.)
- * @param updatedAt - Optional timestamp for cache busting (use artist.externalInfoUpdatedAt or artist.updatedAt)
+ * @param imageType - Type of image (profile, background, banner, logo)
+ * @param tag - Optional MD5 tag for cache validation (from ImageMetadata)
  */
-export function getArtistImageUrl(artistId: string, imageType: string, updatedAt?: Date): string {
+export function getArtistImageUrl(artistId: string, imageType: string, tag?: string): string {
   const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
   const baseUrl = `${API_BASE_URL}/images/artists/${artistId}/${imageType}`;
 
-  // Add version parameter using updatedAt timestamp for cache busting
-  if (updatedAt) {
-    const version = new Date(updatedAt).getTime();
-    return `${baseUrl}?v=${version}`;
+  // Add tag parameter for cache validation (server returns 304 if tag matches)
+  if (tag) {
+    return `${baseUrl}?tag=${tag}`;
   }
 
   // Fallback: check for manual refresh parameter in URL

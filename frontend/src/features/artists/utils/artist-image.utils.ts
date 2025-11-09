@@ -1,17 +1,13 @@
 import { getArtistImageUrl } from '@features/home/hooks';
 
 /**
- * Get artist avatar URL
- * Returns the appropriate size image URL or a fallback
+ * Get artist avatar URL (V2 - unified profile image)
+ * @param artistId - The artist ID
+ * @param tag - Optional tag for cache validation
+ * @deprecated size parameter - V2 uses single unified profile image
  */
-export function getArtistAvatarUrl(artistId: string, size: 'small' | 'medium' | 'large' = 'medium'): string {
-  const imageTypeMap = {
-    small: 'profile-small',
-    medium: 'profile-medium',
-    large: 'profile-large',
-  };
-
-  return getArtistImageUrl(artistId, imageTypeMap[size]);
+export function getArtistAvatarUrl(artistId: string, tag?: string): string {
+  return getArtistImageUrl(artistId, 'profile', tag);
 }
 
 /**
