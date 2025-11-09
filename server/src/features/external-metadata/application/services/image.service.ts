@@ -128,8 +128,8 @@ export class ImageService {
 
     // PRIORIDAD 2: External image (descargada de proveedores)
     const capitalizedType = this.capitalize(imageType);
-    const externalFilename = artist[`external${capitalizedType}Path` as keyof typeof artist];
-    if (externalFilename) {
+    const externalFilename = artist[`external${capitalizedType}Path` as keyof typeof artist] as string | null;
+    if (externalFilename && typeof externalFilename === 'string') {
       const fullPath = path.join(
         await this.storage.getArtistMetadataPath(artistId),
         externalFilename
