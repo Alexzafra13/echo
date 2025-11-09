@@ -27,9 +27,17 @@ interface GridDimensions {
 export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimensions {
   const { maxRows, containerPadding, headerHeight = 200 } = config;
 
-  const [dimensions, setDimensions] = useState<GridDimensions>(() =>
-    calculateDimensions(window.innerWidth, window.innerHeight, maxRows, containerPadding, headerHeight)
-  );
+  const [dimensions, setDimensions] = useState<GridDimensions>(() => {
+    const dims = calculateDimensions(window.innerWidth, window.innerHeight, maxRows, containerPadding, headerHeight);
+    console.log('🔷 useGridDimensions - Initial calculation:', {
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+      maxRows,
+      headerHeight,
+      result: dims
+    });
+    return dims;
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,6 +54,10 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
         newDimensions.columns !== dimensions.columns ||
         newDimensions.rows !== dimensions.rows
       ) {
+        console.log('🔷 useGridDimensions - Resize detected:', {
+          old: dimensions,
+          new: newDimensions
+        });
         setDimensions(newDimensions);
       }
     };
@@ -54,6 +66,7 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
     return () => window.removeEventListener('resize', handleResize);
   }, [maxRows, containerPadding, headerHeight, dimensions.columns, dimensions.rows]);
 
+  console.log('🔷 useGridDimensions - Returning:', dimensions);
   return dimensions;
 }
 
@@ -77,13 +90,29 @@ function calculateDimensions(
   // Calcular número de filas
   const rows = calculateRows(windowHeight, minItemWidth, gap, maxRows, headerHeight);
 
-  return {
+  const result = {
     columns,
     rows,
     itemsPerPage: columns * rows,
     minItemWidth,
     gap,
   };
+
+  console.log('📐 calculateDimensions:', {
+    breakpoint,
+    windowWidth,
+    windowHeight,
+    minItemWidth,
+    gap,
+    padding,
+    columns,
+    rows,
+    itemsPerPage: result.itemsPerPage,
+    maxRows,
+    headerHeight
+  });
+
+  return result;
 }
 
 /**
@@ -139,18 +168,39 @@ function calculateColumns(
   gap: number,
   padding: number
 ): number {
+  // Calcular ancho del sidebar según breakpoints (sincronizado con Sidebar.module.css)
+  let sidebarWidth = 200; // Desktop default
+  if (windowWidth <= 1024 && windowWidth > 768) {
+    sidebarWidth = 180; // Tablet
+  } else if (windowWidth <= 768) {
+    sidebarWidth = 80; // Mobile
+  }
+
   // Small mobile siempre tiene 2 columnas fijas
   if (windowWidth < 480) return 2;
 
-  // Ancho disponible para el grid (restando padding lateral)
-  const availableWidth = windowWidth - padding;
+  // Ancho disponible para el grid (restando sidebar y padding lateral)
+  const availableWidth = windowWidth - sidebarWidth - padding;
+
+  console.log('📏 calculateColumns:', {
+    windowWidth,
+    sidebarWidth,
+    padding,
+    availableWidth,
+    minItemWidth,
+    gap
+  });
 
   // Calcular columnas usando la misma lógica que auto-fill
   // Formula: (availableWidth + gap) / (minItemWidth + gap)
   const columns = Math.floor((availableWidth + gap) / (minItemWidth + gap));
 
   // Mínimo 1 columna, máximo razonable 8
-  return Math.max(1, Math.min(columns, 8));
+  const finalColumns = Math.max(1, Math.min(columns, 8));
+
+  console.log('📏 calculateColumns result:', finalColumns);
+
+  return finalColumns;
 }
 
 /**
