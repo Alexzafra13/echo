@@ -4,6 +4,7 @@ import {
   Param,
   Query,
   Res,
+  Headers,
   NotFoundException,
   Logger,
   UseGuards,
@@ -58,7 +59,11 @@ export class ImagesController {
    * - logo: Logo del artista con transparencia
    *
    * Query params:
-   * - tag: Cache tag (MD5 hash). Si coincide con ETag, devuelve 304 Not Modified
+   * - tag: Cache tag (MD5 hash) for cache-busting (changes URL when image changes)
+   *
+   * HTTP Cache validation:
+   * - Uses ETag header for proper HTTP caching
+   * - Returns 304 Not Modified if client's If-None-Match matches current ETag
    */
   @Public()
   @Get('artists/:artistId/:imageType')
@@ -88,11 +93,12 @@ export class ImagesController {
     },
   })
   @ApiResponse({ status: 404, description: 'Artist or image not found' })
-  @ApiResponse({ status: 304, description: 'Not Modified (tag matches)' })
+  @ApiResponse({ status: 304, description: 'Not Modified (ETag matches)' })
   async getArtistImage(
     @Param('artistId') artistId: string,
     @Param('imageType') imageType: string,
     @Query('tag') tag: string | undefined,
+    @Headers('if-none-match') ifNoneMatch: string | undefined,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile | void> {
     // Validar tipo de imagen
@@ -116,10 +122,14 @@ export class ImagesController {
         imageType as ArtistImageType,
       );
 
-      // Si tag coincide, devolver 304 Not Modified
-      if (tag && tag === imageResult.tag) {
+      // HTTP Cache validation: Check If-None-Match header (ETag)
+      // Only return 304 if client sends If-None-Match matching current ETag
+      const currentETag = `"${imageResult.tag}"`;
+      if (ifNoneMatch && ifNoneMatch === currentETag) {
         res.status(304);
-        this.logger.debug(`304 Not Modified: ${artistId}/${imageType} (tag match)`);
+        this.logger.debug(
+          `304 Not Modified: ${artistId}/${imageType} (ETag match: ${currentETag})`,
+        );
         return;
       }
 
