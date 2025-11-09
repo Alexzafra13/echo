@@ -109,15 +109,20 @@ export class ApplyArtistAvatarUseCase {
         await this.imageDownload.downloadAndSave(input.avatarUrl, mediumPath);
 
         // Update all profile image fields (updatedAt will be automatically updated by Prisma)
-        await this.prisma.artist.update({
+        const updateData = {
+          smallImageUrl: smallPath,
+          mediumImageUrl: mediumPath,
+          largeImageUrl: imagePath,
+          externalInfoUpdatedAt: new Date(),
+        };
+        this.logger.debug(`Updating artist ${input.artistId} with profile data:`, JSON.stringify(updateData));
+
+        const updatedArtist = await this.prisma.artist.update({
           where: { id: input.artistId },
-          data: {
-            smallImageUrl: smallPath,
-            mediumImageUrl: mediumPath,
-            largeImageUrl: imagePath,
-            externalInfoUpdatedAt: new Date(),
-          },
+          data: updateData,
         });
+
+        this.logger.debug(`Artist updated. externalInfoUpdatedAt is now: ${updatedArtist.externalInfoUpdatedAt}`);
       } catch (error) {
         this.logger.warn(
           `Failed to download profile variants: ${(error as Error).message}`,
@@ -126,13 +131,18 @@ export class ApplyArtistAvatarUseCase {
       }
     } else {
       // Update single field for other types (updatedAt will be automatically updated by Prisma)
-      await this.prisma.artist.update({
+      const updateData = {
+        [dbField]: imagePath,
+        externalInfoUpdatedAt: new Date(),
+      };
+      this.logger.debug(`Updating artist ${input.artistId} with data:`, JSON.stringify(updateData));
+
+      const updatedArtist = await this.prisma.artist.update({
         where: { id: input.artistId },
-        data: {
-          [dbField]: imagePath,
-          externalInfoUpdatedAt: new Date(),
-        },
+        data: updateData,
       });
+
+      this.logger.debug(`Artist updated. externalInfoUpdatedAt is now: ${updatedArtist.externalInfoUpdatedAt}`);
     }
 
     // Invalidate server-side image cache to force reload of new images
