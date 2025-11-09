@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '../../components';
 import { useAlbums } from '../../hooks/useAlbums';
+import { useGridDimensions } from '../../hooks/useGridDimensions';
 import styles from './AlbumsPage.module.css';
 
 /**
@@ -11,15 +12,24 @@ import styles from './AlbumsPage.module.css';
  */
 export default function AlbumsPage() {
   const [page, setPage] = useState(0);
-  const pageSize = 24; // 4 rows of 6 albums
+
+  // Calculate dynamic grid dimensions to fill the screen
+  const { itemsPerPage } = useGridDimensions({
+    headerHeight: 180, // Header + page title height
+  });
 
   const { data: response, isLoading, error } = useAlbums({
-    skip: page * pageSize,
-    take: pageSize,
+    skip: page * itemsPerPage,
+    take: itemsPerPage,
   });
 
   const albums = response?.data || [];
   const hasMore = response?.hasMore || false;
+
+  // Reset to first page when itemsPerPage changes (window resize)
+  useEffect(() => {
+    setPage(0);
+  }, [itemsPerPage]);
 
   const handlePreviousPage = () => {
     if (page > 0) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { HeroSection, AlbumGrid, Sidebar } from '../../components';
 import { Header } from '@shared/components/layout/Header';
-import { useFeaturedAlbum, useRecentAlbums } from '../../hooks';
+import { useFeaturedAlbum, useRecentAlbums, useGridDimensions } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
 import type { Album } from '../../types';
 import styles from './HomePage.module.css';
@@ -56,8 +56,14 @@ export default function HomePage() {
     ? featuredAlbumsPool[currentHeroIndex]
     : featuredAlbum;
 
-  // Limit to 12 albums (2 rows of 6)
-  const displayedRecentAlbums = recentAlbums?.slice(0, 12) || [];
+  // Calculate dynamic grid dimensions (exactly 2 rows)
+  const { itemsPerPage } = useGridDimensions({
+    maxRows: 2,
+    headerHeight: 450, // Hero section + header height
+  });
+
+  // Display albums based on calculated grid size (2 rows that fill the screen width)
+  const displayedRecentAlbums = recentAlbums?.slice(0, itemsPerPage) || [];
   const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
 
   return (
