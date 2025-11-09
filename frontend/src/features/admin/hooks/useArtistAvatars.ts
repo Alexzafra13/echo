@@ -21,10 +21,13 @@ export function useApplyArtistAvatar() {
   return useMutation({
     mutationFn: (request: ApplyArtistAvatarRequest) =>
       artistAvatarsApi.applyAvatar(request),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidar queries relacionadas para refrescar las imágenes
-      queryClient.invalidateQueries({ queryKey: ['artists'] });
-      queryClient.invalidateQueries({ queryKey: ['artist'] });
+      // IMPORTANTE: WebSocket ya emitirá un evento que invalidará automáticamente,
+      // pero hacemos invalidación local inmediata para feedback instantáneo
+      queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
+      queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });
+      queryClient.invalidateQueries({ queryKey: ['artists'] }); // Lista de artistas
     },
   });
 }
