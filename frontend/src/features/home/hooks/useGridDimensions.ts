@@ -77,13 +77,23 @@ function calculateDimensions(
   // Calcular número de filas
   const rows = calculateRows(windowHeight, minItemWidth, gap, maxRows, headerHeight);
 
-  return {
+  const result = {
     columns,
     rows,
     itemsPerPage: columns * rows,
     minItemWidth,
     gap,
   };
+
+  console.log('📊 Grid Dimensions:', {
+    resolution: `${windowWidth}x${windowHeight}`,
+    breakpoint,
+    columns,
+    rows,
+    itemsPerPage: result.itemsPerPage,
+  });
+
+  return result;
 }
 
 /**
@@ -150,15 +160,33 @@ function calculateColumns(
   // Small mobile siempre tiene 2 columnas fijas
   if (windowWidth < 480) return 2;
 
-  // Ancho disponible para el grid (restando sidebar y padding lateral)
-  const availableWidth = windowWidth - sidebarWidth - padding;
+  // Paddings acumulados del layout:
+  // - homePage__content: padding 0 30px (60px total horizontal)
+  // - albumGrid__grid: padding 0 20px (40px total horizontal)
+  const contentPadding = 60; // HomePage content padding
+  const gridPadding = 40;    // AlbumGrid padding
+
+  // Ancho disponible para el grid (restando sidebar y TODOS los paddings)
+  const availableWidth = windowWidth - sidebarWidth - contentPadding - gridPadding;
 
   // Calcular columnas usando la misma lógica que auto-fill
   // Formula: (availableWidth + gap) / (minItemWidth + gap)
   const columns = Math.floor((availableWidth + gap) / (minItemWidth + gap));
 
-  // Mínimo 1 columna, máximo razonable 8
-  return Math.max(1, Math.min(columns, 8));
+  // Log para debug
+  console.log('🔢 calculateColumns:', {
+    windowWidth,
+    sidebarWidth,
+    contentPadding,
+    gridPadding,
+    availableWidth,
+    minItemWidth,
+    gap,
+    columns
+  });
+
+  // Mínimo 1 columna, máximo razonable 10 (para 2K)
+  return Math.max(1, Math.min(columns, 10));
 }
 
 /**
