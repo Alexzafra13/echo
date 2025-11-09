@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   Res,
   NotFoundException,
   Logger,
@@ -47,23 +48,24 @@ export class ImagesController {
   constructor(private readonly imageService: ImageService) {}
 
   /**
-   * Sirve una imagen de artista
-   * GET /api/images/artists/:artistId/:imageType
+   * Sirve una imagen de artista con tag-based cache busting
+   * GET /api/images/artists/:artistId/:imageType?tag={cacheTag}
    *
    * imageType puede ser:
-   * - profile-small: Imagen de perfil pequeña (250x250)
-   * - profile-medium: Imagen de perfil mediana (500x500)
-   * - profile-large: Imagen de perfil grande (1000x1000)
+   * - profile: Imagen de perfil del artista
    * - background: Imagen de fondo HD (1920x1080+)
    * - banner: Banner del artista (1000x185+)
    * - logo: Logo del artista con transparencia
+   *
+   * Query params:
+   * - tag: Cache tag (MD5 hash). Si coincide con ETag, devuelve 304 Not Modified
    */
   @Public()
   @Get('artists/:artistId/:imageType')
   @ApiOperation({
     summary: 'Serve artist image',
     description:
-      'Returns an artist image file with appropriate cache headers. Supports profile, background, banner, and logo images.',
+      'Returns an artist image file with tag-based cache validation. Supports profile, background, banner, and logo images.',
   })
   @ApiParam({
     name: 'artistId',
@@ -73,15 +75,8 @@ export class ImagesController {
   @ApiParam({
     name: 'imageType',
     description: 'Type of image to retrieve',
-    enum: [
-      'profile-small',
-      'profile-medium',
-      'profile-large',
-      'background',
-      'banner',
-      'logo',
-    ],
-    example: 'profile-medium',
+    enum: ['profile', 'background', 'banner', 'logo'],
+    example: 'profile',
   })
   @ApiResponse({
     status: 200,
@@ -93,17 +88,16 @@ export class ImagesController {
     },
   })
   @ApiResponse({ status: 404, description: 'Artist or image not found' })
-  @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
+  @ApiResponse({ status: 304, description: 'Not Modified (tag matches)' })
   async getArtistImage(
     @Param('artistId') artistId: string,
     @Param('imageType') imageType: string,
+    @Query('tag') tag: string | undefined,
     @Res({ passthrough: true }) res: FastifyReply,
-  ): Promise<StreamableFile> {
+  ): Promise<StreamableFile | void> {
     // Validar tipo de imagen
     const validImageTypes: ArtistImageType[] = [
-      'profile-small',
-      'profile-medium',
-      'profile-large',
+      'profile',
       'background',
       'banner',
       'logo',
@@ -122,14 +116,21 @@ export class ImagesController {
         imageType as ArtistImageType,
       );
 
-      // Configurar headers de caché
-      this.setCacheHeaders(res, imageResult.lastModified, imageResult.mimeType);
+      // Si tag coincide, devolver 304 Not Modified
+      if (tag && tag === imageResult.tag) {
+        res.status(304);
+        this.logger.debug(`304 Not Modified: ${artistId}/${imageType} (tag match)`);
+        return;
+      }
+
+      // Configurar headers de caché con tag como ETag
+      this.setCacheHeaders(res, imageResult);
 
       // Crear stream del archivo
       const fileStream = createReadStream(imageResult.filePath);
 
       this.logger.debug(
-        `Serving artist image: ${artistId} - ${imageType} (${imageResult.size} bytes)`,
+        `Serving ${imageResult.source.toUpperCase()} artist image: ${artistId} - ${imageType} (${imageResult.size} bytes, tag=${imageResult.tag})`,
       );
 
       return new StreamableFile(fileStream);
@@ -184,7 +185,7 @@ export class ImagesController {
       const imageResult = await this.imageService.getAlbumCover(albumId);
 
       // Configurar headers de caché
-      this.setCacheHeaders(res, imageResult.lastModified, imageResult.mimeType);
+      this.setCacheHeaders(res, imageResult);
 
       // Crear stream del archivo
       const fileStream = createReadStream(imageResult.filePath);
@@ -234,9 +235,7 @@ export class ImagesController {
   ) {
     // Validar tipo de imagen
     const validImageTypes: ArtistImageType[] = [
-      'profile-small',
-      'profile-medium',
-      'profile-large',
+      'profile',
       'background',
       'banner',
       'logo',
@@ -328,7 +327,7 @@ export class ImagesController {
       const imageResult = await this.imageService.getUserAvatar(userId);
 
       // Configurar headers de caché
-      this.setCacheHeaders(res, imageResult.lastModified, imageResult.mimeType);
+      this.setCacheHeaders(res, imageResult);
 
       // Crear stream del archivo
       const fileStream = createReadStream(imageResult.filePath);
@@ -397,30 +396,14 @@ export class ImagesController {
     // Transform ImageResult objects to ImageMetadataDto format
     const transformedImages: ArtistImagesDto['images'] = {};
 
-    if (images.profileSmall) {
-      transformedImages.profileSmall = {
+    if (images.profile) {
+      transformedImages.profile = {
         exists: true,
-        size: images.profileSmall.size,
-        mimeType: images.profileSmall.mimeType,
-        lastModified: images.profileSmall.lastModified.toISOString(),
-      };
-    }
-
-    if (images.profileMedium) {
-      transformedImages.profileMedium = {
-        exists: true,
-        size: images.profileMedium.size,
-        mimeType: images.profileMedium.mimeType,
-        lastModified: images.profileMedium.lastModified.toISOString(),
-      };
-    }
-
-    if (images.profileLarge) {
-      transformedImages.profileLarge = {
-        exists: true,
-        size: images.profileLarge.size,
-        mimeType: images.profileLarge.mimeType,
-        lastModified: images.profileLarge.lastModified.toISOString(),
+        size: images.profile.size,
+        mimeType: images.profile.mimeType,
+        lastModified: images.profile.lastModified.toISOString(),
+        tag: images.profile.tag,
+        source: images.profile.source,
       };
     }
 
@@ -430,6 +413,8 @@ export class ImagesController {
         size: images.background.size,
         mimeType: images.background.mimeType,
         lastModified: images.background.lastModified.toISOString(),
+        tag: images.background.tag,
+        source: images.background.source,
       };
     }
 
@@ -439,6 +424,8 @@ export class ImagesController {
         size: images.banner.size,
         mimeType: images.banner.mimeType,
         lastModified: images.banner.lastModified.toISOString(),
+        tag: images.banner.tag,
+        source: images.banner.source,
       };
     }
 
@@ -448,6 +435,8 @@ export class ImagesController {
         size: images.logo.size,
         mimeType: images.logo.mimeType,
         lastModified: images.logo.lastModified.toISOString(),
+        tag: images.logo.tag,
+        source: images.logo.source,
       };
     }
 
@@ -462,27 +451,25 @@ export class ImagesController {
   // ============================================
 
   /**
-   * Configura headers de caché para la respuesta
+   * Configura headers de caché para la respuesta (V2 con tag)
    */
   private setCacheHeaders(
     res: FastifyReply,
-    lastModified: Date,
-    mimeType: string,
+    imageResult: { mimeType: string; lastModified: Date; tag: string },
   ): void {
     // Content-Type
-    res.header('Content-Type', mimeType);
+    res.header('Content-Type', imageResult.mimeType);
 
     // Last-Modified
-    res.header('Last-Modified', lastModified.toUTCString());
+    res.header('Last-Modified', imageResult.lastModified.toUTCString());
 
-    // ETag basado en timestamp
-    const etag = `"${lastModified.getTime()}"`;
+    // ETag usando el tag generado (MD5 de path + mtime)
+    const etag = `"${imageResult.tag}"`;
     res.header('ETag', etag);
 
-    // Cache-Control - No cache agresivo para asegurar actualización inmediata
-    // El navegador validará con el servidor usando ETag/Last-Modified
-    // Esto garantiza que siempre se sirve la imagen más reciente
-    res.header('Cache-Control', 'no-cache, must-revalidate');
+    // Cache-Control - Cache agresivo porque usamos tag-based invalidation
+    // Si el tag cambia, la URL cambia → navegador pide nueva imagen
+    res.header('Cache-Control', 'public, max-age=31536000, immutable');
 
     // Permitir CORS
     res.header('Access-Control-Allow-Origin', '*');
