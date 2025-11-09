@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { StorageService } from './storage.service';
+import { StorageService } from '../../infrastructure/services/storage.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
