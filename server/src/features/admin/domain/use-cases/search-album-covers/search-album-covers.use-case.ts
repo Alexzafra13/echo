@@ -56,7 +56,6 @@ export class SearchAlbumCoversUseCase {
           this.logger.debug(`Trying agent "${agent.name}" for covers`);
 
           const covers: CoverOption[] = [];
-          const seenDimensions = new Set<string>();
           const seenUrls = new Set<string>();
 
           // Special handling for Fanart.tv to get ALL variants
@@ -143,7 +142,8 @@ export class SearchAlbumCoversUseCase {
               `Agent "${agent.name}" returned ${urlsToProbe.length} URLs to probe: ${urlsToProbe.map(u => `${u.sizeLabel} (${u.url.substring(0, 60)}...)`).join(', ')}`
             );
 
-            // Process URLs from standard agents
+            // Process URLs from standard agents (CoverArtArchive, etc.)
+            // Show ALL variants even if dimensions are identical
             for (const { url, sizeLabel } of urlsToProbe) {
               // Skip if we've already probed this exact URL
               if (seenUrls.has(url)) {
@@ -159,34 +159,26 @@ export class SearchAlbumCoversUseCase {
                 const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
 
                 if (dimensions) {
-                  // Create unique key for these dimensions
                   const dimensionKey = `${dimensions.width}x${dimensions.height}`;
 
                   this.logger.debug(
                     `Got dimensions for ${agent.name} (${sizeLabel}): ${dimensionKey}`
                   );
 
-                  // Only add if we haven't seen this exact dimension yet
-                  if (!seenDimensions.has(dimensionKey)) {
-                    seenDimensions.add(dimensionKey);
+                  // Add ALL variants without filtering by dimensions
+                  // This ensures users see all size options from CoverArtArchive
+                  covers.push({
+                    provider: agent.name,
+                    url: url,
+                    thumbnailUrl: sizeLabel === 'large' ? (cover.mediumUrl || cover.smallUrl) : undefined,
+                    size: `${dimensions.width}x${dimensions.height} (${sizeLabel})`,
+                    width: dimensions.width,
+                    height: dimensions.height,
+                  });
 
-                    covers.push({
-                      provider: agent.name,
-                      url: url,
-                      thumbnailUrl: sizeLabel === 'large' ? (cover.mediumUrl || cover.smallUrl) : undefined,
-                      size: `${dimensions.width}x${dimensions.height}`, // Show real dimensions
-                      width: dimensions.width,
-                      height: dimensions.height,
-                    });
-
-                    this.logger.log(
-                      `✓ Added ${agent.name} cover: ${dimensionKey} from ${sizeLabel}`
-                    );
-                  } else {
-                    this.logger.debug(
-                      `Skipping duplicate dimensions ${dimensionKey} from ${agent.name} (${sizeLabel})`
-                    );
-                  }
+                  this.logger.log(
+                    `✓ Added ${agent.name} cover: ${dimensionKey} (${sizeLabel})`
+                  );
                 } else {
                   this.logger.warn(`Could not get dimensions for ${url} from ${agent.name}`);
                 }
