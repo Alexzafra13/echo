@@ -47,12 +47,19 @@ export default function ArtistDetailPage() {
 
   // Timestamp for cache busting (prefer externalInfoUpdatedAt, fallback to updatedAt)
   const artistTimestamp = artist?.externalInfoUpdatedAt || artist?.updatedAt;
+  console.log('[ArtistDetailPage] Artist timestamp:', {
+    externalInfoUpdatedAt: artist?.externalInfoUpdatedAt,
+    updatedAt: artist?.updatedAt,
+    timestampMs: artistTimestamp ? new Date(artistTimestamp).getTime() : null
+  });
 
   // Get background image
   const hasBackground = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
   const backgroundUrl = hasBackground
     ? getArtistImageUrl(id!, artistImages?.images.background?.exists ? 'background' : 'banner', artistTimestamp)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
+
+  console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
 
   // Get logo or use text
   const hasLogo = artistImages?.images.logo?.exists;
