@@ -206,12 +206,7 @@ export function AlbumCoverSelectorModal({
                       </span>
                       {cover.width && cover.height && (
                         <span className={styles.coverResolution}>
-                          {cover.width}×{cover.height}
-                        </span>
-                      )}
-                      {cover.size && (
-                        <span className={styles.coverSize}>
-                          {cover.size.toUpperCase()}
+                          {cover.width}×{cover.height} px
                         </span>
                       )}
                     </div>
