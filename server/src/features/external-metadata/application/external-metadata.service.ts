@@ -201,45 +201,55 @@ export class ExternalMetadataService {
         }
       }
 
-      // Enrich images if not present or forceRefresh
+      // Enrich images if not present or forceRefresh (V2 schema)
       const needsImages =
         forceRefresh ||
-        !artist.largeImageUrl ||
-        !artist.backgroundImageUrl ||
-        !artist.bannerImageUrl ||
-        !artist.logoImageUrl;
+        !artist.externalProfilePath ||
+        !artist.externalBackgroundPath ||
+        !artist.externalBannerPath ||
+        !artist.externalLogoPath;
 
       if (needsImages) {
         const images = await this.getArtistImages(artist.mbzArtistId, artist.name, forceRefresh);
         if (images) {
-          // Download images locally
+          // Download images locally (V2)
           const localPaths = await this.downloadArtistImages(artistId, images);
 
           const updateData: any = {};
+          const now = new Date();
 
-          // Only update null fields unless forceRefresh
-          if (forceRefresh || !artist.smallImageUrl) {
-            updateData.smallImageUrl = localPaths.smallUrl;
+          // V2: Update external fields with individual timestamps
+          if (forceRefresh || !artist.externalProfilePath) {
+            if (localPaths.profileUrl) {
+              updateData.externalProfilePath = localPaths.profileUrl;
+              updateData.externalProfileSource = images.source;
+              updateData.externalProfileUpdatedAt = now;
+            }
           }
-          if (forceRefresh || !artist.mediumImageUrl) {
-            updateData.mediumImageUrl = localPaths.mediumUrl;
+          if (forceRefresh || !artist.externalBackgroundPath) {
+            if (localPaths.backgroundUrl) {
+              updateData.externalBackgroundPath = localPaths.backgroundUrl;
+              updateData.externalBackgroundSource = images.source;
+              updateData.externalBackgroundUpdatedAt = now;
+            }
           }
-          if (forceRefresh || !artist.largeImageUrl) {
-            updateData.largeImageUrl = localPaths.largeUrl;
+          if (forceRefresh || !artist.externalBannerPath) {
+            if (localPaths.bannerUrl) {
+              updateData.externalBannerPath = localPaths.bannerUrl;
+              updateData.externalBannerSource = images.source;
+              updateData.externalBannerUpdatedAt = now;
+            }
           }
-          if (forceRefresh || !artist.backgroundImageUrl) {
-            updateData.backgroundImageUrl = localPaths.backgroundUrl;
-          }
-          if (forceRefresh || !artist.bannerImageUrl) {
-            updateData.bannerImageUrl = localPaths.bannerUrl;
-          }
-          if (forceRefresh || !artist.logoImageUrl) {
-            updateData.logoImageUrl = localPaths.logoUrl;
+          if (forceRefresh || !artist.externalLogoPath) {
+            if (localPaths.logoUrl) {
+              updateData.externalLogoPath = localPaths.logoUrl;
+              updateData.externalLogoSource = images.source;
+              updateData.externalLogoUpdatedAt = now;
+            }
           }
 
           // Update storage size
           updateData.metadataStorageSize = localPaths.totalSize;
-          updateData.externalInfoUpdatedAt = new Date();
 
           if (Object.keys(updateData).length > 0) {
             await this.prisma.artist.update({
@@ -620,16 +630,14 @@ export class ExternalMetadataService {
   }
 
   /**
-   * Download artist images from external URLs and save locally
-   * Returns local paths for all images
+   * Download artist images from external URLs and save locally (V2)
+   * Returns local paths for all images using new schema
    */
   private async downloadArtistImages(
     artistId: string,
     images: ArtistImages
   ): Promise<{
-    smallUrl: string | null;
-    mediumUrl: string | null;
-    largeUrl: string | null;
+    profileUrl: string | null;
     backgroundUrl: string | null;
     bannerUrl: string | null;
     logoUrl: string | null;
@@ -639,46 +647,23 @@ export class ExternalMetadataService {
     let totalSize = 0;
 
     const result = {
-      smallUrl: null as string | null,
-      mediumUrl: null as string | null,
-      largeUrl: null as string | null,
+      profileUrl: null as string | null,
       backgroundUrl: null as string | null,
       bannerUrl: null as string | null,
       logoUrl: null as string | null,
       totalSize: 0,
     };
 
-    // Download profile images (small, medium, large)
-    if (images.smallUrl) {
+    // V2: Download single unified profile image (prioritize large > medium > small)
+    const profileUrl = images.largeUrl || images.mediumUrl || images.smallUrl;
+    if (profileUrl) {
       try {
-        const filePath = path.join(basePath, 'profile-small.jpg');
-        await this.imageDownload.downloadAndSave(images.smallUrl, filePath);
-        result.smallUrl = 'profile-small.jpg'; // Store only filename (not full path) for portability
+        const filePath = path.join(basePath, 'profile.jpg');
+        await this.imageDownload.downloadAndSave(profileUrl, filePath);
+        result.profileUrl = 'profile.jpg'; // Store only filename (not full path) for portability
         totalSize += await this.storage.getFileSize(filePath);
       } catch (error) {
-        this.logger.warn(`Failed to download small profile image: ${(error as Error).message}`);
-      }
-    }
-
-    if (images.mediumUrl) {
-      try {
-        const filePath = path.join(basePath, 'profile-medium.jpg');
-        await this.imageDownload.downloadAndSave(images.mediumUrl, filePath);
-        result.mediumUrl = 'profile-medium.jpg'; // Store only filename (not full path) for portability
-        totalSize += await this.storage.getFileSize(filePath);
-      } catch (error) {
-        this.logger.warn(`Failed to download medium profile image: ${(error as Error).message}`);
-      }
-    }
-
-    if (images.largeUrl) {
-      try {
-        const filePath = path.join(basePath, 'profile-large.jpg');
-        await this.imageDownload.downloadAndSave(images.largeUrl, filePath);
-        result.largeUrl = 'profile-large.jpg'; // Store only filename (not full path) for portability
-        totalSize += await this.storage.getFileSize(filePath);
-      } catch (error) {
-        this.logger.warn(`Failed to download large profile image: ${(error as Error).message}`);
+        this.logger.warn(`Failed to download profile image: ${(error as Error).message}`);
       }
     }
 

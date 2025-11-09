@@ -125,12 +125,10 @@ export class CleanupService {
       const artists = await this.prisma.artist.findMany({
         where: {
           OR: [
-            { smallImageUrl: { not: null } },
-            { mediumImageUrl: { not: null } },
-            { largeImageUrl: { not: null } },
-            { backgroundImageUrl: { not: null } },
-            { bannerImageUrl: { not: null } },
-            { logoImageUrl: { not: null } },
+            { externalProfilePath: { not: null } },
+            { externalBackgroundPath: { not: null } },
+            { externalBannerPath: { not: null } },
+            { externalLogoPath: { not: null } },
           ],
         },
         select: {
@@ -176,12 +174,10 @@ export class CleanupService {
       const artistsWithMetadata = await this.prisma.artist.count({
         where: {
           OR: [
-            { smallImageUrl: { not: null } },
-            { mediumImageUrl: { not: null } },
-            { largeImageUrl: { not: null } },
-            { backgroundImageUrl: { not: null } },
-            { bannerImageUrl: { not: null } },
-            { logoImageUrl: { not: null } },
+            { externalProfilePath: { not: null } },
+            { externalBackgroundPath: { not: null } },
+            { externalBannerPath: { not: null } },
+            { externalLogoPath: { not: null } },
           ],
         },
       });
@@ -248,34 +244,28 @@ export class CleanupService {
       const artists = await this.prisma.artist.findMany({
         where: {
           OR: [
-            { smallImageUrl: { not: null } },
-            { mediumImageUrl: { not: null } },
-            { largeImageUrl: { not: null } },
-            { backgroundImageUrl: { not: null } },
-            { bannerImageUrl: { not: null } },
-            { logoImageUrl: { not: null } },
+            { externalProfilePath: { not: null } },
+            { externalBackgroundPath: { not: null } },
+            { externalBannerPath: { not: null } },
+            { externalLogoPath: { not: null } },
           ],
         },
         select: {
           id: true,
           name: true,
-          smallImageUrl: true,
-          mediumImageUrl: true,
-          largeImageUrl: true,
-          backgroundImageUrl: true,
-          bannerImageUrl: true,
-          logoImageUrl: true,
+          externalProfilePath: true,
+          externalBackgroundPath: true,
+          externalBannerPath: true,
+          externalLogoPath: true,
         },
       });
 
       for (const artist of artists) {
         const paths = [
-          artist.smallImageUrl,
-          artist.mediumImageUrl,
-          artist.largeImageUrl,
-          artist.backgroundImageUrl,
-          artist.bannerImageUrl,
-          artist.logoImageUrl,
+          artist.externalProfilePath,
+          artist.externalBackgroundPath,
+          artist.externalBannerPath,
+          artist.externalLogoPath,
         ].filter((p) => p !== null);
 
         for (const filePath of paths) {
