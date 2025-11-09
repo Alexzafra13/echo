@@ -158,8 +158,10 @@ model Album {
   name                    String    @db.VarChar(255)
   albumArtistId           String?   @map("album_artist_id") @db.VarChar(36)
   artistId                String?   @map("artist_id") @db.VarChar(36)
-  coverArtPath            String?   @map("cover_art_path") @db.VarChar(512)
-  coverArtId              String?   @map("cover_art_id") @db.VarChar(255)
+  // Cover images: Local (from disk/embedded) vs External (downloaded from providers)
+  coverArtPath            String?   @map("cover_art_path") @db.VarChar(512)        // Local cover from disk
+  externalCoverPath       String?   @map("external_cover_path") @db.VarChar(512)   // External cover (Fanart, etc.)
+  externalCoverSource     String?   @map("external_cover_source") @db.VarChar(50)  // Provider (fanart, lastfm, etc.)
   year                    Int?
   releaseDate             DateTime? @map("release_date") @db.Date
   originalDate            DateTime? @map("original_date") @db.Date
@@ -178,13 +180,8 @@ model Album {
   sortArtistName          String?   @map("sort_artist_name") @db.VarChar(255)
   sortAlbumArtistName     String?   @map("sort_album_artist_name") @db.VarChar(255)
   description             String?   @db.Text
-  smallImageUrl           String?   @map("small_image_url") @db.VarChar(512)
-  mediumImageUrl          String?   @map("medium_image_url") @db.VarChar(512)
-  largeImageUrl           String?   @map("large_image_url") @db.VarChar(512)
   externalUrl             String?   @map("external_url") @db.VarChar(512)
   externalInfoUpdatedAt   DateTime? @map("external_info_updated_at")
-  externalCoverPath       String?   @map("external_cover_path") @db.VarChar(512)
-  externalCoverSource     String?   @map("external_cover_source") @db.VarChar(50)
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
 
