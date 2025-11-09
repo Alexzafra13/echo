@@ -1,6 +1,6 @@
 import { useParams, useLocation } from 'wouter';
 import { BookOpen, Image } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
@@ -53,13 +53,25 @@ export default function ArtistDetailPage() {
     timestampMs: artistTimestamp ? new Date(artistTimestamp).getTime() : null
   });
 
-  // Get background image
+  // Get background image with aggressive cache busting
   const hasBackground = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
   const backgroundUrl = hasBackground
     ? getArtistImageUrl(id!, artistImages?.images.background?.exists ? 'background' : 'banner', artistTimestamp)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
 
   console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
+
+  // CRITICAL: Force browser to reload background image when URL changes
+  // This is needed because CSS background-image doesn't always respect cache headers
+  useEffect(() => {
+    if (backgroundUrl) {
+      console.log('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
+      const img = new Image();
+      img.src = backgroundUrl;
+      img.onload = () => console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
+      img.onerror = (e) => console.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
+    }
+  }, [backgroundUrl]);
 
   // Get logo or use text
   const hasLogo = artistImages?.images.logo?.exists;
@@ -73,6 +85,24 @@ export default function ArtistDetailPage() {
                      (artistImages?.images.profileMedium?.exists ? getArtistImageUrl(id!, 'profile-medium', artistTimestamp) : null);
 
   const initials = artist ? getArtistInitials(artist.name) : '';
+
+  // Force preload of logo to break browser cache
+  useEffect(() => {
+    if (logoUrl) {
+      console.log('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
+      const img = new Image();
+      img.src = logoUrl;
+    }
+  }, [logoUrl]);
+
+  // Force preload of profile image to break browser cache
+  useEffect(() => {
+    if (profileUrl) {
+      console.log('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
+      const img = new Image();
+      img.src = profileUrl;
+    }
+  }, [profileUrl]);
 
   // Helper to format biography with drop cap
   const formatBiographyWithDropCap = (text: string) => {
