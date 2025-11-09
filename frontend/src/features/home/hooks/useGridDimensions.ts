@@ -27,17 +27,9 @@ interface GridDimensions {
 export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimensions {
   const { maxRows, containerPadding, headerHeight = 200 } = config;
 
-  const [dimensions, setDimensions] = useState<GridDimensions>(() => {
-    const dims = calculateDimensions(window.innerWidth, window.innerHeight, maxRows, containerPadding, headerHeight);
-    console.log('🔷 useGridDimensions - Initial calculation:', {
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      maxRows,
-      headerHeight,
-      result: dims
-    });
-    return dims;
-  });
+  const [dimensions, setDimensions] = useState<GridDimensions>(() =>
+    calculateDimensions(window.innerWidth, window.innerHeight, maxRows, containerPadding, headerHeight)
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -54,10 +46,6 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
         newDimensions.columns !== dimensions.columns ||
         newDimensions.rows !== dimensions.rows
       ) {
-        console.log('🔷 useGridDimensions - Resize detected:', {
-          old: dimensions,
-          new: newDimensions
-        });
         setDimensions(newDimensions);
       }
     };
@@ -66,7 +54,6 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
     return () => window.removeEventListener('resize', handleResize);
   }, [maxRows, containerPadding, headerHeight, dimensions.columns, dimensions.rows]);
 
-  console.log('🔷 useGridDimensions - Returning:', dimensions);
   return dimensions;
 }
 
@@ -90,29 +77,13 @@ function calculateDimensions(
   // Calcular número de filas
   const rows = calculateRows(windowHeight, minItemWidth, gap, maxRows, headerHeight);
 
-  const result = {
+  return {
     columns,
     rows,
     itemsPerPage: columns * rows,
     minItemWidth,
     gap,
   };
-
-  console.log('📐 calculateDimensions:', {
-    breakpoint,
-    windowWidth,
-    windowHeight,
-    minItemWidth,
-    gap,
-    padding,
-    columns,
-    rows,
-    itemsPerPage: result.itemsPerPage,
-    maxRows,
-    headerHeight
-  });
-
-  return result;
 }
 
 /**
@@ -182,25 +153,12 @@ function calculateColumns(
   // Ancho disponible para el grid (restando sidebar y padding lateral)
   const availableWidth = windowWidth - sidebarWidth - padding;
 
-  console.log('📏 calculateColumns:', {
-    windowWidth,
-    sidebarWidth,
-    padding,
-    availableWidth,
-    minItemWidth,
-    gap
-  });
-
   // Calcular columnas usando la misma lógica que auto-fill
   // Formula: (availableWidth + gap) / (minItemWidth + gap)
   const columns = Math.floor((availableWidth + gap) / (minItemWidth + gap));
 
   // Mínimo 1 columna, máximo razonable 8
-  const finalColumns = Math.max(1, Math.min(columns, 8));
-
-  console.log('📏 calculateColumns result:', finalColumns);
-
-  return finalColumns;
+  return Math.max(1, Math.min(columns, 8));
 }
 
 /**
