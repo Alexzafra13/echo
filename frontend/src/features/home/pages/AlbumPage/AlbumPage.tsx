@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
+import { useQueryClient } from '@tanstack/react-query';
 import { Play } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../components';
@@ -10,7 +11,7 @@ import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { getArtistImageUrl } from '../../hooks';
+import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl } from '../../hooks';
 import styles from './AlbumPage.module.css';
 
 /**
@@ -20,6 +21,7 @@ import styles from './AlbumPage.module.css';
 export default function AlbumPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
@@ -33,20 +35,26 @@ export default function AlbumPage() {
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
 
+  // Fetch cover metadata with tag for cache busting
+  const { data: coverMeta } = useAlbumCoverMetadata(id);
+
+  // Get cover URL with tag-based cache busting
+  const coverUrl = id && coverMeta?.cover.exists
+    ? getAlbumCoverUrl(id, coverMeta.cover.tag)
+    : getCoverUrl(album?.coverImage);
+
   // Extract dominant color from album cover
   useEffect(() => {
-    if (album?.coverImage) {
-      const coverUrl = getCoverUrl(album.coverImage);
+    if (coverUrl) {
       extractDominantColor(coverUrl).then(color => {
         setDominantColor(color);
       });
     }
-  }, [album?.coverImage]);
+  }, [coverUrl]);
 
   // Load cover dimensions when modal opens
   useEffect(() => {
-    if (isImageModalOpen && album?.coverImage) {
-      const coverUrl = getCoverUrl(album.coverImage);
+    if (isImageModalOpen && coverUrl) {
       const img = new window.Image();
       img.onload = () => {
         setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
@@ -55,7 +63,7 @@ export default function AlbumPage() {
     } else if (!isImageModalOpen) {
       setCoverDimensions(null); // Reset when modal closes
     }
-  }, [isImageModalOpen, album?.coverImage]);
+  }, [isImageModalOpen, coverUrl]);
 
   const handleArtistClick = () => {
     if (album?.artistId) {
@@ -107,9 +115,12 @@ export default function AlbumPage() {
   };
 
   const handleCoverChanged = () => {
-    // Force hard reload to fetch updated album data with new cover version
-    // The backend automatically includes version timestamp in the URL
-    window.location.reload();
+    // Invalidate queries to refetch album data with new cover
+    queryClient.invalidateQueries({ queryKey: ['album', id] });
+    queryClient.invalidateQueries({ queryKey: ['album-cover-metadata', id] });
+
+    // Close the modal
+    setIsCoverSelectorOpen(false);
   };
 
   if (loadingAlbum) {
@@ -167,7 +178,7 @@ export default function AlbumPage() {
           <div className={styles.albumPage__hero}>
             {/* Album cover */}
             <img
-              src={getCoverUrl(album.coverImage)}
+              src={coverUrl}
               alt={album.title}
               className={styles.albumPage__heroCover}
               onError={handleImageError}
@@ -253,7 +264,7 @@ export default function AlbumPage() {
         >
           <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img
-              src={getCoverUrl(album.coverImage)}
+              src={coverUrl}
               alt={album.title}
               className={styles.albumPage__imageModalImage}
               onError={handleImageError}

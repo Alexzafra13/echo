@@ -10,4 +10,5 @@ export {
 export { useTrackSearch } from './useTracks';
 
 export { useArtistImages, getArtistImageUrl } from './useArtistImages';
+export { useAlbumCoverMetadata, getAlbumCoverUrl } from './useAlbumCoverMetadata';
 export { useAutoEnrichArtist } from './useAutoEnrichArtist';
