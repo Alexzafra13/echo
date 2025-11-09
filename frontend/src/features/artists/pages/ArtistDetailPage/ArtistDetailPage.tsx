@@ -21,6 +21,9 @@ export default function ArtistDetailPage() {
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
+  const [imageRenderKey, setImageRenderKey] = useState(0);
+  const [logoRenderKey, setLogoRenderKey] = useState(0);
+  const [profileRenderKey, setProfileRenderKey] = useState(0);
   const { user } = useAuth();
 
   // Real-time synchronization via WebSocket for artist images and album covers
@@ -68,7 +71,12 @@ export default function ArtistDetailPage() {
       console.log('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
       const img = new window.Image();
       img.src = backgroundUrl;
-      img.onload = () => console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
+      img.onload = () => {
+        console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
+        // Force React to destroy and recreate the background div
+        // This helps clear any browser memory cache of the old image
+        setImageRenderKey(prev => prev + 1);
+      };
       img.onerror = (e) => console.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
     }
   }, [backgroundUrl]);
@@ -92,6 +100,10 @@ export default function ArtistDetailPage() {
       console.log('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
       const img = new window.Image();
       img.src = logoUrl;
+      img.onload = () => {
+        console.log('[ArtistDetailPage] ✅ Logo preloaded successfully');
+        setLogoRenderKey(prev => prev + 1);
+      };
     }
   }, [logoUrl]);
 
@@ -101,6 +113,10 @@ export default function ArtistDetailPage() {
       console.log('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
       const img = new window.Image();
       img.src = profileUrl;
+      img.onload = () => {
+        console.log('[ArtistDetailPage] ✅ Profile image preloaded successfully');
+        setProfileRenderKey(prev => prev + 1);
+      };
     }
   }, [profileUrl]);
 
@@ -156,7 +172,7 @@ export default function ArtistDetailPage() {
             {/* Background */}
             {backgroundUrl && (
               <div
-                key={backgroundUrl} // Force re-render when URL changes (timestamp updates)
+                key={`${backgroundUrl}-${imageRenderKey}`} // Force complete re-render when image changes
                 className={styles.artistDetailPage__background}
                 style={{
                   backgroundImage: `url(${backgroundUrl})`,
@@ -172,7 +188,7 @@ export default function ArtistDetailPage() {
               <div className={styles.artistDetailPage__avatarContainer}>
                 {profileUrl ? (
                   <img
-                    key={profileUrl} // Force re-render when URL changes (timestamp updates)
+                    key={`${profileUrl}-${profileRenderKey}`} // Force complete re-render when image changes
                     src={profileUrl}
                     alt={artist.name}
                     className={styles.artistDetailPage__avatar}
@@ -199,6 +215,7 @@ export default function ArtistDetailPage() {
                 {/* Logo or Name */}
                 {logoUrl ? (
                   <img
+                    key={`${logoUrl}-${logoRenderKey}`} // Force complete re-render when logo changes
                     src={logoUrl}
                     alt={artist.name}
                     className={styles.artistDetailPage__logo}
