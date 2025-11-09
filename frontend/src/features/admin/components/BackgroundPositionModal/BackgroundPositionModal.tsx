@@ -13,13 +13,11 @@ interface BackgroundPositionModalProps {
   onSuccess?: () => void;
 }
 
-// Scale factor for the preview image (makes it larger than cover size to allow dragging)
-const SCALE_FACTOR = 1.8;
-
 /**
  * BackgroundPositionModal Component
- * Facebook-style drag-to-reposition interface for background images
+ * Drag-to-reposition interface for background images
  * Shows a fixed viewport (hero area) and allows dragging the image within it
+ * Uses background-size: 100% (width 100%, height auto) matching the actual CSS
  */
 export function BackgroundPositionModal({
   artistId,
@@ -52,26 +50,11 @@ export function BackgroundPositionModal({
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
 
-        // Calculate image size to cover the container
-        const containerRatio = containerWidth / containerHeight;
+        // Use background-size: 100% logic (NOT cover)
+        // Width is always 100% of container, height scales proportionally
         const imageRatio = img.naturalWidth / img.naturalHeight;
-
-        let renderWidth: number;
-        let renderHeight: number;
-
-        if (imageRatio > containerRatio) {
-          // Image is wider - fit by height
-          renderHeight = containerHeight;
-          renderWidth = renderHeight * imageRatio;
-        } else {
-          // Image is taller - fit by width
-          renderWidth = containerWidth;
-          renderHeight = renderWidth / imageRatio;
-        }
-
-        // Scale image larger to provide dragging space
-        renderWidth *= SCALE_FACTOR;
-        renderHeight *= SCALE_FACTOR;
+        const renderWidth = containerWidth;
+        const renderHeight = containerWidth / imageRatio;
 
         // Save calculated dimensions
         setImageDimensions({ width: renderWidth, height: renderHeight });
@@ -84,15 +67,8 @@ export function BackgroundPositionModal({
         let xOffset = 0;
         let yOffset = 0;
 
-        // Calculate X offset
-        if (xPart === 'center') {
-          xOffset = -(renderWidth - containerWidth) / 2;
-        } else if (xPart === 'right') {
-          xOffset = -(renderWidth - containerWidth);
-        } else if (xPart.endsWith('%')) {
-          const percent = parseFloat(xPart);
-          xOffset = -((renderWidth - containerWidth) * percent) / 100;
-        }
+        // X is always 0 since width === containerWidth
+        xOffset = 0;
 
         // Calculate Y offset
         if (yPart === 'center') {
@@ -118,24 +94,19 @@ export function BackgroundPositionModal({
 
     const container = containerRef.current;
     const image = imageRef.current;
-    const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-    const imageWidth = image.clientWidth;
     const imageHeight = image.clientHeight;
 
-    let newX = clientX - dragStartRef.current.x;
+    // Only vertical movement (background-size: 100% keeps width fixed)
     let newY = clientY - dragStartRef.current.y;
 
     // Constrain movement (image can't reveal edges)
-    const maxX = 0;
-    const minX = containerWidth - imageWidth;
     const maxY = 0;
     const minY = containerHeight - imageHeight;
 
-    newX = Math.max(minX, Math.min(maxX, newX));
     newY = Math.max(minY, Math.min(maxY, newY));
 
-    setImagePosition({ x: newX, y: newY });
+    setImagePosition({ x: 0, y: newY });
   }, []);
 
   // Mouse handlers
@@ -222,39 +193,22 @@ export function BackgroundPositionModal({
 
     const container = containerRef.current;
     const image = imageRef.current;
-    const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-
-    // Image dimensions in the preview are scaled by SCALE_FACTOR
-    // But CSS background-position assumes cover size, so we need to un-scale
-    const scaledImageWidth = image.clientWidth;
-    const scaledImageHeight = image.clientHeight;
-    const imageWidth = scaledImageWidth / SCALE_FACTOR;
-    const imageHeight = scaledImageHeight / SCALE_FACTOR;
+    const imageHeight = image.clientHeight;
 
     // Calculate percentage position
     // background-position percentage is calculated as:
     // (container - image) * (percent / 100) = offset
     // So: percent = (offset / (container - image)) * 100
-    // Since our offset is negative (image position), we need to invert it
-    // We also need to scale the offset since the preview image is larger
-    const scaledOffsetX = imagePosition.x / SCALE_FACTOR;
-    const scaledOffsetY = imagePosition.y / SCALE_FACTOR;
-
-    const widthDiff = imageWidth - containerWidth;
     const heightDiff = imageHeight - containerHeight;
 
-    let xPercent = 50; // default center
+    // X is always center (50%) since width is always 100%
+    const xPercent = 50;
     let yPercent = 0;  // default top
-
-    if (widthDiff > 0) {
-      // Image is wider than container
-      xPercent = (Math.abs(scaledOffsetX) / widthDiff) * 100;
-    }
 
     if (heightDiff > 0) {
       // Image is taller than container
-      yPercent = (Math.abs(scaledOffsetY) / heightDiff) * 100;
+      yPercent = (Math.abs(imagePosition.y) / heightDiff) * 100;
     }
 
     // Clamp values
@@ -287,18 +241,11 @@ export function BackgroundPositionModal({
   };
 
   const handleReset = () => {
-    if (containerRef.current && imageRef.current) {
-      const container = containerRef.current;
-      const image = imageRef.current;
-      const containerWidth = container.clientWidth;
-      const imageWidth = image.clientWidth;
-
-      // Reset to center horizontally, top vertically
-      setImagePosition({
-        x: -(imageWidth - containerWidth) / 2,
-        y: 0,
-      });
-    }
+    // Reset to top (Y=0, X always 0 with background-size: 100%)
+    setImagePosition({
+      x: 0,
+      y: 0,
+    });
   };
 
   return (
