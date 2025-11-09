@@ -4,6 +4,7 @@ import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer, Track } from '@features/player';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAlbumTracks } from '../../hooks';
 import { useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
+import { useArtist } from '@features/artists/hooks';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
 
@@ -28,6 +29,9 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
   // Real-time synchronization via WebSocket for artist and album metadata
   useArtistMetadataSync(album.artistId);
   useAlbumMetadataSync(album.id, album.artistId);
+
+  // Fetch artist data for timestamp
+  const { data: artist } = useArtist(album.artistId);
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(album.artistId);
@@ -85,15 +89,18 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
 
   const coverUrl = getCoverUrl(album.coverImage);
 
+  // Timestamp for cache busting (prefer externalInfoUpdatedAt, fallback to updatedAt)
+  const artistTimestamp = artist?.externalInfoUpdatedAt || artist?.updatedAt;
+
   // Use Fanart.tv background if available, fallback to album cover
   const hasBackground = artistImages?.images.background?.exists;
   const backgroundUrl = hasBackground
-    ? getArtistImageUrl(album.artistId, 'background')
+    ? getArtistImageUrl(album.artistId, 'background', artistTimestamp)
     : (album.backgroundImage || coverUrl);
 
   // Check if artist logo is available
   const hasLogo = artistImages?.images.logo?.exists;
-  const logoUrl = hasLogo ? getArtistImageUrl(album.artistId, 'logo') : null;
+  const logoUrl = hasLogo ? getArtistImageUrl(album.artistId, 'logo', artistTimestamp) : null;
 
   return (
     <section className={styles.heroSection}>
