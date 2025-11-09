@@ -400,6 +400,11 @@ export default function ArtistDetailPage() {
           artistId={artist.id}
           artistName={artist.name}
           defaultType={selectedImageType}
+          allowedTypes={
+            selectedImageType === 'background' || selectedImageType === 'banner'
+              ? ['background', 'banner']
+              : [selectedImageType]
+          }
           onClose={() => setIsAvatarSelectorOpen(false)}
           onSuccess={() => {
             // WebSocket will automatically sync the changes via useArtistMetadataSync

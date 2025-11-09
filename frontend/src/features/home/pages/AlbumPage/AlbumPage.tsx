@@ -27,6 +27,7 @@ export default function AlbumPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [coverRenderKey, setCoverRenderKey] = useState(0); // Force re-render when cover changes
   const { playQueue, currentTrack } = usePlayer();
 
   // Real-time synchronization via WebSocket for album cover
@@ -49,6 +50,23 @@ export default function AlbumPage() {
       extractDominantColor(coverUrl).then(color => {
         setDominantColor(color);
       });
+    }
+  }, [coverUrl]);
+
+  // CRITICAL: Force browser to reload cover image when URL changes
+  // This preloads the image to ensure browser cache is updated
+  useEffect(() => {
+    if (coverUrl) {
+      console.log('[AlbumPage] 🔄 Preloading cover:', coverUrl);
+      const img = new window.Image();
+      img.src = coverUrl;
+      img.onload = () => {
+        console.log('[AlbumPage] ✅ Cover image preloaded successfully');
+        setCoverRenderKey(prev => prev + 1); // Force component re-render
+      };
+      img.onerror = () => {
+        console.error('[AlbumPage] ❌ Failed to preload cover');
+      };
     }
   }, [coverUrl]);
 
@@ -178,6 +196,7 @@ export default function AlbumPage() {
           <div className={styles.albumPage__hero}>
             {/* Album cover */}
             <img
+              key={`cover-${coverRenderKey}`}
               src={coverUrl}
               alt={album.title}
               className={styles.albumPage__heroCover}
@@ -264,6 +283,7 @@ export default function AlbumPage() {
         >
           <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img
+              key={`modal-cover-${coverRenderKey}`}
               src={coverUrl}
               alt={album.title}
               className={styles.albumPage__imageModalImage}
