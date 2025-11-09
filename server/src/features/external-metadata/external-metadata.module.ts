@@ -110,6 +110,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     StorageService,
     ImageDownloadService,
     MetadataConflictService,
+    MetadataEnrichmentGateway,
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {
