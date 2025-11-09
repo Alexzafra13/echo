@@ -45,22 +45,25 @@ export default function ArtistDetailPage() {
   // Filter albums by this artist
   const artistAlbums = allAlbumsData?.data.filter(album => album.artistId === id) || [];
 
+  // Timestamp for cache busting (prefer externalInfoUpdatedAt, fallback to updatedAt)
+  const artistTimestamp = artist?.externalInfoUpdatedAt || artist?.updatedAt;
+
   // Get background image
   const hasBackground = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
   const backgroundUrl = hasBackground
-    ? getArtistImageUrl(id!, artistImages?.images.background?.exists ? 'background' : 'banner')
+    ? getArtistImageUrl(id!, artistImages?.images.background?.exists ? 'background' : 'banner', artistTimestamp)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
 
   // Get logo or use text
   const hasLogo = artistImages?.images.logo?.exists;
-  const logoUrl = hasLogo ? getArtistImageUrl(id!, 'logo') : null;
+  const logoUrl = hasLogo ? getArtistImageUrl(id!, 'logo', artistTimestamp) : null;
 
   // Get profile image for avatar (prioritize DB images first, then Fanart.tv)
   const profileUrl = artist?.largeImageUrl ||
                      artist?.mediumImageUrl ||
                      artist?.smallImageUrl ||
-                     (artistImages?.images.profileLarge?.exists ? getArtistImageUrl(id!, 'profile-large') : null) ||
-                     (artistImages?.images.profileMedium?.exists ? getArtistImageUrl(id!, 'profile-medium') : null);
+                     (artistImages?.images.profileLarge?.exists ? getArtistImageUrl(id!, 'profile-large', artistTimestamp) : null) ||
+                     (artistImages?.images.profileMedium?.exists ? getArtistImageUrl(id!, 'profile-medium', artistTimestamp) : null);
 
   const initials = artist ? getArtistInitials(artist.name) : '';
 
