@@ -43,10 +43,15 @@ export function useArtistMetadataSync(artistId?: string) {
   const socket = useMetadataWebSocket();
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('[useArtistMetadataSync] No socket available, skipping sync setup');
+      return;
+    }
+
+    console.log('[useArtistMetadataSync] Setting up sync for artistId:', artistId);
 
     const handleArtistImagesUpdated = (data: ArtistImagesUpdatedEvent) => {
-      console.log('[useArtistMetadataSync] Artist images updated:', data);
+      console.log('[useArtistMetadataSync] 🔥 Artist images updated event received:', data);
 
       // If we're listening for a specific artist, ignore updates for other artists
       if (artistId && data.artistId !== artistId) {
@@ -69,10 +74,12 @@ export function useArtistMetadataSync(artistId?: string) {
 
     // Subscribe to artist images updated events
     socket.on('artist:images:updated', handleArtistImagesUpdated);
+    console.log('[useArtistMetadataSync] ✅ Subscribed to artist:images:updated events');
 
     // Cleanup
     return () => {
       socket.off('artist:images:updated', handleArtistImagesUpdated);
+      console.log('[useArtistMetadataSync] ❌ Unsubscribed from artist:images:updated events');
     };
   }, [socket, queryClient, artistId]);
 }
