@@ -118,7 +118,7 @@ export class ApplyAlbumCoverUseCase {
     });
 
     // Emit WebSocket event to notify all connected clients about the update
-    if (finalAlbum) {
+    if (finalAlbum && finalAlbum.artistId) {
       this.metadataGateway.emitAlbumCoverUpdated({
         albumId: input.albumId,
         albumName: album.name,
