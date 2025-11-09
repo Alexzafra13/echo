@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { StorageService } from './storage.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -46,7 +47,10 @@ export class ImageService {
   private readonly imageCache = new Map<string, ImageResult>();
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   /**
    * Obtiene una imagen de artista
@@ -82,8 +86,8 @@ export class ImageService {
       throw new NotFoundException(`Artist with ID ${artistId} not found`);
     }
 
-    // Mapear tipo de imagen a campo de base de datos
-    const imagePath = this.getArtistImagePath(artist, imageType);
+    // Mapear tipo de imagen a campo de base de datos y construir ruta completa
+    const imagePath = await this.getArtistImagePath(artistId, artist, imageType);
 
     if (!imagePath) {
       throw new NotFoundException(
@@ -333,10 +337,13 @@ export class ImageService {
   // ============================================
 
   /**
-   * Mapea el tipo de imagen a la ruta en la base de datos
+   * Mapea el tipo de imagen a la ruta completa del archivo
    * Con fallback: si se pide small/medium y no existe, usa large
+   *
+   * DB stores only filenames (e.g., "background.jpg"), this method constructs full path
    */
-  private getArtistImagePath(
+  private async getArtistImagePath(
+    artistId: string,
     artist: {
       smallImageUrl: string | null;
       mediumImageUrl: string | null;
@@ -346,26 +353,49 @@ export class ImageService {
       logoImageUrl: string | null;
     },
     imageType: ArtistImageType,
-  ): string | null {
+  ): Promise<string | null> {
+    // Get filename from DB based on image type
+    let filename: string | null = null;
+
     switch (imageType) {
       case 'profile-small':
         // Fallback: small -> medium -> large
-        return artist.smallImageUrl || artist.mediumImageUrl || artist.largeImageUrl;
+        filename = artist.smallImageUrl || artist.mediumImageUrl || artist.largeImageUrl;
+        break;
       case 'profile-medium':
         // Fallback: medium -> large -> small
-        return artist.mediumImageUrl || artist.largeImageUrl || artist.smallImageUrl;
+        filename = artist.mediumImageUrl || artist.largeImageUrl || artist.smallImageUrl;
+        break;
       case 'profile-large':
         // Fallback: large -> medium -> small
-        return artist.largeImageUrl || artist.mediumImageUrl || artist.smallImageUrl;
+        filename = artist.largeImageUrl || artist.mediumImageUrl || artist.smallImageUrl;
+        break;
       case 'background':
-        return artist.backgroundImageUrl;
+        filename = artist.backgroundImageUrl;
+        break;
       case 'banner':
-        return artist.bannerImageUrl;
+        filename = artist.bannerImageUrl;
+        break;
       case 'logo':
-        return artist.logoImageUrl;
+        filename = artist.logoImageUrl;
+        break;
       default:
         return null;
     }
+
+    if (!filename) {
+      return null;
+    }
+
+    // If filename contains path separators, it's an old absolute path - use as is
+    // (for backwards compatibility with existing data)
+    if (filename.includes('/') || filename.includes('\\')) {
+      return filename;
+    }
+
+    // Construct full path: storage/metadata/artists/{artistId}/{filename}
+    const basePath = await this.storage.getArtistMetadataPath(artistId);
+    return path.join(basePath, filename);
   }
 
   /**
