@@ -133,9 +133,15 @@ export default function AlbumPage() {
   };
 
   const handleCoverChanged = () => {
-    // Invalidate queries to refetch album data with new cover
-    queryClient.invalidateQueries({ queryKey: ['album', id] });
-    queryClient.invalidateQueries({ queryKey: ['album-cover-metadata', id] });
+    // Force immediate refetch to update album data with new cover
+    queryClient.refetchQueries({
+      queryKey: ['album', id],
+      type: 'active'
+    });
+    queryClient.refetchQueries({
+      queryKey: ['album-cover-metadata', id],
+      type: 'active'
+    });
 
     // Close the modal
     setIsCoverSelectorOpen(false);
