@@ -44,6 +44,19 @@ export default function AlbumPage() {
     ? getAlbumCoverUrl(id, coverMeta.cover.tag)
     : getCoverUrl(album?.coverImage);
 
+  // Debug: Log cover metadata changes
+  useEffect(() => {
+    if (coverMeta) {
+      console.log('[AlbumPage] 📊 Cover metadata updated:', {
+        albumId: id,
+        exists: coverMeta.cover.exists,
+        tag: coverMeta.cover.tag,
+        lastModified: coverMeta.cover.lastModified,
+        source: coverMeta.cover.source
+      });
+    }
+  }, [coverMeta, id]);
+
   // Extract dominant color from album cover
   useEffect(() => {
     if (coverUrl) {
@@ -55,20 +68,30 @@ export default function AlbumPage() {
 
   // CRITICAL: Force browser to reload cover image when URL changes
   // This preloads the image to ensure browser cache is updated
+  // Adding timestamp to defeat aggressive browser caching
   useEffect(() => {
-    if (coverUrl) {
-      console.log('[AlbumPage] 🔄 Preloading cover:', coverUrl);
+    if (coverUrl && coverMeta?.cover.tag) {
+      // Add timestamp to force cache bust
+      const cacheBustUrl = coverUrl.includes('?')
+        ? `${coverUrl}&_cb=${Date.now()}`
+        : `${coverUrl}?_cb=${Date.now()}`;
+
+      console.log('[AlbumPage] 🔄 Preloading cover with cache bust:', cacheBustUrl);
+      console.log('[AlbumPage] 📌 Current tag:', coverMeta.cover.tag);
+      console.log('[AlbumPage] 📌 Current renderKey:', coverRenderKey);
+
       const img = new window.Image();
-      img.src = coverUrl;
+      img.src = cacheBustUrl;
       img.onload = () => {
         console.log('[AlbumPage] ✅ Cover image preloaded successfully');
+        console.log('[AlbumPage] 📐 Image dimensions:', img.width, 'x', img.height);
         setCoverRenderKey(prev => prev + 1); // Force component re-render
       };
       img.onerror = () => {
         console.error('[AlbumPage] ❌ Failed to preload cover');
       };
     }
-  }, [coverUrl]);
+  }, [coverUrl, coverMeta]);
 
   // Load cover dimensions when modal opens
   useEffect(() => {
