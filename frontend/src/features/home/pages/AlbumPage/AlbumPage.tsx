@@ -6,6 +6,7 @@ import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../comp
 import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSelectorModal';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { usePlayer, Track } from '@features/player';
+import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -25,6 +26,9 @@ export default function AlbumPage() {
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const { playQueue, currentTrack } = usePlayer();
+
+  // Real-time synchronization via WebSocket for album cover
+  useAlbumMetadataSync(id);
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
