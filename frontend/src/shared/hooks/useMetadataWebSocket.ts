@@ -76,11 +76,24 @@ export function useMetadataWebSocket(): Socket | null {
     console.log('[useMetadataWebSocket] Socket connected status:', metadataSocket.connected);
     console.log('[useMetadataWebSocket] Socket ID:', metadataSocket.id);
 
-    setSocket(metadataSocket);
-    console.log('[useMetadataWebSocket] ✅ Socket saved to state');
+    // Wait for actual connection before setting state
+    const handleConnect = () => {
+      console.log('[useMetadataWebSocket] 🎯 Socket connected event fired, updating state');
+      setSocket(metadataSocket);
+    };
+
+    // If already connected, set immediately. Otherwise wait for connect event.
+    if (metadataSocket.connected) {
+      console.log('[useMetadataWebSocket] ✅ Socket already connected, saving to state');
+      setSocket(metadataSocket);
+    } else {
+      console.log('[useMetadataWebSocket] ⏳ Socket not yet connected, waiting for connect event...');
+      metadataSocket.on('connect', handleConnect);
+    }
 
     // Cleanup on unmount
     return () => {
+      metadataSocket.off('connect', handleConnect);
       // Don't disconnect immediately - other components might be using it
       // WebSocket service handles connection pooling
       console.log('[useMetadataWebSocket] Component unmounting (connection kept alive for other components)');
