@@ -106,6 +106,7 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
     <section className={styles.heroSection}>
       {/* Background Image with blur effect */}
       <div
+        key={backgroundUrl} // Force re-render when URL changes (timestamp updates)
         className={styles.heroSection__background}
         style={{
           backgroundImage: `url(${backgroundUrl})`,
@@ -157,6 +158,7 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
           >
             {logoUrl ? (
               <img
+                key={logoUrl} // Force re-render when URL changes (timestamp updates)
                 src={logoUrl}
                 alt={album.artist}
                 className={styles.heroSection__artistLogo}
