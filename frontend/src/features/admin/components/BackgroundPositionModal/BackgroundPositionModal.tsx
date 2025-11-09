@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check, Loader, Move } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useUpdateBackgroundPosition } from '../../hooks/useArtistAvatars';
@@ -27,31 +27,19 @@ export function BackgroundPositionModal({
   onSuccess,
 }: BackgroundPositionModalProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   const { mutate: updatePosition, isPending } = useUpdateBackgroundPosition();
 
-  // Parse initial background-position to image offset
-  const parseInitialPosition = (pos: string): { x: number; y: number } => {
-    const parts = pos.split(' ');
-    let xPart = parts[0] || 'center';
-    let yPart = parts[1] || 'top';
-
-    // For now, return defaults - we'll calculate actual position after image loads
-    return { x: 0, y: 0 };
-  };
-
   // Load image and calculate initial position
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
-      setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
       setImageLoaded(true);
 
       // Calculate initial position based on initialPosition prop
@@ -113,37 +101,19 @@ export function BackgroundPositionModal({
     img.src = backgroundUrl;
   }, [backgroundUrl, initialPosition]);
 
-  // Handle drag start
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
+  // Handle drag move with useCallback to avoid recreating on every render
+  const handleMove = useCallback((clientX: number, clientY: number) => {
+    if (!containerRef.current || !imageRef.current) return;
 
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
-    setDragStart({
-      x: clientX - imagePosition.x,
-      y: clientY - imagePosition.y,
-    });
-  };
-
-  // Handle drag move
-  const handleMouseMove = (e: MouseEvent | TouchEvent) => {
-    if (!isDragging || !containerRef.current || !imageRef.current) return;
-
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
-    let newX = clientX - dragStart.x;
-    let newY = clientY - dragStart.y;
-
-    // Get dimensions
     const container = containerRef.current;
     const image = imageRef.current;
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
     const imageWidth = image.clientWidth;
     const imageHeight = image.clientHeight;
+
+    let newX = clientX - dragStartRef.current.x;
+    let newY = clientY - dragStartRef.current.y;
 
     // Constrain movement (image can't reveal edges)
     const maxX = 0;
@@ -155,29 +125,85 @@ export function BackgroundPositionModal({
     newY = Math.max(minY, Math.min(maxY, newY));
 
     setImagePosition({ x: newX, y: newY });
-  };
+  }, []);
 
-  // Handle drag end
-  const handleMouseUp = () => {
+  // Mouse handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.clientX - imagePosition.x,
+      y: e.clientY - imagePosition.y,
+    };
+  }, [imagePosition]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    handleMove(e.clientX, e.clientY);
+  }, [isDragging, handleMove]);
+
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
-  // Add global mouse/touch event listeners
+  // Touch handlers - registered with {passive: false} to allow preventDefault
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault(); // Prevent scrolling
+    setIsDragging(true);
+    const touch = e.touches[0];
+    dragStartRef.current = {
+      x: touch.clientX - imagePosition.x,
+      y: touch.clientY - imagePosition.y,
+    };
+  }, [imagePosition]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    e.preventDefault(); // Prevent scrolling
+    const touch = e.touches[0];
+    handleMove(touch.clientX, touch.clientY);
+  }, [isDragging, handleMove]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Add/remove event listeners
   useEffect(() => {
     if (isDragging) {
+      // Mouse events
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleMouseMove);
-      document.addEventListener('touchend', handleMouseUp);
 
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
-        document.removeEventListener('touchmove', handleMouseMove);
-        document.removeEventListener('touchend', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart, imagePosition]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Touch event listeners with {passive: false}
+  useEffect(() => {
+    const overlay = containerRef.current;
+    if (!overlay) return;
+
+    overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+    if (isDragging) {
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+
+    return () => {
+      overlay.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, [isDragging, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   // Convert image position to CSS background-position
   const calculateBackgroundPosition = (): string => {
@@ -281,6 +307,7 @@ export function BackgroundPositionModal({
             style={{
               cursor: isDragging ? 'grabbing' : 'grab',
             }}
+            onMouseDown={handleMouseDown}
           >
             {!imageLoaded && (
               <div className={styles.preview__loading}>
@@ -299,20 +326,12 @@ export function BackgroundPositionModal({
                   className={styles.preview__image}
                   style={{
                     transform: `translate(${imagePosition.x}px, ${imagePosition.y}px)`,
-                    pointerEvents: 'none',
-                    userSelect: 'none',
                   }}
                   draggable={false}
-                  onMouseDown={handleMouseDown}
-                  onTouchStart={handleMouseDown}
                 />
 
                 {/* Overlay with instructions */}
-                <div
-                  className={styles.preview__overlay}
-                  onMouseDown={handleMouseDown}
-                  onTouchStart={handleMouseDown}
-                >
+                <div className={styles.preview__overlay}>
                   <div className={styles.preview__instructions}>
                     {isDragging ? (
                       <>
