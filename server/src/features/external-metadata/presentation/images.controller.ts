@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
@@ -168,12 +169,18 @@ export class ImagesController {
   @ApiOperation({
     summary: 'Serve album cover',
     description:
-      'Returns an album cover image file with appropriate cache headers.',
+      'Returns an album cover image file with appropriate cache headers. Supports tag-based cache busting.',
   })
   @ApiParam({
     name: 'albumId',
     description: 'Album UUID',
     example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiQuery({
+    name: 'tag',
+    required: false,
+    description: 'Cache tag for cache busting (MD5 hash of filepath:mtime)',
+    example: 'a1b2c3d4',
   })
   @ApiResponse({
     status: 200,
@@ -188,11 +195,23 @@ export class ImagesController {
   @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
   async getAlbumCover(
     @Param('albumId') albumId: string,
+    @Query('tag') tag: string | undefined,
+    @Headers('if-none-match') ifNoneMatch: string | undefined,
     @Res({ passthrough: true }) res: FastifyReply,
-  ): Promise<StreamableFile> {
+  ): Promise<StreamableFile | void> {
     try {
       // Obtener información de la portada
       const imageResult = await this.imageService.getAlbumCover(albumId);
+
+      // HTTP Cache validation: Check If-None-Match header (ETag)
+      const currentETag = `"${imageResult.tag}"`;
+      if (ifNoneMatch && ifNoneMatch === currentETag) {
+        res.status(304);
+        this.logger.debug(
+          `304 Not Modified: album ${albumId} cover (ETag match: ${currentETag})`,
+        );
+        return;
+      }
 
       // Configurar headers de caché
       this.setCacheHeaders(res, imageResult);
@@ -201,7 +220,7 @@ export class ImagesController {
       const fileStream = createReadStream(imageResult.filePath);
 
       this.logger.debug(
-        `Serving album cover: ${albumId} (${imageResult.size} bytes)`,
+        `Serving album cover: ${albumId} (${imageResult.size} bytes, tag: ${imageResult.tag})`,
       );
 
       return new StreamableFile(fileStream);
@@ -299,6 +318,66 @@ export class ImagesController {
       exists,
       albumId,
     };
+  }
+
+  /**
+   * Get album cover metadata (including tag for cache busting)
+   * GET /api/images/albums/:albumId/cover/metadata
+   */
+  @Get('albums/:albumId/cover/metadata')
+  @ApiOperation({
+    summary: 'Get album cover metadata',
+    description:
+      'Returns metadata for album cover including tag for cache busting',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cover metadata returned successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        albumId: { type: 'string' },
+        cover: {
+          type: 'object',
+          properties: {
+            exists: { type: 'boolean' },
+            size: { type: 'number' },
+            mimeType: { type: 'string' },
+            lastModified: { type: 'string' },
+            tag: { type: 'string' },
+            source: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Album not found' })
+  async getAlbumCoverMetadata(@Param('albumId') albumId: string) {
+    try {
+      const coverResult = await this.imageService.getAlbumCover(albumId);
+
+      return {
+        albumId,
+        cover: {
+          exists: true,
+          size: coverResult.size,
+          mimeType: coverResult.mimeType,
+          lastModified: coverResult.lastModified.toISOString(),
+          tag: coverResult.tag,
+          source: coverResult.source,
+        },
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          albumId,
+          cover: {
+            exists: false,
+          },
+        };
+      }
+      throw error;
+    }
   }
 
   /**
