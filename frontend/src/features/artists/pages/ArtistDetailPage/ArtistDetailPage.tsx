@@ -138,6 +138,15 @@ export default function ArtistDetailPage() {
     setIsAvatarSelectorOpen(true);
   };
 
+  // Handler for background/banner (they share the same visual space)
+  const handleChangeBackgroundOrBanner = () => {
+    // Pre-select whichever type currently exists (background takes priority)
+    const currentType = artistImages?.images.background?.exists ? 'background' : 'banner';
+    setSelectedImageType(currentType);
+    setIsImageMenuOpen(false);
+    setIsAvatarSelectorOpen(true);
+  };
+
   // Helper to format biography with drop cap
   const formatBiographyWithDropCap = (text: string) => {
     if (!text || text.length === 0) return text;
@@ -237,17 +246,10 @@ export default function ArtistDetailPage() {
                         </button>
                         <button
                           className={styles.artistDetailPage__imageMenuItem}
-                          onClick={() => handleChangeImage('background')}
+                          onClick={handleChangeBackgroundOrBanner}
                         >
                           <Frame size={14} />
-                          <span>Cambiar fondo</span>
-                        </button>
-                        <button
-                          className={styles.artistDetailPage__imageMenuItem}
-                          onClick={() => handleChangeImage('banner')}
-                        >
-                          <Layers size={14} />
-                          <span>Cambiar banner</span>
+                          <span>Cambiar fondo/banner</span>
                         </button>
                         <button
                           className={styles.artistDetailPage__imageMenuItem}

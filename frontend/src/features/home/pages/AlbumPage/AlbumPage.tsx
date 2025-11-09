@@ -23,6 +23,7 @@ export default function AlbumPage() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
+  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const { playQueue, currentTrack } = usePlayer();
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
@@ -37,6 +38,20 @@ export default function AlbumPage() {
       });
     }
   }, [album?.coverImage]);
+
+  // Load cover dimensions when modal opens
+  useEffect(() => {
+    if (isImageModalOpen && album?.coverImage) {
+      const coverUrl = getCoverUrl(album.coverImage);
+      const img = new window.Image();
+      img.onload = () => {
+        setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.src = coverUrl;
+    } else if (!isImageModalOpen) {
+      setCoverDimensions(null); // Reset when modal closes
+    }
+  }, [isImageModalOpen, album?.coverImage]);
 
   const handleArtistClick = () => {
     if (album?.artistId) {
@@ -239,6 +254,11 @@ export default function AlbumPage() {
               className={styles.albumPage__imageModalImage}
               onError={handleImageError}
             />
+            {coverDimensions && (
+              <div className={styles.albumPage__imageDimensions}>
+                {coverDimensions.width} × {coverDimensions.height} px
+              </div>
+            )}
           </div>
         </div>
       )}
