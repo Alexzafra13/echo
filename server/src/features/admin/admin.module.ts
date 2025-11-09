@@ -21,6 +21,7 @@ import { SearchAlbumCoversUseCase } from './domain/use-cases/search-album-covers
 import { ApplyAlbumCoverUseCase } from './domain/use-cases/apply-album-cover';
 import { SearchArtistAvatarsUseCase } from './domain/use-cases/search-artist-avatars';
 import { ApplyArtistAvatarUseCase } from './domain/use-cases/apply-artist-avatar';
+import { UpdateArtistBackgroundPositionUseCase } from './domain/use-cases/update-artist-background-position';
 import { ManageArtistBannersUseCase } from './domain/use-cases/manage-artist-banners';
 
 @Module({
@@ -39,6 +40,7 @@ import { ManageArtistBannersUseCase } from './domain/use-cases/manage-artist-ban
     ApplyAlbumCoverUseCase,
     SearchArtistAvatarsUseCase,
     ApplyArtistAvatarUseCase,
+    UpdateArtistBackgroundPositionUseCase,
     ManageArtistBannersUseCase,
   ],
 })

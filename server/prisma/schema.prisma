@@ -95,6 +95,7 @@ model Artist {
   // Background Images
   backgroundImagePath    String?   @map("background_image_path") @db.VarChar(512)
   backgroundUpdatedAt    DateTime? @map("background_updated_at")
+  backgroundPosition     String?   @map("background_position") @db.VarChar(50)
   externalBackgroundPath String?   @map("external_background_path") @db.VarChar(512)
   externalBackgroundSource String? @map("external_background_source") @db.VarChar(50)
   externalBackgroundUpdatedAt DateTime? @map("external_background_updated_at")

@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { artistAvatarsApi, ApplyArtistAvatarRequest } from '../api/artist-avatars.api';
+import {
+  artistAvatarsApi,
+  ApplyArtistAvatarRequest,
+  UpdateBackgroundPositionRequest
+} from '../api/artist-avatars.api';
 
 /**
  * Hook para buscar avatares de artista
@@ -28,6 +32,23 @@ export function useApplyArtistAvatar() {
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artists'] }); // Lista de artistas
+    },
+  });
+}
+
+/**
+ * Hook para actualizar la posición del fondo de un artista
+ */
+export function useUpdateBackgroundPosition() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: UpdateBackgroundPositionRequest) =>
+      artistAvatarsApi.updateBackgroundPosition(request),
+    onSuccess: (data, variables) => {
+      // Invalidar queries para refrescar los datos del artista
+      queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
+      queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });
     },
   });
 }
