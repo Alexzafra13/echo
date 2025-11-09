@@ -134,40 +134,69 @@ export class SearchArtistAvatarsUseCase {
               );
 
               if (variants) {
-                // Process all artist thumbs as profile images
+                // Use estimated dimensions like Jellyfin does (no probing for performance)
+                // Fanart.tv image dimensions are fairly consistent by type
+
+                // Artist thumbs - typically 1000x1000
                 for (let i = 0; i < variants.artistthumbs.length; i++) {
-                  await addImage(
-                    variants.artistthumbs[i],
-                    'profile',
-                    `thumb-${i + 1}`
-                  );
+                  const url = variants.artistthumbs[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'profile',
+                      width: 1000,
+                      height: 1000,
+                    });
+                  }
                 }
 
-                // Process all backgrounds
+                // Backgrounds - typically 1920x1080
                 for (let i = 0; i < variants.backgrounds.length; i++) {
-                  await addImage(
-                    variants.backgrounds[i],
-                    'background',
-                    `background-${i + 1}`
-                  );
+                  const url = variants.backgrounds[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'background',
+                      width: 1920,
+                      height: 1080,
+                    });
+                  }
                 }
 
-                // Process all banners
+                // Banners - typically 1000x185
                 for (let i = 0; i < variants.banners.length; i++) {
-                  await addImage(
-                    variants.banners[i],
-                    'banner',
-                    `banner-${i + 1}`
-                  );
+                  const url = variants.banners[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'banner',
+                      width: 1000,
+                      height: 185,
+                    });
+                  }
                 }
 
-                // Process all logos
+                // Logos - HD logos are typically 800x310, regular logos 400x155
+                // Since we mix HD and regular, we'll use HD dimensions as default
                 for (let i = 0; i < variants.logos.length; i++) {
-                  await addImage(
-                    variants.logos[i],
-                    'logo',
-                    `logo-${i + 1}`
-                  );
+                  const url = variants.logos[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    // Use HD dimensions (800x310) for estimated size
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'logo',
+                      width: 800,
+                      height: 310,
+                    });
+                  }
                 }
 
                 this.logger.log(
