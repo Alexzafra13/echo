@@ -55,37 +55,39 @@ export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
         return;
       }
 
-      // Invalidate specific album query (force refetch)
-      queryClient.invalidateQueries({
+      // FORCE IMMEDIATE REFETCH (not just invalidate) to ensure UI updates
+      // This is critical because invalidateQueries only marks as stale,
+      // but doesn't guarantee immediate refetch
+      queryClient.refetchQueries({
         queryKey: ['albums', data.albumId],
-        refetchType: 'active'
+        type: 'active'
       });
 
-      // If no specific album ID, invalidate the albums list
+      // If no specific album ID, refetch the albums list
       if (!albumId) {
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: ['albums'],
-          refetchType: 'active'
+          type: 'active'
         });
       }
 
-      // Also invalidate artist queries (album covers appear on artist pages)
+      // Also refetch artist queries (album covers appear on artist pages)
       if (data.artistId) {
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: ['artists', data.artistId],
-          refetchType: 'active'
+          type: 'active'
         });
       }
 
-      // If we have a specific artistId param, also invalidate it
+      // If we have a specific artistId param, also refetch it
       if (artistId) {
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: ['artists', artistId],
-          refetchType: 'active'
+          type: 'active'
         });
       }
 
-      console.log(`[useAlbumMetadataSync] Invalidated and refetching queries for album ${data.albumId}`);
+      console.log(`[useAlbumMetadataSync] ✅ Forced immediate refetch for album ${data.albumId}`);
     };
 
     // Subscribe to album cover updated events
