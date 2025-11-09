@@ -143,50 +143,51 @@ export class SearchAlbumCoversUseCase {
             );
 
             // Process URLs from standard agents (CoverArtArchive, etc.)
-            // Show ALL variants even if dimensions are identical
+            // Use estimated dimensions like Jellyfin does (no probing for performance)
             for (const { url, sizeLabel } of urlsToProbe) {
-              // Skip if we've already probed this exact URL
+              // Skip if we've already seen this exact URL
               if (seenUrls.has(url)) {
                 this.logger.debug(
-                  `Skipping duplicate URL from ${agent.name} (${sizeLabel}): ${url.substring(0, 60)}...`
+                  `Skipping duplicate URL from ${agent.name} (${sizeLabel})`
                 );
                 continue;
               }
               seenUrls.add(url);
 
-              try {
-                this.logger.debug(`Probing ${agent.name} (${sizeLabel}): ${url.substring(0, 80)}...`);
-                const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
+              // Use estimated dimensions based on CoverArtArchive thumbnail sizes
+              let width: number;
+              let height: number;
 
-                if (dimensions) {
-                  const dimensionKey = `${dimensions.width}x${dimensions.height}`;
-
-                  this.logger.debug(
-                    `Got dimensions for ${agent.name} (${sizeLabel}): ${dimensionKey}`
-                  );
-
-                  // Add ALL variants without filtering by dimensions
-                  // This ensures users see all size options from CoverArtArchive
-                  covers.push({
-                    provider: agent.name,
-                    url: url,
-                    thumbnailUrl: sizeLabel === 'large' ? (cover.mediumUrl || cover.smallUrl) : undefined,
-                    size: `${dimensions.width}x${dimensions.height} (${sizeLabel})`,
-                    width: dimensions.width,
-                    height: dimensions.height,
-                  });
-
-                  this.logger.log(
-                    `✓ Added ${agent.name} cover: ${dimensionKey} (${sizeLabel})`
-                  );
-                } else {
-                  this.logger.warn(`Could not get dimensions for ${url} from ${agent.name}`);
-                }
-              } catch (error) {
-                this.logger.warn(
-                  `Failed to probe ${url} from ${agent.name}: ${(error as Error).message}`
-                );
+              switch (sizeLabel) {
+                case 'small':
+                  width = 250;
+                  height = 250;
+                  break;
+                case 'medium':
+                  width = 500;
+                  height = 500;
+                  break;
+                case 'large':
+                  width = 1200;
+                  height = 1200;
+                  break;
+                default:
+                  width = 500;
+                  height = 500;
               }
+
+              covers.push({
+                provider: agent.name,
+                url: url,
+                thumbnailUrl: sizeLabel === 'large' ? (cover.mediumUrl || cover.smallUrl) : undefined,
+                size: `${width}x${height} (${sizeLabel}, est.)`,
+                width: width,
+                height: height,
+              });
+
+              this.logger.log(
+                `✓ Added ${agent.name} cover: ${width}x${height} (${sizeLabel})`
+              );
             }
 
             this.logger.log(
