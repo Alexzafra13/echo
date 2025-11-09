@@ -4,10 +4,10 @@ import { albumsService } from '../services';
 /**
  * Hook to fetch recently added albums
  */
-export function useRecentAlbums() {
+export function useRecentAlbums(take?: number) {
   return useQuery({
-    queryKey: ['albums', 'recent'],
-    queryFn: () => albumsService.getRecent(),
+    queryKey: ['albums', 'recent', take],
+    queryFn: () => albumsService.getRecent(take),
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 }
