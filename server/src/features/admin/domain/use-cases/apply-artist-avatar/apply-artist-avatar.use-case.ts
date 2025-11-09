@@ -98,7 +98,7 @@ export class ApplyArtistAvatarUseCase {
     if (input.replaceLocal !== false) {  // Default to true if not specified
       updateData[typeConfig.localPathField] = null;
       updateData[typeConfig.localUpdatedField] = null;
-      this.logger.debug(`Clearing local ${input.type} reference (replaceLocal=${input.replaceLocal !== false})`);
+      this.logger.debug(`Clearing local ${input.type} reference (replaceLocal=${input.replaceLocal ?? true})`);
     }
 
     this.logger.debug(
