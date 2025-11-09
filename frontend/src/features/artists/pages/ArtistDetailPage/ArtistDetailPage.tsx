@@ -66,7 +66,7 @@ export default function ArtistDetailPage() {
   useEffect(() => {
     if (backgroundUrl) {
       console.log('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
-      const img = new Image();
+      const img = new window.Image();
       img.src = backgroundUrl;
       img.onload = () => console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
       img.onerror = (e) => console.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
@@ -90,7 +90,7 @@ export default function ArtistDetailPage() {
   useEffect(() => {
     if (logoUrl) {
       console.log('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
-      const img = new Image();
+      const img = new window.Image();
       img.src = logoUrl;
     }
   }, [logoUrl]);
@@ -99,7 +99,7 @@ export default function ArtistDetailPage() {
   useEffect(() => {
     if (profileUrl) {
       console.log('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
-      const img = new Image();
+      const img = new window.Image();
       img.src = profileUrl;
     }
   }, [profileUrl]);
