@@ -134,30 +134,70 @@ export class SearchArtistAvatarsUseCase {
               );
 
               if (variants) {
-                // Helper to process images in parallel chunks
-                const processInParallel = async (
-                  urls: string[],
-                  type: 'profile' | 'background' | 'banner' | 'logo',
-                  label: string
-                ) => {
-                  const chunkSize = 5; // Process 5 images at a time
-                  for (let i = 0; i < urls.length; i += chunkSize) {
-                    const chunk = urls.slice(i, i + chunkSize);
-                    await Promise.all(
-                      chunk.map((url, idx) =>
-                        addImage(url, type, `${label}-${i + idx + 1}`)
-                      )
-                    );
-                  }
-                };
+                // Use estimated dimensions like Jellyfin does (no probing for performance)
+                // Fanart.tv image dimensions are fairly consistent by type
 
-                // Process all variants in parallel by type
-                await Promise.all([
-                  processInParallel(variants.artistthumbs, 'profile', 'thumb'),
-                  processInParallel(variants.backgrounds, 'background', 'background'),
-                  processInParallel(variants.banners, 'banner', 'banner'),
-                  processInParallel(variants.logos, 'logo', 'logo'),
-                ]);
+                // Artist thumbs - typically 1000x1000
+                for (let i = 0; i < variants.artistthumbs.length; i++) {
+                  const url = variants.artistthumbs[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'profile',
+                      width: 1000,
+                      height: 1000,
+                    });
+                  }
+                }
+
+                // Backgrounds - typically 1920x1080
+                for (let i = 0; i < variants.backgrounds.length; i++) {
+                  const url = variants.backgrounds[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'background',
+                      width: 1920,
+                      height: 1080,
+                    });
+                  }
+                }
+
+                // Banners - typically 1000x185
+                for (let i = 0; i < variants.banners.length; i++) {
+                  const url = variants.banners[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'banner',
+                      width: 1000,
+                      height: 185,
+                    });
+                  }
+                }
+
+                // Logos - HD logos are typically 800x310, regular logos 400x155
+                // Since we mix HD and regular, we'll use HD dimensions as default
+                for (let i = 0; i < variants.logos.length; i++) {
+                  const url = variants.logos[i];
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    // Use HD dimensions (800x310) for estimated size
+                    avatars.push({
+                      provider: agent.name,
+                      url: url,
+                      type: 'logo',
+                      width: 800,
+                      height: 310,
+                    });
+                  }
+                }
 
                 this.logger.log(
                   `Agent "${agent.name}" contributed ${avatars.length} unique avatars from all variants`
