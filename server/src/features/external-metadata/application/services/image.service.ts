@@ -3,20 +3,19 @@ import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { StorageService } from '../../infrastructure/services/storage.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { createHash } from 'crypto';
 
 /**
  * Tipos de imágenes de artista soportadas
  */
 export type ArtistImageType =
-  | 'profile-small'
-  | 'profile-medium'
-  | 'profile-large'
+  | 'profile'
   | 'background'
   | 'banner'
   | 'logo';
 
 /**
- * Resultado de la búsqueda de imagen
+ * Resultado de la búsqueda de imagen (V2 con tag y source)
  */
 export interface ImageResult {
   /** Ruta absoluta del archivo de imagen */
@@ -27,19 +26,23 @@ export interface ImageResult {
   size: number;
   /** Última modificación del archivo */
   lastModified: Date;
+  /** Fuente de la imagen: 'local' (disco) o 'external' (descargada) */
+  source: 'local' | 'external';
+  /** Tag único para cache-busting (MD5 de path + mtime) */
+  tag: string;
 }
 
 /**
- * ImageService
+ * ImageService V2
  *
- * Servicio para obtener y servir imágenes almacenadas localmente
- * desde metadatos externos (artistas y álbumes).
+ * Servicio para obtener y servir imágenes con arquitectura Jellyfin-style.
  *
- * Funcionalidades:
- * - Obtener rutas de imágenes desde la base de datos
- * - Cacheo en memoria para rutas frecuentes
- * - Validación de existencia de archivos
- * - Mapeo de tipos de imagen a campos de base de datos
+ * Características V2:
+ * - Priorización: Local (disco) > External (descargado)
+ * - Tag-based cache busting (MD5 de path + mtime)
+ * - Separación explícita de fuentes (local vs external)
+ * - Timestamps independientes por tipo de imagen
+ * - Validación y limpieza automática de archivos borrados
  */
 @Injectable()
 export class ImageService {
@@ -53,7 +56,7 @@ export class ImageService {
   ) {}
 
   /**
-   * Obtiene una imagen de artista
+   * Obtiene una imagen de artista con priorización Local > External
    */
   async getArtistImage(
     artistId: string,
@@ -73,12 +76,24 @@ export class ImageService {
       where: { id: artistId },
       select: {
         id: true,
-        smallImageUrl: true,
-        mediumImageUrl: true,
-        largeImageUrl: true,
-        backgroundImageUrl: true,
-        bannerImageUrl: true,
-        logoImageUrl: true,
+        // Local images
+        profileImagePath: true,
+        profileImageUpdatedAt: true,
+        backgroundImagePath: true,
+        backgroundUpdatedAt: true,
+        bannerImagePath: true,
+        bannerUpdatedAt: true,
+        logoImagePath: true,
+        logoUpdatedAt: true,
+        // External images
+        externalProfilePath: true,
+        externalProfileUpdatedAt: true,
+        externalBackgroundPath: true,
+        externalBackgroundUpdatedAt: true,
+        externalBannerPath: true,
+        externalBannerUpdatedAt: true,
+        externalLogoPath: true,
+        externalLogoUpdatedAt: true,
       },
     });
 
@@ -86,22 +101,61 @@ export class ImageService {
       throw new NotFoundException(`Artist with ID ${artistId} not found`);
     }
 
-    // Mapear tipo de imagen a campo de base de datos y construir ruta completa
-    const imagePath = await this.getArtistImagePath(artistId, artist, imageType);
+    // PRIORIDAD 1: Local image (desde disco del artista)
+    const localPath = artist[`${imageType}ImagePath`];
+    if (localPath) {
+      try {
+        await fs.access(localPath);
+        const stats = await fs.stat(localPath);
+        const result: ImageResult = {
+          filePath: localPath,
+          mimeType: this.getMimeType(localPath),
+          size: stats.size,
+          lastModified: stats.mtime,
+          source: 'local',
+          tag: this.generateTag(localPath, stats.mtime),
+        };
 
-    if (!imagePath) {
-      throw new NotFoundException(
-        `Artist ${artistId} does not have a ${imageType} image`,
-      );
+        this.cacheImageResult(cacheKey, result);
+        this.logger.debug(`Serving LOCAL image: ${imageType} from ${localPath}`);
+        return result;
+      } catch (error) {
+        // Archivo local ya no existe, limpiar BD
+        this.logger.warn(`Local ${imageType} image not found, cleaning DB: ${localPath}`);
+        await this.clearLocalImage(artistId, imageType);
+      }
     }
 
-    // Verificar que el archivo existe y obtener metadata
-    const imageResult = await this.getImageFileInfo(imagePath);
+    // PRIORIDAD 2: External image (descargada de proveedores)
+    const externalFilename = artist[`external${this.capitalize(imageType)}Path`];
+    if (externalFilename) {
+      const fullPath = path.join(
+        await this.storage.getArtistMetadataPath(artistId),
+        externalFilename
+      );
 
-    // Cachear resultado
-    this.cacheImageResult(cacheKey, imageResult);
+      try {
+        await fs.access(fullPath);
+        const stats = await fs.stat(fullPath);
+        const result: ImageResult = {
+          filePath: fullPath,
+          mimeType: this.getMimeType(fullPath),
+          size: stats.size,
+          lastModified: stats.mtime,
+          source: 'external',
+          tag: this.generateTag(fullPath, stats.mtime),
+        };
 
-    return imageResult;
+        this.cacheImageResult(cacheKey, result);
+        this.logger.debug(`Serving EXTERNAL image: ${imageType} from ${fullPath}`);
+        return result;
+      } catch (error) {
+        this.logger.warn(`External ${imageType} image not found, cleaning DB: ${fullPath}`);
+        await this.clearExternalImage(artistId, imageType);
+      }
+    }
+
+    throw new NotFoundException(`No ${imageType} image for artist ${artistId}`);
   }
 
   /**
@@ -142,7 +196,7 @@ export class ImageService {
       // Usar imagen por defecto si no hay cover
       this.logger.debug(`Album ${albumId} has no cover, using default image`);
       const defaultCoverPath = 'defaults/album-cover-default.png';
-      imageResult = await this.getImageFileInfo(defaultCoverPath);
+      imageResult = await this.getImageFileInfo(defaultCoverPath, 'local');
     } else {
       // Si coverPath no tiene path absoluto ni relativo (solo nombre de archivo),
       // asumir que está en uploads/covers/
@@ -153,7 +207,7 @@ export class ImageService {
       }
 
       // Verificar que el archivo existe y obtener metadata
-      imageResult = await this.getImageFileInfo(fullPath);
+      imageResult = await this.getImageFileInfo(fullPath, 'external');
     }
 
     // Cachear resultado
@@ -197,7 +251,7 @@ export class ImageService {
     }
 
     // Verificar que el archivo existe y obtener metadata
-    const imageResult = await this.getImageFileInfo(user.avatarPath);
+    const imageResult = await this.getImageFileInfo(user.avatarPath, 'local');
 
     // Cachear resultado
     this.cacheImageResult(cacheKey, imageResult);
@@ -236,17 +290,13 @@ export class ImageService {
    * Obtiene todas las imágenes disponibles de un artista
    */
   async getArtistImages(artistId: string): Promise<{
-    profileSmall?: ImageResult;
-    profileMedium?: ImageResult;
-    profileLarge?: ImageResult;
+    profile?: ImageResult;
     background?: ImageResult;
     banner?: ImageResult;
     logo?: ImageResult;
   }> {
     const imageTypes: ArtistImageType[] = [
-      'profile-small',
-      'profile-medium',
-      'profile-large',
+      'profile',
       'background',
       'banner',
       'logo',
@@ -257,8 +307,7 @@ export class ImageService {
     for (const imageType of imageTypes) {
       try {
         const image = await this.getArtistImage(artistId, imageType);
-        const key = imageType.replace('-', '');
-        results[key] = image;
+        results[imageType] = image;
       } catch (error) {
         // Imagen no disponible, continuar
         this.logger.debug(
@@ -283,9 +332,7 @@ export class ImageService {
    */
   invalidateArtistCache(artistId: string): void {
     const imageTypes: ArtistImageType[] = [
-      'profile-small',
-      'profile-medium',
-      'profile-large',
+      'profile',
       'background',
       'banner',
       'logo',
@@ -337,71 +384,9 @@ export class ImageService {
   // ============================================
 
   /**
-   * Mapea el tipo de imagen a la ruta completa del archivo
-   * Con fallback: si se pide small/medium y no existe, usa large
-   *
-   * DB stores only filenames (e.g., "background.jpg"), this method constructs full path
-   */
-  private async getArtistImagePath(
-    artistId: string,
-    artist: {
-      smallImageUrl: string | null;
-      mediumImageUrl: string | null;
-      largeImageUrl: string | null;
-      backgroundImageUrl: string | null;
-      bannerImageUrl: string | null;
-      logoImageUrl: string | null;
-    },
-    imageType: ArtistImageType,
-  ): Promise<string | null> {
-    // Get filename from DB based on image type
-    let filename: string | null = null;
-
-    switch (imageType) {
-      case 'profile-small':
-        // Fallback: small -> medium -> large
-        filename = artist.smallImageUrl || artist.mediumImageUrl || artist.largeImageUrl;
-        break;
-      case 'profile-medium':
-        // Fallback: medium -> large -> small
-        filename = artist.mediumImageUrl || artist.largeImageUrl || artist.smallImageUrl;
-        break;
-      case 'profile-large':
-        // Fallback: large -> medium -> small
-        filename = artist.largeImageUrl || artist.mediumImageUrl || artist.smallImageUrl;
-        break;
-      case 'background':
-        filename = artist.backgroundImageUrl;
-        break;
-      case 'banner':
-        filename = artist.bannerImageUrl;
-        break;
-      case 'logo':
-        filename = artist.logoImageUrl;
-        break;
-      default:
-        return null;
-    }
-
-    if (!filename) {
-      return null;
-    }
-
-    // If filename contains path separators, it's an old absolute path - use as is
-    // (for backwards compatibility with existing data)
-    if (filename.includes('/') || filename.includes('\\')) {
-      return filename;
-    }
-
-    // Construct full path: storage/metadata/artists/{artistId}/{filename}
-    const basePath = await this.storage.getArtistMetadataPath(artistId);
-    return path.join(basePath, filename);
-  }
-
-  /**
    * Obtiene información del archivo de imagen
    */
-  private async getImageFileInfo(filePath: string): Promise<ImageResult> {
+  private async getImageFileInfo(filePath: string, source: 'local' | 'external'): Promise<ImageResult> {
     try {
       // Verificar que el archivo existe
       const stats = await fs.stat(filePath);
@@ -411,13 +396,15 @@ export class ImageService {
       }
 
       // Detectar MIME type por extensión
-      const mimeType = this.getMimeTypeFromPath(filePath);
+      const mimeType = this.getMimeType(filePath);
 
       return {
         filePath,
         mimeType,
         size: stats.size,
         lastModified: stats.mtime,
+        source,
+        tag: this.generateTag(filePath, stats.mtime),
       };
     } catch (error) {
       if ((error as any).code === 'ENOENT') {
@@ -430,7 +417,7 @@ export class ImageService {
   /**
    * Detecta el MIME type a partir de la extensión del archivo
    */
-  private getMimeTypeFromPath(filePath: string): string {
+  private getMimeType(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
 
     const mimeTypes: Record<string, string> = {
@@ -447,6 +434,16 @@ export class ImageService {
   }
 
   /**
+   * Genera un tag único para cache-busting usando MD5
+   */
+  private generateTag(filePath: string, mtime: Date): string {
+    return createHash('md5')
+      .update(`${filePath}:${mtime.getTime()}`)
+      .digest('hex')
+      .substring(0, 8);
+  }
+
+  /**
    * Cachea un resultado de imagen con TTL
    */
   private cacheImageResult(key: string, result: ImageResult): void {
@@ -459,5 +456,50 @@ export class ImageService {
     }, this.CACHE_TTL_MS);
 
     this.logger.debug(`Cached ${key} for ${this.CACHE_TTL_MS}ms`);
+  }
+
+  /**
+   * Limpia referencia a imagen local cuando el archivo no existe
+   */
+  private async clearLocalImage(artistId: string, imageType: ArtistImageType): Promise<void> {
+    try {
+      await this.prisma.artist.update({
+        where: { id: artistId },
+        data: {
+          [`${imageType}ImagePath`]: null,
+          [`${imageType}UpdatedAt`]: null,
+        },
+      });
+      this.logger.debug(`Cleared local ${imageType} reference for artist ${artistId}`);
+    } catch (error) {
+      this.logger.error(`Failed to clear local ${imageType} for ${artistId}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Limpia referencia a imagen externa cuando el archivo no existe
+   */
+  private async clearExternalImage(artistId: string, imageType: ArtistImageType): Promise<void> {
+    try {
+      const capitalizedType = this.capitalize(imageType);
+      await this.prisma.artist.update({
+        where: { id: artistId },
+        data: {
+          [`external${capitalizedType}Path`]: null,
+          [`external${capitalizedType}Source`]: null,
+          [`external${capitalizedType}UpdatedAt`]: null,
+        },
+      });
+      this.logger.debug(`Cleared external ${imageType} reference for artist ${artistId}`);
+    } catch (error) {
+      this.logger.error(`Failed to clear external ${imageType} for ${artistId}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Capitaliza la primera letra de un string
+   */
+  private capitalize(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }
