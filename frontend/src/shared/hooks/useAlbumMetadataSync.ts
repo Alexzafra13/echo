@@ -55,25 +55,37 @@ export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
         return;
       }
 
-      // Invalidate specific album query
-      queryClient.invalidateQueries({ queryKey: ['albums', data.albumId] });
+      // Invalidate specific album query (force refetch)
+      queryClient.invalidateQueries({
+        queryKey: ['albums', data.albumId],
+        refetchType: 'active'
+      });
 
       // If no specific album ID, invalidate the albums list
       if (!albumId) {
-        queryClient.invalidateQueries({ queryKey: ['albums'] });
+        queryClient.invalidateQueries({
+          queryKey: ['albums'],
+          refetchType: 'active'
+        });
       }
 
       // Also invalidate artist queries (album covers appear on artist pages)
       if (data.artistId) {
-        queryClient.invalidateQueries({ queryKey: ['artists', data.artistId] });
+        queryClient.invalidateQueries({
+          queryKey: ['artists', data.artistId],
+          refetchType: 'active'
+        });
       }
 
       // If we have a specific artistId param, also invalidate it
       if (artistId) {
-        queryClient.invalidateQueries({ queryKey: ['artists', artistId] });
+        queryClient.invalidateQueries({
+          queryKey: ['artists', artistId],
+          refetchType: 'active'
+        });
       }
 
-      console.log(`[useAlbumMetadataSync] Invalidated queries for album ${data.albumId}`);
+      console.log(`[useAlbumMetadataSync] Invalidated and refetching queries for album ${data.albumId}`);
     };
 
     // Subscribe to album cover updated events

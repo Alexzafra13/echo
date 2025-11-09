@@ -58,18 +58,27 @@ export function useArtistMetadataSync(artistId?: string) {
         return;
       }
 
-      // Invalidate specific artist query
-      queryClient.invalidateQueries({ queryKey: ['artists', data.artistId] });
+      // Invalidate AND refetch specific artist query (ignoring staleTime)
+      queryClient.invalidateQueries({
+        queryKey: ['artists', data.artistId],
+        refetchType: 'active' // Force refetch even if staleTime hasn't expired
+      });
 
       // Invalidate artist images metadata
-      queryClient.invalidateQueries({ queryKey: ['artist-images', data.artistId] });
+      queryClient.invalidateQueries({
+        queryKey: ['artist-images', data.artistId],
+        refetchType: 'active'
+      });
 
       // If no specific artist ID, also invalidate the artists list
       if (!artistId) {
-        queryClient.invalidateQueries({ queryKey: ['artists'] });
+        queryClient.invalidateQueries({
+          queryKey: ['artists'],
+          refetchType: 'active'
+        });
       }
 
-      console.log(`[useArtistMetadataSync] Invalidated queries for artist ${data.artistId}`);
+      console.log(`[useArtistMetadataSync] Invalidated and refetching queries for artist ${data.artistId}`);
     };
 
     // Subscribe to artist images updated events
