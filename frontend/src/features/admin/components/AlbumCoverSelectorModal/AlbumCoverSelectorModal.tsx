@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Check, Loader, AlertCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@shared/components/ui';
 import { useSearchAlbumCovers, useApplyAlbumCover } from '../../hooks/useAlbumCovers';
 import { CoverOption } from '../../api/album-covers.api';
@@ -26,6 +27,7 @@ export function AlbumCoverSelectorModal({
   const [providerFilter, setProviderFilter] = useState<string>('');
   const [applyError, setApplyError] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useSearchAlbumCovers(albumId);
   const { mutate: applyCover, isPending: isApplying } = useApplyAlbumCover();
 
@@ -51,13 +53,48 @@ export function AlbumCoverSelectorModal({
         provider: selectedCover.provider,
       },
       {
-        onSuccess: () => {
-          console.log('Cover applied successfully');
+        onSuccess: async () => {
+          console.log('[AlbumCoverSelector] ✅ Cover applied successfully');
+
+          // FALLBACK: Force manual refetch in case WebSocket fails
+          // This ensures the UI updates even if the WebSocket event doesn't arrive
+          console.log('[AlbumCoverSelector] Forcing manual refetch as fallback...');
+
+          // Immediate refetch of album
+          await queryClient.refetchQueries({
+            queryKey: ['albums', albumId],
+            type: 'active'
+          });
+
+          // Also refetch albums list
+          await queryClient.refetchQueries({
+            queryKey: ['albums'],
+            type: 'active'
+          });
+
+          // If album has artistId, refetch artist too (album covers appear on artist pages)
+          if (albumInfo?.artistId) {
+            await queryClient.refetchQueries({
+              queryKey: ['artists', albumInfo.artistId],
+              type: 'active'
+            });
+          }
+
+          // Delayed refetch to ensure backend has fully processed the image
+          setTimeout(() => {
+            console.log('[AlbumCoverSelector] Secondary refetch after 1s...');
+            queryClient.refetchQueries({
+              queryKey: ['albums', albumId],
+              type: 'active'
+            });
+          }, 1000);
+
+          console.log('[AlbumCoverSelector] Manual refetch completed');
           onSuccess?.();
           onClose();
         },
         onError: (error: any) => {
-          console.error('Error applying cover:', error);
+          console.error('[AlbumCoverSelector] ❌ Error applying cover:', error);
           setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la carátula');
         },
       },

@@ -58,27 +58,29 @@ export function useArtistMetadataSync(artistId?: string) {
         return;
       }
 
-      // Invalidate AND refetch specific artist query (ignoring staleTime)
-      queryClient.invalidateQueries({
+      // FORCE IMMEDIATE REFETCH (not just invalidate) to ensure UI updates
+      // This is critical because invalidateQueries only marks as stale,
+      // but doesn't guarantee immediate refetch
+      queryClient.refetchQueries({
         queryKey: ['artists', data.artistId],
-        refetchType: 'active' // Force refetch even if staleTime hasn't expired
+        type: 'active'
       });
 
-      // Invalidate artist images metadata
-      queryClient.invalidateQueries({
+      // Refetch artist images metadata
+      queryClient.refetchQueries({
         queryKey: ['artist-images', data.artistId],
-        refetchType: 'active'
+        type: 'active'
       });
 
-      // If no specific artist ID, also invalidate the artists list
+      // If no specific artist ID, also refetch the artists list
       if (!artistId) {
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: ['artists'],
-          refetchType: 'active'
+          type: 'active'
         });
       }
 
-      console.log(`[useArtistMetadataSync] Invalidated and refetching queries for artist ${data.artistId}`);
+      console.log(`[useArtistMetadataSync] ✅ Forced immediate refetch for artist ${data.artistId}`);
     };
 
     // Subscribe to artist images updated events
