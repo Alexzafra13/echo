@@ -42,7 +42,7 @@ export function useAlbumCoverMetadata(albumId: string | undefined, enabled: bool
       return response.data;
     },
     enabled: enabled && !!albumId,
-    staleTime: 1000 * 60 * 30, // 30 minutes - covers don't change often
+    staleTime: 0, // Always consider stale so refetch works immediately when cover changes
     gcTime: 1000 * 60 * 60,    // 1 hour cache time
     retry: false, // Don't retry on error - if no cover exists, that's expected
   });

@@ -63,6 +63,12 @@ export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
         type: 'active'
       });
 
+      // CRITICAL: Refetch album cover metadata to get new tag for cache busting
+      queryClient.refetchQueries({
+        queryKey: ['album-cover-metadata', data.albumId],
+        type: 'active'
+      });
+
       // If no specific album ID, refetch the albums list
       if (!albumId) {
         queryClient.refetchQueries({
