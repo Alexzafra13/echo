@@ -67,10 +67,14 @@ export function useMetadataWebSocket(): Socket | null {
     }
 
     console.log('[useMetadataWebSocket] Connecting to metadata namespace...');
+    console.log('[useMetadataWebSocket] 🔍 CODE VERSION: v2.0 - About to connect...');
 
     // Connect to metadata namespace
     const wsService = WebSocketService.getInstance();
+    console.log('[useMetadataWebSocket] 🔍 WebSocket service obtained:', !!wsService);
+
     const metadataSocket = wsService.connect('metadata', token);
+    console.log('[useMetadataWebSocket] 🔍 Socket returned from connect:', !!metadataSocket);
 
     console.log('[useMetadataWebSocket] Socket instance created:', !!metadataSocket);
     console.log('[useMetadataWebSocket] Socket connected status:', metadataSocket.connected);
