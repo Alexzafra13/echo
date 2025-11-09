@@ -27,6 +27,7 @@ import { SettingsRepository } from './infrastructure/persistence/settings.reposi
 // Application
 import { ExternalMetadataService } from './application/external-metadata.service';
 import { ImageService } from './application/services/image.service';
+import { LocalImageProvider } from './application/services/local-image-provider.service';
 
 // Presentation
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
@@ -89,6 +90,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     // Application services
     ExternalMetadataService,
     ImageService,
+    LocalImageProvider,
 
     // WebSocket gateway
     MetadataEnrichmentGateway,
@@ -104,6 +106,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
   exports: [
     ExternalMetadataService,
     ImageService,
+    LocalImageProvider,
     AgentRegistryService,
     MetadataCacheService,
     SettingsService,
