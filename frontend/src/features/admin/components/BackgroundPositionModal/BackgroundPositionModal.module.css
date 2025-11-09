@@ -13,7 +13,7 @@
   background: var(--color-background-elevated);
   border-radius: 12px;
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -33,6 +33,9 @@
   font-weight: 600;
   margin: 0;
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .modal__closeButton {
@@ -63,25 +66,52 @@
   margin: 0 0 1.5rem;
   color: var(--color-text-secondary);
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
+/* Fixed viewport container - this represents the hero area */
 .preview {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 9; /* Hero section aspect ratio */
   border-radius: 8px;
   overflow: hidden;
   background-color: #000;
   touch-action: none;
   user-select: none;
+  border: 2px solid var(--color-border);
+}
+
+.preview__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--color-text-secondary);
+}
+
+/* Draggable image - covers the viewport */
+.preview__image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  will-change: transform;
+  transition: none;
 }
 
 .preview__overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
-  pointer-events: none;
+  pointer-events: all;
+  z-index: 10;
 }
 
 .preview__instructions {
@@ -91,57 +121,25 @@
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
   backdrop-filter: blur(8px);
-}
-
-.preview__crosshair {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  margin-left: -20px;
-  margin-top: -20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   pointer-events: none;
 }
 
-.preview__crosshairH,
-.preview__crosshairV {
+/* Frame indicator to show the visible area */
+.preview__frame {
   position: absolute;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-}
-
-.preview__crosshairH {
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 2px;
-  transform: translateY(-50%);
-}
-
-.preview__crosshairV {
-  left: 50%;
-  top: 0;
-  width: 2px;
-  height: 100%;
-  transform: translateX(-50%);
-}
-
-.preview__crosshair::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  inset: 0;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
 }
 
 .modal__positionInfo {
@@ -191,7 +189,7 @@
   }
 
   .preview {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 4 / 3; /* Adjust for mobile */
   }
 
   .modal__footer {
