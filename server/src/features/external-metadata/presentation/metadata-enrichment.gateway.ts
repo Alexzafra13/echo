@@ -166,4 +166,80 @@ export class MetadataEnrichmentGateway implements OnGatewayConnection, OnGateway
       `(${data.failed} failed) in ${data.duration}ms`
     );
   }
+
+  /**
+   * Emit artist images updated event
+   * Used when artist avatar, background, banner, or logo is manually updated
+   */
+  emitArtistImagesUpdated(data: {
+    artistId: string;
+    artistName: string;
+    imageType: 'profile' | 'background' | 'banner' | 'logo';
+    updatedAt: Date;
+  }) {
+    const payload = {
+      ...data,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Emit to all clients
+    this.server.emit('artist:images:updated', payload);
+
+    // Emit to specific artist room (if clients are subscribed)
+    this.server.to(`artist:${data.artistId}`).emit('artist:images:updated', payload);
+
+    this.logger.log(
+      `Artist images updated: ${data.artistName} (${data.imageType}) - notified via WebSocket`
+    );
+  }
+
+  /**
+   * Emit album cover updated event
+   * Used when album cover is manually updated
+   */
+  emitAlbumCoverUpdated(data: {
+    albumId: string;
+    albumName: string;
+    artistId: string;
+    updatedAt: Date;
+  }) {
+    const payload = {
+      ...data,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Emit to all clients
+    this.server.emit('album:cover:updated', payload);
+
+    // Emit to specific album room (if clients are subscribed)
+    this.server.to(`album:${data.albumId}`).emit('album:cover:updated', payload);
+
+    // Also emit to artist room (album cover affects artist detail page)
+    this.server.to(`artist:${data.artistId}`).emit('album:cover:updated', payload);
+
+    this.logger.log(
+      `Album cover updated: ${data.albumName} - notified via WebSocket`
+    );
+  }
+
+  /**
+   * Emit metadata cache invalidation event
+   * Generic event for any metadata changes that require cache refresh
+   */
+  emitCacheInvalidation(data: {
+    entityType: 'artist' | 'album';
+    entityId: string;
+    reason: string;
+  }) {
+    const payload = {
+      ...data,
+      timestamp: new Date().toISOString(),
+    };
+
+    this.server.emit('metadata:cache:invalidate', payload);
+
+    this.logger.debug(
+      `Cache invalidation: ${data.entityType}:${data.entityId} - ${data.reason}`
+    );
+  }
 }

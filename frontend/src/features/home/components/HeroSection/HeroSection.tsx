@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer, Track } from '@features/player';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAlbumTracks } from '../../hooks';
+import { useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import type { HeroSectionProps } from '../../types';
 import styles from './HeroSection.module.css';
 
@@ -23,6 +24,10 @@ import styles from './HeroSection.module.css';
 export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionProps) {
   const [, setLocation] = useLocation();
   const { playQueue } = usePlayer();
+
+  // Real-time synchronization via WebSocket for artist and album metadata
+  useArtistMetadataSync(album.artistId);
+  useAlbumMetadataSync(album.id, album.artistId);
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(album.artistId);

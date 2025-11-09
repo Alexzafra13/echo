@@ -4,3 +4,7 @@ export { useTheme } from './useTheme';
 export { useScannerWebSocket } from './useScannerWebSocket';
 export { useMetadataEnrichment } from './useMetadataEnrichment';
 export type { EnrichmentNotification, EnrichmentProgress } from './useMetadataEnrichment';
+export { useMetadataWebSocket } from './useMetadataWebSocket';
+export type { ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidationEvent } from './useMetadataWebSocket';
+export { useArtistMetadataSync } from './useArtistMetadataSync';
+export { useAlbumMetadataSync } from './useAlbumMetadataSync';

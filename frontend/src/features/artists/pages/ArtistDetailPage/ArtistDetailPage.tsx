@@ -7,7 +7,7 @@ import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvat
 import { useArtist } from '../../hooks';
 import { useAlbums } from '@features/home/hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
-import { useAuth } from '@shared/hooks';
+import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
 import styles from './ArtistDetailPage.module.css';
 
@@ -22,6 +22,10 @@ export default function ArtistDetailPage() {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const { user } = useAuth();
+
+  // Real-time synchronization via WebSocket for artist images and album covers
+  useArtistMetadataSync(id);
+  useAlbumMetadataSync(undefined, id); // Sync albums for this artist
 
   // Fetch artist details
   const { data: artist, isLoading: loadingArtist, error: artistError } = useArtist(id);
@@ -264,9 +268,9 @@ export default function ArtistDetailPage() {
           artistName={artist.name}
           onClose={() => setIsAvatarSelectorOpen(false)}
           onSuccess={() => {
-            // Force hard reload to fetch updated artist data with new image version
-            // The backend automatically includes version timestamp in the URL
-            window.location.reload();
+            // WebSocket will automatically sync the changes via useArtistMetadataSync
+            // No need for window.location.reload() - React Query handles it
+            setIsAvatarSelectorOpen(false);
           }}
         />
       )}
