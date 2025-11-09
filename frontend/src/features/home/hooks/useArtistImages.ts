@@ -25,19 +25,22 @@ interface ImageMetadata {
 
 /**
  * Get artist images URL from artist ID and image type
- * @param bustCache - Si es true, agrega timestamp para evitar caché (default: true si hay ?_refresh en URL)
+ * @param artistId - The artist ID
+ * @param imageType - Type of image (background, banner, logo, profile-small, etc.)
+ * @param updatedAt - Optional timestamp for cache busting (use artist.externalInfoUpdatedAt or artist.updatedAt)
  */
-export function getArtistImageUrl(artistId: string, imageType: string, bustCache?: boolean): string {
+export function getArtistImageUrl(artistId: string, imageType: string, updatedAt?: Date): string {
   const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
   const baseUrl = `${API_BASE_URL}/images/artists/${artistId}/${imageType}`;
 
-  // Auto-detect cache busting from URL params
-  if (bustCache === undefined) {
-    bustCache = new URLSearchParams(window.location.search).has('_refresh');
+  // Add version parameter using updatedAt timestamp for cache busting
+  if (updatedAt) {
+    const version = new Date(updatedAt).getTime();
+    return `${baseUrl}?v=${version}`;
   }
 
-  // Add cache busting parameter if needed
-  if (bustCache) {
+  // Fallback: check for manual refresh parameter in URL
+  if (new URLSearchParams(window.location.search).has('_refresh')) {
     const timestamp = new URLSearchParams(window.location.search).get('_refresh') || Date.now().toString();
     return `${baseUrl}?_t=${timestamp}`;
   }
