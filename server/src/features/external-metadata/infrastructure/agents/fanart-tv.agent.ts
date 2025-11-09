@@ -147,6 +147,75 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
   }
 
   /**
+   * Get ALL album cover variants from Fanart.tv using Artist MBID
+   * Returns all available covers for the album (not just the best one)
+   *
+   * @param artistMbid MusicBrainz Artist ID (required by Fanart.tv)
+   * @param albumMbid MusicBrainz Release-Group ID to filter albums
+   * @param artistName Artist name (for logging)
+   * @param albumName Album name (for logging)
+   * @returns Array of all album cover URLs
+   */
+  async getAllAlbumCoverVariants(
+    artistMbid: string,
+    albumMbid: string,
+    artistName: string,
+    albumName: string
+  ): Promise<string[] | null> {
+    try {
+      await this.rateLimiter.waitForRateLimit(this.name);
+
+      const url = `${this.baseUrl}/${artistMbid}`;
+      this.logger.debug(`Fetching ALL Fanart.tv album covers: ${artistName} - ${albumName} (artist: ${artistMbid}, album: ${albumMbid})`);
+
+      const response = await fetch(url, {
+        headers: {
+          'api-key': this.apiKey,
+          'User-Agent': 'Echo-Music-Server/1.0.0',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          this.logger.debug(`No Fanart.tv data found for artist: ${artistName}`);
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Fanart.tv returns albums in 'albums' object, keyed by release-group MBID
+      if (!data.albums || !data.albums[albumMbid]) {
+        this.logger.debug(`No album data found for: ${artistName} - ${albumName} (${albumMbid})`);
+        return null;
+      }
+
+      const albumData = data.albums[albumMbid];
+
+      // Extract ALL album covers
+      const albumCovers = this.getAllImages(albumData.albumcover);
+
+      if (albumCovers.length === 0) {
+        this.logger.debug(`No album cover images found for: ${artistName} - ${albumName}`);
+        return null;
+      }
+
+      this.logger.log(
+        `Retrieved ${albumCovers.length} album covers from Fanart.tv for: ${artistName} - ${albumName}`
+      );
+
+      return albumCovers;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching Fanart.tv album covers for ${artistName} - ${albumName}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      return null;
+    }
+  }
+
+  /**
    * Get album cover art from Fanart.tv using Artist MBID
    * Fanart.tv organizes all data (including album covers) by artist
    *
@@ -219,6 +288,103 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
       );
       return null;
     }
+  }
+
+  /**
+   * Get ALL artist image variants from Fanart.tv
+   * Returns all available logos, backgrounds, banners, and thumbs (not just the best one)
+   * This allows users to choose from multiple options
+   *
+   * @param mbid MusicBrainz Artist ID (required by Fanart.tv)
+   * @param name Artist name (for logging only)
+   * @returns Array of all available image URLs by type
+   */
+  async getAllArtistImageVariants(
+    mbid: string | null,
+    name: string
+  ): Promise<{
+    artistthumbs: string[];
+    backgrounds: string[];
+    banners: string[];
+    logos: string[];
+  } | null> {
+    if (!mbid) {
+      this.logger.debug(`No MBID provided for artist: ${name}. Fanart.tv requires MBID.`);
+      return null;
+    }
+
+    try {
+      await this.rateLimiter.waitForRateLimit(this.name);
+
+      const url = `${this.baseUrl}/${mbid}`;
+      this.logger.debug(`Fetching ALL Fanart.tv variants for: ${name} (${mbid})`);
+
+      const response = await fetch(url, {
+        headers: {
+          'api-key': this.apiKey,
+          'User-Agent': 'Echo-Music-Server/1.0.0',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          this.logger.debug(`No Fanart.tv data found for: ${name}`);
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Extract ALL images of each type (sorted by likes)
+      const artistthumbs = this.getAllImages(data.artistthumb);
+      const backgrounds = this.getAllImages(data.artistbackground);
+      const banners = this.getAllImages(data.musicbanner);
+
+      // For logos, prefer HD but include regular logos too
+      const hdLogos = this.getAllImages(data.hdmusiclogo);
+      const regularLogos = this.getAllImages(data.musiclogo);
+      const logos = [...hdLogos, ...regularLogos];
+
+      this.logger.log(
+        `Retrieved ALL Fanart.tv variants for: ${name} ` +
+        `(thumbs: ${artistthumbs.length}, backgrounds: ${backgrounds.length}, banners: ${banners.length}, logos: ${logos.length})`
+      );
+
+      return {
+        artistthumbs,
+        backgrounds,
+        banners,
+        logos,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error fetching Fanart.tv variants for ${name}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Get all images from an array, sorted by likes (descending)
+   * @param images Array of image objects from Fanart.tv
+   * @returns Array of image URLs sorted by popularity
+   */
+  private getAllImages(images: any[] | undefined): string[] {
+    if (!images || images.length === 0) {
+      return [];
+    }
+
+    // Sort by likes (descending)
+    const sorted = [...images].sort((a, b) => {
+      const likesA = parseInt(a.likes || '0', 10);
+      const likesB = parseInt(b.likes || '0', 10);
+      return likesB - likesA;
+    });
+
+    // Return all URLs
+    return sorted.map(img => img.url).filter(url => !!url);
   }
 
   /**

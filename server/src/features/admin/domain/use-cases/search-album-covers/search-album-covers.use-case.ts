@@ -55,14 +55,95 @@ export class SearchAlbumCoversUseCase {
         try {
           this.logger.debug(`Trying agent "${agent.name}" for covers`);
 
+          const covers: CoverOption[] = [];
+          const seenDimensions = new Set<string>();
+          const seenUrls = new Set<string>();
+
+          // Special handling for Fanart.tv to get ALL variants
+          if (agent.name === 'fanart' && mbzArtistId && mbzAlbumId) {
+            const fanartAgent = agent as any;
+
+            if (fanartAgent.getAllAlbumCoverVariants) {
+              this.logger.debug(`Getting ALL Fanart.tv album cover variants for ${album.name}`);
+
+              const variants = await fanartAgent.getAllAlbumCoverVariants(
+                mbzArtistId,
+                mbzAlbumId,
+                artistName,
+                album.name
+              );
+
+              if (variants && variants.length > 0) {
+                this.logger.debug(
+                  `Agent "${agent.name}" returned ${variants.length} cover variants to probe`
+                );
+
+                // Process all cover variants
+                for (let i = 0; i < variants.length; i++) {
+                  const url = variants[i];
+
+                  if (seenUrls.has(url)) {
+                    this.logger.debug(
+                      `Skipping duplicate URL from ${agent.name} (variant-${i + 1})`
+                    );
+                    continue;
+                  }
+                  seenUrls.add(url);
+
+                  try {
+                    this.logger.debug(`Probing ${agent.name} (variant-${i + 1}): ${url.substring(0, 80)}...`);
+                    const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
+
+                    if (dimensions) {
+                      const dimensionKey = `${dimensions.width}x${dimensions.height}`;
+
+                      this.logger.debug(
+                        `Got dimensions for ${agent.name} (variant-${i + 1}): ${dimensionKey}`
+                      );
+
+                      if (!seenDimensions.has(dimensionKey)) {
+                        seenDimensions.add(dimensionKey);
+
+                        covers.push({
+                          provider: agent.name,
+                          url: url,
+                          size: `${dimensions.width}x${dimensions.height}`,
+                          width: dimensions.width,
+                          height: dimensions.height,
+                        });
+
+                        this.logger.log(
+                          `✓ Added ${agent.name} cover: ${dimensionKey} from variant-${i + 1}`
+                        );
+                      } else {
+                        this.logger.debug(
+                          `Skipping duplicate dimensions ${dimensionKey} from ${agent.name} (variant-${i + 1})`
+                        );
+                      }
+                    } else {
+                      this.logger.warn(`Could not get dimensions for variant-${i + 1} from ${agent.name}`);
+                    }
+                  } catch (error) {
+                    this.logger.warn(
+                      `Failed to probe variant-${i + 1} from ${agent.name}: ${(error as Error).message}`
+                    );
+                  }
+                }
+
+                this.logger.log(
+                  `Agent "${agent.name}" contributed ${covers.length} unique covers (from ${variants.length} variants)`
+                );
+
+                return covers;
+              }
+            }
+          }
+
+          // Standard handling for other agents (CoverArtArchive, etc.)
           let cover;
 
-          // Fanart.tv requires special handling with artist MBID
-          if (
-            agent.name === 'fanart' &&
-            mbzArtistId &&
-            mbzAlbumId
-          ) {
+          if (agent.name === 'fanart' && mbzArtistId && mbzAlbumId) {
+            // Fallback to single cover if getAllAlbumCoverVariants didn't work
             const fanartAgent = agent as any;
             if (fanartAgent.getAlbumCoverByArtist) {
               cover = await fanartAgent.getAlbumCoverByArtist(
@@ -99,11 +180,7 @@ export class SearchAlbumCoversUseCase {
               `Agent "${agent.name}" returned ${urlsToProbe.length} URLs to probe: ${urlsToProbe.map(u => `${u.sizeLabel} (${u.url.substring(0, 60)}...)`).join(', ')}`
             );
 
-            // Get real dimensions for each URL
-            const covers: CoverOption[] = [];
-            const seenDimensions = new Set<string>(); // Track seen dimensions to filter duplicates
-            const seenUrls = new Set<string>(); // Also track URLs to avoid probing duplicates
-
+            // Process URLs from standard agents
             for (const { url, sizeLabel } of urlsToProbe) {
               // Skip if we've already probed this exact URL
               if (seenUrls.has(url)) {
