@@ -126,6 +126,7 @@ export default function ArtistDetailPage() {
             {/* Background */}
             {backgroundUrl && (
               <div
+                key={backgroundUrl} // Force re-render when URL changes (timestamp updates)
                 className={styles.artistDetailPage__background}
                 style={{
                   backgroundImage: `url(${backgroundUrl})`,
@@ -141,6 +142,7 @@ export default function ArtistDetailPage() {
               <div className={styles.artistDetailPage__avatarContainer}>
                 {profileUrl ? (
                   <img
+                    key={profileUrl} // Force re-render when URL changes (timestamp updates)
                     src={profileUrl}
                     alt={artist.name}
                     className={styles.artistDetailPage__avatar}
