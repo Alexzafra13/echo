@@ -98,10 +98,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  /* Width and height are set inline based on calculated dimensions */
+  /* object-fit removed to allow manual drag positioning */
   will-change: transform;
   transition: none;
 }
