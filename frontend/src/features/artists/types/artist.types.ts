@@ -21,6 +21,7 @@ export interface ArtistDetail extends Artist {
   mbzArtistId?: string;
   externalUrl?: string;
   externalInfoUpdatedAt?: string;
+  backgroundPosition?: string; // CSS background-position for background image
   size: number;
   createdAt: string;
   updatedAt: string;
