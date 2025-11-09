@@ -10,6 +10,7 @@ interface ArtistAvatarSelectorModalProps {
   artistId: string;
   artistName: string;
   defaultType?: 'profile' | 'background' | 'banner' | 'logo'; // Pre-select image type
+  allowedTypes?: Array<'profile' | 'background' | 'banner' | 'logo'>; // Restrict which types can be selected
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -22,6 +23,7 @@ export function ArtistAvatarSelectorModal({
   artistId,
   artistName,
   defaultType,
+  allowedTypes,
   onClose,
   onSuccess,
 }: ArtistAvatarSelectorModalProps) {
@@ -39,10 +41,17 @@ export function ArtistAvatarSelectorModal({
 
   // Get unique providers and types for filters
   const providers = Array.from(new Set(avatars.map((a) => a.provider)));
-  const types = Array.from(new Set(avatars.map((a) => a.type).filter(Boolean)));
+  const allTypes = Array.from(new Set(avatars.map((a) => a.type).filter(Boolean)));
+
+  // Filter types based on allowedTypes prop (if provided)
+  const types = allowedTypes
+    ? allTypes.filter(type => allowedTypes.includes(type as any))
+    : allTypes;
 
   // Filter avatars
   const filteredAvatars = avatars.filter((a) => {
+    // Filter by allowed types (if specified)
+    if (allowedTypes && a.type && !allowedTypes.includes(a.type as any)) return false;
     if (providerFilter && a.provider !== providerFilter) return false;
     if (typeFilter && a.type !== typeFilter) return false;
     return true;
