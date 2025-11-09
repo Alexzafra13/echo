@@ -13,6 +13,9 @@ interface BackgroundPositionModalProps {
   onSuccess?: () => void;
 }
 
+// Scale factor for the preview image (makes it larger than cover size to allow dragging)
+const SCALE_FACTOR = 1.8;
+
 /**
  * BackgroundPositionModal Component
  * Facebook-style drag-to-reposition interface for background images
@@ -65,6 +68,10 @@ export function BackgroundPositionModal({
           renderWidth = containerWidth;
           renderHeight = renderWidth / imageRatio;
         }
+
+        // Scale image larger to provide dragging space
+        renderWidth *= SCALE_FACTOR;
+        renderHeight *= SCALE_FACTOR;
 
         // Save calculated dimensions
         setImageDimensions({ width: renderWidth, height: renderHeight });
@@ -217,14 +224,23 @@ export function BackgroundPositionModal({
     const image = imageRef.current;
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-    const imageWidth = image.clientWidth;
-    const imageHeight = image.clientHeight;
+
+    // Image dimensions in the preview are scaled by SCALE_FACTOR
+    // But CSS background-position assumes cover size, so we need to un-scale
+    const scaledImageWidth = image.clientWidth;
+    const scaledImageHeight = image.clientHeight;
+    const imageWidth = scaledImageWidth / SCALE_FACTOR;
+    const imageHeight = scaledImageHeight / SCALE_FACTOR;
 
     // Calculate percentage position
     // background-position percentage is calculated as:
     // (container - image) * (percent / 100) = offset
     // So: percent = (offset / (container - image)) * 100
     // Since our offset is negative (image position), we need to invert it
+    // We also need to scale the offset since the preview image is larger
+    const scaledOffsetX = imagePosition.x / SCALE_FACTOR;
+    const scaledOffsetY = imagePosition.y / SCALE_FACTOR;
+
     const widthDiff = imageWidth - containerWidth;
     const heightDiff = imageHeight - containerHeight;
 
@@ -233,12 +249,12 @@ export function BackgroundPositionModal({
 
     if (widthDiff > 0) {
       // Image is wider than container
-      xPercent = (Math.abs(imagePosition.x) / widthDiff) * 100;
+      xPercent = (Math.abs(scaledOffsetX) / widthDiff) * 100;
     }
 
     if (heightDiff > 0) {
       // Image is taller than container
-      yPercent = (Math.abs(imagePosition.y) / heightDiff) * 100;
+      yPercent = (Math.abs(scaledOffsetY) / heightDiff) * 100;
     }
 
     // Clamp values
