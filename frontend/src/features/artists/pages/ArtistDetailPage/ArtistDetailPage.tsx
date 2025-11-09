@@ -52,13 +52,33 @@ export default function ArtistDetailPage() {
   const artistAlbums = allAlbumsData?.data.filter(album => album.artistId === id) || [];
 
   // Get background image with tag-based cache busting (V2)
-  const hasBackground = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
-  const backgroundImageType = artistImages?.images.background?.exists ? 'background' : 'banner';
-  const backgroundTag = artistImages?.images.background?.exists
+  // Determine which background image to show (most recently updated)
+  const getBackgroundImageType = (): 'background' | 'banner' | null => {
+    const hasBackground = artistImages?.images.background?.exists;
+    const hasBanner = artistImages?.images.banner?.exists;
+
+    if (!hasBackground && !hasBanner) return null;
+    if (!hasBackground) return 'banner';
+    if (!hasBanner) return 'background';
+
+    // Both exist, use the most recently updated one
+    const bgModified = artistImages?.images.background?.lastModified;
+    const bannerModified = artistImages?.images.banner?.lastModified;
+
+    if (!bgModified && !bannerModified) return 'background'; // Default to background if no timestamps
+    if (!bgModified) return 'banner';
+    if (!bannerModified) return 'background';
+
+    return new Date(bgModified) >= new Date(bannerModified) ? 'background' : 'banner';
+  };
+
+  const backgroundImageType = getBackgroundImageType();
+  const hasBackground = backgroundImageType !== null;
+  const backgroundTag = backgroundImageType === 'background'
     ? artistImages?.images.background?.tag
     : artistImages?.images.banner?.tag;
   const backgroundUrl = hasBackground
-    ? getArtistImageUrl(id!, backgroundImageType, backgroundTag)
+    ? getArtistImageUrl(id!, backgroundImageType!, backgroundTag)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
 
   console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
@@ -140,8 +160,8 @@ export default function ArtistDetailPage() {
 
   // Handler for background/banner (they share the same visual space)
   const handleChangeBackgroundOrBanner = () => {
-    // Pre-select whichever type currently exists (background takes priority)
-    const currentType = artistImages?.images.background?.exists ? 'background' : 'banner';
+    // Pre-select whichever type is currently shown (most recently updated)
+    const currentType = getBackgroundImageType() || 'background';
     setSelectedImageType(currentType);
     setIsImageMenuOpen(false);
     setIsAvatarSelectorOpen(true);
