@@ -33,6 +33,16 @@ export interface ApplyArtistAvatarResponse {
   imagePath?: string;
 }
 
+export interface UpdateBackgroundPositionRequest {
+  artistId: string;
+  backgroundPosition: string;
+}
+
+export interface UpdateBackgroundPositionResponse {
+  success: boolean;
+  message: string;
+}
+
 export const artistAvatarsApi = {
   /**
    * Buscar todas las imágenes disponibles para un artista
@@ -50,6 +60,19 @@ export const artistAvatarsApi = {
   async applyAvatar(request: ApplyArtistAvatarRequest): Promise<ApplyArtistAvatarResponse> {
     const response = await apiClient.post<ApplyArtistAvatarResponse>(
       '/admin/metadata/artist/avatars/apply',
+      request,
+    );
+    return response.data;
+  },
+
+  /**
+   * Actualizar la posición del fondo de un artista
+   */
+  async updateBackgroundPosition(
+    request: UpdateBackgroundPositionRequest,
+  ): Promise<UpdateBackgroundPositionResponse> {
+    const response = await apiClient.patch<UpdateBackgroundPositionResponse>(
+      '/admin/metadata/artist/background-position',
       request,
     );
     return response.data;

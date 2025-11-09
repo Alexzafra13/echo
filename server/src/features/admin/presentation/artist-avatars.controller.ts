@@ -1,12 +1,15 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { SearchArtistAvatarsUseCase } from '../domain/use-cases/search-artist-avatars';
 import { ApplyArtistAvatarUseCase } from '../domain/use-cases/apply-artist-avatar';
+import { UpdateArtistBackgroundPositionUseCase } from '../domain/use-cases/update-artist-background-position';
 import { SearchArtistAvatarsResponseDto } from './dtos/search-artist-avatars.response.dto';
 import { ApplyArtistAvatarRequestDto } from './dtos/apply-artist-avatar.request.dto';
 import { ApplyArtistAvatarResponseDto } from './dtos/apply-artist-avatar.response.dto';
+import { UpdateArtistBackgroundPositionRequestDto } from './dtos/update-artist-background-position.request.dto';
+import { UpdateArtistBackgroundPositionResponseDto } from './dtos/update-artist-background-position.response.dto';
 
 @ApiTags('Admin - Artist Avatars')
 @ApiBearerAuth()
@@ -16,6 +19,7 @@ export class ArtistAvatarsController {
   constructor(
     private readonly searchArtistAvatars: SearchArtistAvatarsUseCase,
     private readonly applyArtistAvatar: ApplyArtistAvatarUseCase,
+    private readonly updateArtistBackgroundPosition: UpdateArtistBackgroundPositionUseCase,
   ) {}
 
   @Get(':artistId/avatars/search')
@@ -47,5 +51,21 @@ export class ArtistAvatarsController {
       type: body.type,
     });
     return ApplyArtistAvatarResponseDto.fromDomain(result);
+  }
+
+  @Patch('background-position')
+  @ApiOperation({
+    summary: 'Update artist background position',
+    description:
+      'Updates the CSS background-position for an artist background image',
+  })
+  async updateBackgroundPosition(
+    @Body() body: UpdateArtistBackgroundPositionRequestDto,
+  ): Promise<UpdateArtistBackgroundPositionResponseDto> {
+    const result = await this.updateArtistBackgroundPosition.execute({
+      artistId: body.artistId,
+      backgroundPosition: body.backgroundPosition,
+    });
+    return UpdateArtistBackgroundPositionResponseDto.fromDomain(result);
   }
 }
