@@ -75,66 +75,22 @@ export class SearchAlbumCoversUseCase {
 
               if (variants && variants.length > 0) {
                 this.logger.debug(
-                  `Agent "${agent.name}" returned ${variants.length} cover variants to probe`
+                  `Agent "${agent.name}" returned ${variants.length} cover variants`
                 );
 
-                // Process variants in parallel chunks for better performance
-                const chunkSize = 5; // Process 5 variants at a time
-                for (let i = 0; i < variants.length; i += chunkSize) {
-                  const chunk = variants.slice(i, i + chunkSize);
-
-                  await Promise.all(
-                    chunk.map(async (url, idx) => {
-                      const variantIndex = i + idx + 1;
-
-                      if (seenUrls.has(url)) {
-                        this.logger.debug(
-                          `Skipping duplicate URL from ${agent.name} (variant-${variantIndex})`
-                        );
-                        return;
-                      }
-                      seenUrls.add(url);
-
-                      try {
-                        this.logger.debug(`Probing ${agent.name} (variant-${variantIndex}): ${url.substring(0, 80)}...`);
-                        const dimensions = await this.imageDownload.getImageDimensionsFromUrl(url);
-
-                        if (dimensions) {
-                          const dimensionKey = `${dimensions.width}x${dimensions.height}`;
-
-                          this.logger.debug(
-                            `Got dimensions for ${agent.name} (variant-${variantIndex}): ${dimensionKey}`
-                          );
-
-                          if (!seenDimensions.has(dimensionKey)) {
-                            seenDimensions.add(dimensionKey);
-
-                            covers.push({
-                              provider: agent.name,
-                              url: url,
-                              size: `${dimensions.width}x${dimensions.height}`,
-                              width: dimensions.width,
-                              height: dimensions.height,
-                            });
-
-                            this.logger.log(
-                              `✓ Added ${agent.name} cover: ${dimensionKey} from variant-${variantIndex}`
-                            );
-                          } else {
-                            this.logger.debug(
-                              `Skipping duplicate dimensions ${dimensionKey} from ${agent.name} (variant-${variantIndex})`
-                            );
-                          }
-                        } else {
-                          this.logger.warn(`Could not get dimensions for variant-${variantIndex} from ${agent.name}`);
-                        }
-                      } catch (error) {
-                        this.logger.warn(
-                          `Failed to probe variant-${variantIndex} from ${agent.name}: ${(error as Error).message}`
-                        );
-                      }
-                    })
-                  );
+                // Use estimated dimensions like Jellyfin does (no probing for performance)
+                // Fanart.tv album covers are typically 1000x1000
+                for (const url of variants) {
+                  if (!seenUrls.has(url)) {
+                    seenUrls.add(url);
+                    covers.push({
+                      provider: agent.name,
+                      url: url,
+                      size: '1000x1000 (est.)',
+                      width: 1000,
+                      height: 1000,
+                    });
+                  }
                 }
 
                 this.logger.log(

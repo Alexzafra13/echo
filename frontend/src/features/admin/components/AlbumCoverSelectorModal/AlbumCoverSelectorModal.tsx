@@ -206,7 +206,7 @@ export function AlbumCoverSelectorModal({
                       </span>
                       {cover.width && cover.height && (
                         <span className={styles.coverResolution}>
-                          {cover.width}×{cover.height} px
+                          {cover.width}×{cover.height} px{cover.provider === 'fanart' ? ' (est.)' : ''}
                         </span>
                       )}
                     </div>

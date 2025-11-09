@@ -263,7 +263,7 @@ export function ArtistAvatarSelectorModal({
                       </span>
                       {avatar.width && avatar.height && (
                         <span className={styles.resolution}>
-                          {avatar.width}×{avatar.height} px
+                          {avatar.width}×{avatar.height} px{avatar.provider === 'fanart' ? ' (est.)' : ''}
                         </span>
                       )}
                     </div>
