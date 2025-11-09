@@ -58,14 +58,21 @@ export function useMetadataWebSocket(): Socket | null {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
+    console.log('[useMetadataWebSocket] Auth state:', { isAuthenticated, hasToken: !!token });
+
     if (!isAuthenticated || !token) {
+      console.log('[useMetadataWebSocket] Not authenticated or no token, skipping WebSocket connection');
       setSocket(null);
       return;
     }
 
+    console.log('[useMetadataWebSocket] Connecting to metadata namespace...');
+
     // Connect to metadata namespace
     const wsService = WebSocketService.getInstance();
     const metadataSocket = wsService.connect('metadata', token);
+
+    console.log('[useMetadataWebSocket] Socket instance created:', !!metadataSocket);
 
     setSocket(metadataSocket);
 
@@ -73,6 +80,7 @@ export function useMetadataWebSocket(): Socket | null {
     return () => {
       // Don't disconnect immediately - other components might be using it
       // WebSocket service handles connection pooling
+      console.log('[useMetadataWebSocket] Component unmounting (connection kept alive for other components)');
     };
   }, [token, isAuthenticated]);
 
