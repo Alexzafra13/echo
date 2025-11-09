@@ -57,7 +57,7 @@ export default function HomePage() {
     : featuredAlbum;
 
   // Calculate dynamic grid dimensions (exactly 2 rows)
-  const { itemsPerPage } = useGridDimensions({
+  const { itemsPerPage, columns, rows } = useGridDimensions({
     maxRows: 2,
     headerHeight: 450, // Hero section + header height
   });
@@ -65,6 +65,14 @@ export default function HomePage() {
   // Display albums based on calculated grid size (2 rows that fill the screen width)
   const displayedRecentAlbums = recentAlbums?.slice(0, itemsPerPage) || [];
   const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
+
+  console.log('🏠 HomePage - Mostrando álbumes:', {
+    totalDisponibles: recentAlbums?.length,
+    columnas: columns,
+    filas: rows,
+    itemsPerPage,
+    mostrandoAhora: displayedRecentAlbums.length
+  });
 
   return (
     <div className={styles.homePage}>
