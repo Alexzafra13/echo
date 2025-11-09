@@ -21,10 +21,14 @@ export function useApplyAlbumCover() {
   return useMutation({
     mutationFn: (request: ApplyAlbumCoverRequest) =>
       albumCoversApi.applyCover(request),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidar queries relacionadas para refrescar las imágenes
-      queryClient.invalidateQueries({ queryKey: ['albums'] });
-      queryClient.invalidateQueries({ queryKey: ['album'] });
+      // IMPORTANTE: WebSocket ya emitirá un evento que invalidará automáticamente,
+      // pero hacemos invalidación local inmediata para feedback instantáneo
+      queryClient.invalidateQueries({ queryKey: ['albums', variables.albumId] });
+      queryClient.invalidateQueries({ queryKey: ['albums'] }); // Lista de álbumes
+      // También invalidar artista (los álbumes aparecen en páginas de artistas)
+      // El artistId se invalida automáticamente via WebSocket event
     },
   });
 }
