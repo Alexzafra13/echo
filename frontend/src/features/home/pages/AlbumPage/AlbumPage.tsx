@@ -6,6 +6,7 @@ import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../comp
 import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSelectorModal';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { usePlayer, Track } from '@features/player';
+import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -23,7 +24,11 @@ export default function AlbumPage() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
+  const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const { playQueue, currentTrack } = usePlayer();
+
+  // Real-time synchronization via WebSocket for album cover
+  useAlbumMetadataSync(id);
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
@@ -37,6 +42,20 @@ export default function AlbumPage() {
       });
     }
   }, [album?.coverImage]);
+
+  // Load cover dimensions when modal opens
+  useEffect(() => {
+    if (isImageModalOpen && album?.coverImage) {
+      const coverUrl = getCoverUrl(album.coverImage);
+      const img = new window.Image();
+      img.onload = () => {
+        setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.src = coverUrl;
+    } else if (!isImageModalOpen) {
+      setCoverDimensions(null); // Reset when modal closes
+    }
+  }, [isImageModalOpen, album?.coverImage]);
 
   const handleArtistClick = () => {
     if (album?.artistId) {
@@ -239,6 +258,11 @@ export default function AlbumPage() {
               className={styles.albumPage__imageModalImage}
               onError={handleImageError}
             />
+            {coverDimensions && (
+              <div className={styles.albumPage__imageDimensions}>
+                {coverDimensions.width} × {coverDimensions.height} px
+              </div>
+            )}
           </div>
         </div>
       )}
