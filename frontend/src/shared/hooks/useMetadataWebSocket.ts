@@ -73,8 +73,11 @@ export function useMetadataWebSocket(): Socket | null {
     const metadataSocket = wsService.connect('metadata', token);
 
     console.log('[useMetadataWebSocket] Socket instance created:', !!metadataSocket);
+    console.log('[useMetadataWebSocket] Socket connected status:', metadataSocket.connected);
+    console.log('[useMetadataWebSocket] Socket ID:', metadataSocket.id);
 
     setSocket(metadataSocket);
+    console.log('[useMetadataWebSocket] ✅ Socket saved to state');
 
     // Cleanup on unmount
     return () => {
@@ -84,5 +87,6 @@ export function useMetadataWebSocket(): Socket | null {
     };
   }, [token, isAuthenticated]);
 
+  console.log('[useMetadataWebSocket] Returning socket:', !!socket);
   return socket;
 }
