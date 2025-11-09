@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
@@ -22,6 +23,7 @@ export class ApplyAlbumCoverUseCase {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly settings: SettingsService,
@@ -105,6 +107,18 @@ export class ApplyAlbumCoverUseCase {
     // Invalidate server-side image cache to force reload of new cover
     this.imageService.invalidateAlbumCache(input.albumId);
     this.logger.debug(`Invalidated image cache for album ${input.albumId}`);
+
+    // CRITICAL: Invalidate Redis cache to ensure GET requests return fresh data
+    const albumCacheKey = `album:${input.albumId}`;
+    await this.redis.del(albumCacheKey);
+    this.logger.debug(`Invalidated Redis cache for key: ${albumCacheKey}`);
+
+    // Also invalidate artist cache if album has artistId (artist queries may reference album data)
+    if (album.artistId) {
+      const artistCacheKey = `artist:${album.artistId}`;
+      await this.redis.del(artistCacheKey);
+      this.logger.debug(`Invalidated Redis cache for key: ${artistCacheKey}`);
+    }
 
     // Get updated album data for WebSocket notification
     const finalAlbum = await this.prisma.album.findUnique({
