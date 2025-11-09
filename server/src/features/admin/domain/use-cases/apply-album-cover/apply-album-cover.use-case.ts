@@ -4,6 +4,7 @@ import { ImageDownloadService } from '@features/external-metadata/infrastructure
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
+import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -25,6 +26,7 @@ export class ApplyAlbumCoverUseCase {
     private readonly storage: StorageService,
     private readonly settings: SettingsService,
     private readonly imageService: ImageService,
+    private readonly metadataGateway: MetadataEnrichmentGateway,
   ) {}
 
   async execute(input: ApplyAlbumCoverInput): Promise<ApplyAlbumCoverOutput> {
@@ -103,6 +105,27 @@ export class ApplyAlbumCoverUseCase {
     // Invalidate server-side image cache to force reload of new cover
     this.imageService.invalidateAlbumCache(input.albumId);
     this.logger.debug(`Invalidated image cache for album ${input.albumId}`);
+
+    // Get updated album data for WebSocket notification
+    const finalAlbum = await this.prisma.album.findUnique({
+      where: { id: input.albumId },
+      select: {
+        id: true,
+        name: true,
+        artistId: true,
+        externalInfoUpdatedAt: true,
+      },
+    });
+
+    // Emit WebSocket event to notify all connected clients about the update
+    if (finalAlbum) {
+      this.metadataGateway.emitAlbumCoverUpdated({
+        albumId: input.albumId,
+        albumName: album.name,
+        artistId: finalAlbum.artistId,
+        updatedAt: finalAlbum.externalInfoUpdatedAt || new Date(),
+      });
+    }
 
     return {
       success: true,

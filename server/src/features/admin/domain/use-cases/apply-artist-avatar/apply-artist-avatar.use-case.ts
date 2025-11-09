@@ -3,6 +3,7 @@ import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
+import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -23,6 +24,7 @@ export class ApplyArtistAvatarUseCase {
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
+    private readonly metadataGateway: MetadataEnrichmentGateway,
   ) {}
 
   async execute(input: ApplyArtistAvatarInput): Promise<ApplyArtistAvatarOutput> {
@@ -148,6 +150,19 @@ export class ApplyArtistAvatarUseCase {
     // Invalidate server-side image cache to force reload of new images
     this.imageService.invalidateArtistCache(input.artistId);
     this.logger.debug(`Invalidated image cache for artist ${input.artistId}`);
+
+    // Get updated artist data to return and for WebSocket notification
+    const finalArtist = await this.prisma.artist.findUnique({
+      where: { id: input.artistId },
+    });
+
+    // Emit WebSocket event to notify all connected clients about the update
+    this.metadataGateway.emitArtistImagesUpdated({
+      artistId: input.artistId,
+      artistName: artist.name,
+      imageType: input.type,
+      updatedAt: finalArtist?.externalInfoUpdatedAt || new Date(),
+    });
 
     return {
       success: true,
