@@ -1,9 +1,10 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen, Image, MoreVertical, ImageIcon, Frame, Layers, Tag } from 'lucide-react';
+import { BookOpen, Image, MoreVertical, ImageIcon, Frame, Layers, Tag, Move } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
+import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
 import { useArtist } from '../../hooks';
 import { useAlbums } from '@features/home/hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
@@ -21,6 +22,7 @@ export default function ArtistDetailPage() {
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
+  const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
   const [selectedImageType, setSelectedImageType] = useState<'profile' | 'background' | 'banner' | 'logo'>('profile');
   const [isImageMenuOpen, setIsImageMenuOpen] = useState(false);
   const [imageRenderKey, setImageRenderKey] = useState(0);
@@ -223,9 +225,9 @@ export default function ArtistDetailPage() {
                 className={styles.artistDetailPage__background}
                 style={{
                   backgroundImage: `url(${backgroundUrl})`,
-                  // If using Fanart background (artist photo), show top portion for faces
-                  // If using album cover, keep centered
-                  backgroundPosition: hasBackground ? 'center top' : 'center center',
+                  // Use saved position, or default based on image type
+                  backgroundPosition: artist?.backgroundPosition ||
+                    (hasBackground ? 'center top' : 'center center'),
                 }}
               />
             )}
@@ -271,6 +273,18 @@ export default function ArtistDetailPage() {
                           <Frame size={14} />
                           <span>Cambiar fondo/banner</span>
                         </button>
+                        {backgroundUrl && hasBackground && (
+                          <button
+                            className={styles.artistDetailPage__imageMenuItem}
+                            onClick={() => {
+                              setIsImageMenuOpen(false);
+                              setIsBackgroundPositionModalOpen(true);
+                            }}
+                          >
+                            <Move size={14} />
+                            <span>Ajustar posición</span>
+                          </button>
+                        )}
                         <button
                           className={styles.artistDetailPage__imageMenuItem}
                           onClick={() => handleChangeImage('logo')}
@@ -410,6 +424,21 @@ export default function ArtistDetailPage() {
             // WebSocket will automatically sync the changes via useArtistMetadataSync
             // No need for window.location.reload() - React Query handles it
             setIsAvatarSelectorOpen(false);
+          }}
+        />
+      )}
+
+      {/* Background Position Adjustment Modal */}
+      {isBackgroundPositionModalOpen && artist && backgroundUrl && (
+        <BackgroundPositionModal
+          artistId={artist.id}
+          artistName={artist.name}
+          backgroundUrl={backgroundUrl}
+          initialPosition={artist.backgroundPosition}
+          onClose={() => setIsBackgroundPositionModalOpen(false)}
+          onSuccess={() => {
+            // WebSocket will automatically sync the changes
+            setIsBackgroundPositionModalOpen(false);
           }}
         />
       )}
