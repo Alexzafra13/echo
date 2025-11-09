@@ -69,27 +69,66 @@ export class ApplyAlbumCoverUseCase {
       true,
     );
 
-    let coverPath: string;
+    let targetFolder: string;
 
     if (saveInFolder && album.tracks.length > 0) {
       // Save in album folder
-      const albumFolder = path.dirname(album.tracks[0].path);
-      coverPath = path.join(albumFolder, 'cover.jpg');
+      targetFolder = path.dirname(album.tracks[0].path);
     } else {
       // Save to metadata storage
-      const metadataPath = await this.storage.getAlbumMetadataPath(
-        input.albumId,
-      );
-      coverPath = path.join(metadataPath, 'cover.jpg');
+      targetFolder = await this.storage.getAlbumMetadataPath(input.albumId);
     }
 
-    // Download the cover
+    // Download to temporary path first
+    const tempPath = path.join(targetFolder, `cover-temp-${Date.now()}.jpg`);
+
     try {
-      await this.imageDownload.downloadAndSave(input.coverUrl, coverPath);
-      this.logger.log(`Downloaded cover to: ${coverPath}`);
+      await this.imageDownload.downloadAndSave(input.coverUrl, tempPath);
+      this.logger.debug(`Downloaded cover to temp path: ${tempPath}`);
+
+      // Get image dimensions using probe-image-size
+      const dimensions = await this.imageDownload.getImageDimensionsFromFile(tempPath);
+
+      if (!dimensions) {
+        throw new Error('Failed to detect image dimensions');
+      }
+
+      const width = dimensions.width;
+      const height = dimensions.height;
+
+      this.logger.log(
+        `Cover dimensions: ${width}x${height}`,
+      );
+
+      // Generate final filename with dimensions
+      const finalFilename = `cover-${width}x${height}.jpg`;
+      const coverPath = path.join(targetFolder, finalFilename);
+
+      // If a cover with these exact dimensions already exists, delete it
+      try {
+        await fs.access(coverPath);
+        await fs.unlink(coverPath);
+        this.logger.debug(`Deleted existing cover with same dimensions: ${coverPath}`);
+      } catch (error) {
+        // File doesn't exist, which is fine
+      }
+
+      // Rename temp file to final name
+      await fs.rename(tempPath, coverPath);
+      this.logger.log(`Saved cover to: ${coverPath} (${width}x${height})`);
+
+      // Store the final path for database update
+      var finalCoverPath = coverPath;
     } catch (error) {
+      // Clean up temp file on error
+      try {
+        await fs.unlink(tempPath);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+
       this.logger.error(
-        `Failed to download cover: ${(error as Error).message}`,
+        `Failed to download or process cover: ${(error as Error).message}`,
       );
       throw error;
     }
@@ -98,7 +137,7 @@ export class ApplyAlbumCoverUseCase {
     await this.prisma.album.update({
       where: { id: input.albumId },
       data: {
-        externalCoverPath: coverPath,
+        externalCoverPath: finalCoverPath,
         externalCoverSource: input.provider,
         externalInfoUpdatedAt: new Date(),
       },
@@ -144,7 +183,7 @@ export class ApplyAlbumCoverUseCase {
     return {
       success: true,
       message: `Cover successfully applied from ${input.provider}`,
-      coverPath,
+      coverPath: finalCoverPath,
     };
   }
 }
