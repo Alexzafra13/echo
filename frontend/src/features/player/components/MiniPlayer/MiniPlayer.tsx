@@ -1,4 +1,5 @@
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio, Pin, PinOff } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
@@ -9,6 +10,7 @@ interface MiniPlayerProps {
 }
 
 export function MiniPlayer({ isVisible }: MiniPlayerProps) {
+  const [isPinned, setIsPinned] = useState(false);
   const {
     currentTrack,
     currentRadioStation,
@@ -59,8 +61,24 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     ? currentRadioStation.favicon || '/images/covers/placeholder.jpg'
     : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
 
+  const togglePin = () => {
+    setIsPinned(!isPinned);
+  };
+
+  // Mostrar siempre si está pinned, sino depende de isVisible
+  const shouldShow = isPinned || isVisible;
+
   return (
-    <div className={`${styles.miniPlayer} ${isVisible ? styles.miniPlayer_visible : ''}`}>
+    <div className={`${styles.miniPlayer} ${shouldShow ? styles.miniPlayer_visible : ''}`}>
+      {/* Pin button */}
+      <button
+        className={`${styles.pinButton} ${isPinned ? styles.pinButton_active : ''}`}
+        onClick={togglePin}
+        title={isPinned ? 'Desfijar reproductor' : 'Fijar reproductor'}
+      >
+        {isPinned ? <Pin size={12} /> : <PinOff size={12} />}
+      </button>
+
       {/* Cover con animación de reproducción */}
       <div className={styles.coverContainer}>
         <img
@@ -69,6 +87,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
           className={styles.cover}
           onError={handleImageError}
         />
+        {/* Animación EQ en la parte inferior del disco */}
         {isPlaying && (
           <div className={styles.playingIndicator}>
             <div className={`${styles.bar} ${styles.bar1}`}></div>
@@ -86,16 +105,55 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         <div className={styles.artist}>{displayArtist}</div>
       </div>
 
-      {/* Controls */}
+      {/* Controls reorganizados */}
       <div className={styles.controls}>
-        {/* Volume */}
+        {/* Play controls centrados */}
+        <div className={styles.playControls}>
+          {!isRadioMode && (
+            <button
+              className={styles.controlBtn}
+              onClick={playPrevious}
+              title="Anterior"
+            >
+              <SkipBack size={16} />
+            </button>
+          )}
+
+          <button
+            className={styles.playBtn}
+            onClick={togglePlayPause}
+            title={isPlaying ? 'Pausar' : 'Reproducir'}
+          >
+            {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+          </button>
+
+          {!isRadioMode && (
+            <button
+              className={styles.controlBtn}
+              onClick={playNext}
+              title="Siguiente"
+            >
+              <SkipForward size={16} />
+            </button>
+          )}
+
+          {/* Indicador EN VIVO para radio */}
+          {isRadioMode && (
+            <div className={styles.liveIndicator}>
+              <Radio size={12} className={styles.liveIcon} />
+              <span className={styles.liveText}>EN VIVO</span>
+            </div>
+          )}
+        </div>
+
+        {/* Volume control a la derecha con hover desplegable */}
         <div className={styles.volumeContainer}>
           <button
             className={styles.volumeButton}
             onClick={toggleMute}
             title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
-            {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
           <div className={styles.volumeSliderContainer}>
             <div className={styles.volumeSlider}>
@@ -115,42 +173,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
             />
           </div>
         </div>
-
-        {/* Play controls */}
-        {!isRadioMode && (
-          <button
-            className={styles.controlBtn}
-            onClick={playPrevious}
-            title="Anterior"
-          >
-            <SkipBack size={18} />
-          </button>
-        )}
-
-        <button
-          className={styles.playBtn}
-          onClick={togglePlayPause}
-          title={isPlaying ? 'Pausar' : 'Reproducir'}
-        >
-          {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-        </button>
-
-        {!isRadioMode && (
-          <button
-            className={styles.controlBtn}
-            onClick={playNext}
-            title="Siguiente"
-          >
-            <SkipForward size={18} />
-          </button>
-        )}
-
-        {/* Indicador EN VIVO para radio */}
-        {isRadioMode && (
-          <div className={styles.liveIndicator}>
-            <Radio size={14} className={styles.liveIcon} />
-          </div>
-        )}
       </div>
 
       {/* Progress bar - Solo para tracks */}
