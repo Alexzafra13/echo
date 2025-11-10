@@ -41,10 +41,13 @@ export function AudioPlayer() {
   const { preference, setPreference } = usePlayerPreference();
 
   // Lógica de visibilidad basada en preferencia
+  // - 'footer': siempre visible en footer (shouldHide = false)
+  // - 'sidebar': siempre oculto, usa mini-player en sidebar (shouldHide = true)
+  // - 'dynamic': ocultar cuando hay scroll (shouldHide = isMiniMode)
   const shouldHide =
     preference === 'footer' ? false :
     preference === 'sidebar' ? true :
-    isMiniMode; // dynamic
+    isMiniMode;
 
   // Controlar padding-bottom del body según si el mini-player está activo
   useEffect(() => {
@@ -135,39 +138,6 @@ export function AudioPlayer() {
 
   return (
     <div className={`${styles.player} ${shouldHide ? styles.player_hidden : ''}`}>
-      {/* Menú de opciones */}
-      <div className={styles.menuContainer} ref={menuRef}>
-        <button
-          className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          title="Opciones del reproductor"
-        >
-          <MoreVertical size={16} />
-        </button>
-
-        {isMenuOpen && (
-          <div className={styles.menuDropdown}>
-            <button
-              className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
-              onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
-            >
-              Posición dinámica
-            </button>
-            <button
-              className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
-              onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
-            >
-              Reproductor lateral
-            </button>
-            <button
-              className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
-              onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
-            >
-              Reproductor por defecto
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
@@ -291,23 +261,68 @@ export function AudioPlayer() {
           </div>
         )}
 
-        <button
-          className={styles.volumeButton}
-          onClick={toggleMute}
-          title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
-        >
-          {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={handleVolumeChange}
-          className={styles.volumeSlider}
-          style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
-        />
+        {/* Volume container con slider vertical */}
+        <div className={styles.volumeContainer}>
+          <button
+            className={styles.volumeButton}
+            onClick={toggleMute}
+            title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
+          >
+            {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+          <div className={styles.volumeSliderContainer}>
+            <div className={styles.volumeSlider}>
+              <div
+                className={styles.volumeFill}
+                style={{ height: `${volume * 100}%` }}
+              />
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className={styles.volumeInput}
+              orient="vertical"
+            />
+          </div>
+        </div>
+
+        {/* Menú de opciones junto al volumen */}
+        <div className={styles.menuContainer} ref={menuRef}>
+          <button
+            className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            title="Opciones del reproductor"
+          >
+            <MoreVertical size={16} />
+          </button>
+
+          {isMenuOpen && (
+            <div className={styles.menuDropdown}>
+              <button
+                className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
+                onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
+              >
+                Posición dinámica
+              </button>
+              <button
+                className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
+                onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
+              >
+                Reproductor lateral
+              </button>
+              <button
+                className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
+                onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
+              >
+                Reproductor por defecto
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
