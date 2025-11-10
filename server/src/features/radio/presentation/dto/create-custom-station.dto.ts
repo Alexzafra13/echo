@@ -6,11 +6,11 @@ import { IsNotEmpty, IsString, IsUrl, IsOptional, IsNumber } from 'class-validat
 export class CreateCustomStationDto {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  name!: string;
 
   @IsNotEmpty()
   @IsUrl()
-  url: string;
+  url!: string;
 
   @IsOptional()
   @IsUrl()

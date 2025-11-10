@@ -4,10 +4,10 @@ import { RadioStation } from '../../domain/entities/radio-station.entity';
  * DTO de respuesta para RadioStation
  */
 export class RadioStationResponseDto {
-  id: string;
+  id!: string;
   stationUuid?: string;
-  name: string;
-  url: string;
+  name!: string;
+  url!: string;
   urlResolved?: string;
   homepage?: string;
   favicon?: string;
@@ -21,10 +21,10 @@ export class RadioStationResponseDto {
   votes?: number;
   clickCount?: number;
   lastCheckOk?: boolean;
-  source: 'radio-browser' | 'custom';
-  isFavorite: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  source!: 'radio-browser' | 'custom';
+  isFavorite!: boolean;
+  createdAt!: Date;
+  updatedAt!: Date;
 
   static fromDomain(station: RadioStation): RadioStationResponseDto {
     return {
