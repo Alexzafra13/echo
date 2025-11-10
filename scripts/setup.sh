@@ -88,6 +88,19 @@ check_command() {
   fi
 }
 
+# Detect docker compose command (new: "docker compose" vs old: "docker-compose")
+get_docker_compose_cmd() {
+  if docker compose version &> /dev/null 2>&1; then
+    echo "docker compose"
+  elif command -v docker-compose &> /dev/null; then
+    echo "docker-compose"
+  else
+    echo ""
+  fi
+}
+
+DOCKER_COMPOSE_CMD=$(get_docker_compose_cmd)
+
 # Start
 print_header "ECHO MONOREPO - Instalación Inicial"
 
@@ -132,6 +145,15 @@ if [ "$SKIP_DOCKER" = false ]; then
     # Verificar que Docker esté corriendo
     if docker ps &> /dev/null; then
       print_success "Docker está corriendo"
+
+      # Verificar docker compose
+      if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+        print_error "Docker Compose no está disponible"
+        print_info "Instala con: sudo apt install docker-compose-plugin (Ubuntu) o usa Docker Desktop"
+        HAS_ERROR=true
+      else
+        print_success "Docker Compose detectado: $DOCKER_COMPOSE_CMD"
+      fi
     else
       print_warning "Docker NO está corriendo. Inícialo antes de continuar."
       HAS_ERROR=true
@@ -218,9 +240,9 @@ if [ "$SKIP_DOCKER" = false ] && [ "$SKIP_BACKEND" = false ]; then
 
   cd server
 
-  print_info "Ejecutando: docker-compose up -d"
+  print_info "Ejecutando: $DOCKER_COMPOSE_CMD up -d"
 
-  if docker-compose up -d; then
+  if $DOCKER_COMPOSE_CMD up -d; then
     print_success "Servicios Docker levantados"
 
     # Esperar a que PostgreSQL esté listo
