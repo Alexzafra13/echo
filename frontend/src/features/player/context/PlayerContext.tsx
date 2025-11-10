@@ -144,6 +144,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     } else if (state.currentTrack && !state.isRadioMode) {
       // Resume current track (only if not in radio mode)
       audioRef.current.play();
+    } else if (state.isRadioMode && state.currentRadioStation) {
+      // Resume radio station
+      audioRef.current.play();
     }
   };
 

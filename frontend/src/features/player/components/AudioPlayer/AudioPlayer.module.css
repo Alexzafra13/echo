@@ -17,6 +17,16 @@
   z-index: var(--z-fixed);
   backdrop-filter: blur(var(--blur-xl));
   box-shadow: var(--shadow-2xl);
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+
+.player_hidden {
+  transform: translateY(120px) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ===== Track Info ===== */
