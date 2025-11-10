@@ -29,41 +29,93 @@
   pointer-events: none;
 }
 
-/* ===== Pin Button ===== */
+/* ===== Menu Container ===== */
 
-.pinButton {
+.menuContainer {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  top: 8px;
+  right: var(--space-4);
+  z-index: 25;
+}
+
+.menuButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
   color: var(--text-secondary);
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  z-index: 20;
-  opacity: 0.8;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  opacity: 0.7;
 }
 
-.pinButton:hover {
+.menuButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.menuButton_active {
   opacity: 1;
   background: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.pinButton_active {
-  opacity: 1;
-  background: rgba(237, 104, 66, 0.2);
-  border-color: var(--color-primary-500);
+.menuDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: rgba(20, 20, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 180px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  animation: menuFadeIn 0.15s ease;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuOption {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menuOption:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.menuOption_active {
+  background: rgba(237, 104, 66, 0.15);
   color: var(--color-primary-500);
-  box-shadow: 0 0 12px rgba(237, 104, 66, 0.3);
+}
+
+.menuOption_active:hover {
+  background: rgba(237, 104, 66, 0.2);
 }
 
 /* ===== Track Info ===== */
