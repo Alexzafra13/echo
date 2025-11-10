@@ -5,9 +5,10 @@
   left: 0;
   bottom: 0;
   width: 100%;
+  max-height: 280px; /* Limitar altura para no tapar menú */
   background: linear-gradient(to bottom, rgba(20, 20, 20, 0.95), rgba(10, 10, 10, 0.95));
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: var(--space-3);
+  padding: var(--space-2);
   z-index: 10;
   backdrop-filter: blur(var(--blur-xl));
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
@@ -27,34 +28,37 @@
 
 .pinButton {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-tertiary);
-  padding: 4px;
-  border-radius: 4px;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+  padding: 6px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   z-index: 20;
-  opacity: 0.5;
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .pinButton:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
-  transform: scale(1.1);
+  transform: scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .pinButton_active {
   opacity: 1;
-  background: rgba(237, 104, 66, 0.15);
+  background: rgba(237, 104, 66, 0.2);
   border-color: var(--color-primary-500);
   color: var(--color-primary-500);
+  box-shadow: 0 0 12px rgba(237, 104, 66, 0.3);
 }
 
 /* ===== Cover Container ===== */
@@ -297,10 +301,12 @@
 
 .volumeSliderContainer {
   position: absolute;
-  right: 100%;
-  margin-right: 4px;
-  width: 60px;
-  height: 20px;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  width: 4px;
+  height: 60px;
   display: flex;
   align-items: center;
   opacity: 0;
@@ -315,8 +321,8 @@
 
 .volumeSlider {
   position: absolute;
-  width: 100%;
-  height: 3px;
+  width: 4px;
+  height: 100%;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   overflow: hidden;
@@ -324,9 +330,11 @@
 }
 
 .volumeFill {
-  height: 100%;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
   background: var(--color-primary-500);
-  transition: width 0.1s ease;
+  transition: height 0.1s ease;
 }
 
 .volumeInput {
@@ -334,8 +342,10 @@
   width: 100%;
   height: 100%;
   background: transparent;
-  -webkit-appearance: none;
-  appearance: none;
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  writing-mode: bt-lr; /* IE */
+  -webkit-writing-mode: bt-lr;
   outline: none;
   cursor: pointer;
   margin: 0;
@@ -345,32 +355,32 @@
 .volumeInput::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: white;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   transition: transform 0.1s ease;
 }
 
 .volumeInput::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.3);
 }
 
 .volumeInput::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: white;
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   transition: transform 0.1s ease;
 }
 
 .volumeInput::-moz-range-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.3);
 }
 
 /* ===== Progress Bar ===== */
