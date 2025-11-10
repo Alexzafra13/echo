@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
+import { usePlayer } from '@features/player/context/PlayerContext';
 import {
   RadioStationCard,
   RadioSearchBar,
@@ -13,9 +14,13 @@ import {
   useTopVotedStations,
   useStationsByCountry,
   useStationsByTag,
-  useSearchStations
+  useSearchStations,
+  useFavoriteStations,
+  useSaveFavoriteFromApi,
+  useDeleteFavoriteStation
 } from '../../hooks';
-import type { RadioStation } from '../../types';
+import { radioService } from '../../services';
+import type { RadioStation, RadioBrowserStation } from '../../types';
 import type { Country } from '../../components/CountrySelect/CountrySelect';
 import { Radio } from 'lucide-react';
 import styles from './RadioPage.module.css';
@@ -47,6 +52,9 @@ const FILTER_TABS = [
 ];
 
 export default function RadioPage() {
+  // Player context
+  const { playRadio, currentRadioStation, isPlaying, isRadioMode } = usePlayer();
+
   // Calculate grid dimensions for 3 rows
   const { itemsPerPage: stationsPerView } = useGridDimensions({
     maxRows: 3,
@@ -60,6 +68,11 @@ export default function RadioPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [favoritesPage, setFavoritesPage] = useState(1);
+
+  // Favorites
+  const { data: favoriteStations = [] } = useFavoriteStations();
+  const saveFavoriteMutation = useSaveFavoriteFromApi();
+  const deleteFavoriteMutation = useDeleteFavoriteStation();
 
   // Initialize selected country when user country is detected
   useEffect(() => {
@@ -160,8 +173,7 @@ export default function RadioPage() {
   const isLoading = loadingTopVoted || loadingCountryTop || loadingAllCountry ||
                     loadingAllWorld || loadingGenreCountry || loadingGenreGlobal;
 
-  // Favorites (mock for now - should come from backend/localStorage)
-  const favoriteStations: RadioStation[] = [];
+  // Favorites pagination
   const { itemsPerPage: favoritesPerView } = useGridDimensions({
     maxRows: 2,
     headerHeight: 100,
@@ -177,10 +189,9 @@ export default function RadioPage() {
     setSearchQuery(query);
   }, []);
 
-  const handleResultSelect = useCallback((station: RadioStation) => {
-    console.log('Selected station:', station);
-    // TODO: Play station or navigate
-  }, []);
+  const handleResultSelect = useCallback((station: RadioStation | RadioBrowserStation) => {
+    playRadio(station);
+  }, [playRadio]);
 
   const handleCountryChange = useCallback((countryCode: string) => {
     setSelectedCountry(countryCode);
@@ -200,6 +211,58 @@ export default function RadioPage() {
   const handleFavoritesPageChange = useCallback((page: number) => {
     setFavoritesPage(page);
   }, []);
+
+  // Play station handler
+  const handlePlayStation = useCallback((station: RadioBrowserStation | RadioStation) => {
+    playRadio(station);
+  }, [playRadio]);
+
+  // Toggle favorite handler
+  const handleToggleFavorite = useCallback(async (station: RadioBrowserStation) => {
+    try {
+      const isInFavorites = favoriteStations.some(
+        (fav) => fav.stationUuid === station.stationuuid
+      );
+
+      if (isInFavorites) {
+        const favoriteStation = favoriteStations.find(
+          (fav) => fav.stationUuid === station.stationuuid
+        );
+        if (favoriteStation?.id) {
+          await deleteFavoriteMutation.mutateAsync(favoriteStation.id);
+        }
+      } else {
+        const dto = radioService.convertToSaveDto(station);
+        await saveFavoriteMutation.mutateAsync(dto);
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  }, [favoriteStations, saveFavoriteMutation, deleteFavoriteMutation]);
+
+  // Remove favorite handler (for favoritas section)
+  const handleRemoveFavorite = useCallback(async (stationId: string) => {
+    try {
+      await deleteFavoriteMutation.mutateAsync(stationId);
+    } catch (error) {
+      console.error('Failed to remove favorite:', error);
+    }
+  }, [deleteFavoriteMutation]);
+
+  // Helper: Check if station is playing
+  const isStationPlaying = useCallback((station: RadioBrowserStation | RadioStation) => {
+    if (!isRadioMode || !currentRadioStation) return false;
+    const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
+    const currentUuid = 'stationuuid' in currentRadioStation
+      ? currentRadioStation.stationuuid
+      : currentRadioStation.stationUuid;
+    return isPlaying && stationUuid === currentUuid;
+  }, [isRadioMode, currentRadioStation, isPlaying]);
+
+  // Helper: Check if station is favorite
+  const isStationFavorite = useCallback((station: RadioBrowserStation) => {
+    return favoriteStations.some((fav) => fav.stationUuid === station.stationuuid);
+  }, [favoriteStations]);
 
   // Get country name for display
   const selectedCountryName = useMemo(() => {
@@ -264,7 +327,14 @@ export default function RadioPage() {
               <>
                 <div className={styles.radioPage__grid}>
                   {paginatedStations.map((station) => (
-                    <RadioStationCard key={station.stationuuid} station={station} />
+                    <RadioStationCard
+                      key={station.stationuuid}
+                      station={station}
+                      isFavorite={isStationFavorite(station)}
+                      isPlaying={isStationPlaying(station)}
+                      onPlay={() => handlePlayStation(station)}
+                      onToggleFavorite={() => handleToggleFavorite(station)}
+                    />
                   ))}
                 </div>
 
@@ -312,7 +382,14 @@ export default function RadioPage() {
 
               <div className={styles.radioPage__grid}>
                 {paginatedFavorites.map((station) => (
-                  <RadioStationCard key={station.stationuuid} station={station} />
+                  <RadioStationCard
+                    key={station.id || station.stationUuid}
+                    station={station}
+                    isFavorite={true}
+                    isPlaying={isStationPlaying(station)}
+                    onPlay={() => handlePlayStation(station)}
+                    onToggleFavorite={() => station.id && handleRemoveFavorite(station.id)}
+                  />
                 ))}
               </div>
 
