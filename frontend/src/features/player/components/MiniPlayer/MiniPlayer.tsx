@@ -79,6 +79,9 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
 
   // Lógica de visibilidad basada en preferencia
+  // - 'sidebar': siempre visible en sidebar (shouldShow = true)
+  // - 'dynamic': visible cuando hay scroll (shouldShow = isVisible)
+  // - 'footer': siempre oculto, usa footer player (shouldShow = false)
   const shouldShow =
     preference === 'sidebar' ? true :
     preference === 'dynamic' ? isVisible :
@@ -86,40 +89,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
   return (
     <div className={`${styles.miniPlayer} ${shouldShow ? styles.miniPlayer_visible : ''}`}>
-      {/* Menú de opciones */}
-      <div className={styles.menuContainer} ref={menuRef}>
-        <button
-          className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          title="Opciones del reproductor"
-        >
-          <MoreVertical size={14} />
-        </button>
-
-        {isMenuOpen && (
-          <div className={styles.menuDropdown}>
-            <button
-              className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
-              onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
-            >
-              Posición dinámica
-            </button>
-            <button
-              className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
-              onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
-            >
-              Reproductor lateral
-            </button>
-            <button
-              className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
-              onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
-            >
-              Reproductor por defecto
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* Cover con animación de reproducción */}
       <div className={styles.coverContainer}>
         <img
@@ -214,6 +183,40 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
               orient="vertical"
             />
           </div>
+        </div>
+
+        {/* Menú de opciones junto al volumen */}
+        <div className={styles.menuContainer} ref={menuRef}>
+          <button
+            className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            title="Opciones del reproductor"
+          >
+            <MoreVertical size={14} />
+          </button>
+
+          {isMenuOpen && (
+            <div className={styles.menuDropdown}>
+              <button
+                className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
+                onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
+              >
+                Posición dinámica
+              </button>
+              <button
+                className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
+                onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
+              >
+                Reproductor lateral
+              </button>
+              <button
+                className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
+                onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
+              >
+                Reproductor por defecto
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
