@@ -1,0 +1,75 @@
+/* CountrySelect Component Styles */
+
+.countrySelect {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.countrySelect__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.countrySelect__select {
+  min-width: 200px;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23b8bcc8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.countrySelect__select:hover {
+  border-color: var(--color-primary);
+}
+
+.countrySelect__select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.1);
+}
+
+.countrySelect__select option {
+  background: var(--bg-surface);
+  color: var(--color-text-primary);
+  padding: 8px;
+}
+
+.countrySelect__select optgroup {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .countrySelect {
+    gap: 8px;
+  }
+
+  .countrySelect__label {
+    font-size: 13px;
+  }
+
+  .countrySelect__select {
+    min-width: 150px;
+    font-size: 13px;
+    padding: 8px 10px;
+    padding-right: 32px;
+  }
+}
