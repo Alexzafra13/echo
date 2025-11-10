@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Pin, PinOff } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, MoreVertical } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
+import { usePlayerPreference } from '../../hooks/usePlayerPreference';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
 import styles from './AudioPlayer.module.css';
@@ -29,18 +30,21 @@ export function AudioPlayer() {
   } = usePlayer();
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [isPinned, setIsPinned] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const queueRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Detectar scroll para activar mini-player
   const isMiniMode = useScrollDetection(120);
 
-  const togglePin = () => {
-    setIsPinned(!isPinned);
-  };
+  // Sistema de preferencias
+  const { preference, setPreference } = usePlayerPreference();
 
-  // Mostrar siempre si está pinned, sino depende del scroll
-  const shouldHide = isMiniMode && !isPinned;
+  // Lógica de visibilidad basada en preferencia
+  const shouldHide =
+    preference === 'footer' ? false :
+    preference === 'sidebar' ? true :
+    isMiniMode; // dynamic
 
   // Controlar padding-bottom del body según si el mini-player está activo
   useEffect(() => {
@@ -73,6 +77,22 @@ export function AudioPlayer() {
       };
     }
   }, [isQueueOpen]);
+
+  // Close menu dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isMenuOpen]);
 
   // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
@@ -115,14 +135,39 @@ export function AudioPlayer() {
 
   return (
     <div className={`${styles.player} ${shouldHide ? styles.player_hidden : ''}`}>
-      {/* Pin button */}
-      <button
-        className={`${styles.pinButton} ${isPinned ? styles.pinButton_active : ''}`}
-        onClick={togglePin}
-        title={isPinned ? 'Desfijar reproductor' : 'Fijar reproductor'}
-      >
-        {isPinned ? <Pin size={14} /> : <PinOff size={14} />}
-      </button>
+      {/* Menú de opciones */}
+      <div className={styles.menuContainer} ref={menuRef}>
+        <button
+          className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          title="Opciones del reproductor"
+        >
+          <MoreVertical size={16} />
+        </button>
+
+        {isMenuOpen && (
+          <div className={styles.menuDropdown}>
+            <button
+              className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
+              onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
+            >
+              Posición dinámica
+            </button>
+            <button
+              className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
+              onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
+            >
+              Reproductor lateral
+            </button>
+            <button
+              className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
+              onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
+            >
+              Reproductor por defecto
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
