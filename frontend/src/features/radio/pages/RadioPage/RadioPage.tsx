@@ -70,8 +70,8 @@ export default function RadioPage() {
 
   // Search stations query
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
-    searchQuery,
-    { enabled: searchQuery.length >= 2 }
+    { name: searchQuery, limit: 50 },
+    searchQuery.length >= 2
   );
 
   // Determine which query to use based on filter and country
@@ -82,20 +82,17 @@ export default function RadioPage() {
 
   // Queries for different filter combinations
   const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(
-    stationsPerView * 5, // Fetch more for pagination
-    { enabled: isAllCountries && isTopFilter }
+    stationsPerView * 5 // Fetch more for pagination
   );
 
   const { data: countryStations = [], isLoading: loadingCountry } = useStationsByCountry(
-    selectedCountry,
-    stationsPerView * 5,
-    { enabled: !isAllCountries && (isTopFilter || isAllFilter) }
+    (isTopFilter || isAllFilter) && !isAllCountries ? selectedCountry : '',
+    stationsPerView * 5
   );
 
   const { data: genreStations = [], isLoading: loadingGenre } = useStationsByTag(
-    activeFilter,
-    stationsPerView * 5,
-    { enabled: isGenreFilter }
+    isGenreFilter ? activeFilter : '',
+    stationsPerView * 5
   );
 
   // Select the appropriate stations list
