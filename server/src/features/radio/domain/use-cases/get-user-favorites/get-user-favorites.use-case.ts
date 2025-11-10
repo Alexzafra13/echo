@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { IRadioStationRepository } from '../../ports/radio-station-repository.port';
+import { Injectable, Inject } from '@nestjs/common';
+import { IRadioStationRepository, RADIO_STATION_REPOSITORY } from '../../ports/radio-station-repository.port';
 import { RadioStation } from '../../entities/radio-station.entity';
 
 /**
@@ -7,7 +7,10 @@ import { RadioStation } from '../../entities/radio-station.entity';
  */
 @Injectable()
 export class GetUserFavoritesUseCase {
-  constructor(private readonly repository: IRadioStationRepository) {}
+  constructor(
+    @Inject(RADIO_STATION_REPOSITORY)
+    private readonly repository: IRadioStationRepository,
+  ) {}
 
   async execute(userId: string): Promise<RadioStation[]> {
     return this.repository.findByUserId(userId);

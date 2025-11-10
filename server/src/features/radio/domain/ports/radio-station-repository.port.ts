@@ -35,3 +35,9 @@ export interface IRadioStationRepository {
    */
   countByUserId(userId: string): Promise<number>;
 }
+
+/**
+ * Constante con el nombre del provider
+ * Se usa en NestJS para inyección de dependencias
+ */
+export const RADIO_STATION_REPOSITORY = 'IRadioStationRepository';

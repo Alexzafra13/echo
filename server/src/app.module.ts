@@ -18,6 +18,7 @@ import { StreamingModule } from './features/streaming/streaming.module';
 import { PlaylistsModule } from './features/playlists/playlists.module';
 import { ScannerModule } from './features/scanner/scanner.module';
 import { ExternalMetadataModule } from './features/external-metadata/external-metadata.module';
+import { RadioModule } from './features/radio/radio.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ExternalMetadataModule } from './features/external-metadata/external-me
     PlaylistsModule,
     ScannerModule,
     ExternalMetadataModule,
+    RadioModule,
   ],
   controllers: [],
   providers: [],
