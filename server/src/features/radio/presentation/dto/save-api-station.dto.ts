@@ -6,15 +6,15 @@ import { IsNotEmpty, IsString, IsUrl, IsOptional, IsNumber, IsBoolean } from 'cl
 export class SaveApiStationDto {
   @IsNotEmpty()
   @IsString()
-  stationuuid: string;
+  stationuuid!: string;
 
   @IsNotEmpty()
   @IsString()
-  name: string;
+  name!: string;
 
   @IsNotEmpty()
   @IsUrl()
-  url: string;
+  url!: string;
 
   @IsOptional()
   @IsUrl()

@@ -43,7 +43,9 @@ export class SearchStationsDto {
 
   @IsOptional()
   @IsString()
-  order?: string;
+  order?: 'name' | 'url' | 'homepage' | 'favicon' | 'tags' | 'country' | 'state' |
+          'language' | 'votes' | 'codec' | 'bitrate' | 'lastcheckok' | 'lastchecktime' |
+          'clicktimestamp' | 'clickcount' | 'clicktrend' | 'changetimestamp' | 'random';
 
   @IsOptional()
   @Type(() => Boolean)
