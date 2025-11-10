@@ -81,36 +81,84 @@ export default function RadioPage() {
   const isGenreFilter = !isTopFilter && !isAllFilter;
 
   // Queries for different filter combinations
-  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(
-    stationsPerView * 5 // Fetch more for pagination
+
+  // 1. Top 20 global (solo 20 emisoras, sin paginar)
+  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(20);
+
+  // 2. Top 20 por país (solo 20 emisoras, sin paginar)
+  const { data: countryTop20 = [], isLoading: loadingCountryTop } = useStationsByCountry(
+    !isAllCountries && isTopFilter ? selectedCountry : '',
+    20
   );
 
-  const { data: countryStations = [], isLoading: loadingCountry } = useStationsByCountry(
-    (isTopFilter || isAllFilter) && !isAllCountries ? selectedCountry : '',
-    stationsPerView * 5
+  // 3. Todas las emisoras del país (muchas para paginar)
+  const { data: allCountryStations = [], isLoading: loadingAllCountry } = useStationsByCountry(
+    !isAllCountries && isAllFilter ? selectedCountry : '',
+    500
   );
 
-  const { data: genreStations = [], isLoading: loadingGenre } = useStationsByTag(
-    isGenreFilter ? activeFilter : '',
-    stationsPerView * 5
+  // 4. Todas las emisoras del mundo
+  const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
+    { limit: 500, order: 'votes', reverse: true },
+    isAllCountries && isAllFilter
+  );
+
+  // 5. Filtro por género + país
+  const { data: genreCountryStations = [], isLoading: loadingGenreCountry } = useSearchStations(
+    {
+      tag: isGenreFilter ? activeFilter : undefined,
+      countrycode: !isAllCountries && isGenreFilter ? selectedCountry : undefined,
+      limit: 500,
+      order: 'votes',
+      reverse: true
+    },
+    isGenreFilter && !isAllCountries
+  );
+
+  // 6. Filtro por género global
+  const { data: genreGlobalStations = [], isLoading: loadingGenreGlobal } = useStationsByTag(
+    isGenreFilter && isAllCountries ? activeFilter : '',
+    500
   );
 
   // Select the appropriate stations list
   const stations = useMemo(() => {
+    // Top 20 mundial
     if (isAllCountries && isTopFilter) return topVotedStations;
-    if (isGenreFilter) return genreStations;
-    return countryStations;
-  }, [isAllCountries, isTopFilter, isGenreFilter, topVotedStations, genreStations, countryStations]);
+
+    // Top 20 por país
+    if (!isAllCountries && isTopFilter) return countryTop20;
+
+    // Todas del mundo
+    if (isAllCountries && isAllFilter) return allWorldStations;
+
+    // Todas del país
+    if (!isAllCountries && isAllFilter) return allCountryStations;
+
+    // Género + país
+    if (isGenreFilter && !isAllCountries) return genreCountryStations;
+
+    // Género global
+    if (isGenreFilter && isAllCountries) return genreGlobalStations;
+
+    return [];
+  }, [
+    isAllCountries, isTopFilter, isAllFilter, isGenreFilter,
+    topVotedStations, countryTop20, allWorldStations, allCountryStations,
+    genreCountryStations, genreGlobalStations
+  ]);
 
   // Paginate stations (3 rows per page)
-  const totalPages = Math.ceil(stations.length / stationsPerView);
-  const paginatedStations = stations.slice(
-    (currentPage - 1) * stationsPerView,
-    currentPage * stationsPerView
-  );
+  // Top 20 no se pagina, el resto sí
+  const shouldPaginate = !isTopFilter;
+  const totalPages = shouldPaginate ? Math.ceil(stations.length / stationsPerView) : 1;
+  const paginatedStations = shouldPaginate
+    ? stations.slice((currentPage - 1) * stationsPerView, currentPage * stationsPerView)
+    : stations;
 
   // Loading state
-  const isLoading = loadingTopVoted || loadingCountry || loadingGenre;
+  const isLoading = loadingTopVoted || loadingCountryTop || loadingAllCountry ||
+                    loadingAllWorld || loadingGenreCountry || loadingGenreGlobal;
 
   // Favorites (mock for now - should come from backend/localStorage)
   const favoriteStations: RadioStation[] = [];
