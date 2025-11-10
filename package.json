@@ -33,6 +33,8 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f echo-app",
     "docker:restart": "docker-compose restart echo-app",
+    "db:reset": "cd server && pnpm db:reset",
+    "db:studio": "cd server && pnpm db:studio",
     "clean": "pnpm --recursive exec rm -rf node_modules dist coverage .next",
     "lint": "pnpm --recursive exec eslint",
     "lint:server": "pnpm --filter echo-server-backend lint",
