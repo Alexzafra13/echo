@@ -77,23 +77,13 @@ function calculateDimensions(
   // Calcular número de filas
   const rows = calculateRows(windowHeight, minItemWidth, gap, maxRows, headerHeight);
 
-  const result = {
+  return {
     columns,
     rows,
     itemsPerPage: columns * rows,
     minItemWidth,
     gap,
   };
-
-  console.log('📊 Grid Dimensions:', {
-    resolution: `${windowWidth}x${windowHeight}`,
-    breakpoint,
-    columns,
-    rows,
-    itemsPerPage: result.itemsPerPage,
-  });
-
-  return result;
 }
 
 /**
@@ -172,18 +162,6 @@ function calculateColumns(
   // Calcular columnas usando la misma lógica que auto-fill
   // Formula: (availableWidth + gap) / (minItemWidth + gap)
   const columns = Math.floor((availableWidth + gap) / (minItemWidth + gap));
-
-  // Log para debug
-  console.log('🔢 calculateColumns:', {
-    windowWidth,
-    sidebarWidth,
-    contentPadding,
-    gridPadding,
-    availableWidth,
-    minItemWidth,
-    gap,
-    columns
-  });
 
   // Mínimo 1 columna, máximo razonable 10 (para 2K)
   return Math.max(1, Math.min(columns, 10));
