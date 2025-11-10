@@ -9,6 +9,7 @@
 
 .radioPage__main {
   flex: 1;
+  margin-left: 200px; /* Aligned with 200px sidebar width */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -101,6 +102,10 @@
 
 /* Tablet */
 @media (max-width: 1024px) {
+  .radioPage__main {
+    margin-left: 200px;
+  }
+
   .radioPage__content {
     padding: 32px 24px;
   }
@@ -121,6 +126,10 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+  .radioPage__main {
+    margin-left: 80px;
+  }
+
   .radioPage__content {
     padding: 24px 16px;
     padding-bottom: 140px;
@@ -165,6 +174,11 @@
 
 /* Small mobile */
 @media (max-width: 480px) {
+  .radioPage__main {
+    margin-left: 0;
+    padding-top: 60px; /* Space for mobile header */
+  }
+
   .radioPage__grid {
     grid-template-columns: repeat(2, 1fr);
   }
