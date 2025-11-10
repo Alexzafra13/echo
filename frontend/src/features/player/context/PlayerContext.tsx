@@ -20,6 +20,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     duration: 0,
     isShuffle: false,
     repeatMode: 'off',
+    currentRadioStation: null,
+    isRadioMode: false,
   });
 
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
@@ -135,9 +137,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         ...prev,
         currentTrack: track,
         isPlaying: true,
+        // Clear radio state when playing a track
+        currentRadioStation: null,
+        isRadioMode: false,
       }));
-    } else if (state.currentTrack) {
-      // Resume current track
+    } else if (state.currentTrack && !state.isRadioMode) {
+      // Resume current track (only if not in radio mode)
       audioRef.current.play();
     }
   };
@@ -256,6 +261,61 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     });
   };
 
+  // Play radio station
+  const playRadio = (station: any) => {
+    if (!audioRef.current) return;
+
+    // Use url_resolved if available (better quality), fallback to url
+    const streamUrl = station.urlResolved || station.url_resolved || station.url;
+
+    if (!streamUrl) {
+      console.error('[Player] Radio station has no valid stream URL');
+      return;
+    }
+
+    audioRef.current.src = streamUrl;
+    audioRef.current.load();
+
+    // Error handler for radio loading issues
+    audioRef.current.onerror = () => {
+      console.error('[Player] Failed to load radio station:', station.name);
+    };
+
+    audioRef.current.play().catch((error) => {
+      console.error('[Player] Failed to play radio:', error.message);
+    });
+
+    setState(prev => ({
+      ...prev,
+      currentRadioStation: station,
+      isRadioMode: true,
+      isPlaying: true,
+      // Clear track state when playing radio
+      currentTrack: null,
+      queue: [],
+      currentTime: 0,
+      duration: 0,
+    }));
+
+    setCurrentQueueIndex(-1);
+  };
+
+  // Stop radio
+  const stopRadio = () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+
+    setState(prev => ({
+      ...prev,
+      currentRadioStation: null,
+      isRadioMode: false,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+    }));
+  };
+
   const value: PlayerContextValue = {
     ...state,
     play,
@@ -268,6 +328,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     removeFromQueue,
     clearQueue,
     playQueue,
+    playRadio,
+    stopRadio,
     seek,
     setVolume,
     toggleShuffle,
