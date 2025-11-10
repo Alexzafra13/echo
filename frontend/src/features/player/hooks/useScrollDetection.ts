@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
  * Hook para detectar cuando el usuario llega al final de la página
  * y convertir el player en mini-player en el sidebar
  *
+ * Calcula el scroll REAL del contenido, excluyendo el padding-bottom
+ * del body para evitar loops y parpadeo en páginas con poco contenido.
+ *
  * @param threshold Píxeles desde el bottom para considerar "final de página" (default: 120px para el player height)
  * @returns boolean indicando si el mini-player debe estar activo
  */
@@ -21,11 +24,22 @@ export function useScrollDetection(threshold: number = 120) {
           const scrollTop = window.scrollY || document.documentElement.scrollTop;
           const clientHeight = window.innerHeight;
 
-          // Verificar si hay scroll disponible (contenido más alto que viewport)
-          // Agregar margen de 50px para evitar activar en páginas con scroll mínimo
-          const hasScroll = scrollHeight > clientHeight + 50;
+          // Obtener el padding-bottom del body para excluirlo del cálculo
+          const bodyPaddingBottom = parseInt(
+            getComputedStyle(document.body).paddingBottom || '0',
+            10
+          );
 
-          if (!hasScroll) {
+          // Altura real del contenido sin el padding artificial
+          const realContentHeight = scrollHeight - bodyPaddingBottom;
+
+          // Verificar si hay scroll REAL disponible
+          // El contenido real debe ser al menos 200px más alto que el viewport
+          // para evitar activación en páginas con poco contenido
+          const minScrollRequired = 200;
+          const hasRealScroll = realContentHeight > clientHeight + minScrollRequired;
+
+          if (!hasRealScroll) {
             // Si no hay scroll suficiente, nunca activar mini mode
             if (isMiniMode) {
               setIsMiniMode(false);
