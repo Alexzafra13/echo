@@ -11,6 +11,8 @@ import {
   Shield,
 } from 'lucide-react';
 import { useAuthStore } from '@shared/store';
+import { MiniPlayer } from '@features/player/components/MiniPlayer';
+import { useScrollDetection } from '@features/player/hooks/useScrollDetection';
 import styles from './Sidebar.module.css';
 
 /**
@@ -21,6 +23,9 @@ export function Sidebar() {
   const [location] = useLocation();
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.isAdmin === true;
+
+  // Detectar scroll para mostrar mini-player
+  const isMiniMode = useScrollDetection(120);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -71,6 +76,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Mini Player - se muestra al final de la página */}
+      <MiniPlayer isVisible={isMiniMode} />
     </aside>
   );
 }
