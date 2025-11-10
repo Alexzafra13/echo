@@ -159,7 +159,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
             <div className={styles.volumeSlider}>
               <div
                 className={styles.volumeFill}
-                style={{ width: `${volume * 100}%` }}
+                style={{ height: `${volume * 100}%` }}
               />
             </div>
             <input
@@ -170,6 +170,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
               value={volume}
               onChange={handleVolumeChange}
               className={styles.volumeInput}
+              orient="vertical"
             />
           </div>
         </div>
