@@ -29,7 +29,21 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     setVolume,
   } = usePlayer();
 
-  // No mostrar si no hay ni track ni radio
+  // Cerrar menú al hacer click fuera (moved before early return)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
+
+  // No mostrar si no hay ni track ni radio (moved after all hooks)
   if (!currentTrack && !currentRadioStation) {
     return null;
   }
@@ -63,20 +77,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   const displayCover = isRadioMode && currentRadioStation
     ? currentRadioStation.favicon || '/images/covers/placeholder.jpg'
     : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
-
-  // Cerrar menú al hacer click fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isMenuOpen]);
 
   // Lógica de visibilidad basada en preferencia
   const shouldShow =
