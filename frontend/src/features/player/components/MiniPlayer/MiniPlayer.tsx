@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio, Pin, PinOff } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio, MoreVertical } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
+import { usePlayerPreference } from '../../hooks/usePlayerPreference';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
 import styles from './MiniPlayer.module.css';
@@ -10,7 +11,9 @@ interface MiniPlayerProps {
 }
 
 export function MiniPlayer({ isVisible }: MiniPlayerProps) {
-  const [isPinned, setIsPinned] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { preference, setPreference } = usePlayerPreference();
   const {
     currentTrack,
     currentRadioStation,
@@ -61,23 +64,61 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     ? currentRadioStation.favicon || '/images/covers/placeholder.jpg'
     : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
 
-  const togglePin = () => {
-    setIsPinned(!isPinned);
-  };
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
 
-  // Mostrar siempre si está pinned, sino depende de isVisible
-  const shouldShow = isPinned || isVisible;
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
+
+  // Lógica de visibilidad basada en preferencia
+  const shouldShow =
+    preference === 'sidebar' ? true :
+    preference === 'dynamic' ? isVisible :
+    false;
 
   return (
     <div className={`${styles.miniPlayer} ${shouldShow ? styles.miniPlayer_visible : ''}`}>
-      {/* Pin button */}
-      <button
-        className={`${styles.pinButton} ${isPinned ? styles.pinButton_active : ''}`}
-        onClick={togglePin}
-        title={isPinned ? 'Desfijar reproductor' : 'Fijar reproductor'}
-      >
-        {isPinned ? <Pin size={12} /> : <PinOff size={12} />}
-      </button>
+      {/* Menú de opciones */}
+      <div className={styles.menuContainer} ref={menuRef}>
+        <button
+          className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          title="Opciones del reproductor"
+        >
+          <MoreVertical size={14} />
+        </button>
+
+        {isMenuOpen && (
+          <div className={styles.menuDropdown}>
+            <button
+              className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
+              onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
+            >
+              Posición dinámica
+            </button>
+            <button
+              className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
+              onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
+            >
+              Reproductor lateral
+            </button>
+            <button
+              className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
+              onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
+            >
+              Reproductor por defecto
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Cover con animación de reproducción */}
       <div className={styles.coverContainer}>

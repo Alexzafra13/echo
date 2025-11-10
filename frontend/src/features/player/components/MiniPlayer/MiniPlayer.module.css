@@ -24,41 +24,93 @@
   pointer-events: auto;
 }
 
-/* ===== Pin Button ===== */
+/* ===== Menu Container ===== */
 
-.pinButton {
+.menuContainer {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  top: 4px;
+  left: 4px;
+  z-index: 25;
+}
+
+.menuButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
   color: var(--text-secondary);
-  padding: 6px;
-  border-radius: 6px;
+  padding: 4px;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  z-index: 20;
-  opacity: 0.8;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  opacity: 0.7;
 }
 
-.pinButton:hover {
+.menuButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.menuButton_active {
   opacity: 1;
   background: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
-  transform: scale(1.15);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.pinButton_active {
-  opacity: 1;
-  background: rgba(237, 104, 66, 0.2);
-  border-color: var(--color-primary-500);
+.menuDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: rgba(20, 20, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  animation: menuFadeIn 0.15s ease;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuOption {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menuOption:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.menuOption_active {
+  background: rgba(237, 104, 66, 0.15);
   color: var(--color-primary-500);
-  box-shadow: 0 0 12px rgba(237, 104, 66, 0.3);
+}
+
+.menuOption_active:hover {
+  background: rgba(237, 104, 66, 0.2);
 }
 
 /* ===== Cover Container ===== */
@@ -302,11 +354,10 @@
 .volumeSliderContainer {
   position: absolute;
   bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   margin-bottom: 8px;
-  width: 4px;
-  height: 60px;
+  width: 6px;
+  height: 70px;
   display: flex;
   align-items: center;
   opacity: 0;
@@ -314,17 +365,19 @@
   transition: opacity 0.2s ease;
 }
 
-.volumeContainer:hover .volumeSliderContainer {
+/* Mantener visible cuando hay hover en el container o en el slider mismo */
+.volumeContainer:hover .volumeSliderContainer,
+.volumeSliderContainer:hover {
   opacity: 1;
   pointer-events: auto;
 }
 
 .volumeSlider {
   position: absolute;
-  width: 4px;
+  width: 6px;
   height: 100%;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+  border-radius: 3px;
   overflow: hidden;
   pointer-events: none;
 }
@@ -333,8 +386,9 @@
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: var(--color-primary-500);
+  background: linear-gradient(to top, #3b82f6, #60a5fa);
   transition: height 0.1s ease;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
 .volumeInput {
