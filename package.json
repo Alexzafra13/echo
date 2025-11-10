@@ -13,6 +13,8 @@
   "scripts": {
     "install:first": "bash scripts/setup.sh",
     "install:first:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "quickstart": "bash scripts/quickstart.sh",
+    "quickstart:windows": "powershell -ExecutionPolicy Bypass -File scripts/quickstart.ps1",
     "install:all": "pnpm install",
     "dev": "pnpm --filter echo-server-backend dev",
     "dev:server": "pnpm --filter echo-server-backend dev",
