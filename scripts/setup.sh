@@ -307,23 +307,40 @@ echo ""
 # ==============================================
 # 6. Ejecutar Migraciones
 # ==============================================
+MIGRATION_METHOD=""
+
 if [ "$SKIP_BACKEND" = false ] && [ "$SKIP_DOCKER" = false ]; then
   print_header "6. Ejecutando Migraciones de Base de Datos"
 
   cd server
 
-  print_info "Ejecutando: pnpm db:migrate"
-
   # Dar un poco más de tiempo para que PostgreSQL esté 100% listo
   sleep 2
 
-  if pnpm db:migrate; then
-    print_success "Migraciones ejecutadas correctamente"
+  print_info "Intentando aplicar migraciones..."
+
+  # Primero intentar con migrate deploy (más seguro para instalaciones limpias)
+  if pnpm prisma migrate deploy; then
+    print_success "Migraciones aplicadas correctamente"
+    MIGRATION_METHOD="deploy"
   else
-    print_error "Error al ejecutar migraciones"
-    print_info "Posible solución: Verifica que Docker esté corriendo y que .env tenga 'localhost'"
-    cd ..
-    exit 1
+    print_warning "Migrate deploy falló, intentando reset completo..."
+
+    # Si falla, hacer reset (limpia todo y aplica desde cero)
+    print_info "Ejecutando: pnpm prisma migrate reset --force"
+    if pnpm prisma migrate reset --force; then
+      print_success "Base de datos reseteada y migrada correctamente"
+      print_info "Usuario admin creado: admin / admin123 (por reset)"
+      MIGRATION_METHOD="reset"
+    else
+      print_error "Error al ejecutar migraciones"
+      print_info "Soluciones posibles:"
+      print_info "  1. Verifica que Docker esté corriendo: docker ps"
+      print_info "  2. Verifica .env tenga 'localhost': DATABASE_URL=...@localhost:5432/..."
+      print_info "  3. Intenta resetear manualmente: cd server && pnpm db:reset"
+      cd ..
+      exit 1
+    fi
   fi
 
   cd ..
@@ -337,20 +354,26 @@ echo ""
 # 7. Ejecutar Seed (Crear Usuario Admin)
 # ==============================================
 if [ "$SKIP_BACKEND" = false ] && [ "$SKIP_DOCKER" = false ]; then
-  print_header "7. Ejecutando Seed de Base de Datos"
+  # Solo ejecutar seed si se usó migrate deploy
+  # (reset ya ejecuta el seed automáticamente)
+  if [ "$MIGRATION_METHOD" = "deploy" ]; then
+    print_header "7. Ejecutando Seed de Base de Datos"
 
-  cd server
+    cd server
 
-  print_info "Ejecutando: pnpm db:seed"
+    print_info "Ejecutando: pnpm db:seed"
 
-  if pnpm db:seed; then
-    print_success "Seed ejecutado correctamente"
-    print_info "Usuario admin creado: admin / admin123"
-  else
-    print_warning "El seed falló o el usuario ya existe"
+    if pnpm db:seed; then
+      print_success "Seed ejecutado correctamente"
+      print_info "Usuario admin creado: admin / admin123"
+    else
+      print_warning "El seed falló o el usuario ya existe"
+    fi
+
+    cd ..
+  elif [ "$MIGRATION_METHOD" = "reset" ]; then
+    print_info "Skipping seed (ya fue ejecutado por migrate reset)"
   fi
-
-  cd ..
 else
   print_info "Skipping seed"
 fi
