@@ -46,6 +46,7 @@ model User {
   players       Player[]
   bookmarks     Bookmark[]
   streamTokens  StreamToken[]
+  radioStations RadioStation[]
 
   @@map("users")
 }
@@ -532,15 +533,41 @@ model Share {
 // OTROS
 // ============================================
 
-model Radio {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(255)
-  streamUrl   String   @map("stream_url") @db.VarChar(512)
-  homePageUrl String?  @map("home_page_url") @db.VarChar(512)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+// ============================================
+// RADIO STATIONS
+// ============================================
 
-  @@map("radios")
+model RadioStation {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id") @db.VarChar(36)
+  stationUuid   String?  @map("station_uuid") @db.VarChar(255) // UUID from Radio Browser API
+  name          String   @db.VarChar(255)
+  url           String   @db.VarChar(512) // Stream URL
+  urlResolved   String?  @map("url_resolved") @db.VarChar(512)
+  homepage      String?  @db.VarChar(512)
+  favicon       String?  @db.VarChar(512) // Logo/icon URL
+  country       String?  @db.VarChar(100)
+  countryCode   String?  @map("country_code") @db.VarChar(10)
+  state         String?  @db.VarChar(100)
+  language      String?  @db.VarChar(100)
+  tags          String?  @db.VarChar(512) // Comma-separated genres
+  codec         String?  @db.VarChar(50)
+  bitrate       Int?
+  votes         Int?
+  clickCount    Int?     @map("click_count")
+  lastCheckOk   Boolean? @map("last_check_ok") // Is online
+  source        String   @db.VarChar(20) // 'radio-browser' or 'custom'
+  isFavorite    Boolean  @default(true) @map("is_favorite")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relaciones
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stationUuid])
+  @@index([userId, isFavorite])
+  @@map("radio_stations")
 }
 
 model Transcoding {
