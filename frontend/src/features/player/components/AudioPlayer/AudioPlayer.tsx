@@ -9,6 +9,8 @@ import styles from './AudioPlayer.module.css';
 export function AudioPlayer() {
   const {
     currentTrack,
+    currentRadioStation,
+    isRadioMode,
     isPlaying,
     currentTime,
     duration,
@@ -44,8 +46,9 @@ export function AudioPlayer() {
     }
   }, [isQueueOpen]);
 
-  if (!currentTrack) {
-    return null; // No mostrar barra si no hay track
+  // No mostrar si no hay ni track ni radio
+  if (!currentTrack && !currentRadioStation) {
+    return null;
   }
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -69,103 +72,142 @@ export function AudioPlayer() {
     setIsQueueOpen(!isQueueOpen);
   };
 
+  // Determinar qué mostrar: track o radio
+  const displayTitle = isRadioMode && currentRadioStation
+    ? currentRadioStation.name
+    : currentTrack?.title || '';
+
+  const displayArtist = isRadioMode && currentRadioStation
+    ? [currentRadioStation.country, currentRadioStation.tags?.split(',')[0]].filter(Boolean).join(' • ') || 'Radio'
+    : currentTrack?.artist || '';
+
+  const displayCover = isRadioMode && currentRadioStation
+    ? currentRadioStation.favicon || '/images/covers/placeholder.jpg'
+    : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
+
   return (
     <div className={styles.player}>
-      {/* Track info - Left side */}
+      {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
         <img
-          src={getCoverUrl(currentTrack.coverImage)}
-          alt={currentTrack.title}
+          src={isRadioMode ? displayCover : getCoverUrl(displayCover)}
+          alt={displayTitle}
           className={styles.trackCover}
           onError={handleImageError}
         />
         <div className={styles.trackDetails}>
-          <div className={styles.trackTitle}>{currentTrack.title}</div>
-          <div className={styles.trackArtist}>{currentTrack.artist}</div>
+          <div className={styles.trackTitle}>{displayTitle}</div>
+          <div className={styles.trackArtist}>{displayArtist}</div>
         </div>
       </div>
 
       {/* Player controls - Center */}
       <div className={styles.playerControls}>
         <div className={styles.controlButtons}>
-          <button
-            className={`${styles.controlButton} ${styles.controlButtonSmall} ${isShuffle ? styles.active : ''}`}
-            onClick={toggleShuffle}
-            title="Shuffle"
-          >
-            <Shuffle size={16} />
-          </button>
+          {/* Radio mode: solo play/pause */}
+          {isRadioMode ? (
+            <button
+              className={`${styles.controlButton} ${styles.playButton}`}
+              onClick={togglePlayPause}
+              title={isPlaying ? 'Pausar' : 'Reproducir'}
+            >
+              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+            </button>
+          ) : (
+            /* Track mode: controles completos */
+            <>
+              <button
+                className={`${styles.controlButton} ${styles.controlButtonSmall} ${isShuffle ? styles.active : ''}`}
+                onClick={toggleShuffle}
+                title="Shuffle"
+              >
+                <Shuffle size={16} />
+              </button>
 
-          <button
-            className={styles.controlButton}
-            onClick={playPrevious}
-            title="Anterior"
-          >
-            <SkipBack size={20} />
-          </button>
+              <button
+                className={styles.controlButton}
+                onClick={playPrevious}
+                title="Anterior"
+              >
+                <SkipBack size={20} />
+              </button>
 
-          <button
-            className={`${styles.controlButton} ${styles.playButton}`}
-            onClick={togglePlayPause}
-            title={isPlaying ? 'Pausar' : 'Reproducir'}
-          >
-            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-          </button>
+              <button
+                className={`${styles.controlButton} ${styles.playButton}`}
+                onClick={togglePlayPause}
+                title={isPlaying ? 'Pausar' : 'Reproducir'}
+              >
+                {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+              </button>
 
-          <button
-            className={styles.controlButton}
-            onClick={playNext}
-            title="Siguiente"
-          >
-            <SkipForward size={20} />
-          </button>
+              <button
+                className={styles.controlButton}
+                onClick={playNext}
+                title="Siguiente"
+              >
+                <SkipForward size={20} />
+              </button>
 
-          <button
-            className={`${styles.controlButton} ${styles.controlButtonSmall} ${repeatMode !== 'off' ? styles.active : ''}`}
-            onClick={toggleRepeat}
-            title={`Repetir: ${repeatMode}`}
-          >
-            {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
-          </button>
+              <button
+                className={`${styles.controlButton} ${styles.controlButtonSmall} ${repeatMode !== 'off' ? styles.active : ''}`}
+                onClick={toggleRepeat}
+                title={`Repetir: ${repeatMode}`}
+              >
+                {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Progress bar */}
-        <div className={styles.progressContainer}>
-          <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
-          <div
-            className={styles.progressBar}
-            onClick={handleProgressClick}
-          >
+        {/* Progress bar - Solo para tracks, no para radio */}
+        {!isRadioMode && (
+          <div className={styles.progressContainer}>
+            <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
             <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
-            <div
-              className={styles.progressHandle}
-              style={{ left: `${progressPercent}%` }}
-            />
+              className={styles.progressBar}
+              onClick={handleProgressClick}
+            >
+              <div
+                className={styles.progressFill}
+                style={{ width: `${progressPercent}%` }}
+              />
+              <div
+                className={styles.progressHandle}
+                style={{ left: `${progressPercent}%` }}
+              />
+            </div>
+            <span className={styles.timeLabel}>{formatDuration(duration)}</span>
           </div>
-          <span className={styles.timeLabel}>{formatDuration(duration)}</span>
-        </div>
+        )}
+
+        {/* Indicador de streaming en vivo para radio */}
+        {isRadioMode && (
+          <div className={styles.liveIndicator}>
+            <span className={styles.liveDot}></span>
+            <span className={styles.liveText}>EN VIVO</span>
+          </div>
+        )}
       </div>
 
       {/* Volume control - Right side */}
       <div className={styles.volumeControl}>
-        {/* Queue button and dropdown */}
-        <div className={styles.queueContainer} ref={queueRef}>
-          <button
-            className={`${styles.queueButton} ${isQueueOpen ? styles.queueButton_active : ''}`}
-            onClick={toggleQueue}
-            title="Lista de reproducción"
-          >
-            <ListMusic size={20} />
-            {queue.length > 0 && (
-              <span className={styles.queueButton__badge}>{queue.length}</span>
-            )}
-          </button>
+        {/* Queue button and dropdown - Solo para tracks */}
+        {!isRadioMode && (
+          <div className={styles.queueContainer} ref={queueRef}>
+            <button
+              className={`${styles.queueButton} ${isQueueOpen ? styles.queueButton_active : ''}`}
+              onClick={toggleQueue}
+              title="Lista de reproducción"
+            >
+              <ListMusic size={20} />
+              {queue.length > 0 && (
+                <span className={styles.queueButton__badge}>{queue.length}</span>
+              )}
+            </button>
 
-          {isQueueOpen && <QueueList onClose={() => setIsQueueOpen(false)} />}
-        </div>
+            {isQueueOpen && <QueueList onClose={() => setIsQueueOpen(false)} />}
+          </div>
+        )}
 
         <button
           className={styles.volumeButton}
