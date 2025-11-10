@@ -1,175 +1,172 @@
-import { useState } from 'react';
-import { Sidebar } from '@features/home/components';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
+import { Sidebar } from '@features/home/components';
+import { useGridDimensions } from '@features/home/hooks';
 import {
   RadioStationCard,
-  RadioSearch,
-  FilterTabs,
-  CountryGrid,
-  GenreCard,
-  type FilterTab,
-  type Country,
-  type Genre,
+  RadioSearchBar,
+  CountrySelect,
+  FilterTabs
 } from '../../components';
-import { usePlayer } from '@features/player/context/PlayerContext';
 import {
+  useUserCountry,
   useTopVotedStations,
-  usePopularStations,
   useStationsByCountry,
   useStationsByTag,
-  useFavoriteStations,
-  useSaveFavoriteFromApi,
-  useDeleteFavoriteStation,
-  useUserCountry,
-  useSearchStations,
+  useSearchStations
 } from '../../hooks';
-import { radioService } from '../../services';
-import type { RadioBrowserStation } from '../../types';
+import type { RadioStation } from '../../types';
+import type { Country } from '../../components/CountrySelect/CountrySelect';
+import { Radio } from 'lucide-react';
 import styles from './RadioPage.module.css';
 
+// Países populares con banderas
 const POPULAR_COUNTRIES: Country[] = [
-  { code: 'US', name: 'USA', flag: '🇺🇸' },
-  { code: 'GB', name: 'UK', flag: '🇬🇧' },
-  { code: 'FR', name: 'France', flag: '🇫🇷' },
-  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
-  { code: 'IT', name: 'Italy', flag: '🇮🇹' },
-  { code: 'JP', name: 'Japan', flag: '🇯🇵' },
-  { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+  { code: 'ES', name: 'España', flag: '🇪🇸' },
+  { code: 'US', name: 'Estados Unidos', flag: '🇺🇸' },
+  { code: 'GB', name: 'Reino Unido', flag: '🇬🇧' },
+  { code: 'FR', name: 'Francia', flag: '🇫🇷' },
+  { code: 'DE', name: 'Alemania', flag: '🇩🇪' },
+  { code: 'IT', name: 'Italia', flag: '🇮🇹' },
+  { code: 'MX', name: 'México', flag: '🇲🇽' },
   { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
+  { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
+  { code: 'JP', name: 'Japón', flag: '🇯🇵' },
 ];
 
-const GENRES: Genre[] = [
-  { id: 'rock', name: 'Rock', icon: '🎸', stationCount: 245 },
-  { id: 'pop', name: 'Pop', icon: '🎵', stationCount: 312 },
-  { id: 'jazz', name: 'Jazz', icon: '🎷', stationCount: 89 },
-  { id: 'news', name: 'News', icon: '📻', stationCount: 156 },
-  { id: 'dance', name: 'Dance', icon: '💃', stationCount: 198 },
-  { id: 'classical', name: 'Clásica', icon: '🎻', stationCount: 67 },
+// Filtros disponibles
+const FILTER_TABS = [
+  { id: 'top', label: 'Top 20' },
+  { id: 'all', label: 'Todas' },
+  { id: 'rock', label: 'Rock' },
+  { id: 'pop', label: 'Pop' },
+  { id: 'news', label: 'News' },
+  { id: 'jazz', label: 'Jazz' },
+  { id: 'dance', label: 'Dance' },
+  { id: 'electronic', label: 'Electronic' },
 ];
 
 export default function RadioPage() {
-  const { playRadio, currentRadioStation, isPlaying, isRadioMode } = usePlayer();
+  // Calculate grid dimensions for 3 rows
+  const { itemsPerPage: stationsPerView } = useGridDimensions({
+    maxRows: 3,
+    headerHeight: 180, // Search bar + filters height
+  });
 
-  // Detectar país del usuario
+  // State
   const { data: userCountry } = useUserCountry();
-
-  // Estados para filtros
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [activeFilter, setActiveFilter] = useState<string>('top');
   const [searchQuery, setSearchQuery] = useState('');
-  const [localCountryFilter, setLocalCountryFilter] = useState('top');
-  const [internationalCountry, setInternationalCountry] = useState<string | null>(null);
-  const [popularFilter, setPopularFilter] = useState('global');
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [favoritesPage, setFavoritesPage] = useState(1);
 
-  // Tabs para país local
-  const localTabs: FilterTab[] = [
-    { id: 'top', label: 'Top 20' },
-    { id: 'rock', label: 'Rock' },
-    { id: 'pop', label: 'Pop' },
-    { id: 'news', label: 'News' },
-    { id: 'jazz', label: 'Jazz' },
-    { id: 'dance', label: 'Dance' },
-  ];
+  // Initialize selected country when user country is detected
+  useEffect(() => {
+    if (userCountry?.countryCode && !selectedCountry) {
+      setSelectedCountry(userCountry.countryCode);
+    }
+  }, [userCountry, selectedCountry]);
 
-  // Tabs para populares
-  const popularTabs: FilterTab[] = [
-    { id: 'global', label: 'Global' },
-    { id: 'rock', label: 'Rock' },
-    { id: 'pop', label: 'Pop' },
-    { id: 'jazz', label: 'Jazz' },
-    { id: 'electronic', label: 'Electronic' },
-  ];
-
-  // Queries
-  const { data: topVotedStations } = useTopVotedStations(20);
-  const { data: popularStations } = usePopularStations(20);
-  const { data: favoriteStations } = useFavoriteStations();
-
-  // Query para país local con filtro
-  const localCountryCode = userCountry?.countryCode || 'ES';
-  const localTag = localCountryFilter === 'top' ? undefined : localCountryFilter;
-  const { data: localStations } = useStationsByCountry(localCountryCode, 20);
-  const { data: localTagStations } = useStationsByTag(localTag || '', 20);
-
-  // Query para país internacional seleccionado
-  const { data: internationalStations } = useStationsByCountry(
-    internationalCountry || '',
-    20
+  // Search stations query
+  const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
+    searchQuery,
+    { enabled: searchQuery.length >= 2 }
   );
 
-  // Query para género seleccionado
-  const { data: genreStations } = useStationsByTag(selectedGenre || '', 20);
+  // Determine which query to use based on filter and country
+  const isAllCountries = selectedCountry === 'ALL';
+  const isTopFilter = activeFilter === 'top';
+  const isAllFilter = activeFilter === 'all';
+  const isGenreFilter = !isTopFilter && !isAllFilter;
 
-  // Query para búsqueda
-  const { data: searchResults } = useSearchStations(
-    { name: searchQuery, limit: 20 },
-    searchQuery.length > 0
+  // Queries for different filter combinations
+  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(
+    stationsPerView * 5, // Fetch more for pagination
+    { enabled: isAllCountries && isTopFilter }
   );
 
-  // Mutations
-  const saveFavoriteMutation = useSaveFavoriteFromApi();
-  const deleteFavoriteMutation = useDeleteFavoriteStation();
+  const { data: countryStations = [], isLoading: loadingCountry } = useStationsByCountry(
+    selectedCountry,
+    stationsPerView * 5,
+    { enabled: !isAllCountries && (isTopFilter || isAllFilter) }
+  );
+
+  const { data: genreStations = [], isLoading: loadingGenre } = useStationsByTag(
+    activeFilter,
+    stationsPerView * 5,
+    { enabled: isGenreFilter }
+  );
+
+  // Select the appropriate stations list
+  const stations = useMemo(() => {
+    if (isAllCountries && isTopFilter) return topVotedStations;
+    if (isGenreFilter) return genreStations;
+    return countryStations;
+  }, [isAllCountries, isTopFilter, isGenreFilter, topVotedStations, genreStations, countryStations]);
+
+  // Paginate stations (3 rows per page)
+  const totalPages = Math.ceil(stations.length / stationsPerView);
+  const paginatedStations = stations.slice(
+    (currentPage - 1) * stationsPerView,
+    currentPage * stationsPerView
+  );
+
+  // Loading state
+  const isLoading = loadingTopVoted || loadingCountry || loadingGenre;
+
+  // Favorites (mock for now - should come from backend/localStorage)
+  const favoriteStations: RadioStation[] = [];
+  const { itemsPerPage: favoritesPerView } = useGridDimensions({
+    maxRows: 2,
+    headerHeight: 100,
+  });
+  const totalFavoritesPages = Math.ceil(favoriteStations.length / favoritesPerView);
+  const paginatedFavorites = favoriteStations.slice(
+    (favoritesPage - 1) * favoritesPerView,
+    favoritesPage * favoritesPerView
+  );
 
   // Handlers
-  const handlePlayStation = (station: RadioBrowserStation | any) => {
-    playRadio(station);
-  };
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
 
-  const handleToggleFavorite = async (station: RadioBrowserStation) => {
-    try {
-      const isInFavorites = favoriteStations?.some(
-        (fav) => fav.stationUuid === station.stationuuid
-      );
+  const handleResultSelect = useCallback((station: RadioStation) => {
+    console.log('Selected station:', station);
+    // TODO: Play station or navigate
+  }, []);
 
-      if (isInFavorites) {
-        const favoriteStation = favoriteStations?.find(
-          (fav) => fav.stationUuid === station.stationuuid
-        );
-        if (favoriteStation) {
-          await deleteFavoriteMutation.mutateAsync(favoriteStation.id!);
-        }
-      } else {
-        const dto = radioService.convertToSaveDto(station);
-        await saveFavoriteMutation.mutateAsync(dto);
-      }
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-    }
-  };
+  const handleCountryChange = useCallback((countryCode: string) => {
+    setSelectedCountry(countryCode);
+    setCurrentPage(1); // Reset pagination
+  }, []);
 
-  const handleRemoveFavorite = async (stationId: string) => {
-    try {
-      await deleteFavoriteMutation.mutateAsync(stationId);
-    } catch (error) {
-      console.error('Failed to remove favorite:', error);
-    }
-  };
+  const handleFilterChange = useCallback((filterId: string) => {
+    setActiveFilter(filterId);
+    setCurrentPage(1); // Reset pagination
+  }, []);
 
-  const isStationPlaying = (station: RadioBrowserStation | any) => {
-    if (!isRadioMode || !currentRadioStation) return false;
-    const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
-    const currentUuid = currentRadioStation.stationUuid;
-    return isPlaying && stationUuid === currentUuid;
-  };
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
-  const isStationFavorite = (station: RadioBrowserStation) => {
-    return favoriteStations?.some((fav) => fav.stationUuid === station.stationuuid) || false;
-  };
+  const handleFavoritesPageChange = useCallback((page: number) => {
+    setFavoritesPage(page);
+  }, []);
 
-  // Determinar qué emisoras mostrar según filtros
-  const getLocalStations = () => {
-    if (localCountryFilter === 'top') {
-      return localStations || [];
-    }
-    return localTagStations || [];
-  };
+  // Get country name for display
+  const selectedCountryName = useMemo(() => {
+    const country = POPULAR_COUNTRIES.find(c => c.code === selectedCountry);
+    return country?.name || 'tu país';
+  }, [selectedCountry]);
 
-  const getPopularStationsFiltered = () => {
-    if (popularFilter === 'global') {
-      return popularStations || [];
-    }
-    // TODO: Filtrar por género
-    return popularStations || [];
-  };
+  // Get filter label for display
+  const activeFilterLabel = useMemo(() => {
+    const filter = FILTER_TABS.find(f => f.id === activeFilter);
+    return filter?.label || '';
+  }, [activeFilter]);
 
   return (
     <div className={styles.radioPage}>
@@ -179,198 +176,124 @@ export default function RadioPage() {
         <Header />
 
         <div className={styles.radioPage__content}>
-          {/* Header */}
-          <div className={styles.radioPage__header}>
-            <h1 className={styles.radioPage__title}>Radio</h1>
-            <p className={styles.radioPage__subtitle}>
-              Descubre y escucha miles de emisoras de todo el mundo
-            </p>
+          {/* Search bar and country selector */}
+          <div className={styles.radioPage__topBar}>
+            <RadioSearchBar
+              onSearch={handleSearch}
+              onResultSelect={handleResultSelect}
+              searchResults={searchResults}
+              isLoading={isSearching}
+              placeholder="Buscar emisora por nombre, país o género..."
+            />
+            <CountrySelect
+              countries={POPULAR_COUNTRIES}
+              selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
+              onChange={handleCountryChange}
+              userCountryCode={userCountry?.countryCode}
+            />
           </div>
 
-          {/* Búsqueda global */}
-          <RadioSearch
-            onSearch={setSearchQuery}
-            placeholder="Buscar emisora por nombre..."
-          />
+          {/* Filter tabs */}
+          <div className={styles.radioPage__filters}>
+            <FilterTabs
+              tabs={FILTER_TABS}
+              activeTab={activeFilter}
+              onTabChange={handleFilterChange}
+            />
+          </div>
 
-          {/* Resultados de búsqueda */}
-          {searchQuery && searchResults && (
-            <section className={styles.radioPage__section}>
-              <h2 className={styles.sectionTitle}>
-                Resultados para "{searchQuery}" ({searchResults.length})
+          {/* Main stations grid */}
+          <div className={styles.radioPage__section}>
+            <h2 className={styles.radioPage__title}>
+              <Radio size={24} />
+              {isAllCountries ? 'Top emisoras del mundo' :
+               `Emisoras de ${selectedCountryName}`}
+              {!isTopFilter && !isAllFilter && ` - ${activeFilterLabel}`}
+            </h2>
+
+            {isLoading ? (
+              <div className={styles.radioPage__loading}>
+                <p>Cargando emisoras...</p>
+              </div>
+            ) : paginatedStations.length > 0 ? (
+              <>
+                <div className={styles.radioPage__grid}>
+                  {paginatedStations.map((station) => (
+                    <RadioStationCard key={station.stationuuid} station={station} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className={styles.radioPage__pagination}>
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={styles.radioPage__paginationButton}
+                    >
+                      Anterior
+                    </button>
+                    <span className={styles.radioPage__paginationInfo}>
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={styles.radioPage__paginationButton}
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.radioPage__empty}>
+                <Radio size={48} />
+                <p>No se encontraron emisoras</p>
+                <p className={styles.radioPage__emptyHint}>
+                  Intenta cambiar el filtro o país seleccionado
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Favorites section */}
+          {favoriteStations.length > 0 && (
+            <div className={styles.radioPage__section}>
+              <h2 className={styles.radioPage__title}>
+                <Radio size={24} />
+                Mis favoritas
               </h2>
-              {searchResults.length > 0 ? (
-                <div className={styles.radioPage__grid}>
-                  {searchResults.map((station: RadioBrowserStation) => (
-                    <RadioStationCard
-                      key={station.stationuuid}
-                      station={station}
-                      isFavorite={isStationFavorite(station)}
-                      isPlaying={isStationPlaying(station)}
-                      onPlay={() => handlePlayStation(station)}
-                      onToggleFavorite={() => handleToggleFavorite(station)}
-                    />
-                  ))}
+
+              <div className={styles.radioPage__grid}>
+                {paginatedFavorites.map((station) => (
+                  <RadioStationCard key={station.stationuuid} station={station} />
+                ))}
+              </div>
+
+              {/* Favorites pagination */}
+              {totalFavoritesPages > 1 && (
+                <div className={styles.radioPage__pagination}>
+                  <button
+                    onClick={() => handleFavoritesPageChange(favoritesPage - 1)}
+                    disabled={favoritesPage === 1}
+                    className={styles.radioPage__paginationButton}
+                  >
+                    Anterior
+                  </button>
+                  <span className={styles.radioPage__paginationInfo}>
+                    Página {favoritesPage} de {totalFavoritesPages}
+                  </span>
+                  <button
+                    onClick={() => handleFavoritesPageChange(favoritesPage + 1)}
+                    disabled={favoritesPage === totalFavoritesPages}
+                    className={styles.radioPage__paginationButton}
+                  >
+                    Siguiente
+                  </button>
                 </div>
-              ) : (
-                <p className={styles.radioPage__empty}>
-                  No se encontraron emisoras con ese nombre
-                </p>
               )}
-            </section>
-          )}
-
-          {/* Secciones principales (ocultar si hay búsqueda) */}
-          {!searchQuery && (
-            <>
-              {/* Tu País */}
-              <section className={styles.radioPage__section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    📍 {userCountry?.countryName || 'Tu País'}
-                  </h2>
-                  <span className={styles.sectionSubtitle}>Auto-detectado</span>
-                </div>
-
-                <FilterTabs
-                  tabs={localTabs}
-                  activeTab={localCountryFilter}
-                  onTabChange={setLocalCountryFilter}
-                />
-
-                <div className={styles.radioPage__grid}>
-                  {getLocalStations().slice(0, 10).map((station: RadioBrowserStation) => (
-                    <RadioStationCard
-                      key={station.stationuuid}
-                      station={station}
-                      isFavorite={isStationFavorite(station)}
-                      isPlaying={isStationPlaying(station)}
-                      onPlay={() => handlePlayStation(station)}
-                      onToggleFavorite={() => handleToggleFavorite(station)}
-                    />
-                  ))}
-                </div>
-              </section>
-
-              {/* Internacional */}
-              <section className={styles.radioPage__section}>
-                <h2 className={styles.sectionTitle}>🌍 Internacional</h2>
-                <p className={styles.sectionDescription}>
-                  Selecciona un país para explorar sus emisoras
-                </p>
-
-                <CountryGrid
-                  countries={POPULAR_COUNTRIES}
-                  onCountrySelect={setInternationalCountry}
-                />
-
-                {internationalCountry && internationalStations && (
-                  <>
-                    <h3 className={styles.subsectionTitle}>
-                      Emisoras de {POPULAR_COUNTRIES.find(c => c.code === internationalCountry)?.name}
-                    </h3>
-                    <div className={styles.radioPage__grid}>
-                      {internationalStations.slice(0, 10).map((station: RadioBrowserStation) => (
-                        <RadioStationCard
-                          key={station.stationuuid}
-                          station={station}
-                          isFavorite={isStationFavorite(station)}
-                          isPlaying={isStationPlaying(station)}
-                          onPlay={() => handlePlayStation(station)}
-                          onToggleFavorite={() => handleToggleFavorite(station)}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </section>
-
-              {/* Más Populares */}
-              <section className={styles.radioPage__section}>
-                <h2 className={styles.sectionTitle}>⭐ Más Populares</h2>
-
-                <FilterTabs
-                  tabs={popularTabs}
-                  activeTab={popularFilter}
-                  onTabChange={setPopularFilter}
-                />
-
-                <div className={styles.radioPage__grid}>
-                  {getPopularStationsFiltered().slice(0, 8).map((station: RadioBrowserStation) => (
-                    <RadioStationCard
-                      key={station.stationuuid}
-                      station={station}
-                      isFavorite={isStationFavorite(station)}
-                      isPlaying={isStationPlaying(station)}
-                      onPlay={() => handlePlayStation(station)}
-                      onToggleFavorite={() => handleToggleFavorite(station)}
-                    />
-                  ))}
-                </div>
-              </section>
-
-              {/* Por Género */}
-              <section className={styles.radioPage__section}>
-                <h2 className={styles.sectionTitle}>🎵 Por Género</h2>
-                <p className={styles.sectionDescription}>
-                  Explora emisoras por tipo de música
-                </p>
-
-                <div className={styles.genreGrid}>
-                  {GENRES.map((genre) => (
-                    <GenreCard
-                      key={genre.id}
-                      genre={genre}
-                      onClick={setSelectedGenre}
-                    />
-                  ))}
-                </div>
-
-                {selectedGenre && genreStations && (
-                  <>
-                    <h3 className={styles.subsectionTitle}>
-                      Emisoras de {GENRES.find(g => g.id === selectedGenre)?.name}
-                    </h3>
-                    <div className={styles.radioPage__grid}>
-                      {genreStations.slice(0, 10).map((station: RadioBrowserStation) => (
-                        <RadioStationCard
-                          key={station.stationuuid}
-                          station={station}
-                          isFavorite={isStationFavorite(station)}
-                          isPlaying={isStationPlaying(station)}
-                          onPlay={() => handlePlayStation(station)}
-                          onToggleFavorite={() => handleToggleFavorite(station)}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </section>
-
-              {/* Mis Favoritos */}
-              {favoriteStations && favoriteStations.length > 0 && (
-                <section className={styles.radioPage__section}>
-                  <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>
-                      ❤️ Mis Favoritos ({favoriteStations.length})
-                    </h2>
-                  </div>
-
-                  <div className={styles.radioPage__grid}>
-                    {favoriteStations.map((station: any) => (
-                      <RadioStationCard
-                        key={station.id}
-                        station={station}
-                        isFavorite={true}
-                        isPlaying={isStationPlaying(station)}
-                        onPlay={() => handlePlayStation(station)}
-                        onToggleFavorite={() => handleRemoveFavorite(station.id!)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
+            </div>
           )}
         </div>
       </main>
