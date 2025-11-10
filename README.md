@@ -17,9 +17,32 @@ echo/
 - pnpm >= 10
 - Docker & Docker Compose (Docker Desktop para Windows)
 
-### Automated Setup (Recommended)
+### 🎯 Quickstart (Instalar + Levantar todo)
 
-El proyecto incluye un script de setup que instala todo automáticamente:
+**La forma más rápida de empezar - un solo comando:**
+
+```bash
+# Linux/macOS/Git Bash
+pnpm quickstart
+
+# Windows (PowerShell nativo)
+pnpm quickstart:windows
+```
+
+Este comando:
+- ✅ Instala todas las dependencias
+- ✅ Configura el entorno
+- ✅ Levanta Docker (PostgreSQL + Redis)
+- ✅ Ejecuta migraciones y seed
+- ✅ **Inicia backend + frontend automáticamente**
+
+Después de ejecutar, el proyecto estará corriendo en:
+- Backend: http://localhost:4567
+- Frontend: http://localhost:5173
+
+### Automated Setup (Solo instalación)
+
+Si solo quieres instalar sin levantar el proyecto:
 
 ```bash
 # Clone repository
