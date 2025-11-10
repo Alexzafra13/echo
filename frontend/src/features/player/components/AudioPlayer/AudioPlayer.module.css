@@ -106,25 +106,20 @@
 }
 
 .playButton {
-  background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  box-shadow: var(--shadow-lg);
-}
-
-.playButton svg {
-  fill: #000;
-  stroke: none;
+  width: 40px;
+  height: 40px;
+  background: var(--color-primary-500);
+  color: white;
+  border-radius: var(--radius-full);
 }
 
 .playButton:hover {
-  transform: scale(1.08);
-  box-shadow: var(--shadow-xl);
+  background: var(--color-primary-600);
+  transform: scale(1.1);
 }
 
 .playButton:active {
-  transform: scale(0.96);
+  transform: scale(1.05);
 }
 
 /* ===== Progress Bar ===== */
@@ -137,7 +132,7 @@
 }
 
 .timeLabel {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--text-tertiary);
   min-width: 40px;
   text-align: center;
@@ -148,9 +143,9 @@
   height: 5px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-sm);
-  position: relative;
   cursor: pointer;
-  transition: height var(--transition-base);
+  position: relative;
+  transition: height 0.2s ease;
 }
 
 .progressBar:hover {
@@ -163,10 +158,9 @@
 
 .progressFill {
   height: 100%;
-  background: var(--gradient-primary);
+  background: var(--color-primary-500);
   border-radius: var(--radius-sm);
   transition: width 0.1s linear;
-  box-shadow: 0 0 8px rgba(237, 104, 66, 0.5);
 }
 
 .progressHandle {
@@ -175,11 +169,10 @@
   transform: translate(-50%, -50%);
   width: 14px;
   height: 14px;
-  background: var(--text-primary);
+  background: white;
   border-radius: var(--radius-full);
   opacity: 0;
-  transition: opacity var(--transition-base);
-  pointer-events: none;
+  transition: opacity 0.2s ease;
   box-shadow: var(--shadow-md);
 }
 
@@ -188,7 +181,7 @@
 .volumeControl {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   justify-content: flex-end;
 }
 
@@ -336,17 +329,18 @@
 .liveIndicator {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  background: rgba(34, 197, 94, 0.1);
-  border-radius: var(--radius-full);
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 4px;
   margin-right: var(--space-3);
 }
 
 .liveAntenna {
   color: #22c55e; /* Verde - buena señal */
-  animation: pulse-antenna 1.5s ease-in-out infinite;
+  animation: pulse-antenna 2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .liveAntenna.warning {
@@ -358,10 +352,11 @@
 }
 
 .liveText {
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
+  font-size: 11px;
+  font-weight: 600;
   color: #22c55e;
   letter-spacing: 0.5px;
+  line-height: 1;
 }
 
 .liveText.warning {
@@ -375,11 +370,9 @@
 @keyframes pulse-antenna {
   0%, 100% {
     opacity: 1;
-    transform: scale(1);
   }
   50% {
-    opacity: 0.4;
-    transform: scale(1.1);
+    opacity: 0.3;
   }
 }
 
