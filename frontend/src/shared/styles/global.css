@@ -15,6 +15,11 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Fondo en html para que cubra toda la viewport incluyendo el padding del body */
+  background-color: var(--bg-base);
+  background-image: var(--gradient-dark);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 body {
@@ -24,8 +29,8 @@ body {
   font-weight: var(--font-normal);
   line-height: var(--leading-normal);
   color: var(--text-primary);
-  background-color: var(--bg-base);
-  background-image: var(--gradient-dark);
+  /* Sin fondo en body, lo hereda del html */
+  background: transparent;
   min-height: 100vh;
   /* Prevenir scroll horizontal */
   overflow-x: hidden;
