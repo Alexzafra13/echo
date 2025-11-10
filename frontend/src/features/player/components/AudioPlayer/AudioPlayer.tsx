@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Pin, PinOff } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
@@ -29,10 +29,18 @@ export function AudioPlayer() {
   } = usePlayer();
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const queueRef = useRef<HTMLDivElement>(null);
 
   // Detectar scroll para activar mini-player
   const isMiniMode = useScrollDetection(120);
+
+  const togglePin = () => {
+    setIsPinned(!isPinned);
+  };
+
+  // Mostrar siempre si está pinned, sino depende del scroll
+  const shouldHide = isMiniMode && !isPinned;
 
   // Controlar padding-bottom del body según si el mini-player está activo
   useEffect(() => {
@@ -106,7 +114,16 @@ export function AudioPlayer() {
     : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
 
   return (
-    <div className={`${styles.player} ${isMiniMode ? styles.player_hidden : ''}`}>
+    <div className={`${styles.player} ${shouldHide ? styles.player_hidden : ''}`}>
+      {/* Pin button */}
+      <button
+        className={`${styles.pinButton} ${isPinned ? styles.pinButton_active : ''}`}
+        onClick={togglePin}
+        title={isPinned ? 'Desfijar reproductor' : 'Fijar reproductor'}
+      >
+        {isPinned ? <Pin size={14} /> : <PinOff size={14} />}
+      </button>
+
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
         <img

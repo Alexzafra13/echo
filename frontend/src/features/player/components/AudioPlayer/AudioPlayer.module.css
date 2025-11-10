@@ -29,6 +29,43 @@
   pointer-events: none;
 }
 
+/* ===== Pin Button ===== */
+
+.pinButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 20;
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pinButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pinButton_active {
+  opacity: 1;
+  background: rgba(237, 104, 66, 0.2);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-500);
+  box-shadow: 0 0 12px rgba(237, 104, 66, 0.3);
+}
+
 /* ===== Track Info ===== */
 
 .trackInfo {
