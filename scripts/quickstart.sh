@@ -37,6 +37,19 @@ print_info() {
   echo -e "${BLUE}ℹ $1${NC}"
 }
 
+# Detect docker compose command
+get_docker_compose_cmd() {
+  if docker compose version &> /dev/null 2>&1; then
+    echo "docker compose"
+  elif command -v docker-compose &> /dev/null; then
+    echo "docker-compose"
+  else
+    echo ""
+  fi
+}
+
+DOCKER_COMPOSE_CMD=$(get_docker_compose_cmd)
+
 # ==============================================
 # 1. Ejecutar Setup Completo
 # ==============================================
