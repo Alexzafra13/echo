@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
-import { MiniPlayer } from '../MiniPlayer/MiniPlayer';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
@@ -34,6 +33,22 @@ export function AudioPlayer() {
 
   // Detectar scroll para activar mini-player
   const isMiniMode = useScrollDetection(120);
+
+  // Controlar padding-bottom del body según si el mini-player está activo
+  useEffect(() => {
+    if (isMiniMode) {
+      // Mini-player activo: quitar padding (el reproductor está en el sidebar)
+      document.body.style.paddingBottom = '0';
+    } else {
+      // Mini-player inactivo: restaurar padding (el reproductor está en el footer)
+      document.body.style.paddingBottom = '110px';
+    }
+
+    // Cleanup: restaurar padding al desmontar
+    return () => {
+      document.body.style.paddingBottom = '110px';
+    };
+  }, [isMiniMode]);
 
   // Close queue dropdown when clicking outside
   useEffect(() => {
@@ -91,12 +106,7 @@ export function AudioPlayer() {
     : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
 
   return (
-    <>
-      {/* Mini Player - se muestra cuando estamos en mini mode */}
-      <MiniPlayer isVisible={isMiniMode} />
-
-      {/* Player principal - se oculta cuando estamos en mini mode */}
-      <div className={`${styles.player} ${isMiniMode ? styles.player_hidden : ''}`}>
+    <div className={`${styles.player} ${isMiniMode ? styles.player_hidden : ''}`}>
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
         <img
@@ -238,6 +248,5 @@ export function AudioPlayer() {
         />
       </div>
     </div>
-    </>
   );
 }
