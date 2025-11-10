@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -104,7 +104,7 @@ export function AudioPlayer() {
       {/* Player controls - Center */}
       <div className={styles.playerControls}>
         <div className={styles.controlButtons}>
-          {/* Radio mode: solo play/pause */}
+          {/* Radio mode: solo play/pause centrado */}
           {isRadioMode ? (
             <button
               className={`${styles.controlButton} ${styles.playButton}`}
@@ -179,18 +179,18 @@ export function AudioPlayer() {
             <span className={styles.timeLabel}>{formatDuration(duration)}</span>
           </div>
         )}
-
-        {/* Indicador de streaming en vivo para radio */}
-        {isRadioMode && (
-          <div className={styles.liveIndicator}>
-            <span className={styles.liveDot}></span>
-            <span className={styles.liveText}>EN VIVO</span>
-          </div>
-        )}
       </div>
 
       {/* Volume control - Right side */}
       <div className={styles.volumeControl}>
+        {/* Indicador EN VIVO para radio - al lado del volumen */}
+        {isRadioMode && (
+          <div className={styles.liveIndicator}>
+            <Radio size={16} className={styles.liveAntenna} />
+            <span className={styles.liveText}>EN VIVO</span>
+          </div>
+        )}
+
         {/* Queue button and dropdown - Solo para tracks */}
         {!isRadioMode && (
           <div className={styles.queueContainer} ref={queueRef}>
