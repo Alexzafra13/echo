@@ -49,13 +49,18 @@ export function AudioPlayer() {
     preference === 'sidebar' ? true :
     isMiniMode;
 
-  // Controlar padding-bottom del body según si el mini-player está activo
+  // Controlar padding-bottom del body según preferencia y scroll
   useEffect(() => {
-    if (isMiniMode) {
-      // Mini-player activo: quitar padding (el reproductor está en el sidebar)
+    // Si está en modo sidebar fijo, no necesita padding
+    if (preference === 'sidebar') {
       document.body.style.paddingBottom = '0';
-    } else {
-      // Mini-player inactivo: restaurar padding (el reproductor está en el footer)
+    }
+    // Si está en modo dinámico y hay scroll (mini-player activo), quitar padding
+    else if (preference === 'dynamic' && isMiniMode) {
+      document.body.style.paddingBottom = '0';
+    }
+    // En cualquier otro caso, mantener padding para el footer player
+    else {
       document.body.style.paddingBottom = '110px';
     }
 
@@ -63,7 +68,7 @@ export function AudioPlayer() {
     return () => {
       document.body.style.paddingBottom = '110px';
     };
-  }, [isMiniMode]);
+  }, [isMiniMode, preference]);
 
   // Close queue dropdown when clicking outside
   useEffect(() => {
@@ -261,7 +266,7 @@ export function AudioPlayer() {
           </div>
         )}
 
-        {/* Volume container con slider vertical */}
+        {/* Volume container con slider horizontal */}
         <div className={styles.volumeContainer}>
           <button
             className={styles.volumeButton}
@@ -270,24 +275,16 @@ export function AudioPlayer() {
           >
             {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </button>
-          <div className={styles.volumeSliderContainer}>
-            <div className={styles.volumeSlider}>
-              <div
-                className={styles.volumeFill}
-                style={{ height: `${volume * 100}%` }}
-              />
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={handleVolumeChange}
-              className={styles.volumeInput}
-              orient="vertical"
-            />
-          </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={handleVolumeChange}
+            className={styles.volumeSlider}
+            style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
+          />
         </div>
 
         {/* Menú de opciones junto al volumen */}
