@@ -1,0 +1,249 @@
+/* RadioStationCard Component Styles - BEM Naming Convention */
+
+/* Block: radioCard */
+.radioCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.radioCard:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+.radioCard--playing {
+  background: rgba(237, 104, 66, 0.1);
+}
+
+/* Elements */
+.radioCard__coverContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.3s ease;
+  border: 1px solid var(--border-base);
+  background: var(--bg-surface);
+}
+
+.radioCard:hover .radioCard__coverContainer {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.radioCard__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.radioCard:hover .radioCard__cover {
+  transform: scale(1.03);
+}
+
+.radioCard__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+  color: var(--color-text-secondary);
+}
+
+.radioCard__overlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+  transition: background 0.2s ease;
+}
+
+.radioCard:hover .radioCard__overlay {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.radioCard__playButton {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-primary, #ed6842);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 2px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(255, 102, 51, 0.4);
+}
+
+.radioCard:hover .radioCard__playButton {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.radioCard__playButton:hover {
+  background: var(--color-primary-hover, #e04d28);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(255, 102, 51, 0.5);
+}
+
+.radioCard__playButton:active {
+  transform: scale(1.05);
+}
+
+.radioCard__favoriteButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+}
+
+.radioCard:hover .radioCard__favoriteButton {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.radioCard__favoriteButton:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.radioCard__favoriteButton--active {
+  color: var(--color-primary, #ed6842);
+  background: rgba(237, 104, 66, 0.2);
+}
+
+.radioCard__favoriteButton--active:hover {
+  background: rgba(237, 104, 66, 0.3);
+}
+
+.radioCard__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radioCard__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radioCard__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radioCard__quality {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #8b8f9a);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.radioCard__separator {
+  color: var(--color-text-tertiary, #8b8f9a);
+}
+
+/* ===== Responsive Design ===== */
+
+/* Mobile */
+@media (max-width: 768px) {
+  .radioCard {
+    gap: 8px;
+    padding: 4px;
+  }
+
+  .radioCard__title {
+    font-size: 14px;
+  }
+
+  .radioCard__meta {
+    font-size: 12px;
+  }
+
+  .radioCard__quality {
+    font-size: 10px;
+  }
+
+  .radioCard__playButton {
+    width: 36px;
+    height: 36px;
+    bottom: 6px;
+    right: 6px;
+  }
+
+  .radioCard__playButton svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .radioCard__favoriteButton {
+    width: 30px;
+    height: 30px;
+    top: 6px;
+    right: 6px;
+  }
+
+  .radioCard__favoriteButton svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Touch devices: show buttons on hover/tap */
+@media (hover: none) {
+  .radioCard__playButton,
+  .radioCard__favoriteButton {
+    opacity: 0;
+  }
+
+  .radioCard:active .radioCard__playButton,
+  .radioCard:active .radioCard__favoriteButton {
+    opacity: 1;
+  }
+}
