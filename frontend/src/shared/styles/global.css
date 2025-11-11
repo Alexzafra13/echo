@@ -15,10 +15,6 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Fondo en html para que cubra toda la viewport incluyendo el padding del body */
-  background-color: var(--bg-base);
-  background-image: var(--gradient-dark);
-  background-attachment: fixed;
   min-height: 100vh;
 }
 
@@ -29,12 +25,22 @@ body {
   font-weight: var(--font-normal);
   line-height: var(--leading-normal);
   color: var(--text-primary);
-  /* Sin fondo en body, lo hereda del html */
-  background: transparent;
+  background-color: var(--bg-base);
+  background-image: var(--gradient-dark);
+  background-attachment: fixed;
   min-height: 100vh;
   /* Prevenir scroll horizontal */
   overflow-x: hidden;
-  /* El padding se controla dinámicamente desde AudioPlayer solo cuando hay contenido */
+}
+
+/* Espaciador invisible para el reproductor del footer */
+/* Se aplica dinámicamente cuando hay contenido y el player está en el footer */
+body.has-footer-player::after {
+  content: '';
+  display: block;
+  height: 110px;
+  width: 100%;
+  pointer-events: none;
 }
 
 /* ===== Typography ===== */
