@@ -12,6 +12,7 @@ import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
 import PlaylistsPage from '@features/playlists/pages/PlaylistsPage';
 import PlaylistDetailPage from '@features/playlists/pages/PlaylistDetailPage';
 import { RadioPage } from '@features/radio/pages/RadioPage';
+import { DailyMixPage } from '@features/recommendations/pages/DailyMixPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { useAuthStore } from '@shared/store';
@@ -100,6 +101,13 @@ function App() {
         <Route path="/radio">
           <ProtectedRoute>
             <RadioPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Daily Mix Route (Protected) */}
+        <Route path="/daily-mix">
+          <ProtectedRoute>
+            <DailyMixPage />
           </ProtectedRoute>
         </Route>
 
