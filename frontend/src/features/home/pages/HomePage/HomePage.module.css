@@ -5,6 +5,8 @@
   display: flex;
   min-height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 .homePage__main {
@@ -12,12 +14,15 @@
   margin-left: 200px; /* Aligned with 200px sidebar width */
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  max-width: calc(100vw - 200px);
 }
 
 .homePage__content {
   flex: 1;
   padding: 0 30px 30px 30px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Empty State */
