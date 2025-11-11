@@ -394,14 +394,17 @@ model UserStarred {
   userId      String   @map("user_id") @db.VarChar(36)
   starredId   String   @map("starred_id") @db.VarChar(36)
   starredType String   @map("starred_type") @db.VarChar(50)
+  sentiment   String   @db.VarChar(20) // 'like' or 'dislike'
   starredAt   DateTime @default(now()) @map("starred_at")
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, starredId, starredType])
   @@index([userId, starredAt(sort: Desc)], map: "idx_user_starred_user")
   @@index([starredId, starredType], map: "idx_user_starred_item")
+  @@index([userId, sentiment], map: "idx_user_starred_sentiment")
   @@map("user_starred")
 }
 
@@ -409,7 +412,7 @@ model UserRating {
   userId    String   @map("user_id") @db.VarChar(36)
   itemId    String   @map("item_id") @db.VarChar(36)
   itemType  String   @map("item_type") @db.VarChar(50)
-  rating    Int
+  rating    Int      // 0 = not rated, 1-5 = rating value
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -417,16 +420,25 @@ model UserRating {
 
   @@id([userId, itemId, itemType])
   @@index([userId], map: "idx_user_ratings_user")
+  @@index([itemId, itemType], map: "idx_ratings_item")
   @@map("user_ratings")
 }
 
 model PlayHistory {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id") @db.VarChar(36)
-  trackId   String   @map("track_id") @db.VarChar(36)
-  playedAt  DateTime @map("played_at")
-  client    String?  @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id") @db.VarChar(36)
+  trackId        String   @map("track_id") @db.VarChar(36)
+  playedAt       DateTime @map("played_at")
+  client         String?  @db.VarChar(255)
+
+  // Smart tracking context
+  playContext    String   @default("direct") @map("play_context") @db.VarChar(50) // 'direct', 'album', 'playlist', 'radio', 'shuffle', 'recommendation', 'search'
+  completionRate Float?   @map("completion_rate") // 0.0 - 1.0 (percentage of track played)
+  skipped        Boolean  @default(false) // True if skipped before 50%
+  sourceId       String?  @map("source_id") @db.VarChar(36) // ID of album/playlist/artist that originated the play
+  sourceType     String?  @map("source_type") @db.VarChar(50) // 'album', 'playlist', 'artist', 'radio', etc.
+
+  createdAt      DateTime @default(now()) @map("created_at")
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
@@ -434,20 +446,26 @@ model PlayHistory {
   @@index([userId, playedAt(sort: Desc)], map: "idx_play_history_user_date")
   @@index([trackId], map: "idx_play_history_track")
   @@index([playedAt(sort: Desc)], map: "idx_play_history_played_at")
+  @@index([userId, playContext], map: "idx_play_history_context")
+  @@index([sourceId, sourceType], map: "idx_play_history_source")
   @@map("play_history")
 }
 
 model UserPlayStats {
-  userId       String    @map("user_id") @db.VarChar(36)
-  itemId       String    @map("item_id") @db.VarChar(36)
-  itemType     String    @map("item_type") @db.VarChar(50)
-  playCount    BigInt    @default(0) @map("play_count")
-  lastPlayedAt DateTime? @map("last_played_at")
+  userId           String    @map("user_id") @db.VarChar(36)
+  itemId           String    @map("item_id") @db.VarChar(36)
+  itemType         String    @map("item_type") @db.VarChar(50) // 'track', 'album', 'artist'
+  playCount        BigInt    @default(0) @map("play_count")
+  weightedPlayCount Float    @default(0) @map("weighted_play_count") // Play count weighted by context
+  lastPlayedAt     DateTime? @map("last_played_at")
+  avgCompletionRate Float?   @map("avg_completion_rate") // Average completion rate
+  skipCount        BigInt    @default(0) @map("skip_count") // Number of times skipped
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, itemId, itemType])
   @@index([userId, playCount(sort: Desc)], map: "idx_user_play_stats_user")
+  @@index([userId, weightedPlayCount(sort: Desc)], map: "idx_user_play_stats_weighted")
   @@index([itemId, itemType], map: "idx_user_play_stats_item")
   @@map("user_play_stats")
 }
