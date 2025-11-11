@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CalculateScoreDto {
   @ApiProperty({ description: 'Track ID' })
   @IsString()
-  trackId: string;
+  trackId!: string;
 
   @ApiProperty({ description: 'Artist ID (optional, for diversity calculation)', required: false })
   @IsOptional()
@@ -45,7 +45,7 @@ export enum SmartPlaylistSortDto {
 export class SmartPlaylistConfigDto {
   @ApiProperty({ description: 'Playlist name' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'Playlist description', required: false })
   @IsOptional()

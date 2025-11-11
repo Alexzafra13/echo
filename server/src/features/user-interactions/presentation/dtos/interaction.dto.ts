@@ -11,37 +11,37 @@ export enum ItemTypeDto {
 export class ToggleLikeDto {
   @ApiProperty({ description: 'ID of the item to like' })
   @IsString()
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ enum: ItemTypeDto, description: 'Type of the item' })
   @IsEnum(ItemTypeDto)
-  itemType: ItemTypeDto;
+  itemType!: ItemTypeDto;
 }
 
 export class ToggleDislikeDto {
   @ApiProperty({ description: 'ID of the item to dislike' })
   @IsString()
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ enum: ItemTypeDto, description: 'Type of the item' })
   @IsEnum(ItemTypeDto)
-  itemType: ItemTypeDto;
+  itemType!: ItemTypeDto;
 }
 
 export class SetRatingDto {
   @ApiProperty({ description: 'ID of the item to rate' })
   @IsString()
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ enum: ItemTypeDto, description: 'Type of the item' })
   @IsEnum(ItemTypeDto)
-  itemType: ItemTypeDto;
+  itemType!: ItemTypeDto;
 
   @ApiProperty({ description: 'Rating value (1-5 stars)', minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating!: number;
 }
 
 export class GetUserInteractionsDto {
@@ -54,9 +54,9 @@ export class GetUserInteractionsDto {
 export class GetItemSummaryDto {
   @ApiProperty({ description: 'ID of the item' })
   @IsString()
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ enum: ItemTypeDto, description: 'Type of the item' })
   @IsEnum(ItemTypeDto)
-  itemType: ItemTypeDto;
+  itemType!: ItemTypeDto;
 }
