@@ -1,3 +1,4 @@
+import apiClient from './api';
 /**
  * Recommendations Service
  *
@@ -7,7 +8,7 @@
  * @module recommendations.service
  */
 
-import { apiClient } from './api-client';
+
 
 /**
  * Track with score details
