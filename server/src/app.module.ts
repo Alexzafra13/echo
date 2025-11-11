@@ -21,6 +21,7 @@ import { ExternalMetadataModule } from './features/external-metadata/external-me
 import { RadioModule } from './features/radio/radio.module';
 import { UserInteractionsModule } from './features/user-interactions/user-interactions.module';
 import { PlayTrackingModule } from './features/play-tracking/play-tracking.module';
+import { RecommendationsModule } from './features/recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { PlayTrackingModule } from './features/play-tracking/play-tracking.modul
     RadioModule,
     UserInteractionsModule,
     PlayTrackingModule,
+    RecommendationsModule,
   ],
   controllers: [],
   providers: [],
