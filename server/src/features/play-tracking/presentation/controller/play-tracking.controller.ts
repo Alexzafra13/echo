@@ -174,9 +174,9 @@ export class PlayTrackingController {
     type: [TopTrackResponseDto],
   })
   async getTopTracks(
+    @Req() req: any,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 50,
     @Query('days', new ParseIntPipe({ optional: true })) days?: number,
-    @Req() req: any,
   ): Promise<TopTrackResponseDto[]> {
     const userId = req.user.id;
     return await this.getUserTopTracksUseCase.execute(userId, limit, days);
