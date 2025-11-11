@@ -1,0 +1,101 @@
+.rating {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 2px;
+  justify-content: flex-start;
+}
+
+.starButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.starButton:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.starButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.readOnly .starButton {
+  cursor: default;
+}
+
+.readOnly .starButton:hover {
+  transform: none;
+}
+
+/* Default state - gray stars */
+.starButton svg {
+  fill: #666;
+  transition: fill 0.3s ease;
+}
+
+/* Star 1 - Red (Malo) */
+.star1 svg,
+.starButton.star1 svg {
+  fill: #ef4444;
+}
+
+.hover1 svg {
+  fill: #a23c3c !important;
+}
+
+/* Star 2 - Orange (Regular) */
+.star2 svg,
+.starButton.star2 svg {
+  fill: #e06c2b;
+}
+
+.hover2 svg {
+  fill: #99542d !important;
+}
+
+/* Star 3 - Yellow (Bueno) */
+.star3 svg,
+.starButton.star3 svg {
+  fill: #eab308;
+}
+
+.hover3 svg {
+  fill: #9f7e18 !important;
+}
+
+/* Star 4 - Green (Muy bueno) */
+.star4 svg,
+.starButton.star4 svg {
+  fill: #19c37d;
+}
+
+.hover4 svg {
+  fill: #22885e !important;
+}
+
+/* Star 5 - Purple (Excelente) */
+.star5 svg,
+.starButton.star5 svg {
+  fill: #ab68ff;
+}
+
+.hover5 svg {
+  fill: #7951ac !important;
+}
+
+/* Hover effect for unfilled stars */
+.starButton:hover:not(:disabled):not(.star1):not(.star2):not(.star3):not(.star4):not(.star5) svg {
+  fill: #ff9e0b;
+}

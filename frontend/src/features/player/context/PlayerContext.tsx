@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { Track, PlayerState, PlayerContextValue } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
+import { recordPlay, recordSkip, type PlayContext } from '@shared/services/play-tracking.service';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
@@ -8,8 +9,20 @@ interface PlayerProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Play session tracking data
+ */
+interface PlaySession {
+  trackId: string;
+  startTime: number; // Unix timestamp
+  playContext: PlayContext;
+  sourceId?: string;
+  sourceType?: string;
+}
+
 export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playSessionRef = useRef<PlaySession | null>(null);
   const { data: streamTokenData } = useStreamToken();
   const [state, setState] = useState<PlayerState>({
     currentTrack: null,
@@ -26,9 +39,89 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
 
+  /**
+   * Determine play context based on player state
+   */
+  const getPlayContext = (): PlayContext => {
+    if (state.isShuffle) {
+      return 'shuffle';
+    }
+    // Default to 'direct' - can be enhanced with sourceType tracking
+    return 'direct';
+  };
+
+  /**
+   * Start tracking a new play session
+   */
+  const startPlaySession = (track: Track, context?: PlayContext) => {
+    const playContext = context || getPlayContext();
+
+    playSessionRef.current = {
+      trackId: track.id,
+      startTime: Date.now(),
+      playContext,
+      // These can be set externally when playing from specific sources
+      sourceId: undefined,
+      sourceType: undefined,
+    };
+
+    console.log('[PlayTracking] Started session:', playSessionRef.current);
+  };
+
+  /**
+   * End current play session and record to backend
+   */
+  const endPlaySession = async (skipped: boolean = false) => {
+    if (!playSessionRef.current || !audioRef.current) return;
+
+    const session = playSessionRef.current;
+    const audio = audioRef.current;
+    const duration = audio.duration || 0;
+    const currentTime = audio.currentTime || 0;
+
+    // Calculate completion rate
+    const completionRate = duration > 0 ? currentTime / duration : 0;
+
+    console.log('[PlayTracking] Ending session:', {
+      trackId: session.trackId,
+      completionRate: (completionRate * 100).toFixed(1) + '%',
+      skipped,
+    });
+
+    if (skipped) {
+      // Record skip event
+      await recordSkip({
+        trackId: session.trackId,
+        timeListened: currentTime,
+        totalDuration: duration,
+        playContext: session.playContext,
+        sourceId: session.sourceId,
+        sourceType: session.sourceType as any,
+      });
+    } else {
+      // Record play event (only if completion > 30% or track ended naturally)
+      if (completionRate >= 0.3 || completionRate >= 0.95) {
+        await recordPlay({
+          trackId: session.trackId,
+          playContext: session.playContext,
+          completionRate,
+          skipped: false,
+          sourceId: session.sourceId,
+          sourceType: session.sourceType as any,
+        });
+      }
+    }
+
+    // Clear session
+    playSessionRef.current = null;
+  };
+
   // Play next track in queue
   const playNext = () => {
     if (state.queue.length === 0) return;
+
+    // End current session as skipped (user manually went to next track)
+    endPlaySession(true);
 
     let nextIndex: number;
     if (state.isShuffle) {
@@ -54,6 +147,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (!audio) return;
 
     const handleEnded = () => {
+      // Record completed play (not skipped)
+      endPlaySession(false);
+
       if (state.repeatMode === 'one') {
         audio.play();
       } else if (state.repeatMode === 'all' || currentQueueIndex < state.queue.length - 1) {
@@ -141,6 +237,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         currentRadioStation: null,
         isRadioMode: false,
       }));
+
+      // Start new play session for tracking
+      startPlaySession(track);
     } else if (state.currentTrack && !state.isRadioMode) {
       // Resume current track (only if not in radio mode)
       audioRef.current.play();
@@ -181,6 +280,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioRef.current.currentTime = 0;
       return;
     }
+
+    // End current session as skipped (user went to previous track)
+    endPlaySession(true);
 
     let prevIndex = currentQueueIndex - 1;
     if (prevIndex < 0) {
