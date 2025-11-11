@@ -49,33 +49,27 @@ export function AudioPlayer() {
     preference === 'sidebar' ? true :
     isMiniMode;
 
-  // Controlar padding-bottom del body según contenido, preferencia y scroll
+  // Controlar espaciador del footer según contenido, preferencia y scroll
   useEffect(() => {
-    // Solo aplicar padding si hay contenido cargado (track o radio)
+    // Solo aplicar espaciador si hay contenido cargado (track o radio)
     const hasContent = !!(currentTrack || currentRadioStation);
 
-    if (!hasContent) {
-      // Sin contenido = sin padding
-      document.body.style.paddingBottom = '0';
-      return;
+    // Determinar si debe mostrarse el espaciador del footer
+    const needsFooterSpacer =
+      hasContent && // Hay contenido
+      preference !== 'sidebar' && // No está fijado en sidebar
+      !(preference === 'dynamic' && isMiniMode); // No está en modo mini dinámico
+
+    // Toggle clase en body para activar/desactivar el espaciador ::after
+    if (needsFooterSpacer) {
+      document.body.classList.add('has-footer-player');
+    } else {
+      document.body.classList.remove('has-footer-player');
     }
 
-    // Si está en modo sidebar fijo, no necesita padding
-    if (preference === 'sidebar') {
-      document.body.style.paddingBottom = '0';
-    }
-    // Si está en modo dinámico y hay scroll (mini-player activo), quitar padding
-    else if (preference === 'dynamic' && isMiniMode) {
-      document.body.style.paddingBottom = '0';
-    }
-    // En cualquier otro caso, mantener padding para el footer player
-    else {
-      document.body.style.paddingBottom = '110px';
-    }
-
-    // Cleanup: quitar padding al desmontar
+    // Cleanup: quitar clase al desmontar
     return () => {
-      document.body.style.paddingBottom = '0';
+      document.body.classList.remove('has-footer-player');
     };
   }, [currentTrack, currentRadioStation, isMiniMode, preference]);
 
