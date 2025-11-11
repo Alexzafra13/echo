@@ -34,8 +34,7 @@ body {
   min-height: 100vh;
   /* Prevenir scroll horizontal */
   overflow-x: hidden;
-  /* Padding para el reproductor del footer (90px altura + 2 * 16px margen = ~110px) */
-  padding-bottom: 110px;
+  /* El padding se controla dinámicamente desde AudioPlayer solo cuando hay contenido */
 }
 
 /* ===== Typography ===== */

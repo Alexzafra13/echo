@@ -49,8 +49,17 @@ export function AudioPlayer() {
     preference === 'sidebar' ? true :
     isMiniMode;
 
-  // Controlar padding-bottom del body según preferencia y scroll
+  // Controlar padding-bottom del body según contenido, preferencia y scroll
   useEffect(() => {
+    // Solo aplicar padding si hay contenido cargado (track o radio)
+    const hasContent = !!(currentTrack || currentRadioStation);
+
+    if (!hasContent) {
+      // Sin contenido = sin padding
+      document.body.style.paddingBottom = '0';
+      return;
+    }
+
     // Si está en modo sidebar fijo, no necesita padding
     if (preference === 'sidebar') {
       document.body.style.paddingBottom = '0';
@@ -64,11 +73,11 @@ export function AudioPlayer() {
       document.body.style.paddingBottom = '110px';
     }
 
-    // Cleanup: restaurar padding al desmontar
+    // Cleanup: quitar padding al desmontar
     return () => {
-      document.body.style.paddingBottom = '110px';
+      document.body.style.paddingBottom = '0';
     };
-  }, [isMiniMode, preference]);
+  }, [currentTrack, currentRadioStation, isMiniMode, preference]);
 
   // Close queue dropdown when clicking outside
   useEffect(() => {
