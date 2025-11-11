@@ -33,14 +33,10 @@ body {
   overflow-x: hidden;
 }
 
-/* Espaciador invisible para el reproductor del footer */
-/* Se aplica dinámicamente cuando hay contenido y el player está en el footer */
-body.has-footer-player::after {
-  content: '';
-  display: block;
-  height: 110px;
-  width: 100%;
-  pointer-events: none;
+/* Espaciador para el reproductor del footer */
+/* Se aplica a los elementos main cuando el player está visible */
+body.has-footer-player main {
+  padding-bottom: 120px;
 }
 
 /* ===== Typography ===== */
