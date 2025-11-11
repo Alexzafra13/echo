@@ -25,11 +25,11 @@ export enum SourceTypeDto {
 export class RecordPlayDto {
   @ApiProperty({ description: 'Track ID' })
   @IsString()
-  trackId: string;
+  trackId!: string;
 
   @ApiProperty({ enum: PlayContextDto, description: 'Play context' })
   @IsEnum(PlayContextDto)
-  playContext: PlayContextDto;
+  playContext!: PlayContextDto;
 
   @ApiProperty({ description: 'Completion rate (0.0 - 1.0)', required: false, minimum: 0, maximum: 1 })
   @IsOptional()
@@ -52,15 +52,15 @@ export class RecordPlayDto {
 export class RecordSkipDto {
   @ApiProperty({ description: 'Track ID' })
   @IsString()
-  trackId: string;
+  trackId!: string;
 
   @ApiProperty({ description: 'Completion rate when skipped (0.0 - 1.0)', minimum: 0, maximum: 1 })
   @IsNumber()
   @Min(0)
   @Max(1)
-  completionRate: number;
+  completionRate!: number;
 
   @ApiProperty({ enum: PlayContextDto, description: 'Play context' })
   @IsEnum(PlayContextDto)
-  playContext: PlayContextDto;
+  playContext!: PlayContextDto;
 }
