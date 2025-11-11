@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class ToggleLikeResponseDto {
   @ApiProperty({ description: 'Whether the item is liked after toggle' })
-  liked: boolean;
+  liked!: boolean;
 
   @ApiProperty({ description: 'Timestamp when liked', required: false })
   likedAt?: Date;
@@ -10,7 +10,7 @@ export class ToggleLikeResponseDto {
 
 export class ToggleDislikeResponseDto {
   @ApiProperty({ description: 'Whether the item is disliked after toggle' })
-  disliked: boolean;
+  disliked!: boolean;
 
   @ApiProperty({ description: 'Timestamp when disliked', required: false })
   dislikedAt?: Date;
@@ -18,33 +18,33 @@ export class ToggleDislikeResponseDto {
 
 export class RatingResponseDto {
   @ApiProperty({ description: 'User ID' })
-  userId: string;
+  userId!: string;
 
   @ApiProperty({ description: 'Item ID' })
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ description: 'Item type' })
-  itemType: string;
+  itemType!: string;
 
   @ApiProperty({ description: 'Rating value (1-5)' })
-  rating: number;
+  rating!: number;
 
   @ApiProperty({ description: 'Created at timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({ description: 'Updated at timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 }
 
 export class UserInteractionDto {
   @ApiProperty({ description: 'User ID' })
-  userId: string;
+  userId!: string;
 
   @ApiProperty({ description: 'Item ID' })
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ description: 'Item type' })
-  itemType: string;
+  itemType!: string;
 
   @ApiProperty({ description: 'Sentiment (like/dislike)', required: false })
   sentiment?: string;
@@ -64,10 +64,10 @@ export class UserInteractionDto {
 
 export class ItemInteractionSummaryDto {
   @ApiProperty({ description: 'Item ID' })
-  itemId: string;
+  itemId!: string;
 
   @ApiProperty({ description: 'Item type' })
-  itemType: string;
+  itemType!: string;
 
   @ApiProperty({ description: 'User sentiment (like/dislike)', required: false })
   userSentiment?: string;
@@ -76,28 +76,28 @@ export class ItemInteractionSummaryDto {
   userRating?: number;
 
   @ApiProperty({ description: 'Total likes' })
-  totalLikes: number;
+  totalLikes!: number;
 
   @ApiProperty({ description: 'Total dislikes' })
-  totalDislikes: number;
+  totalDislikes!: number;
 
   @ApiProperty({ description: 'Average rating' })
-  averageRating: number;
+  averageRating!: number;
 
   @ApiProperty({ description: 'Total ratings' })
-  totalRatings: number;
+  totalRatings!: number;
 }
 
 export class InteractionStatsDto {
   @ApiProperty({ description: 'Total likes' })
-  totalLikes: number;
+  totalLikes!: number;
 
   @ApiProperty({ description: 'Total dislikes' })
-  totalDislikes: number;
+  totalDislikes!: number;
 
   @ApiProperty({ description: 'Total ratings' })
-  totalRatings: number;
+  totalRatings!: number;
 
   @ApiProperty({ description: 'Average rating' })
-  averageRating: number;
+  averageRating!: number;
 }
