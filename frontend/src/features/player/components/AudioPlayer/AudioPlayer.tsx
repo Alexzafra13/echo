@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, MoreVertical } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
+import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
 import styles from './AudioPlayer.module.css';
@@ -38,7 +41,7 @@ export function AudioPlayer() {
   const isMiniMode = useScrollDetection(120);
 
   // Sistema de preferencias
-  const { preference, setPreference } = usePlayerPreference();
+  const { preference } = usePlayerPreference();
 
   // Lógica de visibilidad basada en preferencia
   // - 'footer': siempre visible en footer (shouldHide = false)
@@ -49,61 +52,28 @@ export function AudioPlayer() {
     preference === 'sidebar' ? true :
     isMiniMode;
 
+  // Cerrar dropdowns al hacer click fuera
+  useClickOutside(queueRef, () => setIsQueueOpen(false), isQueueOpen);
+  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
+
   // Controlar espaciador del footer según contenido, preferencia y scroll
   useEffect(() => {
-    // Solo aplicar espaciador si hay contenido cargado (track o radio)
     const hasContent = !!(currentTrack || currentRadioStation);
-
-    // Determinar si debe mostrarse el espaciador del footer
     const needsFooterSpacer =
-      hasContent && // Hay contenido
-      preference !== 'sidebar' && // No está fijado en sidebar
-      !(preference === 'dynamic' && isMiniMode); // No está en modo mini dinámico
+      hasContent &&
+      preference !== 'sidebar' &&
+      !(preference === 'dynamic' && isMiniMode);
 
-    // Toggle clase en body para activar/desactivar el espaciador ::after
     if (needsFooterSpacer) {
       document.body.classList.add('has-footer-player');
     } else {
       document.body.classList.remove('has-footer-player');
     }
 
-    // Cleanup: quitar clase al desmontar
     return () => {
       document.body.classList.remove('has-footer-player');
     };
   }, [currentTrack, currentRadioStation, isMiniMode, preference]);
-
-  // Close queue dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (queueRef.current && !queueRef.current.contains(event.target as Node)) {
-        setIsQueueOpen(false);
-      }
-    };
-
-    if (isQueueOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isQueueOpen]);
-
-  // Close menu dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isMenuOpen]);
 
   // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
@@ -131,33 +101,27 @@ export function AudioPlayer() {
     setIsQueueOpen(!isQueueOpen);
   };
 
-  // Determinar qué mostrar: track o radio
-  const displayTitle = isRadioMode && currentRadioStation
-    ? currentRadioStation.name
-    : currentTrack?.title || '';
-
-  const displayArtist = isRadioMode && currentRadioStation
-    ? [currentRadioStation.country, currentRadioStation.tags?.split(',')[0]].filter(Boolean).join(' • ') || 'Radio'
-    : currentTrack?.artist || '';
-
-  const displayCover = isRadioMode && currentRadioStation
-    ? currentRadioStation.favicon || '/images/covers/placeholder.jpg'
-    : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
+  // Obtener información de visualización (track o radio)
+  const { title, artist, cover } = getPlayerDisplayInfo(
+    isRadioMode,
+    currentRadioStation,
+    currentTrack
+  );
 
   return (
-    <div className={`${styles.player} ${shouldHide ? styles.player_hidden : ''}`}>
+    <div className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''}`}>
 
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
         <img
-          src={isRadioMode ? displayCover : getCoverUrl(displayCover)}
-          alt={displayTitle}
+          src={isRadioMode ? cover : getCoverUrl(cover)}
+          alt={title}
           className={styles.trackCover}
           onError={handleImageError}
         />
         <div className={styles.trackDetails}>
-          <div className={styles.trackTitle}>{displayTitle}</div>
-          <div className={styles.trackArtist}>{displayArtist}</div>
+          <div className={styles.trackTitle}>{title}</div>
+          <div className={styles.trackArtist}>{artist}</div>
         </div>
       </div>
 
@@ -255,7 +219,7 @@ export function AudioPlayer() {
         {!isRadioMode && (
           <div className={styles.queueContainer} ref={queueRef}>
             <button
-              className={`${styles.queueButton} ${isQueueOpen ? styles.queueButton_active : ''}`}
+              className={`${styles.queueButton} ${isQueueOpen ? styles['queueButton--active'] : ''}`}
               onClick={toggleQueue}
               title="Lista de reproducción"
             >
@@ -291,38 +255,13 @@ export function AudioPlayer() {
         </div>
 
         {/* Menú de opciones junto al volumen */}
-        <div className={styles.menuContainer} ref={menuRef}>
-          <button
-            className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            title="Opciones del reproductor"
-          >
-            <MoreVertical size={16} />
-          </button>
-
-          {isMenuOpen && (
-            <div className={styles.menuDropdown}>
-              <button
-                className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
-                onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
-              >
-                Posición dinámica
-              </button>
-              <button
-                className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
-                onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
-              >
-                Reproductor lateral
-              </button>
-              <button
-                className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
-                onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
-              >
-                Reproductor por defecto
-              </button>
-            </div>
-          )}
-        </div>
+        <PlayerMenu
+          isOpen={isMenuOpen}
+          onToggle={() => setIsMenuOpen(!isMenuOpen)}
+          onClose={() => setIsMenuOpen(false)}
+          menuRef={menuRef}
+          size={16}
+        />
       </div>
     </div>
   );
