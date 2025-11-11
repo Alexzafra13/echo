@@ -1,0 +1,43 @@
+import type { Track } from '@shared/types/track.types';
+import type { RadioStation } from '@shared/types/radio.types';
+
+/**
+ * Información de visualización para el reproductor
+ */
+export interface PlayerDisplayInfo {
+  title: string;
+  artist: string;
+  cover: string;
+}
+
+/**
+ * Extrae la información de visualización para el reproductor
+ * Funciona tanto para tracks como para estaciones de radio
+ *
+ * @param isRadioMode - Si está en modo radio
+ * @param currentRadioStation - Estación de radio actual
+ * @param currentTrack - Track actual
+ * @returns Información formateada para mostrar
+ */
+export function getPlayerDisplayInfo(
+  isRadioMode: boolean,
+  currentRadioStation: RadioStation | null,
+  currentTrack: Track | null
+): PlayerDisplayInfo {
+  if (isRadioMode && currentRadioStation) {
+    return {
+      title: currentRadioStation.name,
+      artist: [
+        currentRadioStation.country,
+        currentRadioStation.tags?.split(',')[0]
+      ].filter(Boolean).join(' • ') || 'Radio',
+      cover: currentRadioStation.favicon || '/images/covers/placeholder.jpg'
+    };
+  }
+
+  return {
+    title: currentTrack?.title || '',
+    artist: currentTrack?.artist || '',
+    cover: currentTrack?.coverImage || '/images/covers/placeholder.jpg'
+  };
+}

@@ -23,7 +23,7 @@
   pointer-events: auto;
 }
 
-.player_hidden {
+.player--hidden {
   transform: translateY(120px) scale(0.9);
   opacity: 0;
   pointer-events: none;
@@ -58,7 +58,7 @@
   color: var(--text-primary);
 }
 
-.menuButton_active {
+.menuButton--active {
   opacity: 1;
   background: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
@@ -109,12 +109,12 @@
   color: var(--text-primary);
 }
 
-.menuOption_active {
+.menuOption--active {
   background: rgba(237, 104, 66, 0.15);
   color: var(--color-primary-500);
 }
 
-.menuOption_active:hover {
+.menuOption--active:hover {
   background: rgba(237, 104, 66, 0.2);
 }
 
@@ -406,7 +406,7 @@
   transform: scale(1.05);
 }
 
-.queueButton_active {
+.queueButton--active {
   color: var(--color-primary-500);
   background: rgba(237, 104, 66, 0.15);
 }
