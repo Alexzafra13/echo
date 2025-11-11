@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio, MoreVertical } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
+import { useClickOutside } from '../../hooks/useClickOutside';
+import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
+import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
 import styles from './MiniPlayer.module.css';
@@ -13,7 +16,7 @@ interface MiniPlayerProps {
 export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { preference, setPreference } = usePlayerPreference();
+  const { preference } = usePlayerPreference();
   const {
     currentTrack,
     currentRadioStation,
@@ -29,21 +32,10 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     setVolume,
   } = usePlayer();
 
-  // Cerrar menú al hacer click fuera (moved before early return)
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
+  // Cerrar menú al hacer click fuera
+  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isMenuOpen]);
-
-  // No mostrar si no hay ni track ni radio (moved after all hooks)
+  // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
     return null;
   }
@@ -65,18 +57,12 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     setVolume(volume === 0 ? 0.7 : 0);
   };
 
-  // Determinar qué mostrar: track o radio
-  const displayTitle = isRadioMode && currentRadioStation
-    ? currentRadioStation.name
-    : currentTrack?.title || '';
-
-  const displayArtist = isRadioMode && currentRadioStation
-    ? [currentRadioStation.country, currentRadioStation.tags?.split(',')[0]].filter(Boolean).join(' • ') || 'Radio'
-    : currentTrack?.artist || '';
-
-  const displayCover = isRadioMode && currentRadioStation
-    ? currentRadioStation.favicon || '/images/covers/placeholder.jpg'
-    : currentTrack?.coverImage || '/images/covers/placeholder.jpg';
+  // Obtener información de visualización (track o radio)
+  const { title, artist, cover } = getPlayerDisplayInfo(
+    isRadioMode,
+    currentRadioStation,
+    currentTrack
+  );
 
   // Lógica de visibilidad basada en preferencia
   // - 'sidebar': siempre visible en sidebar (shouldShow = true)
@@ -88,12 +74,12 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
     false;
 
   return (
-    <div className={`${styles.miniPlayer} ${shouldShow ? styles.miniPlayer_visible : ''}`}>
+    <div className={`${styles.miniPlayer} ${shouldShow ? styles['miniPlayer--visible'] : ''}`}>
       {/* Cover con animación de reproducción */}
       <div className={styles.coverContainer}>
         <img
-          src={isRadioMode ? displayCover : getCoverUrl(displayCover)}
-          alt={displayTitle}
+          src={isRadioMode ? cover : getCoverUrl(cover)}
+          alt={title}
           className={styles.cover}
           onError={handleImageError}
         />
@@ -111,8 +97,8 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
 
       {/* Info */}
       <div className={styles.info}>
-        <div className={styles.title}>{displayTitle}</div>
-        <div className={styles.artist}>{displayArtist}</div>
+        <div className={styles.title}>{title}</div>
+        <div className={styles.artist}>{artist}</div>
       </div>
 
       {/* Controls reorganizados */}
@@ -186,38 +172,13 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </div>
 
         {/* Menú de opciones junto al volumen */}
-        <div className={styles.menuContainer} ref={menuRef}>
-          <button
-            className={`${styles.menuButton} ${isMenuOpen ? styles.menuButton_active : ''}`}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            title="Opciones del reproductor"
-          >
-            <MoreVertical size={14} />
-          </button>
-
-          {isMenuOpen && (
-            <div className={styles.menuDropdown}>
-              <button
-                className={`${styles.menuOption} ${preference === 'dynamic' ? styles.menuOption_active : ''}`}
-                onClick={() => { setPreference('dynamic'); setIsMenuOpen(false); }}
-              >
-                Posición dinámica
-              </button>
-              <button
-                className={`${styles.menuOption} ${preference === 'sidebar' ? styles.menuOption_active : ''}`}
-                onClick={() => { setPreference('sidebar'); setIsMenuOpen(false); }}
-              >
-                Reproductor lateral
-              </button>
-              <button
-                className={`${styles.menuOption} ${preference === 'footer' ? styles.menuOption_active : ''}`}
-                onClick={() => { setPreference('footer'); setIsMenuOpen(false); }}
-              >
-                Reproductor por defecto
-              </button>
-            </div>
-          )}
-        </div>
+        <PlayerMenu
+          isOpen={isMenuOpen}
+          onToggle={() => setIsMenuOpen(!isMenuOpen)}
+          onClose={() => setIsMenuOpen(false)}
+          menuRef={menuRef}
+          size={14}
+        />
       </div>
 
       {/* Progress bar - Solo para tracks */}
