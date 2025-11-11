@@ -16,6 +16,9 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  /* Prevenir scroll horizontal en toda la página */
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -31,6 +34,8 @@ body {
   min-height: 100vh;
   /* Prevenir scroll horizontal */
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* Espaciador para el reproductor del footer */
@@ -179,4 +184,7 @@ textarea:focus-visible {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
