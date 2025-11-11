@@ -20,6 +20,7 @@ import { ScannerModule } from './features/scanner/scanner.module';
 import { ExternalMetadataModule } from './features/external-metadata/external-metadata.module';
 import { RadioModule } from './features/radio/radio.module';
 import { UserInteractionsModule } from './features/user-interactions/user-interactions.module';
+import { PlayTrackingModule } from './features/play-tracking/play-tracking.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { UserInteractionsModule } from './features/user-interactions/user-intera
     ExternalMetadataModule,
     RadioModule,
     UserInteractionsModule,
+    PlayTrackingModule,
   ],
   controllers: [],
   providers: [],
