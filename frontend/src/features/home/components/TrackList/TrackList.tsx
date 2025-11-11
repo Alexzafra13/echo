@@ -7,6 +7,8 @@ import { TrackInfoModal } from '../TrackInfoModal';
 import type { Track } from '../../types';
 import { formatDuration } from '../../types';
 import { TrackOptionsMenu } from '../TrackOptionsMenu/TrackOptionsMenu';
+import { RatingStars } from '@shared/components/ui/RatingStars';
+import { LikeDislikeButtons } from '@shared/components/ui/LikeDislikeButtons';
 import styles from './TrackList.module.css';
 
 /**
@@ -109,6 +111,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
         <span className={styles.trackList__headerTitle}>Título</span>
         <span className={styles.trackList__headerFormat}>Formato</span>
         <span className={styles.trackList__headerDuration}>Duración</span>
+        <span className={styles.trackList__headerRating}>Calificación</span>
       </div>
 
       <div className={styles.trackList__tracks}>
@@ -175,6 +178,12 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
               <span className={styles.trackList__trackDuration}>
                 {formatDuration(track.duration)}
               </span>
+
+              {/* Rating (Like/Dislike + Stars) */}
+              <div className={styles.trackList__trackRating}>
+                <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
+                <RatingStars itemId={track.id} itemType="track" size={14} />
+              </div>
 
               {/* Options Menu */}
               <TrackOptionsMenu
