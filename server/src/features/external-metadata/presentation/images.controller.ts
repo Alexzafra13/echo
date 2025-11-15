@@ -238,6 +238,74 @@ export class ImagesController {
   }
 
   /**
+   * Sirve una imagen personalizada por su ID
+   * GET /api/images/artists/:artistId/custom/:customImageId
+   */
+  @Public()
+  @Get('artists/:artistId/custom/:customImageId')
+  @ApiOperation({
+    summary: 'Serve custom artist image by ID',
+    description: 'Returns a custom uploaded image file',
+  })
+  @ApiParam({
+    name: 'artistId',
+    description: 'Artist UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiParam({
+    name: 'customImageId',
+    description: 'Custom image UUID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Custom image returned successfully',
+    content: {
+      'image/jpeg': {},
+      'image/png': {},
+      'image/webp': {},
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Custom image not found' })
+  async getCustomArtistImage(
+    @Param('artistId') artistId: string,
+    @Param('customImageId') customImageId: string,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<StreamableFile> {
+    try {
+      // Obtener información de la imagen personalizada
+      const customImage = await this.imageService.getCustomArtistImage(
+        artistId,
+        customImageId,
+      );
+
+      // Configurar headers de caché
+      this.setCacheHeaders(res, customImage);
+
+      // Crear stream del archivo
+      const fileStream = createReadStream(customImage.filePath);
+
+      this.logger.debug(
+        `Serving custom artist image: ${customImageId} (${customImage.size} bytes)`,
+      );
+
+      return new StreamableFile(fileStream);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Error serving custom artist image ${customImageId}: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+      throw new NotFoundException(
+        `Unable to serve custom image ${customImageId}`,
+      );
+    }
+  }
+
+  /**
    * Verifica si un artista tiene una imagen específica
    * GET /api/images/artists/:artistId/:imageType/exists
    */
