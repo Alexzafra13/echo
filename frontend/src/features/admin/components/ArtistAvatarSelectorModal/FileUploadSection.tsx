@@ -77,14 +77,38 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         file: selectedFile,
       },
       {
-        onSuccess: () => {
-          console.log('[FileUpload] ✅ Image uploaded successfully');
-          setSelectedFile(null);
-          setPreviewUrl(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          onSuccess?.();
+        onSuccess: (data) => {
+          console.log('[FileUpload] ✅ Image uploaded successfully', data);
+
+          // Aplicar automáticamente la imagen recién subida
+          console.log('[FileUpload] Applying uploaded image automatically...');
+          applyImage(
+            {
+              artistId,
+              customImageId: data.customImageId,
+            },
+            {
+              onSuccess: () => {
+                console.log('[FileUpload] ✅ Image applied successfully');
+                setSelectedFile(null);
+                setPreviewUrl(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+                onSuccess?.();
+              },
+              onError: (error: any) => {
+                console.error('[FileUpload] ❌ Apply error:', error);
+                setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
+                // Limpiar el formulario aunque falle la aplicación
+                setSelectedFile(null);
+                setPreviewUrl(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              },
+            }
+          );
         },
         onError: (error: any) => {
           console.error('[FileUpload] ❌ Upload error:', error);
@@ -217,10 +241,10 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
               variant="primary"
               fullWidth
               onClick={handleUpload}
-              disabled={isUploading}
-              loading={isUploading}
+              disabled={isUploading || isApplying}
+              loading={isUploading || isApplying}
             >
-              {isUploading ? 'Subiendo...' : 'Subir imagen'}
+              {isUploading ? 'Subiendo...' : isApplying ? 'Aplicando...' : 'Subir y aplicar'}
             </Button>
           </div>
         )}
