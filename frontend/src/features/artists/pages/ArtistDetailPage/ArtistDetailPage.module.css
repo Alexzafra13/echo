@@ -114,10 +114,6 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
-.artistDetailPage__imageMenuContainer {
-  position: relative;
-}
-
 .artistDetailPage__imageMenu {
   position: absolute;
   bottom: 50px;
