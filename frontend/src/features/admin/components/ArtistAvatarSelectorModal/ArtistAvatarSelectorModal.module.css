@@ -65,6 +65,45 @@
   color: var(--color-text-primary, #ffffff);
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  margin-bottom: -1px; /* Overlap with bottom border */
+}
+
+.tab:hover {
+  color: var(--color-text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tabActive {
+  color: var(--color-primary-500, #ed6842);
+  border-bottom-color: var(--color-primary-500, #ed6842);
+}
+
+.tab svg {
+  flex-shrink: 0;
+}
+
 /* Body */
 .body {
   flex: 1;
