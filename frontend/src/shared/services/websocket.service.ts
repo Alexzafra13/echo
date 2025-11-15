@@ -64,13 +64,13 @@ export class WebSocketService {
       reconnectionAttempts: 5,
     });
 
-    // Event listeners para logging
+    // Event listeners para logging (solo errores)
     socket.on('connect', () => {
-      console.log(`✅ WebSocket connected to /${namespace} (ID: ${socket.id})`);
+      // Connection successful - silent
     });
 
     socket.on('disconnect', (reason: string) => {
-      console.log(`❌ WebSocket disconnected from /${namespace}: ${reason}`);
+      // Disconnected - silent unless debugging
     });
 
     socket.on('error', (error: Error) => {

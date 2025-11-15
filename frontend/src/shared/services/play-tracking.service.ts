@@ -36,7 +36,6 @@ export interface RecordPlayData {
   trackId: string;
   playContext: PlayContext;
   completionRate?: number;
-  skipped?: boolean;
   sourceId?: string;
   sourceType?: SourceType;
 }
