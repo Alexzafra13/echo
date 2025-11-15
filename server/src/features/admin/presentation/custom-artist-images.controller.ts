@@ -6,15 +6,14 @@ import {
   Param,
   Body,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
+  HttpCode,
+  HttpStatus,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { MultipartFile } from '@fastify/multipart';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { UploadCustomArtistImageUseCase } from '../domain/use-cases/upload-custom-artist-image';
@@ -44,7 +43,7 @@ export class CustomArtistImagesController {
   }
 
   @Post(':artistId/upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Upload custom artist image',
@@ -57,33 +56,89 @@ export class CustomArtistImagesController {
         file: {
           type: 'string',
           format: 'binary',
+          description: 'Image file (JPEG, PNG, or WebP)',
         },
         imageType: {
           type: 'string',
           enum: ['profile', 'background', 'banner', 'logo'],
+          description: 'Type of image to upload',
         },
+      },
+      required: ['file', 'imageType'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Image uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+        customImageId: { type: 'string' },
+        filePath: { type: 'string' },
+        url: { type: 'string' },
       },
     },
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file (size, type, or missing)',
+  })
   async uploadImage(
     @Param('artistId') artistId: string,
-    @Body('imageType') imageType: string,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
-        ],
-      }),
-    )
-    file: Express.Multer.File,
-    @Req() req: any,
+    @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: any },
   ) {
+    // Fastify multipart - get uploaded file
+    const data = await request.file();
+
+    if (!data) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Validate file size (10MB max for custom images)
+    const MAX_SIZE = 10 * 1024 * 1024;
+
+    // Convert stream to buffer
+    const buffer = await data.toBuffer();
+
+    if (buffer.length > MAX_SIZE) {
+      throw new BadRequestException('File size exceeds maximum allowed size of 10MB');
+    }
+
+    // Validate MIME type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(data.mimetype)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`,
+      );
+    }
+
+    // Get imageType from fields
+    const fields = data.fields as any;
+    const imageType = fields.imageType?.value;
+
+    if (!imageType) {
+      throw new BadRequestException('imageType field is required');
+    }
+
+    const validImageTypes = ['profile', 'background', 'banner', 'logo'];
+    if (!validImageTypes.includes(imageType)) {
+      throw new BadRequestException(
+        `Invalid imageType. Allowed values: ${validImageTypes.join(', ')}`,
+      );
+    }
+
     return await this.uploadCustomImage.execute({
       artistId,
-      imageType: imageType as any,
-      file,
-      uploadedBy: req.user.id,
+      imageType,
+      file: {
+        buffer,
+        mimetype: data.mimetype,
+        size: buffer.length,
+        originalname: data.filename,
+      },
+      uploadedBy: request.user.id,
     });
   }
 
