@@ -44,20 +44,16 @@ body.has-footer-player main {
   padding-bottom: 120px;
 }
 
-/* Prevenir scroll horizontal en todas las páginas */
-[class*="Page"] {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
-[class*="__main"] {
-  overflow-x: hidden;
-  max-width: calc(100vw - 200px);
-}
-
-[class*="__content"] {
-  overflow-x: hidden;
-}
+/*
+ * IMPORTANT: Removed global overflow-x: hidden from all Page/main/content selectors
+ * to allow Portal-based dropdowns to render correctly.
+ *
+ * Individual pages should apply overflow-x: hidden only where needed,
+ * preferably on specific scrollable containers, not on the entire page.
+ *
+ * This prevents dropdowns from being clipped while still allowing
+ * horizontal scroll prevention on specific elements.
+ */
 
 /* ===== Typography ===== */
 
