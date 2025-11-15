@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { X, Check, Loader, AlertCircle } from 'lucide-react';
+import { X, Check, Loader, AlertCircle, Cloud, Upload } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@shared/components/ui';
 import { useSearchArtistAvatars, useApplyArtistAvatar } from '../../hooks/useArtistAvatars';
 import { AvatarOption } from '../../api/artist-avatars.api';
+import { FileUploadSection } from './FileUploadSection';
 import styles from './ArtistAvatarSelectorModal.module.css';
 
 interface ArtistAvatarSelectorModalProps {
@@ -19,6 +20,8 @@ interface ArtistAvatarSelectorModalProps {
  * ArtistAvatarSelectorModal Component
  * Modal para buscar y seleccionar imágenes de artista de múltiples proveedores
  */
+type TabType = 'providers' | 'upload';
+
 export function ArtistAvatarSelectorModal({
   artistId,
   artistName,
@@ -27,6 +30,7 @@ export function ArtistAvatarSelectorModal({
   onClose,
   onSuccess,
 }: ArtistAvatarSelectorModalProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('providers');
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarOption | null>(null);
   const [providerFilter, setProviderFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>(defaultType || ''); // Use defaultType if provided
@@ -146,16 +150,35 @@ export function ArtistAvatarSelectorModal({
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>Seleccionar imagen de artista</h2>
-            <p className={styles.subtitle}>{artistInfo?.name}</p>
+            <p className={styles.subtitle}>{artistInfo?.name || artistName}</p>
           </div>
           <button onClick={onClose} className={styles.closeButton}>
             <X size={24} />
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${activeTab === 'providers' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('providers')}
+          >
+            <Cloud size={18} />
+            <span>Proveedores externos</span>
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'upload' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('upload')}
+          >
+            <Upload size={18} />
+            <span>Subir desde PC</span>
+          </button>
+        </div>
+
         {/* Body */}
         <div className={styles.body}>
-          {isLoading ? (
+          {activeTab === 'providers' ? (
+            isLoading ? (
             <div className={styles.loading}>
               <Loader className={styles.spinner} size={48} />
               <p>Buscando imágenes en todos los proveedores...</p>
@@ -271,19 +294,30 @@ export function ArtistAvatarSelectorModal({
                 ))}
               </div>
             </>
+          )
+          ) : (
+            /* Upload Tab */
+            <FileUploadSection
+              artistId={artistId}
+              imageType={(defaultType || (allowedTypes && allowedTypes[0]) || 'profile') as 'profile' | 'background' | 'banner' | 'logo'}
+              onSuccess={() => {
+                onSuccess?.();
+                onClose();
+              }}
+            />
           )}
         </div>
 
         {/* Error message */}
-        {applyError && (
+        {applyError && activeTab === 'providers' && (
           <div className={styles.errorMessage}>
             <AlertCircle size={16} />
             <span>{applyError}</span>
           </div>
         )}
 
-        {/* Footer */}
-        {!isLoading && !error && avatars.length > 0 && (
+        {/* Footer - Only show for providers tab */}
+        {activeTab === 'providers' && !isLoading && !error && avatars.length > 0 && (
           <div className={styles.footer}>
             <Button variant="secondary" onClick={onClose} disabled={isApplying}>
               Cancelar

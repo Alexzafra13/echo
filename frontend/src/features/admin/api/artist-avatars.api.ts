@@ -43,6 +43,58 @@ export interface UpdateBackgroundPositionResponse {
   message: string;
 }
 
+export interface UploadCustomImageRequest {
+  artistId: string;
+  imageType: 'profile' | 'background' | 'banner' | 'logo';
+  file: File;
+}
+
+export interface UploadCustomImageResponse {
+  success: boolean;
+  message: string;
+  customImageId: string;
+  filePath: string;
+  url: string;
+}
+
+export interface CustomImage {
+  id: string;
+  artistId: string;
+  imageType: 'profile' | 'background' | 'banner' | 'logo';
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  isActive: boolean;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListCustomImagesResponse {
+  customImages: CustomImage[];
+}
+
+export interface ApplyCustomImageRequest {
+  artistId: string;
+  customImageId: string;
+}
+
+export interface ApplyCustomImageResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface DeleteCustomImageRequest {
+  artistId: string;
+  customImageId: string;
+}
+
+export interface DeleteCustomImageResponse {
+  success: boolean;
+  message: string;
+}
+
 export const artistAvatarsApi = {
   /**
    * Buscar todas las imágenes disponibles para un artista
@@ -74,6 +126,56 @@ export const artistAvatarsApi = {
     const response = await apiClient.patch<UpdateBackgroundPositionResponse>(
       '/admin/metadata/artist/background-position',
       request,
+    );
+    return response.data;
+  },
+
+  /**
+   * Subir una imagen personalizada desde el PC
+   */
+  async uploadCustomImage(request: UploadCustomImageRequest): Promise<UploadCustomImageResponse> {
+    const formData = new FormData();
+    formData.append('file', request.file);
+    formData.append('imageType', request.imageType);
+
+    const response = await apiClient.post<UploadCustomImageResponse>(
+      `/admin/metadata/artist/custom-images/${request.artistId}/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
+    return response.data;
+  },
+
+  /**
+   * Listar todas las imágenes personalizadas de un artista
+   */
+  async listCustomImages(artistId: string): Promise<ListCustomImagesResponse> {
+    const response = await apiClient.get<ListCustomImagesResponse>(
+      `/admin/metadata/artist/custom-images/${artistId}`,
+    );
+    return response.data;
+  },
+
+  /**
+   * Aplicar (activar) una imagen personalizada
+   */
+  async applyCustomImage(request: ApplyCustomImageRequest): Promise<ApplyCustomImageResponse> {
+    const response = await apiClient.post<ApplyCustomImageResponse>(
+      `/admin/metadata/artist/custom-images/${request.artistId}/apply/${request.customImageId}`,
+    );
+    return response.data;
+  },
+
+  /**
+   * Eliminar una imagen personalizada
+   */
+  async deleteCustomImage(request: DeleteCustomImageRequest): Promise<DeleteCustomImageResponse> {
+    const response = await apiClient.delete<DeleteCustomImageResponse>(
+      `/admin/metadata/artist/custom-images/${request.artistId}/${request.customImageId}`,
     );
     return response.data;
   },
