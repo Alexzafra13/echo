@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { toggleLike, toggleDislike, type ItemType, type Sentiment } from '@shared/services/interactions.service';
+import {
+  toggleLike,
+  toggleDislike,
+  getItemInteractionSummary,
+  type ItemType,
+  type Sentiment
+} from '@shared/services/interactions.service';
 import styles from './LikeDislikeButtons.module.css';
 
 interface LikeDislikeButtonsProps {
@@ -29,6 +35,23 @@ export function LikeDislikeButtons({
 }: LikeDislikeButtonsProps) {
   const [sentiment, setSentiment] = useState<Sentiment | null>(initialSentiment);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load initial state from API
+  useEffect(() => {
+    const loadInitialState = async () => {
+      try {
+        const summary = await getItemInteractionSummary(itemId, itemType);
+        if (summary.userSentiment) {
+          setSentiment(summary.userSentiment as Sentiment);
+        }
+      } catch (error) {
+        // Silently fail - item might not have interactions yet
+        console.debug('No interactions found for item:', itemId);
+      }
+    };
+
+    loadInitialState();
+  }, [itemId, itemType]);
 
   useEffect(() => {
     setSentiment(initialSentiment);
