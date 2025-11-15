@@ -1,3 +1,4 @@
+import apiClient from './api';
 /**
  * Recommendations Service
  *
