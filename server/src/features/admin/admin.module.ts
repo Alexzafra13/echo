@@ -7,6 +7,7 @@ import { EnrichmentHistoryController } from './presentation/enrichment-history.c
 import { AlbumCoversController } from './presentation/album-covers.controller';
 import { ArtistAvatarsController } from './presentation/artist-avatars.controller';
 import { ArtistBannersManagementController } from './presentation/artist-banners.controller';
+import { CustomArtistImagesController } from './presentation/custom-artist-images.controller';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -23,10 +24,21 @@ import { SearchArtistAvatarsUseCase } from './domain/use-cases/search-artist-ava
 import { ApplyArtistAvatarUseCase } from './domain/use-cases/apply-artist-avatar';
 import { UpdateArtistBackgroundPositionUseCase } from './domain/use-cases/update-artist-background-position';
 import { ManageArtistBannersUseCase } from './domain/use-cases/manage-artist-banners';
+import { UploadCustomArtistImageUseCase } from './domain/use-cases/upload-custom-artist-image';
+import { ListCustomArtistImagesUseCase } from './domain/use-cases/list-custom-artist-images';
+import { DeleteCustomArtistImageUseCase } from './domain/use-cases/delete-custom-artist-image';
+import { ApplyCustomArtistImageUseCase } from './domain/use-cases/apply-custom-artist-image';
 
 @Module({
   imports: [AuthModule, PrismaModule, ExternalMetadataModule],
-  controllers: [AdminController, EnrichmentHistoryController, AlbumCoversController, ArtistAvatarsController, ArtistBannersManagementController],
+  controllers: [
+    AdminController,
+    EnrichmentHistoryController,
+    AlbumCoversController,
+    ArtistAvatarsController,
+    ArtistBannersManagementController,
+    CustomArtistImagesController,
+  ],
   providers: [
     CreateUserUseCase,
     ListUsersUseCase,
@@ -42,6 +54,10 @@ import { ManageArtistBannersUseCase } from './domain/use-cases/manage-artist-ban
     ApplyArtistAvatarUseCase,
     UpdateArtistBackgroundPositionUseCase,
     ManageArtistBannersUseCase,
+    UploadCustomArtistImageUseCase,
+    ListCustomArtistImagesUseCase,
+    DeleteCustomArtistImageUseCase,
+    ApplyCustomArtistImageUseCase,
   ],
 })
 export class AdminModule {}
