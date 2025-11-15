@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
-import { setRating, removeRating, type ItemType } from '@shared/services/interactions.service';
+import {
+  setRating,
+  removeRating,
+  getItemInteractionSummary,
+  type ItemType
+} from '@shared/services/interactions.service';
 import styles from './RatingStars.module.css';
 
 interface RatingStarsProps {
@@ -30,6 +35,23 @@ export function RatingStars({
   const [rating, setLocalRating] = useState(initialRating);
   const [hover, setHover] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load initial state from API
+  useEffect(() => {
+    const loadInitialState = async () => {
+      try {
+        const summary = await getItemInteractionSummary(itemId, itemType);
+        if (summary.userRating) {
+          setLocalRating(summary.userRating);
+        }
+      } catch (error) {
+        // Silently fail - item might not have interactions yet
+        console.debug('No interactions found for item:', itemId);
+      }
+    };
+
+    loadInitialState();
+  }, [itemId, itemType]);
 
   useEffect(() => {
     setLocalRating(initialRating);
