@@ -8,3 +8,4 @@ export { useMetadataWebSocket } from './useMetadataWebSocket';
 export type { ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidationEvent } from './useMetadataWebSocket';
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
+export { useDropdownPosition } from './useDropdownPosition';

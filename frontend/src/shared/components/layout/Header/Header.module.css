@@ -4,7 +4,7 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 90;
+  z-index: 95;
   display: flex;
   align-items: center;
   justify-content: space-between; /* Changed from flex-end to space-between for back button */
