@@ -1,4 +1,4 @@
-import { apiClient } from './api-client';
+import { apiClient } from './api';
 
 export type ItemType = 'track' | 'album' | 'artist' | 'playlist';
 export type Sentiment = 'like' | 'dislike';

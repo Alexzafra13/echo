@@ -8,7 +8,7 @@ import apiClient from './api';
  * @module recommendations.service
  */
 
-
+import { apiClient } from './api';
 
 /**
  * Track with score details
