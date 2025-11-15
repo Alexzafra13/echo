@@ -33,13 +33,14 @@ export interface ImageResult {
 }
 
 /**
- * ImageService V2
+ * ImageService V3
  *
  * Servicio para obtener y servir imágenes con arquitectura Jellyfin-style.
  *
- * Características V2:
- * - Priorización: Local (disco) > External (descargado)
+ * Características V3:
+ * - Priorización: Custom (subidas por usuario) > Local (disco) > External (descargado)
  * - Tag-based cache busting (MD5 de path + mtime)
+ * - Soporte para custom images subidas desde PC (customArtistImage table)
  * - Separación explícita de fuentes (local vs external)
  * - Timestamps independientes por tipo de imagen
  * - Validación y limpieza automática de archivos borrados
@@ -56,7 +57,7 @@ export class ImageService {
   ) {}
 
   /**
-   * Obtiene una imagen de artista con priorización Local > External
+   * Obtiene una imagen de artista con priorización Custom > Local > External
    */
   async getArtistImage(
     artistId: string,
@@ -69,6 +70,44 @@ export class ImageService {
     if (cached) {
       this.logger.debug(`Cache hit for ${cacheKey}`);
       return cached;
+    }
+
+    // PRIORIDAD 0: Custom uploaded image (máxima prioridad)
+    const customImage = await this.prisma.customArtistImage.findFirst({
+      where: {
+        artistId,
+        imageType,
+        isActive: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    if (customImage) {
+      try {
+        await fs.access(customImage.filePath);
+        const stats = await fs.stat(customImage.filePath);
+        const result: ImageResult = {
+          filePath: customImage.filePath,
+          mimeType: customImage.mimeType,
+          size: Number(customImage.fileSize),
+          lastModified: stats.mtime,
+          source: 'local', // Custom images are treated as local
+          tag: this.generateTag(customImage.filePath, stats.mtime),
+        };
+
+        this.cacheImageResult(cacheKey, result);
+        this.logger.debug(`Serving CUSTOM image: ${imageType} from ${customImage.filePath}`);
+        return result;
+      } catch (error) {
+        // Archivo custom ya no existe, desactivar en BD
+        this.logger.warn(`Custom ${imageType} image not found, deactivating: ${customImage.filePath}`);
+        await this.prisma.customArtistImage.update({
+          where: { id: customImage.id },
+          data: { isActive: false },
+        });
+      }
     }
 
     // Obtener artista de la base de datos
@@ -215,6 +254,62 @@ export class ImageService {
     this.cacheImageResult(cacheKey, imageResult);
 
     return imageResult;
+  }
+
+  /**
+   * Obtiene una imagen personalizada de artista por su ID
+   */
+  async getCustomArtistImage(
+    artistId: string,
+    customImageId: string,
+  ): Promise<ImageResult> {
+    const cacheKey = `custom:${artistId}:${customImageId}`;
+
+    // Verificar caché
+    const cached = this.imageCache.get(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for ${cacheKey}`);
+      return cached;
+    }
+
+    // Obtener imagen personalizada de la base de datos
+    const customImage = await this.prisma.customArtistImage.findFirst({
+      where: {
+        id: customImageId,
+        artistId,
+      },
+    });
+
+    if (!customImage) {
+      throw new NotFoundException(
+        `Custom image ${customImageId} not found for artist ${artistId}`,
+      );
+    }
+
+    // Verificar que el archivo existe y obtener metadata
+    try {
+      await fs.access(customImage.filePath);
+      const stats = await fs.stat(customImage.filePath);
+      const result: ImageResult = {
+        filePath: customImage.filePath,
+        mimeType: customImage.mimeType,
+        size: Number(customImage.fileSize),
+        lastModified: stats.mtime,
+        source: 'local',
+        tag: this.generateTag(customImage.filePath, stats.mtime),
+      };
+
+      this.cacheImageResult(cacheKey, result);
+      this.logger.debug(`Serving custom image: ${customImageId}`);
+      return result;
+    } catch (error) {
+      if ((error as any).code === 'ENOENT') {
+        throw new NotFoundException(
+          `Custom image file not found: ${customImage.filePath}`,
+        );
+      }
+      throw error;
+    }
   }
 
   /**
