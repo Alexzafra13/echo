@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = '/api/interactions';
+import { apiClient } from './api-client';
 
 export type ItemType = 'track' | 'album' | 'artist' | 'playlist';
 export type Sentiment = 'like' | 'dislike';
@@ -39,8 +37,8 @@ export interface ItemInteractionSummary {
  * Toggle like on an item
  */
 export async function toggleLike(itemId: string, itemType: ItemType): Promise<ToggleLikeResponse> {
-  const response = await axios.post<ToggleLikeResponse>(
-    `${API_URL}/like`,
+  const response = await apiClient.post<ToggleLikeResponse>(
+    '/interactions/like',
     { itemId, itemType },
   );
   return response.data;
@@ -50,8 +48,8 @@ export async function toggleLike(itemId: string, itemType: ItemType): Promise<To
  * Toggle dislike on an item
  */
 export async function toggleDislike(itemId: string, itemType: ItemType): Promise<ToggleDislikeResponse> {
-  const response = await axios.post<ToggleDislikeResponse>(
-    `${API_URL}/dislike`,
+  const response = await apiClient.post<ToggleDislikeResponse>(
+    '/interactions/dislike',
     { itemId, itemType },
   );
   return response.data;
@@ -65,8 +63,8 @@ export async function setRating(
   itemType: ItemType,
   rating: number,
 ): Promise<RatingResponse> {
-  const response = await axios.post<RatingResponse>(
-    `${API_URL}/rating`,
+  const response = await apiClient.post<RatingResponse>(
+    '/interactions/rating',
     { itemId, itemType, rating },
   );
   return response.data;
@@ -76,7 +74,7 @@ export async function setRating(
  * Remove rating from an item
  */
 export async function removeRating(itemId: string, itemType: ItemType): Promise<void> {
-  await axios.delete(`${API_URL}/rating/${itemType}/${itemId}`);
+  await apiClient.delete(`/interactions/rating/${itemType}/${itemId}`);
 }
 
 /**
@@ -86,8 +84,8 @@ export async function getItemInteractionSummary(
   itemId: string,
   itemType: ItemType,
 ): Promise<ItemInteractionSummary> {
-  const response = await axios.get<ItemInteractionSummary>(
-    `${API_URL}/item/${itemType}/${itemId}`,
+  const response = await apiClient.get<ItemInteractionSummary>(
+    `/interactions/item/${itemType}/${itemId}`,
   );
   return response.data;
 }
