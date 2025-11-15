@@ -105,7 +105,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           trackId: session.trackId,
           playContext: session.playContext,
           completionRate,
-          skipped: false,
           sourceId: session.sourceId,
           sourceType: session.sourceType as any,
         });
