@@ -86,19 +86,23 @@ export class ImageService {
 
     if (customImage) {
       try {
-        await fs.access(customImage.filePath);
-        const stats = await fs.stat(customImage.filePath);
+        // Construir ruta absoluta desde la ruta relativa guardada en BD
+        const basePath = await this.storage.getArtistMetadataPath(artistId);
+        const absolutePath = path.join(basePath, customImage.filePath);
+
+        await fs.access(absolutePath);
+        const stats = await fs.stat(absolutePath);
         const result: ImageResult = {
-          filePath: customImage.filePath,
+          filePath: absolutePath,
           mimeType: customImage.mimeType,
           size: Number(customImage.fileSize),
           lastModified: stats.mtime,
           source: 'local', // Custom images are treated as local
-          tag: this.generateTag(customImage.filePath, stats.mtime),
+          tag: this.generateTag(absolutePath, stats.mtime),
         };
 
         this.cacheImageResult(cacheKey, result);
-        this.logger.debug(`Serving CUSTOM image: ${imageType} from ${customImage.filePath}`);
+        this.logger.debug(`Serving CUSTOM image: ${imageType} from ${absolutePath}`);
         return result;
       } catch (error) {
         // Archivo custom ya no existe, desactivar en BD
@@ -288,15 +292,19 @@ export class ImageService {
 
     // Verificar que el archivo existe y obtener metadata
     try {
-      await fs.access(customImage.filePath);
-      const stats = await fs.stat(customImage.filePath);
+      // Construir ruta absoluta desde la ruta relativa guardada en BD
+      const basePath = await this.storage.getArtistMetadataPath(artistId);
+      const absolutePath = path.join(basePath, customImage.filePath);
+
+      await fs.access(absolutePath);
+      const stats = await fs.stat(absolutePath);
       const result: ImageResult = {
-        filePath: customImage.filePath,
+        filePath: absolutePath,
         mimeType: customImage.mimeType,
         size: Number(customImage.fileSize),
         lastModified: stats.mtime,
         source: 'local',
-        tag: this.generateTag(customImage.filePath, stats.mtime),
+        tag: this.generateTag(absolutePath, stats.mtime),
       };
 
       this.cacheImageResult(cacheKey, result);
