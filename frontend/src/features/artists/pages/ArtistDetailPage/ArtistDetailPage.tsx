@@ -234,7 +234,7 @@ export default function ArtistDetailPage() {
 
             <div className={styles.artistDetailPage__heroContent}>
               {/* Artist Avatar/Profile */}
-              <div className={styles.artistDetailPage__avatarContainer}>
+              <div className={styles.artistDetailPage__avatarContainer} ref={imageMenuRef}>
                 {profileUrl ? (
                   <img
                     key={`${profileUrl}-${profileRenderKey}`} // Force complete re-render when image changes
@@ -249,7 +249,7 @@ export default function ArtistDetailPage() {
                   </div>
                 )}
                 {user?.isAdmin && (
-                  <div className={styles.artistDetailPage__imageMenuContainer} ref={imageMenuRef}>
+                  <>
                     <button
                       className={styles.artistDetailPage__changeAvatarBtn}
                       onClick={() => setIsImageMenuOpen(!isImageMenuOpen)}
@@ -294,7 +294,7 @@ export default function ArtistDetailPage() {
                         </button>
                       </div>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
 
