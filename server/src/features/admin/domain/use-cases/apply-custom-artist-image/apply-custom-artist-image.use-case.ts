@@ -1,0 +1,162 @@
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { RedisService } from '@infrastructure/cache/redis.service';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
+import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import {
+  ApplyCustomArtistImageInput,
+  ApplyCustomArtistImageOutput,
+} from './apply-custom-artist-image.dto';
+
+/**
+ * ApplyCustomArtistImageUseCase
+ * Applies a custom uploaded image as the artist's active image for that type
+ */
+@Injectable()
+export class ApplyCustomArtistImageUseCase {
+  private readonly logger = new Logger(ApplyCustomArtistImageUseCase.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+    private readonly imageService: ImageService,
+    private readonly metadataGateway: MetadataEnrichmentGateway,
+  ) {}
+
+  async execute(input: ApplyCustomArtistImageInput): Promise<ApplyCustomArtistImageOutput> {
+    // Find the custom image
+    const customImage = await this.prisma.customArtistImage.findUnique({
+      where: { id: input.customImageId },
+      include: {
+        artist: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    if (!customImage) {
+      throw new NotFoundException(`Custom image not found: ${input.customImageId}`);
+    }
+
+    // Validate artist ID matches
+    if (customImage.artistId !== input.artistId) {
+      throw new BadRequestException('Artist ID mismatch');
+    }
+
+    this.logger.log(
+      `Applying custom ${customImage.imageType} image for artist: ${customImage.artist.name}`,
+    );
+
+    const typeConfig = this.getTypeConfig(customImage.imageType);
+
+    // Start a transaction to update both the artist and custom images
+    await this.prisma.$transaction(async (tx) => {
+      // Deactivate all other custom images of this type for this artist
+      await tx.customArtistImage.updateMany({
+        where: {
+          artistId: input.artistId,
+          imageType: customImage.imageType,
+          isActive: true,
+        },
+        data: {
+          isActive: false,
+        },
+      });
+
+      // Activate this custom image
+      await tx.customArtistImage.update({
+        where: { id: input.customImageId },
+        data: {
+          isActive: true,
+        },
+      });
+
+      // Update artist record to use this custom image (local path)
+      const updateData: any = {
+        [typeConfig.localPathField]: customImage.filePath,
+        [typeConfig.localUpdatedField]: new Date(),
+        // Clear external image references (custom takes precedence)
+        [typeConfig.externalPathField]: null,
+        [typeConfig.externalSourceField]: null,
+        [typeConfig.externalUpdatedField]: null,
+      };
+
+      await tx.artist.update({
+        where: { id: input.artistId },
+        data: updateData,
+      });
+    });
+
+    // Invalidate caches
+    this.imageService.invalidateArtistCache(input.artistId);
+    await this.redis.del(`artist:${input.artistId}`);
+
+    // Emit WebSocket event
+    this.metadataGateway.emitArtistImagesUpdated({
+      artistId: input.artistId,
+      artistName: customImage.artist.name,
+      imageType: customImage.imageType as any,
+      updatedAt: new Date(),
+    });
+
+    this.logger.log(
+      `✅ Successfully applied custom ${customImage.imageType} image for ${customImage.artist.name}`,
+    );
+
+    return {
+      success: true,
+      message: `Custom ${customImage.imageType} image applied successfully`,
+      imageType: customImage.imageType,
+    };
+  }
+
+  /**
+   * Get field names for each image type
+   */
+  private getTypeConfig(type: string): {
+    localPathField: string;
+    localUpdatedField: string;
+    externalPathField: string;
+    externalSourceField: string;
+    externalUpdatedField: string;
+  } {
+    const configs: Record<string, {
+      localPathField: string;
+      localUpdatedField: string;
+      externalPathField: string;
+      externalSourceField: string;
+      externalUpdatedField: string;
+    }> = {
+      profile: {
+        localPathField: 'profileImagePath',
+        localUpdatedField: 'profileImageUpdatedAt',
+        externalPathField: 'externalProfilePath',
+        externalSourceField: 'externalProfileSource',
+        externalUpdatedField: 'externalProfileUpdatedAt',
+      },
+      background: {
+        localPathField: 'backgroundImagePath',
+        localUpdatedField: 'backgroundUpdatedAt',
+        externalPathField: 'externalBackgroundPath',
+        externalSourceField: 'externalBackgroundSource',
+        externalUpdatedField: 'externalBackgroundUpdatedAt',
+      },
+      banner: {
+        localPathField: 'bannerImagePath',
+        localUpdatedField: 'bannerUpdatedAt',
+        externalPathField: 'externalBannerPath',
+        externalSourceField: 'externalBannerSource',
+        externalUpdatedField: 'externalBannerUpdatedAt',
+      },
+      logo: {
+        localPathField: 'logoImagePath',
+        localUpdatedField: 'logoUpdatedAt',
+        externalPathField: 'externalLogoPath',
+        externalSourceField: 'externalLogoSource',
+        externalUpdatedField: 'externalLogoUpdatedAt',
+      },
+    };
+
+    return configs[type] || configs.profile;
+  }
+}
