@@ -27,21 +27,17 @@
   transform: scale(0.95);
 }
 
-/* Dropdown */
+/* Dropdown - Portal rendered with fixed positioning */
 .albumOptionsMenu__dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
   min-width: 220px;
-  max-height: 400px;
   overflow-y: auto;
   background: var(--color-bg-elevated, #1e293b);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   padding: 8px;
-  z-index: 1000;
   animation: fadeIn 0.15s ease;
+  /* Position, top, left/right, max-height set via inline styles */
 }
 
 @keyframes fadeIn {

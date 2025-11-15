@@ -9,4 +9,6 @@ export type { CardProps } from './Card';
 
 export { BackButton } from './BackButton';
 
+export { Portal } from './Portal';
+
 export { ToastContainer } from './Toast/ToastContainer';
