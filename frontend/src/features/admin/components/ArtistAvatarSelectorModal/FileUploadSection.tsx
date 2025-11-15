@@ -36,7 +36,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
   const { mutate: deleteImage, isPending: isDeleting } = useDeleteCustomImage();
 
   // Filtrar imágenes por tipo
-  const customImages = customImagesData?.customImages.filter((img) => img.imageType === imageType) || [];
+  const customImages = (customImagesData?.customImages || []).filter((img) => img.imageType === imageType);
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
