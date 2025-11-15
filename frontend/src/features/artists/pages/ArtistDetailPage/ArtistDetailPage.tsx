@@ -1,8 +1,9 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen, Image, MoreVertical, ImageIcon, Frame, Layers, Tag, Move } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { BookOpen } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
+import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
 import { useArtist } from '../../hooks';
@@ -24,12 +25,10 @@ export default function ArtistDetailPage() {
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
   const [selectedImageType, setSelectedImageType] = useState<'profile' | 'background' | 'banner' | 'logo'>('profile');
-  const [isImageMenuOpen, setIsImageMenuOpen] = useState(false);
   const [imageRenderKey, setImageRenderKey] = useState(0);
   const [logoRenderKey, setLogoRenderKey] = useState(0);
   const [profileRenderKey, setProfileRenderKey] = useState(0);
   const { user } = useAuth();
-  const imageMenuRef = useRef<HTMLDivElement>(null);
 
   // Real-time synchronization via WebSocket for artist images and album covers
   useArtistMetadataSync(id);
@@ -139,33 +138,25 @@ export default function ArtistDetailPage() {
     }
   }, [profileUrl]);
 
-  // Close image menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (imageMenuRef.current && !imageMenuRef.current.contains(event.target as Node)) {
-        setIsImageMenuOpen(false);
-      }
-    }
-
-    if (isImageMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isImageMenuOpen]);
-
   // Handlers for image menu
-  const handleChangeImage = (type: 'profile' | 'background' | 'banner' | 'logo') => {
-    setSelectedImageType(type);
-    setIsImageMenuOpen(false);
+  const handleChangeProfile = () => {
+    setSelectedImageType('profile');
     setIsAvatarSelectorOpen(true);
   };
 
-  // Handler for background/banner (they share the same visual space)
   const handleChangeBackgroundOrBanner = () => {
     // Pre-select whichever type is currently shown (most recently updated)
     const currentType = getBackgroundImageType() || 'background';
     setSelectedImageType(currentType);
-    setIsImageMenuOpen(false);
+    setIsAvatarSelectorOpen(true);
+  };
+
+  const handleAdjustPosition = () => {
+    setIsBackgroundPositionModalOpen(true);
+  };
+
+  const handleChangeLogo = () => {
+    setSelectedImageType('logo');
     setIsAvatarSelectorOpen(true);
   };
 
@@ -234,7 +225,7 @@ export default function ArtistDetailPage() {
 
             <div className={styles.artistDetailPage__heroContent}>
               {/* Artist Avatar/Profile */}
-              <div className={styles.artistDetailPage__avatarContainer} ref={imageMenuRef}>
+              <div className={styles.artistDetailPage__avatarContainer}>
                 {profileUrl ? (
                   <img
                     key={`${profileUrl}-${profileRenderKey}`} // Force complete re-render when image changes
@@ -249,52 +240,13 @@ export default function ArtistDetailPage() {
                   </div>
                 )}
                 {user?.isAdmin && (
-                  <>
-                    <button
-                      className={styles.artistDetailPage__changeAvatarBtn}
-                      onClick={() => setIsImageMenuOpen(!isImageMenuOpen)}
-                      title="Cambiar imágenes del artista"
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-                    {isImageMenuOpen && (
-                      <div className={styles.artistDetailPage__imageMenu}>
-                        <button
-                          className={styles.artistDetailPage__imageMenuItem}
-                          onClick={() => handleChangeImage('profile')}
-                        >
-                          <ImageIcon size={14} />
-                          <span>Cambiar perfil</span>
-                        </button>
-                        <button
-                          className={styles.artistDetailPage__imageMenuItem}
-                          onClick={handleChangeBackgroundOrBanner}
-                        >
-                          <Frame size={14} />
-                          <span>Cambiar fondo/banner</span>
-                        </button>
-                        {backgroundUrl && hasBackground && (
-                          <button
-                            className={styles.artistDetailPage__imageMenuItem}
-                            onClick={() => {
-                              setIsImageMenuOpen(false);
-                              setIsBackgroundPositionModalOpen(true);
-                            }}
-                          >
-                            <Move size={14} />
-                            <span>Ajustar posición</span>
-                          </button>
-                        )}
-                        <button
-                          className={styles.artistDetailPage__imageMenuItem}
-                          onClick={() => handleChangeImage('logo')}
-                        >
-                          <Tag size={14} />
-                          <span>Cambiar logo</span>
-                        </button>
-                      </div>
-                    )}
-                  </>
+                  <ArtistOptionsMenu
+                    onChangeProfile={handleChangeProfile}
+                    onChangeBackground={handleChangeBackgroundOrBanner}
+                    onAdjustPosition={handleAdjustPosition}
+                    onChangeLogo={handleChangeLogo}
+                    hasBackground={backgroundUrl !== undefined && hasBackground}
+                  />
                 )}
               </div>
 
