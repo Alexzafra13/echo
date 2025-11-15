@@ -559,11 +559,20 @@ export class ImageService {
    */
   private async clearLocalImage(artistId: string, imageType: ArtistImageType): Promise<void> {
     try {
+      // Mapeo correcto de campos en la BD
+      const fieldMappings: Record<ArtistImageType, { path: string; updatedAt: string }> = {
+        profile: { path: 'profileImagePath', updatedAt: 'profileImageUpdatedAt' },
+        background: { path: 'backgroundImagePath', updatedAt: 'backgroundUpdatedAt' },
+        banner: { path: 'bannerImagePath', updatedAt: 'bannerUpdatedAt' },
+        logo: { path: 'logoImagePath', updatedAt: 'logoUpdatedAt' },
+      };
+
+      const fields = fieldMappings[imageType];
       await this.prisma.artist.update({
         where: { id: artistId },
         data: {
-          [`${imageType}ImagePath`]: null,
-          [`${imageType}UpdatedAt`]: null,
+          [fields.path]: null,
+          [fields.updatedAt]: null,
         },
       });
       this.logger.debug(`Cleared local ${imageType} reference for artist ${artistId}`);
