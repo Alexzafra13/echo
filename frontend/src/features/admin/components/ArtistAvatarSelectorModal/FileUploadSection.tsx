@@ -287,7 +287,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
 
                 <div className={styles.customImageWrapper}>
                   <img
-                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/artists/${artistId}/images/custom/${image.id}`}
+                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/images/artists/${artistId}/custom/${image.id}`}
                     alt={`Custom ${image.imageType}`}
                     className={styles.customImage}
                     onError={(e) => {
