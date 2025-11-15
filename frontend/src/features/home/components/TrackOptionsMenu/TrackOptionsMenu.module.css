@@ -42,11 +42,13 @@
   top: calc(100% + 4px);
   right: 0;
   min-width: 200px;
+  max-height: 400px;
+  overflow-y: auto;
   background: var(--bg-elevated, #1e293b);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 100;
+  z-index: 1000;
   padding: 4px;
   animation: fadeIn 0.15s ease;
 }

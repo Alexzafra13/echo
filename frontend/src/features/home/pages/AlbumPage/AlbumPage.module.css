@@ -59,6 +59,7 @@
   flex-direction: column;
   justify-content: flex-end;
   gap: 12px;
+  min-width: 0; /* Allow flex item to shrink below content size */
 }
 
 .albumPage__heroType {
@@ -76,6 +77,11 @@
   margin: 0;
   line-height: 1.1;
   letter-spacing: -1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .albumPage__heroMeta {
@@ -128,6 +134,7 @@
   align-items: center;
   gap: 16px;
   margin-top: 16px;
+  position: relative; /* Establish positioning context for dropdown */
 }
 
 .albumPage__heroMoreButton {
