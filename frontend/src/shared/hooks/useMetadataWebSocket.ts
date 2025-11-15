@@ -110,6 +110,5 @@ export function useMetadataWebSocket(): Socket | null {
     }
   }, [token, isAuthenticated]);
 
-  console.log('[useMetadataWebSocket] Returning socket:', !!socket);
   return socket;
 }
