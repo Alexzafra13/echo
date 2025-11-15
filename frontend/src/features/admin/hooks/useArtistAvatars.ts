@@ -92,12 +92,27 @@ export function useApplyCustomImage() {
   return useMutation({
     mutationFn: (request: ApplyCustomImageRequest) =>
       artistAvatarsApi.applyCustomImage(request),
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
+      console.log('[useApplyCustomImage] ✅ Image applied, invalidating queries...');
+
       // Invalidar queries relacionadas para refrescar las imágenes
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['customArtistImages', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artists'] });
+
+      // Force refetch para asegurar actualización inmediata
+      await queryClient.refetchQueries({
+        queryKey: ['artists', variables.artistId],
+        type: 'active'
+      });
+
+      await queryClient.refetchQueries({
+        queryKey: ['artist-images', variables.artistId],
+        type: 'active'
+      });
+
+      console.log('[useApplyCustomImage] ✅ Queries invalidated and refetched');
     },
   });
 }
