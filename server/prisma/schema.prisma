@@ -124,13 +124,14 @@ model Artist {
   updatedAt              DateTime  @updatedAt @map("updated_at")
 
   // Relaciones
-  albums              Album[]       @relation("ArtistAlbums")
-  albumsAsAlbumArtist Album[]       @relation("AlbumArtist")
-  tracks              Track[]       @relation("ArtistTracks")
-  tracksAsAlbumArtist Track[]       @relation("AlbumArtistTracks")
+  albums              Album[]              @relation("ArtistAlbums")
+  albumsAsAlbumArtist Album[]              @relation("AlbumArtist")
+  tracks              Track[]              @relation("ArtistTracks")
+  tracksAsAlbumArtist Track[]              @relation("AlbumArtistTracks")
   trackArtists        TrackArtist[]
   genres              ArtistGenre[]
-  banners             ArtistBanner[] // Multiple banner images
+  banners             ArtistBanner[]       // Multiple banner images
+  customImages        CustomArtistImage[]  // User uploaded custom images
 
   @@index([name], map: "idx_artists_name")
   @@index([albumCount(sort: Desc)], map: "idx_artists_album_count")
@@ -155,6 +156,32 @@ model ArtistBanner {
   @@index([artistId])
   @@index([artistId, order])
   @@map("artist_banners")
+}
+
+// ============================================
+// CUSTOM ARTIST IMAGES (User uploaded images)
+// ============================================
+
+model CustomArtistImage {
+  id         String   @id @default(uuid())
+  artistId   String   @map("artist_id") @db.VarChar(36)
+  imageType  String   @map("image_type") @db.VarChar(20) // 'profile', 'background', 'banner', 'logo'
+  filePath   String   @map("file_path") @db.VarChar(512)
+  fileName   String   @map("file_name") @db.VarChar(255)
+  fileSize   BigInt   @default(0) @map("file_size")
+  mimeType   String   @map("mime_type") @db.VarChar(50)
+  isActive   Boolean  @default(false) @map("is_active") // Whether this is the currently applied image
+  uploadedBy String?  @map("uploaded_by") @db.VarChar(36)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relación
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([artistId])
+  @@index([artistId, imageType])
+  @@index([isActive])
+  @@map("custom_artist_images")
 }
 
 // ============================================
