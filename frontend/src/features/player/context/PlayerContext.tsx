@@ -119,8 +119,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const playNext = () => {
     if (state.queue.length === 0) return;
 
-    // End current session as skipped (user manually went to next track)
-    endPlaySession(true);
+    // End current session as skipped ONLY if there's an active session
+    // (if handleEnded already called endPlaySession, this will be null)
+    if (playSessionRef.current) {
+      endPlaySession(true);
+    }
 
     let nextIndex: number;
     if (state.isShuffle) {
@@ -280,8 +283,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return;
     }
 
-    // End current session as skipped (user went to previous track)
-    endPlaySession(true);
+    // End current session as skipped ONLY if there's an active session
+    if (playSessionRef.current) {
+      endPlaySession(true);
+    }
 
     let prevIndex = currentQueueIndex - 1;
     if (prevIndex < 0) {
