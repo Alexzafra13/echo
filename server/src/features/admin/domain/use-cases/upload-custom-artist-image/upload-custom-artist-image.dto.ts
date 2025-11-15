@@ -5,7 +5,12 @@
 export interface UploadCustomArtistImageInput {
   artistId: string;
   imageType: 'profile' | 'background' | 'banner' | 'logo';
-  file: Express.Multer.File;
+  file: {
+    buffer: Buffer;
+    mimetype: string;
+    size: number;
+    originalname: string;
+  };
   uploadedBy?: string;
 }
 
