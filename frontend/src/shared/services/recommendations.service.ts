@@ -1,4 +1,3 @@
-import apiClient from './api';
 /**
  * Recommendations Service
  *
@@ -11,15 +10,23 @@ import apiClient from './api';
 import { apiClient } from './api';
 
 /**
+ * Score breakdown
+ */
+export interface ScoreBreakdown {
+  explicitFeedback: number;
+  implicitBehavior: number;
+  recency: number;
+  diversity: number;
+}
+
+/**
  * Track with score details
  */
 export interface ScoredTrack {
   trackId: string;
   totalScore: number;
-  explicitFeedback: number;
-  implicitBehavior: number;
-  recency: number;
-  diversity: number;
+  rank: number;
+  breakdown: ScoreBreakdown;
   track?: {
     id: string;
     title: string;
@@ -32,17 +39,33 @@ export interface ScoredTrack {
 }
 
 /**
+ * Daily Mix metadata
+ */
+export interface DailyMixMetadata {
+  totalTracks: number;
+  avgScore: number;
+  topGenres: string[];
+  topArtists: string[];
+  temporalDistribution: {
+    lastWeek: number;
+    lastMonth: number;
+    lastYear: number;
+    older: number;
+  };
+}
+
+/**
  * Daily Mix response
  */
 export interface DailyMix {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
   tracks: ScoredTrack[];
-  generatedAt: string;
-  totalTracks: number;
-  breakdown: {
-    coreTracks: number;
-    freshTracks: number;
-    explorationTracks: number;
-  };
+  createdAt: string;
+  expiresAt: string;
+  metadata: DailyMixMetadata;
 }
 
 /**

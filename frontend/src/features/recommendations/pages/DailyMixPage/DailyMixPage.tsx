@@ -25,9 +25,12 @@ export function DailyMixPage() {
     setError(null);
     try {
       const mix = await getDailyMix();
+      console.log('[DailyMix] Received:', mix);
+      console.log('[DailyMix] Tracks count:', mix.tracks?.length || 0);
       setDailyMix(mix);
     } catch (err: any) {
       console.error('[DailyMix] Failed to load:', err);
+      console.error('[DailyMix] Error response:', err.response?.data);
       setError(err.response?.data?.message || 'Error al cargar el Daily Mix');
     } finally {
       setIsLoading(false);
@@ -116,12 +119,12 @@ export function DailyMixPage() {
               </p>
               {dailyMix && (
                 <div className={styles.dailyMixPage__heroMeta}>
-                  <span>{dailyMix.totalTracks} canciones</span>
+                  <span>{dailyMix.metadata.totalTracks} canciones</span>
                   <span className={styles.dailyMixPage__separator}>•</span>
                   <span>{formatDuration(totalDuration)}</span>
                   <span className={styles.dailyMixPage__separator}>•</span>
                   <span className={styles.dailyMixPage__generatedDate}>
-                    {formatDate(dailyMix.generatedAt)}
+                    {formatDate(dailyMix.createdAt)}
                   </span>
                 </div>
               )}
@@ -169,13 +172,15 @@ export function DailyMixPage() {
                 <li><strong>Patrones de escucha:</strong> Contexto de reproducción y tasa de finalización</li>
                 <li><strong>Diversidad:</strong> Evita saturación de un solo artista</li>
               </ul>
-              {dailyMix && (
+              {dailyMix && dailyMix.metadata && (
                 <div className={styles.dailyMixPage__infoBreakdown}>
-                  <p><strong>Composición de tu mix:</strong></p>
+                  <p><strong>Estadísticas de tu mix:</strong></p>
                   <ul>
-                    <li>{dailyMix.breakdown.coreTracks} canciones principales (tus favoritos)</li>
-                    <li>{dailyMix.breakdown.freshTracks} canciones recientes (descubrimientos nuevos)</li>
-                    <li>{dailyMix.breakdown.explorationTracks} canciones de exploración (diversidad)</li>
+                    <li>Puntuación promedio: {dailyMix.metadata.avgScore.toFixed(1)} puntos</li>
+                    <li>Artistas destacados: {dailyMix.metadata.topArtists.slice(0, 3).join(', ')}</li>
+                    {dailyMix.metadata.topGenres.length > 0 && (
+                      <li>Géneros: {dailyMix.metadata.topGenres.slice(0, 3).join(', ')}</li>
+                    )}
                   </ul>
                 </div>
               )}
