@@ -7,7 +7,7 @@
  * @module play-tracking.service
  */
 
-import apiClient from './api';
+import { apiClient } from './api';
 
 /**
  * Play context types
