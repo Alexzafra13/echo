@@ -7,11 +7,22 @@ export class ScoreBreakdownDto {
   @ApiProperty() diversity!: number;
 }
 
+export class TrackDataDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() title!: string;
+  @ApiProperty({ required: false }) artistName?: string;
+  @ApiProperty({ required: false }) albumName?: string;
+  @ApiProperty({ required: false }) duration?: number;
+  @ApiProperty({ required: false }) albumId?: string;
+  @ApiProperty({ required: false }) artistId?: string;
+}
+
 export class TrackScoreDto {
   @ApiProperty() trackId!: string;
   @ApiProperty() totalScore!: number;
   @ApiProperty() rank!: number;
   @ApiProperty({ type: ScoreBreakdownDto }) breakdown!: ScoreBreakdownDto;
+  @ApiProperty({ type: TrackDataDto, required: false }) track?: TrackDataDto;
 }
 
 export class DailyMixMetadataDto {

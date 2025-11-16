@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import {
   CalculateTrackScoreUseCase,
   GenerateDailyMixUseCase,
@@ -41,6 +42,7 @@ export class RecommendationsController {
     private readonly calculateTrackScoreUseCase: CalculateTrackScoreUseCase,
     private readonly generateDailyMixUseCase: GenerateDailyMixUseCase,
     private readonly generateSmartPlaylistUseCase: GenerateSmartPlaylistUseCase,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -87,22 +89,53 @@ export class RecommendationsController {
     const userId = req.user.id;
     const dailyMix = await this.generateDailyMixUseCase.execute(userId, config);
 
+    // Fetch track details for all tracks in the mix
+    const trackIds = dailyMix.tracks.map((t) => t.trackId);
+    const tracks = await this.prisma.track.findMany({
+      where: { id: { in: trackIds } },
+      include: {
+        artist: {
+          select: { name: true },
+        },
+        album: {
+          select: { title: true },
+        },
+      },
+    });
+
+    // Create a map for quick lookup
+    const trackMap = new Map(tracks.map((t) => [t.id, t]));
+
     return {
       id: dailyMix.id,
       userId: dailyMix.userId,
       name: dailyMix.name,
       description: dailyMix.description,
-      tracks: dailyMix.tracks.map((t) => ({
-        trackId: t.trackId,
-        totalScore: t.totalScore,
-        rank: t.rank,
-        breakdown: {
-          explicitFeedback: t.breakdown.explicitFeedback,
-          implicitBehavior: t.breakdown.implicitBehavior,
-          recency: t.breakdown.recency,
-          diversity: t.breakdown.diversity,
-        },
-      })),
+      tracks: dailyMix.tracks.map((t) => {
+        const track = trackMap.get(t.trackId);
+        return {
+          trackId: t.trackId,
+          totalScore: t.totalScore,
+          rank: t.rank,
+          breakdown: {
+            explicitFeedback: t.breakdown.explicitFeedback,
+            implicitBehavior: t.breakdown.implicitBehavior,
+            recency: t.breakdown.recency,
+            diversity: t.breakdown.diversity,
+          },
+          track: track
+            ? {
+                id: track.id,
+                title: track.title,
+                artistName: track.artist?.name,
+                albumName: track.album?.title,
+                duration: track.duration || undefined,
+                albumId: track.albumId || undefined,
+                artistId: track.artistId || undefined,
+              }
+            : undefined,
+        };
+      }),
       createdAt: dailyMix.createdAt,
       expiresAt: dailyMix.expiresAt,
       metadata: {
@@ -131,18 +164,49 @@ export class RecommendationsController {
     const userId = req.user.id;
     const result = await this.generateSmartPlaylistUseCase.execute(userId, config as any);
 
-    return {
-      tracks: result.tracks.map((t) => ({
-        trackId: t.trackId,
-        totalScore: t.totalScore,
-        rank: t.rank,
-        breakdown: {
-          explicitFeedback: t.breakdown.explicitFeedback,
-          implicitBehavior: t.breakdown.implicitBehavior,
-          recency: t.breakdown.recency,
-          diversity: t.breakdown.diversity,
+    // Fetch track details for all tracks in the playlist
+    const trackIds = result.tracks.map((t) => t.trackId);
+    const tracks = await this.prisma.track.findMany({
+      where: { id: { in: trackIds } },
+      include: {
+        artist: {
+          select: { name: true },
         },
-      })),
+        album: {
+          select: { title: true },
+        },
+      },
+    });
+
+    // Create a map for quick lookup
+    const trackMap = new Map(tracks.map((t) => [t.id, t]));
+
+    return {
+      tracks: result.tracks.map((t) => {
+        const track = trackMap.get(t.trackId);
+        return {
+          trackId: t.trackId,
+          totalScore: t.totalScore,
+          rank: t.rank,
+          breakdown: {
+            explicitFeedback: t.breakdown.explicitFeedback,
+            implicitBehavior: t.breakdown.implicitBehavior,
+            recency: t.breakdown.recency,
+            diversity: t.breakdown.diversity,
+          },
+          track: track
+            ? {
+                id: track.id,
+                title: track.title,
+                artistName: track.artist?.name,
+                albumName: track.album?.title,
+                duration: track.duration || undefined,
+                albumId: track.albumId || undefined,
+                artistId: track.artistId || undefined,
+              }
+            : undefined,
+        };
+      }),
       metadata: result.metadata,
     };
   }
