@@ -21,10 +21,16 @@
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   padding: 124px 48px 40px; /* 84px + 40px for header glassmorphism effect */
   max-width: 1400px;
   width: 100%;
   box-sizing: border-box; /* Include padding in width */
+}
+
+.adminPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .header {
