@@ -230,7 +230,7 @@ export class ImageService {
       try {
         // Construir ruta absoluta desde la ruta relativa guardada en BD
         const basePath = path.join(
-          await this.storage.getBaseStoragePath(),
+          await this.storage.getStoragePath(),
           'metadata',
           'albums',
           albumId
@@ -341,7 +341,7 @@ export class ImageService {
     try {
       // Construir ruta absoluta desde la ruta relativa guardada en BD
       const basePath = path.join(
-        await this.storage.getBaseStoragePath(),
+        await this.storage.getStoragePath(),
         'metadata',
         'albums',
         albumId

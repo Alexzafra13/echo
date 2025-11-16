@@ -63,7 +63,7 @@ export class UploadCustomAlbumCoverUseCase {
 
     // Get storage path for album (using metadata directory)
     const basePath = path.join(
-      await this.storage.getBaseStoragePath(),
+      await this.storage.getStoragePath(),
       'metadata',
       'albums',
       input.albumId
