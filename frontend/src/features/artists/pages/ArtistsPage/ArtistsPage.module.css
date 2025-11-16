@@ -20,6 +20,7 @@
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
   overflow-y: auto;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
   padding: 114px 30px 30px; /* 84px + 30px for header glassmorphism effect */
   max-width: 1400px;
   width: 100%;
