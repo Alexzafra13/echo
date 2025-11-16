@@ -50,6 +50,10 @@ export function WaveMixPage() {
     loadPlaylists();
   };
 
+  // Separate playlists by type
+  const dailyPlaylists = playlists.filter(p => p.type === 'wave-mix');
+  const artistPlaylists = playlists.filter(p => p.type === 'artist');
+
   return (
     <div className={styles.waveMixPage}>
       <Sidebar />
@@ -60,15 +64,10 @@ export function WaveMixPage() {
         <div className={styles.waveMixPage__content}>
           {/* Hero Section */}
           <div className={styles.waveMixPage__hero}>
-            <div className={styles.waveMixPage__heroIcon}>
-              <Waves size={48} />
-            </div>
-            <div className={styles.waveMixPage__heroInfo}>
-              <h1 className={styles.waveMixPage__heroTitle}>Wave Mix</h1>
-              <p className={styles.waveMixPage__heroDescription}>
-                Recomendaciones personalizadas para {user?.name || user?.username || 'ti'}
-              </p>
-            </div>
+            <h1 className={styles.waveMixPage__heroTitle}>Wave Mix</h1>
+            <p className={styles.waveMixPage__heroDescription}>
+              Recomendaciones personalizadas para {user?.name || user?.username || 'ti'}
+            </p>
             <Button
               variant="secondary"
               onClick={handleRefresh}
@@ -112,41 +111,79 @@ export function WaveMixPage() {
             </div>
           )}
 
-          {/* Playlists Grid */}
+          {/* Playlists Sections */}
           {!isLoading && !error && playlists.length > 0 && (
-            <div className={styles.waveMixPage__grid}>
-              {playlists.map((playlist) => (
-                <div
-                  key={playlist.id}
-                  className={styles.playlistCard}
-                  onClick={() => handlePlaylistClick(playlist)}
-                >
-                  <PlaylistCover
-                    type={playlist.type}
-                    name={playlist.name}
-                    coverColor={playlist.coverColor}
-                    coverImageUrl={playlist.coverImageUrl}
-                    artistName={playlist.metadata.artistName}
-                    size="medium"
-                  />
-                  <div className={styles.playlistCard__info}>
-                    <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
-                    <p className={styles.playlistCard__description}>
-                      {playlist.description}
-                    </p>
-                    <div className={styles.playlistCard__meta}>
-                      <span>{playlist.metadata.totalTracks} canciones</span>
-                      {playlist.type === 'wave-mix' && (
-                        <>
-                          <span className={styles.separator}>•</span>
-                          <span>Actualizado hoy</span>
-                        </>
-                      )}
-                    </div>
+            <>
+              {/* Daily Recommendations Section */}
+              {dailyPlaylists.length > 0 && (
+                <div className={styles.waveMixPage__section}>
+                  <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones Diarias</h2>
+                  <div className={styles.waveMixPage__grid}>
+                    {dailyPlaylists.map((playlist) => (
+                      <div
+                        key={playlist.id}
+                        className={styles.playlistCard}
+                        onClick={() => handlePlaylistClick(playlist)}
+                      >
+                        <PlaylistCover
+                          type={playlist.type}
+                          name={playlist.name}
+                          coverColor={playlist.coverColor}
+                          coverImageUrl={playlist.coverImageUrl}
+                          artistName={playlist.metadata.artistName}
+                          size="medium"
+                        />
+                        <div className={styles.playlistCard__info}>
+                          <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
+                          <p className={styles.playlistCard__description}>
+                            {playlist.description}
+                          </p>
+                          <div className={styles.playlistCard__meta}>
+                            <span>{playlist.metadata.totalTracks} canciones</span>
+                            <span className={styles.separator}>•</span>
+                            <span>Actualizado hoy</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* Artist Recommendations Section */}
+              {artistPlaylists.length > 0 && (
+                <div className={styles.waveMixPage__section}>
+                  <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Artista</h2>
+                  <div className={styles.waveMixPage__grid}>
+                    {artistPlaylists.map((playlist) => (
+                      <div
+                        key={playlist.id}
+                        className={styles.playlistCard}
+                        onClick={() => handlePlaylistClick(playlist)}
+                      >
+                        <PlaylistCover
+                          type={playlist.type}
+                          name={playlist.name}
+                          coverColor={playlist.coverColor}
+                          coverImageUrl={playlist.coverImageUrl}
+                          artistName={playlist.metadata.artistName}
+                          size="medium"
+                        />
+                        <div className={styles.playlistCard__info}>
+                          <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
+                          <p className={styles.playlistCard__description}>
+                            {playlist.description}
+                          </p>
+                          <div className={styles.playlistCard__meta}>
+                            <span>{playlist.metadata.totalTracks} canciones</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
