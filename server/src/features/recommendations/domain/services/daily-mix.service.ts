@@ -40,7 +40,11 @@ export class DailyMixService {
    * 6. Shuffle intelligently (avoid consecutive tracks from same artist/album)
    */
   async generateDailyMix(userId: string, config?: Partial<DailyMixConfig>): Promise<DailyMix> {
-    const finalConfig = { ...DEFAULT_DAILY_MIX_CONFIG, ...config };
+    // Filter out undefined values from config to preserve defaults
+    const cleanConfig = config
+      ? Object.fromEntries(Object.entries(config).filter(([_, v]) => v !== undefined))
+      : {};
+    const finalConfig = { ...DEFAULT_DAILY_MIX_CONFIG, ...cleanConfig };
 
     // Step 1: Get user's top tracks based on play stats
     const topTracks = await this.playTrackingRepo.getUserTopTracks(userId, 200); // Get more than needed
