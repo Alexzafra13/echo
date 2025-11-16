@@ -22,47 +22,47 @@
 /* Hero Section */
 .waveMixPage__hero {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
   margin-bottom: 3rem;
   padding-bottom: 2rem;
   border-bottom: 1px solid var(--border-color);
 }
 
-.waveMixPage__heroIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-hover) 100%);
-  border-radius: 16px;
-  color: white;
-  box-shadow: 0 8px 24px rgba(108, 92, 231, 0.3);
-}
-
-.waveMixPage__heroInfo {
-  flex: 1;
-}
-
 .waveMixPage__heroTitle {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin: 0 0 0.5rem 0;
+  font-size: 4rem;
+  font-weight: 900;
+  margin: 0 0 0.75rem 0;
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-color) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.1;
 }
 
 .waveMixPage__heroDescription {
-  font-size: 1rem;
+  font-size: 1.125rem;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .waveMixPage__refreshButton {
   gap: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+/* Sections */
+.waveMixPage__section {
+  margin-bottom: 3rem;
+}
+
+.waveMixPage__sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  color: var(--text-primary);
 }
 
 /* Grid */
