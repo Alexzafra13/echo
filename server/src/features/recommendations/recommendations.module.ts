@@ -26,7 +26,7 @@ import { RecommendationsController } from './presentation/controller/recommendat
     GenerateWaveMixUseCase,
     {
       provide: GenerateDailyMixUseCase,
-      useExisting: GenerateWaveMixUseCase, // Alias for backwards compatibility
+      useClass: GenerateWaveMixUseCase, // Alias for backwards compatibility
     },
     GenerateSmartPlaylistUseCase,
     GetAutoPlaylistsUseCase,
