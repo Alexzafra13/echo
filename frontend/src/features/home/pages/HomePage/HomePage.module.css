@@ -21,9 +21,11 @@
 .homePage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
-  padding: 84px 30px 30px 30px; /* Top padding for header space */
+  padding: 0 30px 30px 30px; /* No top padding - allows content to scroll behind header */
   overflow-y: auto;
   overflow-x: hidden;
+  /* Hero has margin-top: -84px to extend behind header */
+  /* When scrolling, content (albums) can pass behind header for glassmorphism effect */
 }
 
 /* Empty State */
