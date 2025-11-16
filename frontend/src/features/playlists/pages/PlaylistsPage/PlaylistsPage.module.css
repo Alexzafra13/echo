@@ -21,6 +21,8 @@
   margin-top: -84px; /* Content starts behind header */
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   padding: 116px 48px 32px; /* 84px + 32px for header glassmorphism effect */
 }
 
@@ -267,20 +269,7 @@
 
 /* Scrollbar */
 .playlistsPage__content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.playlistsPage__content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.playlistsPage__content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.playlistsPage__content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Responsive */

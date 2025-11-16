@@ -26,7 +26,13 @@
   padding: 84px 30px 30px 30px; /* Top padding prevents content from being hidden by header */
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   /* Negative margin makes content scroll behind header for glassmorphism effect */
+}
+
+.homePage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Empty State */

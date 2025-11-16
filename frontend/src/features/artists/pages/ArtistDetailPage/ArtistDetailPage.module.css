@@ -22,6 +22,12 @@
   padding: 114px 40px 30px; /* 84px + 30px for header glassmorphism effect */
   overflow-y: auto;
   overflow-x: hidden; /* Prevent horizontal scroll but allow Portal dropdowns */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.artistDetailPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .artistDetailPage__backButton {
