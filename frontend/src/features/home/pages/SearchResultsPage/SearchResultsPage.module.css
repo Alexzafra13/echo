@@ -16,12 +16,14 @@
   margin-left: 200px; /* Aligned with 200px sidebar width */
   display: flex;
   flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
 }
 
 .searchResultsPage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
-  padding: 0 30px 30px 30px;
+  margin-top: -84px; /* Content starts behind header */
+  padding: 84px 30px 30px; /* 84px for header glassmorphism effect */
   overflow-y: auto;
   max-width: 1400px;
   width: 100%;
