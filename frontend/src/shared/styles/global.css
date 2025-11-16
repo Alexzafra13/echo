@@ -39,8 +39,9 @@ body {
 }
 
 /* Espaciador para el reproductor del footer */
-/* Se aplica a los elementos main cuando el player está visible */
-body.has-footer-player main {
+/* Se aplica a los divs content que son los que realmente scrollean */
+/* Esto previene que el contenido quede detrás del reproductor fijo */
+body.has-footer-player main > div[class*="__content"] {
   padding-bottom: 120px;
 }
 
