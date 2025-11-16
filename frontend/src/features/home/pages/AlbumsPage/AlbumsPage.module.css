@@ -21,6 +21,7 @@
   margin-top: -84px; /* Content starts behind header */
   padding: 116px 40px 32px; /* 84px + 32px for header glassmorphism effect */
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Page Header */
