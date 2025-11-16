@@ -6,7 +6,7 @@
   height: 520px;
   width: calc(100% + 60px);
   margin-left: -30px;
-  margin-top: -84px; /* Extends behind header */
+  margin-top: 0; /* Parent container already handles header spacing with padding */
   overflow: hidden;
   border-radius: 0;
   margin-bottom: 40px;
