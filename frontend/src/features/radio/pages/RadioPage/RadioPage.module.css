@@ -25,6 +25,12 @@
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden; /* Hide horizontal scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.radioPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Top bar - Search + Country selector */

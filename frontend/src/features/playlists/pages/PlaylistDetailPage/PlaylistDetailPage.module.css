@@ -22,6 +22,8 @@
   padding: 108px 40px 24px; /* 84px + 24px for header glassmorphism effect */
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   background: linear-gradient(180deg, rgba(237, 104, 66, 0.15) 0%, rgba(15, 18, 24, 1) 40%);
 }
 
@@ -267,20 +269,7 @@
 
 /* Scrollbar */
 .playlistDetailPage__content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.playlistDetailPage__content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.playlistDetailPage__content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.playlistDetailPage__content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Responsive */

@@ -26,8 +26,14 @@
   padding: 84px 30px 30px; /* 84px for header glassmorphism effect */
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   max-width: 1400px;
   width: 100%;
+}
+
+.searchResultsPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Header */
