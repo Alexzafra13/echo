@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useRoute, useLocation } from 'wouter';
 import { Play, ArrowLeft } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
@@ -16,22 +16,27 @@ import styles from './PlaylistDetailPage.module.css';
  * Displays individual playlist with tracks
  */
 export function PlaylistDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [match, params] = useRoute('/wave-mix/:id');
+  const [, setLocation] = useLocation();
   const { playQueue, currentTrack } = usePlayer();
   const [playlist, setPlaylist] = useState<AutoPlaylist | null>(null);
 
   useEffect(() => {
-    // Get playlist from navigation state
-    const statePlaylist = location.state?.playlist as AutoPlaylist | undefined;
-    if (statePlaylist) {
-      setPlaylist(statePlaylist);
+    // Get playlist from sessionStorage
+    const storedPlaylist = sessionStorage.getItem('currentPlaylist');
+    if (storedPlaylist) {
+      try {
+        const parsedPlaylist = JSON.parse(storedPlaylist) as AutoPlaylist;
+        setPlaylist(parsedPlaylist);
+      } catch (error) {
+        console.error('Failed to parse playlist from sessionStorage', error);
+        setLocation('/wave-mix');
+      }
     } else {
-      // If no state, redirect back to Wave Mix page
-      navigate('/wave-mix');
+      // If no playlist in storage, redirect back to Wave Mix page
+      setLocation('/wave-mix');
     }
-  }, [location.state, navigate]);
+  }, [setLocation]);
 
   const handlePlayAll = () => {
     if (!playlist || playlist.tracks.length === 0) return;
@@ -47,7 +52,8 @@ export function PlaylistDetailPage() {
   };
 
   const handleBack = () => {
-    navigate('/wave-mix');
+    sessionStorage.removeItem('currentPlaylist');
+    setLocation('/wave-mix');
   };
 
   const convertToPlayerTracks = (playlist: AutoPlaylist): Track[] => {

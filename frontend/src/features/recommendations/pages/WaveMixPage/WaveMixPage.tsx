@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { Waves, RefreshCw, Sparkles } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
@@ -13,7 +13,7 @@ import styles from './WaveMixPage.module.css';
  * Displays a grid of auto-generated playlists (Wave Mix + Artist playlists)
  */
 export function WaveMixPage() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [playlists, setPlaylists] = useState<AutoPlaylist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +38,10 @@ export function WaveMixPage() {
   }, []);
 
   const handlePlaylistClick = (playlist: AutoPlaylist) => {
-    // Navigate to individual playlist page
-    navigate(`/wave-mix/${playlist.id}`, { state: { playlist } });
+    // Navigate to individual playlist page with state
+    // Note: wouter doesn't support state in navigation, so we'll store in sessionStorage
+    sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    setLocation(`/wave-mix/${playlist.id}`);
   };
 
   const handleRefresh = () => {
