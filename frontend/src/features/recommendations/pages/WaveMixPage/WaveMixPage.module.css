@@ -10,7 +10,7 @@
   margin-left: 200px; /* Sidebar width */
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* overflow removed to allow sticky header to work */
 }
 
 .waveMixPage__content {
