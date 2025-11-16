@@ -11,7 +11,7 @@
   margin-left: 200px; /* Compensate for fixed sidebar width */
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  /* overflow removed to allow sticky header to work */
 }
 
 .artistsPage__content {
