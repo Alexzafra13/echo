@@ -53,7 +53,7 @@ export class DeleteCustomAlbumCoverUseCase {
     // Delete file from disk
     try {
       const basePath = path.join(
-        await this.storage.getBaseStoragePath(),
+        await this.storage.getStoragePath(),
         'metadata',
         'albums',
         input.albumId
