@@ -4,6 +4,7 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { ArtistCard } from '../../components';
 import { useArtists } from '../../hooks';
+import { useArtistMetadataSync } from '@shared/hooks';
 import { Search } from 'lucide-react';
 import styles from './ArtistsPage.module.css';
 
@@ -14,6 +15,9 @@ import styles from './ArtistsPage.module.css';
 export default function ArtistsPage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Real-time synchronization via WebSocket for artist images
+  useArtistMetadataSync();
 
   // Fetch all artists (backend returns them sorted alphabetically by orderArtistName)
   const { data, isLoading, error } = useArtists({ skip: 0, take: 500 });
