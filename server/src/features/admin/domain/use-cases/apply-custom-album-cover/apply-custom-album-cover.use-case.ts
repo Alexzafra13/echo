@@ -25,7 +25,7 @@ export class ApplyCustomAlbumCoverUseCase {
     // Validate album exists
     const album = await this.prisma.album.findUnique({
       where: { id: input.albumId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, artistId: true },
     });
 
     if (!album) {
@@ -68,12 +68,15 @@ export class ApplyCustomAlbumCoverUseCase {
     // Invalidate image cache
     this.imageService.invalidateAlbumCache(input.albumId);
 
-    // Notify via WebSocket
-    this.metadataGateway.emitAlbumCoverUpdated({
-      albumId: input.albumId,
-      albumName: album.name,
-      updatedAt: new Date(),
-    });
+    // Notify via WebSocket (if album has an artist)
+    if (album.artistId) {
+      this.metadataGateway.emitAlbumCoverUpdated({
+        albumId: input.albumId,
+        albumName: album.name,
+        artistId: album.artistId,
+        updatedAt: new Date(),
+      });
+    }
 
     this.logger.log(`✅ Successfully applied custom cover for ${album.name}`);
 
