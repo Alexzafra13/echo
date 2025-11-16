@@ -73,7 +73,7 @@ export default function HomePage() {
       <Sidebar />
 
       <main className={styles.homePage__main}>
-        <Header />
+        <Header alwaysGlass />
 
         <div className={styles.homePage__content}>
           {/* Hero Section */}
