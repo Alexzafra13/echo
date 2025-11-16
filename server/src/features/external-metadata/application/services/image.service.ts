@@ -203,7 +203,7 @@ export class ImageService {
   }
 
   /**
-   * Obtiene la portada de un álbum
+   * Obtiene la portada de un álbum con priorización Custom > External > Local > Default
    */
   async getAlbumCover(albumId: string): Promise<ImageResult> {
     const cacheKey = `album:${albumId}:cover`;
@@ -213,6 +213,52 @@ export class ImageService {
     if (cached) {
       this.logger.debug(`Cache hit for ${cacheKey}`);
       return cached;
+    }
+
+    // PRIORIDAD 0: Custom uploaded cover (máxima prioridad)
+    const customCover = await this.prisma.customAlbumCover.findFirst({
+      where: {
+        albumId,
+        isActive: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    if (customCover) {
+      try {
+        // Construir ruta absoluta desde la ruta relativa guardada en BD
+        const basePath = path.join(
+          await this.storage.getBaseStoragePath(),
+          'metadata',
+          'albums',
+          albumId
+        );
+        const absolutePath = path.join(basePath, customCover.filePath);
+
+        await fs.access(absolutePath);
+        const stats = await fs.stat(absolutePath);
+        const result: ImageResult = {
+          filePath: absolutePath,
+          mimeType: customCover.mimeType,
+          size: Number(customCover.fileSize),
+          lastModified: stats.mtime,
+          source: 'local', // Custom covers are treated as local
+          tag: this.generateTag(absolutePath, stats.mtime),
+        };
+
+        this.cacheImageResult(cacheKey, result);
+        this.logger.debug(`Serving CUSTOM album cover from ${absolutePath}`);
+        return result;
+      } catch (error) {
+        // Archivo custom ya no existe, desactivar en BD
+        this.logger.warn(`Custom album cover not found, deactivating: ${customCover.filePath}`);
+        await this.prisma.customAlbumCover.update({
+          where: { id: customCover.id },
+          data: { isActive: false },
+        });
+      }
     }
 
     // Obtener álbum de la base de datos
@@ -229,7 +275,8 @@ export class ImageService {
       throw new NotFoundException(`Album with ID ${albumId} not found`);
     }
 
-    // Priorizar externalCoverPath sobre coverArtPath
+    // PRIORIDAD 1: External cover (descargado de proveedores)
+    // PRIORIDAD 2: Local cover (de disco/embedded)
     const coverPath = album.externalCoverPath || album.coverArtPath;
 
     this.logger.debug(`Album ${albumId}: externalCoverPath=${album.externalCoverPath}, coverArtPath=${album.coverArtPath}, using: ${coverPath}`);
@@ -258,6 +305,71 @@ export class ImageService {
     this.cacheImageResult(cacheKey, imageResult);
 
     return imageResult;
+  }
+
+  /**
+   * Obtiene una portada personalizada de álbum por su ID
+   */
+  async getCustomAlbumCover(
+    albumId: string,
+    customCoverId: string,
+  ): Promise<ImageResult> {
+    const cacheKey = `custom:album:${albumId}:${customCoverId}`;
+
+    // Verificar caché
+    const cached = this.imageCache.get(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for ${cacheKey}`);
+      return cached;
+    }
+
+    // Obtener portada personalizada de la base de datos
+    const customCover = await this.prisma.customAlbumCover.findFirst({
+      where: {
+        id: customCoverId,
+        albumId,
+      },
+    });
+
+    if (!customCover) {
+      throw new NotFoundException(
+        `Custom cover ${customCoverId} not found for album ${albumId}`,
+      );
+    }
+
+    // Verificar que el archivo existe y obtener metadata
+    try {
+      // Construir ruta absoluta desde la ruta relativa guardada en BD
+      const basePath = path.join(
+        await this.storage.getBaseStoragePath(),
+        'metadata',
+        'albums',
+        albumId
+      );
+      const absolutePath = path.join(basePath, customCover.filePath);
+
+      await fs.access(absolutePath);
+      const stats = await fs.stat(absolutePath);
+      const result: ImageResult = {
+        filePath: absolutePath,
+        mimeType: customCover.mimeType,
+        size: Number(customCover.fileSize),
+        lastModified: stats.mtime,
+        source: 'local',
+        tag: this.generateTag(absolutePath, stats.mtime),
+      };
+
+      this.cacheImageResult(cacheKey, result);
+      this.logger.debug(`Serving custom album cover: ${customCoverId}`);
+      return result;
+    } catch (error) {
+      if ((error as any).code === 'ENOENT') {
+        throw new NotFoundException(
+          `Custom cover file not found: ${customCover.filePath}`,
+        );
+      }
+      throw error;
+    }
   }
 
   /**
