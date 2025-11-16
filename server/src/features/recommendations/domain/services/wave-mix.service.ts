@@ -6,6 +6,7 @@ import {
   PLAY_TRACKING_REPOSITORY,
 } from '@features/play-tracking/domain/ports';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 
 const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
   maxTracks: 50,
@@ -43,6 +44,7 @@ export class WaveMixService {
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepo: IPlayTrackingRepository,
     private readonly prisma: PrismaService,
+    private readonly externalMetadataService: ExternalMetadataService,
   ) {}
 
   /**
@@ -170,6 +172,7 @@ export class WaveMixService {
         select: {
           id: true,
           name: true,
+          mbzArtistId: true,
         },
       });
 
@@ -222,6 +225,33 @@ export class WaveMixService {
 
       const now = new Date();
 
+      // Try to get artist image from FanArt API
+      let coverImageUrl: string | undefined;
+      try {
+        if (artist.mbzArtistId) {
+          const artistImages = await this.externalMetadataService['getArtistImages'](
+            artist.mbzArtistId,
+            artist.name,
+            false // don't force refresh
+          );
+          if (artistImages) {
+            // Use the best available profile image (large > medium > small)
+            const bestImage = artistImages.getBestProfileUrl();
+            if (bestImage) {
+              coverImageUrl = bestImage;
+            }
+          }
+        }
+      } catch (error) {
+        // If FanArt fails, we'll just use undefined and let the frontend handle it
+        console.log(`[WaveMix] Failed to fetch FanArt image for ${artist.name}:`, error);
+      }
+
+      // Fallback to local artist profile if no FanArt image
+      if (!coverImageUrl) {
+        coverImageUrl = `/api/images/artist/${artist.id}/profile`;
+      }
+
       playlists.push({
         id: `artist-mix-${artist.id}-${userId}-${now.getTime()}`,
         type: 'artist',
@@ -232,7 +262,7 @@ export class WaveMixService {
         createdAt: now,
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
         metadata,
-        coverImageUrl: `/api/images/artist/${artist.id}/profile`, // Will use artist profile image
+        coverImageUrl,
       });
     }
 
