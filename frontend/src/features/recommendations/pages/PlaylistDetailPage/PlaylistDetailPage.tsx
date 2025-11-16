@@ -67,6 +67,11 @@ export function PlaylistDetailPage() {
         albumId: st.track!.albumId,
         artistId: st.track!.artistId,
         duration: st.track!.duration || 0,
+        path: st.track!.path || '',
+        discNumber: st.track!.discNumber || 1,
+        compilation: st.track!.compilation || false,
+        createdAt: new Date(st.track!.createdAt || Date.now()),
+        updatedAt: new Date(st.track!.updatedAt || Date.now()),
       } as Track));
   };
 
@@ -112,6 +117,7 @@ export function PlaylistDetailPage() {
                 name={playlist.name}
                 coverColor={playlist.coverColor}
                 coverImageUrl={playlist.coverImageUrl}
+                artistName={playlist.metadata.artistName}
                 size="large"
                 className={styles.playlistCover}
               />
