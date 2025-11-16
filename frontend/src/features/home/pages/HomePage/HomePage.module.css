@@ -14,7 +14,7 @@
   margin-left: 200px; /* Aligned with 200px sidebar width */
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  /* overflow-x removed to allow sticky header to work */
   max-width: calc(100vw - 200px);
 }
 
