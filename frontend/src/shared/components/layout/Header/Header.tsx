@@ -38,6 +38,12 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   const searchRef = useRef<HTMLFormElement>(null);
   const headerRef = useRef<HTMLElement>(null);
 
+  // Debug log for state changes
+  useEffect(() => {
+    console.log('[Header] State changed - isScrolled:', isScrolled, 'alwaysGlass:', alwaysGlass);
+    console.log('[Header] Classes will be:', `header ${isScrolled ? 'header--scrolled' : ''}`);
+  }, [isScrolled, alwaysGlass]);
+
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
   useEffect(() => {
