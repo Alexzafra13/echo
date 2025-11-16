@@ -1,14 +1,14 @@
 /**
  * Artist entity (list view)
+ *
+ * Note: Images are fetched dynamically via ImageService API endpoints
+ * using getArtistImageUrl(artistId, imageType, tag). URLs are not stored in database.
  */
 export interface Artist {
   id: string;
   name: string;
   albumCount: number;
   songCount: number;
-  smallImageUrl?: string;
-  mediumImageUrl?: string;
-  largeImageUrl?: string;
   orderArtistName?: string;
 }
 

@@ -11,7 +11,7 @@ import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl } from '../../hooks';
+import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl, useArtistImages } from '../../hooks';
 import styles from './AlbumPage.module.css';
 
 /**
@@ -36,6 +36,9 @@ export default function AlbumPage() {
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
 
+  
+  // Fetch artist images metadata for tag-based cache busting on artist avatar
+  const { data: artistImages } = useArtistImages(album?.artistId);
   // Fetch cover metadata with tag for cache busting
   const { data: coverMeta } = useAlbumCoverMetadata(id);
 
@@ -245,7 +248,7 @@ export default function AlbumPage() {
                 >
                   {album.artistId && (
                     <img
-                      src={getArtistImageUrl(album.artistId, 'profile')}
+                      src={getArtistImageUrl(album.artistId, 'profile', artistImages?.images.profile?.tag)}
                       alt={album.artist}
                       className={styles.albumPage__heroArtistAvatar}
                       onError={(e) => {

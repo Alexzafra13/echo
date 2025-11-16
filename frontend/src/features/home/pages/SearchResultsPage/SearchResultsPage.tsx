@@ -1,6 +1,7 @@
 import { useSearch, useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
+import { useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { Sidebar } from '../../components';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
@@ -22,6 +23,10 @@ export function SearchResultsPage() {
   const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 20 });
   const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(query);
   const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(query, { take: 50 });
+  
+  // Real-time synchronization via WebSocket for artist and album images
+  useArtistMetadataSync();
+  useAlbumMetadataSync();
 
   // Extract artists array from paginated response
   const artists = artistData?.data || [];
