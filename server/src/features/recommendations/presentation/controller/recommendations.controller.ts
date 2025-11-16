@@ -93,13 +93,14 @@ export class RecommendationsController {
     const trackIds = dailyMix.tracks.map((t) => t.trackId);
     const tracks = await this.prisma.track.findMany({
       where: { id: { in: trackIds } },
-      include: {
-        artist: {
-          select: { name: true },
-        },
-        album: {
-          select: { title: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        artistName: true,
+        albumName: true,
+        duration: true,
+        albumId: true,
+        artistId: true,
       },
     });
 
@@ -127,8 +128,8 @@ export class RecommendationsController {
             ? {
                 id: track.id,
                 title: track.title,
-                artistName: track.artist?.name,
-                albumName: track.album?.title,
+                artistName: track.artistName || undefined,
+                albumName: track.albumName || undefined,
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
@@ -168,13 +169,14 @@ export class RecommendationsController {
     const trackIds = result.tracks.map((t) => t.trackId);
     const tracks = await this.prisma.track.findMany({
       where: { id: { in: trackIds } },
-      include: {
-        artist: {
-          select: { name: true },
-        },
-        album: {
-          select: { title: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        artistName: true,
+        albumName: true,
+        duration: true,
+        albumId: true,
+        artistId: true,
       },
     });
 
@@ -198,8 +200,8 @@ export class RecommendationsController {
             ? {
                 id: track.id,
                 title: track.title,
-                artistName: track.artist?.name,
-                albumName: track.album?.title,
+                artistName: track.artistName || undefined,
+                albumName: track.albumName || undefined,
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
