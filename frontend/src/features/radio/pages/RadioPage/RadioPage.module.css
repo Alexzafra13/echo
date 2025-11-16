@@ -33,7 +33,7 @@
   align-items: center;
   gap: var(--space-4);
   margin-bottom: var(--space-6);
-  margin-top: var(--space-4);
+  /* margin-top removed - parent container already has padding-top for header */
 }
 
 /* Filters */
