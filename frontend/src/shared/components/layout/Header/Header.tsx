@@ -41,16 +41,44 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
   useEffect(() => {
     // Find the scrollable content container (sibling of header)
     const findScrollContainer = () => {
-      if (!headerRef.current) return null;
+      if (!headerRef.current) {
+        console.log('[Header] headerRef not available');
+        return null;
+      }
 
       // Get parent main element
       const mainElement = headerRef.current.parentElement;
-      if (!mainElement) return null;
+      if (!mainElement) {
+        console.log('[Header] Parent main element not found');
+        return null;
+      }
+
+      console.log('[Header] Main element found:', mainElement);
+      console.log('[Header] Main element children:', Array.from(mainElement.children));
 
       // Find the content div (next sibling with __content in className)
-      const contentDiv = Array.from(mainElement.children).find(
-        (child) => child.className && child.className.includes('__content')
-      );
+      // Check both className string and classList
+      const contentDiv = Array.from(mainElement.children).find((child) => {
+        const element = child as HTMLElement;
+        const classStr = element.className || '';
+        const hasContentClass = classStr.includes('__content') ||
+                               (element.classList && Array.from(element.classList).some(c => c.includes('__content')));
+
+        console.log('[Header] Checking child:', {
+          element,
+          className: classStr,
+          classList: element.classList ? Array.from(element.classList) : [],
+          hasContentClass
+        });
+
+        return hasContentClass;
+      });
+
+      if (contentDiv) {
+        console.log('[Header] ✅ Found scroll container:', contentDiv);
+      } else {
+        console.log('[Header] ❌ No scroll container found');
+      }
 
       return contentDiv as HTMLElement | null;
     };
@@ -59,15 +87,24 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
 
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement;
-      setIsScrolled(target.scrollTop > 50);
+      const scrollTop = target.scrollTop;
+      const shouldBeScrolled = scrollTop > 50;
+
+      console.log('[Header] Scroll event:', { scrollTop, shouldBeScrolled });
+      setIsScrolled(shouldBeScrolled);
     };
 
     if (scrollContainer) {
+      console.log('[Header] 🎯 Attaching scroll listener to:', scrollContainer);
       scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+      return () => {
+        console.log('[Header] 🧹 Cleaning up scroll listener');
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      };
     }
 
     // Fallback to window scroll for pages that might use it
+    console.log('[Header] ⚠️ Using window scroll fallback');
     const handleWindowScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
