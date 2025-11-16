@@ -88,7 +88,10 @@ export class ImageService {
       try {
         // Construir ruta absoluta desde la ruta relativa guardada en BD
         const basePath = await this.storage.getArtistMetadataPath(artistId);
-        const absolutePath = path.join(basePath, customImage.filePath);
+        // Normalize path separators for cross-platform compatibility
+        // Old records may have Windows backslashes (\) in the database
+        const normalizedPath = customImage.filePath.replace(/\\/g, '/');
+        const absolutePath = path.join(basePath, normalizedPath);
 
         await fs.access(absolutePath);
         const stats = await fs.stat(absolutePath);
@@ -235,7 +238,10 @@ export class ImageService {
           'albums',
           albumId
         );
-        const absolutePath = path.join(basePath, customCover.filePath);
+        // Normalize path separators for cross-platform compatibility
+        // Old records may have Windows backslashes (\) in the database
+        const normalizedPath = customCover.filePath.replace(/\\/g, '/');
+        const absolutePath = path.join(basePath, normalizedPath);
 
         await fs.access(absolutePath);
         const stats = await fs.stat(absolutePath);
