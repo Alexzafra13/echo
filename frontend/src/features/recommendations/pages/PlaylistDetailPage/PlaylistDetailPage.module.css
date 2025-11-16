@@ -10,14 +10,16 @@
   margin-left: 200px; /* Sidebar width */
   display: flex;
   flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
   /* overflow removed to allow sticky header to work */
 }
 
 .playlistDetailPage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
+  margin-top: -84px; /* Content starts behind header */
   overflow-y: auto;
-  padding: 2rem 3rem;
+  padding: calc(84px + 2rem) 3rem 2rem; /* 84px for header glassmorphism effect */
 }
 
 /* Back Button */
