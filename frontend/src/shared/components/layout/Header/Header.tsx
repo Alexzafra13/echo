@@ -51,7 +51,6 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
         const hasScroll = styles.overflowY === 'auto' || styles.overflowY === 'scroll';
 
         if (hasScroll) {
-          console.log('[Header] ✅ Found scroll container (nextSibling):', scrollableElement);
           return scrollableElement;
         }
       }
@@ -67,12 +66,10 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
         }) || null;
 
         if (scrollableElement) {
-          console.log('[Header] ✅ Found scroll container (by overflow):', scrollableElement);
           return scrollableElement;
         }
       }
 
-      console.log('[Header] ❌ No scroll container found');
       return null;
     };
 
@@ -82,33 +79,23 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
       const target = e.target as HTMLElement;
       const scrollTop = target.scrollTop;
       const shouldBeScrolled = scrollTop > 50;
-      console.log('[Header] 📜 SCROLL EVENT FIRED!', { scrollTop, shouldBeScrolled, currentIsScrolled: isScrolled });
       setIsScrolled(shouldBeScrolled);
     };
 
     if (scrollContainer) {
-      console.log('[Header] 🎯 Attaching scroll listener to:', scrollContainer);
-      console.log('[Header] 📊 Initial scroll position:', scrollContainer.scrollTop);
-      console.log('[Header] 📊 Container has overflow-y:', window.getComputedStyle(scrollContainer).overflowY);
-      console.log('[Header] 📊 Container scrollHeight:', scrollContainer.scrollHeight);
-      console.log('[Header] 📊 Container clientHeight:', scrollContainer.clientHeight);
-
       scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
 
       // Check initial scroll position
       if (scrollContainer.scrollTop > 50) {
-        console.log('[Header] ⚡ Initial scroll > 50, activating glassmorphism');
         setIsScrolled(true);
       }
 
       return () => {
-        console.log('[Header] 🧹 Cleaning up scroll listener');
         scrollContainer.removeEventListener('scroll', handleScroll);
       };
     }
 
     // Fallback to window scroll for pages that might use it
-    console.log('[Header] ⚠️ Using window scroll fallback');
     const handleWindowScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
