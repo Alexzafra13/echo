@@ -2,9 +2,13 @@ import { getArtistImageUrl } from '@features/home/hooks';
 
 /**
  * Get artist avatar URL (V2 - unified profile image)
+ * Constructs dynamic URL to ImageService API endpoint.
+ *
  * @param artistId - The artist ID
- * @param tag - Optional tag for cache validation
- * @deprecated size parameter - V2 uses single unified profile image
+ * @param tag - Optional MD5 tag for cache validation (from useArtistImages metadata)
+ *
+ * Note: For list views without tag, WebSocket sync ensures cache invalidation
+ * when images are updated. For detail views, use useArtistImages() to get tag.
  */
 export function getArtistAvatarUrl(artistId: string, tag?: string): string {
   return getArtistImageUrl(artistId, 'profile', tag);

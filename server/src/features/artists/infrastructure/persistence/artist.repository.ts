@@ -90,9 +90,6 @@ export class PrismaArtistRepository implements IArtistRepository {
     if (primitives.songCount !== undefined) updateData.songCount = primitives.songCount;
     if (primitives.mbzArtistId !== undefined) updateData.mbzArtistId = primitives.mbzArtistId;
     if (primitives.biography !== undefined) updateData.biography = primitives.biography;
-    if (primitives.smallImageUrl !== undefined) updateData.smallImageUrl = primitives.smallImageUrl;
-    if (primitives.mediumImageUrl !== undefined) updateData.mediumImageUrl = primitives.mediumImageUrl;
-    if (primitives.largeImageUrl !== undefined) updateData.largeImageUrl = primitives.largeImageUrl;
     if (primitives.externalUrl !== undefined) updateData.externalUrl = primitives.externalUrl;
     if (primitives.externalInfoUpdatedAt !== undefined) updateData.externalInfoUpdatedAt = primitives.externalInfoUpdatedAt;
     if (primitives.orderArtistName !== undefined) updateData.orderArtistName = primitives.orderArtistName;
