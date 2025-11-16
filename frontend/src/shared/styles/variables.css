@@ -197,9 +197,9 @@
   --sidebar-border: var(--border-subtle);
 
   /* Header - Glassmorphism effect */
-  --header-bg-scrolled: rgba(15, 23, 42, 0.6);
-  --header-border-scrolled: rgba(255, 255, 255, 0.1);
-  --header-shadow-scrolled: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --header-bg-scrolled: rgba(15, 23, 42, 0.3);
+  --header-border-scrolled: rgba(255, 255, 255, 0.12);
+  --header-shadow-scrolled: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   /* Input */
   --input-bg: #ffffff;
@@ -288,9 +288,9 @@
   --sidebar-border: var(--border-subtle);
 
   /* Header - Glassmorphism effect for light theme */
-  --header-bg-scrolled: rgba(250, 250, 249, 0.6);
-  --header-border-scrolled: rgba(41, 37, 36, 0.1);
-  --header-shadow-scrolled: 0 8px 32px rgba(41, 37, 36, 0.15);
+  --header-bg-scrolled: rgba(250, 250, 249, 0.3);
+  --header-border-scrolled: rgba(41, 37, 36, 0.12);
+  --header-shadow-scrolled: 0 8px 32px rgba(41, 37, 36, 0.2);
 
   --input-bg: #fafaf9;
   --input-border: #d6d3d1; /* Stone 300 */
