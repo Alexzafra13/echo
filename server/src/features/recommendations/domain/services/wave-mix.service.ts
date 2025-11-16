@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { DailyMix, DailyMixConfig, DailyMixMetadata, TrackScore } from '../entities/track-score.entity';
+import { AutoPlaylist, WaveMixConfig, PlaylistMetadata, TrackScore } from '../entities/track-score.entity';
 import { ScoringService } from './scoring.service';
 import {
   IPlayTrackingRepository,
@@ -7,7 +7,7 @@ import {
 } from '@features/play-tracking/domain/ports';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 
-const DEFAULT_DAILY_MIX_CONFIG: DailyMixConfig = {
+const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
   maxTracks: 50,
   minScore: 20,
   freshnessRatio: 0.2,
@@ -20,8 +20,24 @@ const DEFAULT_DAILY_MIX_CONFIG: DailyMixConfig = {
   },
 };
 
+// Pastel colors for Wave Mix covers
+const WAVE_MIX_COLORS = [
+  '#FF6B9D', // Pink
+  '#C44569', // Dark Pink
+  '#4834DF', // Blue Purple
+  '#6C5CE7', // Purple
+  '#00D2D3', // Cyan
+  '#1ABC9C', // Turquoise
+  '#F39C12', // Orange
+  '#E67E22', // Dark Orange
+  '#E74C3C', // Red
+  '#9B59B6', // Purple
+  '#3498DB', // Blue
+  '#2ECC71', // Green
+];
+
 @Injectable()
-export class DailyMixService {
+export class WaveMixService {
   constructor(
     private readonly scoringService: ScoringService,
     @Inject(PLAY_TRACKING_REPOSITORY)
@@ -30,7 +46,7 @@ export class DailyMixService {
   ) {}
 
   /**
-   * Generate Daily Mix for a user
+   * Generate Wave Mix for a user
    * Algorithm:
    * 1. Get user's listening history
    * 2. Score all tracks the user has interacted with
@@ -39,21 +55,21 @@ export class DailyMixService {
    * 5. Add exploration tracks (10%) - from genres/artists less explored
    * 6. Shuffle intelligently (avoid consecutive tracks from same artist/album)
    */
-  async generateDailyMix(userId: string, config?: Partial<DailyMixConfig>): Promise<DailyMix> {
+  async generateWaveMix(userId: string, config?: Partial<WaveMixConfig>): Promise<AutoPlaylist> {
     // Filter out undefined values from config to preserve defaults
     const cleanConfig = config
       ? Object.fromEntries(Object.entries(config).filter(([_, v]) => v !== undefined))
       : {};
-    const finalConfig = { ...DEFAULT_DAILY_MIX_CONFIG, ...cleanConfig };
+    const finalConfig = { ...DEFAULT_WAVE_MIX_CONFIG, ...cleanConfig };
 
     // Step 1: Get user's top tracks based on play stats
     const topTracks = await this.playTrackingRepo.getUserTopTracks(userId, 200); // Get more than needed
-    console.log(`[DailyMix] User ${userId} has ${topTracks.length} top tracks`);
+    console.log(`[WaveMix] User ${userId} has ${topTracks.length} top tracks`);
 
     if (topTracks.length === 0) {
       // User has no listening history, return empty mix
-      console.log(`[DailyMix] No listening history for user ${userId}, returning empty mix`);
-      return this.createEmptyDailyMix(userId);
+      console.log(`[WaveMix] No listening history for user ${userId}, returning empty mix`);
+      return this.createEmptyWaveMix(userId);
     }
 
     // Get track details with artist IDs
@@ -72,19 +88,18 @@ export class DailyMixService {
 
     // Step 2: Calculate scores for all tracks
     const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
-    console.log(`[DailyMix] Calculated scores for ${scoredTracks.length} tracks`);
+    console.log(`[WaveMix] Calculated scores for ${scoredTracks.length} tracks`);
     if (scoredTracks.length > 0) {
-      console.log(`[DailyMix] Score range: ${scoredTracks[0]?.totalScore} to ${scoredTracks[scoredTracks.length - 1]?.totalScore}`);
-      console.log(`[DailyMix] Sample scores:`, scoredTracks.slice(0, 5).map(t => ({ score: t.totalScore, breakdown: t.breakdown })));
+      console.log(`[WaveMix] Score range: ${scoredTracks[0]?.totalScore} to ${scoredTracks[scoredTracks.length - 1]?.totalScore}`);
     }
 
     // Step 3: Filter tracks above minimum score
     const qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
-    console.log(`[DailyMix] ${qualifiedTracks.length} tracks qualified (score >= ${finalConfig.minScore})`);
+    console.log(`[WaveMix] ${qualifiedTracks.length} tracks qualified (score >= ${finalConfig.minScore})`);
 
     if (qualifiedTracks.length === 0) {
-      console.log(`[DailyMix] No tracks qualified above min score ${finalConfig.minScore}, returning empty mix`);
-      return this.createEmptyDailyMix(userId);
+      console.log(`[WaveMix] No tracks qualified above min score ${finalConfig.minScore}, returning empty mix`);
+      return this.createEmptyWaveMix(userId);
     }
 
     // Step 4: Select core tracks (70%)
@@ -115,20 +130,125 @@ export class DailyMixService {
     // Calculate metadata
     const metadata = await this.calculateMetadata(userId, shuffledTracks, tracks);
 
-    // Create Daily Mix object
+    // Create Wave Mix object
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Expires in 24 hours
 
+    // Pick a random color for the cover
+    const coverColor = this.getRandomColor(userId);
+
     return {
-      id: `daily-mix-${userId}-${now.getTime()}`,
+      id: `wave-mix-${userId}-${now.getTime()}`,
+      type: 'wave-mix',
       userId,
-      name: `Daily Mix - ${now.toLocaleDateString()}`,
-      description: this.generateDescription(metadata),
+      name: 'Wave Mix',
+      description: 'Recomendaciones personalizadas basadas en tus gustos musicales y tu atmósfera favorita en echo',
       tracks: shuffledTracks,
       createdAt: now,
       expiresAt,
       metadata,
+      coverColor,
     };
+  }
+
+  /**
+   * Generate artist-based playlists for user's top artists
+   */
+  async generateArtistPlaylists(userId: string, limit: number = 5): Promise<AutoPlaylist[]> {
+    // Get user's top artists based on play stats
+    const topArtists = await this.playTrackingRepo.getUserTopArtists(userId, limit);
+
+    if (topArtists.length === 0) {
+      return [];
+    }
+
+    const playlists: AutoPlaylist[] = [];
+
+    for (const artistStat of topArtists) {
+      const artist = await this.prisma.artist.findUnique({
+        where: { id: artistStat.artistId },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+      if (!artist) continue;
+
+      // Get all tracks by this artist that the user has listened to
+      const artistTracks = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+      const trackIds = artistTracks.map(t => t.itemId);
+
+      const tracks = await this.prisma.track.findMany({
+        where: {
+          id: { in: trackIds },
+          artistId: artist.id,
+        },
+        select: {
+          id: true,
+          artistId: true,
+          albumId: true,
+          title: true,
+        },
+      });
+
+      if (tracks.length === 0) continue;
+
+      const trackIdsList = tracks.map(t => t.id);
+      const trackArtistMap = new Map(tracks.map((t) => [t.id, t.artistId || '']));
+
+      // Score tracks
+      const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIdsList, trackArtistMap);
+
+      // Take top 30 tracks for this artist
+      const topTracks = scoredTracks.slice(0, 30);
+
+      if (topTracks.length === 0) continue;
+
+      const metadata: PlaylistMetadata = {
+        totalTracks: topTracks.length,
+        avgScore: topTracks.reduce((sum, t) => sum + t.totalScore, 0) / topTracks.length,
+        topGenres: [],
+        topArtists: [artist.id],
+        artistId: artist.id,
+        artistName: artist.name,
+        temporalDistribution: {
+          lastWeek: 0,
+          lastMonth: 0,
+          lastYear: 0,
+          older: 0,
+        },
+      };
+
+      const now = new Date();
+
+      playlists.push({
+        id: `artist-mix-${artist.id}-${userId}-${now.getTime()}`,
+        type: 'artist',
+        userId,
+        name: `Lo mejor de ${artist.name}`,
+        description: `Las mejores canciones de ${artist.name} basadas en tu historial de escucha`,
+        tracks: topTracks,
+        createdAt: now,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
+        metadata,
+        coverImageUrl: `/api/images/artist/${artist.id}/profile`, // Will use artist profile image
+      });
+    }
+
+    return playlists;
+  }
+
+  /**
+   * Get all auto playlists for a user (Wave Mix + Artist playlists)
+   */
+  async getAllAutoPlaylists(userId: string): Promise<AutoPlaylist[]> {
+    const [waveMix, artistPlaylists] = await Promise.all([
+      this.generateWaveMix(userId),
+      this.generateArtistPlaylists(userId, 5),
+    ]);
+
+    return [waveMix, ...artistPlaylists];
   }
 
   /**
@@ -170,9 +290,9 @@ export class DailyMixService {
   }
 
   /**
-   * Calculate metadata for the Daily Mix
+   * Calculate metadata for the playlist
    */
-  private async calculateMetadata(userId: string, tracks: TrackScore[], trackDetails: any[]): Promise<DailyMixMetadata> {
+  private async calculateMetadata(userId: string, tracks: TrackScore[], trackDetails: any[]): Promise<PlaylistMetadata> {
     const trackMap = new Map(trackDetails.map((t) => [t.id, t]));
 
     // Get play history to determine temporal distribution
@@ -193,7 +313,7 @@ export class DailyMixService {
     // Calculate average score
     const avgScore = tracks.reduce((sum, t) => sum + t.totalScore, 0) / tracks.length;
 
-    // Get top artists (would need to fetch from DB in real implementation)
+    // Get top artists
     const artistIds = tracks
       .map((t) => trackMap.get(t.trackId)?.artistId)
       .filter((id) => id) as string[];
@@ -209,7 +329,7 @@ export class DailyMixService {
     return {
       totalTracks: tracks.length,
       avgScore: Math.round(avgScore * 10) / 10,
-      topGenres: [], // Would need genre data
+      topGenres: [],
       topArtists,
       temporalDistribution: {
         lastWeek,
@@ -221,22 +341,25 @@ export class DailyMixService {
   }
 
   /**
-   * Generate description based on metadata
+   * Get a consistent random color based on user ID
    */
-  private generateDescription(metadata: DailyMixMetadata): string {
-    return `A personalized mix of ${metadata.totalTracks} tracks based on your listening habits. Average score: ${metadata.avgScore}/100`;
+  private getRandomColor(userId: string): string {
+    // Use user ID to seed the random selection for consistency
+    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return WAVE_MIX_COLORS[hash % WAVE_MIX_COLORS.length];
   }
 
   /**
-   * Create empty daily mix when user has no data
+   * Create empty wave mix when user has no data
    */
-  private createEmptyDailyMix(userId: string): DailyMix {
+  private createEmptyWaveMix(userId: string): AutoPlaylist {
     const now = new Date();
     return {
-      id: `daily-mix-${userId}-${now.getTime()}`,
+      id: `wave-mix-${userId}-${now.getTime()}`,
+      type: 'wave-mix',
       userId,
-      name: 'Daily Mix',
-      description: 'Start listening to music to get personalized recommendations!',
+      name: 'Wave Mix',
+      description: '¡Empieza a escuchar música para obtener recomendaciones personalizadas!',
       tracks: [],
       createdAt: now,
       expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
@@ -252,6 +375,7 @@ export class DailyMixService {
           older: 0,
         },
       },
+      coverColor: this.getRandomColor(userId),
     };
   }
 }

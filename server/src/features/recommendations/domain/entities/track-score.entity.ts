@@ -21,7 +21,7 @@ export interface RecommendationOptions {
   minScore?: number;        // Minimum score threshold
 }
 
-export interface DailyMixConfig {
+export interface WaveMixConfig {
   maxTracks: number;                // Max 50 tracks
   minScore: number;                 // Minimum score to consider (default: 20)
   freshnessRatio: number;           // 0-1, ratio of "new" tracks (default: 0.2)
@@ -36,22 +36,27 @@ export interface TemporalBalance {
   older: number;       // 0.1 = 10% from older
 }
 
-export interface DailyMix {
+export interface AutoPlaylist {
   id: string;
+  type: 'wave-mix' | 'artist' | 'genre' | 'mood';
   userId: string;
   name: string;
   description: string;
   tracks: TrackScore[];
   createdAt: Date;
   expiresAt: Date;
-  metadata: DailyMixMetadata;
+  metadata: PlaylistMetadata;
+  coverColor?: string;  // Hex color for generated cover
+  coverImageUrl?: string; // URL for artist/album cover
 }
 
-export interface DailyMixMetadata {
+export interface PlaylistMetadata {
   totalTracks: number;
   avgScore: number;
   topGenres: string[];
   topArtists: string[];
+  artistId?: string;  // For artist playlists
+  artistName?: string; // For artist playlists
   temporalDistribution: {
     lastWeek: number;
     lastMonth: number;
@@ -59,6 +64,11 @@ export interface DailyMixMetadata {
     older: number;
   };
 }
+
+// Legacy aliases for backwards compatibility
+export type DailyMixConfig = WaveMixConfig;
+export type DailyMix = AutoPlaylist;
+export type DailyMixMetadata = PlaylistMetadata;
 
 export interface SmartPlaylistConfig {
   name: string;
