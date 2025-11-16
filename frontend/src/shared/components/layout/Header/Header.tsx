@@ -39,35 +39,68 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
   useEffect(() => {
-    // Find the scrollable content container (sibling of header)
+    // Find the scrollable content container
     const findScrollContainer = () => {
       if (!headerRef.current) return null;
 
-      // Get parent main element
-      const mainElement = headerRef.current.parentElement;
-      if (!mainElement) return null;
+      // Strategy 1: Try next sibling (most common case)
+      let scrollableElement = headerRef.current.nextElementSibling as HTMLElement | null;
 
-      // Find the content div (next sibling with __content in className)
-      const contentDiv = Array.from(mainElement.children).find(
-        (child) => child.className && child.className.includes('__content')
-      );
+      if (scrollableElement) {
+        const styles = window.getComputedStyle(scrollableElement);
+        const hasScroll = styles.overflowY === 'auto' || styles.overflowY === 'scroll';
 
-      return contentDiv as HTMLElement | null;
+        if (hasScroll) {
+          console.log('[Header] ✅ Found scroll container (nextSibling):', scrollableElement);
+          return scrollableElement;
+        }
+      }
+
+      // Strategy 2: Find any child with overflow-y: auto in parent
+      const parent = headerRef.current.parentElement;
+      if (parent) {
+        const children = Array.from(parent.children) as HTMLElement[];
+        scrollableElement = children.find((child) => {
+          if (child === headerRef.current) return false;
+          const styles = window.getComputedStyle(child);
+          return styles.overflowY === 'auto' || styles.overflowY === 'scroll';
+        }) || null;
+
+        if (scrollableElement) {
+          console.log('[Header] ✅ Found scroll container (by overflow):', scrollableElement);
+          return scrollableElement;
+        }
+      }
+
+      console.log('[Header] ❌ No scroll container found');
+      return null;
     };
 
     const scrollContainer = findScrollContainer();
 
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement;
-      setIsScrolled(target.scrollTop > 50);
+      const scrollTop = target.scrollTop;
+      const shouldBeScrolled = scrollTop > 50;
+      setIsScrolled(shouldBeScrolled);
     };
 
     if (scrollContainer) {
+      console.log('[Header] 🎯 Attaching scroll listener');
       scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+
+      // Check initial scroll position
+      if (scrollContainer.scrollTop > 50) {
+        setIsScrolled(true);
+      }
+
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      };
     }
 
     // Fallback to window scroll for pages that might use it
+    console.log('[Header] ⚠️ Using window scroll fallback');
     const handleWindowScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
