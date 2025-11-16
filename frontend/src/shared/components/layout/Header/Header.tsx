@@ -34,15 +34,46 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const searchRef = useRef<HTMLFormElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   // Detect scroll to apply glassmorphism effect
+  // The scroll happens in the content container (sibling element), not in window
   useEffect(() => {
-    const handleScroll = () => {
+    // Find the scrollable content container (sibling of header)
+    const findScrollContainer = () => {
+      if (!headerRef.current) return null;
+
+      // Get parent main element
+      const mainElement = headerRef.current.parentElement;
+      if (!mainElement) return null;
+
+      // Find the content div (next sibling with __content in className)
+      const contentDiv = Array.from(mainElement.children).find(
+        (child) => child.className && child.className.includes('__content')
+      );
+
+      return contentDiv as HTMLElement | null;
+    };
+
+    const scrollContainer = findScrollContainer();
+
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      setIsScrolled(target.scrollTop > 50);
+    };
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+
+    // Fallback to window scroll for pages that might use it
+    const handleWindowScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleWindowScroll);
+    return () => window.removeEventListener('scroll', handleWindowScroll);
   }, []);
 
   // Debounce search query
@@ -100,7 +131,7 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
   };
 
   return (
-    <header className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}>
+    <header ref={headerRef} className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}>
       {/* Back button */}
       {showBackButton && (
         <BackButton className={styles.header__backButton} />
