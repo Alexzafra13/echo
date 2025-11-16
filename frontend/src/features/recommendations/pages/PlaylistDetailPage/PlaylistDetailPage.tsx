@@ -8,7 +8,8 @@ import { Button } from '@shared/components/ui';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
-import type { Track } from '@features/home/types';
+import type { Track as HomeTrack } from '@features/home/types';
+import type { Track as PlayerTrack } from '@features/player/types';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -44,7 +45,7 @@ export function PlaylistDetailPage() {
     playQueue(tracks);
   };
 
-  const handlePlayTrack = (track: Track) => {
+  const handlePlayTrack = (track: HomeTrack) => {
     if (!playlist) return;
     const tracks = convertToPlayerTracks(playlist);
     const index = tracks.findIndex((t) => t.id === track.id);
@@ -56,7 +57,23 @@ export function PlaylistDetailPage() {
     setLocation('/wave-mix');
   };
 
-  const convertToPlayerTracks = (playlist: AutoPlaylist): Track[] => {
+  // Convert to Player Tracks (for playback)
+  const convertToPlayerTracks = (playlist: AutoPlaylist): PlayerTrack[] => {
+    return playlist.tracks
+      .filter((st) => st.track)
+      .map((st) => ({
+        id: st.track!.id,
+        title: st.track!.title,
+        artist: st.track!.artistName || 'Unknown Artist',
+        albumName: st.track!.albumName,
+        duration: st.track!.duration || 0,
+        coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
+        trackNumber: st.track!.trackNumber,
+      }));
+  };
+
+  // Convert to Home Tracks (for display in TrackList)
+  const convertToHomeTracks = (playlist: AutoPlaylist): HomeTrack[] => {
     return playlist.tracks
       .filter((st) => st.track)
       .map((st) => ({
@@ -67,19 +84,19 @@ export function PlaylistDetailPage() {
         albumId: st.track!.albumId,
         artistId: st.track!.artistId,
         duration: st.track!.duration || 0,
-        path: st.track!.path || '',
-        discNumber: st.track!.discNumber || 1,
-        compilation: st.track!.compilation || false,
-        createdAt: new Date(st.track!.createdAt || Date.now()),
-        updatedAt: new Date(st.track!.updatedAt || Date.now()),
-      } as Track));
+        path: '',
+        discNumber: 1,
+        compilation: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
   };
 
   if (!playlist) {
     return null;
   }
 
-  const tracks = convertToPlayerTracks(playlist);
+  const tracks = convertToHomeTracks(playlist);
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
 
   const formatDuration = (seconds: number): string => {

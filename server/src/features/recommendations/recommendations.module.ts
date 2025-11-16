@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { UserInteractionsModule } from '@features/user-interactions/user-interactions.module';
 import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
+import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { ScoringService } from './domain/services/scoring.service';
 import { WaveMixService } from './domain/services/wave-mix.service';
 import { SmartPlaylistService } from './domain/services/smart-playlist.service';
@@ -15,7 +16,7 @@ import {
 import { RecommendationsController } from './presentation/controller/recommendations.controller';
 
 @Module({
-  imports: [UserInteractionsModule, PlayTrackingModule],
+  imports: [UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule],
   controllers: [RecommendationsController],
   providers: [
     PrismaService,
