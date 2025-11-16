@@ -137,6 +137,10 @@ export class ScoringService {
     const playStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
     const trackStats = playStats.find((s) => s.itemId === trackId);
 
+    if (!trackStats) {
+      console.log(`[Scoring] No play stats found for track ${trackId}`);
+    }
+
     // Get artist play stats for diversity calculation
     let artistPlayCount = 0;
     let totalPlayCount = playStats.reduce((sum, s) => sum + s.playCount, 0);
