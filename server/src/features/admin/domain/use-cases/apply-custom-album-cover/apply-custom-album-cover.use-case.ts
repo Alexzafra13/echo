@@ -69,11 +69,11 @@ export class ApplyCustomAlbumCoverUseCase {
     this.imageService.invalidateAlbumCache(input.albumId);
 
     // Notify via WebSocket
-    this.metadataGateway.notifyAlbumCoverUpdated(
-      input.albumId,
-      album.name,
-      new Date(),
-    );
+    this.metadataGateway.emitAlbumCoverUpdated({
+      albumId: input.albumId,
+      albumName: album.name,
+      updatedAt: new Date(),
+    });
 
     this.logger.log(`✅ Successfully applied custom cover for ${album.name}`);
 
