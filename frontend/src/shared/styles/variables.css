@@ -196,6 +196,11 @@
   --sidebar-bg: var(--bg-elevated);
   --sidebar-border: var(--border-subtle);
 
+  /* Header - Glassmorphism effect */
+  --header-bg-scrolled: rgba(15, 23, 42, 0.75);
+  --header-border-scrolled: rgba(255, 255, 255, 0.08);
+  --header-shadow-scrolled: 0 4px 24px rgba(0, 0, 0, 0.2);
+
   /* Input */
   --input-bg: #ffffff;
   --input-border: var(--color-slate-300);
@@ -281,6 +286,11 @@
 
   --sidebar-bg: var(--bg-elevated);
   --sidebar-border: var(--border-subtle);
+
+  /* Header - Glassmorphism effect for light theme */
+  --header-bg-scrolled: rgba(250, 250, 249, 0.75);
+  --header-border-scrolled: rgba(41, 37, 36, 0.08);
+  --header-shadow-scrolled: 0 4px 24px rgba(41, 37, 36, 0.1);
 
   --input-bg: #fafaf9;
   --input-border: #d6d3d1; /* Stone 300 */
