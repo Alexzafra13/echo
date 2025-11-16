@@ -21,6 +21,7 @@ import {
   CalculateTrackScoreUseCase,
   GenerateDailyMixUseCase,
   GenerateSmartPlaylistUseCase,
+  GetAutoPlaylistsUseCase,
 } from '../../domain/use-cases';
 import {
   CalculateScoreDto,
@@ -30,6 +31,7 @@ import {
 import {
   TrackScoreDto,
   DailyMixDto,
+  AutoPlaylistDto,
   SmartPlaylistDto,
 } from '../dtos/recommendations-response.dto';
 
@@ -42,6 +44,7 @@ export class RecommendationsController {
     private readonly calculateTrackScoreUseCase: CalculateTrackScoreUseCase,
     private readonly generateDailyMixUseCase: GenerateDailyMixUseCase,
     private readonly generateSmartPlaylistUseCase: GenerateSmartPlaylistUseCase,
+    private readonly getAutoPlaylistsUseCase: GetAutoPlaylistsUseCase,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -211,5 +214,82 @@ export class RecommendationsController {
       }),
       metadata: result.metadata,
     };
+  }
+
+  /**
+   * GET /recommendations/auto-playlists
+   * Get all auto-generated playlists (Wave Mix + Artist playlists)
+   */
+  @Get('auto-playlists')
+  @ApiOperation({ summary: 'Get all auto-generated playlists (Wave Mix + artist playlists)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Auto playlists generated successfully',
+    type: [AutoPlaylistDto],
+  })
+  async getAutoPlaylists(@Req() req: any): Promise<AutoPlaylistDto[]> {
+    const userId = req.user.id;
+    const playlists = await this.getAutoPlaylistsUseCase.execute(userId);
+
+    // Fetch track details for all playlists
+    const playlistsWithTracks = await Promise.all(
+      playlists.map(async (playlist) => {
+        const trackIds = playlist.tracks.map((t) => t.trackId);
+        const tracks = await this.prisma.track.findMany({
+          where: { id: { in: trackIds } },
+          select: {
+            id: true,
+            title: true,
+            artistName: true,
+            albumName: true,
+            duration: true,
+            albumId: true,
+            artistId: true,
+          },
+        });
+
+        const trackMap = new Map(tracks.map((t) => [t.id, t]));
+
+        return {
+          id: playlist.id,
+          type: playlist.type,
+          userId: playlist.userId,
+          name: playlist.name,
+          description: playlist.description,
+          tracks: playlist.tracks.map((t) => {
+            const track = trackMap.get(t.trackId);
+            return {
+              trackId: t.trackId,
+              totalScore: t.totalScore,
+              rank: t.rank,
+              breakdown: {
+                explicitFeedback: t.breakdown.explicitFeedback,
+                implicitBehavior: t.breakdown.implicitBehavior,
+                recency: t.breakdown.recency,
+                diversity: t.breakdown.diversity,
+              },
+              track: track
+                ? {
+                    id: track.id,
+                    title: track.title,
+                    artistName: track.artistName || undefined,
+                    albumName: track.albumName || undefined,
+                    duration: track.duration || undefined,
+                    albumId: track.albumId || undefined,
+                    artistId: track.artistId || undefined,
+                  }
+                : undefined,
+            };
+          }),
+          createdAt: playlist.createdAt,
+          expiresAt: playlist.expiresAt,
+          metadata: playlist.metadata,
+          coverColor: playlist.coverColor,
+          coverImageUrl: playlist.coverImageUrl,
+        };
+      }),
+    );
+
+    return playlistsWithTracks;
   }
 }

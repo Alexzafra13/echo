@@ -5,7 +5,7 @@ import {
   User,
   ListMusic,
   Radio,
-  Calendar,
+  Waves,
   Compass,
   Settings,
   Shield,
@@ -33,7 +33,7 @@ export function Sidebar() {
     { icon: User, label: 'Artists', path: '/artists' },
     { icon: ListMusic, label: 'Playlists', path: '/playlists' },
     { icon: Radio, label: 'Radio', path: '/radio' },
-    { icon: Calendar, label: 'Daily Mix', path: '/daily-mix' },
+    { icon: Waves, label: 'Wave Mix', path: '/wave-mix' },
     { icon: Compass, label: 'Explorar', path: '/explore' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
