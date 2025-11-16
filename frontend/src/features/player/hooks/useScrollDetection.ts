@@ -13,13 +13,44 @@ export function useScrollDetection(threshold: number = 120) {
   useEffect(() => {
     let ticking = false;
 
-    const handleScroll = () => {
+    // Buscar el contenedor scrolleable correcto
+    const findScrollContainer = () => {
+      // Buscar elementos con clase que termina en __content y tiene overflow-y: auto
+      const contentElements = document.querySelectorAll('[class*="__content"]');
+
+      for (const element of contentElements) {
+        const htmlElement = element as HTMLElement;
+        const styles = window.getComputedStyle(htmlElement);
+        const hasScroll = styles.overflowY === 'auto' || styles.overflowY === 'scroll';
+
+        if (hasScroll) {
+          return htmlElement;
+        }
+      }
+
+      return null;
+    };
+
+    const scrollContainer = findScrollContainer();
+
+    const handleScroll = (e?: Event) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // Calcular dimensiones
-          const scrollHeight = document.documentElement.scrollHeight;
-          const scrollTop = window.scrollY || document.documentElement.scrollTop;
-          const clientHeight = window.innerHeight;
+          let scrollHeight: number;
+          let scrollTop: number;
+          let clientHeight: number;
+
+          if (scrollContainer) {
+            // Usar el contenedor scrolleable específico de la página
+            scrollHeight = scrollContainer.scrollHeight;
+            scrollTop = scrollContainer.scrollTop;
+            clientHeight = scrollContainer.clientHeight;
+          } else {
+            // Fallback a window scroll (para páginas legacy)
+            scrollHeight = document.documentElement.scrollHeight;
+            scrollTop = window.scrollY || document.documentElement.scrollTop;
+            clientHeight = window.innerHeight;
+          }
 
           // Verificar si hay scroll REAL disponible
           // El contenido debe ser al menos 200px más alto que el viewport
@@ -54,8 +85,12 @@ export function useScrollDetection(threshold: number = 120) {
       }
     };
 
-    // Listener para scroll
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Listener para scroll en el contenedor específico o window
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    } else {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
 
     // También escuchar cambios de tamaño por si el contenido cambia dinámicamente
     window.addEventListener('resize', handleScroll, { passive: true });
@@ -64,7 +99,11 @@ export function useScrollDetection(threshold: number = 120) {
     handleScroll();
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      } else {
+        window.removeEventListener('scroll', handleScroll);
+      }
       window.removeEventListener('resize', handleScroll);
     };
   }, [threshold, isMiniMode]);
