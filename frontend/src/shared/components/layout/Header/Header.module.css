@@ -22,8 +22,8 @@
     rgba(10, 14, 39, 0.40),
     rgba(15, 23, 42, 0.50)
   );
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
   border-bottom: 1px solid var(--header-border-scrolled);
   box-shadow: var(--header-shadow-scrolled);
 }
