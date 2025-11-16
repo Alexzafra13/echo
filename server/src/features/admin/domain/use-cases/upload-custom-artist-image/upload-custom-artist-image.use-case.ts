@@ -90,11 +90,15 @@ export class UploadCustomArtistImageUseCase {
     }
 
     // Create database record
+    // IMPORTANT: Normalize path separators to Unix-style (/) for cross-platform compatibility
+    // Windows path.relative() returns backslashes (\) which don't work on Unix systems
+    const relativePath = path.relative(basePath, filePath).replace(/\\/g, '/');
+
     const customImage = await this.prisma.customArtistImage.create({
       data: {
         artistId: input.artistId,
         imageType: input.imageType,
-        filePath: path.relative(basePath, filePath),
+        filePath: relativePath,
         fileName,
         fileSize: BigInt(input.file.size),
         mimeType: input.file.mimetype,
