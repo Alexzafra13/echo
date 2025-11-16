@@ -8,6 +8,7 @@ import { AlbumCoversController } from './presentation/album-covers.controller';
 import { ArtistAvatarsController } from './presentation/artist-avatars.controller';
 import { ArtistBannersManagementController } from './presentation/artist-banners.controller';
 import { CustomArtistImagesController } from './presentation/custom-artist-images.controller';
+import { CustomAlbumCoversController } from './presentation/custom-album-covers.controller';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -28,6 +29,10 @@ import { UploadCustomArtistImageUseCase } from './domain/use-cases/upload-custom
 import { ListCustomArtistImagesUseCase } from './domain/use-cases/list-custom-artist-images';
 import { DeleteCustomArtistImageUseCase } from './domain/use-cases/delete-custom-artist-image';
 import { ApplyCustomArtistImageUseCase } from './domain/use-cases/apply-custom-artist-image';
+import { UploadCustomAlbumCoverUseCase } from './domain/use-cases/upload-custom-album-cover';
+import { ListCustomAlbumCoversUseCase } from './domain/use-cases/list-custom-album-covers';
+import { DeleteCustomAlbumCoverUseCase } from './domain/use-cases/delete-custom-album-cover';
+import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-album-cover';
 
 @Module({
   imports: [AuthModule, PrismaModule, ExternalMetadataModule],
@@ -38,6 +43,7 @@ import { ApplyCustomArtistImageUseCase } from './domain/use-cases/apply-custom-a
     ArtistAvatarsController,
     ArtistBannersManagementController,
     CustomArtistImagesController,
+    CustomAlbumCoversController,
   ],
   providers: [
     CreateUserUseCase,
@@ -58,6 +64,10 @@ import { ApplyCustomArtistImageUseCase } from './domain/use-cases/apply-custom-a
     ListCustomArtistImagesUseCase,
     DeleteCustomArtistImageUseCase,
     ApplyCustomArtistImageUseCase,
+    UploadCustomAlbumCoverUseCase,
+    ListCustomAlbumCoversUseCase,
+    DeleteCustomAlbumCoverUseCase,
+    ApplyCustomAlbumCoverUseCase,
   ],
 })
 export class AdminModule {}

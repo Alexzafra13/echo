@@ -184,6 +184,26 @@ model CustomArtistImage {
   @@map("custom_artist_images")
 }
 
+model CustomAlbumCover {
+  id         String   @id @default(uuid())
+  albumId    String   @map("album_id") @db.VarChar(36)
+  filePath   String   @map("file_path") @db.VarChar(512)
+  fileName   String   @map("file_name") @db.VarChar(255)
+  fileSize   BigInt   @default(0) @map("file_size")
+  mimeType   String   @map("mime_type") @db.VarChar(50)
+  isActive   Boolean  @default(false) @map("is_active") // Whether this is the currently applied cover
+  uploadedBy String?  @map("uploaded_by") @db.VarChar(36)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relación
+  album Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([isActive])
+  @@map("custom_album_covers")
+}
+
 // ============================================
 // GÉNEROS
 // ============================================
@@ -239,10 +259,11 @@ model Album {
   updatedAt               DateTime  @updatedAt @map("updated_at")
 
   // Relaciones
-  artist       Artist?      @relation("ArtistAlbums", fields: [artistId], references: [id], onDelete: SetNull)
-  albumArtist  Artist?      @relation("AlbumArtist", fields: [albumArtistId], references: [id], onDelete: SetNull)
+  artist       Artist?            @relation("ArtistAlbums", fields: [artistId], references: [id], onDelete: SetNull)
+  albumArtist  Artist?            @relation("AlbumArtist", fields: [albumArtistId], references: [id], onDelete: SetNull)
   tracks       Track[]
   genres       AlbumGenre[]
+  customCovers CustomAlbumCover[]
 
   @@index([artistId], map: "idx_albums_artist")
   @@index([albumArtistId], map: "idx_albums_album_artist")

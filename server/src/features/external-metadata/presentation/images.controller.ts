@@ -238,6 +238,74 @@ export class ImagesController {
   }
 
   /**
+   * Sirve una portada personalizada de álbum por su ID
+   * GET /api/images/albums/:albumId/custom/:customCoverId
+   */
+  @Public()
+  @Get('albums/:albumId/custom/:customCoverId')
+  @ApiOperation({
+    summary: 'Serve custom album cover by ID',
+    description: 'Returns a custom uploaded cover file',
+  })
+  @ApiParam({
+    name: 'albumId',
+    description: 'Album UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiParam({
+    name: 'customCoverId',
+    description: 'Custom cover UUID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Custom cover returned successfully',
+    content: {
+      'image/jpeg': {},
+      'image/png': {},
+      'image/webp': {},
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Custom cover not found' })
+  async getCustomAlbumCover(
+    @Param('albumId') albumId: string,
+    @Param('customCoverId') customCoverId: string,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ): Promise<StreamableFile> {
+    try {
+      // Obtener información de la portada personalizada
+      const customCover = await this.imageService.getCustomAlbumCover(
+        albumId,
+        customCoverId,
+      );
+
+      // Configurar headers de caché
+      this.setCacheHeaders(res, customCover);
+
+      // Crear stream del archivo
+      const fileStream = createReadStream(customCover.filePath);
+
+      this.logger.debug(
+        `Serving custom album cover: ${customCoverId} (${customCover.size} bytes)`,
+      );
+
+      return new StreamableFile(fileStream);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Error serving custom album cover ${customCoverId}: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+      throw new NotFoundException(
+        `Unable to serve custom cover ${customCoverId}`,
+      );
+    }
+  }
+
+  /**
    * Sirve una imagen personalizada por su ID
    * GET /api/images/artists/:artistId/custom/:customImageId
    */
