@@ -12,13 +12,15 @@
   margin-left: 200px; /* Ajustado de 230px → 200px (coincide con sidebar) */
   display: flex;
   flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
   /* No overflow-x to allow sticky header to work */
 }
 
 .albumPage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
-  padding: 24px 40px;
+  margin-top: -84px; /* Content starts behind header */
+  padding: 108px 40px 24px; /* 84px + 24px for header glassmorphism effect */
   overflow-y: auto;
   overflow-x: hidden; /* Prevent horizontal scroll but allow Portal dropdowns */
   transition: background 0.5s ease;
