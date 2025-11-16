@@ -44,9 +44,11 @@ export class DailyMixService {
 
     // Step 1: Get user's top tracks based on play stats
     const topTracks = await this.playTrackingRepo.getUserTopTracks(userId, 200); // Get more than needed
+    console.log(`[DailyMix] User ${userId} has ${topTracks.length} top tracks`);
 
     if (topTracks.length === 0) {
       // User has no listening history, return empty mix
+      console.log(`[DailyMix] No listening history for user ${userId}, returning empty mix`);
       return this.createEmptyDailyMix(userId);
     }
 
@@ -66,11 +68,18 @@ export class DailyMixService {
 
     // Step 2: Calculate scores for all tracks
     const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
+    console.log(`[DailyMix] Calculated scores for ${scoredTracks.length} tracks`);
+    if (scoredTracks.length > 0) {
+      console.log(`[DailyMix] Score range: ${scoredTracks[0]?.totalScore} to ${scoredTracks[scoredTracks.length - 1]?.totalScore}`);
+      console.log(`[DailyMix] Sample scores:`, scoredTracks.slice(0, 5).map(t => ({ score: t.totalScore, breakdown: t.breakdown })));
+    }
 
     // Step 3: Filter tracks above minimum score
     const qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
+    console.log(`[DailyMix] ${qualifiedTracks.length} tracks qualified (score >= ${finalConfig.minScore})`);
 
     if (qualifiedTracks.length === 0) {
+      console.log(`[DailyMix] No tracks qualified above min score ${finalConfig.minScore}, returning empty mix`);
       return this.createEmptyDailyMix(userId);
     }
 
