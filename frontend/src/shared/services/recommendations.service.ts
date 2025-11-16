@@ -55,10 +55,11 @@ export interface DailyMixMetadata {
 }
 
 /**
- * Daily Mix response
+ * Auto Playlist response
  */
-export interface DailyMix {
+export interface AutoPlaylist {
   id: string;
+  type: 'wave-mix' | 'artist' | 'genre' | 'mood';
   userId: string;
   name: string;
   description: string;
@@ -66,7 +67,12 @@ export interface DailyMix {
   createdAt: string;
   expiresAt: string;
   metadata: DailyMixMetadata;
+  coverColor?: string;
+  coverImageUrl?: string;
 }
+
+// Legacy alias
+export type DailyMix = AutoPlaylist;
 
 /**
  * Smart playlist response
@@ -91,7 +97,15 @@ export interface CalculateScoreRequest {
 }
 
 /**
- * Get Daily Mix
+ * Get all auto-generated playlists (Wave Mix + Artist playlists)
+ */
+export async function getAutoPlaylists(): Promise<AutoPlaylist[]> {
+  const response = await apiClient.get('/recommendations/auto-playlists');
+  return response.data;
+}
+
+/**
+ * Get Daily Mix (legacy - use getAutoPlaylists for new code)
  * Fetches a personalized mix of 50 tracks based on user preferences
  */
 export async function getDailyMix(): Promise<DailyMix> {
