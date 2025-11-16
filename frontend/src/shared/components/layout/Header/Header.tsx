@@ -39,48 +39,41 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
   useEffect(() => {
-    // Find the scrollable content container (sibling of header)
+    // Find the scrollable content container
     const findScrollContainer = () => {
-      if (!headerRef.current) {
-        console.log('[Header] headerRef not available');
-        return null;
+      if (!headerRef.current) return null;
+
+      // Strategy 1: Try next sibling (most common case)
+      let scrollableElement = headerRef.current.nextElementSibling as HTMLElement | null;
+
+      if (scrollableElement) {
+        const styles = window.getComputedStyle(scrollableElement);
+        const hasScroll = styles.overflowY === 'auto' || styles.overflowY === 'scroll';
+
+        if (hasScroll) {
+          console.log('[Header] ✅ Found scroll container (nextSibling):', scrollableElement);
+          return scrollableElement;
+        }
       }
 
-      // Get parent main element
-      const mainElement = headerRef.current.parentElement;
-      if (!mainElement) {
-        console.log('[Header] Parent main element not found');
-        return null;
+      // Strategy 2: Find any child with overflow-y: auto in parent
+      const parent = headerRef.current.parentElement;
+      if (parent) {
+        const children = Array.from(parent.children) as HTMLElement[];
+        scrollableElement = children.find((child) => {
+          if (child === headerRef.current) return false;
+          const styles = window.getComputedStyle(child);
+          return styles.overflowY === 'auto' || styles.overflowY === 'scroll';
+        }) || null;
+
+        if (scrollableElement) {
+          console.log('[Header] ✅ Found scroll container (by overflow):', scrollableElement);
+          return scrollableElement;
+        }
       }
 
-      console.log('[Header] Main element found:', mainElement);
-      console.log('[Header] Main element children:', Array.from(mainElement.children));
-
-      // Find the content div (next sibling with __content in className)
-      // Check both className string and classList
-      const contentDiv = Array.from(mainElement.children).find((child) => {
-        const element = child as HTMLElement;
-        const classStr = element.className || '';
-        const hasContentClass = classStr.includes('__content') ||
-                               (element.classList && Array.from(element.classList).some(c => c.includes('__content')));
-
-        console.log('[Header] Checking child:', {
-          element,
-          className: classStr,
-          classList: element.classList ? Array.from(element.classList) : [],
-          hasContentClass
-        });
-
-        return hasContentClass;
-      });
-
-      if (contentDiv) {
-        console.log('[Header] ✅ Found scroll container:', contentDiv);
-      } else {
-        console.log('[Header] ❌ No scroll container found');
-      }
-
-      return contentDiv as HTMLElement | null;
+      console.log('[Header] ❌ No scroll container found');
+      return null;
     };
 
     const scrollContainer = findScrollContainer();
@@ -89,16 +82,19 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
       const target = e.target as HTMLElement;
       const scrollTop = target.scrollTop;
       const shouldBeScrolled = scrollTop > 50;
-
-      console.log('[Header] Scroll event:', { scrollTop, shouldBeScrolled });
       setIsScrolled(shouldBeScrolled);
     };
 
     if (scrollContainer) {
-      console.log('[Header] 🎯 Attaching scroll listener to:', scrollContainer);
+      console.log('[Header] 🎯 Attaching scroll listener');
       scrollContainer.addEventListener('scroll', handleScroll);
+
+      // Check initial scroll position
+      if (scrollContainer.scrollTop > 50) {
+        setIsScrolled(true);
+      }
+
       return () => {
-        console.log('[Header] 🧹 Cleaning up scroll listener');
         scrollContainer.removeEventListener('scroll', handleScroll);
       };
     }
