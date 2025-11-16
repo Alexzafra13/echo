@@ -1,0 +1,137 @@
+.playlistDetailPage {
+  display: flex;
+  height: 100vh;
+  background: var(--background-primary);
+  color: var(--text-primary);
+}
+
+.playlistDetailPage__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.playlistDetailPage__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 3rem;
+}
+
+/* Back Button */
+.backButton {
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+/* Hero Section */
+.playlistDetailPage__hero {
+  margin-bottom: 2rem;
+}
+
+.playlistDetailPage__heroContent {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-end;
+}
+
+.playlistCover {
+  flex-shrink: 0;
+}
+
+.playlistDetailPage__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+}
+
+.playlistType {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.playlistName {
+  font-size: 3rem;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.playlistDescription {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 600px;
+}
+
+.playlistMeta {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.separator {
+  opacity: 0.5;
+}
+
+/* Actions */
+.playlistDetailPage__actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.playButton {
+  gap: 0.5rem;
+  min-width: 180px;
+}
+
+/* Track List */
+.playlistDetailPage__tracks {
+  margin-bottom: 2rem;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-secondary);
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .playlistDetailPage__heroContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .playlistName {
+    font-size: 2rem;
+  }
+
+  .playlistDescription {
+    max-width: 100%;
+  }
+
+  .playlistDetailPage__info {
+    align-items: center;
+  }
+}
