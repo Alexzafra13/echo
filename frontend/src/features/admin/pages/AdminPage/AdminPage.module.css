@@ -1,20 +1,33 @@
 /* AdminPage Component Styles */
 
-.container {
-  padding: 40px 48px;
+/* Layout */
+.adminPage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary, #0a0e27);
+}
+
+.adminPage__main {
+  flex: 1;
+  margin-left: 200px; /* Compensate for fixed sidebar width */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
+}
+
+.adminPage__content {
+  flex: 1 1 0;
+  min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
+  margin: -84px auto 0; /* Content starts behind header, centered horizontally */
+  overflow-y: auto;
+  padding: 124px 48px 40px; /* 84px + 40px for header glassmorphism effect */
   max-width: 1400px;
-  width: 100%; /* Force consistent width */
-  margin: 0 auto;
+  width: 100%;
   box-sizing: border-box; /* Include padding in width */
-  overflow-x: hidden; /* Prevent content from pushing width */
 }
 
 .header {
   margin-bottom: 40px;
-}
-
-.backButton {
-  margin-bottom: 20px;
 }
 
 .title {
@@ -75,8 +88,12 @@
 
 /* Tablet */
 @media (max-width: 1024px) {
-  .container {
-    padding: 32px 32px;
+  .adminPage__main {
+    margin-left: 200px;
+  }
+
+  .adminPage__content {
+    padding: 116px 32px 32px; /* 84px + 32px */
   }
 
   .title {
@@ -86,8 +103,12 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-  .container {
-    padding: 24px 20px;
+  .adminPage__main {
+    margin-left: 80px;
+  }
+
+  .adminPage__content {
+    padding: 104px 20px 24px; /* 84px + 20px */
   }
 
   .title {
