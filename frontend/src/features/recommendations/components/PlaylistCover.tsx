@@ -7,6 +7,7 @@ interface PlaylistCoverProps {
   name: string;
   coverColor?: string;
   coverImageUrl?: string;
+  artistName?: string; // For artist playlists
   size?: 'small' | 'medium' | 'large';
   className?: string;
 }
@@ -20,6 +21,7 @@ export function PlaylistCover({
   name,
   coverColor,
   coverImageUrl,
+  artistName,
   size = 'medium',
   className = '',
 }: PlaylistCoverProps) {
@@ -39,6 +41,11 @@ export function PlaylistCover({
             className={styles.image}
           />
           <div className={styles.imageOverlay} />
+          {artistName && (
+            <div className={styles.artistName}>
+              {artistName}
+            </div>
+          )}
         </div>
       ) : (
         <div
