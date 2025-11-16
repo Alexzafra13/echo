@@ -82,19 +82,27 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
       const target = e.target as HTMLElement;
       const scrollTop = target.scrollTop;
       const shouldBeScrolled = scrollTop > 50;
+      console.log('[Header] 📜 SCROLL EVENT FIRED!', { scrollTop, shouldBeScrolled, currentIsScrolled: isScrolled });
       setIsScrolled(shouldBeScrolled);
     };
 
     if (scrollContainer) {
-      console.log('[Header] 🎯 Attaching scroll listener');
-      scrollContainer.addEventListener('scroll', handleScroll);
+      console.log('[Header] 🎯 Attaching scroll listener to:', scrollContainer);
+      console.log('[Header] 📊 Initial scroll position:', scrollContainer.scrollTop);
+      console.log('[Header] 📊 Container has overflow-y:', window.getComputedStyle(scrollContainer).overflowY);
+      console.log('[Header] 📊 Container scrollHeight:', scrollContainer.scrollHeight);
+      console.log('[Header] 📊 Container clientHeight:', scrollContainer.clientHeight);
+
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
 
       // Check initial scroll position
       if (scrollContainer.scrollTop > 50) {
+        console.log('[Header] ⚡ Initial scroll > 50, activating glassmorphism');
         setIsScrolled(true);
       }
 
       return () => {
+        console.log('[Header] 🧹 Cleaning up scroll listener');
         scrollContainer.removeEventListener('scroll', handleScroll);
       };
     }
