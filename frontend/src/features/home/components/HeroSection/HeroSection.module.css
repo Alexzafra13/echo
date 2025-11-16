@@ -6,7 +6,7 @@
   height: 520px;
   width: calc(100% + 60px);
   margin-left: -30px;
-  margin-top: 0; /* Parent container already handles header spacing with padding */
+  margin-top: -84px; /* Extends behind header for glassmorphism effect */
   overflow: hidden;
   border-radius: 0;
   margin-bottom: 40px;
