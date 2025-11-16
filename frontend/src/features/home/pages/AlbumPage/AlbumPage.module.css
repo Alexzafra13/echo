@@ -12,6 +12,7 @@
   margin-left: 200px; /* Ajustado de 230px → 200px (coincide con sidebar) */
   display: flex;
   flex-direction: column;
+  /* No overflow-x to allow sticky header to work */
 }
 
 .albumPage__content {
