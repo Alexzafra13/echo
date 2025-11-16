@@ -19,7 +19,8 @@
 }
 
 .homePage__content {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   padding: 0 30px 30px 30px;
   overflow-y: auto;
   overflow-x: hidden;
