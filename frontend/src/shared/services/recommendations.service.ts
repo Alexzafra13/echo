@@ -46,6 +46,8 @@ export interface DailyMixMetadata {
   avgScore: number;
   topGenres: string[];
   topArtists: string[];
+  artistId?: string; // For artist playlists
+  artistName?: string; // For artist playlists
   temporalDistribution: {
     lastWeek: number;
     lastMonth: number;

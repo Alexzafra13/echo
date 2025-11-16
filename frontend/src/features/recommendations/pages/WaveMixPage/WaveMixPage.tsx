@@ -6,6 +6,7 @@ import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getAutoPlaylists, type AutoPlaylist } from '@shared/services/recommendations.service';
+import { useAuthStore } from '@shared/store';
 import styles from './WaveMixPage.module.css';
 
 /**
@@ -14,6 +15,7 @@ import styles from './WaveMixPage.module.css';
  */
 export function WaveMixPage() {
   const [, setLocation] = useLocation();
+  const user = useAuthStore((state) => state.user);
   const [playlists, setPlaylists] = useState<AutoPlaylist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function WaveMixPage() {
             <div className={styles.waveMixPage__heroInfo}>
               <h1 className={styles.waveMixPage__heroTitle}>Wave Mix</h1>
               <p className={styles.waveMixPage__heroDescription}>
-                Playlists personalizadas creadas automáticamente para ti
+                Recomendaciones personalizadas para {user?.name || user?.username || 'ti'}
               </p>
             </div>
             <Button
@@ -124,6 +126,7 @@ export function WaveMixPage() {
                     name={playlist.name}
                     coverColor={playlist.coverColor}
                     coverImageUrl={playlist.coverImageUrl}
+                    artistName={playlist.metadata.artistName}
                     size="medium"
                   />
                   <div className={styles.playlistCard__info}>
