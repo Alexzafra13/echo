@@ -88,9 +88,6 @@ export class UploadCustomAlbumCoverUseCase {
       throw new BadRequestException('Failed to save cover file');
     }
 
-        // Normalize path separators for cross-platform compatibility
-        // Old records may have Windows backslashes (\) in the database
-        const normalizedPath = customImage.filePath.replace(/\\/g, '/');
     // Create database record
     // IMPORTANT: Normalize path separators to Unix-style (/) for cross-platform compatibility
     // Windows path.relative() returns backslashes (\) which don't work on Unix systems
