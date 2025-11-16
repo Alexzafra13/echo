@@ -14,6 +14,8 @@ interface HeaderProps {
   adminMode?: boolean;
   /** Show back button */
   showBackButton?: boolean;
+  /** Always show glassmorphism effect (for pages with hero behind header) */
+  alwaysGlass?: boolean;
 }
 
 /**
@@ -23,7 +25,7 @@ interface HeaderProps {
  * Supports admin mode with back navigation instead of search
  * Live search results with debouncing (300ms)
  */
-export function Header({ adminMode = false, showBackButton = false }: HeaderProps) {
+export function Header({ adminMode = false, showBackButton = false, alwaysGlass = false }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -32,13 +34,16 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(alwaysGlass);
   const searchRef = useRef<HTMLFormElement>(null);
   const headerRef = useRef<HTMLElement>(null);
 
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
   useEffect(() => {
+    // Skip scroll detection if alwaysGlass is enabled
+    if (alwaysGlass) return;
+
     // Find the scrollable content container
     const findScrollContainer = () => {
       if (!headerRef.current) return null;
@@ -102,7 +107,7 @@ export function Header({ adminMode = false, showBackButton = false }: HeaderProp
 
     window.addEventListener('scroll', handleWindowScroll);
     return () => window.removeEventListener('scroll', handleWindowScroll);
-  }, []);
+  }, [alwaysGlass]);
 
   // Debounce search query
   useEffect(() => {
