@@ -112,6 +112,7 @@ export class RecommendationsController {
 
     return {
       id: dailyMix.id,
+      type: dailyMix.type,
       userId: dailyMix.userId,
       name: dailyMix.name,
       description: dailyMix.description,
@@ -149,6 +150,8 @@ export class RecommendationsController {
         topArtists: dailyMix.metadata.topArtists,
         temporalDistribution: dailyMix.metadata.temporalDistribution,
       },
+      coverColor: dailyMix.coverColor,
+      coverImageUrl: dailyMix.coverImageUrl,
     };
   }
 
