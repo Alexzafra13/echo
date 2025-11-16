@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Library, Music2, Wrench, Users } from 'lucide-react';
 import { Tabs, Tab } from '../../components/Tabs';
 import { Header } from '@shared/components/layout/Header';
+import { Sidebar } from '@features/home/components';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
@@ -62,20 +63,25 @@ export default function AdminPage() {
   ];
 
   return (
-    <>
-      <Header adminMode showBackButton />
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1 className={styles.title}>Panel de Administración</h1>
-          <p className={styles.subtitle}>
-            Gestiona tu librería musical y configuración del servidor
-          </p>
-        </div>
+    <div className={styles.adminPage}>
+      <Sidebar />
 
-        <div className={styles.content}>
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className={styles.adminPage__main}>
+        <Header showBackButton />
+
+        <div className={styles.adminPage__content}>
+          <div className={styles.header}>
+            <h1 className={styles.title}>Panel de Administración</h1>
+            <p className={styles.subtitle}>
+              Gestiona tu librería musical y configuración del servidor
+            </p>
+          </div>
+
+          <div className={styles.content}>
+            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
