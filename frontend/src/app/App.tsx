@@ -12,6 +12,8 @@ import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
 import PlaylistsPage from '@features/playlists/pages/PlaylistsPage';
 import PlaylistDetailPage from '@features/playlists/pages/PlaylistDetailPage';
 import { RadioPage } from '@features/radio/pages/RadioPage';
+import { WaveMixPage } from '@features/recommendations/pages/WaveMixPage';
+import { PlaylistDetailPage as WavePlaylistDetailPage } from '@features/recommendations/pages/PlaylistDetailPage';
 import { DailyMixPage } from '@features/recommendations/pages/DailyMixPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
@@ -104,7 +106,21 @@ function App() {
           </ProtectedRoute>
         </Route>
 
-        {/* Daily Mix Route (Protected) */}
+        {/* Wave Mix Route (Protected) */}
+        <Route path="/wave-mix">
+          <ProtectedRoute>
+            <WaveMixPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Wave Mix Playlist Detail Route (Protected) */}
+        <Route path="/wave-mix/:id">
+          <ProtectedRoute>
+            <WavePlaylistDetailPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Daily Mix Route (Protected) - Legacy, redirects to Wave Mix */}
         <Route path="/daily-mix">
           <ProtectedRoute>
             <DailyMixPage />
