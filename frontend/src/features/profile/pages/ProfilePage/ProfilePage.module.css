@@ -15,16 +15,19 @@
   margin-left: 200px;
   display: flex;
   flex-direction: column;
+  position: relative; /* Creates stacking context for sticky header */
 }
 
 .profilePage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
-  padding: 0 40px 40px 40px;
+  margin-top: -84px; /* Content starts behind header */
+  padding: 84px 40px 40px; /* 84px for header glassmorphism effect */
   overflow-y: auto;
   max-width: 800px;
   width: 100%;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Header */
