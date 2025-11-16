@@ -12,6 +12,7 @@ export function useScrollDetection(threshold: number = 120) {
 
   useEffect(() => {
     let ticking = false;
+    let currentScrollContainer: HTMLElement | null = null;
 
     // Buscar el contenedor scrolleable correcto
     const findScrollContainer = () => {
@@ -31,11 +32,12 @@ export function useScrollDetection(threshold: number = 120) {
       return null;
     };
 
-    const scrollContainer = findScrollContainer();
-
     const handleScroll = (e?: Event) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
+          // Re-detectar el contenedor en cada scroll por si cambió de página
+          const scrollContainer = findScrollContainer();
+
           let scrollHeight: number;
           let scrollTop: number;
           let clientHeight: number;
@@ -85,26 +87,53 @@ export function useScrollDetection(threshold: number = 120) {
       }
     };
 
-    // Listener para scroll en el contenedor específico o window
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    } else {
-      window.addEventListener('scroll', handleScroll, { passive: true });
-    }
+    // Setup: encontrar el contenedor inicial y añadir listeners
+    const setupListeners = () => {
+      // Limpiar listener anterior si existe
+      if (currentScrollContainer) {
+        currentScrollContainer.removeEventListener('scroll', handleScroll);
+      }
+
+      // Buscar nuevo contenedor
+      currentScrollContainer = findScrollContainer();
+
+      // Añadir listener al nuevo contenedor o window
+      if (currentScrollContainer) {
+        currentScrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+      } else {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+      }
+    };
+
+    setupListeners();
 
     // También escuchar cambios de tamaño por si el contenido cambia dinámicamente
     window.addEventListener('resize', handleScroll, { passive: true });
+
+    // MutationObserver para detectar cuando cambia el DOM (cambio de página)
+    const observer = new MutationObserver(() => {
+      // Re-configurar listeners cuando cambia el DOM
+      setupListeners();
+      handleScroll();
+    });
+
+    // Observar cambios en el body (cuando se monta/desmonta contenido de páginas)
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
 
     // Check inicial
     handleScroll();
 
     return () => {
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+      if (currentScrollContainer) {
+        currentScrollContainer.removeEventListener('scroll', handleScroll);
       } else {
         window.removeEventListener('scroll', handleScroll);
       }
       window.removeEventListener('resize', handleScroll);
+      observer.disconnect();
     };
   }, [threshold, isMiniMode]);
 
