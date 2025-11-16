@@ -11,10 +11,14 @@ import styles from './ArtistCard.module.css';
  *   artist={artist}
  *   onClick={() => navigate(`/artists/${artist.id}`)}
  * />
+ *
+ * Note: Avatar URL is generated dynamically from ImageService API.
+ * Tag-based cache busting happens via WebSocket sync in ArtistsPage.
  */
 export function ArtistCard({ artist, onClick }: ArtistCardProps) {
-  // Prioritize database URLs first, then fallback to API URL generation
-  const avatarUrl = artist.mediumImageUrl || artist.largeImageUrl || artist.smallImageUrl || getArtistAvatarUrl(artist.id, 'medium');
+  // Use dynamic URL generation (V2 system)
+  // ImageService will prioritize: custom > local > external
+  const avatarUrl = getArtistAvatarUrl(artist.id);
   const initials = getArtistInitials(artist.name);
 
   return (
