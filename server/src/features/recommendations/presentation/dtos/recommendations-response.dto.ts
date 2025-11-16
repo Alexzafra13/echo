@@ -39,8 +39,9 @@ export class DailyMixMetadataDto {
   };
 }
 
-export class DailyMixDto {
+export class AutoPlaylistDto {
   @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['wave-mix', 'artist', 'genre', 'mood'] }) type!: string;
   @ApiProperty() userId!: string;
   @ApiProperty() name!: string;
   @ApiProperty() description!: string;
@@ -48,7 +49,12 @@ export class DailyMixDto {
   @ApiProperty() createdAt!: Date;
   @ApiProperty() expiresAt!: Date;
   @ApiProperty({ type: DailyMixMetadataDto }) metadata!: DailyMixMetadataDto;
+  @ApiProperty({ required: false }) coverColor?: string;
+  @ApiProperty({ required: false }) coverImageUrl?: string;
 }
+
+// Legacy alias
+export class DailyMixDto extends AutoPlaylistDto {}
 
 export class SmartPlaylistDto {
   @ApiProperty({ type: [TrackScoreDto] }) tracks!: TrackScoreDto[];
