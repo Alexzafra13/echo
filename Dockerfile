@@ -1,6 +1,8 @@
 # ============================================
-# FULL-STACK DOCKER BUILD (Jellyfin/Navidrome style)
-# Single container serves both API and Frontend
+# ECHO MUSIC SERVER - FULL-STACK BUILD
+# ============================================
+# Single container with Backend + Frontend (Jellyfin-style)
+# Multi-stage build for optimal image size (~250MB)
 # ============================================
 
 # ----------------------------------------
@@ -10,19 +12,19 @@ FROM node:22-alpine AS frontend-builder
 
 WORKDIR /build/frontend
 
-# Install pnpm
+# Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
-# Copy frontend package files
+# Copy only package files first (better layer caching)
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
 
 # Install frontend dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy frontend source
+# Copy frontend source code
 COPY frontend/ ./
 
-# Build frontend (output to dist/)
+# Build frontend for production
 RUN pnpm build
 
 # ----------------------------------------
@@ -32,15 +34,15 @@ FROM node:22-alpine AS backend-dependencies
 
 WORKDIR /build/server
 
-# Install pnpm
+# Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
-# Copy backend package files
+# Copy only package files first (better layer caching)
 COPY server/package.json server/pnpm-lock.yaml ./
 COPY server/prisma ./prisma/
 
-# Install backend dependencies
-RUN pnpm install --frozen-lockfile --prod=false
+# Install ALL dependencies (including dev for build)
+RUN pnpm install --frozen-lockfile
 
 # Generate Prisma Client
 RUN pnpm db:generate || PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 pnpm db:generate
@@ -52,7 +54,7 @@ FROM node:22-alpine AS backend-builder
 
 WORKDIR /build/server
 
-# Install pnpm
+# Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
 # Copy dependencies from previous stage
@@ -62,10 +64,10 @@ COPY --from=backend-dependencies /build/server/prisma ./prisma
 # Copy backend source code
 COPY server/ ./
 
-# Build the backend
-RUN pnpm run build
+# Build the backend application
+RUN pnpm build
 
-# Remove development dependencies
+# Remove development dependencies (reduces size significantly)
 RUN pnpm prune --prod
 
 # ----------------------------------------
@@ -73,54 +75,65 @@ RUN pnpm prune --prod
 # ----------------------------------------
 FROM node:22-alpine AS production
 
-# Set NODE_ENV to production
+# Metadata
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION=latest
+
+LABEL org.opencontainers.image.title="Echo Music Server" \
+      org.opencontainers.image.description="Self-hosted music streaming platform (Full-stack single container)" \
+      org.opencontainers.image.vendor="Echo" \
+      org.opencontainers.image.source="https://github.com/Alexzafra13/echo" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.version="${VERSION}"
+
+# Set production environment
 ENV NODE_ENV=production
 
 # Install runtime dependencies for health checks and signal handling
+# netcat-openbsd: for database connection checks
+# dumb-init: proper signal handling (PID 1)
 RUN apk add --no-cache netcat-openbsd dumb-init
 
-# Create non-root user
+# Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S echoapp -u 1001
 
 WORKDIR /app
 
-# Copy built backend from builder
+# Copy built backend from builder stage
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/node_modules ./node_modules
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/package.json ./
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 
-# Copy built frontend from frontend-builder
+# Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
 # Copy entrypoint script
 COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /app/
 RUN chmod +x /app/docker-entrypoint.sh
 
-# Create upload directories
+# Create upload directories with proper permissions
 RUN mkdir -p /app/uploads/music /app/uploads/covers && \
     chown -R echoapp:nodejs /app/uploads
 
 # Switch to non-root user
 USER echoapp
 
-# Default port
+# Default port (configurable via environment)
 ENV PORT=4567
 EXPOSE ${PORT}
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# Health check with dynamic port support
+# Extended start period (60s) to allow time for database migrations
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD node -e "const port = process.env.PORT || 4567; require('http').get('http://localhost:' + port + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Labels
-LABEL org.opencontainers.image.title="Echo Music Server" \
-      org.opencontainers.image.description="Self-hosted music streaming platform (Jellyfin-style single container)" \
-      org.opencontainers.image.vendor="Echo" \
-      org.opencontainers.image.source="https://github.com/Alexzafra13/echo"
-
-# Use dumb-init for proper signal handling
+# Use dumb-init for proper signal handling (graceful shutdown)
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-# Start the application
+# Start the application using entrypoint script
+# (waits for DB/Redis, runs migrations, starts server)
 CMD ["/app/docker-entrypoint.sh"]

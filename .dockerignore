@@ -1,0 +1,85 @@
+# ============================================
+# .dockerignore - Root level
+# ============================================
+# Reduces Docker build context size and speeds up builds
+
+# Dependencies (will be installed in container)
+**/node_modules
+**/.pnpm-store
+
+# Build outputs (will be generated in container)
+**/dist
+**/build
+**/coverage
+**/.next
+**/.nuxt
+
+# Environment files (use docker-compose env)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Git
+.git
+.gitignore
+.gitattributes
+**/.gitkeep
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+**/logs
+**/*.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Testing
+**/coverage
+**/.nyc_output
+**/*.test.ts
+**/*.spec.ts
+**/test
+**/tests
+
+# Documentation
+*.md
+!README.md
+**/docs
+**/.docs
+
+# Docker files themselves
+**/Dockerfile*
+**/docker-compose*.yml
+**/.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+**/.DS_Store
+
+# Temporary files
+**/tmp
+**/temp
+**/.cache
+
+# Uploads (will be volume mounted)
+**/uploads
+**/music
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Other
+*.zip
+*.tar.gz
+*.rar
