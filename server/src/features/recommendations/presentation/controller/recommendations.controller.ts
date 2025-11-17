@@ -8,6 +8,7 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  Inject,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { RequestWithUser } from '@shared/types/request.types';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import {
   CalculateTrackScoreUseCase,
   GenerateDailyMixUseCase,
@@ -48,7 +49,8 @@ export class RecommendationsController {
     private readonly generateSmartPlaylistUseCase: GenerateSmartPlaylistUseCase,
     private readonly getAutoPlaylistsUseCase: GetAutoPlaylistsUseCase,
     private readonly waveMixService: WaveMixService,
-    private readonly prisma: PrismaService,
+    @Inject(TRACK_REPOSITORY)
+    private readonly trackRepository: ITrackRepository,
   ) {}
 
   /**
@@ -261,26 +263,30 @@ export class RecommendationsController {
 
   /**
    * Batch fetch track details by IDs
+   * Usa el repository en vez de Prisma directo para respetar la arquitectura
    */
   private async fetchTracksById(trackIds: string[]) {
     if (trackIds.length === 0) {
       return new Map();
     }
 
-    const tracks = await this.prisma.track.findMany({
-      where: { id: { in: trackIds } },
-      select: {
-        id: true,
-        title: true,
-        artistName: true,
-        albumName: true,
-        duration: true,
-        albumId: true,
-        artistId: true,
-      },
+    const tracks = await this.trackRepository.findByIds(trackIds);
+
+    // Convertir a formato esperado por el DTO (primitives)
+    const tracksData = tracks.map((t) => {
+      const primitives = t.toPrimitives();
+      return {
+        id: primitives.id,
+        title: primitives.title,
+        artistName: primitives.artistName,
+        albumName: primitives.albumName,
+        duration: primitives.duration,
+        albumId: primitives.albumId,
+        artistId: primitives.artistId,
+      };
     });
 
-    return new Map(tracks.map((t) => [t.id, t]));
+    return new Map(tracksData.map((t) => [t.id, t]));
   }
 
   /**
