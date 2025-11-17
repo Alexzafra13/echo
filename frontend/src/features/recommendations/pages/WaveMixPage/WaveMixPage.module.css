@@ -68,11 +68,28 @@
   margin-bottom: 3rem;
 }
 
+.waveMixPage__sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
 .waveMixPage__sectionTitle {
   font-size: 1.75rem;
   font-weight: 700;
-  margin: 0 0 1.5rem 0;
+  margin: 0;
   color: var(--text-primary);
+}
+
+.waveMixPage__viewAllButton {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.waveMixPage__viewAllButton:hover {
+  color: var(--accent-color);
 }
 
 /* Grid */
