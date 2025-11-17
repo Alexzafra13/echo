@@ -8,6 +8,18 @@ describe('StartScanUseCase', () => {
   let scannerRepository: jest.Mocked<IScannerRepository>;
   let scanProcessor: jest.Mocked<any>;
 
+  // Helper para crear mock de scan con valores por defecto
+  const createMockScan = (overrides = {}): LibraryScan => {
+    return LibraryScan.create({
+      status: 'pending',
+      startedAt: new Date(),
+      tracksAdded: 0,
+      tracksUpdated: 0,
+      tracksDeleted: 0,
+      ...overrides,
+    });
+  };
+
   beforeEach(async () => {
     // Mock del repository
     scannerRepository = {
@@ -42,20 +54,10 @@ describe('StartScanUseCase', () => {
     useCase = module.get<StartScanUseCase>(StartScanUseCase);
   });
 
-  it('should be defined', () => {
-    expect(useCase).toBeDefined();
-  });
-
   describe('execute', () => {
     it('should create a scan and enqueue it successfully', async () => {
       // Arrange
-      const mockScan = LibraryScan.create({
-        status: 'pending',
-        startedAt: new Date(),
-        tracksAdded: 0,
-        tracksUpdated: 0,
-        tracksDeleted: 0,
-      });
+      const mockScan = createMockScan();
 
       scannerRepository.findByStatus.mockResolvedValue([]); // No hay escaneos running
       scannerRepository.create.mockResolvedValue(mockScan);
@@ -81,14 +83,7 @@ describe('StartScanUseCase', () => {
 
     it('should throw error if there is already a running scan', async () => {
       // Arrange
-      const runningScan = LibraryScan.create({
-        status: 'running',
-        startedAt: new Date(),
-        tracksAdded: 0,
-        tracksUpdated: 0,
-        tracksDeleted: 0,
-      });
-
+      const runningScan = createMockScan({ status: 'running' });
       scannerRepository.findByStatus.mockResolvedValue([runningScan]);
 
       // Act & Assert
@@ -103,13 +98,7 @@ describe('StartScanUseCase', () => {
 
     it('should use default options when none provided', async () => {
       // Arrange
-      const mockScan = LibraryScan.create({
-        status: 'pending',
-        startedAt: new Date(),
-        tracksAdded: 0,
-        tracksUpdated: 0,
-        tracksDeleted: 0,
-      });
+      const mockScan = createMockScan();
 
       scannerRepository.findByStatus.mockResolvedValue([]);
       scannerRepository.create.mockResolvedValue(mockScan);
@@ -119,12 +108,61 @@ describe('StartScanUseCase', () => {
       await useCase.execute({});
 
       // Assert
+      // Los valores por defecto son manejados por el use case
       expect(scanProcessor.enqueueScan).toHaveBeenCalledWith(
         mockScan.id,
         expect.objectContaining({
           path: undefined,
           recursive: undefined,
           pruneDeleted: undefined,
+        }),
+      );
+    });
+
+    it('should handle repository create error gracefully', async () => {
+      // Arrange
+      scannerRepository.findByStatus.mockResolvedValue([]);
+      scannerRepository.create.mockRejectedValue(new Error('Database error'));
+
+      // Act & Assert
+      await expect(useCase.execute({ path: '/music' })).rejects.toThrow('Database error');
+      expect(scanProcessor.enqueueScan).not.toHaveBeenCalled();
+    });
+
+    it('should handle processor enqueue error gracefully', async () => {
+      // Arrange
+      const mockScan = createMockScan();
+      scannerRepository.findByStatus.mockResolvedValue([]);
+      scannerRepository.create.mockResolvedValue(mockScan);
+      scanProcessor.enqueueScan.mockRejectedValue(new Error('Queue error'));
+
+      // Act & Assert
+      await expect(useCase.execute({ path: '/music' })).rejects.toThrow('Queue error');
+    });
+
+    it('should correctly pass scan options to processor', async () => {
+      // Arrange
+      const mockScan = createMockScan();
+      const scanOptions = {
+        path: '/music/jazz',
+        recursive: false,
+        pruneDeleted: true,
+      };
+
+      scannerRepository.findByStatus.mockResolvedValue([]);
+      scannerRepository.create.mockResolvedValue(mockScan);
+      scanProcessor.enqueueScan.mockResolvedValue(undefined);
+
+      // Act
+      await useCase.execute(scanOptions);
+
+      // Assert
+      expect(scanProcessor.enqueueScan).toHaveBeenCalledWith(
+        mockScan.id,
+        expect.objectContaining({
+          path: '/music/jazz',
+          recursive: false,
+          pruneDeleted: true,
         }),
       );
     });

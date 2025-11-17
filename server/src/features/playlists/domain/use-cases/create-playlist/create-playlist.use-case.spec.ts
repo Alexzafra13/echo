@@ -7,6 +7,26 @@ describe('CreatePlaylistUseCase', () => {
   let useCase: CreatePlaylistUseCase;
   let playlistRepository: jest.Mocked<IPlaylistRepository>;
 
+  // Factory para crear mock de playlist con valores por defecto
+  const createMockPlaylist = (overrides = {}): Playlist => {
+    return Playlist.fromPrimitives({
+      id: 'playlist-123',
+      name: 'Test Playlist',
+      description: null,
+      coverImageUrl: null,
+      duration: 0,
+      size: BigInt(0),
+      ownerId: 'user-123',
+      public: false,
+      songCount: 0,
+      path: null,
+      sync: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
+  };
+
   beforeEach(() => {
     playlistRepository = {
       create: jest.fn(),
@@ -38,20 +58,9 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.fromPrimitives({
-        id: 'playlist-123',
+      const mockPlaylist = createMockPlaylist({
         name: 'My Playlist',
         description: 'Test playlist',
-        coverImageUrl: null,
-        duration: 0,
-        size: BigInt(0),
-        ownerId: 'user-123',
-        public: false,
-        songCount: 0,
-        path: null,
-        sync: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       playlistRepository.create.mockResolvedValue(mockPlaylist);
@@ -82,20 +91,9 @@ describe('CreatePlaylistUseCase', () => {
         public: true,
       };
 
-      const mockPlaylist = Playlist.fromPrimitives({
-        id: 'playlist-123',
+      const mockPlaylist = createMockPlaylist({
         name: 'Public Playlist',
-        description: null,
-        coverImageUrl: null,
-        duration: 0,
-        size: BigInt(0),
-        ownerId: 'user-123',
         public: true,
-        songCount: 0,
-        path: null,
-        sync: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       playlistRepository.create.mockResolvedValue(mockPlaylist);
@@ -114,20 +112,9 @@ describe('CreatePlaylistUseCase', () => {
         ownerId: 'user-123',
       };
 
-      const mockPlaylist = Playlist.fromPrimitives({
-        id: 'playlist-123',
+      const mockPlaylist = createMockPlaylist({
         name: 'Default Playlist',
-        description: null,
-        coverImageUrl: null,
-        duration: 0,
-        size: BigInt(0),
-        ownerId: 'user-123',
         public: false,
-        songCount: 0,
-        path: null,
-        sync: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       playlistRepository.create.mockResolvedValue(mockPlaylist);
@@ -151,20 +138,8 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.fromPrimitives({
-        id: 'playlist-123',
+      const mockPlaylist = createMockPlaylist({
         name: 'Playlist with spaces',
-        description: null,
-        coverImageUrl: null,
-        duration: 0,
-        size: BigInt(0),
-        ownerId: 'user-123',
-        public: false,
-        songCount: 0,
-        path: null,
-        sync: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       playlistRepository.create.mockResolvedValue(mockPlaylist);
@@ -189,8 +164,9 @@ describe('CreatePlaylistUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
-      await expect(useCase.execute(input)).rejects.toThrow('Playlist name is required');
+      await expect(useCase.execute(input)).rejects.toThrow(
+        new BadRequestException('Playlist name is required'),
+      );
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });
 
@@ -216,8 +192,9 @@ describe('CreatePlaylistUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
-      await expect(useCase.execute(input)).rejects.toThrow('Owner ID is required');
+      await expect(useCase.execute(input)).rejects.toThrow(
+        new BadRequestException('Owner ID is required'),
+      );
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });
 
@@ -232,20 +209,8 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.fromPrimitives({
-        id: 'playlist-123',
+      const mockPlaylist = createMockPlaylist({
         name: 'Minimal Playlist',
-        description: null,
-        coverImageUrl: null,
-        duration: 0,
-        size: BigInt(0),
-        ownerId: 'user-123',
-        public: false,
-        songCount: 0,
-        path: null,
-        sync: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       playlistRepository.create.mockResolvedValue(mockPlaylist);
@@ -267,20 +232,8 @@ describe('CreatePlaylistUseCase', () => {
         public: false,
       };
 
-      const mockPlaylist = Playlist.fromPrimitives({
-        id: 'playlist-123',
+      const mockPlaylist = createMockPlaylist({
         name: 'New Playlist',
-        description: null,
-        coverImageUrl: null,
-        duration: 0,
-        size: BigInt(0),
-        ownerId: 'user-123',
-        public: false,
-        songCount: 0,
-        path: null,
-        sync: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       playlistRepository.create.mockResolvedValue(mockPlaylist);
