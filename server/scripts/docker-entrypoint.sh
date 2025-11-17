@@ -5,6 +5,45 @@ echo "🚀 Starting Echo Music Server..."
 echo ""
 
 # ============================================
+# 0. Auto-generate JWT Secrets (Jellyfin-style)
+# ============================================
+CONFIG_DIR="/app/config"
+SECRETS_FILE="$CONFIG_DIR/secrets.env"
+
+# Create config directory if it doesn't exist
+mkdir -p "$CONFIG_DIR"
+
+# Generate secrets if they don't exist (FIRST RUN ONLY)
+if [ ! -f "$SECRETS_FILE" ]; then
+  echo "🔐 First run detected - generating secure JWT secrets..."
+
+  # Generate cryptographically secure secrets
+  JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
+  JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
+
+  # Save to persistent volume
+  cat > "$SECRETS_FILE" << EOF
+# Auto-generated JWT secrets (DO NOT EDIT MANUALLY)
+# Generated on: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+export JWT_SECRET="$JWT_SECRET"
+export JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
+EOF
+
+  echo "✅ Secure JWT secrets generated and saved to $SECRETS_FILE"
+  echo ""
+else
+  echo "ℹ️  Using existing JWT secrets from $SECRETS_FILE"
+  echo ""
+fi
+
+# Load secrets into environment
+. "$SECRETS_FILE"
+
+# Export for Node.js application
+export JWT_SECRET
+export JWT_REFRESH_SECRET
+
+# ============================================
 # 1. Wait for Dependencies
 # ============================================
 echo "⏳ Waiting for PostgreSQL..."

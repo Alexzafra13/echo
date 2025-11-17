@@ -91,11 +91,13 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-change_me_in_production}
 
-      # Security (REQUIRED in production!)
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required in production}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required in production}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
-      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      # Security (Auto-generated if not provided - Jellyfin-style!)
+      # JWT secrets are auto-generated in /app/config/secrets.env
+      # You can override them here if needed, but it's optional
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-30d}
       BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
 
       # CORS - Configure for your domain
@@ -115,6 +117,9 @@ services:
       COVERS_PATH: /app/uploads/covers
 
     volumes:
+      # Configuration (Jellyfin-style - auto-generated secrets)
+      - echo-config:/app/config
+
       # Music library (read-only recommended for safety)
       - ${MUSIC_PATH:-./music}:/music:ro
 
@@ -148,6 +153,8 @@ volumes:
     name: echo-postgres-data
   redis-data:
     name: echo-redis-data
+  echo-config:
+    name: echo-config  # Auto-generated secrets stored here (Jellyfin-style)
   echo-uploads:
     name: echo-uploads
   echo-logs:
