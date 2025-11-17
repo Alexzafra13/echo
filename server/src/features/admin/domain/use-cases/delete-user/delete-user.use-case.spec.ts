@@ -58,6 +58,21 @@ describe('DeleteUserUseCase', () => {
 
     it('debería permitir desactivar un admin si hay más admins', async () => {
       // Arrange
+      const systemAdmin = User.reconstruct({
+        id: 'admin-000',
+        username: 'admin0',
+        email: 'admin0@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'System Admin',
+        isActive: true,
+        isAdmin: true,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date('2020-01-01'), // Oldest admin
+        updatedAt: new Date(),
+      });
+
       const adminToDelete = User.reconstruct({
         id: 'admin-123',
         username: 'admin1',
@@ -69,7 +84,7 @@ describe('DeleteUserUseCase', () => {
         mustChangePassword: false,
         theme: 'dark',
         language: 'es',
-        createdAt: new Date(),
+        createdAt: new Date('2021-01-01'), // Newer than system admin
         updatedAt: new Date(),
       });
 
@@ -84,7 +99,7 @@ describe('DeleteUserUseCase', () => {
         mustChangePassword: false,
         theme: 'dark',
         language: 'es',
-        createdAt: new Date(),
+        createdAt: new Date('2022-01-01'), // Newest
         updatedAt: new Date(),
       });
 
@@ -104,7 +119,7 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
-      mockUserRepository.findAll.mockResolvedValue([adminToDelete, otherAdmin, regularUser]);
+      mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, otherAdmin, regularUser]);
       mockUserRepository.updatePartial.mockResolvedValue({
         ...adminToDelete,
         isActive: false,
@@ -127,6 +142,21 @@ describe('DeleteUserUseCase', () => {
 
     it('debería lanzar error si intenta desactivar el último admin', async () => {
       // Arrange
+      const systemAdmin = User.reconstruct({
+        id: 'admin-000',
+        username: 'admin0',
+        email: 'admin0@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'System Admin',
+        isActive: false, // Inactive - oldest admin
+        isAdmin: true,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date('2020-01-01'), // Oldest admin
+        updatedAt: new Date(),
+      });
+
       const lastAdmin = User.reconstruct({
         id: 'admin-123',
         username: 'admin',
@@ -138,7 +168,7 @@ describe('DeleteUserUseCase', () => {
         mustChangePassword: false,
         theme: 'dark',
         language: 'es',
-        createdAt: new Date(),
+        createdAt: new Date('2021-01-01'), // Newer than system admin
         updatedAt: new Date(),
       });
 
@@ -173,7 +203,13 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(lastAdmin);
-      mockUserRepository.findAll.mockResolvedValue([lastAdmin, regularUser1, regularUser2]);
+      // System admin exists but is inactive, lastAdmin is the only active admin
+      mockUserRepository.findAll.mockResolvedValue([
+        systemAdmin,
+        lastAdmin,
+        regularUser1,
+        regularUser2,
+      ]);
 
       const input = {
         userId: 'admin-123',
@@ -238,8 +274,23 @@ describe('DeleteUserUseCase', () => {
       expect(mockUserRepository.updatePartial).toHaveBeenCalledTimes(1);
     });
 
-    it('no debería verificar admins si el usuario a desactivar no es admin', async () => {
+    it('debería desactivar usuarios normales sin verificar límite de admins activos', async () => {
       // Arrange
+      const systemAdmin = User.reconstruct({
+        id: 'admin-000',
+        username: 'admin0',
+        email: 'admin0@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'System Admin',
+        isActive: true,
+        isAdmin: true,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date('2020-01-01'),
+        updatedAt: new Date(),
+      });
+
       const regularUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
@@ -256,7 +307,8 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(regularUser);
-      mockUserRepository.findAll.mockResolvedValue([regularUser]);
+      // findAll is called to check system admin, but admin count check is skipped for non-admins
+      mockUserRepository.findAll.mockResolvedValue([systemAdmin, regularUser]);
       mockUserRepository.updatePartial.mockResolvedValue({
         ...regularUser,
         isActive: false,
@@ -270,11 +322,31 @@ describe('DeleteUserUseCase', () => {
       await useCase.execute(input);
 
       // Assert
-      expect(mockUserRepository.findAll).not.toHaveBeenCalled();
+      // findAll is called to check system admin
+      expect(mockUserRepository.findAll).toHaveBeenCalledWith(0, 1000);
+      // But updatePartial should succeed since user is not admin
+      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
+        isActive: false,
+      });
     });
 
     it('debería contar solo admins activos al verificar el último admin', async () => {
       // Arrange
+      const systemAdmin = User.reconstruct({
+        id: 'admin-000',
+        username: 'admin0',
+        email: 'admin0@test.com',
+        passwordHash: '$2b$12$hashed',
+        name: 'System Admin',
+        isActive: false, // Inactive
+        isAdmin: true,
+        mustChangePassword: false,
+        theme: 'dark',
+        language: 'es',
+        createdAt: new Date('2020-01-01'), // Oldest
+        updatedAt: new Date(),
+      });
+
       const adminToDelete = User.reconstruct({
         id: 'admin-123',
         username: 'admin1',
@@ -286,7 +358,7 @@ describe('DeleteUserUseCase', () => {
         mustChangePassword: false,
         theme: 'dark',
         language: 'es',
-        createdAt: new Date(),
+        createdAt: new Date('2021-01-01'), // Newer than system admin
         updatedAt: new Date(),
       });
 
@@ -302,12 +374,12 @@ describe('DeleteUserUseCase', () => {
         mustChangePassword: false,
         theme: 'dark',
         language: 'es',
-        createdAt: new Date(),
+        createdAt: new Date('2022-01-01'),
         updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
-      mockUserRepository.findAll.mockResolvedValue([adminToDelete, inactiveAdmin]);
+      mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, inactiveAdmin]);
 
       const input = {
         userId: 'admin-123',

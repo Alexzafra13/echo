@@ -1,0 +1,1703 @@
+
+> echo-server-backend@1.0.0 test
+> jest
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+FAIL src/features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts
+  DeleteUserUseCase
+    execute
+      ✓ debería desactivar un usuario normal correctamente (25 ms)
+      ✕ debería permitir desactivar un admin si hay más admins
+      ✕ debería lanzar error si intenta desactivar el último admin (5 ms)
+      ✓ debería lanzar error si el usuario no existe (1 ms)
+      ✓ debería hacer soft delete (no eliminar físicamente) (1 ms)
+      ✕ no debería verificar admins si el usuario a desactivar no es admin (1 ms)
+      ✕ debería contar solo admins activos al verificar el último admin (2 ms)
+
+  ● DeleteUserUseCase › execute › debería permitir desactivar un admin si hay más admins
+
+    Cannot delete system administrator
+
+      34 |     // 3. No permitir eliminar al system admin
+      35 |     if (isSystemAdmin) {
+    > 36 |       throw new ValidationError('Cannot delete system administrator');
+         |             ^
+      37 |     }
+      38 |
+      39 |     // 4. Prevenir eliminación del usuario actual si es el único admin
+
+      at DeleteUserUseCase.execute (features/admin/domain/use-cases/delete-user/delete-user.use-case.ts:36:13)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:118:22)
+
+  ● DeleteUserUseCase › execute › debería lanzar error si intenta desactivar el último admin
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Cannot delete the last admin user"
+    Received message:   "Cannot delete system administrator"
+
+          34 |     // 3. No permitir eliminar al system admin
+          35 |     if (isSystemAdmin) {
+        > 36 |       throw new ValidationError('Cannot delete system administrator');
+             |             ^
+          37 |     }
+          38 |
+          39 |     // 4. Prevenir eliminación del usuario actual si es el único admin
+
+      at DeleteUserUseCase.execute (features/admin/domain/use-cases/delete-user/delete-user.use-case.ts:36:13)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:184:7)
+      at Object.toThrow (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:184:52)
+
+  ● DeleteUserUseCase › execute › no debería verificar admins si el usuario a desactivar no es admin
+
+    expect(jest.fn()).not.toHaveBeenCalled()
+
+    Expected number of calls: 0
+    Received number of calls: 1
+
+    1: 0, 1000
+
+      271 |
+      272 |       // Assert
+    > 273 |       expect(mockUserRepository.findAll).not.toHaveBeenCalled();
+          |                                              ^
+      274 |     });
+      275 |
+      276 |     it('debería contar solo admins activos al verificar el último admin', async () => {
+
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:273:46)
+
+  ● DeleteUserUseCase › execute › debería contar solo admins activos al verificar el último admin
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Cannot delete the last admin user"
+    Received message:   "Cannot delete system administrator"
+
+          34 |     // 3. No permitir eliminar al system admin
+          35 |     if (isSystemAdmin) {
+        > 36 |       throw new ValidationError('Cannot delete system administrator');
+             |             ^
+          37 |     }
+          38 |
+          39 |     // 4. Prevenir eliminación del usuario actual si es el único admin
+
+      at DeleteUserUseCase.execute (features/admin/domain/use-cases/delete-user/delete-user.use-case.ts:36:13)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:319:7)
+      at Object.toThrow (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:319:52)
+
+PASS src/features/playlists/domain/use-cases/add-track-to-playlist/add-track-to-playlist.use-case.spec.ts
+  AddTrackToPlaylistUseCase
+    execute
+      ✓ should add track to playlist successfully (25 ms)
+      ✓ should use addTrackWithAutoOrder for race-condition safe ordering (1 ms)
+      ✓ should throw error if playlistId is empty (15 ms)
+      ✓ should throw error if trackId is empty (1 ms)
+      ✓ should throw error if playlist not found (1 ms)
+      ✓ should throw error if track not found (2 ms)
+      ✓ should throw error if track already in playlist (1 ms)
+      ✓ should update playlist metadata (duration, size, songCount) (1 ms)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/albums/infrastructure/persistence/cached-album.repository.spec.ts
+  CachedAlbumRepository
+    findById
+      ✓ should return cached album on cache hit (26 ms)
+      ✓ should fetch from DB and cache on cache miss (1 ms)
+      ✓ should return null if album not found (2 ms)
+    findAll
+      ✓ should NOT cache paginated list (1 ms)
+    search
+      ✓ should NOT cache search results (1 ms)
+    findByArtistId
+      ✓ should return cached albums on cache hit (1 ms)
+      ✓ should fetch from DB and cache on cache miss (1 ms)
+      ✓ should NOT cache empty results (1 ms)
+    findRecent
+      ✓ should cache recent albums with shorter TTL (1 ms)
+      ✓ should return cached recent albums on cache hit (1 ms)
+    findMostPlayed
+      ✓ should cache most played albums (1 ms)
+    count
+      ✓ should cache count with long TTL (1 ms)
+      ✓ should return cached count on cache hit
+    create
+      ✓ should create album and invalidate list caches (1 ms)
+    update
+      ✓ should update album and invalidate caches (4 ms)
+      ✓ should NOT invalidate cache if update fails (1 ms)
+    delete
+      ✓ should delete album and invalidate caches
+      ✓ should NOT invalidate cache if delete fails (1 ms)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/artists/domain/use-cases/get-artists/get-artists.use-case.spec.ts
+  GetArtistsUseCase
+    execute
+      ✓ debería retornar lista paginada con valores por defecto (36 ms)
+      ✓ debería aplicar paginación correctamente (4 ms)
+      ✓ debería limitar take a máximo 100 (2 ms)
+      ✓ debería establecer hasMore en false cuando no hay más resultados (2 ms)
+      ✓ debería convertir skip negativo a 0 (3 ms)
+      ✓ debería convertir take menor a 1 a 1 (2 ms)
+      ✓ debería manejar resultado vacío (2 ms)
+      ✓ debería mapear correctamente todos los campos de los artistas (2 ms)
+      ✓ debería usar valores por defecto si no se provee skip/take (2 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:37 PM [31m  ERROR[39m [38;5;3m[CleanupService] [39m[31mFailed to cleanup artist files: Permission denied[39m
+Error: Permission denied
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/cleanup.service.spec.ts:156:48)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:37 PM [31m  ERROR[39m [38;5;3m[CleanupService] [39m[31mFailed to cleanup album files: Permission denied[39m
+Error: Permission denied
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/cleanup.service.spec.ts:156:48)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+FAIL src/features/external-metadata/infrastructure/services/cleanup.service.spec.ts
+  CleanupService
+    cleanupOrphanedFiles
+      ✓ debería ejecutar en modo dry-run sin eliminar archivos (11 ms)
+      ✓ debería detectar archivos huérfanos sin eliminarlos (dry-run) (3 ms)
+      ✓ debería eliminar archivos huérfanos en modo real (2 ms)
+      ✓ debería manejar errores durante la limpieza (16 ms)
+    getStorageStats
+      ✓ debería calcular estadísticas de almacenamiento (2 ms)
+      ✓ debería manejar caso sin metadatos (2 ms)
+    recalculateStorageSizes
+      ✓ debería recalcular tamaños para todos los artistas (2 ms)
+      ✓ debería manejar errores individuales sin fallar todo (2 ms)
+      ✓ debería retornar 0 updates si no hay artistas (3 ms)
+    verifyIntegrity
+      ✕ debería verificar integridad de archivos referenciados (3 ms)
+      ✕ debería detectar archivos faltantes (2 ms)
+      ✓ debería manejar caso sin archivos para verificar (1 ms)
+
+  ● CleanupService › verifyIntegrity › debería verificar integridad de archivos referenciados
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 3
+    Received: 5
+
+      306 |
+      307 |       // Assert
+    > 308 |       expect(result.totalChecked).toBe(3); // 2 artist images + 1 album cover
+          |                                   ^
+      309 |       expect(result.missing).toEqual([]);
+      310 |       expect(result.errors).toEqual([]);
+      311 |     });
+
+      at Object.<anonymous> (features/external-metadata/infrastructure/services/cleanup.service.spec.ts:308:35)
+
+  ● CleanupService › verifyIntegrity › debería detectar archivos faltantes
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 4
+
+      335 |
+      336 |       // Assert
+    > 337 |       expect(result.totalChecked).toBe(1);
+          |                                   ^
+      338 |       expect(result.missing.length).toBe(1);
+      339 |       expect(result.missing[0]).toContain('Artist 1');
+      340 |     });
+
+      at Object.<anonymous> (features/external-metadata/infrastructure/services/cleanup.service.spec.ts:337:35)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+FAIL src/features/users/presentation/users.controller.spec.ts
+  UsersController
+    PUT /users/password - changePassword
+      ✓ debería cambiar la contraseña correctamente (11 ms)
+      ✓ debería usar el userId del usuario autenticado (3 ms)
+      ✓ debería propagar errores del use case (18 ms)
+    PUT /users/profile - updateProfile
+      ✕ debería actualizar el perfil correctamente (5 ms)
+      ✓ debería actualizar solo el nombre (2 ms)
+      ✓ debería actualizar solo el email (2 ms)
+    PUT /users/theme - changeTheme
+      ✓ debería cambiar el tema a dark (1 ms)
+      ✓ debería cambiar el tema a light (2 ms)
+      ✓ debería propagar errores de validación (4 ms)
+    PUT /users/language - changeLanguage
+      ✓ debería cambiar el idioma a español (2 ms)
+      ✓ debería cambiar el idioma a inglés (2 ms)
+      ✓ debería propagar errores de validación (2 ms)
+
+  ● UsersController › PUT /users/profile - updateProfile › debería actualizar el perfil correctamente
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 2
+
+    - Object {
+    + UserResponseDto {
+    +   "avatarUrl": "/api/images/users/user-123/avatar",
+        "email": "updated@test.com",
+        "id": "user-123",
+        "name": "Updated Name",
+        "username": "testuser",
+      }
+
+      178 |         email: 'updated@test.com',
+      179 |       });
+    > 180 |       expect(result).toEqual(useCaseResponse);
+          |                      ^
+      181 |     });
+      182 |
+      183 |     it('debería actualizar solo el nombre', async () => {
+
+      at Object.<anonymous> (features/users/presentation/users.controller.spec.ts:180:22)
+
+PASS src/features/recommendations/infrastructure/jobs/wave-mix-scheduler.service.spec.ts
+  WaveMixSchedulerService
+    ✓ should be defined (4 ms)
+    onModuleInit
+      ✓ debería registrar el procesador y programar la regeneración diaria (9 ms)
+    regenerateAllWaveMixes
+      ✓ debería regenerar Wave Mix para todos los usuarios (2 ms)
+      ✓ debería manejar errores individuales sin fallar todo el proceso (2 ms)
+    regenerateUserWaveMix
+      ✓ debería regenerar Wave Mix para un usuario específico (1 ms)
+    triggerUserRegeneration
+      ✓ debería encolar un job de regeneración para un usuario (2 ms)
+    triggerImmediateRegeneration
+      ✓ debería encolar un job de regeneración inmediata para todos los usuarios (1 ms)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/auth/presentation/auth.controller.spec.ts
+  AuthController
+    POST /auth/login
+      ✓ debería retornar tokens válidos en login exitoso (2 ms)
+      ✓ debería retornar mustChangePassword true para usuarios nuevos
+      ✓ debería lanzar error 401 con credenciales inválidas (13 ms)
+      ✓ debería lanzar error si username está vacío (1 ms)
+      ✓ debería lanzar error si password está vacío (1 ms)
+    POST /auth/refresh
+      ✓ debería generar nuevos tokens (1 ms)
+      ✓ debería lanzar error con token inválido
+      ✓ debería lanzar error con token expirado (1 ms)
+    GET /auth/me
+      ✓ debería retornar el usuario autenticado (1 ms)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+[33m[Nest] 20351  - [39m11/17/2025, 3:31:40 PM [33m   WARN[39m [38;5;3m[WsThrottlerGuard] [39m[33m⚠️ Rate limit exceeded for client test-socket-id[39m
+[33m[Nest] 20351  - [39m11/17/2025, 3:31:40 PM [33m   WARN[39m [38;5;3m[WsThrottlerGuard] [39m[33m⚠️ Rate limit exceeded for client test-socket-id[39m
+PASS src/features/scanner/infrastructure/gateways/scanner.gateway.spec.ts
+  ScannerGateway
+    lifecycle
+      ✓ should be defined (5 ms)
+      ✓ should log on init (2 ms)
+      ✓ should log on connection (3 ms)
+      ✓ should log on disconnection (6 ms)
+    handleSubscribe
+      ✓ should join client to scan room (2 ms)
+    handleUnsubscribe
+      ✓ should remove client from scan room (1 ms)
+    emitProgress
+      ✓ should emit progress to scan room (1 ms)
+    emitError
+      ✓ should emit error to scan room (3 ms)
+    emitCompleted
+      ✓ should emit completed to scan room (1 ms)
+    handlePause
+      ✓ should emit paused confirmation (1 ms)
+    handleCancel
+      ✓ should emit cancelled confirmation (2 ms)
+    handleResume
+      ✓ should emit resumed confirmation (1 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/notfound.jpg: HTTP 404: Not Found[39m
+Error: HTTP 404: Not Found
+    at ImageDownloadService.downloadImage (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.ts:50:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:106:7)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/file.html: Invalid content type: text/html[39m
+Error: Invalid content type: text/html
+    at ImageDownloadService.downloadImage (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.ts:56:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:124:7)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/large.jpg: Image too large: 11534336 bytes[39m
+Error: Image too large: 11534336 bytes
+    at ImageDownloadService.downloadImage (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.ts:62:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:144:7)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/large.jpg: Image too large: 11534336 bytes[39m
+Error: Image too large: 11534336 bytes
+    at ImageDownloadService.downloadImage (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.ts:71:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:164:7)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/invalid.jpg: Downloaded file is not a valid image[39m
+Error: Downloaded file is not a valid image
+    at ImageDownloadService.downloadImage (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.ts:76:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:184:7)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/image.jpg: Network error[39m
+Error: Network error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:191:53)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/image.jpg: Download failed[39m
+Error: Download failed
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:224:53)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading and saving image from https://example.com/image.jpg to /path/to/save.jpg: Download failed[39m
+Error: Download failed
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:224:53)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading and saving image from https://example.com/image.jpg to /path/to/save.jpg: Save failed[39m
+Error: Save failed
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:245:43)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/image2.jpg: Network error[39m
+Error: Network error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:309:32)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading image from https://example.com/medium.jpg: Network error[39m
+Error: Network error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:402:32)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[ImageDownloadService] [39m[31mError downloading and saving image from https://example.com/medium.jpg to /storage/artists/123/profile-medium.jpg: Network error[39m
+Error: Network error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/infrastructure/services/image-download.service.spec.ts:402:32)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+PASS src/features/external-metadata/infrastructure/services/image-download.service.spec.ts
+  ImageDownloadService
+    downloadImage
+      ✓ debería descargar una imagen válida (4 ms)
+      ✓ debería rechazar si HTTP status no es OK (19 ms)
+      ✓ debería rechazar si content-type no es imagen (2 ms)
+      ✓ debería rechazar si imagen es muy grande (content-length) (1 ms)
+      ✓ debería rechazar si buffer descargado es muy grande (3 ms)
+      ✓ debería rechazar si buffer no contiene imagen válida (3 ms)
+      ✓ debería manejar errores de red (5 ms)
+    downloadAndSave
+      ✓ debería descargar y guardar una imagen (2 ms)
+      ✓ debería propagar errores de descarga (3 ms)
+      ✓ debería propagar errores de guardado (2 ms)
+    downloadMultiple
+      ✓ debería descargar múltiples imágenes en paralelo (1 ms)
+      ✓ debería manejar errores individuales sin fallar todo (2 ms)
+    downloadMultipleSizes
+      ✓ debería descargar múltiples tamaños de imagen (2 ms)
+      ✓ debería manejar URLs faltantes (1 ms)
+      ✓ debería continuar si algún tamaño falla (2 ms)
+    getImageFormat
+      ✓ debería detectar formato JPEG (1 ms)
+      ✓ debería detectar formato PNG (1 ms)
+      ✓ debería detectar formato GIF (1 ms)
+      ✓ debería detectar formato WebP (1 ms)
+      ✓ debería retornar null para buffer inválido (1 ms)
+      ✓ debería retornar null para buffer muy pequeño (1 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/admin/presentation/admin.controller.spec.ts
+  AdminController
+    POST /admin/users - createUser
+      ✓ debería crear un usuario correctamente (11 ms)
+      ✓ debería crear un usuario admin (3 ms)
+      ✓ debería crear usuario sin email (3 ms)
+      ✓ debería propagar error del use case (13 ms)
+    GET /admin/users - listUsers
+      ✓ debería listar usuarios sin parámetros (6 ms)
+      ✓ debería listar usuarios con paginación (2 ms)
+      ✓ debería convertir skip y take a números (1 ms)
+      ✓ debería manejar skip sin take (2 ms)
+      ✓ debería manejar take sin skip (3 ms)
+      ✓ debería retornar lista vacía si no hay usuarios (1 ms)
+    PUT /admin/users/:id - updateUser
+      ✓ debería actualizar un usuario correctamente (1 ms)
+      ✓ debería actualizar el rol de admin de un usuario (2 ms)
+      ✓ debería actualizar el estado activo de un usuario (1 ms)
+      ✓ debería propagar error del use case (2 ms)
+    DELETE /admin/users/:id - deleteUser
+      ✓ debería desactivar un usuario correctamente (1 ms)
+      ✓ debería propagar error si intenta eliminar el último admin (2 ms)
+      ✓ debería propagar error si el usuario no existe (2 ms)
+    POST /admin/users/:id/reset-password - resetUserPassword
+      ✓ debería resetear la contraseña de un usuario correctamente (2 ms)
+      ✓ debería generar una contraseña temporal alfanumérica (2 ms)
+      ✓ debería propagar error si el usuario no existe (2 ms)
+
+PASS src/infrastructure/websocket/guards/ws-throttler.guard.spec.ts
+  WsThrottlerGuard
+    canActivate
+      ✓ should allow first request (1 ms)
+      ✓ should allow requests under the limit (1 ms)
+      ✓ should block request when limit is exceeded (6 ms)
+      ✓ should reset after time window passes (1101 ms)
+      ✓ should track different clients separately (1 ms)
+      ✓ should register cleanup on disconnect (1 ms)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/tracks/infrastructure/persistence/cached-track.repository.spec.ts
+  CachedTrackRepository
+    findById
+      ✓ should return cached track on cache hit (1 ms)
+      ✓ should fetch from DB and cache on cache miss (1 ms)
+      ✓ should return null if track not found
+    findAll
+      ✓ should delegate to base repository without caching (1 ms)
+    search
+      ✓ should delegate to base repository without caching (1 ms)
+    findByAlbumId
+      ✓ should delegate to base repository without caching
+    findByArtistId
+      ✓ should delegate to base repository without caching
+    count
+      ✓ should delegate to base repository without caching (1 ms)
+    create
+      ✓ should create track without cache invalidation
+    update
+      ✓ should update track and invalidate specific cache (1 ms)
+      ✓ should NOT invalidate cache if update fails (1 ms)
+    delete
+      ✓ should delete track and invalidate cache
+      ✓ should NOT invalidate cache if delete fails (1 ms)
+    cache TTL configuration
+      ✓ should use default TTL from environment (1 ms)
+
+[95m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [95m  DEBUG[39m [38;5;3m[WsJwtGuard] [39m[95m✅ User user-123 authenticated via WebSocket[39m
+[95m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [95m  DEBUG[39m [38;5;3m[WsJwtGuard] [39m[95m✅ User user-456 authenticated via WebSocket[39m
+[95m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [95m  DEBUG[39m [38;5;3m[WsJwtGuard] [39m[95m✅ User user-789 authenticated via WebSocket[39m
+[33m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [33m   WARN[39m [38;5;3m[WsJwtGuard] [39m[33m❌ WebSocket authentication failed: No token provided[39m
+[33m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [33m   WARN[39m [38;5;3m[WsJwtGuard] [39m[33m❌ WebSocket authentication failed: No token provided[39m
+[33m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [33m   WARN[39m [38;5;3m[WsJwtGuard] [39m[33m❌ WebSocket authentication failed: Invalid token[39m
+[33m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [33m   WARN[39m [38;5;3m[WsJwtGuard] [39m[33m❌ WebSocket authentication failed: Invalid token[39m
+[33m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [33m   WARN[39m [38;5;3m[WsJwtGuard] [39m[33m❌ WebSocket authentication failed: Token expired[39m
+[95m[Nest] 20343  - [39m11/17/2025, 3:31:41 PM [95m  DEBUG[39m [38;5;3m[WsJwtGuard] [39m[95m✅ User user-999 authenticated via WebSocket[39m
+PASS src/infrastructure/websocket/guards/ws-jwt.guard.spec.ts
+  WsJwtGuard
+    canActivate
+      ✓ should allow connection with valid token from query param (2 ms)
+      ✓ should allow connection with valid token from auth object
+      ✓ should allow connection with valid token from Authorization header (1 ms)
+      ✓ should reject connection without token (12 ms)
+      ✓ should reject connection with invalid token (1 ms)
+      ✓ should reject connection with expired token (1 ms)
+      ✓ should handle array of tokens in query param (1 ms)
+
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError retrieving settings: Database error[39m
+Error: Database error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:68:49)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError retrieving settings for category test: Database error[39m
+Error: Database error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:105:56)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError retrieving setting nonexistent: Setting with key nonexistent not found[39m
+BadRequestException: Setting with key nonexistent not found
+    at AdminSettingsController.getSetting (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.ts:183:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:130:7)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError retrieving setting nonexistent: Setting with key nonexistent not found[39m
+BadRequestException: Setting with key nonexistent not found
+    at AdminSettingsController.getSetting (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.ts:183:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:131:7)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError retrieving setting test.key: Database error[39m
+Error: Database error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:138:49)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError updating setting nonexistent: Setting with key nonexistent not found[39m
+BadRequestException: Setting with key nonexistent not found
+    at AdminSettingsController.updateSetting (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.ts:241:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:173:7)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError updating setting test.key: Database error[39m
+Error: Database error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:181:48)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError validating API key for lastfm: Network error[39m
+Error: Network error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:249:56)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError deleting setting nonexistent: Setting with key nonexistent not found[39m
+BadRequestException: Setting with key nonexistent not found
+    at AdminSettingsController.deleteSetting (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.ts:382:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:290:7)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError deleting setting test.key: Database error[39m
+Error: Database error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:296:48)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+[31m[Nest] 20345  - [39m11/17/2025, 3:31:41 PM [31m  ERROR[39m [38;5;3m[AdminSettingsController] [39m[31mError clearing cache: Cache error[39m
+Error: Cache error
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:322:15)
+    at /home/user/echo/node_modules/.pnpm/jest-mock@29.7.0/node_modules/jest-mock/build/index.js:397:39
+    at Object.<anonymous> (/home/user/echo/node_modules/.pnpm/jest-mock@29.7.0/node_modules/jest-mock/build/index.js:404:13)
+    at Object.mockConstructor [as clearCache] (/home/user/echo/node_modules/.pnpm/jest-mock@29.7.0/node_modules/jest-mock/build/index.js:148:19)
+    at AdminSettingsController.clearCache (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.ts:427:28)
+    at Object.<anonymous> (/home/user/echo/server/src/features/external-metadata/presentation/admin-settings.controller.spec.ts:326:31)
+    at Promise.then.completed (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/user/echo/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/user/echo/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)
+PASS src/features/external-metadata/presentation/admin-settings.controller.spec.ts
+  AdminSettingsController
+    getAllSettings
+      ✓ debería retornar todas las configuraciones (5 ms)
+      ✓ debería propagar errores del servicio (14 ms)
+    getSettingsByCategory
+      ✓ debería retornar configuraciones de una categoría (2 ms)
+      ✓ debería retornar array vacío si no hay configuraciones (2 ms)
+      ✓ debería propagar errores del servicio (2 ms)
+    getSetting
+      ✓ debería retornar una configuración específica (2 ms)
+      ✓ debería lanzar BadRequestException si no existe (7 ms)
+      ✓ debería propagar errores del servicio (2 ms)
+    updateSetting
+      ✓ debería actualizar una configuración (3 ms)
+      ✓ debería lanzar BadRequestException si setting no existe (2 ms)
+      ✓ debería propagar errores del servicio (3 ms)
+    validateApiKey
+      ✓ debería validar API key de Last.fm correctamente (2 ms)
+      ✓ debería retornar false para API key inválida (1 ms)
+      ✓ debería validar API key de Fanart.tv (2 ms)
+      ✓ debería manejar errores de validación (2 ms)
+    deleteSetting
+      ✓ debería eliminar una configuración (2 ms)
+      ✓ debería lanzar BadRequestException si setting no existe (1 ms)
+      ✓ debería propagar errores del servicio (1 ms)
+    clearCache
+      ✓ debería limpiar el cache correctamente (2 ms)
+      ✓ debería manejar errores al limpiar cache (2 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/streaming/domain/use-cases/stream-track/stream-track.use-case.spec.ts
+  StreamTrackUseCase
+    execute
+      ✓ debería retornar metadata del track para streaming (5 ms)
+      ✓ debería lanzar NotFoundException si trackId está vacío (16 ms)
+      ✓ debería lanzar NotFoundException si trackId es solo espacios (2 ms)
+      ✓ debería lanzar NotFoundException si el track no existe (1 ms)
+      ✓ debería lanzar NotFoundException si el track no tiene path (2 ms)
+      ✓ debería lanzar NotFoundException si el archivo no existe (1 ms)
+      ✓ debería lanzar NotFoundException si el path no es un archivo (2 ms)
+      ✓ debería detectar MIME type para MP3 (1 ms)
+      ✓ debería detectar MIME type para FLAC (1 ms)
+      ✓ debería usar audio/mpeg por defecto para extensiones desconocidas (1 ms)
+      ✓ debería extraer correctamente el nombre del archivo (1 ms)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/artists/domain/use-cases/get-artist/get-artist.use-case.spec.ts
+  GetArtistUseCase
+    execute
+      ✓ debería retornar un artista por su ID (4 ms)
+      ✓ debería lanzar NotFoundError si el artista no existe (7 ms)
+      ✓ debería lanzar NotFoundError si el ID está vacío (4 ms)
+      ✓ debería lanzar NotFoundError si el ID es solo espacios (1 ms)
+      ✓ debería manejar artistas sin campos opcionales (2 ms)
+      ✓ debería retornar artista con todos los campos completos (1 ms)
+
+[31m[Nest] 20344  - [39m11/17/2025, 3:31:42 PM [31m  ERROR[39m [38;5;3m[SettingsService] [39m[31mLast.fm API key validation failed: Network error[39m
+PASS src/features/external-metadata/infrastructure/services/settings.service.spec.ts
+  SettingsService
+    get
+      ✓ debería retornar valor del cache si existe (4 ms)
+      ✓ debería consultar la BD si no está en cache (2 ms)
+      ✓ debería retornar defaultValue si no existe el setting (1 ms)
+      ✓ debería retornar null si no existe y no hay defaultValue (1 ms)
+    getBoolean
+      ✓ debería convertir "true" a boolean true (2 ms)
+      ✓ debería convertir "false" a boolean false (2 ms)
+      ✓ debería retornar defaultValue si no existe (1 ms)
+    getNumber
+      ✓ debería convertir string a número (2 ms)
+      ✓ debería retornar defaultValue si no existe (1 ms)
+    getString
+      ✓ debería retornar valor como string (1 ms)
+      ✓ debería retornar defaultValue si no existe (1 ms)
+    set
+      ✓ debería actualizar un setting y su cache (1 ms)
+      ✓ debería convertir boolean a string (2 ms)
+      ✓ debería convertir número a string (1 ms)
+    setMultiple
+      ✓ debería actualizar múltiples settings (2 ms)
+    getCategory
+      ✓ debería retornar todas las settings de una categoría (2 ms)
+    validateApiKey
+      ✓ debería retornar false si API key está vacía (1 ms)
+      ✓ debería validar Last.fm API key correctamente (2 ms)
+      ✓ debería retornar false si Last.fm API key es inválida (1 ms)
+      ✓ debería validar Fanart.tv API key correctamente (2 ms)
+      ✓ debería retornar false si Fanart.tv API key es inválida (1 ms)
+      ✓ debería manejar errores de red (2 ms)
+    clearCache
+      ✓ debería limpiar el cache (3 ms)
+    update
+      ✓ debería actualizar setting y invalidar cache (1 ms)
+    delete
+      ✓ debería eliminar setting y invalidar cache (2 ms)
+
+PASS src/features/admin/domain/use-cases/list-users/list-users.use-case.spec.ts
+  ListUsersUseCase
+    execute
+      ✓ debería listar usuarios con paginación por defecto (4 ms)
+      ✓ debería respetar parámetros de paginación personalizados (2 ms)
+      ✓ debería manejar lista vacía de usuarios (2 ms)
+      ✓ debería mapear correctamente usuarios sin email ni lastLoginAt (1 ms)
+
+PASS src/features/tracks/domain/use-cases/search-tracks/search-tracks.use-case.spec.ts
+  SearchTracksUseCase
+    execute
+      ✓ debería buscar tracks por query (4 ms)
+      ✓ debería lanzar ValidationError si query está vacío (15 ms)
+      ✓ debería lanzar ValidationError si query es solo espacios (2 ms)
+      ✓ debería lanzar ValidationError si query tiene menos de 2 caracteres (2 ms)
+      ✓ debería limpiar espacios del query antes de buscar (1 ms)
+      ✓ debería limitar take a máximo 100 (1 ms)
+      ✓ debería convertir skip negativo a 0 (2 ms)
+      ✓ debería convertir take menor a 1 a 1 (1 ms)
+      ✓ debería establecer hasMore correctamente (1 ms)
+      ✓ debería establecer hasMore en false cuando no hay más resultados (1 ms)
+      ✓ debería manejar resultado vacío (2 ms)
+      ✓ debería mapear correctamente todos los campos de los tracks (2 ms)
+      ✓ debería aceptar query con exactamente 2 caracteres (2 ms)
+      ✓ debería manejar queries con caracteres especiales (1 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/albums/domain/use-cases/search-albums/search-albums.use-case.spec.ts
+  SearchAlbumsUseCase
+    execute
+      ✓ debería buscar álbumes por query (4 ms)
+      ✓ debería lanzar ValidationError si query está vacío (13 ms)
+      ✓ debería lanzar ValidationError si query es solo espacios (2 ms)
+      ✓ debería lanzar ValidationError si query tiene menos de 2 caracteres (2 ms)
+      ✓ debería limpiar espacios del query antes de buscar (1 ms)
+      ✓ debería limitar take a máximo 100 (1 ms)
+      ✓ debería convertir skip negativo a 0 (1 ms)
+      ✓ debería convertir take menor a 1 a 1 (1 ms)
+      ✓ debería establecer hasMore correctamente (1 ms)
+      ✓ debería establecer hasMore en false cuando no hay más resultados (2 ms)
+      ✓ debería manejar resultado vacío (1 ms)
+      ✓ debería mapear correctamente todos los campos de los álbumes (2 ms)
+      ✓ debería aceptar query con exactamente 2 caracteres (1 ms)
+      ✓ debería manejar queries con caracteres especiales (2 ms)
+
+PASS src/features/tracks/domain/use-cases/get-track/get-track.use-case.spec.ts
+  GetTrackUseCase
+    execute
+      ✓ debería retornar un track por su ID (4 ms)
+      ✓ debería lanzar NotFoundError si el track no existe (8 ms)
+      ✓ debería lanzar NotFoundError si el ID está vacío (5 ms)
+      ✓ debería lanzar NotFoundError si el ID es solo espacios (1 ms)
+      ✓ debería manejar tracks sin campos opcionales (2 ms)
+      ✓ debería manejar tracks de compilación (1 ms)
+
+PASS src/features/scanner/domain/use-cases/get-scan-status/get-scan-status.use-case.spec.ts
+  GetScanStatusUseCase
+    ✓ should be defined (4 ms)
+    execute
+      ✓ should return scan status for existing scan (5 ms)
+      ✓ should throw NotFoundError if scan does not exist (6 ms)
+      ✓ should throw NotFoundError for empty/invalid id (5 ms)
+      ✓ should return scan with null duration if not finished (1 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/artists/domain/use-cases/search-artists/search-artists.use-case.spec.ts
+  SearchArtistsUseCase
+    execute
+      ✓ debería buscar artistas por query (8 ms)
+      ✓ debería lanzar ValidationError si query está vacío (12 ms)
+      ✓ debería lanzar ValidationError si query es solo espacios (2 ms)
+      ✓ debería lanzar ValidationError si query tiene menos de 2 caracteres (1 ms)
+      ✓ debería limpiar espacios del query antes de buscar (1 ms)
+      ✓ debería limitar take a máximo 100 (2 ms)
+      ✓ debería convertir skip negativo a 0 (1 ms)
+      ✓ debería convertir take menor a 1 a 1 (1 ms)
+      ✓ debería establecer hasMore correctamente (1 ms)
+      ✓ debería establecer hasMore en false cuando no hay más resultados (2 ms)
+      ✓ debería manejar resultado vacío (1 ms)
+      ✓ debería mapear correctamente todos los campos de los artistas (2 ms)
+      ✓ debería aceptar query con exactamente 2 caracteres (1 ms)
+      ✓ debería manejar queries con caracteres especiales (2 ms)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/tracks/domain/use-cases/get-tracks/get-tracks.use-case.spec.ts
+  GetTracksUseCase
+    execute
+      ✓ debería retornar lista paginada con valores por defecto (4 ms)
+      ✓ debería aplicar paginación correctamente (1 ms)
+      ✓ debería limitar take a máximo 100 (1 ms)
+      ✓ debería establecer hasMore en false cuando no hay más resultados (2 ms)
+      ✓ debería convertir skip negativo a 0 (1 ms)
+      ✓ debería convertir take menor a 1 a 1 (1 ms)
+      ✓ debería manejar resultado vacío (2 ms)
+      ✓ debería mapear correctamente todos los campos de los tracks (3 ms)
+      ✓ debería usar valores por defecto si no se provee skip/take (1 ms)
+
+PASS src/features/scanner/domain/use-cases/start-scan/start-scan.use-case.spec.ts
+  StartScanUseCase
+    execute
+      ✓ should create a scan and enqueue it successfully (5 ms)
+      ✓ should throw error if there is already a running scan (7 ms)
+      ✓ should use default options when none provided (1 ms)
+      ✓ should handle repository create error gracefully (7 ms)
+      ✓ should handle processor enqueue error gracefully (1 ms)
+      ✓ should correctly pass scan options to processor (1 ms)
+
+PASS src/features/albums/domain/use-cases/get-album/get-album.use-case.spec.ts
+  GetAlbumUseCase
+    execute
+      ✓ debería retornar un álbum por su ID (5 ms)
+      ✓ debería lanzar NotFoundError si el álbum no existe (8 ms)
+      ✓ debería lanzar NotFoundError si el ID está vacío (5 ms)
+      ✓ debería lanzar NotFoundError si el ID es solo espacios (2 ms)
+      ✓ debería manejar álbumes sin campos opcionales (1 ms)
+      ✓ debería manejar álbumes de compilación (1 ms)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/shared/guards/must-change-password.guard.spec.ts
+  MustChangePasswordGuard
+    canActivate
+      ✓ debería permitir acceso si mustChangePassword es false (1 ms)
+      ✓ debería denegar acceso si mustChangePassword es true (10 ms)
+      ✓ debería permitir acceso a rutas con decorator AllowChangePassword
+      ✓ debería permitir acceso si no hay usuario (caso edge) (1 ms)
+      ✓ debería permitir acceso si mustChangePassword es undefined
+      ✓ debería verificar metadata ALLOW_CHANGE_PASSWORD_KEY (1 ms)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/admin/domain/use-cases/update-user/update-user.use-case.spec.ts
+  UpdateUserUseCase
+    execute
+      ✓ debería actualizar el nombre del usuario correctamente (1 ms)
+      ✓ debería actualizar el email del usuario correctamente (1 ms)
+      ✓ debería actualizar el rol de admin del usuario
+      ✓ debería actualizar el estado activo del usuario (1 ms)
+      ✓ debería actualizar múltiples campos a la vez
+      ✓ debería lanzar error si el usuario no existe (14 ms)
+      ✓ debería lanzar error si el email ya existe en otro usuario (1 ms)
+      ✓ debería permitir actualizar con el mismo email del usuario (1 ms)
+      ✓ debería lanzar error si el formato del email es inválido (1 ms)
+      ✓ debería permitir email vacío (sin validación) (1 ms)
+      ✓ no debería verificar email duplicado si no se está cambiando
+
+PASS src/features/artists/infrastructure/persistence/cached-artist.repository.spec.ts
+  CachedArtistRepository
+    findById
+      ✓ should return cached artist on cache hit (1 ms)
+      ✓ should fetch from DB and cache on cache miss (1 ms)
+      ✓ should return null if artist not found (1 ms)
+      ✓ should handle cache service errors gracefully (11 ms)
+    findAll
+      ✓ should delegate to base repository without caching (1 ms)
+    search
+      ✓ should delegate to base repository without caching
+    count
+      ✓ should delegate to base repository without caching (1 ms)
+    create
+      ✓ should create artist without cache invalidation
+    update
+      ✓ should update artist and invalidate specific cache (1 ms)
+      ✓ should NOT invalidate cache if update fails (1 ms)
+      ✓ should handle partial updates correctly (3 ms)
+    delete
+      ✓ should delete artist and invalidate cache (1 ms)
+      ✓ should NOT invalidate cache if delete fails (1 ms)
+    cache TTL configuration
+      ✓ should use longer TTL for artists (7200s default)
+    integration scenarios
+      ✓ should handle full CRUD cycle with proper cache management (1 ms)
+
+PASS src/features/albums/domain/use-cases/get-albums/get-albums.use-case.spec.ts
+  GetAlbumsUseCase
+    execute
+      ✓ debería retornar lista paginada con valores por defecto (11 ms)
+      ✓ debería aplicar paginación correctamente (2 ms)
+      ✓ debería limitar take a máximo 100 (1 ms)
+      ✓ debería establecer hasMore en false cuando no hay más resultados (1 ms)
+      ✓ debería convertir skip negativo a 0 (1 ms)
+      ✓ debería convertir take menor a 1 a 1 (1 ms)
+      ✓ debería manejar resultado vacío (2 ms)
+      ✓ debería mapear correctamente todos los campos de los álbumes (2 ms)
+      ✓ debería usar valores por defecto si no se provee skip/take (1 ms)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/auth/infrastructure/adapters/jwt.adapter.spec.ts
+  JwtAdapter
+    generateAccessToken
+      ✓ debería generar access token válido (1 ms)
+    generateRefreshToken
+      ✓ debería generar refresh token válido (1 ms)
+    verifyAccessToken
+      ✓ debería verificar access token válido
+      ✓ debería lanzar error si token es inválido (9 ms)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/users/domain/use-cases/change-language/change-language.use-case.spec.ts
+  ChangeLanguageUseCase
+    execute
+      ✓ debería cambiar idioma a español (1 ms)
+      ✓ debería cambiar idioma a inglés
+      ✓ debería permitir establecer el mismo idioma actual (1 ms)
+      ✓ debería lanzar error si usuario no existe (7 ms)
+      ✓ debería lanzar error si idioma no es válido (4 ms)
+      ✓ debería lanzar error para idioma vacío (1 ms)
+      ✓ debería lanzar error para idioma con mayúsculas
+      ✓ debería validar idioma ANTES de verificar si usuario existe (1 ms)
+      ✓ debería rechazar códigos de idioma con región (1 ms)
+      ✓ NO debería retornar nada (void) (1 ms)
+      ✓ debería funcionar para usuarios inactivos
+
+PASS src/features/users/domain/use-cases/update-profile/update-profile.use-case.spec.ts
+  UpdateProfileUseCase
+    execute
+      ✓ debería actualizar nombre y email correctamente (2 ms)
+      ✓ debería actualizar solo el nombre (1 ms)
+      ✓ debería actualizar solo el email (1 ms)
+      ✓ debería lanzar error si usuario no existe (7 ms)
+      ✓ debería lanzar error si nuevo email ya está en uso (1 ms)
+      ✓ NO debería lanzar error si el nuevo email es el mismo que el actual (1 ms)
+      ✓ NO debería incluir campos sensibles en la respuesta (1 ms)
+      ✓ debería preservar username (no debe cambiar) (1 ms)
+
+PASS src/features/playlists/domain/use-cases/create-playlist/create-playlist.use-case.spec.ts
+  CreatePlaylistUseCase
+    execute
+      ✓ should create a new playlist successfully (2 ms)
+      ✓ should create a public playlist
+      ✓ should default to private playlist if public not specified (1 ms)
+      ✓ should trim whitespace from name
+      ✓ should throw error if name is empty (12 ms)
+      ✓ should throw error if name is only whitespace (1 ms)
+      ✓ should throw error if ownerId is empty (1 ms)
+      ✓ should handle optional fields
+      ✓ should initialize playlist with zero tracks and duration (1 ms)
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/auth/domain/use-cases/refresh-token/refresh-token.use-case.spec.ts
+  RefreshTokenUseCase
+    execute
+      ✓ debería generar nuevos tokens con refresh token válido (2 ms)
+      ✓ debería lanzar error si refresh token es inválido (8 ms)
+      ✓ debería lanzar error si refresh token está expirado (1 ms)
+      ✓ debería lanzar error si usuario no existe (1 ms)
+      ✓ debería lanzar error si usuario está inactivo (1 ms)
+      ✓ debería lanzar error si refresh token está vacío (1 ms)
+      ✓ debería funcionar para usuarios admin (1 ms)
+      ✓ debería generar tokens diferentes en cada llamada
+
+PASS src/features/users/domain/use-cases/change-password/change-password.use-case.spec.ts
+  ChangePasswordUseCase
+    execute
+      ✓ debería cambiar contraseña correctamente (1 ms)
+      ✓ debería quitar mustChangePassword si era primer login
+      ✓ NO debería llamar updatePartial si mustChangePassword ya era false
+      ✓ debería lanzar error si nueva contraseña es muy corta (15 ms)
+      ✓ debería lanzar error si usuario no existe
+      ✓ debería lanzar error si contraseña actual es incorrecta (1 ms)
+      ✓ debería lanzar error si nueva contraseña es igual a la actual (1 ms)
+      ✓ debería permitir contraseña con exactamente 8 caracteres
+
+PASS src/shared/guards/jwt-auth.guard.spec.ts
+  AdminGuard
+    canActivate
+      ✓ debería permitir acceso si el usuario es admin (1 ms)
+      ✓ debería denegar acceso si el usuario NO es admin (13 ms)
+      ✓ debería denegar acceso si no hay usuario en el request (1 ms)
+      ✓ debería denegar acceso si user.isAdmin es undefined
+      ✓ debería denegar acceso si user.isAdmin es null (1 ms)
+      ✓ debería denegar acceso si user.isAdmin es false explícitamente (1 ms)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/users/domain/use-cases/change-theme/change-theme.use-case.spec.ts
+  ChangeThemeUseCase
+    execute
+      ✓ debería cambiar tema a dark (1 ms)
+      ✓ debería cambiar tema a light (1 ms)
+      ✓ debería permitir establecer el mismo tema actual
+      ✓ debería lanzar error si usuario no existe (8 ms)
+      ✓ debería lanzar error si tema no es válido (4 ms)
+      ✓ debería lanzar error para tema vacío (1 ms)
+      ✓ debería lanzar error para tema con mayúsculas (1 ms)
+      ✓ debería validar tema ANTES de verificar si usuario existe (1 ms)
+      ✓ NO debería retornar nada (void)
+      ✓ debería funcionar para usuarios inactivos
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/playlists/domain/use-cases/get-playlists/get-playlists.use-case.spec.ts
+  GetPlaylistsUseCase
+    execute
+      ✓ should get playlists by ownerId (2 ms)
+      ✓ should get public playlists only (1 ms)
+      ✓ should use default pagination values (1 ms)
+      ✓ should handle custom pagination
+      ✓ should throw error if skip is negative (12 ms)
+      ✓ should throw error if take is zero (1 ms)
+      ✓ should throw error if take exceeds 100 (2 ms)
+      ✓ should throw error if no filter specified (1 ms)
+      ✓ should map playlists to output format correctly
+      ✓ should handle empty result (1 ms)
+
+PASS src/features/admin/domain/use-cases/reset-user-password/reset-user-password.use-case.spec.ts
+  ResetUserPasswordUseCase
+    execute
+      ✓ debería resetear la contraseña del usuario correctamente (2 ms)
+      ✓ debería generar una contraseña temporal alfanumérica de 8 caracteres (1 ms)
+      ✓ debería marcar mustChangePassword como true
+      ✓ debería funcionar para usuarios admin (1 ms)
+      ✓ debería lanzar error si el usuario no existe (9 ms)
+      ✓ debería hashear la contraseña temporal antes de guardarla (1 ms)
+      ✓ debería generar contraseñas diferentes en cada ejecución (1 ms)
+      ✓ debería funcionar para usuarios inactivos
+
+PASS src/features/auth/domain/use-cases/login/loginUseCase.spec.ts
+  LoginUseCase
+    execute
+      ✓ debería loguear un usuario válido (2 ms)
+      ✓ debería lanzar error si username y password están vacíos (10 ms)
+      ✓ debería lanzar error si username falta (1 ms)
+      ✓ debería lanzar error si password falta
+      ✓ debería lanzar error si usuario no existe (1 ms)
+      ✓ debería lanzar error si usuario está inactivo
+      ✓ debería lanzar error si password es incorrecto
+      ✓ debería retornar sin email si el usuario no tiene
+      ✓ debería generar tokens correctamente (1 ms)
+
+  console.log
+    🧪 Test Worker 3 → music_server_test_3
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/admin/domain/use-cases/create-user/create-user.use-case.spec.ts
+  CreateUserUseCase
+    execute
+      ✓ debería crear un usuario correctamente (2 ms)
+      ✓ debería crear un usuario admin
+      ✓ debería crear usuario sin email (1 ms)
+      ✓ debería lanzar error si username es muy corto (11 ms)
+      ✓ debería lanzar error si username ya existe
+      ✓ debería lanzar error si email ya existe (1 ms)
+      ✓ debería generar contraseña temporal de 6 dígitos
+
+  console.log
+    🧪 Test Worker 4 → music_server_test_4
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/auth/infrastructure/adapters/bcrypt.adapter.spec.ts
+  BcryptAdapter
+    hash
+      ✓ debería hashear una contraseña (1 ms)
+      ✓ debería usar el número correcto de rounds (1 ms)
+    compare
+      ✓ debería retornar true si passwords coinciden
+      ✓ debería retornar false si passwords no coinciden
+      ✓ debería manejar errores de bcrypt (6 ms)
+
+PASS src/features/auth/domain/entities/user.entity.spec.ts
+  User Entity
+    create
+      ✓ debería crear un nuevo usuario (1 ms)
+      ✓ debería generar IDs únicos para diferentes usuarios
+      ✓ debería tener isAdmin en false por defecto
+      ✓ debería permitir crear sin email
+    reconstruct
+      ✓ debería reconstruir un usuario desde BD (1 ms)
+      ✓ debería preservar las fechas al reconstruir
+    getters
+      ✓ debería retornar todas las propiedades (1 ms)
+      ✓ debería retornar undefined para email si no existe
+      ✓ debería retornar undefined para name si no existe
+    toPrimitives
+      ✓ debería convertir a objeto primitivo (1 ms)
+      ✓ debería retornar una copia, no referencia (1 ms)
+      ✓ debería poder reconstruir desde toPrimitives
+    immutability
+      ✓ no debería permitir modificar propiedades directamente (11 ms)
+
+PASS src/shared/utils/password.util.spec.ts
+  PasswordUtil
+    generateTemporaryPassword
+      ✓ debería generar una contraseña de exactamente 8 caracteres (1 ms)
+      ✓ debería generar solo caracteres alfanuméricos
+      ✓ debería contener al menos una letra mayúscula (1 ms)
+      ✓ debería contener al menos una letra minúscula (1 ms)
+      ✓ debería contener al menos un número
+      ✓ NO debería contener caracteres confusos (I, O, l, 0, 1) (25 ms)
+      ✓ debería generar contraseñas diferentes en cada llamada
+      ✓ debería generar contraseñas con alta entropía (100 contraseñas únicas) (2 ms)
+      ✓ debería tener la estructura esperada: 1 mayúscula + 1 minúscula + 1 número + 5 aleatorios (13 ms)
+      ✓ debería usar solo caracteres seguros (sin I, O, l, o, 0, 1) (33 ms)
+      ✓ debería mantener consistencia en el formato: alfanumérico de 8 caracteres (16 ms)
+
+  console.log
+    🧪 Test Worker 1 → music_server_test_1
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+PASS src/features/scanner/domain/entities/library-scan.entity.spec.ts
+  LibraryScan Entity
+    create
+      ✓ should create a new LibraryScan with auto-generated id (1 ms)
+    fromPrimitives
+      ✓ should reconstruct LibraryScan from primitives (3 ms)
+    status methods
+      ✓ should correctly identify pending scan
+      ✓ should correctly identify running scan (1 ms)
+      ✓ should correctly identify completed scan
+      ✓ should correctly identify failed scan
+    getTotalChanges
+      ✓ should calculate total changes correctly
+      ✓ should return 0 for scan with no changes
+    getDuration
+      ✓ should return null if scan is not finished
+      ✓ should calculate duration correctly for finished scan
+    toPrimitives
+      ✓ should convert entity to primitives (1 ms)
+
+PASS src/shared/guards/admin.guard.spec.ts
+  AdminGuard
+    canActivate
+      ✓ debería permitir acceso si el usuario es admin (1 ms)
+      ✓ debería denegar acceso si el usuario NO es admin (8 ms)
+      ✓ debería denegar acceso si no hay usuario en el request
+      ✓ debería denegar acceso si user.isAdmin es undefined (1 ms)
+      ✓ debería denegar acceso si user.isAdmin es null
+      ✓ debería denegar acceso si user.isAdmin es false explícitamente (1 ms)
+
+  console.log
+    🧪 Test Worker 2 → music_server_test_2
+
+      at Object.<anonymous> (../test/setup-test-db.ts:10:9)
+
+FAIL src/features/recommendations/domain/services/wave-mix.service.spec.ts
+  ● Test suite failed to run
+
+    Configuration error:
+
+    Could not locate module @features/external-metadata/infrastructure/image-download.service mapped as:
+    /home/user/echo/server/src/features/$1.
+
+    Please check your configuration for these entries:
+    {
+      "moduleNameMapper": {
+        "/^@features\/(.*)$/": "/home/user/echo/server/src/features/$1"
+      },
+      "resolver": undefined
+    }
+
+       8 | import { RedisService } from '@infrastructure/cache/redis.service';
+       9 | import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+    > 10 | import { ImageDownloadService } from '@features/external-metadata/infrastructure/image-download.service';
+         | ^
+      11 |
+      12 | describe('WaveMixService', () => {
+      13 |   let service: WaveMixService;
+
+      at createNoMappedModuleFoundError (../../node_modules/.pnpm/jest-resolve@29.7.0/node_modules/jest-resolve/build/resolver.js:759:17)
+      at Object.<anonymous> (features/recommendations/domain/services/wave-mix.service.spec.ts:10:1)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+Summary of all failing tests
+FAIL features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts
+  ● DeleteUserUseCase › execute › debería permitir desactivar un admin si hay más admins
+
+    Cannot delete system administrator
+
+      34 |     // 3. No permitir eliminar al system admin
+      35 |     if (isSystemAdmin) {
+    > 36 |       throw new ValidationError('Cannot delete system administrator');
+         |             ^
+      37 |     }
+      38 |
+      39 |     // 4. Prevenir eliminación del usuario actual si es el único admin
+
+      at DeleteUserUseCase.execute (features/admin/domain/use-cases/delete-user/delete-user.use-case.ts:36:13)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:118:22)
+
+  ● DeleteUserUseCase › execute › debería lanzar error si intenta desactivar el último admin
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Cannot delete the last admin user"
+    Received message:   "Cannot delete system administrator"
+
+          34 |     // 3. No permitir eliminar al system admin
+          35 |     if (isSystemAdmin) {
+        > 36 |       throw new ValidationError('Cannot delete system administrator');
+             |             ^
+          37 |     }
+          38 |
+          39 |     // 4. Prevenir eliminación del usuario actual si es el único admin
+
+      at DeleteUserUseCase.execute (features/admin/domain/use-cases/delete-user/delete-user.use-case.ts:36:13)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:184:7)
+      at Object.toThrow (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:184:52)
+
+  ● DeleteUserUseCase › execute › no debería verificar admins si el usuario a desactivar no es admin
+
+    expect(jest.fn()).not.toHaveBeenCalled()
+
+    Expected number of calls: 0
+    Received number of calls: 1
+
+    1: 0, 1000
+
+      271 |
+      272 |       // Assert
+    > 273 |       expect(mockUserRepository.findAll).not.toHaveBeenCalled();
+          |                                              ^
+      274 |     });
+      275 |
+      276 |     it('debería contar solo admins activos al verificar el último admin', async () => {
+
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:273:46)
+
+  ● DeleteUserUseCase › execute › debería contar solo admins activos al verificar el último admin
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Cannot delete the last admin user"
+    Received message:   "Cannot delete system administrator"
+
+          34 |     // 3. No permitir eliminar al system admin
+          35 |     if (isSystemAdmin) {
+        > 36 |       throw new ValidationError('Cannot delete system administrator');
+             |             ^
+          37 |     }
+          38 |
+          39 |     // 4. Prevenir eliminación del usuario actual si es el único admin
+
+      at DeleteUserUseCase.execute (features/admin/domain/use-cases/delete-user/delete-user.use-case.ts:36:13)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:319:7)
+      at Object.toThrow (../../node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (features/admin/domain/use-cases/delete-user/delete-user.use-case.spec.ts:319:52)
+
+FAIL features/external-metadata/infrastructure/services/cleanup.service.spec.ts
+  ● CleanupService › verifyIntegrity › debería verificar integridad de archivos referenciados
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 3
+    Received: 5
+
+      306 |
+      307 |       // Assert
+    > 308 |       expect(result.totalChecked).toBe(3); // 2 artist images + 1 album cover
+          |                                   ^
+      309 |       expect(result.missing).toEqual([]);
+      310 |       expect(result.errors).toEqual([]);
+      311 |     });
+
+      at Object.<anonymous> (features/external-metadata/infrastructure/services/cleanup.service.spec.ts:308:35)
+
+  ● CleanupService › verifyIntegrity › debería detectar archivos faltantes
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 4
+
+      335 |
+      336 |       // Assert
+    > 337 |       expect(result.totalChecked).toBe(1);
+          |                                   ^
+      338 |       expect(result.missing.length).toBe(1);
+      339 |       expect(result.missing[0]).toContain('Artist 1');
+      340 |     });
+
+      at Object.<anonymous> (features/external-metadata/infrastructure/services/cleanup.service.spec.ts:337:35)
+
+FAIL features/users/presentation/users.controller.spec.ts
+  ● UsersController › PUT /users/profile - updateProfile › debería actualizar el perfil correctamente
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 2
+
+    - Object {
+    + UserResponseDto {
+    +   "avatarUrl": "/api/images/users/user-123/avatar",
+        "email": "updated@test.com",
+        "id": "user-123",
+        "name": "Updated Name",
+        "username": "testuser",
+      }
+
+      178 |         email: 'updated@test.com',
+      179 |       });
+    > 180 |       expect(result).toEqual(useCaseResponse);
+          |                      ^
+      181 |     });
+      182 |
+      183 |     it('debería actualizar solo el nombre', async () => {
+
+      at Object.<anonymous> (features/users/presentation/users.controller.spec.ts:180:22)
+
+FAIL features/recommendations/domain/services/wave-mix.service.spec.ts
+  ● Test suite failed to run
+
+    Configuration error:
+
+    Could not locate module @features/external-metadata/infrastructure/image-download.service mapped as:
+    /home/user/echo/server/src/features/$1.
+
+    Please check your configuration for these entries:
+    {
+      "moduleNameMapper": {
+        "/^@features\/(.*)$/": "/home/user/echo/server/src/features/$1"
+      },
+      "resolver": undefined
+    }
+
+       8 | import { RedisService } from '@infrastructure/cache/redis.service';
+       9 | import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+    > 10 | import { ImageDownloadService } from '@features/external-metadata/infrastructure/image-download.service';
+         | ^
+      11 |
+      12 | describe('WaveMixService', () => {
+      13 |   let service: WaveMixService;
+
+      at createNoMappedModuleFoundError (../../node_modules/.pnpm/jest-resolve@29.7.0/node_modules/jest-resolve/build/resolver.js:759:17)
+      at Object.<anonymous> (features/recommendations/domain/services/wave-mix.service.spec.ts:10:1)
+
+
+Test Suites: 4 failed, 2 skipped, 45 passed, 49 of 51 total
+Tests:       7 failed, 20 skipped, 480 passed, 507 total
+Snapshots:   0 total
+Time:        16.435 s
+Ran all test suites.
