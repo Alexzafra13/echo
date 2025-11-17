@@ -157,7 +157,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @MessageBody() dto: PauseScanDto,
   ): Promise<void> {
     // SEGURIDAD: Verificar que el usuario es admin
-    if (!client.data.user?.role || client.data.user.role !== 'admin') {
+    if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
 
@@ -181,7 +181,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @MessageBody() dto: CancelScanDto,
   ): Promise<void> {
     // SEGURIDAD: Verificar que el usuario es admin
-    if (!client.data.user?.role || client.data.user.role !== 'admin') {
+    if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
 
@@ -206,7 +206,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @MessageBody() dto: ResumeScanDto,
   ): Promise<void> {
     // SEGURIDAD: Verificar que el usuario es admin
-    if (!client.data.user?.role || client.data.user.role !== 'admin') {
+    if (!client.data.user?.isAdmin) {
       throw new WsException('Unauthorized: Admin access required');
     }
 
