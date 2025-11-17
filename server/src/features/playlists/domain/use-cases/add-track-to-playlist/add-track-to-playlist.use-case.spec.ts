@@ -58,6 +58,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       update: jest.fn(),
       delete: jest.fn(),
       addTrack: jest.fn(),
+      addTrackWithAutoOrder: jest.fn(),
       removeTrack: jest.fn(),
       getPlaylistTracks: jest.fn(),
       reorderTracks: jest.fn(),
@@ -102,8 +103,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       playlistRepository.findById.mockResolvedValue(createMockPlaylist());
       trackRepository.findById.mockResolvedValue(createMockTrack());
       playlistRepository.isTrackInPlaylist.mockResolvedValue(false);
-      playlistRepository.getPlaylistTracks.mockResolvedValue([mockPlaylistTrack]);
-      playlistRepository.addTrack.mockResolvedValue(mockPlaylistTrack);
+      playlistRepository.addTrackWithAutoOrder.mockResolvedValue(mockPlaylistTrack);
       playlistRepository.update.mockResolvedValue(createMockPlaylist());
 
       // Act
@@ -113,14 +113,14 @@ describe('AddTrackToPlaylistUseCase', () => {
       expect(playlistRepository.findById).toHaveBeenCalledWith('playlist-123');
       expect(trackRepository.findById).toHaveBeenCalledWith('track-123');
       expect(playlistRepository.isTrackInPlaylist).toHaveBeenCalledWith('playlist-123', 'track-123');
-      expect(playlistRepository.addTrack).toHaveBeenCalledTimes(1);
+      expect(playlistRepository.addTrackWithAutoOrder).toHaveBeenCalledWith('playlist-123', 'track-123');
       expect(playlistRepository.update).toHaveBeenCalledTimes(1);
       expect(result.playlistId).toBe('playlist-123');
       expect(result.trackId).toBe('track-123');
       expect(result.message).toBe('Track added to playlist successfully');
     });
 
-    it('should set correct track order for first track', async () => {
+    it('should use addTrackWithAutoOrder for race-condition safe ordering', async () => {
       // Arrange
       const input = {
         playlistId: 'playlist-123',
@@ -139,20 +139,14 @@ describe('AddTrackToPlaylistUseCase', () => {
       playlistRepository.findById.mockResolvedValue(createMockPlaylist());
       trackRepository.findById.mockResolvedValue(createMockTrack());
       playlistRepository.isTrackInPlaylist.mockResolvedValue(false);
-      playlistRepository.getPlaylistTracks.mockResolvedValue([]); // Empty playlist
-      playlistRepository.addTrack.mockResolvedValue(mockPlaylistTrack);
+      playlistRepository.addTrackWithAutoOrder.mockResolvedValue(mockPlaylistTrack);
       playlistRepository.update.mockResolvedValue(createMockPlaylist());
 
       // Act
       await useCase.execute(input);
 
       // Assert
-      expect(playlistRepository.getPlaylistTracks).toHaveBeenCalledWith('playlist-123');
-      expect(playlistRepository.addTrack).toHaveBeenCalledWith(
-        expect.objectContaining({
-          trackOrder: 0, // First track should have order 0
-        }),
-      );
+      expect(playlistRepository.addTrackWithAutoOrder).toHaveBeenCalledWith('playlist-123', 'track-123');
     });
 
     it('should throw error if playlistId is empty', async () => {
@@ -262,8 +256,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       playlistRepository.findById.mockResolvedValue(mockPlaylist);
       trackRepository.findById.mockResolvedValue(mockTrack);
       playlistRepository.isTrackInPlaylist.mockResolvedValue(false);
-      playlistRepository.getPlaylistTracks.mockResolvedValue([]);
-      playlistRepository.addTrack.mockResolvedValue(mockPlaylistTrack);
+      playlistRepository.addTrackWithAutoOrder.mockResolvedValue(mockPlaylistTrack);
       playlistRepository.update.mockResolvedValue(createMockPlaylist());
 
       // Act
