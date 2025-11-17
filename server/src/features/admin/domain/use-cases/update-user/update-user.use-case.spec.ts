@@ -10,6 +10,8 @@ describe('UpdateUserUseCase', () => {
     mockUserRepository = {
       findById: jest.fn(),
       findByEmail: jest.fn(),
+      findByUsername: jest.fn(),
+      findAll: jest.fn(),
       updatePartial: jest.fn(),
     };
 
@@ -40,6 +42,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       const input = {
@@ -82,6 +85,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
@@ -121,6 +125,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       const input = {
@@ -161,6 +166,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       const input = {
@@ -203,6 +209,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
@@ -274,6 +281,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser, otherUser]);
       mockUserRepository.findByEmail.mockResolvedValue(otherUser);
 
       const input = {
@@ -304,6 +312,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.findByEmail.mockResolvedValue(existingUser);
       mockUserRepository.updatePartial.mockResolvedValue(existingUser);
 
@@ -339,6 +348,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
 
       const input = {
         userId: 'user-123',
@@ -373,6 +383,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       const input = {
@@ -411,6 +422,7 @@ describe('UpdateUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
+      mockUserRepository.findAll.mockResolvedValue([existingUser]);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       const input = {

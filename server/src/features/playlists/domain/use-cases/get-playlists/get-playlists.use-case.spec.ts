@@ -55,6 +55,7 @@ describe('GetPlaylistsUseCase', () => {
       reorderTracks: jest.fn(),
       count: jest.fn(),
       countByOwnerId: jest.fn(),
+      getBatchPlaylistAlbumIds: jest.fn(),
     } as any;
 
     useCase = new GetPlaylistsUseCase(playlistRepository);
@@ -76,6 +77,12 @@ describe('GetPlaylistsUseCase', () => {
 
       playlistRepository.findByOwnerId.mockResolvedValue(mockPlaylists);
       playlistRepository.countByOwnerId.mockResolvedValue(2);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(
+        new Map([
+          ['playlist-1', ['album-1', 'album-2']],
+          ['playlist-2', ['album-3']],
+        ])
+      );
 
       // Act
       const result = await useCase.execute(input);
@@ -83,6 +90,7 @@ describe('GetPlaylistsUseCase', () => {
       // Assert
       expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 20);
       expect(playlistRepository.countByOwnerId).toHaveBeenCalledWith('user-123');
+      expect(playlistRepository.getBatchPlaylistAlbumIds).toHaveBeenCalledWith(['playlist-1', 'playlist-2']);
       expect(result.items).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.skip).toBe(0);
@@ -101,6 +109,9 @@ describe('GetPlaylistsUseCase', () => {
 
       playlistRepository.findPublic.mockResolvedValue(publicPlaylists);
       playlistRepository.count.mockResolvedValue(1);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(
+        new Map([['playlist-2', ['album-3']]])
+      );
 
       // Act
       const result = await useCase.execute(input);
@@ -120,6 +131,7 @@ describe('GetPlaylistsUseCase', () => {
 
       playlistRepository.findByOwnerId.mockResolvedValue(mockPlaylists);
       playlistRepository.countByOwnerId.mockResolvedValue(2);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
 
       // Act
       const result = await useCase.execute(input);
@@ -141,6 +153,7 @@ describe('GetPlaylistsUseCase', () => {
 
       playlistRepository.findByOwnerId.mockResolvedValue([]);
       playlistRepository.countByOwnerId.mockResolvedValue(15);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
 
       // Act
       const result = await useCase.execute(input);
@@ -219,6 +232,7 @@ describe('GetPlaylistsUseCase', () => {
 
       playlistRepository.findByOwnerId.mockResolvedValue(mockPlaylists);
       playlistRepository.countByOwnerId.mockResolvedValue(2);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
 
       // Act
       const result = await useCase.execute(input);
@@ -247,6 +261,7 @@ describe('GetPlaylistsUseCase', () => {
 
       playlistRepository.findByOwnerId.mockResolvedValue([]);
       playlistRepository.countByOwnerId.mockResolvedValue(0);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
 
       // Act
       const result = await useCase.execute(input);
