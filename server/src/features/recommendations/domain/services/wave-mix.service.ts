@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
+import * as path from 'path';
 import { AutoPlaylist, WaveMixConfig, PlaylistMetadata, TrackScore } from '../entities/track-score.entity';
 import { ScoringService } from './scoring.service';
 import {
@@ -551,8 +552,9 @@ export class WaveMixService {
     try {
       if (artist.mbzArtistId) {
         // Check if we already have the FanArt image saved locally
-        const fanartPath = `metadata/artists/${artist.id}/fanart-thumb.jpg`;
-        const exists = await this.storageService.exists(fanartPath);
+        const artistMetadataPath = await this.storageService.getArtistMetadataPath(artist.id);
+        const fanartPath = path.join(artistMetadataPath, 'fanart-thumb.jpg');
+        const exists = await this.storageService.fileExists(fanartPath);
 
         if (exists) {
           // Use cached image
@@ -571,11 +573,9 @@ export class WaveMixService {
           const bestImage = artistImages.getBestProfileUrl();
           if (bestImage) {
             // Download and save image to storage
-            await this.imageDownloadService.downloadAndSaveImage(
-              bestImage,
-              `metadata/artists/${artist.id}`,
-              'fanart-thumb.jpg'
-            );
+            const artistMetadataPath = await this.storageService.getArtistMetadataPath(artist.id);
+            const destinationPath = path.join(artistMetadataPath, 'fanart-thumb.jpg');
+            await this.imageDownloadService.downloadAndSave(bestImage, destinationPath);
             this.logger.info({ artistId: artist.id, artistName: artist.name }, 'Downloaded and saved FanArt image');
             return `/api/images/artist/${artist.id}/fanart-thumb`;
           }

@@ -1,1 +1,1 @@
-export { IAlbumRepository, ALBUM_REPOSITORY } from './album-repository.port';
+export { type IAlbumRepository, ALBUM_REPOSITORY } from './album-repository.port';

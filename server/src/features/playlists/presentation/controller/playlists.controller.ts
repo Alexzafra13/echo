@@ -172,9 +172,13 @@ export class PlaylistsController {
   async updatePlaylist(
     @Param('id') id: string,
     @Body() dto: UpdatePlaylistDto,
+    @Req() req: RequestWithUser,
   ): Promise<PlaylistResponseDto> {
+    const userId = req.user.id;
+
     const result = await this.updatePlaylistUseCase.execute({
       id,
+      userId,
       name: dto.name,
       description: dto.description,
       coverImageUrl: dto.coverImageUrl,
@@ -202,8 +206,12 @@ export class PlaylistsController {
     },
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
-  async deletePlaylist(@Param('id') id: string): Promise<{ success: boolean; message: string }> {
-    return this.deletePlaylistUseCase.execute({ id });
+  async deletePlaylist(
+    @Param('id') id: string,
+    @Req() req: RequestWithUser,
+  ): Promise<{ success: boolean; message: string }> {
+    const userId = req.user.id;
+    return this.deletePlaylistUseCase.execute({ id, userId });
   }
 
   /**
@@ -248,10 +256,13 @@ export class PlaylistsController {
   async addTrackToPlaylist(
     @Param('id') playlistId: string,
     @Body() dto: AddTrackToPlaylistDto,
+    @Req() req: RequestWithUser,
   ): Promise<any> {
+    const userId = req.user.id;
     return this.addTrackToPlaylistUseCase.execute({
       playlistId,
       trackId: dto.trackId,
+      userId,
     });
   }
 
@@ -276,10 +287,13 @@ export class PlaylistsController {
   async removeTrackFromPlaylist(
     @Param('id') playlistId: string,
     @Param('trackId') trackId: string,
+    @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; message: string }> {
+    const userId = req.user.id;
     return this.removeTrackFromPlaylistUseCase.execute({
       playlistId,
       trackId,
+      userId,
     });
   }
 
@@ -306,10 +320,13 @@ export class PlaylistsController {
   async reorderPlaylistTracks(
     @Param('id') playlistId: string,
     @Body() dto: ReorderTracksDto,
+    @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; message: string; playlistId: string }> {
+    const userId = req.user.id;
     return this.reorderPlaylistTracksUseCase.execute({
       playlistId,
       trackOrders: dto.trackOrders,
+      userId,
     });
   }
 }
