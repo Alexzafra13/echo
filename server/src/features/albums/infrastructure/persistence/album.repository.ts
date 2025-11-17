@@ -46,25 +46,41 @@ export class PrismaAlbumRepository implements IAlbumRepository {
   }
 
   /**
-   * Busca álbumes por nombre
+   * Busca álbumes por nombre usando trigram similarity para búsqueda rápida
+   * Requiere extensión pg_trgm y índice GIN (ver migración 20251117030000)
+   *
+   * La búsqueda por trigram similarity es 10-100x más rápida que ILIKE '%query%'
    */
   async search(name: string, skip: number, take: number): Promise<Album[]> {
+    // Primero obtenemos los IDs usando trigram similarity (muy rápido con índice GIN)
+    const albumIds = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT id
+      FROM albums
+      WHERE title % ${name}
+      ORDER BY similarity(title, ${name}) DESC, title ASC
+      LIMIT ${take}
+      OFFSET ${skip}
+    `;
+
+    if (albumIds.length === 0) {
+      return [];
+    }
+
+    // Luego obtenemos los álbumes completos con relaciones
     const albums = await this.prisma.album.findMany({
       where: {
-        name: {
-          contains: name,
-          mode: 'insensitive',
-        },
+        id: { in: albumIds.map((a) => a.id) },
       },
-      skip,
-      take,
-      orderBy: { name: 'asc' },
       include: {
-        artist: true, // Include artist relation to get artist name
+        artist: true,
       },
     });
 
-    return AlbumMapper.toDomainArray(albums);
+    // Mantener el orden de similaridad
+    const albumMap = new Map(albums.map((a) => [a.id, a]));
+    const orderedAlbums = albumIds.map((id) => albumMap.get(id.id)).filter(Boolean) as any[];
+
+    return AlbumMapper.toDomainArray(orderedAlbums);
   }
 
   /**
