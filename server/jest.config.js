@@ -45,6 +45,7 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/shared/$1',
     '^@infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/features/$1',
+    '^test/(.*)$': '<rootDir>/../test/$1',
   },
 
   // ✅ 4 workers = 4 BDs = tests en paralelo SIN conflictos
