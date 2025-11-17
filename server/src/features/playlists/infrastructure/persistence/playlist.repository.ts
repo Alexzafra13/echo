@@ -140,6 +140,34 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
     return PlaylistMapper.playlistTrackToDomain(created);
   }
 
+  /**
+   * RACE CONDITION FIX: Agrega track con auto-asignación de orden dentro de transacción
+   * Previene duplicación de trackOrder cuando múltiples requests concurrentes agregan tracks
+   */
+  async addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack> {
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Obtener el máximo trackOrder actual dentro de la transacción
+      const maxOrder = await tx.playlistTrack.aggregate({
+        where: { playlistId },
+        _max: { trackOrder: true },
+      });
+
+      // 2. Calcular siguiente orden (empezando desde 1)
+      const nextOrder = (maxOrder._max.trackOrder ?? 0) + 1;
+
+      // 3. Crear el nuevo track con el orden calculado
+      const created = await tx.playlistTrack.create({
+        data: {
+          playlistId,
+          trackId,
+          trackOrder: nextOrder,
+        },
+      });
+
+      return PlaylistMapper.playlistTrackToDomain(created);
+    });
+  }
+
   async removeTrack(playlistId: string, trackId: string): Promise<boolean> {
     const result = await this.prisma.playlistTrack.deleteMany({
       where: {
