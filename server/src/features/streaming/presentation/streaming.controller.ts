@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiQuery,
 } from '@nestjs/swagger';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from '../domain/stream-token.guard';
@@ -42,7 +43,11 @@ import * as fs from 'fs';
 @UseGuards(StreamTokenGuard)
 @AllowChangePassword() // Permitir streaming aunque usuario deba cambiar contraseña
 export class StreamingController {
-  constructor(private readonly streamTrackUseCase: StreamTrackUseCase) {}
+  constructor(
+    @InjectPinoLogger(StreamingController.name)
+    private readonly logger: PinoLogger,
+    private readonly streamTrackUseCase: StreamTrackUseCase,
+  ) {}
 
   /**
    * HEAD /tracks/:id/stream
@@ -175,7 +180,10 @@ export class StreamingController {
       const stream = fs.createReadStream(filePath, { start, end });
 
       stream.on('error', (error) => {
-        console.error('[StreamTrack] Error reading file (range):', error);
+        this.logger.error(
+          { error: error instanceof Error ? error.message : error, trackId: id, start, end },
+          'Error reading file (range request)'
+        );
         if (!res.raw.destroyed) {
           res.raw.destroy();
         }
@@ -197,7 +205,10 @@ export class StreamingController {
       const stream = fs.createReadStream(filePath);
 
       stream.on('error', (error) => {
-        console.error('[StreamTrack] Error reading file:', error);
+        this.logger.error(
+          { error: error instanceof Error ? error.message : error, trackId: id },
+          'Error reading file (full stream)'
+        );
         if (!res.raw.destroyed) {
           res.raw.destroy();
         }
