@@ -57,8 +57,8 @@ async function main() {
     { key: 'metadata.coverart.enabled', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Enable Cover Art Archive (no API key required)' },
     { key: 'metadata.lastfm.enabled', value: 'false', category: 'external_metadata', type: 'boolean', description: 'Enable Last.fm' },
     { key: 'metadata.lastfm.api_key', value: '', category: 'external_metadata', type: 'string', description: 'Last.fm API Key' },
-    { key: 'metadata.fanart.enabled', value: process.env.FANART_ENABLED || 'false', category: 'external_metadata', type: 'boolean', description: 'Enable Fanart.tv' },
-    { key: 'metadata.fanart.api_key', value: process.env.FANART_API_KEY || '', category: 'external_metadata', type: 'string', description: 'Fanart.tv API Key' },
+    { key: 'metadata.fanart.enabled', value: 'false', category: 'external_metadata', type: 'boolean', description: 'Enable Fanart.tv' },
+    { key: 'metadata.fanart.api_key', value: '', category: 'external_metadata', type: 'string', description: 'Fanart.tv API Key' },
 
     // Download Settings
     { key: 'metadata.download.enabled', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Download images locally' },
