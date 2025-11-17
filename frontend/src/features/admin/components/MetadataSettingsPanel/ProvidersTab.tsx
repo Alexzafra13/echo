@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Check, X, AlertCircle, Key, Shield } from 'lucide-react';
+import { Check, X, AlertCircle, Key, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
-import { useToast } from '@shared/context/ToastContext';
 import styles from './ProvidersTab.module.css';
 
 interface Settings {
@@ -19,8 +18,6 @@ interface Settings {
  * Configuración de proveedores de metadata externos
  */
 export function ProvidersTab() {
-  const { addToast } = useToast();
-
   const [settings, setSettings] = useState<Settings>({
     autoEnrichEnabled: false,
     coverArtArchiveEnabled: true,
@@ -39,6 +36,7 @@ export function ProvidersTab() {
     lastfm?: { valid: boolean; message: string };
     fanarttv?: { valid: boolean; message: string };
   }>({});
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch settings on mount
   useEffect(() => {
@@ -170,10 +168,17 @@ export function ProvidersTab() {
       // Recargar settings
       await loadSettings();
 
-      addToast('Configuración guardada correctamente', 'success');
+      setSaveMessage({ type: 'success', text: 'Configuración guardada correctamente' });
+      // Clear message after 5 seconds
+      setTimeout(() => setSaveMessage(null), 5000);
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      addToast(error.response?.data?.message || 'Error al guardar configuración', 'error');
+      setSaveMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Error al guardar configuración'
+      });
+      // Clear message after 5 seconds
+      setTimeout(() => setSaveMessage(null), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -389,6 +394,18 @@ export function ProvidersTab() {
         >
           Guardar Configuración
         </Button>
+
+        {/* Save Message */}
+        {saveMessage && (
+          <div className={saveMessage.type === 'success' ? styles.saveSuccess : styles.saveError}>
+            {saveMessage.type === 'success' ? (
+              <CheckCircle2 size={18} />
+            ) : (
+              <XCircle size={18} />
+            )}
+            <span>{saveMessage.text}</span>
+          </div>
+        )}
       </div>
     </div>
   );
