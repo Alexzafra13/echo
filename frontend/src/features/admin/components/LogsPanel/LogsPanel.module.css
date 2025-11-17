@@ -1,0 +1,312 @@
+/* LogsPanel Component Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 14px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 14px;
+}
+
+.filterGroup label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.select {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: var(--color-text-primary, #ffffff);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.select:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary, #ff6b6b);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.stats {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--color-text-tertiary, #6b7280);
+  white-space: nowrap;
+}
+
+/* Logs List */
+.logsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 64px 32px;
+  color: var(--color-text-tertiary, #6b7280);
+  text-align: center;
+}
+
+.empty p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Log Card */
+.logCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Level-specific borders */
+.level-critical {
+  border-left: 4px solid #ef4444;
+}
+
+.level-error {
+  border-left: 4px solid #f97316;
+}
+
+.level-warning {
+  border-left: 4px solid #eab308;
+}
+
+.level-info {
+  border-left: 4px solid #3b82f6;
+}
+
+.level-debug {
+  border-left: 4px solid #6b7280;
+}
+
+/* Log Header */
+.logHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.logLevel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.levelLabel {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.logCategory {
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+/* Log Message */
+.logMessage {
+  font-size: 14px;
+  color: var(--color-text-primary, #ffffff);
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+/* Log Details (Expandable) */
+.logDetails {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.detailRow strong {
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 600;
+}
+
+.detailsJson,
+.stackTrace {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--color-text-secondary, #b8bcc8);
+  overflow-x: auto;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.stackTrace {
+  color: #ef4444;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pagination span {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+/* Spinning animation for refresh button */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .select {
+    width: 100%;
+  }
+
+  .stats {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .logHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .logTime {
+    margin-left: 0;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
