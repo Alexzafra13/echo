@@ -1,10 +1,16 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Redis } from 'ioredis';
 import { cacheConfig } from '@config/cache.config';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private redis!: Redis;
+
+  constructor(
+    @InjectPinoLogger(RedisService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   async onModuleInit() {
     this.redis = new Redis({
@@ -14,11 +20,18 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.redis.on('connect', () => {
-      console.log('✅ Redis conectado');
+      this.logger.info({
+        host: cacheConfig.redis_host,
+        port: cacheConfig.redis_port,
+      }, 'Redis connected');
     });
 
     this.redis.on('error', (err) => {
-      console.error('❌ Error en Redis:', err);
+      this.logger.error({
+        error: err,
+        host: cacheConfig.redis_host,
+        port: cacheConfig.redis_port,
+      }, 'Redis error');
     });
   }
 
