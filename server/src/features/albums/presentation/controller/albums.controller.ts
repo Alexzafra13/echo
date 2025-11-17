@@ -1,16 +1,10 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, StreamableFile, NotFoundException, Inject } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
-import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from '../../domain/use-cases';
+import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
-import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
-import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { CoverArtService } from '@shared/services';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -33,9 +27,8 @@ export class AlbumsController {
     private readonly searchAlbumsUseCase: SearchAlbumsUseCase,
     private readonly getRecentAlbumsUseCase: GetRecentAlbumsUseCase,
     private readonly getFeaturedAlbumUseCase: GetFeaturedAlbumUseCase,
-    private readonly prisma: PrismaService,
-    private readonly coverArtService: CoverArtService,
-    @Inject(TRACK_REPOSITORY) private readonly trackRepository: ITrackRepository,
+    private readonly getAlbumTracksUseCase: GetAlbumTracksUseCase,
+    private readonly getAlbumCoverUseCase: GetAlbumCoverUseCase,
   ) {}
 
   /**
@@ -126,13 +119,8 @@ export class AlbumsController {
     description: 'Álbum no encontrado'
   })
   async getAlbumTracks(@Param('id') albumId: string): Promise<TrackResponseDto[]> {
-    // Verificar que el álbum existe
-    await this.getAlbumUseCase.execute({ id: albumId });
-
-    // Obtener las canciones del álbum
-    const tracks = await this.trackRepository.findByAlbumId(albumId);
-
-    return tracks.map((track) => TrackResponseDto.fromDomain(track));
+    const result = await this.getAlbumTracksUseCase.execute({ albumId });
+    return result.tracks.map((track) => TrackResponseDto.fromDomain(track));
   }
 
   /**
@@ -164,60 +152,16 @@ export class AlbumsController {
     @Param('id') id: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
-    // 1. Buscar el álbum
-    const album = await this.prisma.album.findUnique({
-      where: { id },
-      select: { coverArtPath: true },
+    const result = await this.getAlbumCoverUseCase.execute({ albumId: id });
+
+    // Servir la imagen con headers apropiados
+    res.headers({
+      'Content-Type': result.mimeType,
+      'Content-Length': result.fileSize.toString(),
+      'Cache-Control': 'public, max-age=2592000', // 30 días
     });
 
-    if (!album) {
-      throw new NotFoundException('Album not found');
-    }
-
-    // 2. Obtener ruta absoluta del cover desde el caché
-    const coverPath = this.coverArtService.getCoverPath(album.coverArtPath);
-
-    if (!coverPath) {
-      throw new NotFoundException('No cover art found');
-    }
-
-    try {
-      // 3. Leer archivo de cover
-      const coverBuffer = await fs.readFile(coverPath);
-
-      // 4. Determinar Content-Type desde la extensión
-      const ext = path.extname(coverPath).toLowerCase();
-      const contentType = this.getContentType(ext);
-
-      // 5. Servir la imagen desde el caché
-      res.headers({
-        'Content-Type': contentType,
-        'Content-Length': coverBuffer.length.toString(),
-        'Cache-Control': 'public, max-age=2592000', // 30 días
-      });
-
-      res.send(coverBuffer);
-    } catch (error) {
-      this.logger.error(
-        { albumId: id, error: error instanceof Error ? error.message : error },
-        'Error serving cover for album'
-      );
-      throw new NotFoundException('Could not serve cover art');
-    }
-  }
-
-  /**
-   * Mapea extensión de archivo a Content-Type
-   */
-  private getContentType(ext: string): string {
-    const contentTypes: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-    };
-    return contentTypes[ext] || 'image/jpeg';
+    res.send(result.buffer);
   }
 
   /**
