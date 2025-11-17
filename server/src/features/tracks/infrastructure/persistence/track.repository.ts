@@ -40,20 +40,23 @@ export class PrismaTrackRepository implements ITrackRepository {
   }
 
   /**
-   * Busca tracks por título
+   * Busca tracks por título usando trigram similarity para búsqueda rápida
+   * Requiere extensión pg_trgm y índice GIN (ver migración 20251117030000)
+   *
+   * La búsqueda por trigram similarity es 10-100x más rápida que ILIKE '%query%'
+   * porque utiliza el índice GIN en lugar de hacer full table scan
    */
   async search(title: string, skip: number, take: number): Promise<Track[]> {
-    const tracks = await this.prisma.track.findMany({
-      where: {
-        title: {
-          contains: title,
-          mode: 'insensitive',
-        },
-      },
-      skip,
-      take,
-      orderBy: { title: 'asc' },
-    });
+    // Usar búsqueda por similaridad de trigram para mejor rendimiento
+    // El operador % usa el índice GIN creado en la migración
+    const tracks = await this.prisma.$queryRaw<any[]>`
+      SELECT *
+      FROM tracks
+      WHERE title % ${title}
+      ORDER BY similarity(title, ${title}) DESC, title ASC
+      LIMIT ${take}
+      OFFSET ${skip}
+    `;
 
     return TrackMapper.toDomainArray(tracks);
   }

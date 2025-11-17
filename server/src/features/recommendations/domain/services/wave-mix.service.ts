@@ -39,6 +39,11 @@ const WAVE_MIX_COLORS = [
 
 @Injectable()
 export class WaveMixService {
+  // In-memory cache for auto-playlists to avoid regenerating on every page load
+  // Cache TTL: 1 hour
+  private readonly playlistCache = new Map<string, { playlists: AutoPlaylist[]; expiresAt: number }>();
+  private readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
   constructor(
     private readonly scoringService: ScoringService,
     @Inject(PLAY_TRACKING_REPOSITORY)
@@ -155,8 +160,9 @@ export class WaveMixService {
 
   /**
    * Generate artist-based playlists for user's top artists
+   * OPTIMIZATION: Reduced from 5 to 3 playlists to improve load time
    */
-  async generateArtistPlaylists(userId: string, limit: number = 5): Promise<AutoPlaylist[]> {
+  async generateArtistPlaylists(userId: string, limit: number = 3): Promise<AutoPlaylist[]> {
     // Get user's top artists based on play stats
     const topArtists = await this.playTrackingRepo.getUserTopArtists(userId, limit);
 
@@ -225,32 +231,10 @@ export class WaveMixService {
 
       const now = new Date();
 
-      // Try to get artist image from FanArt API
-      let coverImageUrl: string | undefined;
-      try {
-        if (artist.mbzArtistId) {
-          const artistImages = await this.externalMetadataService['getArtistImages'](
-            artist.mbzArtistId,
-            artist.name,
-            false // don't force refresh
-          );
-          if (artistImages) {
-            // Use the best available profile image (large > medium > small)
-            const bestImage = artistImages.getBestProfileUrl();
-            if (bestImage) {
-              coverImageUrl = bestImage;
-            }
-          }
-        }
-      } catch (error) {
-        // If FanArt fails, we'll just use undefined and let the frontend handle it
-        console.log(`[WaveMix] Failed to fetch FanArt image for ${artist.name}:`, error);
-      }
-
-      // Fallback to local artist profile if no FanArt image
-      if (!coverImageUrl) {
-        coverImageUrl = `/api/images/artist/${artist.id}/profile`;
-      }
+      // OPTIMIZATION: Always use local artist profile image to avoid slow external API calls
+      // This eliminates 3-5 external API calls on page load (FanArt.tv)
+      // External images can be enriched later via background job if needed
+      const coverImageUrl = `/api/images/artist/${artist.id}/profile`;
 
       playlists.push({
         id: `artist-mix-${artist.id}-${userId}-${now.getTime()}`,
@@ -271,14 +255,43 @@ export class WaveMixService {
 
   /**
    * Get all auto playlists for a user (Wave Mix + Artist playlists)
+   * OPTIMIZATION: Added 1-hour in-memory cache to avoid regenerating playlists on every page load
    */
   async getAllAutoPlaylists(userId: string): Promise<AutoPlaylist[]> {
+    // Check cache first
+    const cached = this.playlistCache.get(userId);
+    const now = Date.now();
+
+    if (cached && cached.expiresAt > now) {
+      console.log(`[WaveMix] Serving cached playlists for user ${userId}`);
+      return cached.playlists;
+    }
+
+    // Generate fresh playlists
+    console.log(`[WaveMix] Generating fresh playlists for user ${userId}`);
     const [waveMix, artistPlaylists] = await Promise.all([
       this.generateWaveMix(userId),
-      this.generateArtistPlaylists(userId, 5),
+      this.generateArtistPlaylists(userId, 3),
     ]);
 
-    return [waveMix, ...artistPlaylists];
+    const playlists = [waveMix, ...artistPlaylists];
+
+    // Cache for 1 hour
+    this.playlistCache.set(userId, {
+      playlists,
+      expiresAt: now + this.CACHE_TTL_MS,
+    });
+
+    // Clean up expired cache entries periodically (simple LRU)
+    if (this.playlistCache.size > 100) {
+      for (const [key, value] of this.playlistCache.entries()) {
+        if (value.expiresAt <= now) {
+          this.playlistCache.delete(key);
+        }
+      }
+    }
+
+    return playlists;
   }
 
   /**
