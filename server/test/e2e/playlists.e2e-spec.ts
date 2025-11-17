@@ -208,8 +208,9 @@ describe('Playlists E2E', () => {
     });
 
     it('debería retornar 404 para playlist inexistente', () => {
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
       return request(app.getHttpServer())
-        .get('/api/playlists/99999')
+        .get(`/api/playlists/${nonExistentId}`)
         .set('Authorization', `Bearer ${userToken}`)
         .expect(404);
     });
