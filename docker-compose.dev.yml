@@ -5,14 +5,12 @@
 # Run your app locally with: pnpm dev:all
 #
 # Usage:
-#   docker-compose -f docker-compose.dev.yml up -d
+#   docker compose -f docker-compose.dev.yml up -d
 #   pnpm dev:all  # Run frontend + backend locally
 #
 # Stop:
-#   docker-compose -f docker-compose.dev.yml down
+#   docker compose -f docker-compose.dev.yml down
 # ============================================
-
-version: '3.8'
 
 services:
   # ----------------------------------------

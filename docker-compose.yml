@@ -5,17 +5,15 @@
 # Single container serves both API and Frontend (Jellyfin-style)
 #
 # Usage:
-#   docker-compose up -d --build
-#   docker-compose logs -f echo-app
-#   docker-compose down
+#   docker compose up -d --build
+#   docker compose logs -f echo-app
+#   docker compose down
 #
 # Requirements:
 #   - Copy .env.example to .env and configure
 #   - Set JWT_SECRET and JWT_REFRESH_SECRET
 #   - Configure MUSIC_PATH to your music library
 # ============================================
-
-version: '3.8'
 
 services:
   # ----------------------------------------

@@ -196,6 +196,30 @@ pnpm reset
 pnpm reset
 ```
 
+### 🪟 Troubleshooting específico de Windows
+
+**Error de red Docker "incorrect label":**
+```bash
+# El script pnpm reset ahora limpia automáticamente las redes antiguas
+# Si aún falla, limpia manualmente:
+docker network prune -f
+docker volume prune -f
+```
+
+**Git Bash vs PowerShell:**
+```bash
+# Recomendado: usar Git Bash para los scripts
+pnpm reset
+
+# En PowerShell, usa los comandos Windows:
+pnpm reset:windows  # (si está disponible)
+```
+
+**Docker Desktop debe estar corriendo:**
+- Abre Docker Desktop antes de ejecutar `pnpm reset`
+- Verifica que esté en modo Linux containers (no Windows containers)
+- Asegúrate de tener WSL2 instalado y configurado
+
 ## 📚 Documentación
 
 - [server/](./server) - Documentación del backend
