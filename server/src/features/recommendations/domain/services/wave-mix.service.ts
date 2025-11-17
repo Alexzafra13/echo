@@ -7,6 +7,9 @@ import {
 } from '@features/play-tracking/domain/ports';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
+import { RedisService } from '@infrastructure/cache/redis.service';
+import { StorageService } from '@features/storage/infrastructure/storage.service';
+import { ImageDownloadService } from '@features/external-metadata/infrastructure/image-download.service';
 
 const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
   maxTracks: 50,
@@ -39,10 +42,9 @@ const WAVE_MIX_COLORS = [
 
 @Injectable()
 export class WaveMixService {
-  // In-memory cache for auto-playlists to avoid regenerating on every page load
-  // Cache TTL: 1 hour
-  private readonly playlistCache = new Map<string, { playlists: AutoPlaylist[]; expiresAt: number }>();
-  private readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+  // Redis cache keys
+  private readonly CACHE_KEY_PREFIX = 'auto-playlists';
+  private readonly CACHE_TTL_SECONDS = 24 * 60 * 60; // 24 hours
 
   constructor(
     private readonly scoringService: ScoringService,
@@ -50,6 +52,9 @@ export class WaveMixService {
     private readonly playTrackingRepo: IPlayTrackingRepository,
     private readonly prisma: PrismaService,
     private readonly externalMetadataService: ExternalMetadataService,
+    private readonly redis: RedisService,
+    private readonly storageService: StorageService,
+    private readonly imageDownloadService: ImageDownloadService,
   ) {}
 
   /**
@@ -160,9 +165,9 @@ export class WaveMixService {
 
   /**
    * Generate artist-based playlists for user's top artists
-   * OPTIMIZATION: Reduced from 5 to 3 playlists to improve load time
+   * Generates 5 playlists by default for the general view
    */
-  async generateArtistPlaylists(userId: string, limit: number = 3): Promise<AutoPlaylist[]> {
+  async generateArtistPlaylists(userId: string, limit: number = 5): Promise<AutoPlaylist[]> {
     // Get user's top artists based on play stats
     const topArtists = await this.playTrackingRepo.getUserTopArtists(userId, limit);
 
@@ -231,10 +236,50 @@ export class WaveMixService {
 
       const now = new Date();
 
-      // OPTIMIZATION: Always use local artist profile image to avoid slow external API calls
-      // This eliminates 3-5 external API calls on page load (FanArt.tv)
-      // External images can be enriched later via background job if needed
-      const coverImageUrl = `/api/images/artist/${artist.id}/profile`;
+      // Try to get artist image from FanArt API and save to storage
+      let coverImageUrl: string | undefined;
+      try {
+        if (artist.mbzArtistId) {
+          // Check if we already have the FanArt image saved locally
+          const fanartPath = `metadata/artists/${artist.id}/fanart-thumb.jpg`;
+          const exists = await this.storageService.exists(fanartPath);
+
+          if (exists) {
+            // Use cached image
+            coverImageUrl = `/api/images/artist/${artist.id}/fanart-thumb`;
+            console.log(`[WaveMix] Using cached FanArt image for ${artist.name}`);
+          } else {
+            // Fetch from FanArt.tv and save to storage
+            const artistImages = await this.externalMetadataService['getArtistImages'](
+              artist.mbzArtistId,
+              artist.name,
+              false // don't force refresh
+            );
+
+            if (artistImages) {
+              const bestImage = artistImages.getBestProfileUrl();
+              if (bestImage) {
+                // Download and save image to storage
+                await this.imageDownloadService.downloadAndSaveImage(
+                  bestImage,
+                  `metadata/artists/${artist.id}`,
+                  'fanart-thumb.jpg'
+                );
+                coverImageUrl = `/api/images/artist/${artist.id}/fanart-thumb`;
+                console.log(`[WaveMix] Downloaded and saved FanArt image for ${artist.name}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // If FanArt fails, we'll just use undefined and fallback
+        console.log(`[WaveMix] Failed to fetch/save FanArt image for ${artist.name}:`, error);
+      }
+
+      // Fallback to local artist profile if no FanArt image
+      if (!coverImageUrl) {
+        coverImageUrl = `/api/images/artist/${artist.id}/profile`;
+      }
 
       playlists.push({
         id: `artist-mix-${artist.id}-${userId}-${now.getTime()}`,
@@ -255,43 +300,181 @@ export class WaveMixService {
 
   /**
    * Get all auto playlists for a user (Wave Mix + Artist playlists)
-   * OPTIMIZATION: Added 1-hour in-memory cache to avoid regenerating playlists on every page load
+   * Uses Redis cache with 24-hour TTL - regenerates once per day or on force refresh
    */
-  async getAllAutoPlaylists(userId: string): Promise<AutoPlaylist[]> {
-    // Check cache first
-    const cached = this.playlistCache.get(userId);
-    const now = Date.now();
+  async getAllAutoPlaylists(userId: string, forceRefresh: boolean = false): Promise<AutoPlaylist[]> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${userId}`;
 
-    if (cached && cached.expiresAt > now) {
-      console.log(`[WaveMix] Serving cached playlists for user ${userId}`);
-      return cached.playlists;
+    // Check Redis cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        console.log(`[WaveMix] Serving cached playlists from Redis for user ${userId}`);
+        return cached;
+      }
     }
 
     // Generate fresh playlists
     console.log(`[WaveMix] Generating fresh playlists for user ${userId}`);
     const [waveMix, artistPlaylists] = await Promise.all([
       this.generateWaveMix(userId),
-      this.generateArtistPlaylists(userId, 3),
+      this.generateArtistPlaylists(userId, 5), // Generate 5 artist playlists
     ]);
 
     const playlists = [waveMix, ...artistPlaylists];
 
-    // Cache for 1 hour
-    this.playlistCache.set(userId, {
-      playlists,
-      expiresAt: now + this.CACHE_TTL_MS,
-    });
-
-    // Clean up expired cache entries periodically (simple LRU)
-    if (this.playlistCache.size > 100) {
-      for (const [key, value] of this.playlistCache.entries()) {
-        if (value.expiresAt <= now) {
-          this.playlistCache.delete(key);
-        }
-      }
-    }
+    // Cache in Redis for 24 hours
+    await this.redis.set(cacheKey, playlists, this.CACHE_TTL_SECONDS);
+    console.log(`[WaveMix] Cached playlists in Redis for user ${userId} (TTL: 24h)`);
 
     return playlists;
+  }
+
+  /**
+   * Force refresh auto playlists for a user (ignores cache)
+   */
+  async refreshAutoPlaylists(userId: string): Promise<AutoPlaylist[]> {
+    return this.getAllAutoPlaylists(userId, true);
+  }
+
+  /**
+   * Get paginated artist playlists for a user
+   * Used in the dedicated artists playlists page
+   */
+  async getArtistPlaylistsPaginated(
+    userId: string,
+    skip: number = 0,
+    take: number = 10
+  ): Promise<{ playlists: AutoPlaylist[]; total: number; hasMore: boolean }> {
+    // Get all top artists (up to 50)
+    const topArtists = await this.playTrackingRepo.getUserTopArtists(userId, 50);
+    const total = topArtists.length;
+
+    // Paginate
+    const paginatedArtists = topArtists.slice(skip, skip + take);
+
+    // Generate playlists only for the requested page
+    const playlists: AutoPlaylist[] = [];
+
+    for (const artistStat of paginatedArtists) {
+      const artist = await this.prisma.artist.findUnique({
+        where: { id: artistStat.artistId },
+        select: {
+          id: true,
+          name: true,
+          mbzArtistId: true,
+        },
+      });
+
+      if (!artist) continue;
+
+      // Get all tracks by this artist that the user has listened to
+      const artistTracks = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+      const trackIds = artistTracks.map(t => t.itemId);
+
+      const tracks = await this.prisma.track.findMany({
+        where: {
+          id: { in: trackIds },
+          artistId: artist.id,
+        },
+        select: {
+          id: true,
+          artistId: true,
+          albumId: true,
+          title: true,
+        },
+      });
+
+      if (tracks.length === 0) continue;
+
+      const trackIdsList = tracks.map(t => t.id);
+      const trackArtistMap = new Map(tracks.map((t) => [t.id, t.artistId || '']));
+
+      // Score tracks
+      const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIdsList, trackArtistMap);
+
+      // Take top 30 tracks for this artist
+      const topTracks = scoredTracks.slice(0, 30);
+
+      if (topTracks.length === 0) continue;
+
+      const metadata: PlaylistMetadata = {
+        totalTracks: topTracks.length,
+        avgScore: topTracks.reduce((sum, t) => sum + t.totalScore, 0) / topTracks.length,
+        topGenres: [],
+        topArtists: [artist.id],
+        artistId: artist.id,
+        artistName: artist.name,
+        temporalDistribution: {
+          lastWeek: 0,
+          lastMonth: 0,
+          lastYear: 0,
+          older: 0,
+        },
+      };
+
+      const now = new Date();
+
+      // Try to get artist image from FanArt API and save to storage
+      let coverImageUrl: string | undefined;
+      try {
+        if (artist.mbzArtistId) {
+          // Check if we already have the FanArt image saved locally
+          const fanartPath = `metadata/artists/${artist.id}/fanart-thumb.jpg`;
+          const exists = await this.storageService.exists(fanartPath);
+
+          if (exists) {
+            // Use cached image
+            coverImageUrl = `/api/images/artist/${artist.id}/fanart-thumb`;
+          } else {
+            // Fetch from FanArt.tv and save to storage
+            const artistImages = await this.externalMetadataService['getArtistImages'](
+              artist.mbzArtistId,
+              artist.name,
+              false
+            );
+
+            if (artistImages) {
+              const bestImage = artistImages.getBestProfileUrl();
+              if (bestImage) {
+                await this.imageDownloadService.downloadAndSaveImage(
+                  bestImage,
+                  `metadata/artists/${artist.id}`,
+                  'fanart-thumb.jpg'
+                );
+                coverImageUrl = `/api/images/artist/${artist.id}/fanart-thumb`;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.log(`[WaveMix] Failed to fetch/save FanArt image for ${artist.name}:`, error);
+      }
+
+      // Fallback to local artist profile if no FanArt image
+      if (!coverImageUrl) {
+        coverImageUrl = `/api/images/artist/${artist.id}/profile`;
+      }
+
+      playlists.push({
+        id: `artist-mix-${artist.id}-${userId}-${now.getTime()}`,
+        type: 'artist',
+        userId,
+        name: `Lo mejor de ${artist.name}`,
+        description: `Las mejores canciones de ${artist.name} basadas en tu historial de escucha`,
+        tracks: topTracks,
+        createdAt: now,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        metadata,
+        coverImageUrl,
+      });
+    }
+
+    return {
+      playlists,
+      total,
+      hasMore: skip + take < total,
+    };
   }
 
   /**

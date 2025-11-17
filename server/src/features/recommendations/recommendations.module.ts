@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { CacheModule } from '@infrastructure/cache/cache.module';
 import { UserInteractionsModule } from '@features/user-interactions/user-interactions.module';
 import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
@@ -16,7 +17,7 @@ import {
 import { RecommendationsController } from './presentation/controller/recommendations.controller';
 
 @Module({
-  imports: [UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule],
+  imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule],
   controllers: [RecommendationsController],
   providers: [
     PrismaService,
