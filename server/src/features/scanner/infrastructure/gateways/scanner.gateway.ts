@@ -7,6 +7,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
@@ -155,10 +156,14 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: PauseScanDto,
   ): Promise<void> {
-    // TODO: Verificar que el usuario es admin
+    // SEGURIDAD: Verificar que el usuario es admin
+    if (!client.data.user?.role || client.data.user.role !== 'admin') {
+      throw new WsException('Unauthorized: Admin access required');
+    }
+
     // TODO: Implementar lógica de pausa en ScanProcessorService
 
-    this.logger.log(`User ${client.data.userId} requested to pause scan ${dto.scanId}`);
+    this.logger.log(`Admin ${client.data.userId} requested to pause scan ${dto.scanId}`);
 
     client.emit('scanner:paused', {
       scanId: dto.scanId,
@@ -175,10 +180,14 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: CancelScanDto,
   ): Promise<void> {
-    // TODO: Verificar que el usuario es admin
+    // SEGURIDAD: Verificar que el usuario es admin
+    if (!client.data.user?.role || client.data.user.role !== 'admin') {
+      throw new WsException('Unauthorized: Admin access required');
+    }
+
     // TODO: Implementar lógica de cancelación en ScanProcessorService
 
-    this.logger.log(`User ${client.data.userId} requested to cancel scan ${dto.scanId}`);
+    this.logger.log(`Admin ${client.data.userId} requested to cancel scan ${dto.scanId}`);
 
     client.emit('scanner:cancelled', {
       scanId: dto.scanId,
@@ -196,10 +205,14 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     @ConnectedSocket() client: Socket,
     @MessageBody() dto: ResumeScanDto,
   ): Promise<void> {
-    // TODO: Verificar que el usuario es admin
+    // SEGURIDAD: Verificar que el usuario es admin
+    if (!client.data.user?.role || client.data.user.role !== 'admin') {
+      throw new WsException('Unauthorized: Admin access required');
+    }
+
     // TODO: Implementar lógica de resumir en ScanProcessorService
 
-    this.logger.log(`User ${client.data.userId} requested to resume scan ${dto.scanId}`);
+    this.logger.log(`Admin ${client.data.userId} requested to resume scan ${dto.scanId}`);
 
     client.emit('scanner:resumed', {
       scanId: dto.scanId,
