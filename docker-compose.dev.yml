@@ -1,0 +1,77 @@
+# ============================================
+# DOCKER COMPOSE - DEVELOPMENT
+# ============================================
+# Development setup: Only infrastructure services (DB + Redis)
+# Run your app locally with: pnpm dev:all
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up -d
+#   pnpm dev:all  # Run frontend + backend locally
+#
+# Stop:
+#   docker-compose -f docker-compose.dev.yml down
+# ============================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # PostgreSQL Database (Development)
+  # ----------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: music_user
+      POSTGRES_PASSWORD: music_password
+      POSTGRES_DB: music_db
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"  # Exposed for local development
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U music_user -d music_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-dev
+
+  # ----------------------------------------
+  # Redis Cache (Development)
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis-dev
+    restart: unless-stopped
+    command: redis-server --requirepass dev_redis_password
+    ports:
+      - "6379:6379"  # Exposed for local development
+    volumes:
+      - redis-data-dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "dev_redis_password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-dev
+
+# ----------------------------------------
+# Volumes
+# ----------------------------------------
+volumes:
+  postgres-data-dev:
+    name: echo-postgres-dev
+  redis-data-dev:
+    name: echo-redis-dev
+
+# ----------------------------------------
+# Networks
+# ----------------------------------------
+networks:
+  echo-dev:
+    name: echo-network-dev
+    driver: bridge
