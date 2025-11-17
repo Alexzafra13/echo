@@ -76,11 +76,9 @@ fi
 echo ""
 
 # ==============================================
-# 1. Limpiar Docker
+# 1. Limpiar Docker COMPLETAMENTE
 # ==============================================
 print_header "1. Limpiando contenedores Docker existentes"
-
-cd server
 
 if [ -z "$DOCKER_COMPOSE_CMD" ]; then
   print_error "Docker Compose no está disponible"
@@ -88,15 +86,39 @@ if [ -z "$DOCKER_COMPOSE_CMD" ]; then
   exit 1
 fi
 
-print_info "Deteniendo contenedores..."
-$DOCKER_COMPOSE_CMD -f docker-compose.yml down -v 2>/dev/null || print_warning "No hay contenedores corriendo"
-
-# Intentar también con el docker-compose.dev.yml del root
+# Parar contenedores con docker-compose
+print_info "Deteniendo contenedores con docker-compose..."
+cd server
+$DOCKER_COMPOSE_CMD -f docker-compose.yml down -v 2>/dev/null || true
 cd ..
-print_info "Limpiando docker-compose.dev.yml..."
-$DOCKER_COMPOSE_CMD -f docker-compose.dev.yml down -v 2>/dev/null || print_warning "No hay contenedores dev corriendo"
+$DOCKER_COMPOSE_CMD -f docker-compose.dev.yml down -v 2>/dev/null || true
 
-print_success "Contenedores y volúmenes eliminados"
+print_success "Contenedores detenidos"
+
+# Limpiar contenedores manualmente (por si quedó algo)
+print_info "Eliminando contenedores de Echo..."
+docker rm -f echo-postgres-dev 2>/dev/null || true
+docker rm -f echo-redis-dev 2>/dev/null || true
+docker rm -f echo-postgres 2>/dev/null || true
+docker rm -f echo-redis 2>/dev/null || true
+docker rm -f echo-app 2>/dev/null || true
+
+# Limpiar redes (esto soluciona el error de "incorrect label")
+print_info "Eliminando redes de Echo..."
+docker network rm echo-network-dev 2>/dev/null || true
+docker network rm echo-network 2>/dev/null || true
+docker network rm echo-dev 2>/dev/null || true
+
+# Limpiar volúmenes
+print_info "Eliminando volúmenes de Echo..."
+docker volume rm echo-postgres-dev 2>/dev/null || true
+docker volume rm echo-redis-dev 2>/dev/null || true
+docker volume rm echo-postgres-data 2>/dev/null || true
+docker volume rm echo-redis-data 2>/dev/null || true
+docker volume rm echo-uploads 2>/dev/null || true
+docker volume rm echo-logs 2>/dev/null || true
+
+print_success "Docker limpiado completamente (contenedores, redes y volúmenes)"
 
 echo ""
 
