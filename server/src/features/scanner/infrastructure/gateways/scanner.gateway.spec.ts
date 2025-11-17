@@ -20,6 +20,9 @@ describe('ScannerGateway', () => {
       id: 'test-socket-id',
       data: {
         userId: 'user-123',
+        user: {
+          isAdmin: true,
+        },
       },
       join: jest.fn(),
       leave: jest.fn(),

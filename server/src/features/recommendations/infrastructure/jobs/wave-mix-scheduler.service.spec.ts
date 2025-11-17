@@ -43,7 +43,7 @@ describe('WaveMixSchedulerService', () => {
       providers: [
         WaveMixSchedulerService,
         {
-          provide: PinoLogger,
+          provide: `PinoLogger:${WaveMixSchedulerService.name}`,
           useValue: mockLogger,
         },
         {
