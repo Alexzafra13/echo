@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Library, Music2, Wrench, Users } from 'lucide-react';
+import { Library, Music2, Wrench, Users, FileText } from 'lucide-react';
 import { Tabs, Tab } from '../../components/Tabs';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
@@ -8,6 +8,7 @@ import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
 import { MaintenanceTab } from '../../components/MetadataSettingsPanel/MaintenanceTab';
 import { UsersPanel } from '../../components/UsersPanel';
+import { LogsPanel } from '../../components/LogsPanel';
 import styles from './AdminPage.module.css';
 
 /**
@@ -57,6 +58,16 @@ export default function AdminPage() {
       content: (
         <div className={styles.tabContent}>
           <UsersPanel />
+        </div>
+      ),
+    },
+    {
+      id: 'logs',
+      label: 'Logs',
+      icon: <FileText size={20} />,
+      content: (
+        <div className={styles.tabContent}>
+          <LogsPanel />
         </div>
       ),
     },
