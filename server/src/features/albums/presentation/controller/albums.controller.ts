@@ -5,6 +5,7 @@ import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
+import { parsePaginationParams } from '@shared/utils';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -229,11 +230,10 @@ export class AlbumsController {
     type: GetAlbumsResponseDto
   })
   async getAlbums(
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '10',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<GetAlbumsResponseDto> {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take);
 
     const result = await this.getAlbumsUseCase.execute({
       skip: skipNum,
@@ -288,11 +288,10 @@ export class AlbumsController {
   })
   async searchAlbums(
     @Param('query') query: string,
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '10',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<SearchAlbumsResponseDto> {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take);
 
     const result = await this.searchAlbumsUseCase.execute({
       query,
