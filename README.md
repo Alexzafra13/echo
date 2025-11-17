@@ -11,20 +11,50 @@ Plataforma de streaming de música con NestJS (backend) y React (frontend).
 
 ### Instalación (Primera Vez)
 
+**Opción 1: Instalación automática (recomendado)**
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
 pnpm quickstart
 ```
 
-Accede en:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3000 (desarrollo) o http://localhost:4567 (producción)
-- API Docs: http://localhost:3000/api/docs
+**Opción 2: Paso a paso**
+```bash
+git clone https://github.com/Alexzafra13/echo.git
+cd echo
 
-**Credenciales por defecto:**
+# 1. Instalar dependencias
+cd server && pnpm install && cd ..
+cd frontend && pnpm install && cd ..
+
+# 2. Levantar base de datos (PostgreSQL + Redis)
+pnpm docker:dev
+
+# 3. Generar archivo .env automáticamente (con JWT secrets seguros)
+cd server && node scripts/generate-env.js && cd ..
+
+# 4. Ejecutar migraciones y seed
+cd server && pnpm db:reset && cd ..
+
+# 5. Iniciar aplicación
+pnpm dev:all
+```
+
+### Acceso
+
+**Desarrollo (modo local):**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+- API Docs (Swagger): http://localhost:3000/api/docs
+
+**Producción (Docker):**
+- Aplicación completa: http://localhost:4567
+- API Docs: http://localhost:4567/api/docs
+
+**Credenciales iniciales:**
 - Usuario: `admin`
 - Contraseña: `admin123`
+- ⚠️ Deberás cambiar la contraseña en el primer login
 
 ### Si Ya Tienes el Proyecto
 
@@ -85,17 +115,48 @@ pnpm clean            # Limpiar builds
 
 **Frontend:** React 18, Vite, Tanstack Query, Zustand
 
-## 🔧 Configuración de Puertos
+## 🔧 Arquitectura y Configuración de Puertos
+
+### Modo Desarrollo vs Producción
+
+Echo sigue el modelo de **Jellyfin/Plex**: un solo contenedor sirve tanto la UI como la API en producción, pero en desarrollo se ejecutan por separado para facilitar el hot-reload.
 
 | Servicio | Desarrollo | Producción (Docker) |
 |----------|-----------|---------------------|
-| Frontend | 5173 | 4567 (integrado con backend) |
-| Backend | 3000 | 4567 |
+| Frontend | 5173 | 4567 (integrado) |
+| Backend API | **3000** | 4567 |
 | PostgreSQL | 5432 (expuesto) | 5432 (interno) |
 | Redis | 6379 (expuesto) | 6379 (interno) |
 
-**Desarrollo:** Frontend y Backend corren por separado en diferentes puertos.
-**Producción:** Un solo contenedor sirve tanto el frontend como el backend en el puerto 4567.
+### Cómo funciona
+
+**Desarrollo (`pnpm dev:all`):**
+- Frontend (Vite) corre en puerto 5173
+- Backend (NestJS) corre en puerto 3000
+- Vite proxy redirige `/api/*` → `localhost:3000`
+- Hot-reload habilitado en ambos
+
+**Producción (`docker-compose up`):**
+- Un solo contenedor en puerto 4567
+- Sirve frontend estático desde `/frontend/dist`
+- Sirve API desde `/api/*`
+- Similar a Jellyfin: todo en un solo proceso
+
+### Configuración Automática
+
+Echo genera automáticamente el archivo `.env` con valores seguros:
+
+```bash
+cd server
+node scripts/generate-env.js
+```
+
+Esto crea:
+- JWT secrets criptográficamente seguros
+- Configuración de base de datos que coincide con `docker-compose.dev.yml`
+- Valores por defecto listos para desarrollo
+
+**No necesitas editar archivos `.env` manualmente** a menos que quieras personalizar la configuración.
 
 ## 🐛 Problemas Comunes
 
