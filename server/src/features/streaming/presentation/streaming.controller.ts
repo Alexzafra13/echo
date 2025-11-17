@@ -209,7 +209,7 @@ export class StreamingController implements OnModuleDestroy {
       stream.on('error', (error) => {
         cleanup();
         this.logger.error(
-          { error: error instanceof Error ? error.message : error, trackId: id, start, end },
+          { error: error instanceof Error ? error.message : error, trackId, start, end },
           'Error reading file (range request)'
         );
         if (!res.raw.destroyed) {
@@ -246,7 +246,7 @@ export class StreamingController implements OnModuleDestroy {
       stream.on('error', (error) => {
         cleanup();
         this.logger.error(
-          { error: error instanceof Error ? error.message : error, trackId: id },
+          { error: error instanceof Error ? error.message : error, trackId },
           'Error reading file (full stream)'
         );
         if (!res.raw.destroyed) {

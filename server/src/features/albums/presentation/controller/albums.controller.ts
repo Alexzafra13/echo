@@ -5,6 +5,7 @@ import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
+import { Track } from '@features/tracks/domain/entities/track.entity';
 import { parsePaginationParams } from '@shared/utils';
 
 /**
@@ -121,7 +122,7 @@ export class AlbumsController {
   })
   async getAlbumTracks(@Param('id') albumId: string): Promise<TrackResponseDto[]> {
     const result = await this.getAlbumTracksUseCase.execute({ albumId });
-    return result.tracks.map((track) => TrackResponseDto.fromDomain(track));
+    return result.tracks.map((track: Track) => TrackResponseDto.fromDomain(track));
   }
 
   /**

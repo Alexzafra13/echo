@@ -9,8 +9,8 @@ import {
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { StorageService } from '@features/storage/infrastructure/storage.service';
-import { ImageDownloadService } from '@features/external-metadata/infrastructure/image-download.service';
+import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
 const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
   maxTracks: 50,
