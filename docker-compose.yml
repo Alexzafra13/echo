@@ -1,85 +1,109 @@
+# ============================================
+# DOCKER COMPOSE - PRODUCTION
+# ============================================
+# Full-stack deployment: PostgreSQL + Redis + Echo App
+# Single container serves both API and Frontend (Jellyfin-style)
+#
+# Usage:
+#   docker-compose up -d --build
+#   docker-compose logs -f echo-app
+#   docker-compose down
+#
+# Requirements:
+#   - Copy .env.example to .env and configure
+#   - Set JWT_SECRET and JWT_REFRESH_SECRET
+#   - Configure MUSIC_PATH to your music library
+# ============================================
+
 version: '3.8'
 
-# ============================================
-# Echo Music Server - Full Stack Deployment
-# ============================================
-# Similar to Jellyfin/Navidrome: single container with both frontend and backend
-# Perfect for self-hosting
-
 services:
+  # ----------------------------------------
   # PostgreSQL Database
+  # ----------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: echo-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-music_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-music_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
       POSTGRES_DB: ${POSTGRES_DB:-music_server}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    # DO NOT expose port in production (internal only)
+    # Uncomment for debugging: ports: ["5432:5432"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-music_admin}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-music_admin} -d ${POSTGRES_DB:-music_server}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - echo-network
 
+  # ----------------------------------------
   # Redis Cache
+  # ----------------------------------------
   redis:
     image: redis:7-alpine
     container_name: echo-redis
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me_in_production}
+    # DO NOT expose port in production (internal only)
+    # Uncomment for debugging: ports: ["6379:6379"]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-redis_password}", "ping"]
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-change_me_in_production}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - echo-network
 
-  # Echo App (Backend + Frontend in single container)
+  # ----------------------------------------
+  # Echo Music Server (Full-stack)
+  # ----------------------------------------
   echo-app:
     build:
       context: .
-      dockerfile: Dockerfile.fullstack
+      dockerfile: Dockerfile
       args:
-        BUILD_DATE: ${BUILD_DATE}
-        VCS_REF: ${VCS_REF}
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
         VERSION: ${VERSION:-latest}
-    image: echo-music-server:latest
+    image: echo-music-server:${VERSION:-latest}
     container_name: echo-app
     restart: unless-stopped
     ports:
       - "${APP_PORT:-4567}:4567"
     environment:
-      # Node Environment
+      # Application
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 4567
       HOST: 0.0.0.0
+      API_PREFIX: api
 
       # Database
-      DATABASE_URL: postgresql://${POSTGRES_USER:-music_admin}:${POSTGRES_PASSWORD:-music_password}@postgres:5432/${POSTGRES_DB:-music_server}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-music_admin}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-music_server}?schema=public
 
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_me_in_production}
 
-      # JWT Secrets (IMPORTANT: Change in production!)
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+      # Security (REQUIRED in production!)
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required in production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required in production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
 
-      # Music Library Path
+      # CORS - Configure for your domain
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4567}
+
+      # Music Library
       MUSIC_LIBRARY_PATH: /music
 
       # Cache Configuration
@@ -88,18 +112,18 @@ services:
       CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-3600}
       CACHE_ARTIST_TTL: ${CACHE_ARTIST_TTL:-7200}
 
-      # API Configuration
-      API_PREFIX: api
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4567}
+      # File Storage
+      UPLOAD_PATH: /app/uploads/music
+      COVERS_PATH: /app/uploads/covers
 
     volumes:
-      # Music library (read-only recommended)
+      # Music library (read-only recommended for safety)
       - ${MUSIC_PATH:-./music}:/music:ro
 
-      # Uploads (covers, metadata, etc.)
+      # Persistent uploads (covers, metadata, etc.)
       - echo-uploads:/app/uploads
 
-      # Optional: Logs
+      # Optional: Application logs
       - echo-logs:/app/logs
 
     depends_on:
@@ -115,10 +139,12 @@ services:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:4567/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 10s
-      start_period: 60s  # Longer for migrations
+      start_period: 60s  # Extended for migrations
       retries: 3
 
-# Named volumes for persistence
+# ----------------------------------------
+# Volumes (Persistent Data)
+# ----------------------------------------
 volumes:
   postgres-data:
     name: echo-postgres-data
@@ -129,7 +155,9 @@ volumes:
   echo-logs:
     name: echo-logs
 
-# Network for service communication
+# ----------------------------------------
+# Network
+# ----------------------------------------
 networks:
   echo-network:
     name: echo-network
