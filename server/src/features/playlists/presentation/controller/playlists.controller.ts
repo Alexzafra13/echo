@@ -20,6 +20,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { RequestWithUser } from '@shared/types/request.types';
 import {
   CreatePlaylistUseCase,
   GetPlaylistUseCase,
@@ -73,7 +74,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Datos inválidos' })
   async createPlaylist(
     @Body() dto: CreatePlaylistDto,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ): Promise<PlaylistResponseDto> {
     const userId = req.user.id;
 

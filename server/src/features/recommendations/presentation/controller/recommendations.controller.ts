@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { RequestWithUser } from '@shared/types/request.types';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import {
   CalculateTrackScoreUseCase,
@@ -62,7 +63,7 @@ export class RecommendationsController {
     description: 'Track score calculated successfully',
     type: TrackScoreDto,
   })
-  async calculateScore(@Body() dto: CalculateScoreDto, @Req() req: any): Promise<TrackScoreDto> {
+  async calculateScore(@Body() dto: CalculateScoreDto, @Req() req: RequestWithUser): Promise<TrackScoreDto> {
     const userId = req.user.id;
     const score = await this.calculateTrackScoreUseCase.execute(userId, dto.trackId, dto.artistId);
 
@@ -90,7 +91,7 @@ export class RecommendationsController {
     description: 'Daily Mix generated successfully',
     type: DailyMixDto,
   })
-  async getDailyMix(@Query() config: DailyMixConfigDto, @Req() req: any): Promise<DailyMixDto> {
+  async getDailyMix(@Query() config: DailyMixConfigDto, @Req() req: RequestWithUser): Promise<DailyMixDto> {
     const userId = req.user.id;
     const dailyMix = await this.generateDailyMixUseCase.execute(userId, config);
 
@@ -155,7 +156,7 @@ export class RecommendationsController {
     description: 'Smart playlist generated successfully',
     type: SmartPlaylistDto,
   })
-  async generateSmartPlaylist(@Body() config: SmartPlaylistConfigDto, @Req() req: any): Promise<SmartPlaylistDto> {
+  async generateSmartPlaylist(@Body() config: SmartPlaylistConfigDto, @Req() req: RequestWithUser): Promise<SmartPlaylistDto> {
     const userId = req.user.id;
     const result = await this.generateSmartPlaylistUseCase.execute(userId, config as any);
 
@@ -204,7 +205,7 @@ export class RecommendationsController {
     description: 'Auto playlists generated successfully',
     type: [AutoPlaylistDto],
   })
-  async getAutoPlaylists(@Req() req: any): Promise<AutoPlaylistDto[]> {
+  async getAutoPlaylists(@Req() req: RequestWithUser): Promise<AutoPlaylistDto[]> {
     const userId = req.user.id;
     const playlists = await this.getAutoPlaylistsUseCase.execute(userId);
 
@@ -224,7 +225,7 @@ export class RecommendationsController {
     description: 'Auto playlists refreshed successfully',
     type: [AutoPlaylistDto],
   })
-  async refreshAutoPlaylists(@Req() req: any): Promise<AutoPlaylistDto[]> {
+  async refreshAutoPlaylists(@Req() req: RequestWithUser): Promise<AutoPlaylistDto[]> {
     const userId = req.user.id;
     const playlists = await this.waveMixService.refreshAutoPlaylists(userId);
 
@@ -240,7 +241,7 @@ export class RecommendationsController {
   @ApiOperation({ summary: 'Get paginated artist playlists (for artists page)' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Artist playlists retrieved successfully' })
   async getArtistPlaylists(
-    @Req() req: any, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
+    @Req() req: RequestWithUser, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
   ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
     const userId = req.user.id;
     const skipNum = Math.max(0, parseInt(skip, 10) || 0);
