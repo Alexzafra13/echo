@@ -88,6 +88,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'playlist-123',
         trackId: 'track-123',
+        userId: 'user-123', // Owner del playlist
       };
 
       const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
@@ -124,6 +125,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'playlist-123',
         trackId: 'track-123',
+        userId: 'user-123',
       };
 
       const mockPlaylistTrack = PlaylistTrack.fromPrimitives({
@@ -158,6 +160,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: '',
         trackId: 'track-123',
+        userId: 'user-123',
       };
 
       // Act & Assert
@@ -171,6 +174,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'playlist-123',
         trackId: '',
+        userId: 'user-123',
       };
 
       // Act & Assert
@@ -183,6 +187,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'non-existent',
         trackId: 'track-123',
+        userId: 'user-123',
       };
 
       playlistRepository.findById.mockResolvedValue(null);
@@ -198,6 +203,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'playlist-123',
         trackId: 'non-existent',
+        userId: 'user-123',
       };
 
       playlistRepository.findById.mockResolvedValue(createMockPlaylist());
@@ -214,6 +220,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'playlist-123',
         trackId: 'track-123',
+        userId: 'user-123',
       };
 
       playlistRepository.findById.mockResolvedValue(createMockPlaylist());
@@ -233,6 +240,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       const input = {
         playlistId: 'playlist-123',
         trackId: 'track-123',
+        userId: 'user-123',
       };
 
       const mockPlaylist = createMockPlaylist();
