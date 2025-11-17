@@ -34,6 +34,7 @@ import {
   AutoPlaylistDto,
   SmartPlaylistDto,
 } from '../dtos/recommendations-response.dto';
+import { WaveMixService } from '../../domain/services/wave-mix.service';
 
 @ApiTags('recommendations')
 @ApiBearerAuth('JWT-auth')
@@ -45,6 +46,7 @@ export class RecommendationsController {
     private readonly generateDailyMixUseCase: GenerateDailyMixUseCase,
     private readonly generateSmartPlaylistUseCase: GenerateSmartPlaylistUseCase,
     private readonly getAutoPlaylistsUseCase: GetAutoPlaylistsUseCase,
+    private readonly waveMixService: WaveMixService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -294,5 +296,109 @@ export class RecommendationsController {
     );
 
     return playlistsWithTracks;
+  }
+
+  /**
+   * POST /recommendations/auto-playlists/refresh
+   * Force refresh auto-generated playlists (ignores Redis cache)
+   */
+  @Post('auto-playlists/refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Force refresh auto-generated playlists (ignores 24h cache)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Auto playlists refreshed successfully',
+    type: [AutoPlaylistDto],
+  })
+  async refreshAutoPlaylists(@Req() req: any): Promise<AutoPlaylistDto[]> {
+    const userId = req.user.id;
+    const playlists = await this.waveMixService.refreshAutoPlaylists(userId);
+
+    // Fetch track details for all playlists (reuse same mapping logic)
+    const playlistsWithTracks = await Promise.all(
+      playlists.map(async (playlist) => {
+        const trackIds = playlist.tracks.map((t) => t.trackId);
+        const tracks = await this.prisma.track.findMany({
+          where: { id: { in: trackIds } },
+          select: { id: true, title: true, artistName: true, albumName: true, duration: true, albumId: true, artistId: true },
+        });
+
+        const trackMap = new Map(tracks.map((t) => [t.id, t]));
+
+        return {
+          id: playlist.id, type: playlist.type, userId: playlist.userId,
+          name: playlist.name, description: playlist.description,
+          tracks: playlist.tracks.map((t) => ({
+            trackId: t.trackId, totalScore: t.totalScore, rank: t.rank,
+            breakdown: { explicitFeedback: t.breakdown.explicitFeedback, implicitBehavior: t.breakdown.implicitBehavior,
+              recency: t.breakdown.recency, diversity: t.breakdown.diversity },
+            track: trackMap.get(t.trackId) ? {
+              id: trackMap.get(t.trackId)!.id, title: trackMap.get(t.trackId)!.title,
+              artistName: trackMap.get(t.trackId)!.artistName || undefined,
+              albumName: trackMap.get(t.trackId)!.albumName || undefined,
+              duration: trackMap.get(t.trackId)!.duration || undefined,
+              albumId: trackMap.get(t.trackId)!.albumId || undefined,
+              artistId: trackMap.get(t.trackId)!.artistId || undefined
+            } : undefined
+          })),
+          createdAt: playlist.createdAt, expiresAt: playlist.expiresAt,
+          metadata: playlist.metadata, coverColor: playlist.coverColor, coverImageUrl: playlist.coverImageUrl,
+        };
+      })
+    );
+
+    return playlistsWithTracks;
+  }
+
+  /**
+   * GET /recommendations/artist-playlists
+   * Get paginated artist playlists for dedicated artists page
+   */
+  @Get('artist-playlists')
+  @ApiOperation({ summary: 'Get paginated artist playlists (for artists page)' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Artist playlists retrieved successfully' })
+  async getArtistPlaylists(
+    @Req() req: any, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
+  ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
+    const userId = req.user.id;
+    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
+    const takeNum = Math.min(50, Math.max(1, parseInt(take, 10) || 10));
+
+    const result = await this.waveMixService.getArtistPlaylistsPaginated(userId, skipNum, takeNum);
+
+    // Fetch track details for all playlists
+    const playlistsWithTracks = await Promise.all(
+      result.playlists.map(async (playlist) => {
+        const trackIds = playlist.tracks.map((t) => t.trackId);
+        const tracks = await this.prisma.track.findMany({
+          where: { id: { in: trackIds } },
+          select: { id: true, title: true, artistName: true, albumName: true, duration: true, albumId: true, artistId: true },
+        });
+
+        const trackMap = new Map(tracks.map((t) => [t.id, t]));
+
+        return {
+          id: playlist.id, type: playlist.type, userId: playlist.userId,
+          name: playlist.name, description: playlist.description,
+          tracks: playlist.tracks.map((t) => ({
+            trackId: t.trackId, totalScore: t.totalScore, rank: t.rank,
+            breakdown: { explicitFeedback: t.breakdown.explicitFeedback, implicitBehavior: t.breakdown.implicitBehavior,
+              recency: t.breakdown.recency, diversity: t.breakdown.diversity },
+            track: trackMap.get(t.trackId) ? {
+              id: trackMap.get(t.trackId)!.id, title: trackMap.get(t.trackId)!.title,
+              artistName: trackMap.get(t.trackId)!.artistName || undefined,
+              albumName: trackMap.get(t.trackId)!.albumName || undefined,
+              duration: trackMap.get(t.trackId)!.duration || undefined,
+              albumId: trackMap.get(t.trackId)!.albumId || undefined,
+              artistId: trackMap.get(t.trackId)!.artistId || undefined
+            } : undefined
+          })),
+          createdAt: playlist.createdAt, expiresAt: playlist.expiresAt,
+          metadata: playlist.metadata, coverColor: playlist.coverColor, coverImageUrl: playlist.coverImageUrl,
+        };
+      })
+    );
+
+    return { playlists: playlistsWithTracks, total: result.total, skip: skipNum, take: takeNum, hasMore: result.hasMore };
   }
 }
