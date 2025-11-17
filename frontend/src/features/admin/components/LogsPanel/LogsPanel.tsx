@@ -181,6 +181,11 @@ export function LogsPanel() {
           <div className={styles.empty}>
             <Info size={48} />
             <p>No hay logs que mostrar</p>
+            <p className={styles.emptyHint}>
+              Solo se muestran logs de nivel WARNING, ERROR y CRITICAL.
+              <br />
+              Los logs INFO y DEBUG solo aparecen en la consola del servidor.
+            </p>
           </div>
         ) : (
           logs.map((log) => (
