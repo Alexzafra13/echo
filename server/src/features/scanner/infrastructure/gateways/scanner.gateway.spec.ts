@@ -43,10 +43,6 @@ describe('ScannerGateway', () => {
   });
 
   describe('lifecycle', () => {
-    it('should be defined', () => {
-      expect(gateway).toBeDefined();
-    });
-
     it('should log on init', () => {
       const logSpy = jest.spyOn(gateway['logger'], 'log');
       gateway.afterInit(mockServer as Server);

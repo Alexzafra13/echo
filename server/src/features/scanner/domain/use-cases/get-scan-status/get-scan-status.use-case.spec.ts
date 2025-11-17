@@ -32,10 +32,6 @@ describe('GetScanStatusUseCase', () => {
     useCase = module.get<GetScanStatusUseCase>(GetScanStatusUseCase);
   });
 
-  it('should be defined', () => {
-    expect(useCase).toBeDefined();
-  });
-
   describe('execute', () => {
     it('should return scan status for existing scan', async () => {
       // Arrange

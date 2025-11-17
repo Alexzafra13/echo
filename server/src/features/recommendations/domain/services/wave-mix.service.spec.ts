@@ -109,10 +109,6 @@ describe('WaveMixService', () => {
     service = module.get<WaveMixService>(WaveMixService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('generateWaveMix', () => {
     it('debería retornar un Wave Mix vacío cuando el usuario no tiene historial', async () => {
       // Arrange
