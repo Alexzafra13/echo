@@ -1,27 +1,49 @@
 import { UnauthorizedError, ValidationError } from '@shared/errors';
 import { User } from '../../entities/user.entity';
 import { LoginUseCase } from './login.use-case';
+import { IUserRepository } from '../../ports/user-repository.port';
+import { IPasswordService } from '../../ports/password-service.port';
+import { ITokenService } from '../../ports/token-service.port';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
-  let mockUserRepository: any;
-  let mockTokenService: any;
-  let mockPasswordService: any;
+  let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockTokenService: jest.Mocked<ITokenService>;
+  let mockPasswordService: jest.Mocked<IPasswordService>;
+
+  // Helper para crear mock de usuario con valores por defecto
+  const createMockUser = (overrides = {}): User => {
+    return User.reconstruct({
+      id: 'user-123',
+      username: 'juan',
+      email: 'juan@test.com',
+      passwordHash: '$2b$12$hashed_password',
+      name: 'Juan',
+      isActive: true,
+      isAdmin: false,
+      mustChangePassword: false,
+      theme: 'dark',
+      language: 'es',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
+  };
 
   beforeEach(() => {
     mockUserRepository = {
       findByUsername: jest.fn(),
       updatePartial: jest.fn(),
-    };
+    } as any;
 
     mockTokenService = {
       generateAccessToken: jest.fn(),
       generateRefreshToken: jest.fn(),
-    };
+    } as any;
 
     mockPasswordService = {
       compare: jest.fn(),
-    };
+    } as any;
 
     useCase = new LoginUseCase(
       mockUserRepository,
@@ -33,20 +55,7 @@ describe('LoginUseCase', () => {
   describe('execute', () => {
     it('debería loguear un usuario válido', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed_password',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = createMockUser();
 
       mockUserRepository.findByUsername.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(true);
@@ -79,13 +88,7 @@ describe('LoginUseCase', () => {
           username: '',
           password: '',
         }),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute({
-          username: '',
-          password: '',
-        }),
-      ).rejects.toThrow('Username and password are required');
+      ).rejects.toThrow(new ValidationError('Username and password are required'));
     });
 
     it('debería lanzar error si username falta', async () => {
@@ -95,13 +98,7 @@ describe('LoginUseCase', () => {
           username: '',
           password: 'Pass123!',
         }),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute({
-          username: '',
-          password: 'Pass123!',
-        }),
-      ).rejects.toThrow('Username and password are required');
+      ).rejects.toThrow(new ValidationError('Username and password are required'));
     });
 
     it('debería lanzar error si password falta', async () => {
@@ -111,13 +108,7 @@ describe('LoginUseCase', () => {
           username: 'juan',
           password: '',
         }),
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        useCase.execute({
-          username: 'juan',
-          password: '',
-        }),
-      ).rejects.toThrow('Username and password are required');
+      ).rejects.toThrow(new ValidationError('Username and password are required'));
     });
 
     it('debería lanzar error si usuario no existe', async () => {
@@ -130,32 +121,12 @@ describe('LoginUseCase', () => {
           username: 'noexiste',
           password: 'Pass123!',
         }),
-      ).rejects.toThrow(UnauthorizedError);
-      await expect(
-        useCase.execute({
-          username: 'noexiste',
-          password: 'Pass123!',
-        }),
-      ).rejects.toThrow('Invalid credentials');
+      ).rejects.toThrow(new UnauthorizedError('Invalid credentials'));
     });
 
     it('debería lanzar error si usuario está inactivo', async () => {
       // Arrange
-      const inactiveUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed_password',
-        name: 'Juan',
-        isActive: false,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
+      const inactiveUser = createMockUser({ isActive: false });
       mockUserRepository.findByUsername.mockResolvedValue(inactiveUser);
 
       // Act & Assert
@@ -164,32 +135,12 @@ describe('LoginUseCase', () => {
           username: 'juan',
           password: 'Pass123!',
         }),
-      ).rejects.toThrow(UnauthorizedError);
-      await expect(
-        useCase.execute({
-          username: 'juan',
-          password: 'Pass123!',
-        }),
-      ).rejects.toThrow('Account is inactive');
+      ).rejects.toThrow(new UnauthorizedError('Account is inactive'));
     });
 
     it('debería lanzar error si password es incorrecto', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed_password',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
+      const mockUser = createMockUser();
       mockUserRepository.findByUsername.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(false);
 
@@ -199,32 +150,12 @@ describe('LoginUseCase', () => {
           username: 'juan',
           password: 'WrongPassword!',
         }),
-      ).rejects.toThrow(UnauthorizedError);
-      await expect(
-        useCase.execute({
-          username: 'juan',
-          password: 'WrongPassword!',
-        }),
-      ).rejects.toThrow('Invalid credentials');
+      ).rejects.toThrow(new UnauthorizedError('Invalid credentials'));
     });
 
     it('debería retornar sin email si el usuario no tiene', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        email: undefined,
-        passwordHash: '$2b$12$hashed_password',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
+      const mockUser = createMockUser({ email: undefined });
       mockUserRepository.findByUsername.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access_token');
@@ -243,21 +174,7 @@ describe('LoginUseCase', () => {
 
     it('debería generar tokens correctamente', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed_password',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
+      const mockUser = createMockUser();
       mockUserRepository.findByUsername.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(true);
       mockTokenService.generateAccessToken.mockResolvedValue('access_token');
