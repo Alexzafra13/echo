@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, StreamableFile, NotFoundException, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
@@ -25,6 +26,8 @@ import * as path from 'path';
 @Controller('albums')
 export class AlbumsController {
   constructor(
+    @InjectPinoLogger(AlbumsController.name)
+    private readonly logger: PinoLogger,
     private readonly getAlbumUseCase: GetAlbumUseCase,
     private readonly getAlbumsUseCase: GetAlbumsUseCase,
     private readonly searchAlbumsUseCase: SearchAlbumsUseCase,
@@ -195,7 +198,10 @@ export class AlbumsController {
 
       res.send(coverBuffer);
     } catch (error) {
-      console.error(`Error serving cover for album ${id}:`, error);
+      this.logger.error(
+        { albumId: id, error: error instanceof Error ? error.message : error },
+        'Error serving cover for album'
+      );
       throw new NotFoundException('Could not serve cover art');
     }
   }

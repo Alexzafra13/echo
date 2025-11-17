@@ -1,4 +1,5 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { NotFoundError } from '@shared/errors';
@@ -18,6 +19,8 @@ export class UploadAvatarUseCase {
   };
 
   constructor(
+    @InjectPinoLogger(UploadAvatarUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
     private readonly storageService: StorageService,
@@ -50,7 +53,10 @@ export class UploadAvatarUseCase {
         await this.storageService.deleteImage(user.avatarPath);
       } catch (error) {
         // Log but don't fail - old avatar might not exist
-        console.warn(`Failed to delete old avatar: ${(error as Error).message}`);
+        this.logger.warn(
+          { userId: input.userId, oldAvatarPath: user.avatarPath, error: (error as Error).message },
+          'Failed to delete old avatar'
+        );
       }
     }
 
