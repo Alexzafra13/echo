@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, X, AlertCircle, Key, Shield } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { useToast } from '@shared/context/ToastContext';
 import styles from './ProvidersTab.module.css';
 
 interface Settings {
@@ -18,6 +19,8 @@ interface Settings {
  * Configuración de proveedores de metadata externos
  */
 export function ProvidersTab() {
+  const { addToast } = useToast();
+
   const [settings, setSettings] = useState<Settings>({
     autoEnrichEnabled: false,
     coverArtArchiveEnabled: true,
@@ -167,10 +170,10 @@ export function ProvidersTab() {
       // Recargar settings
       await loadSettings();
 
-      alert('Configuración guardada correctamente');
+      addToast('Configuración guardada correctamente', 'success');
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      alert(error.response?.data?.message || 'Error al guardar configuración');
+      addToast(error.response?.data?.message || 'Error al guardar configuración', 'error');
     } finally {
       setIsSaving(false);
     }
