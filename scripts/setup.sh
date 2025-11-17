@@ -205,15 +205,25 @@ if [ "$SKIP_BACKEND" = false ]; then
   cd server
 
   if [ ! -f ".env" ]; then
-    if [ -f ".env.development.example" ]; then
-      print_info "Copiando .env.development.example a .env"
-      cp .env.development.example .env
-      print_success "Archivo .env creado"
-      print_warning "IMPORTANTE: Revisa el archivo server/.env y ajusta si es necesario"
+    print_info "Generando .env con valores seguros automáticamente..."
+
+    if node scripts/generate-env.js; then
+      print_success "Archivo .env generado con secrets seguros"
+      print_info "JWT secrets y configuración creados automáticamente"
     else
-      print_error "No se encuentra server/.env.development.example"
-      cd ..
-      exit 1
+      print_error "Error al generar .env automáticamente"
+      print_warning "Intentando método alternativo..."
+
+      # Fallback: copiar desde example
+      if [ -f ".env.development.example" ]; then
+        cp .env.development.example .env
+        print_warning "Se copió .env.development.example (menos seguro)"
+        print_warning "IMPORTANTE: Los JWT secrets no son seguros, cámbialos en producción"
+      else
+        print_error "No se pudo crear .env"
+        cd ..
+        exit 1
+      fi
     fi
   else
     print_info "server/.env ya existe, no se sobrescribe"
