@@ -108,13 +108,23 @@ print_header "2. Verificando configuración (.env)"
 cd server
 
 if [ ! -f ".env" ]; then
-  print_warning "No existe .env, creando desde .env.development.example"
-  if [ -f ".env.development.example" ]; then
-    cp .env.development.example .env
-    print_success "Archivo .env creado"
+  print_warning "No existe .env, generando con valores seguros automáticamente..."
+
+  if node scripts/generate-env.js; then
+    print_success "Archivo .env generado con secrets seguros"
+    print_info "JWT secrets y configuración creados automáticamente"
   else
-    print_error "No se encuentra .env.development.example"
-    exit 1
+    print_error "Error al generar .env automáticamente"
+    print_warning "Intentando método alternativo..."
+
+    # Fallback: copiar desde example
+    if [ -f ".env.development.example" ]; then
+      cp .env.development.example .env
+      print_warning "Se copió .env.development.example (menos seguro)"
+    else
+      print_error "No se pudo crear .env"
+      exit 1
+    fi
   fi
 else
   print_success ".env ya existe"
