@@ -54,7 +54,7 @@ describe('Scanner E2E', () => {
     // Hacer admin al usuario
     await prisma.user.update({
       where: { id: adminRes.body.user.id },
-      data: { role: 'admin' },
+      data: { isAdmin: true },
     });
 
     // Login como admin para obtener token
@@ -264,8 +264,9 @@ describe('Scanner E2E', () => {
     });
 
     it('debería retornar 404 para escaneo inexistente', () => {
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
       return request(app.getHttpServer())
-        .get('/api/scanner/99999')
+        .get(`/api/scanner/${nonExistentId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(404);
     });
