@@ -197,6 +197,56 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
     return Array.from(new Set(albumIds));
   }
 
+  /**
+   * OPTIMIZATION: Batch fetch album IDs for multiple playlists
+   * Avoids N+1 query pattern when fetching multiple playlists
+   */
+  async getBatchPlaylistAlbumIds(playlistIds: string[]): Promise<Map<string, string[]>> {
+    if (playlistIds.length === 0) {
+      return new Map();
+    }
+
+    const playlistTracks = await this.prisma.playlistTrack.findMany({
+      where: { playlistId: { in: playlistIds } },
+      include: {
+        track: {
+          select: {
+            albumId: true,
+          },
+        },
+      },
+      orderBy: { trackOrder: 'asc' },
+    });
+
+    // Group tracks by playlist
+    const tracksByPlaylist = new Map<string, string[]>();
+
+    for (const pt of playlistTracks) {
+      if (!pt.track.albumId) continue;
+
+      if (!tracksByPlaylist.has(pt.playlistId)) {
+        tracksByPlaylist.set(pt.playlistId, []);
+      }
+
+      tracksByPlaylist.get(pt.playlistId)!.push(pt.track.albumId);
+    }
+
+    // Get unique album IDs per playlist
+    const result = new Map<string, string[]>();
+    for (const [playlistId, albumIds] of tracksByPlaylist.entries()) {
+      result.set(playlistId, Array.from(new Set(albumIds)));
+    }
+
+    // Ensure all requested playlists have an entry (even if empty)
+    for (const playlistId of playlistIds) {
+      if (!result.has(playlistId)) {
+        result.set(playlistId, []);
+      }
+    }
+
+    return result;
+  }
+
   async reorderTracks(
     playlistId: string,
     trackOrders: Array<{ trackId: string; order: number }>,
