@@ -14,6 +14,7 @@ import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { LogService, LogCategory } from '@features/logs/application/log.service';
 import * as path from 'path';
 
 /**
@@ -62,6 +63,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly cachedAlbumRepository: CachedAlbumRepository,
     private readonly externalMetadataService: ExternalMetadataService,
     private readonly settingsService: SettingsService,
+    private readonly logService: LogService,
   ) {}
 
   onModuleInit() {
@@ -111,6 +113,13 @@ export class ScanProcessorService implements OnModuleInit {
     const tracker = new ScanProgress();
 
     console.log(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
+
+    // 🔵 LOG: Inicio de scan
+    await this.logService.info(LogCategory.SCANNER, `Scan iniciado: ${scanId}`, {
+      entityId: scanId,
+      entityType: 'scan',
+      details: JSON.stringify({ scanPath, recursive, pruneDeleted }),
+    });
 
     try {
       // 1. Actualizar estado a "running"
@@ -194,6 +203,29 @@ export class ScanProcessorService implements OnModuleInit {
       // 6. Auto-enriquecer metadatos si está habilitado
       await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
 
+      // 🟢 LOG: Scan completado exitosamente
+      await this.logService.info(
+        LogCategory.SCANNER,
+        `Scan completado exitosamente: ${scanId}`,
+        {
+          entityId: scanId,
+          entityType: 'scan',
+          details: JSON.stringify({
+            totalFiles: tracker.totalFiles,
+            filesScanned: tracker.filesScanned,
+            tracksCreated: tracker.tracksCreated,
+            albumsCreated: tracker.albumsCreated,
+            artistsCreated: tracker.artistsCreated,
+            coversExtracted: tracker.coversExtracted,
+            errors: tracker.errors,
+            duration,
+            tracksAdded,
+            tracksUpdated,
+            tracksDeleted,
+          }),
+        },
+      );
+
       // Emitir evento: completado
       this.scannerGateway.emitCompleted({
         scanId,
@@ -212,6 +244,22 @@ export class ScanProcessorService implements OnModuleInit {
       );
     } catch (error) {
       console.error(`❌ Error en escaneo ${scanId}:`, error);
+
+      // 🔴 LOG CRÍTICO: Scan falló completamente
+      await this.logService.critical(
+        LogCategory.SCANNER,
+        `Scan falló completamente: ${scanId}`,
+        {
+          entityId: scanId,
+          entityType: 'scan',
+          details: JSON.stringify({
+            scanPath,
+            errorMessage: (error as Error).message,
+            filesProcessedBeforeError: tracker.filesScanned,
+          }),
+        },
+        error as Error,
+      );
 
       // Actualizar escaneo como fallido
       await this.scannerRepository.update(scanId, {
@@ -422,6 +470,20 @@ export class ScanProcessorService implements OnModuleInit {
       const metadata = await this.metadataExtractor.extractMetadata(filePath);
       if (!metadata) {
         console.warn(`⚠️  No se pudieron extraer metadatos de ${filePath}`);
+
+        // 🔴 LOG CRÍTICO: No se pudieron extraer metadatos
+        await this.logService.error(
+          LogCategory.SCANNER,
+          `Fallo al extraer metadatos del archivo`,
+          {
+            details: JSON.stringify({
+              filePath,
+              fileExtension: path.extname(filePath),
+              reason: 'metadata_extraction_failed',
+            }),
+          },
+        );
+
         return 'skipped';
       }
 
@@ -478,6 +540,23 @@ export class ScanProcessorService implements OnModuleInit {
       const existingTrack = await this.prisma.track.findUnique({
         where: { path: filePath },
       });
+
+      // 🔵 LOG: Datos del track antes de guardar
+      if (!metadata.title && !metadata.artist && !metadata.album) {
+        await this.logService.warning(
+          LogCategory.SCANNER,
+          `Track sin metadatos básicos (título, artista, álbum)`,
+          {
+            details: JSON.stringify({
+              filePath,
+              hasTitle: !!metadata.title,
+              hasArtist: !!metadata.artist,
+              hasAlbum: !!metadata.album,
+              fileName: path.basename(filePath),
+            }),
+          },
+        );
+      }
 
       const trackData = {
         title: metadata.title || path.basename(filePath, path.extname(filePath)),
@@ -540,6 +619,21 @@ export class ScanProcessorService implements OnModuleInit {
       }
     } catch (error) {
       console.error(`❌ Error procesando ${filePath}:`, error);
+
+      // 🔴 LOG CRÍTICO: Error procesando archivo
+      await this.logService.error(
+        LogCategory.SCANNER,
+        `Error procesando archivo de música`,
+        {
+          details: JSON.stringify({
+            filePath,
+            fileExtension: path.extname(filePath),
+            errorMessage: (error as Error).message,
+          }),
+        },
+        error as Error,
+      );
+
       return 'skipped';
     }
   }
