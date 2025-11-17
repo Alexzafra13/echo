@@ -2,18 +2,36 @@
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "username" VARCHAR(50) NOT NULL,
+    "email" VARCHAR(255),
     "password_hash" VARCHAR(255) NOT NULL,
     "name" VARCHAR(100),
     "is_admin" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "theme" VARCHAR(20) NOT NULL DEFAULT 'dark',
     "language" VARCHAR(10) NOT NULL DEFAULT 'es',
+    "must_change_password" BOOLEAN NOT NULL DEFAULT true,
     "last_login_at" TIMESTAMP(3),
     "last_access_at" TIMESTAMP(3),
+    "avatar_path" VARCHAR(512),
+    "avatar_mime_type" VARCHAR(50),
+    "avatar_size" BIGINT,
+    "avatar_updated_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "stream_tokens" (
+    "id" TEXT NOT NULL,
+    "user_id" VARCHAR(36) NOT NULL,
+    "token" VARCHAR(255) NOT NULL,
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "last_used_at" TIMESTAMP(3),
+
+    CONSTRAINT "stream_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -24,17 +42,81 @@ CREATE TABLE "artists" (
     "song_count" INTEGER NOT NULL DEFAULT 0,
     "mbz_artist_id" VARCHAR(36),
     "biography" TEXT,
-    "small_image_url" VARCHAR(512),
-    "medium_image_url" VARCHAR(512),
-    "large_image_url" VARCHAR(512),
+    "biography_source" VARCHAR(50),
+    "profile_image_path" VARCHAR(512),
+    "profile_image_updated_at" TIMESTAMP(3),
+    "external_profile_path" VARCHAR(512),
+    "external_profile_source" VARCHAR(50),
+    "external_profile_updated_at" TIMESTAMP(3),
+    "background_image_path" VARCHAR(512),
+    "background_updated_at" TIMESTAMP(3),
+    "background_position" VARCHAR(50),
+    "external_background_path" VARCHAR(512),
+    "external_background_source" VARCHAR(50),
+    "external_background_updated_at" TIMESTAMP(3),
+    "banner_image_path" VARCHAR(512),
+    "banner_updated_at" TIMESTAMP(3),
+    "external_banner_path" VARCHAR(512),
+    "external_banner_source" VARCHAR(50),
+    "external_banner_updated_at" TIMESTAMP(3),
+    "logo_image_path" VARCHAR(512),
+    "logo_updated_at" TIMESTAMP(3),
+    "external_logo_path" VARCHAR(512),
+    "external_logo_source" VARCHAR(50),
+    "external_logo_updated_at" TIMESTAMP(3),
     "external_url" VARCHAR(512),
-    "external_info_updated_at" TIMESTAMP(3),
+    "metadata_storage_size" BIGINT DEFAULT 0,
     "order_artist_name" VARCHAR(255),
     "size" BIGINT NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "artists_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "artist_banners" (
+    "id" TEXT NOT NULL,
+    "artist_id" VARCHAR(36) NOT NULL,
+    "image_url" VARCHAR(512) NOT NULL,
+    "provider" VARCHAR(50) NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "artist_banners_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "custom_artist_images" (
+    "id" TEXT NOT NULL,
+    "artist_id" VARCHAR(36) NOT NULL,
+    "image_type" VARCHAR(20) NOT NULL,
+    "file_path" VARCHAR(512) NOT NULL,
+    "file_name" VARCHAR(255) NOT NULL,
+    "file_size" BIGINT NOT NULL DEFAULT 0,
+    "mime_type" VARCHAR(50) NOT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT false,
+    "uploaded_by" VARCHAR(36),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "custom_artist_images_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "custom_album_covers" (
+    "id" TEXT NOT NULL,
+    "album_id" VARCHAR(36) NOT NULL,
+    "file_path" VARCHAR(512) NOT NULL,
+    "file_name" VARCHAR(255) NOT NULL,
+    "file_size" BIGINT NOT NULL DEFAULT 0,
+    "mime_type" VARCHAR(50) NOT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT false,
+    "uploaded_by" VARCHAR(36),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "custom_album_covers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -54,7 +136,8 @@ CREATE TABLE "albums" (
     "album_artist_id" VARCHAR(36),
     "artist_id" VARCHAR(36),
     "cover_art_path" VARCHAR(512),
-    "cover_art_id" VARCHAR(255),
+    "external_cover_path" VARCHAR(512),
+    "external_cover_source" VARCHAR(50),
     "year" INTEGER,
     "release_date" DATE,
     "original_date" DATE,
@@ -73,9 +156,6 @@ CREATE TABLE "albums" (
     "sort_artist_name" VARCHAR(255),
     "sort_album_artist_name" VARCHAR(255),
     "description" TEXT,
-    "small_image_url" VARCHAR(512),
-    "medium_image_url" VARCHAR(512),
-    "large_image_url" VARCHAR(512),
     "external_url" VARCHAR(512),
     "external_info_updated_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -205,8 +285,10 @@ CREATE TABLE "user_starred" (
     "user_id" VARCHAR(36) NOT NULL,
     "starred_id" VARCHAR(36) NOT NULL,
     "starred_type" VARCHAR(50) NOT NULL,
+    "sentiment" VARCHAR(20) NOT NULL,
     "starred_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "user_starred_pkey" PRIMARY KEY ("user_id","starred_id","starred_type")
 );
@@ -230,6 +312,11 @@ CREATE TABLE "play_history" (
     "track_id" VARCHAR(36) NOT NULL,
     "played_at" TIMESTAMP(3) NOT NULL,
     "client" VARCHAR(255),
+    "play_context" VARCHAR(50) NOT NULL DEFAULT 'direct',
+    "completion_rate" DOUBLE PRECISION,
+    "skipped" BOOLEAN NOT NULL DEFAULT false,
+    "source_id" VARCHAR(36),
+    "source_type" VARCHAR(50),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "play_history_pkey" PRIMARY KEY ("id")
@@ -241,7 +328,10 @@ CREATE TABLE "user_play_stats" (
     "item_id" VARCHAR(36) NOT NULL,
     "item_type" VARCHAR(50) NOT NULL,
     "play_count" BIGINT NOT NULL DEFAULT 0,
+    "weighted_play_count" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "last_played_at" TIMESTAMP(3),
+    "avg_completion_rate" DOUBLE PRECISION,
+    "skip_count" BIGINT NOT NULL DEFAULT 0,
 
     CONSTRAINT "user_play_stats_pkey" PRIMARY KEY ("user_id","item_id","item_type")
 );
@@ -302,15 +392,31 @@ CREATE TABLE "shares" (
 );
 
 -- CreateTable
-CREATE TABLE "radios" (
+CREATE TABLE "radio_stations" (
     "id" TEXT NOT NULL,
+    "user_id" VARCHAR(36) NOT NULL,
+    "station_uuid" VARCHAR(255),
     "name" VARCHAR(255) NOT NULL,
-    "stream_url" VARCHAR(512) NOT NULL,
-    "home_page_url" VARCHAR(512),
+    "url" VARCHAR(512) NOT NULL,
+    "url_resolved" VARCHAR(512),
+    "homepage" VARCHAR(512),
+    "favicon" VARCHAR(512),
+    "country" VARCHAR(100),
+    "country_code" VARCHAR(10),
+    "state" VARCHAR(100),
+    "language" VARCHAR(100),
+    "tags" VARCHAR(512),
+    "codec" VARCHAR(50),
+    "bitrate" INTEGER,
+    "votes" INTEGER,
+    "click_count" INTEGER,
+    "last_check_ok" BOOLEAN,
+    "source" VARCHAR(20) NOT NULL,
+    "is_favorite" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "radios_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "radio_stations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -368,14 +474,121 @@ CREATE TABLE "library_scans" (
     CONSTRAINT "library_scans_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "metadata_conflicts" (
+    "id" TEXT NOT NULL,
+    "entity_id" VARCHAR(36) NOT NULL,
+    "entity_type" VARCHAR(20) NOT NULL,
+    "field" VARCHAR(50) NOT NULL,
+    "current_value" TEXT,
+    "suggested_value" TEXT NOT NULL,
+    "source" VARCHAR(50) NOT NULL,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+    "priority" INTEGER NOT NULL DEFAULT 1,
+    "metadata" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "resolved_at" TIMESTAMP(3),
+    "resolved_by" VARCHAR(36),
+
+    CONSTRAINT "metadata_conflicts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "enrichment_logs" (
+    "id" TEXT NOT NULL,
+    "entity_id" VARCHAR(36) NOT NULL,
+    "entity_type" VARCHAR(20) NOT NULL,
+    "entity_name" VARCHAR(255) NOT NULL,
+    "provider" VARCHAR(50) NOT NULL,
+    "metadata_type" VARCHAR(50) NOT NULL,
+    "status" VARCHAR(20) NOT NULL,
+    "fields_updated" TEXT[],
+    "error_message" TEXT,
+    "preview_url" VARCHAR(512),
+    "user_id" VARCHAR(36),
+    "processing_time" INTEGER,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "enrichment_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "settings" (
+    "key" VARCHAR(100) NOT NULL,
+    "value" TEXT NOT NULL,
+    "category" VARCHAR(50) NOT NULL,
+    "type" VARCHAR(20) NOT NULL DEFAULT 'string',
+    "description" TEXT,
+    "is_public" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "settings_pkey" PRIMARY KEY ("key")
+);
+
+-- CreateTable
+CREATE TABLE "system_logs" (
+    "id" TEXT NOT NULL,
+    "level" VARCHAR(20) NOT NULL,
+    "category" VARCHAR(50) NOT NULL,
+    "message" TEXT NOT NULL,
+    "details" TEXT,
+    "user_id" VARCHAR(36),
+    "entity_id" VARCHAR(36),
+    "entity_type" VARCHAR(20),
+    "stack_trace" TEXT,
+    "request_id" VARCHAR(36),
+    "ip_address" VARCHAR(45),
+    "user_agent" VARCHAR(512),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "system_logs_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "stream_tokens_token_key" ON "stream_tokens"("token");
+
+-- CreateIndex
+CREATE INDEX "stream_tokens_token_idx" ON "stream_tokens"("token");
+
+-- CreateIndex
+CREATE INDEX "stream_tokens_user_id_idx" ON "stream_tokens"("user_id");
+
+-- CreateIndex
+CREATE INDEX "stream_tokens_expires_at_idx" ON "stream_tokens"("expires_at");
 
 -- CreateIndex
 CREATE INDEX "idx_artists_name" ON "artists"("name");
 
 -- CreateIndex
 CREATE INDEX "idx_artists_album_count" ON "artists"("album_count" DESC);
+
+-- CreateIndex
+CREATE INDEX "artist_banners_artist_id_idx" ON "artist_banners"("artist_id");
+
+-- CreateIndex
+CREATE INDEX "artist_banners_artist_id_order_idx" ON "artist_banners"("artist_id", "order");
+
+-- CreateIndex
+CREATE INDEX "custom_artist_images_artist_id_idx" ON "custom_artist_images"("artist_id");
+
+-- CreateIndex
+CREATE INDEX "custom_artist_images_artist_id_image_type_idx" ON "custom_artist_images"("artist_id", "image_type");
+
+-- CreateIndex
+CREATE INDEX "custom_artist_images_is_active_idx" ON "custom_artist_images"("is_active");
+
+-- CreateIndex
+CREATE INDEX "custom_album_covers_album_id_idx" ON "custom_album_covers"("album_id");
+
+-- CreateIndex
+CREATE INDEX "custom_album_covers_is_active_idx" ON "custom_album_covers"("is_active");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "genres_name_key" ON "genres"("name");
@@ -426,7 +639,13 @@ CREATE INDEX "idx_user_starred_user" ON "user_starred"("user_id", "starred_at" D
 CREATE INDEX "idx_user_starred_item" ON "user_starred"("starred_id", "starred_type");
 
 -- CreateIndex
+CREATE INDEX "idx_user_starred_sentiment" ON "user_starred"("user_id", "sentiment");
+
+-- CreateIndex
 CREATE INDEX "idx_user_ratings_user" ON "user_ratings"("user_id");
+
+-- CreateIndex
+CREATE INDEX "idx_ratings_item" ON "user_ratings"("item_id", "item_type");
 
 -- CreateIndex
 CREATE INDEX "idx_play_history_user_date" ON "play_history"("user_id", "played_at" DESC);
@@ -438,7 +657,16 @@ CREATE INDEX "idx_play_history_track" ON "play_history"("track_id");
 CREATE INDEX "idx_play_history_played_at" ON "play_history"("played_at" DESC);
 
 -- CreateIndex
+CREATE INDEX "idx_play_history_context" ON "play_history"("user_id", "play_context");
+
+-- CreateIndex
+CREATE INDEX "idx_play_history_source" ON "play_history"("source_id", "source_type");
+
+-- CreateIndex
 CREATE INDEX "idx_user_play_stats_user" ON "user_play_stats"("user_id", "play_count" DESC);
+
+-- CreateIndex
+CREATE INDEX "idx_user_play_stats_weighted" ON "user_play_stats"("user_id", "weighted_play_count" DESC);
 
 -- CreateIndex
 CREATE INDEX "idx_user_play_stats_item" ON "user_play_stats"("item_id", "item_type");
@@ -456,7 +684,70 @@ CREATE UNIQUE INDEX "play_queue_tracks_queue_id_queue_order_key" ON "play_queue_
 CREATE UNIQUE INDEX "bookmarks_user_id_item_id_item_type_key" ON "bookmarks"("user_id", "item_id", "item_type");
 
 -- CreateIndex
+CREATE INDEX "radio_stations_user_id_idx" ON "radio_stations"("user_id");
+
+-- CreateIndex
+CREATE INDEX "radio_stations_station_uuid_idx" ON "radio_stations"("station_uuid");
+
+-- CreateIndex
+CREATE INDEX "radio_stations_user_id_is_favorite_idx" ON "radio_stations"("user_id", "is_favorite");
+
+-- CreateIndex
 CREATE INDEX "idx_metadata_cache_expires" ON "metadata_cache"("expires_at");
+
+-- CreateIndex
+CREATE INDEX "metadata_conflicts_entity_id_entity_type_idx" ON "metadata_conflicts"("entity_id", "entity_type");
+
+-- CreateIndex
+CREATE INDEX "metadata_conflicts_status_idx" ON "metadata_conflicts"("status");
+
+-- CreateIndex
+CREATE INDEX "metadata_conflicts_created_at_idx" ON "metadata_conflicts"("created_at");
+
+-- CreateIndex
+CREATE INDEX "enrichment_logs_entity_id_entity_type_idx" ON "enrichment_logs"("entity_id", "entity_type");
+
+-- CreateIndex
+CREATE INDEX "enrichment_logs_provider_idx" ON "enrichment_logs"("provider");
+
+-- CreateIndex
+CREATE INDEX "enrichment_logs_status_idx" ON "enrichment_logs"("status");
+
+-- CreateIndex
+CREATE INDEX "enrichment_logs_created_at_idx" ON "enrichment_logs"("created_at");
+
+-- CreateIndex
+CREATE INDEX "enrichment_logs_user_id_idx" ON "enrichment_logs"("user_id");
+
+-- CreateIndex
+CREATE INDEX "settings_category_idx" ON "settings"("category");
+
+-- CreateIndex
+CREATE INDEX "system_logs_level_created_at_idx" ON "system_logs"("level", "created_at");
+
+-- CreateIndex
+CREATE INDEX "system_logs_category_created_at_idx" ON "system_logs"("category", "created_at");
+
+-- CreateIndex
+CREATE INDEX "system_logs_user_id_idx" ON "system_logs"("user_id");
+
+-- CreateIndex
+CREATE INDEX "system_logs_request_id_idx" ON "system_logs"("request_id");
+
+-- CreateIndex
+CREATE INDEX "system_logs_created_at_idx" ON "system_logs"("created_at");
+
+-- AddForeignKey
+ALTER TABLE "stream_tokens" ADD CONSTRAINT "stream_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "artist_banners" ADD CONSTRAINT "artist_banners_artist_id_fkey" FOREIGN KEY ("artist_id") REFERENCES "artists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "custom_artist_images" ADD CONSTRAINT "custom_artist_images_artist_id_fkey" FOREIGN KEY ("artist_id") REFERENCES "artists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "custom_album_covers" ADD CONSTRAINT "custom_album_covers_album_id_fkey" FOREIGN KEY ("album_id") REFERENCES "albums"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "albums" ADD CONSTRAINT "albums_artist_id_fkey" FOREIGN KEY ("artist_id") REFERENCES "artists"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -538,6 +829,9 @@ ALTER TABLE "bookmarks" ADD CONSTRAINT "bookmarks_user_id_fkey" FOREIGN KEY ("us
 
 -- AddForeignKey
 ALTER TABLE "shares" ADD CONSTRAINT "shares_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "radio_stations" ADD CONSTRAINT "radio_stations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "players" ADD CONSTRAINT "players_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
