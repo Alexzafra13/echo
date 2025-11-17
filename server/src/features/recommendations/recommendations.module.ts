@@ -15,6 +15,7 @@ import {
   GetAutoPlaylistsUseCase,
 } from './domain/use-cases';
 import { RecommendationsController } from './presentation/controller/recommendations.controller';
+import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-scheduler.service';
 
 @Module({
   imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule],
@@ -24,6 +25,7 @@ import { RecommendationsController } from './presentation/controller/recommendat
     ScoringService,
     WaveMixService,
     SmartPlaylistService,
+    WaveMixSchedulerService,
     CalculateTrackScoreUseCase,
     GenerateWaveMixUseCase,
     {
