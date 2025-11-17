@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { cacheConfig } from '@config/cache.config';
@@ -9,6 +10,11 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
   private redisConnection!: Redis;
   private workers: Worker[] = [];
 
+  constructor(
+    @InjectPinoLogger(BullmqService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   async onModuleInit() {
     this.redisConnection = new Redis({
       host: cacheConfig.redis_host,
@@ -18,14 +24,21 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.redisConnection.on('connect', () => {
-      console.log('✅ BullMQ Redis conectado');
+      this.logger.info({
+        host: cacheConfig.redis_host,
+        port: cacheConfig.redis_port,
+      }, 'BullMQ Redis connected');
     });
 
     this.redisConnection.on('error', (err) => {
-      console.error('❌ Error en BullMQ Redis:', err);
+      this.logger.error({
+        error: err,
+        host: cacheConfig.redis_host,
+        port: cacheConfig.redis_port,
+      }, 'BullMQ Redis error');
     });
 
-    console.log('✅ BullMQ Service iniciado');
+    this.logger.info('BullMQ Service initialized');
   }
 
   async onModuleDestroy() {
@@ -71,11 +84,20 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     });
 
     worker.on('completed', (job) => {
-      console.log(`✅ Job ${job.id} completado`);
+      this.logger.info({
+        jobId: job.id,
+        jobName: job.name,
+        queueName,
+      }, 'Job completed successfully');
     });
 
     worker.on('failed', (job, err) => {
-      console.error(`❌ Job ${job?.id} falló:`, err);
+      this.logger.error({
+        jobId: job?.id,
+        jobName: job?.name,
+        queueName,
+        error: err,
+      }, 'Job failed');
     });
 
     this.workers.push(worker);

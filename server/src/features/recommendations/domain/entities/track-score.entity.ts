@@ -65,11 +65,6 @@ export interface PlaylistMetadata {
   };
 }
 
-// Legacy aliases for backwards compatibility
-export type DailyMixConfig = WaveMixConfig;
-export type DailyMix = AutoPlaylist;
-export type DailyMixMetadata = PlaylistMetadata;
-
 export interface SmartPlaylistConfig {
   name: string;
   description?: string;

@@ -417,6 +417,26 @@ export class MaintenanceController {
       // Get all artist directories
       const artistDirs = await fs.readdir(artistsPath, { withFileTypes: true });
 
+      // OPTIMIZATION: Batch load all artists to avoid N+1 query
+      const artistIds = artistDirs
+        .filter(dir => dir.isDirectory())
+        .map(dir => dir.name);
+
+      const artists = await this.prisma.artist.findMany({
+        where: { id: { in: artistIds } },
+        select: {
+          id: true,
+          name: true,
+          externalProfilePath: true,
+          externalBackgroundPath: true,
+          externalBannerPath: true,
+          externalLogoPath: true,
+        },
+      });
+
+      // Create map for O(1) lookups
+      const artistMap = new Map(artists.map(a => [a.id, a]));
+
       for (const dir of artistDirs) {
         if (!dir.isDirectory()) continue;
 
@@ -424,10 +444,8 @@ export class MaintenanceController {
         const artistPath = path.join(artistsPath, artistId);
 
         try {
-          // Check if artist exists in database
-          const artist = await this.prisma.artist.findUnique({
-            where: { id: artistId },
-          });
+          // Check if artist exists in database using map
+          const artist = artistMap.get(artistId);
 
           if (!artist) {
             this.logger.debug(`Artist ${artistId} not found in database, skipping`);

@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { RedisService } from '@infrastructure/cache/redis.service';
 import { PLAY_TRACKING_REPOSITORY } from './domain/ports';
 import { PrismaPlayTrackingRepository } from './infrastructure/persistence/play-tracking.repository';
+import { CachedPlayTrackingRepository } from './infrastructure/persistence/cached-play-tracking.repository';
 import { PlayStatsCalculatorService } from './domain/services/play-stats-calculator.service';
 import {
   RecordPlayUseCase,
@@ -17,9 +19,11 @@ import { PlayTrackingController } from './presentation/controller/play-tracking.
   controllers: [PlayTrackingController],
   providers: [
     PrismaService,
+    RedisService,
+    PrismaPlayTrackingRepository, // Base repository
     {
       provide: PLAY_TRACKING_REPOSITORY,
-      useClass: PrismaPlayTrackingRepository,
+      useClass: CachedPlayTrackingRepository, // Use cached wrapper
     },
     PlayStatsCalculatorService,
     RecordPlayUseCase,

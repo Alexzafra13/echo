@@ -140,6 +140,34 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
     return PlaylistMapper.playlistTrackToDomain(created);
   }
 
+  /**
+   * RACE CONDITION FIX: Agrega track con auto-asignación de orden dentro de transacción
+   * Previene duplicación de trackOrder cuando múltiples requests concurrentes agregan tracks
+   */
+  async addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack> {
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Obtener el máximo trackOrder actual dentro de la transacción
+      const maxOrder = await tx.playlistTrack.aggregate({
+        where: { playlistId },
+        _max: { trackOrder: true },
+      });
+
+      // 2. Calcular siguiente orden (empezando desde 1)
+      const nextOrder = (maxOrder._max.trackOrder ?? 0) + 1;
+
+      // 3. Crear el nuevo track con el orden calculado
+      const created = await tx.playlistTrack.create({
+        data: {
+          playlistId,
+          trackId,
+          trackOrder: nextOrder,
+        },
+      });
+
+      return PlaylistMapper.playlistTrackToDomain(created);
+    });
+  }
+
   async removeTrack(playlistId: string, trackId: string): Promise<boolean> {
     const result = await this.prisma.playlistTrack.deleteMany({
       where: {
@@ -195,6 +223,56 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
 
     // Return unique album IDs
     return Array.from(new Set(albumIds));
+  }
+
+  /**
+   * OPTIMIZATION: Batch fetch album IDs for multiple playlists
+   * Avoids N+1 query pattern when fetching multiple playlists
+   */
+  async getBatchPlaylistAlbumIds(playlistIds: string[]): Promise<Map<string, string[]>> {
+    if (playlistIds.length === 0) {
+      return new Map();
+    }
+
+    const playlistTracks = await this.prisma.playlistTrack.findMany({
+      where: { playlistId: { in: playlistIds } },
+      include: {
+        track: {
+          select: {
+            albumId: true,
+          },
+        },
+      },
+      orderBy: { trackOrder: 'asc' },
+    });
+
+    // Group tracks by playlist
+    const tracksByPlaylist = new Map<string, string[]>();
+
+    for (const pt of playlistTracks) {
+      if (!pt.track.albumId) continue;
+
+      if (!tracksByPlaylist.has(pt.playlistId)) {
+        tracksByPlaylist.set(pt.playlistId, []);
+      }
+
+      tracksByPlaylist.get(pt.playlistId)!.push(pt.track.albumId);
+    }
+
+    // Get unique album IDs per playlist
+    const result = new Map<string, string[]>();
+    for (const [playlistId, albumIds] of tracksByPlaylist.entries()) {
+      result.set(playlistId, Array.from(new Set(albumIds)));
+    }
+
+    // Ensure all requested playlists have an entry (even if empty)
+    for (const playlistId of playlistIds) {
+      if (!result.has(playlistId)) {
+        result.set(playlistId, []);
+      }
+    }
+
+    return result;
   }
 
   async reorderTracks(

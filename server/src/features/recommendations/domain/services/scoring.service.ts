@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   TrackScore,
   ScoreBreakdown,
@@ -18,6 +19,8 @@ import {
 @Injectable()
 export class ScoringService {
   constructor(
+    @InjectPinoLogger(ScoringService.name)
+    private readonly logger: PinoLogger,
     @Inject(USER_INTERACTIONS_REPOSITORY)
     private readonly interactionsRepo: IUserInteractionsRepository,
     @Inject(PLAY_TRACKING_REPOSITORY)
@@ -138,7 +141,7 @@ export class ScoringService {
     const trackStats = playStats.find((s) => s.itemId === trackId);
 
     if (!trackStats) {
-      console.log(`[Scoring] No play stats found for track ${trackId}`);
+      this.logger.debug({ userId, trackId }, 'No play stats found for track');
     }
 
     // Get artist play stats for diversity calculation

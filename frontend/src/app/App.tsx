@@ -15,6 +15,7 @@ import { RadioPage } from '@features/radio/pages/RadioPage';
 import { WaveMixPage } from '@features/recommendations/pages/WaveMixPage';
 import { PlaylistDetailPage as WavePlaylistDetailPage } from '@features/recommendations/pages/PlaylistDetailPage';
 import { DailyMixPage } from '@features/recommendations/pages/DailyMixPage';
+import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlaylistsPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { useAuthStore } from '@shared/store';
@@ -117,6 +118,13 @@ function App() {
         <Route path="/wave-mix/:id">
           <ProtectedRoute>
             <WavePlaylistDetailPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Artist Playlists Route (Protected) */}
+        <Route path="/artist-playlists">
+          <ProtectedRoute>
+            <ArtistPlaylistsPage />
           </ProtectedRoute>
         </Route>
 

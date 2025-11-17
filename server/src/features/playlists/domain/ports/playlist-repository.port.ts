@@ -15,9 +15,11 @@ export interface IPlaylistRepository {
 
   // PlaylistTrack management
   addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack>;
+  addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack>;
   removeTrack(playlistId: string, trackId: string): Promise<boolean>;
   getPlaylistTracks(playlistId: string): Promise<Track[]>;
   getPlaylistAlbumIds(playlistId: string): Promise<string[]>;
+  getBatchPlaylistAlbumIds(playlistIds: string[]): Promise<Map<string, string[]>>;
   reorderTracks(playlistId: string, trackOrders: Array<{ trackId: string; order: number }>): Promise<boolean>;
   isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean>;
 }
