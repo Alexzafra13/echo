@@ -177,7 +177,13 @@ describe('UsersController', () => {
         name: 'Updated Name',
         email: 'updated@test.com',
       });
-      expect(result).toEqual(useCaseResponse);
+      expect(result).toMatchObject({
+        id: 'user-123',
+        username: 'testuser',
+        name: 'Updated Name',
+        email: 'updated@test.com',
+        avatarUrl: '/api/images/users/user-123/avatar',
+      });
     });
 
     it('debería actualizar solo el nombre', async () => {

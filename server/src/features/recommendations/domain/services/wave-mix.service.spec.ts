@@ -6,8 +6,8 @@ import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { StorageService } from '@features/storage/infrastructure/storage.service';
-import { ImageDownloadService } from '@features/external-metadata/infrastructure/image-download.service';
+import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
 describe('WaveMixService', () => {
   let service: WaveMixService;
@@ -72,7 +72,7 @@ describe('WaveMixService', () => {
       providers: [
         WaveMixService,
         {
-          provide: PinoLogger,
+          provide: `PinoLogger:${WaveMixService.name}`,
           useValue: mockLogger,
         },
         {

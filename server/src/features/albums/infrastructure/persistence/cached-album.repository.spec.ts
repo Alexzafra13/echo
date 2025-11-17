@@ -47,8 +47,17 @@ describe('CachedAlbumRepository', () => {
       delPattern: jest.fn(), // For wildcard key deletion
     };
 
+    // Mock PinoLogger
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    } as any;
+
     // Create instance directly without TestingModule to avoid Prisma imports
-    cachedRepository = new CachedAlbumRepository(baseRepository as any, cacheService);
+    // Constructor expects: (logger, baseRepository, cache)
+    cachedRepository = new CachedAlbumRepository(mockLogger, baseRepository as any, cacheService);
   });
 
   afterEach(() => {

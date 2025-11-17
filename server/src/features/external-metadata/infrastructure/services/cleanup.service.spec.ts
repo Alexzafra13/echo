@@ -281,12 +281,10 @@ describe('CleanupService', () => {
         {
           id: 'artist-1',
           name: 'Artist 1',
-          smallImageUrl: '/storage/artist-1/small.jpg',
-          mediumImageUrl: '/storage/artist-1/medium.jpg',
-          largeImageUrl: null,
-          backgroundImageUrl: null,
-          bannerImageUrl: null,
-          logoImageUrl: null,
+          externalProfilePath: '/storage/artist-1/profile.jpg',
+          externalBackgroundPath: '/storage/artist-1/background.jpg',
+          externalBannerPath: null,
+          externalLogoPath: null,
         },
       ] as any);
 
@@ -316,12 +314,10 @@ describe('CleanupService', () => {
         {
           id: 'artist-1',
           name: 'Artist 1',
-          smallImageUrl: '/storage/artist-1/small.jpg',
-          mediumImageUrl: null,
-          largeImageUrl: null,
-          backgroundImageUrl: null,
-          bannerImageUrl: null,
-          logoImageUrl: null,
+          externalProfilePath: '/storage/artist-1/profile.jpg',
+          externalBackgroundPath: null,
+          externalBannerPath: null,
+          externalLogoPath: null,
         },
       ] as any);
 
