@@ -1,5 +1,6 @@
 export interface UpdatePlaylistInput {
   id: string;
+  userId: string;
   name?: string;
   description?: string;
   coverImageUrl?: string;
