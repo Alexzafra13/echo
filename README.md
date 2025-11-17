@@ -220,11 +220,48 @@ pnpm reset:windows  # (si está disponible)
 - Verifica que esté en modo Linux containers (no Windows containers)
 - Asegúrate de tener WSL2 instalado y configurado
 
+## 🚢 Despliegue en Producción
+
+Echo está diseñado para ser **plug-and-play** como Jellyfin.
+
+### Setup Rápido (3 pasos)
+
+```bash
+# 1. Generar secrets seguros
+bash scripts/generate-secrets.sh
+
+# 2. Configurar .env (solo pegar los secrets)
+cp .env.example .env
+nano .env  # Pegar JWT_SECRET y JWT_REFRESH_SECRET
+
+# 3. Levantar servidor
+docker compose up -d
+```
+
+**¡Eso es todo!** El servidor:
+- ✅ Auto-detecta primera ejecución
+- ✅ Ejecuta migraciones automáticamente
+- ✅ Crea usuario admin (admin/admin123)
+- ✅ Muestra credenciales en los logs
+
+Accede en: **http://localhost:4567**
+
+**📖 Guía completa:** Ver [PRODUCTION.md](./PRODUCTION.md)
+
+### Características Jellyfin-style
+
+- **Single container**: Frontend + Backend en un solo proceso (puerto 4567)
+- **Auto-setup**: Base de datos y usuario admin se crean automáticamente
+- **Secrets seguros**: Script para generar JWT secrets criptográficos
+- **Plug and play**: Solo necesitas configurar 2 variables (JWT secrets)
+- **Logs claros**: Muestra credenciales y URLs en el primer arranque
+
 ## 📚 Documentación
 
+- **[PRODUCTION.md](./PRODUCTION.md)** - 🚢 Guía de producción completa
+- [DOCKER.md](./DOCKER.md) - Deploy avanzado y troubleshooting
 - [server/](./server) - Documentación del backend
 - [frontend/](./frontend) - Documentación del frontend
-- [DOCKER.md](./DOCKER.md) - Deploy en producción
 
 ## 📄 Licencia
 
