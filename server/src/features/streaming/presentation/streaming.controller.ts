@@ -8,6 +8,7 @@ import {
   HttpStatus,
   StreamableFile,
   UseGuards,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,6 +24,7 @@ import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from '../domain/stream-token.guard';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 import * as fs from 'fs';
+import { ReadStream } from 'fs';
 
 /**
  * StreamingController - Controlador de streaming de audio
@@ -42,12 +44,29 @@ import * as fs from 'fs';
 @Controller('tracks')
 @UseGuards(StreamTokenGuard)
 @AllowChangePassword() // Permitir streaming aunque usuario deba cambiar contraseña
-export class StreamingController {
+export class StreamingController implements OnModuleDestroy {
+  private readonly activeStreams = new Set<ReadStream>();
+
   constructor(
     @InjectPinoLogger(StreamingController.name)
     private readonly logger: PinoLogger,
     private readonly streamTrackUseCase: StreamTrackUseCase,
   ) {}
+
+  /**
+   * Cleanup: Destruir todos los streams activos al cerrar el módulo
+   */
+  onModuleDestroy() {
+    this.logger.info({ activeStreams: this.activeStreams.size }, 'Cleaning up active streams');
+
+    for (const stream of this.activeStreams) {
+      if (!stream.destroyed) {
+        stream.destroy();
+      }
+    }
+
+    this.activeStreams.clear();
+  }
 
   /**
    * HEAD /tracks/:id/stream
@@ -179,7 +198,16 @@ export class StreamingController {
       // Stream del rango solicitado
       const stream = fs.createReadStream(filePath, { start, end });
 
+      // Track stream for cleanup
+      this.activeStreams.add(stream);
+
+      // Cleanup on finish/close/error
+      const cleanup = () => {
+        this.activeStreams.delete(stream);
+      };
+
       stream.on('error', (error) => {
+        cleanup();
         this.logger.error(
           { error: error instanceof Error ? error.message : error, trackId: id, start, end },
           'Error reading file (range request)'
@@ -188,6 +216,9 @@ export class StreamingController {
           res.raw.destroy();
         }
       });
+
+      stream.on('close', cleanup);
+      stream.on('end', cleanup);
 
       stream.pipe(res.raw);
     } else {
@@ -204,7 +235,16 @@ export class StreamingController {
       // Stream del archivo completo
       const stream = fs.createReadStream(filePath);
 
+      // Track stream for cleanup
+      this.activeStreams.add(stream);
+
+      // Cleanup on finish/close/error
+      const cleanup = () => {
+        this.activeStreams.delete(stream);
+      };
+
       stream.on('error', (error) => {
+        cleanup();
         this.logger.error(
           { error: error instanceof Error ? error.message : error, trackId: id },
           'Error reading file (full stream)'
@@ -213,6 +253,9 @@ export class StreamingController {
           res.raw.destroy();
         }
       });
+
+      stream.on('close', cleanup);
+      stream.on('end', cleanup);
 
       stream.pipe(res.raw);
     }
