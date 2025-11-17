@@ -80,8 +80,6 @@ export class AlbumResponseDto {
       if (timestamp) {
         const version = new Date(timestamp).getTime();
         coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
-        // Debug logging
-        console.log(`[AlbumDTO] Album: ${data.name}, externalInfoUpdatedAt: ${data.externalInfoUpdatedAt}, updatedAt: ${data.updatedAt}, version: ${version}, coverUrl: ${coverUrl}`);
       }
     }
 
