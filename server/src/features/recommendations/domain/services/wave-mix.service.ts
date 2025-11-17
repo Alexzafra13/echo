@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { AutoPlaylist, WaveMixConfig, PlaylistMetadata, TrackScore } from '../entities/track-score.entity';
 import { ScoringService } from './scoring.service';
 import {
@@ -47,6 +48,8 @@ export class WaveMixService {
   private readonly CACHE_TTL_SECONDS = 24 * 60 * 60; // 24 hours
 
   constructor(
+    @InjectPinoLogger(WaveMixService.name)
+    private readonly logger: PinoLogger,
     private readonly scoringService: ScoringService,
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepo: IPlayTrackingRepository,
@@ -76,11 +79,11 @@ export class WaveMixService {
 
     // Step 1: Get user's top tracks based on play stats
     const topTracks = await this.playTrackingRepo.getUserTopTracks(userId, 200); // Get more than needed
-    console.log(`[WaveMix] User ${userId} has ${topTracks.length} top tracks`);
+    this.logger.info({ userId, topTracksCount: topTracks.length }, 'User top tracks retrieved');
 
     if (topTracks.length === 0) {
       // User has no listening history, return empty mix
-      console.log(`[WaveMix] No listening history for user ${userId}, returning empty mix`);
+      this.logger.info({ userId }, 'No listening history, returning empty mix');
       return this.createEmptyWaveMix(userId);
     }
 
@@ -100,17 +103,25 @@ export class WaveMixService {
 
     // Step 2: Calculate scores for all tracks
     const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
-    console.log(`[WaveMix] Calculated scores for ${scoredTracks.length} tracks`);
+    this.logger.info({ userId, scoredTracksCount: scoredTracks.length }, 'Calculated scores for tracks');
     if (scoredTracks.length > 0) {
-      console.log(`[WaveMix] Score range: ${scoredTracks[0]?.totalScore} to ${scoredTracks[scoredTracks.length - 1]?.totalScore}`);
+      this.logger.debug({
+        userId,
+        maxScore: scoredTracks[0]?.totalScore,
+        minScore: scoredTracks[scoredTracks.length - 1]?.totalScore,
+      }, 'Score range calculated');
     }
 
     // Step 3: Filter tracks above minimum score
     const qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
-    console.log(`[WaveMix] ${qualifiedTracks.length} tracks qualified (score >= ${finalConfig.minScore})`);
+    this.logger.info({
+      userId,
+      qualifiedCount: qualifiedTracks.length,
+      minScore: finalConfig.minScore,
+    }, 'Tracks qualified above minimum score');
 
     if (qualifiedTracks.length === 0) {
-      console.log(`[WaveMix] No tracks qualified above min score ${finalConfig.minScore}, returning empty mix`);
+      this.logger.info({ userId, minScore: finalConfig.minScore }, 'No tracks qualified, returning empty mix');
       return this.createEmptyWaveMix(userId);
     }
 
@@ -247,7 +258,7 @@ export class WaveMixService {
           if (exists) {
             // Use cached image
             coverImageUrl = `/api/images/artist/${artist.id}/fanart-thumb`;
-            console.log(`[WaveMix] Using cached FanArt image for ${artist.name}`);
+            this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'Using cached FanArt image');
           } else {
             // Fetch from FanArt.tv and save to storage
             const artistImages = await this.externalMetadataService['getArtistImages'](
@@ -266,14 +277,14 @@ export class WaveMixService {
                   'fanart-thumb.jpg'
                 );
                 coverImageUrl = `/api/images/artist/${artist.id}/fanart-thumb`;
-                console.log(`[WaveMix] Downloaded and saved FanArt image for ${artist.name}`);
+                this.logger.info({ artistId: artist.id, artistName: artist.name }, 'Downloaded and saved FanArt image');
               }
             }
           }
         }
       } catch (error) {
         // If FanArt fails, we'll just use undefined and fallback
-        console.log(`[WaveMix] Failed to fetch/save FanArt image for ${artist.name}:`, error);
+        this.logger.warn({ artistId: artist.id, artistName: artist.name, error }, 'Failed to fetch/save FanArt image');
       }
 
       // Fallback to local artist profile if no FanArt image
@@ -309,13 +320,13 @@ export class WaveMixService {
     if (!forceRefresh) {
       const cached = await this.redis.get(cacheKey);
       if (cached) {
-        console.log(`[WaveMix] Serving cached playlists from Redis for user ${userId}`);
+        this.logger.info({ userId }, 'Serving cached playlists from Redis');
         return cached;
       }
     }
 
     // Generate fresh playlists
-    console.log(`[WaveMix] Generating fresh playlists for user ${userId}`);
+    this.logger.info({ userId }, 'Generating fresh playlists');
     const [waveMix, artistPlaylists] = await Promise.all([
       this.generateWaveMix(userId),
       this.generateArtistPlaylists(userId, 5), // Generate 5 artist playlists
@@ -325,7 +336,7 @@ export class WaveMixService {
 
     // Cache in Redis for 24 hours
     await this.redis.set(cacheKey, playlists, this.CACHE_TTL_SECONDS);
-    console.log(`[WaveMix] Cached playlists in Redis for user ${userId} (TTL: 24h)`);
+    this.logger.info({ userId, ttlSeconds: this.CACHE_TTL_SECONDS }, 'Cached playlists in Redis');
 
     return playlists;
   }
@@ -448,7 +459,7 @@ export class WaveMixService {
           }
         }
       } catch (error) {
-        console.log(`[WaveMix] Failed to fetch/save FanArt image for ${artist.name}:`, error);
+        this.logger.warn({ artistId: artist.id, artistName: artist.name, error }, 'Failed to fetch/save FanArt image in pagination');
       }
 
       // Fallback to local artist profile if no FanArt image
