@@ -6,6 +6,8 @@ import {
   ChangeThemeUseCase,
   ChangeLanguageUseCase,
 } from '../domain/use-cases';
+import { UploadAvatarUseCase } from '../domain/use-cases/upload-avatar/upload-avatar.use-case';
+import { DeleteAvatarUseCase } from '../domain/use-cases/delete-avatar/delete-avatar.use-case';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 
 describe('UsersController', () => {
@@ -14,6 +16,8 @@ describe('UsersController', () => {
   let mockUpdateProfileUseCase: any;
   let mockChangeThemeUseCase: any;
   let mockChangeLanguageUseCase: any;
+  let mockUploadAvatarUseCase: any;
+  let mockDeleteAvatarUseCase: any;
 
   const mockUser = {
     id: 'user-123',
@@ -38,6 +42,14 @@ describe('UsersController', () => {
       execute: jest.fn(),
     };
 
+    mockUploadAvatarUseCase = {
+      execute: jest.fn(),
+    };
+
+    mockDeleteAvatarUseCase = {
+      execute: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
@@ -56,6 +68,14 @@ describe('UsersController', () => {
         {
           provide: ChangeLanguageUseCase,
           useValue: mockChangeLanguageUseCase,
+        },
+        {
+          provide: UploadAvatarUseCase,
+          useValue: mockUploadAvatarUseCase,
+        },
+        {
+          provide: DeleteAvatarUseCase,
+          useValue: mockDeleteAvatarUseCase,
         },
       ],
     })

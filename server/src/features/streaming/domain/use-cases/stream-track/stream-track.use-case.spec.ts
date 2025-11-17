@@ -12,6 +12,13 @@ describe('StreamTrackUseCase', () => {
   let useCase: StreamTrackUseCase;
   let trackRepository: jest.Mocked<ITrackRepository>;
 
+  const mockLogger = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
   const mockTrack = Track.reconstruct({
     id: 'track-1',
     title: 'Test Song',
@@ -39,6 +46,10 @@ describe('StreamTrackUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StreamTrackUseCase,
+        {
+          provide: `PinoLogger:${StreamTrackUseCase.name}`,
+          useValue: mockLogger,
+        },
         {
           provide: TRACK_REPOSITORY,
           useValue: mockTrackRepository,
