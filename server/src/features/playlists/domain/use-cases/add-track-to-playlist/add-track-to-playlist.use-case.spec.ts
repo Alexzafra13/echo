@@ -224,7 +224,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
       await expect(useCase.execute(input)).rejects.toThrow(
-        'Track track-123 is already in playlist playlist-123',
+        'Esta canción ya está en la playlist',
       );
       expect(playlistRepository.addTrack).not.toHaveBeenCalled();
     });
