@@ -15,6 +15,7 @@
     "install:first:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
     "quickstart": "bash scripts/quickstart.sh",
     "quickstart:windows": "powershell -ExecutionPolicy Bypass -File scripts/quickstart.ps1",
+    "reset": "bash scripts/reset-and-init.sh",
     "dev": "pnpm --filter echo-server-backend dev",
     "dev:all": "pnpm --parallel --filter echo-server-backend --filter echo-frontend dev",
     "build": "pnpm --filter echo-frontend build && pnpm --filter echo-server-backend build",
