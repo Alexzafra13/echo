@@ -763,3 +763,30 @@ model Setting {
   @@index([category])
   @@map("settings")
 }
+
+// ============================================
+// SYSTEM LOGS
+// ============================================
+
+model SystemLog {
+  id           String   @id @default(uuid())
+  level        String   @db.VarChar(20) // 'critical', 'error', 'warning', 'info', 'debug'
+  category     String   @db.VarChar(50) // 'scanner', 'metadata', 'auth', 'api', 'storage', 'cleanup'
+  message      String   @db.Text
+  details      String?  @db.Text // JSON con información adicional
+  userId       String?  @map("user_id") @db.VarChar(36) // Usuario relacionado (si aplica)
+  entityId     String?  @map("entity_id") @db.VarChar(36) // ID de entidad relacionada
+  entityType   String?  @map("entity_type") @db.VarChar(20) // 'track', 'album', 'artist', 'scan', etc.
+  stackTrace   String?  @map("stack_trace") @db.Text // Stack trace completo para errores
+  requestId    String?  @map("request_id") @db.VarChar(36) // Para tracking de requests
+  ipAddress    String?  @map("ip_address") @db.VarChar(45) // IPv4 o IPv6
+  userAgent    String?  @map("user_agent") @db.VarChar(512)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([level, createdAt])
+  @@index([category, createdAt])
+  @@index([userId])
+  @@index([requestId])
+  @@index([createdAt])
+  @@map("system_logs")
+}
