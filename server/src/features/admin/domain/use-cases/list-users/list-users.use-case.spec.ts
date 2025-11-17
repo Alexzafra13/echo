@@ -84,6 +84,8 @@ describe('ListUsersUseCase', () => {
         mustChangePassword: false,
         lastLoginAt: new Date('2025-10-20'),
         createdAt: new Date('2025-10-01'),
+        avatarPath: undefined,
+        isSystemAdmin: false,
       });
     });
 
