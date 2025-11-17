@@ -222,39 +222,41 @@ pnpm reset:windows  # (si está disponible)
 
 ## 🚢 Despliegue en Producción
 
-Echo está diseñado para ser **plug-and-play** como Jellyfin.
+Echo es **100% plug-and-play** como Jellyfin.
 
-### Setup Rápido (3 pasos)
+### Setup (1 comando)
 
 ```bash
-# 1. Generar secrets seguros
-bash scripts/generate-secrets.sh
-
-# 2. Configurar .env (solo pegar los secrets)
-cp .env.example .env
-nano .env  # Pegar JWT_SECRET y JWT_REFRESH_SECRET
-
-# 3. Levantar servidor
 docker compose up -d
 ```
 
-**¡Eso es todo!** El servidor:
-- ✅ Auto-detecta primera ejecución
-- ✅ Ejecuta migraciones automáticamente
+**¡Listo!** Sin configuración. Sin archivos .env. Sin scripts.
+
+El servidor automáticamente:
+- ✅ Genera JWT secrets criptográficamente seguros
+- ✅ Guarda secrets en volumen persistente
+- ✅ Detecta primera ejecución
+- ✅ Ejecuta migraciones
 - ✅ Crea usuario admin (admin/admin123)
-- ✅ Muestra credenciales en los logs
+- ✅ Muestra credenciales en logs
 
-Accede en: **http://localhost:4567**
+**Acceso:** http://localhost:4567
 
-**📖 Guía completa:** Ver [PRODUCTION.md](./PRODUCTION.md)
+**Ver credenciales:**
+```bash
+docker compose logs echo-app | grep -A 5 "Default Credentials"
+```
+
+**📖 Guía completa:** [PRODUCTION.md](./PRODUCTION.md)
 
 ### Características Jellyfin-style
 
-- **Single container**: Frontend + Backend en un solo proceso (puerto 4567)
-- **Auto-setup**: Base de datos y usuario admin se crean automáticamente
-- **Secrets seguros**: Script para generar JWT secrets criptográficos
-- **Plug and play**: Solo necesitas configurar 2 variables (JWT secrets)
-- **Logs claros**: Muestra credenciales y URLs en el primer arranque
+- **Zero-config**: Sin .env, sin secrets manuales, sin setup
+- **Auto-generated secrets**: JWT secrets generados automáticamente
+- **Single container**: Frontend + Backend en un proceso (puerto 4567)
+- **Auto-setup**: BD, migraciones y admin creados automáticamente
+- **Persistent config**: Secrets guardados en `/app/config` (volumen)
+- **Clear logs**: Credenciales y URLs mostradas prominentemente
 
 ## 📚 Documentación
 

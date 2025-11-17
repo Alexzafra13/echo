@@ -1,66 +1,49 @@
 # Echo - Production Deployment Guide
 
-Despliegue en producción ultra-simple, inspirado en Jellyfin.
+Despliegue en producción **100% plug-and-play**, exactamente como Jellyfin.
 
-## 🚀 Quick Start (3 Pasos)
-
-### 1. Generar Secrets de JWT
-
-```bash
-# Opción A: Script automático (recomendado)
-bash scripts/generate-secrets.sh
-
-# Opción B: Manual
-openssl rand -base64 64  # Copiar para JWT_SECRET
-openssl rand -base64 64  # Copiar para JWT_REFRESH_SECRET
-```
-
-### 2. Configurar .env
-
-```bash
-# Copiar archivo de ejemplo
-cp .env.example .env
-
-# Editar y pegar los secrets generados
-nano .env  # o tu editor favorito
-```
-
-Solo necesitas cambiar:
-- `JWT_SECRET` - Pegar el primer secret generado
-- `JWT_REFRESH_SECRET` - Pegar el segundo secret generado
-- `MUSIC_PATH` - Ruta a tu biblioteca de música (opcional)
-
-**¡Todo lo demás ya tiene valores por defecto sensatos!**
-
-### 3. Levantar el Servidor
+## 🚀 Quick Start (1 Comando)
 
 ```bash
 docker compose up -d
 ```
 
-**¡Eso es todo!** 🎉
+**¡ESO ES TODO!** 🎉
 
-Accede en: **http://localhost:4567**
+No hay pasos 2 o 3. No hay configuración. Simplemente funciona.
 
-Credenciales iniciales:
+### Acceso
+
+**URL:** http://localhost:4567
+
+**Credenciales (mostradas en logs):**
 - Usuario: `admin`
 - Contraseña: `admin123`
 - ⚠️ Deberás cambiarla en el primer login
 
+**Ver credenciales:**
+```bash
+docker compose logs echo-app | grep -A 5 "Default Credentials"
+```
+
 ---
 
-## 📋 ¿Qué Hace Automáticamente?
+## 📋 ¿Qué Hace Automáticamente? (Jellyfin-style)
 
-El servidor se auto-configura en el primer arranque:
+El servidor es **100% auto-configurante** en el primer arranque:
 
-1. ✅ **Espera** a que PostgreSQL y Redis estén listos
-2. ✅ **Detecta** si es la primera ejecución
-3. ✅ **Ejecuta** migraciones de base de datos automáticamente
-4. ✅ **Crea** usuario admin con contraseña por defecto
-5. ✅ **Muestra** credenciales en los logs
-6. ✅ **Inicia** el servidor completo (API + Frontend)
+1. ✅ **Auto-genera JWT secrets** criptográficamente seguros
+2. ✅ **Guarda secrets** en `/app/config/secrets.env` (persistente)
+3. ✅ **Espera** a que PostgreSQL y Redis estén listos
+4. ✅ **Detecta** primera ejecución (verifica tabla User)
+5. ✅ **Ejecuta** migraciones de base de datos
+6. ✅ **Crea** usuario admin automáticamente
+7. ✅ **Muestra** credenciales en logs con formato bonito
+8. ✅ **Inicia** servidor completo (API + Frontend integrados)
 
-Todo esto sin intervención manual - **como Jellyfin**.
+**Sin configuración. Sin archivos .env. Sin scripts.**
+
+Exactamente como Jellyfin.
 
 ---
 
@@ -253,12 +236,16 @@ cat backup.sql | docker compose exec -T postgres psql -U music_admin music_serve
 
 ### Error: "JWT_SECRET is required"
 
-```bash
-# Verificar que .env existe y tiene JWT_SECRET
-cat .env | grep JWT_SECRET
+Este error NO debería aparecer ya que los secrets se auto-generan.
 
-# Si está vacío o mal configurado:
-bash scripts/generate-secrets.sh
+Si aparece, verifica que el volumen de config existe:
+
+```bash
+# Ver secrets generados
+docker compose exec echo-app cat /app/config/secrets.env
+
+# Si no existe, reiniciar contenedor:
+docker compose restart echo-app
 ```
 
 ### Error: No se ve el frontend
