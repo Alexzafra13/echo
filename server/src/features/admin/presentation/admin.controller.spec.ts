@@ -7,6 +7,7 @@ import {
   DeleteUserUseCase,
   ResetUserPasswordUseCase,
 } from '../domain/use-cases';
+import { PermanentlyDeleteUserUseCase } from '../domain/use-cases/permanently-delete-user/permanently-delete-user.use-case';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 
@@ -17,6 +18,7 @@ describe('AdminController', () => {
   let mockUpdateUserUseCase: any;
   let mockDeleteUserUseCase: any;
   let mockResetUserPasswordUseCase: any;
+  let mockPermanentlyDeleteUserUseCase: any;
 
   beforeEach(async () => {
     mockCreateUserUseCase = {
@@ -36,6 +38,10 @@ describe('AdminController', () => {
     };
 
     mockResetUserPasswordUseCase = {
+      execute: jest.fn(),
+    };
+
+    mockPermanentlyDeleteUserUseCase = {
       execute: jest.fn(),
     };
 
@@ -61,6 +67,10 @@ describe('AdminController', () => {
         {
           provide: ResetUserPasswordUseCase,
           useValue: mockResetUserPasswordUseCase,
+        },
+        {
+          provide: PermanentlyDeleteUserUseCase,
+          useValue: mockPermanentlyDeleteUserUseCase,
         },
       ],
     })
