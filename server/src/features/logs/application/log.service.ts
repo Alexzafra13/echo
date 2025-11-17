@@ -1,4 +1,5 @@
-import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 
 /**
@@ -53,10 +54,13 @@ export interface LogMetadata {
  */
 @Injectable()
 export class LogService {
-  private readonly logger = new NestLogger(LogService.name);
   private readonly PERSIST_LEVELS = new Set([LogLevel.CRITICAL, LogLevel.ERROR, LogLevel.WARNING]);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @InjectPinoLogger(LogService.name)
+    private readonly logger: PinoLogger,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Log crítico - Requiere atención inmediata
@@ -135,12 +139,12 @@ export class LogService {
       }
     } catch (logError) {
       // No queremos que fallos en logging rompan la app
-      this.logger.error(`Failed to log: ${(logError as Error).message}`);
+      this.logger.error({ error: logError }, 'Failed to log message');
     }
   }
 
   /**
-   * Logging a consola usando logger de NestJS
+   * Logging a consola usando Pino logger
    */
   private logToConsole(
     level: LogLevel,
@@ -149,27 +153,25 @@ export class LogService {
     metadata?: LogMetadata,
     error?: Error,
   ): void {
-    const prefix = `[${category.toUpperCase()}]`;
-    const fullMessage = `${prefix} ${message}`;
-    const context = metadata ? JSON.stringify(metadata) : undefined;
+    const logContext = {
+      category,
+      ...metadata,
+      ...(error && { error: { message: error.message, stack: error.stack } }),
+    };
 
     switch (level) {
       case LogLevel.CRITICAL:
       case LogLevel.ERROR:
-        if (error) {
-          this.logger.error(fullMessage, error.stack, context);
-        } else {
-          this.logger.error(fullMessage, context);
-        }
+        this.logger.error(logContext, message);
         break;
       case LogLevel.WARNING:
-        this.logger.warn(fullMessage, context);
+        this.logger.warn(logContext, message);
         break;
       case LogLevel.INFO:
-        this.logger.log(fullMessage, context);
+        this.logger.info(logContext, message);
         break;
       case LogLevel.DEBUG:
-        this.logger.debug(fullMessage, context);
+        this.logger.debug(logContext, message);
         break;
     }
   }
@@ -205,9 +207,7 @@ export class LogService {
       });
     } catch (dbError) {
       // Fallback a consola si falla BD
-      this.logger.error(
-        `Failed to persist log to database: ${(dbError as Error).message}`,
-      );
+      this.logger.error({ error: dbError }, 'Failed to persist log to database');
     }
   }
 
@@ -320,8 +320,9 @@ export class LogService {
       },
     });
 
-    this.logger.log(
-      `Cleaned up ${result.count} logs older than ${daysToKeep} days`,
+    this.logger.info(
+      { count: result.count, daysToKeep, cutoffDate },
+      'Cleaned up old logs',
     );
 
     return result.count;
