@@ -27,6 +27,22 @@ export class PrismaTrackRepository implements ITrackRepository {
   }
 
   /**
+   * Busca múltiples tracks por IDs
+   * Útil para batch fetching y evitar N+1 queries
+   */
+  async findByIds(ids: string[]): Promise<Track[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const tracks = await this.prisma.track.findMany({
+      where: { id: { in: ids } },
+    });
+
+    return TrackMapper.toDomainArray(tracks);
+  }
+
+  /**
    * Obtiene todos los tracks con paginación
    */
   async findAll(skip: number, take: number): Promise<Track[]> {

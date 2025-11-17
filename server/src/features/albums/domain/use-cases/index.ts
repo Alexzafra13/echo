@@ -12,3 +12,9 @@ export { GetRecentAlbumsUseCase, type GetRecentAlbumsInput, type GetRecentAlbums
 
 // Obtener álbum destacado
 export { GetFeaturedAlbumUseCase, type GetFeaturedAlbumOutput } from './get-featured-album';
+
+// Obtener tracks de un álbum
+export { GetAlbumTracksUseCase, type GetAlbumTracksInput, type GetAlbumTracksOutput } from './get-album-tracks';
+
+// Obtener cover art de un álbum
+export { GetAlbumCoverUseCase, type GetAlbumCoverInput, type GetAlbumCoverOutput } from './get-album-cover';

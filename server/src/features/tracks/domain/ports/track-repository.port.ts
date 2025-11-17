@@ -18,6 +18,13 @@ export interface ITrackRepository {
   findById(id: string): Promise<Track | null>;
 
   /**
+   * Busca múltiples tracks por sus IDs
+   * @param ids - Array de IDs (UUIDs) a buscar
+   * @returns Array de tracks encontrados
+   */
+  findByIds(ids: string[]): Promise<Track[]>;
+
+  /**
    * Obtiene todos los tracks con paginación
    * @param skip - Cuántos registros saltar
    * @param take - Cuántos registros traer
