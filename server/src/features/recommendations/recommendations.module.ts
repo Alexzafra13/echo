@@ -4,6 +4,7 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
 import { UserInteractionsModule } from '@features/user-interactions/user-interactions.module';
 import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
+import { TracksModule } from '@features/tracks/tracks.module';
 import { ScoringService } from './domain/services/scoring.service';
 import { WaveMixService } from './domain/services/wave-mix.service';
 import { SmartPlaylistService } from './domain/services/smart-playlist.service';
@@ -18,7 +19,7 @@ import { RecommendationsController } from './presentation/controller/recommendat
 import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-scheduler.service';
 
 @Module({
-  imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule],
+  imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule, TracksModule],
   controllers: [RecommendationsController],
   providers: [
     PrismaService,
