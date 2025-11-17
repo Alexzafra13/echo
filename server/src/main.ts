@@ -2,6 +2,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
@@ -16,7 +17,12 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyAdapter,
+    { bufferLogs: true }, // Buffer logs until Pino logger is ready
   );
+
+  // Set Pino as the application logger
+  const logger = app.get(Logger);
+  app.useLogger(logger);
 
   // Register multipart/form-data support for file uploads
   await app.register(require('@fastify/multipart'), {
@@ -104,7 +110,7 @@ async function bootstrap() {
   const indexHtmlPath = join(frontendPath, 'index.html');
 
   if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
-    console.log(`📦 Serving frontend from: ${frontendPath}`);
+    logger.log(`📦 Serving frontend from: ${frontendPath}`);
 
     // Read index.html once at startup
     const indexHtmlContent = readFileSync(indexHtmlPath, 'utf-8');
@@ -134,14 +140,14 @@ async function bootstrap() {
       }
     });
   } else {
-    console.log(`⚠️  Frontend not found at ${frontendPath}`);
-    console.log(`   Running in API-only mode (development)`);
+    logger.warn(`⚠️  Frontend not found at ${frontendPath}`);
+    logger.warn(`   Running in API-only mode (development)`);
   }
 
   // Start server
   await app.listen(appConfig.port, '0.0.0.0');
 
-  console.log(`
+  logger.log(`
 🎵 Echo Music Server
   🚀 Servidor corriendo en: http://localhost:${appConfig.port}
   📝 API Prefix: ${appConfig.api_prefix}

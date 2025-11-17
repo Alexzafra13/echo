@@ -1,4 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { StreamTrackInput, StreamTrackOutput } from './stream-track.dto';
 import * as fs from 'fs';
@@ -16,6 +17,8 @@ import * as path from 'path';
 @Injectable()
 export class StreamTrackUseCase {
   constructor(
+    @InjectPinoLogger(StreamTrackUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(TRACK_REPOSITORY)
     private readonly trackRepository: ITrackRepository,
   ) {}
@@ -42,7 +45,7 @@ export class StreamTrackUseCase {
 
     // 4. Verificar que el archivo existe
     if (!fs.existsSync(filePath)) {
-      console.error(`[StreamTrack] Audio file not found: ${filePath}`);
+      this.logger.error({ trackId: input.trackId, filePath }, 'Audio file not found');
       throw new NotFoundException(`Audio file not found: ${filePath}`);
     }
 
@@ -50,7 +53,7 @@ export class StreamTrackUseCase {
     const stats = fs.statSync(filePath);
 
     if (!stats.isFile()) {
-      console.error(`[StreamTrack] Path is not a file: ${filePath}`);
+      this.logger.error({ trackId: input.trackId, filePath }, 'Path is not a file');
       throw new NotFoundException(`Path is not a file: ${filePath}`);
     }
 

@@ -18,6 +18,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { RequestWithUser } from '@shared/types/request.types';
 import {
   RecordPlayUseCase,
   RecordSkipUseCase,
@@ -59,7 +60,7 @@ export class PlayTrackingController {
     description: 'Play event recorded successfully',
     type: PlayEventResponseDto,
   })
-  async recordPlay(@Body() dto: RecordPlayDto, @Req() req: any): Promise<PlayEventResponseDto> {
+  async recordPlay(@Body() dto: RecordPlayDto, @Req() req: RequestWithUser): Promise<PlayEventResponseDto> {
     const userId = req.user.id;
 
     const playEvent = await this.recordPlayUseCase.execute({
@@ -99,7 +100,7 @@ export class PlayTrackingController {
     description: 'Skip event recorded successfully',
     type: PlayEventResponseDto,
   })
-  async recordSkip(@Body() dto: RecordSkipDto, @Req() req: any): Promise<PlayEventResponseDto> {
+  async recordSkip(@Body() dto: RecordSkipDto, @Req() req: RequestWithUser): Promise<PlayEventResponseDto> {
     const userId = req.user.id;
 
     const playEvent = await this.recordSkipUseCase.execute(
@@ -140,7 +141,7 @@ export class PlayTrackingController {
   async getPlayHistory(
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 50,
     @Query('offset', new ParseIntPipe({ optional: true })) offset: number = 0,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ): Promise<PlayEventResponseDto[]> {
     const userId = req.user.id;
     const history = await this.getUserPlayHistoryUseCase.execute(userId, limit, offset);
@@ -174,7 +175,7 @@ export class PlayTrackingController {
     type: [TopTrackResponseDto],
   })
   async getTopTracks(
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 50,
     @Query('days', new ParseIntPipe({ optional: true })) days?: number,
   ): Promise<TopTrackResponseDto[]> {
@@ -196,7 +197,7 @@ export class PlayTrackingController {
   })
   async getRecentlyPlayed(
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 20,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ): Promise<string[]> {
     const userId = req.user.id;
     return await this.getRecentlyPlayedUseCase.execute(userId, limit);
@@ -216,7 +217,7 @@ export class PlayTrackingController {
   })
   async getPlaySummary(
     @Query('days', new ParseIntPipe({ optional: true })) days: number = 30,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ): Promise<UserPlaySummaryResponseDto> {
     const userId = req.user.id;
     const summary = await this.getUserPlaySummaryUseCase.execute(userId, days);

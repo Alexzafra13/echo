@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { DeletePlaylistInput, DeletePlaylistOutput } from './delete-playlist.dto';
 
@@ -21,7 +21,12 @@ export class DeletePlaylistUseCase {
       throw new NotFoundException(`Playlist with ID ${input.id} not found`);
     }
 
-    // 3. Eliminar playlist (cascade eliminará los tracks)
+    // 3. SEGURIDAD: Verificar que el usuario es el propietario
+    if (existing.ownerId !== input.userId) {
+      throw new ForbiddenException('You do not have permission to delete this playlist');
+    }
+
+    // 4. Eliminar playlist (cascade eliminará los tracks)
     const deleted = await this.playlistRepository.delete(input.id);
 
     if (!deleted) {

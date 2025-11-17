@@ -107,6 +107,24 @@ export async function getAutoPlaylists(): Promise<AutoPlaylist[]> {
 }
 
 /**
+ * Get paginated artist playlists
+ * For the dedicated artist playlists page
+ */
+export async function getArtistPlaylistsPaginated(
+  skip: number = 0,
+  take: number = 10
+): Promise<{
+  playlists: AutoPlaylist[];
+  total: number;
+  hasMore: boolean;
+}> {
+  const response = await apiClient.get('/recommendations/artist-playlists', {
+    params: { skip, take },
+  });
+  return response.data;
+}
+
+/**
  * Get Daily Mix (legacy - use getAutoPlaylists for new code)
  * Fetches a personalized mix of 50 tracks based on user preferences
  */

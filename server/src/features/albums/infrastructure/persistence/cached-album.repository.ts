@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
@@ -29,6 +30,8 @@ export class CachedAlbumRepository implements IAlbumRepository {
   private readonly LIST_KEY_PREFIX = 'albums:';
 
   constructor(
+    @InjectPinoLogger(CachedAlbumRepository.name)
+    private readonly logger: PinoLogger,
     private readonly baseRepository: PrismaAlbumRepository,
     private readonly cache: RedisService,
   ) {}
@@ -42,11 +45,11 @@ export class CachedAlbumRepository implements IAlbumRepository {
     // 1. Check cache
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Album cache hit');
       return Album.reconstruct(cached);
     }
 
-    console.log(`❌ Cache MISS: ${cacheKey}`);
+    this.logger.debug({ cacheKey, type: 'MISS' }, 'Album cache miss');
 
     // 2. Fetch from DB
     const album = await this.baseRepository.findById(id);
@@ -91,13 +94,13 @@ export class CachedAlbumRepository implements IAlbumRepository {
     // Check cache
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Albums by artist cache hit');
       return cached.map((item: any) =>
         Album.reconstruct(item),
       );
     }
 
-    console.log(`❌ Cache MISS: ${cacheKey}`);
+    this.logger.debug({ cacheKey, type: 'MISS' }, 'Albums by artist cache miss');
 
     // Fetch from DB
     const albums = await this.baseRepository.findByArtistId(
@@ -126,7 +129,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
 
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Recent albums cache hit');
       return cached.map((item: any) =>
         Album.reconstruct(item),
       );
@@ -153,7 +156,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
 
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Most played albums cache hit');
       return cached.map((item: any) =>
         Album.reconstruct(item),
       );
@@ -180,7 +183,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
 
     const cached = await this.cache.get(cacheKey);
     if (cached !== null) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Albums count cache hit');
       return cached;
     }
 
@@ -247,6 +250,6 @@ export class CachedAlbumRepository implements IAlbumRepository {
       this.cache.del(`${this.LIST_KEY_PREFIX}count`),
       this.cache.del(`${this.LIST_KEY_PREFIX}featured`), // Si existe
     ]);
-    console.log('🗑️ Caché de álbumes invalidado');
+    this.logger.info('Album cache invalidated');
   }
 }
