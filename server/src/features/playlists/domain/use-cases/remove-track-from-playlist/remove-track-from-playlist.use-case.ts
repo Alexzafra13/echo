@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
@@ -29,7 +29,12 @@ export class RemoveTrackFromPlaylistUseCase {
       throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
     }
 
-    // 3. Verificar que el track existe
+    // 3. SEGURIDAD: Verificar que el usuario es el propietario
+    if (playlist.ownerId !== input.userId) {
+      throw new ForbiddenException('You do not have permission to modify this playlist');
+    }
+
+    // 4. Verificar que el track existe
     const track = await this.trackRepository.findById(input.trackId);
     if (!track) {
       throw new NotFoundException(`Track with ID ${input.trackId} not found`);

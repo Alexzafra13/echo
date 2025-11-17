@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { UpdatePlaylistInput, UpdatePlaylistOutput } from './update-playlist.dto';
 
@@ -19,6 +19,11 @@ export class UpdatePlaylistUseCase {
     const existing = await this.playlistRepository.findById(input.id);
     if (!existing) {
       throw new NotFoundException(`Playlist with ID ${input.id} not found`);
+    }
+
+    // 3. SEGURIDAD: Verificar que el usuario es el propietario
+    if (existing.ownerId !== input.userId) {
+      throw new ForbiddenException('You do not have permission to modify this playlist');
     }
 
     // 3. Preparar datos para actualizar

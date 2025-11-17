@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { ReorderPlaylistTracksInput, ReorderPlaylistTracksOutput } from './reorder-playlist-tracks.dto';
 
@@ -25,7 +25,12 @@ export class ReorderPlaylistTracksUseCase {
       throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
     }
 
-    // 3. Validar que los órdenes sean válidos
+    // 3. SEGURIDAD: Verificar que el usuario es el propietario
+    if (playlist.ownerId !== input.userId) {
+      throw new ForbiddenException('You do not have permission to modify this playlist');
+    }
+
+    // 4. Validar que los órdenes sean válidos
     for (const item of input.trackOrders) {
       if (!item.trackId || item.trackId.trim() === '') {
         throw new BadRequestException('Track ID is required for each track order');
