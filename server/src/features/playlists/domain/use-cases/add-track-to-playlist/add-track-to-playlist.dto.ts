@@ -1,6 +1,7 @@
 export interface AddTrackToPlaylistInput {
   playlistId: string;
   trackId: string;
+  userId: string;
 }
 
 export interface AddTrackToPlaylistOutput {

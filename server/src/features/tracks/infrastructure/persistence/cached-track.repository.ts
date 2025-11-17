@@ -27,6 +27,10 @@ export class CachedTrackRepository implements ITrackRepository {
     return track;
   }
 
+  async findByIds(ids: string[]): Promise<Track[]> {
+    return this.baseRepository.findByIds(ids);
+  }
+
   async findAll(skip: number, take: number): Promise<Track[]> {
     return this.baseRepository.findAll(skip, take);
   }
