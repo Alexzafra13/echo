@@ -35,6 +35,7 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(userToDelete);
+      mockUserRepository.findAll.mockResolvedValue([userToDelete]);
       mockUserRepository.updatePartial.mockResolvedValue({
         ...userToDelete,
         isActive: false,
@@ -216,6 +217,7 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(userToDelete);
+      mockUserRepository.findAll.mockResolvedValue([userToDelete]);
       mockUserRepository.updatePartial.mockResolvedValue({
         ...userToDelete,
         isActive: false,
@@ -254,6 +256,7 @@ describe('DeleteUserUseCase', () => {
       });
 
       mockUserRepository.findById.mockResolvedValue(regularUser);
+      mockUserRepository.findAll.mockResolvedValue([regularUser]);
       mockUserRepository.updatePartial.mockResolvedValue({
         ...regularUser,
         isActive: false,
