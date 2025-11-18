@@ -98,33 +98,100 @@
   }
 }
 
-/* Mobile - Icon only sidebar */
+/* Mobile - Bottom Navigation iOS Style */
 @media (max-width: 768px) {
   .sidebar {
-    width: 80px;
-    padding: 20px 0;
+    /* Transform to bottom navigation bar */
+    width: 100%;
+    height: auto;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    flex-direction: row;
+    padding: 0;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: var(--z-fixed, 1030);
+    /* iOS safe area */
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   .sidebar__logoContainer {
-    margin-bottom: 24px;
-    padding: 0 16px;
-  }
-
-  .sidebar__logo {
-    width: 48px;
+    display: none; /* Hide logo in bottom nav */
   }
 
   .sidebar__nav {
-    padding: 0 8px;
+    flex: 1;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    overflow: visible;
   }
 
   .sidebar__navItem {
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+    padding: 8px 4px;
     justify-content: center;
-    padding: 12px;
+    align-items: center;
+    border-radius: 0;
+    min-width: 0;
+    text-align: center;
+    /* iOS tab bar height */
+    min-height: 50px;
+  }
+
+  .sidebar__navIcon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
   }
 
   .sidebar__navLabel {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Only show first 5 items in bottom nav */
+  .sidebar__navItem:nth-child(n+6) {
     display: none;
+  }
+
+  /* Active state more prominent iOS style */
+  .sidebar__navItem--active {
+    background: transparent;
+  }
+
+  .sidebar__navItem--active .sidebar__navIcon {
+    transform: scale(1.1);
+  }
+}
+
+/* Mobile Small - Ultra compact */
+@media (max-width: 480px) {
+  .sidebar__navItem {
+    padding: 6px 2px;
+  }
+
+  .sidebar__navIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .sidebar__navLabel {
+    font-size: 9px;
   }
 }
 

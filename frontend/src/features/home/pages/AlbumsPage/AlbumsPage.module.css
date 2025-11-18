@@ -163,11 +163,11 @@
 /* Mobile */
 @media (max-width: 768px) {
   .albumsPage__main {
-    margin-left: 80px;
+    margin-left: 0; /* No sidebar en mobile */
   }
 
   .albumsPage__content {
-    padding: 20px 20px;
+    padding: 20px 20px 80px; /* Bottom padding for bottom nav */
   }
 
   .albumsPage__title {
@@ -202,7 +202,7 @@
   }
 
   .albumsPage__content {
-    padding: 16px 16px;
+    padding: 16px 16px 90px; /* More space for bottom nav */
   }
 
   .albumsPage__pageHeader {

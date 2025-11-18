@@ -294,13 +294,18 @@
 }
 
 @media (max-width: 768px) {
+  .playlistDetailPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+  }
+
   .playlistDetailPage__content {
-    padding: 16px;
+    padding: 16px 16px 80px 16px; /* Bottom padding for bottom nav */
   }
 
   .playlistDetailPage__hero {
     flex-direction: column;
     padding: 20px;
+    border-radius: 16px; /* iOS rounded corners */
   }
 
   .playlistDetailPage__heroCover {
@@ -309,6 +314,7 @@
     height: auto;
     aspect-ratio: 1;
     margin: 0 auto;
+    border-radius: 12px;
   }
 
   .playlistDetailPage__heroTitle {
@@ -317,5 +323,19 @@
 
   .playlistDetailPage__trackSection {
     padding: 0 16px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlistDetailPage__content {
+    padding: 12px 12px 90px 12px;
+  }
+
+  .playlistDetailPage__hero {
+    padding: 16px;
+  }
+
+  .playlistDetailPage__heroTitle {
+    font-size: 28px;
   }
 }

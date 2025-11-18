@@ -229,3 +229,37 @@
     transform: rotate(360deg);
   }
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .waveMixPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+  }
+
+  .waveMixPage__content {
+    padding: calc(84px + 2rem) 3rem 80px; /* Bottom padding for bottom nav */
+  }
+
+  .waveMixPage__heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .waveMixPage__grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .waveMixPage__content {
+    padding: calc(84px + 2rem) 1.5rem 90px; /* More space for bottom nav */
+  }
+
+  .waveMixPage__heroTitle {
+    font-size: 2rem;
+  }
+
+  .waveMixPage__grid {
+    grid-template-columns: 1fr;
+  }
+}
