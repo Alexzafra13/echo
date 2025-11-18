@@ -264,27 +264,28 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .dailyMixPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .dailyMixPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .dailyMixPage__content {
-    padding: 24px 20px 80px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .dailyMixPage__hero {
     flex-direction: column;
     align-items: flex-start;
     gap: 20px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .dailyMixPage__heroIcon {
     width: 120px;
     height: 120px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .dailyMixPage__heroTitle {
@@ -306,15 +307,34 @@
 
   .dailyMixPage__actions button {
     width: 100%;
+    border-radius: 20px; /* iOS rounded button */
   }
 
   .dailyMixPage__playButton {
     width: 100%;
+    border-radius: 20px; /* iOS rounded button */
+  }
+
+  .dailyMixPage__infoButton {
+    border-radius: 8px; /* iOS rounded */
+  }
+
+  .dailyMixPage__infoPanel {
+    border-radius: 12px; /* iOS rounded */
   }
 }
 
 @media (max-width: 480px) {
+  .dailyMixPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .dailyMixPage__content {
-    padding: 24px 20px 90px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .dailyMixPage__heroTitle {
+    font-size: 28px;
   }
 }
