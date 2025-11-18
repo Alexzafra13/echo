@@ -247,6 +247,179 @@ El servidor automáticamente:
 docker compose logs echo-app | grep -A 5 "Default Credentials"
 ```
 
+### 📋 docker-compose.yml Completo (Listo para Copiar)
+
+Crea un archivo `docker-compose.yml` con este contenido y ejecuta `docker compose up -d`:
+
+```yaml
+# ============================================
+# Echo Music Server - Production (Jellyfin-style)
+# ============================================
+# 🎵 Self-hosted music streaming platform
+#
+# Quick Start:
+#   docker compose up -d
+#
+# That's it! No configuration needed.
+# - JWT secrets: Auto-generated
+# - Database: Auto-initialized
+# - Admin user: Created automatically (admin/admin123)
+#
+# Access: http://localhost:4567
+# ============================================
+
+services:
+  # ----------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-music_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      POSTGRES_DB: ${POSTGRES_DB:-music_server}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-music_admin} -d ${POSTGRES_DB:-music_server}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-network
+
+  # ----------------------------------------
+  # Redis Cache
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me_in_production}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-change_me_in_production}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - echo-network
+
+  # ----------------------------------------
+  # Echo Music Server (Full-stack)
+  # ----------------------------------------
+  echo-app:
+    image: ghcr.io/alexzafra13/echo:latest
+    container_name: echo-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-4567}:4567"
+    environment:
+      # Application
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4567
+      HOST: 0.0.0.0
+      API_PREFIX: api
+
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-music_admin}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-music_server}?schema=public
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_me_in_production}
+
+      # Security (Auto-generated if not provided - Jellyfin-style!)
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-30d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4567}
+
+      # Music Library
+      MUSIC_LIBRARY_PATH: /music
+
+      # Cache Configuration
+      ENABLE_CACHE: ${ENABLE_CACHE:-true}
+      CACHE_ALBUM_TTL: ${CACHE_ALBUM_TTL:-3600}
+      CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-3600}
+      CACHE_ARTIST_TTL: ${CACHE_ARTIST_TTL:-7200}
+
+      # File Storage
+      UPLOAD_PATH: /app/uploads/music
+      COVERS_PATH: /app/uploads/covers
+
+    volumes:
+      # Configuration (Jellyfin-style - auto-generated secrets)
+      - echo-config:/app/config
+
+      # Music library (mount your music folder here)
+      - ${MUSIC_PATH:-./music}:/music:ro
+
+      # Persistent uploads (covers, metadata, etc.)
+      - echo-uploads:/app/uploads
+
+      # Application logs
+      - echo-logs:/app/logs
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - echo-network
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4567/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+# ----------------------------------------
+# Volumes (Persistent Data)
+# ----------------------------------------
+volumes:
+  postgres-data:
+    name: echo-postgres-data
+  redis-data:
+    name: echo-redis-data
+  echo-config:
+    name: echo-config
+  echo-uploads:
+    name: echo-uploads
+  echo-logs:
+    name: echo-logs
+
+# ----------------------------------------
+# Network
+# ----------------------------------------
+networks:
+  echo-network:
+    name: echo-network
+    driver: bridge
+```
+
+**Opcional:** Crea un archivo `.env` solo si quieres personalizar:
+
+```bash
+# Ruta a tu biblioteca de música (opcional)
+MUSIC_PATH=/mnt/music
+
+# Cambiar contraseñas (recomendado en producción)
+POSTGRES_PASSWORD=tu_password_seguro
+REDIS_PASSWORD=tu_password_seguro
+```
+
 **📖 Guía completa:** [PRODUCTION.md](./PRODUCTION.md)
 
 ### Características Jellyfin-style

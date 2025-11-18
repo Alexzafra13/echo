@@ -1,18 +1,17 @@
 # ============================================
-# DOCKER COMPOSE - PRODUCTION
+# Echo Music Server - Production (Jellyfin-style)
 # ============================================
-# Full-stack deployment: PostgreSQL + Redis + Echo App
-# Single container serves both API and Frontend (Jellyfin-style)
+# 🎵 Self-hosted music streaming platform
 #
-# Usage:
-#   docker compose up -d --build
-#   docker compose logs -f echo-app
-#   docker compose down
+# Quick Start:
+#   docker compose up -d
 #
-# Requirements:
-#   - Copy .env.example to .env and configure
-#   - Set JWT_SECRET and JWT_REFRESH_SECRET
-#   - Configure MUSIC_PATH to your music library
+# That's it! No configuration needed.
+# - JWT secrets: Auto-generated
+# - Database: Auto-initialized
+# - Admin user: Created automatically (admin/admin123)
+#
+# Access: http://localhost:4567
 # ============================================
 
 services:
