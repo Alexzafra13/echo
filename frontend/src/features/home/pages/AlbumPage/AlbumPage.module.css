@@ -222,18 +222,17 @@
   }
 }
 
-/* Mobile */
+/* Mobile - iOS Style */
 @media (max-width: 768px) {
-  .albumPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .albumPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .albumPage__content {
-    padding: 16px 20px 80px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .albumPage__hero {
@@ -245,8 +244,9 @@
   }
 
   .albumPage__heroCover {
-    width: 180px;
-    height: 180px;
+    width: 200px;
+    height: 200px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .albumPage__heroInfo {
@@ -255,7 +255,8 @@
   }
 
   .albumPage__heroTitle {
-    font-size: 36px;
+    font-size: 32px;
+    -webkit-line-clamp: 3; /* Más líneas en móvil */
   }
 
   .albumPage__heroMeta {
@@ -269,7 +270,7 @@
   }
 
   .albumPage__trackSection {
-    padding: 0 16px;
+    padding: 0 8px;
   }
 
   .albumPage__backButton {
@@ -282,24 +283,26 @@
 @media (max-width: 480px) {
   .albumPage__main {
     margin-left: 0;
-    padding-top: 60px; /* Space for mobile header */
+    padding-top: 0;
   }
 
   .albumPage__content {
-    padding: 12px 16px 90px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
   }
 
   .albumPage__hero {
     padding: 16px;
+    gap: 16px;
   }
 
   .albumPage__heroCover {
     width: 160px;
     height: 160px;
+    border-radius: 10px;
   }
 
   .albumPage__heroTitle {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .albumPage__heroMeta {
@@ -307,7 +310,7 @@
   }
 
   .albumPage__trackSection {
-    padding: 0 12px;
+    padding: 0 6px;
   }
 
   .albumPage__backButton {

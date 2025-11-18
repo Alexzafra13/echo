@@ -293,22 +293,21 @@
 }
 
 @media (max-width: 768px) {
-  .playlistDetailPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .playlistDetailPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .playlistDetailPage__content {
-    padding: 16px 16px 80px 16px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .playlistDetailPage__hero {
     flex-direction: column;
     padding: 20px;
-    border-radius: 16px; /* iOS rounded corners */
+    border-radius: 12px; /* iOS rounded */
   }
 
   .playlistDetailPage__heroCover {
@@ -317,11 +316,15 @@
     height: auto;
     aspect-ratio: 1;
     margin: 0 auto;
-    border-radius: 12px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .playlistDetailPage__heroTitle {
     font-size: 32px;
+  }
+
+  .playlistDetailPage__heroActionButton {
+    border-radius: 20px; /* iOS rounded button */
   }
 
   .playlistDetailPage__trackSection {
@@ -330,8 +333,13 @@
 }
 
 @media (max-width: 480px) {
+  .playlistDetailPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .playlistDetailPage__content {
-    padding: 12px 12px 90px 12px;
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
   }
 
   .playlistDetailPage__hero {

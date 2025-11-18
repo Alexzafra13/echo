@@ -137,16 +137,15 @@
 }
 
 @media (max-width: 768px) {
-  .artistsPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .artistsPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .artistsPage__content {
-    padding: 20px 16px 80px 16px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .artistsPage__title {
@@ -160,6 +159,7 @@
   .artistsPage__searchInput {
     height: 44px;
     font-size: 14px;
+    border-radius: 20px; /* iOS rounded */
   }
 
   .artistsPage__groupLetter {
@@ -168,7 +168,16 @@
 }
 
 @media (max-width: 480px) {
+  .artistsPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .artistsPage__content {
-    padding: 20px 16px 90px 16px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .artistsPage__title {
+    font-size: 28px;
   }
 }
