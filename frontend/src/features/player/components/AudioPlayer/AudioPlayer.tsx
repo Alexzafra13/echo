@@ -9,6 +9,7 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
+import { extractDominantColor } from '@shared/utils/colorExtractor';
 import styles from './AudioPlayer.module.css';
 
 export function AudioPlayer() {
@@ -34,6 +35,7 @@ export function AudioPlayer() {
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [dominantColor, setDominantColor] = useState<string>('0, 0, 0');
   const queueRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +77,22 @@ export function AudioPlayer() {
     };
   }, [currentTrack, currentRadioStation, isMiniMode, preference]);
 
+  // Extraer color dominante del cover para gradient móvil
+  useEffect(() => {
+    const coverUrl = isRadioMode
+      ? currentRadioStation?.favicon
+      : currentTrack?.album?.cover;
+
+    if (coverUrl) {
+      const finalCoverUrl = isRadioMode ? coverUrl : getCoverUrl(coverUrl);
+      extractDominantColor(finalCoverUrl)
+        .then(color => setDominantColor(color))
+        .catch(() => setDominantColor('0, 0, 0'));
+    } else {
+      setDominantColor('0, 0, 0');
+    }
+  }, [currentTrack, currentRadioStation, isRadioMode]);
+
   // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
     return null;
@@ -109,7 +127,10 @@ export function AudioPlayer() {
   );
 
   return (
-    <div className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''}`}>
+    <div
+      className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''}`}
+      style={{ '--player-color': dominantColor } as React.CSSProperties}
+    >
 
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>

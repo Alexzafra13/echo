@@ -497,8 +497,8 @@
     left: 12px;
     right: 12px;
     border-radius: 16px; /* iOS rounded pero sin llegar a extremos */
-    /* iOS style blur */
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.95));
+    /* iOS style blur + gradient con color dominante del álbum */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(var(--player-color), 0.85));
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
     border: 1px solid rgba(255, 255, 255, 0.1);
