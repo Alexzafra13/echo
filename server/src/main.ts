@@ -6,7 +6,6 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
-import { HttpExceptionFilter } from '@shared/filters/http-exception.filter';
 import { WebSocketAdapter } from '@infrastructure/websocket';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
@@ -24,10 +23,6 @@ async function bootstrap() {
   // Set Pino as the application logger
   const logger = app.get(Logger);
   app.useLogger(logger);
-
-  // Get PinoLogger for exception filter
-  const { PinoLogger } = require('nestjs-pino');
-  const pinoLogger = app.get(PinoLogger);
 
   // Register multipart/form-data support for file uploads
   await app.register(require('@fastify/multipart'), {
@@ -70,9 +65,6 @@ async function bootstrap() {
   // MustChangePasswordGuard Global
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new MustChangePasswordGuard(reflector));
-
-  // Global Exception Filter
-  app.useGlobalFilters(new HttpExceptionFilter(pinoLogger));
 
   // Swagger Configuration
   const swaggerConfig = new DocumentBuilder()
