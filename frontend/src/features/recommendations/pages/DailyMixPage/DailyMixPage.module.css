@@ -265,8 +265,12 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .dailyMixPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+  }
+
   .dailyMixPage__content {
-    padding: 24px 20px;
+    padding: 24px 20px 80px; /* Bottom padding for bottom nav */
   }
 
   .dailyMixPage__hero {
@@ -303,5 +307,11 @@
 
   .dailyMixPage__playButton {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dailyMixPage__content {
+    padding: 24px 20px 90px; /* More space for bottom nav */
   }
 }

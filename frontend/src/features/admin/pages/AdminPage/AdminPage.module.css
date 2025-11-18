@@ -111,11 +111,11 @@
 /* Mobile */
 @media (max-width: 768px) {
   .adminPage__main {
-    margin-left: 80px;
+    margin-left: 0; /* No sidebar en mobile */
   }
 
   .adminPage__content {
-    padding: 104px 20px 24px; /* 84px + 20px */
+    padding: 104px 20px 80px; /* Bottom padding for bottom nav */
   }
 
   .title {
@@ -124,5 +124,11 @@
 
   .subtitle {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminPage__content {
+    padding: 104px 20px 90px; /* More space for bottom nav */
   }
 }
