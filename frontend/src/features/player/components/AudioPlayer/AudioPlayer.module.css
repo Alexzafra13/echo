@@ -482,106 +482,189 @@
   }
 }
 
-/* ===== Responsive - iOS Style ===== */
+/* ===== Responsive - iOS Style Compact Player ===== */
 
 @media (max-width: 768px) {
   .player {
-    /* Position above bottom navigation */
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
+    /* Spotify-like compact player */
+    display: flex;
+    flex-direction: column;
     height: auto;
-    padding: 12px 16px;
-    gap: 10px;
-    /* Position above bottom tab bar (50px) + safe area */
-    bottom: calc(50px + env(safe-area-inset-bottom, 0) + 8px);
-    left: 8px;
-    right: 8px;
-    border-radius: 16px; /* iOS rounded corners */
-    /* iOS style blur */
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.9));
-    backdrop-filter: blur(30px) saturate(180%);
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    padding: 0;
+    gap: 0;
+    /* Position above bottom tab bar (50px) + safe area + margin */
+    bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
+    left: 12px;
+    right: 12px;
+    border-radius: 16px; /* iOS rounded pero sin llegar a extremos */
+    /* iOS style blur + gradient con color dominante del álbum */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(var(--player-color), 0.85));
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 9998; /* Justo debajo de la bottom nav (9999) */
+    overflow: hidden;
   }
 
+  /* Progress bar super fina arriba */
+  .progressContainer {
+    order: -1; /* Mover arriba */
+    padding: 0;
+    gap: 0;
+    height: 3px;
+    width: 100%;
+    position: relative;
+  }
+
+  .timeLabel {
+    display: none; /* Ocultar tiempos en móvil */
+  }
+
+  .progressBar {
+    height: 3px;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.15);
+    cursor: default; /* Dificultar interacción */
+    width: 100%;
+  }
+
+  .progressBar:hover {
+    height: 3px; /* No expandir */
+  }
+
+  .progressBar:active {
+    height: 4px; /* Mínima expansión al tocar */
+  }
+
+  .progressFill {
+    height: 100%;
+    background: var(--color-primary-500);
+  }
+
+  .progressHandle {
+    display: none; /* Sin handle en móvil */
+  }
+
+  /* Layout horizontal compacto */
   .trackInfo {
-    grid-column: 1;
-    grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
   }
 
   .trackCover {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px; /* iOS rounded */
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .trackDetails {
+    flex: 1;
+    min-width: 0;
   }
 
   .trackTitle {
     font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .trackArtist {
-    font-size: 11px;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
+  /* Solo botón play/pause */
   .playerControls {
-    grid-column: 1;
-    grid-row: 2;
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 1.5px; /* Compensar barra de progreso */
   }
 
   .controlButtons {
-    gap: var(--space-2);
+    display: flex;
+    gap: 0;
   }
 
+  /* Ocultar todos los controles excepto play */
   .controlButton {
-    padding: 4px;
+    display: none;
   }
 
   .playButton {
-    width: 36px;
-    height: 36px;
+    display: flex;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    color: var(--color-text-primary);
+    transition: all 0.2s ease;
   }
 
-  .progressContainer {
-    gap: 8px;
+  .playButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1);
   }
 
-  .timeLabel {
-    font-size: 10px;
-    min-width: 35px;
-  }
-
-  .progressBar {
-    height: 4px;
-  }
-
-  .progressBar:hover {
-    height: 6px;
+  .playButton:active {
+    transform: scale(0.95);
   }
 
   .volumeControl {
     display: none;
   }
 
-  /* Menu container adjustments */
+  /* Ocultar menu en móvil */
   .menuContainer {
+    display: none;
+  }
+
+  /* Live indicator más compacto */
+  .liveIndicator {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%);
+    margin-top: 1.5px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .liveText {
+    font-size: 10px;
+  }
+
+  .liveAntenna {
+    width: 12px;
+    height: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .player {
-    padding: 10px 12px;
-    gap: 8px;
-    bottom: calc(50px + env(safe-area-inset-bottom, 0) + 6px);
-    left: 6px;
-    right: 6px;
+    bottom: calc(50px + env(safe-area-inset-bottom, 0) + 10px);
+    left: 10px;
+    right: 10px;
+    border-radius: 14px;
+  }
+
+  .trackInfo {
+    padding: 8px 12px;
+    gap: 10px;
   }
 
   .trackCover {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .trackTitle {
@@ -589,15 +672,20 @@
   }
 
   .trackArtist {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .playButton {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 
-  .timeLabel {
-    font-size: 9px;
+  .playerControls {
+    right: 12px;
+  }
+
+  .liveIndicator {
+    right: 54px;
+    padding: 2px 6px;
   }
 }
