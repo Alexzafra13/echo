@@ -146,6 +146,11 @@
   position: relative;
 }
 
+/* Backdrop - hidden on desktop, visible on mobile */
+.header__backdrop {
+  display: none; /* Hidden by default (desktop) */
+}
+
 .header__userButton {
   width: 40px;
   height: 40px;
@@ -356,6 +361,17 @@
     flex-shrink: 0;
   }
 
+  /* Backdrop visible en móvil */
+  .header__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999; /* Detrás del dropdown pero encima del resto */
+    animation: fadeIn 0.3s ease;
+    cursor: pointer;
+  }
+
   /* Bottom Sheet iOS Style - Simple approach */
   .header__userDropdown {
     /* Convertir a bottom sheet */
@@ -373,7 +389,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom: none;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-    z-index: 10000; /* Por encima de todo */
+    z-index: 10000; /* Por encima del backdrop */
     animation: slideUpModal 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
@@ -384,6 +400,15 @@
     }
     to {
       transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
       opacity: 1;
     }
   }
