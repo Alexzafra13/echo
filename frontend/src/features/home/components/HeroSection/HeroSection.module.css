@@ -316,7 +316,8 @@
     height: 300px; /* Más compacto */
     width: calc(100% + 32px);
     margin-left: -16px;
-    margin-top: 0; /* NO extend behind header on mobile - prevents overlap */
+    margin-top: -100px; /* Extend behind header (52px header + 48px spacing) */
+    padding-top: 52px; /* Space for header so content doesn't overlap */
     margin-bottom: 24px;
   }
 
@@ -421,7 +422,8 @@
     height: 260px; /* Aún más compacto */
     width: calc(100% + 24px);
     margin-left: -12px;
-    margin-top: 0; /* NO extend behind header on mobile - prevents overlap */
+    margin-top: -90px; /* Extend behind header (52px header + 38px spacing) */
+    padding-top: 52px; /* Space for header */
     margin-bottom: 20px;
   }
 
