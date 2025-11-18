@@ -128,6 +128,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .playlistDetailPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .playlistDetailPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }

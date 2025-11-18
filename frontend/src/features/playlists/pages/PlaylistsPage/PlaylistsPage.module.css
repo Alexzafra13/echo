@@ -285,6 +285,10 @@
 }
 
 @media (max-width: 768px) {
+  .playlistsPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .playlistsPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }
