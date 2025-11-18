@@ -313,24 +313,20 @@
 /* Mobile - iOS Compact Style */
 @media (max-width: 768px) {
   .heroSection {
-    height: 300px; /* Más compacto */
+    height: 240px; /* Reducido para evitar repetición de imagen */
     width: calc(100% + 32px);
     margin-left: -16px;
-    margin-top: -100px; /* Extend behind header (52px header + 48px spacing) */
-    padding-top: 52px; /* Space for header so content doesn't overlap */
+    margin-top: -52px; /* Solo el alto del header */
     margin-bottom: 24px;
   }
 
+  /* Ocultar flechas de navegación en móvil */
   .heroSection__navButton {
-    width: 34px;
-    height: 34px;
-    top: 60px; /* Debajo del header */
-    left: 12px;
-    backdrop-filter: blur(20px);
+    display: none;
   }
 
   .heroSection__navButton--next {
-    right: 12px;
+    display: none;
   }
 
   .heroSection__content {
@@ -338,7 +334,7 @@
     justify-content: flex-start;
     align-items: center;
     text-align: left;
-    padding: 70px 20px 20px 20px; /* Menos padding top */
+    padding: 60px 20px 16px 20px; /* Ajustado para nuevo tamaño */
     gap: 16px;
   }
 
@@ -419,27 +415,17 @@
 /* Small Mobile - Ultra Compact */
 @media (max-width: 480px) {
   .heroSection {
-    height: 260px; /* Aún más compacto */
+    height: 220px; /* Más compacto aún */
     width: calc(100% + 24px);
     margin-left: -12px;
-    margin-top: -90px; /* Extend behind header (52px header + 38px spacing) */
-    padding-top: 52px; /* Space for header */
+    margin-top: -52px; /* Solo el alto del header */
     margin-bottom: 20px;
   }
 
-  .heroSection__navButton {
-    width: 32px;
-    height: 32px;
-    top: 56px;
-    left: 10px;
-  }
-
-  .heroSection__navButton--next {
-    right: 10px;
-  }
+  /* Flechas ya ocultas en breakpoint anterior */
 
   .heroSection__content {
-    padding: 60px 16px 16px 16px;
+    padding: 56px 16px 12px 16px;
     gap: 12px;
   }
 
