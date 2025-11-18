@@ -209,17 +209,33 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .artistPlaylistsPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
+  }
+
   .artistPlaylistsPage__content {
-    padding: 1rem;
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .artistPlaylistsPage__hero {
     flex-direction: column;
     text-align: center;
+    border-radius: 12px; /* iOS rounded */
+  }
+
+  .artistPlaylistsPage__heroIcon {
+    border-radius: 12px; /* iOS rounded */
   }
 
   .artistPlaylistsPage__heroTitle {
     font-size: 1.5rem;
+  }
+
+  .artistPlaylistsPage__refreshButton {
+    border-radius: 20px; /* iOS rounded button */
   }
 
   .artistPlaylistsPage__grid {
@@ -229,6 +245,7 @@
 
   .playlistCard {
     padding: 1rem;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .artistPlaylistsPage__pagination {
@@ -238,5 +255,29 @@
 
   .paginationButton {
     width: 100%;
+    border-radius: 20px; /* iOS rounded button */
+  }
+
+  .paginationInfo {
+    border-radius: 12px; /* iOS rounded */
+  }
+}
+
+@media (max-width: 480px) {
+  .artistPlaylistsPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
+  .artistPlaylistsPage__content {
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .artistPlaylistsPage__heroTitle {
+    font-size: 1.25rem;
+  }
+
+  .artistPlaylistsPage__grid {
+    grid-template-columns: 1fr;
   }
 }

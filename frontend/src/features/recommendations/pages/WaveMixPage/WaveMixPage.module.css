@@ -231,31 +231,51 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .waveMixPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .waveMixPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .waveMixPage__content {
-    padding: calc(84px + 2rem) 3rem 80px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
+  }
+
+  .waveMixPage__hero {
+    border-radius: 12px; /* iOS rounded */
   }
 
   .waveMixPage__heroTitle {
     font-size: 2.5rem;
   }
 
+  .waveMixPage__refreshButton {
+    border-radius: 20px; /* iOS rounded button */
+  }
+
+  .waveMixPage__viewAllButton {
+    border-radius: 20px; /* iOS rounded button */
+  }
+
   .waveMixPage__grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.5rem;
   }
+
+  .playlistCard {
+    border-radius: 12px; /* iOS rounded */
+  }
 }
 
 @media (max-width: 480px) {
+  .waveMixPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .waveMixPage__content {
-    padding: calc(84px + 2rem) 1.5rem 90px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
   }
 
   .waveMixPage__heroTitle {
