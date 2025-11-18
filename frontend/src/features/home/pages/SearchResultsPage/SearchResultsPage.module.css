@@ -250,6 +250,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .searchResultsPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .searchResultsPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }
