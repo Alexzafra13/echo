@@ -285,8 +285,12 @@
 }
 
 @media (max-width: 768px) {
+  .playlistsPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+  }
+
   .playlistsPage__content {
-    padding: 20px 16px;
+    padding: 20px 16px 80px; /* Bottom padding for bottom nav */
   }
 
   .playlistsPage__title {
@@ -310,5 +314,11 @@
 
   .playlistCard__actions {
     opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlistsPage__content {
+    padding: 20px 16px 90px; /* More space for bottom nav */
   }
 }

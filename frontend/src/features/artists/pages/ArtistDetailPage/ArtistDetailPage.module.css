@@ -333,11 +333,11 @@
 
 @media (max-width: 768px) {
   .artistDetailPage__main {
-    margin-left: 80px; /* Sidebar is narrower on mobile */
+    margin-left: 0; /* No sidebar en mobile */
   }
 
   .artistDetailPage__content {
-    padding: 20px 16px;
+    padding: 20px 16px 80px 16px; /* Bottom padding for bottom nav */
   }
 
   .artistDetailPage__hero {
@@ -388,6 +388,12 @@
 
   .artistDetailPage__biographyText {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .artistDetailPage__content {
+    padding: 20px 16px 90px 16px; /* More space for bottom nav */
   }
 }
 

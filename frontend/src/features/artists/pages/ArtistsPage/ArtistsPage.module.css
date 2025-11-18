@@ -139,11 +139,11 @@
 
 @media (max-width: 768px) {
   .artistsPage__main {
-    margin-left: 80px; /* Sidebar is narrower on mobile */
+    margin-left: 0; /* No sidebar en mobile */
   }
 
   .artistsPage__content {
-    padding: 20px 16px;
+    padding: 20px 16px 80px 16px; /* Bottom padding for bottom nav */
   }
 
   .artistsPage__title {
@@ -161,5 +161,11 @@
 
   .artistsPage__groupLetter {
     font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .artistsPage__content {
+    padding: 20px 16px 90px 16px; /* More space for bottom nav */
   }
 }

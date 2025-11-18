@@ -251,11 +251,11 @@
 /* Responsive */
 @media (max-width: 768px) {
   .searchResultsPage__main {
-    margin-left: 0; /* Remove sidebar space on mobile */
+    margin-left: 0; /* No sidebar en mobile */
   }
 
   .searchResultsPage__content {
-    padding: 0 16px 16px 16px;
+    padding: 0 16px 80px 16px; /* Bottom padding for bottom nav */
   }
 
   .searchResultsPage__header h1 {
@@ -279,5 +279,11 @@
   .searchResultsPage__listImage {
     width: 40px;
     height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchResultsPage__content {
+    padding: 0 16px 90px 16px; /* More space for bottom nav */
   }
 }
