@@ -332,6 +332,10 @@
 }
 
 @media (max-width: 768px) {
+  .artistDetailPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .artistDetailPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }

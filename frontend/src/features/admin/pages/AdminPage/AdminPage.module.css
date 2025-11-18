@@ -110,6 +110,10 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+  .adminPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .adminPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }
