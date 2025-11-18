@@ -6,15 +6,15 @@ import { join } from 'path';
 import { stat } from 'fs/promises';
 
 /**
- * FileWatcherService - Monitorea cambios en la biblioteca de música
+ * FileWatcherService - Monitors changes in music library
  *
- * Funcionalidad:
- * - Detecta archivos nuevos/modificados/eliminados automáticamente
- * - Escanea incrementalmente solo los archivos que cambiaron
- * - Debouncing para evitar escaneos mientras se copian archivos
- * - Configurable (se puede desactivar con AUTO_SCAN=false)
+ * Functionality:
+ * - Automatically detects new/modified/deleted files
+ * - Incrementally scans only changed files
+ * - Debouncing to avoid scans while files are being copied
+ * - Configurable (can be disabled with AUTO_SCAN=false)
  *
- * Similar a Navidrome: Los discos nuevos aparecen automáticamente sin intervención manual
+ * Similar to Navidrome: New albums appear automatically without manual intervention
  */
 @Injectable()
 export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
@@ -22,7 +22,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   private watcher?: FSWatcher;
   private pendingFiles = new Set<string>();
   private debounceTimer?: NodeJS.Timeout;
-  private readonly DEBOUNCE_MS = 5000; // 5 segundos después del último cambio
+  private readonly DEBOUNCE_MS = 5000; // 5 seconds after last change
   private readonly SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.m4a', '.ogg', '.wav', '.opus'];
 
   constructor(
@@ -31,20 +31,20 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   /**
-   * Inicia el file watcher al iniciar el módulo
+   * Starts file watcher when module initializes
    */
   async onModuleInit() {
     const autoScanEnabled = this.configService.get<string>('AUTO_SCAN', 'true') === 'true';
 
     if (!autoScanEnabled) {
-      this.logger.log('📁 Auto-scan desactivado (AUTO_SCAN=false)');
+      this.logger.log('Auto-scan disabled (AUTO_SCAN=false)');
       return;
     }
 
     const musicPath = this.configService.get<string>('UPLOAD_PATH');
 
     if (!musicPath) {
-      this.logger.warn('⚠️ UPLOAD_PATH no configurado, auto-scan desactivado');
+      this.logger.warn('UPLOAD_PATH not configured, auto-scan disabled');
       return;
     }
 
@@ -52,38 +52,38 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Detiene el file watcher al destruir el módulo
+   * Stops file watcher when module destroys
    */
   async onModuleDestroy() {
     await this.stopWatching();
   }
 
   /**
-   * Inicia el monitoreo de la carpeta de música
+   * Starts monitoring music folder
    */
   private async startWatching(path: string): Promise<void> {
     try {
-      this.logger.log(`🔍 Iniciando file watcher en: ${path}`);
+      this.logger.log(`Starting file watcher on: ${path}`);
 
       this.watcher = chokidar.watch(path, {
         ignored: [
-          /(^|[\/\\])\../, // Archivos ocultos
+          /(^|[\/\\])\../, // Hidden files
           '**/node_modules/**',
           '**/.git/**',
-          '**/covers/**', // Ignorar cache de covers
+          '**/covers/**', // Ignore covers cache
         ],
         persistent: true,
-        ignoreInitial: true, // No escanear archivos existentes al iniciar
+        ignoreInitial: true, // Don't scan existing files on startup
         awaitWriteFinish: {
-          stabilityThreshold: 2000, // Esperar 2s de estabilidad
+          stabilityThreshold: 2000, // Wait 2s for stability
           pollInterval: 100,
         },
-        depth: 10, // Máximo 10 niveles de profundidad
-        usePolling: false, // Usar eventos nativos del OS
-        alwaysStat: true, // Obtener stats de los archivos
+        depth: 10, // Maximum 10 levels deep
+        usePolling: false, // Use native OS events
+        alwaysStat: true, // Get file stats
       });
 
-      // Eventos del watcher
+      // Watcher events
       this.watcher
         .on('add', (filePath) => this.handleFileAdded(filePath))
         .on('change', (filePath) => this.handleFileChanged(filePath))
@@ -92,16 +92,16 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         .on('ready', () => this.handleReady(path));
 
     } catch (error) {
-      this.logger.error(`❌ Error iniciando file watcher:`, error);
+      this.logger.error(`Error starting file watcher:`, error);
     }
   }
 
   /**
-   * Detiene el file watcher
+   * Stops file watcher
    */
   private async stopWatching(): Promise<void> {
     if (this.watcher) {
-      this.logger.log('⏹️ Deteniendo file watcher...');
+      this.logger.log('Stopping file watcher...');
       await this.watcher.close();
       this.watcher = undefined;
     }
@@ -112,60 +112,60 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Maneja archivos nuevos detectados
+   * Handles newly detected files
    */
   private handleFileAdded(filePath: string): void {
     if (!this.isSupportedFile(filePath)) {
       return;
     }
 
-    this.logger.debug(`📄 Archivo nuevo detectado: ${filePath}`);
+    this.logger.debug(`New file detected: ${filePath}`);
     this.addToPendingQueue(filePath);
   }
 
   /**
-   * Maneja archivos modificados
+   * Handles modified files
    */
   private handleFileChanged(filePath: string): void {
     if (!this.isSupportedFile(filePath)) {
       return;
     }
 
-    this.logger.debug(`🔄 Archivo modificado: ${filePath}`);
+    this.logger.debug(`File modified: ${filePath}`);
     this.addToPendingQueue(filePath);
   }
 
   /**
-   * Maneja archivos eliminados
+   * Handles deleted files
    */
   private handleFileDeleted(filePath: string): void {
     if (!this.isSupportedFile(filePath)) {
       return;
     }
 
-    this.logger.debug(`🗑️ Archivo eliminado: ${filePath}`);
-    // TODO: Implementar eliminación de tracks de la BD
-    // Por ahora lo dejamos, el scan completo manual limpiará tracks huérfanos
+    this.logger.debug(`File deleted: ${filePath}`);
+    // TODO: Implement track deletion from DB
+    // For now we leave it, full manual scan will clean orphaned tracks
   }
 
   /**
-   * Maneja errores del watcher
+   * Handles watcher errors
    */
   private handleError(error: Error): void {
-    this.logger.error(`❌ Error en file watcher:`, error);
+    this.logger.error(`File watcher error:`, error);
   }
 
   /**
-   * Watcher listo y monitoreando
+   * Watcher ready and monitoring
    */
   private handleReady(path: string): void {
-    this.logger.log(`✅ File watcher activo, monitoreando: ${path}`);
-    this.logger.log(`🎵 Extensiones soportadas: ${this.SUPPORTED_EXTENSIONS.join(', ')}`);
-    this.logger.log(`⏱️ Debounce: ${this.DEBOUNCE_MS / 1000}s después del último cambio`);
+    this.logger.log(`File watcher active, monitoring: ${path}`);
+    this.logger.log(`Supported extensions: ${this.SUPPORTED_EXTENSIONS.join(', ')}`);
+    this.logger.log(`Debounce: ${this.DEBOUNCE_MS / 1000}s after last change`);
   }
 
   /**
-   * Verifica si el archivo es soportado (por extensión)
+   * Checks if file is supported (by extension)
    */
   private isSupportedFile(filePath: string): boolean {
     const ext = filePath.toLowerCase();
@@ -173,12 +173,12 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Agrega archivo a la cola de pendientes y programa escaneo
+   * Adds file to pending queue and schedules scan
    */
   private addToPendingQueue(filePath: string): void {
     this.pendingFiles.add(filePath);
 
-    // Reiniciar timer de debounce
+    // Restart debounce timer
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
@@ -189,7 +189,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Procesa archivos pendientes (después del debounce)
+   * Processes pending files (after debounce)
    */
   private async processPendingFiles(): Promise<void> {
     if (this.pendingFiles.size === 0) {
@@ -199,26 +199,26 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
     const files = Array.from(this.pendingFiles);
     this.pendingFiles.clear();
 
-    this.logger.log(`🚀 Procesando ${files.length} archivo(s) detectado(s)...`);
+    this.logger.log(`Processing ${files.length} detected file(s)...`);
 
     try {
-      // Verificar que los archivos existan (podrían haberse borrado)
+      // Verify files exist (they could have been deleted)
       const existingFiles: string[] = [];
       for (const file of files) {
         try {
           await stat(file);
           existingFiles.push(file);
         } catch {
-          this.logger.debug(`⚠️ Archivo ya no existe: ${file}`);
+          this.logger.debug(`File no longer exists: ${file}`);
         }
       }
 
       if (existingFiles.length === 0) {
-        this.logger.log('ℹ️ No hay archivos válidos para procesar');
+        this.logger.log('No valid files to process');
         return;
       }
 
-      // Agregar job de escaneo incremental a la cola
+      // Add incremental scan job to queue
       await this.bullmq.addJob(
         'scanner',
         'incremental-scan',
@@ -229,14 +229,14 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         },
       );
 
-      this.logger.log(`✅ ${existingFiles.length} archivo(s) agregado(s) a cola de escaneo`);
+      this.logger.log(`${existingFiles.length} file(s) added to scan queue`);
     } catch (error) {
-      this.logger.error(`❌ Error procesando archivos pendientes:`, error);
+      this.logger.error(`Error processing pending files:`, error);
     }
   }
 
   /**
-   * Obtiene estadísticas del watcher
+   * Gets watcher statistics
    */
   getStats() {
     return {

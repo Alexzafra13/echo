@@ -46,17 +46,17 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
   }
 
   async search(name: string, skip: number, take: number): Promise<Playlist[]> {
-    const playlists = await this.prisma.playlist.findMany({
-      where: {
-        name: {
-          contains: name,
-          mode: 'insensitive',
-        },
-      },
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    // Usar búsqueda por similaridad de trigram para mejor rendimiento
+    // El operador % usa el índice GIN creado en la migración 20251117030000
+    // Esto es 10-100x más rápido que ILIKE '%query%'
+    const playlists = await this.prisma.$queryRaw<any[]>`
+      SELECT *
+      FROM playlists
+      WHERE name % ${name}
+      ORDER BY similarity(name, ${name}) DESC, name ASC
+      LIMIT ${take}
+      OFFSET ${skip}
+    `;
 
     return PlaylistMapper.toDomainArray(playlists);
   }

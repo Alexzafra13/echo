@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig } from './config/app.config';
 import { PrismaModule } from './infrastructure/persistence/prisma.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
@@ -62,6 +65,12 @@ import { LogsModule } from './features/logs/logs.module';
       },
     }),
 
+    // Rate Limiting (protección contra fuerza bruta y DoS)
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 60 segundos
+      limit: 100, // 100 requests por minuto (general)
+    }]),
+
     // Global Infrastructure
     PrismaModule,
     CacheModule,
@@ -87,6 +96,12 @@ import { LogsModule } from './features/logs/logs.module';
     RecommendationsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    // Global Rate Limiting Guard
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
