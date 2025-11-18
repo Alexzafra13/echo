@@ -97,6 +97,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
           JEST_MAX_WORKERS: "4"
+          # JWT secrets required for auth tests
+          JWT_SECRET: test-secret-for-ci-pipeline
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci-pipeline
+          # Redis (not required for unit tests, but good to have)
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
         run: pnpm test
 
       - name: Build project
