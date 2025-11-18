@@ -232,6 +232,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .waveMixPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .waveMixPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }

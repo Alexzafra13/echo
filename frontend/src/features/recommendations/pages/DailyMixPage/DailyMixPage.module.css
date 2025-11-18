@@ -265,6 +265,10 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .dailyMixPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .dailyMixPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }

@@ -225,6 +225,10 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+  .albumPage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .albumPage__main {
     margin-left: 0; /* No sidebar en mobile */
   }

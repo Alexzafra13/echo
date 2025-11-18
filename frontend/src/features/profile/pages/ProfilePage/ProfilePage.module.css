@@ -418,6 +418,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .profilePage__content {
+    overflow: visible; /* Permitir que bottom nav sea visible */
+  }
+
   .profilePage__main {
     margin-left: 0; /* No sidebar en mobile */
   }
