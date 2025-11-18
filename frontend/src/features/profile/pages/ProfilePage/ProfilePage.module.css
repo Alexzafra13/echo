@@ -24,7 +24,6 @@
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
   padding: 84px 40px 40px; /* 84px for header glassmorphism effect */
   overflow-y: auto;
-  overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   max-width: 800px;
