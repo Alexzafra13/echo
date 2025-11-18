@@ -19,7 +19,6 @@
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
   overflow-y: auto;
-  overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   padding: calc(84px + 2rem) 3rem 2rem; /* 84px for header glassmorphism effect */

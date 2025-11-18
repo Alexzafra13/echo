@@ -20,7 +20,6 @@
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
   overflow-y: auto;
-  overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   padding: 124px 48px 40px; /* 84px + 40px for header glassmorphism effect */
@@ -55,7 +54,6 @@
   flex-direction: column;
   width: 100%; /* Match container width */
   max-width: 100%; /* Prevent overflow */
-  overflow-x: hidden; /* Ensure no horizontal scroll */
 }
 
 .tabContent {
@@ -65,7 +63,6 @@
   min-height: 600px; /* Ensures consistent height across all tabs */
   width: 100%; /* Ensures full width utilization */
   max-width: 100%; /* Prevent child content from exceeding */
-  overflow-x: hidden; /* Clip any overflowing content */
 }
 
 /* Placeholder for empty tabs */
