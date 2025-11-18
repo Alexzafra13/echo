@@ -2,6 +2,7 @@
   "name": "echo-frontend",
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
