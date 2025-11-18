@@ -506,9 +506,9 @@
     overflow: hidden;
   }
 
-  /* Progress bar super fina arriba */
+  /* Progress bar super fina abajo */
   .progressContainer {
-    order: -1; /* Mover arriba */
+    order: 1; /* Mover abajo */
     padding: 0;
     gap: 0;
     height: 3px;
@@ -588,7 +588,7 @@
     right: 14px;
     top: 50%;
     transform: translateY(-50%);
-    margin-top: 1.5px; /* Compensar barra de progreso */
+    margin-top: -1.5px; /* Centrar en la zona del contenido (sin barra) */
   }
 
   .controlButtons {
@@ -634,7 +634,7 @@
     top: 50%;
     right: 60px;
     transform: translateY(-50%);
-    margin-top: 1.5px;
+    margin-top: -1.5px;
     padding: 3px 8px;
     font-size: 10px;
   }
