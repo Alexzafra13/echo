@@ -48,7 +48,8 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          package_json_file: 'server/package.json'
+          version: 10.18.3
+          run_install: false
 
       - name: Get pnpm store directory
         id: pnpm-cache
