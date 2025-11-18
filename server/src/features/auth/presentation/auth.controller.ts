@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser, AllowChangePassword, Public } from '@shared/decorators';
 import {
@@ -41,9 +42,11 @@ export class AuthController {
   /**
    * Login - ÚNICA ruta pública de toda la aplicación
    * No requiere JWT porque el usuario aún no está autenticado
+   * Rate limit: 5 intentos por minuto para prevenir fuerza bruta
    */
   @Post('login')
   @Public() // ← IMPORTANTE: Única ruta con @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 intentos por minuto
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Iniciar sesión',
@@ -58,6 +61,10 @@ export class AuthController {
   @ApiResponse({
     status: 401,
     description: 'Credenciales inválidas'
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Demasiados intentos de login. Por favor, espera un minuto.'
   })
   async login(@Body() dto: LoginRequestDto): Promise<AuthResponseDto> {
     const result = await this.loginUseCase.execute({

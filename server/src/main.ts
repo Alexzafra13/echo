@@ -6,6 +6,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
+import { HttpExceptionFilter } from '@shared/filters/http-exception.filter';
 import { WebSocketAdapter } from '@infrastructure/websocket';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
@@ -23,6 +24,10 @@ async function bootstrap() {
   // Set Pino as the application logger
   const logger = app.get(Logger);
   app.useLogger(logger);
+
+  // Get PinoLogger for exception filter
+  const { PinoLogger } = require('nestjs-pino');
+  const pinoLogger = app.get(PinoLogger);
 
   // Register multipart/form-data support for file uploads
   await app.register(require('@fastify/multipart'), {
@@ -65,6 +70,9 @@ async function bootstrap() {
   // MustChangePasswordGuard Global
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new MustChangePasswordGuard(reflector));
+
+  // Global Exception Filter
+  app.useGlobalFilters(new HttpExceptionFilter(pinoLogger));
 
   // Swagger Configuration
   const swaggerConfig = new DocumentBuilder()
@@ -110,7 +118,7 @@ async function bootstrap() {
   const indexHtmlPath = join(frontendPath, 'index.html');
 
   if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
-    logger.log(`📦 Serving frontend from: ${frontendPath}`);
+    logger.log(`Serving frontend from: ${frontendPath}`);
 
     // Read index.html once at startup
     const indexHtmlContent = readFileSync(indexHtmlPath, 'utf-8');
@@ -140,22 +148,22 @@ async function bootstrap() {
       }
     });
   } else {
-    logger.warn(`⚠️  Frontend not found at ${frontendPath}`);
-    logger.warn(`   Running in API-only mode (development)`);
+    logger.warn(`Frontend not found at ${frontendPath}`);
+    logger.warn(`Running in API-only mode (development)`);
   }
 
   // Start server
   await app.listen(appConfig.port, '0.0.0.0');
 
   logger.log(`
-🎵 Echo Music Server
-  🚀 Servidor corriendo en: http://localhost:${appConfig.port}
-  📝 API Prefix: ${appConfig.api_prefix}
-  📚 Swagger Docs: http://localhost:${appConfig.port}/api/docs
-  🌍 CORS Origins: ${appConfig.cors_origins.join(', ')}
-  🔒 Guards: MustChangePasswordGuard (Global)
-  🔌 WebSocket: Enabled on port ${appConfig.port}
-  ${existsSync(frontendPath) ? '🎨 Frontend: Served from single container (Jellyfin-style)' : ''}
+Echo Music Server
+  Server running on: http://localhost:${appConfig.port}
+  API Prefix: ${appConfig.api_prefix}
+  Swagger Docs: http://localhost:${appConfig.port}/api/docs
+  CORS Origins: ${appConfig.cors_origins.join(', ')}
+  Guards: MustChangePasswordGuard (Global)
+  WebSocket: Enabled on port ${appConfig.port}
+  ${existsSync(frontendPath) ? 'Frontend: Served from single container (Jellyfin-style)' : ''}
   `);
 }
 

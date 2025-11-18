@@ -1064,10 +1064,10 @@ export class ScanProcessorService implements OnModuleInit {
         }
 
         await this.externalMetadataService.enrichAlbum(album.id, needsRefresh);
-        this.logger.debug(`Álbum enriquecido: ${album.name}`);
+        this.logger.debug(`Album enriched: ${album.name}`);
       } catch (error) {
         this.logger.warn(
-          `Error enriqueciendo álbum ${album.name}: ${(error as Error).message}`,
+          `Error enriching album ${album.name}: ${(error as Error).message}`,
         );
       }
     }

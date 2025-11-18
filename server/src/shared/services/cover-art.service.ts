@@ -6,20 +6,20 @@ import * as path from 'path';
 import { existsSync } from 'fs';
 
 /**
- * CoverArtService - Gestiona la extracción y caché de covers de álbumes
+ * CoverArtService - Manages album cover extraction and caching
  *
- * Inspirado en Navidrome:
- * 1. Busca covers externos (cover.jpg, folder.jpg, etc.)
- * 2. Extrae covers embebidas del archivo de audio
- * 3. Cachea las imágenes en disco
- * 4. Retorna rutas relativas para servir
+ * Inspired by Navidrome:
+ * 1. Search for external covers (cover.jpg, folder.jpg, etc.)
+ * 2. Extract embedded covers from audio files
+ * 3. Cache images to disk
+ * 4. Return relative paths for serving
  */
 @Injectable()
 export class CoverArtService {
   private readonly logger = new Logger(CoverArtService.name);
   private readonly coversPath: string;
 
-  // Nombres comunes de archivos de cover (ordenados por prioridad)
+  // Common cover file names (ordered by priority)
   private readonly COVER_FILENAMES = [
     'cover.jpg',
     'cover.png',
@@ -35,8 +35,8 @@ export class CoverArtService {
   ];
 
   constructor(private readonly configService: ConfigService) {
-    // Directorio donde se cachearán las covers
-    // Prioridad: COVERS_PATH > UPLOAD_PATH/covers > ./uploads/covers
+    // Directory where covers will be cached
+    // Priority: COVERS_PATH > UPLOAD_PATH/covers > ./uploads/covers
     const coversPath = this.configService.get<string>('COVERS_PATH');
     if (coversPath) {
       this.coversPath = coversPath;
@@ -48,32 +48,32 @@ export class CoverArtService {
   }
 
   /**
-   * Asegura que el directorio de covers existe
+   * Ensures covers directory exists
    */
   private async ensureCoversDirectory(): Promise<void> {
     try {
       if (!existsSync(this.coversPath)) {
         await fs.mkdir(this.coversPath, { recursive: true });
-        this.logger.log(`✅ Directorio de covers creado: ${this.coversPath}`);
+        this.logger.log(`Covers directory created: ${this.coversPath}`);
       }
     } catch (error) {
-      this.logger.error(`❌ Error creando directorio de covers:`, error);
+      this.logger.error(`Error creating covers directory:`, error);
     }
   }
 
   /**
-   * Extrae y cachea el cover de un álbum
+   * Extracts and caches album cover
    *
-   * @param albumId - ID del álbum (usado para nombrar el archivo)
-   * @param trackPath - Ruta del primer track del álbum
-   * @returns Ruta relativa del cover cacheado o undefined
+   * @param albumId - Album ID (used for file naming)
+   * @param trackPath - Path to first track of the album
+   * @returns Relative path to cached cover or undefined
    */
   async extractAndCacheCover(
     albumId: string,
     trackPath: string,
   ): Promise<string | undefined> {
     try {
-      // 1. Buscar cover externo en el directorio del track
+      // 1. Search for external cover in track directory
       const trackDir = path.dirname(trackPath);
       const externalCover = await this.findExternalCover(trackDir);
 
@@ -81,7 +81,7 @@ export class CoverArtService {
         return await this.cacheCover(albumId, externalCover);
       }
 
-      // 2. Extraer cover embebida del archivo de audio
+      // 2. Extract embedded cover from audio file
       const embeddedCover = await this.extractEmbeddedCover(trackPath);
 
       if (embeddedCover) {
@@ -92,22 +92,22 @@ export class CoverArtService {
         );
       }
 
-      this.logger.warn(`⚠️ No se encontró cover para álbum ${albumId}`);
+      this.logger.warn(`Cover not found for album ${albumId}`);
       return undefined;
     } catch (error) {
-      this.logger.error(`❌ Error extrayendo cover para álbum ${albumId}:`, error);
+      this.logger.error(`Error extracting cover for album ${albumId}:`, error);
       return undefined;
     }
   }
 
   /**
-   * Busca un archivo de cover externo en el directorio
+   * Searches for external cover file in directory
    */
   private async findExternalCover(directory: string): Promise<string | undefined> {
     for (const filename of this.COVER_FILENAMES) {
       const coverPath = path.join(directory, filename);
       if (existsSync(coverPath)) {
-        this.logger.debug(`📁 Cover externo encontrado: ${filename}`);
+        this.logger.debug(`External cover found: ${filename}`);
         return coverPath;
       }
     }
@@ -115,7 +115,7 @@ export class CoverArtService {
   }
 
   /**
-   * Extrae cover embebida del archivo de audio
+   * Extracts embedded cover from audio file
    */
   private async extractEmbeddedCover(
     trackPath: string,
@@ -125,7 +125,7 @@ export class CoverArtService {
       const picture = metadata.common.picture?.[0];
 
       if (picture && picture.data) {
-        this.logger.debug(`🎵 Cover embebida encontrada en: ${path.basename(trackPath)}`);
+        this.logger.debug(`Embedded cover found in: ${path.basename(trackPath)}`);
         return {
           data: Buffer.from(picture.data),
           format: picture.format || 'image/jpeg',
@@ -135,28 +135,28 @@ export class CoverArtService {
       return undefined;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.warn(`⚠️ Error extrayendo cover de ${trackPath}:`, errorMessage);
+      this.logger.warn(`Error extracting cover from ${trackPath}:`, errorMessage);
       return undefined;
     }
   }
 
   /**
-   * Cachea un cover desde un archivo externo
+   * Caches cover from external file
    */
   private async cacheCover(albumId: string, sourcePath: string): Promise<string> {
     const ext = path.extname(sourcePath);
     const destFileName = `${albumId}${ext}`;
     const destPath = path.join(this.coversPath, destFileName);
 
-    // Copiar archivo con retry (para Windows EPERM errors)
+    // Copy file with retry (for Windows EPERM errors)
     await this.copyFileWithRetry(sourcePath, destPath);
 
-    this.logger.debug(`💾 Cover cacheada: ${destFileName}`);
+    this.logger.debug(`Cover cached: ${destFileName}`);
     return destFileName;
   }
 
   /**
-   * Copia un archivo con retry mechanism para manejar EPERM en Windows
+   * Copies file with retry mechanism to handle Windows EPERM errors
    */
   private async copyFileWithRetry(
     source: string,
@@ -167,44 +167,44 @@ export class CoverArtService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await fs.copyFile(source, dest);
-        return; // Éxito
+        return; // Success
       } catch (error: any) {
-        // Si es un error de permisos (EPERM) en Windows, reintentar
+        // If it's a permission error (EPERM) on Windows, retry
         if (error.code === 'EPERM' && attempt < maxRetries) {
           this.logger.warn(
-            `⚠️ EPERM error copying ${path.basename(source)}, retrying (${attempt}/${maxRetries})...`,
+            `EPERM error copying ${path.basename(source)}, retrying (${attempt}/${maxRetries})...`,
           );
           await new Promise((resolve) => setTimeout(resolve, delay * attempt));
           continue;
         }
-        // Si llegamos aquí, falló después de todos los reintentos o es otro error
+        // If we get here, it failed after all retries or it's another error
         throw error;
       }
     }
   }
 
   /**
-   * Cachea un cover desde un buffer (cover embebida)
+   * Caches cover from buffer (embedded cover)
    */
   private async cacheCoverFromBuffer(
     albumId: string,
     buffer: Buffer,
     mimeType: string,
   ): Promise<string> {
-    // Determinar extensión desde MIME type
+    // Determine extension from MIME type
     const ext = this.mimeTypeToExtension(mimeType);
     const destFileName = `${albumId}${ext}`;
     const destPath = path.join(this.coversPath, destFileName);
 
-    // Guardar buffer
+    // Save buffer
     await fs.writeFile(destPath, buffer);
 
-    this.logger.debug(`💾 Cover cacheada: ${destFileName}`);
+    this.logger.debug(`Cover cached: ${destFileName}`);
     return destFileName;
   }
 
   /**
-   * Convierte MIME type a extensión de archivo
+   * Converts MIME type to file extension
    */
   private mimeTypeToExtension(mimeType: string): string {
     const mimeMap: Record<string, string> = {
@@ -218,7 +218,7 @@ export class CoverArtService {
   }
 
   /**
-   * Obtiene la ruta absoluta de un cover cacheado
+   * Gets absolute path of cached cover
    */
   getCoverPath(fileName: string | undefined | null): string | undefined {
     if (!fileName) return undefined;
@@ -227,7 +227,7 @@ export class CoverArtService {
   }
 
   /**
-   * Verifica si un cover existe en el caché
+   * Checks if cover exists in cache
    */
   async coverExists(fileName: string | undefined | null): Promise<boolean> {
     if (!fileName) return false;
@@ -236,17 +236,17 @@ export class CoverArtService {
   }
 
   /**
-   * Elimina un cover del caché
+   * Deletes cover from cache
    */
   async deleteCover(fileName: string): Promise<void> {
     try {
       const coverPath = path.join(this.coversPath, fileName);
       if (existsSync(coverPath)) {
         await fs.unlink(coverPath);
-        this.logger.debug(`🗑️ Cover eliminado: ${fileName}`);
+        this.logger.debug(`Cover deleted: ${fileName}`);
       }
     } catch (error) {
-      this.logger.error(`❌ Error eliminando cover ${fileName}:`, error);
+      this.logger.error(`Error deleting cover ${fileName}:`, error);
     }
   }
 }
