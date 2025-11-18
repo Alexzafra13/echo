@@ -180,21 +180,26 @@
   .homePage__main {
     margin-left: 0; /* No sidebar en mobile */
     max-width: 100vw;
+    padding-top: 0;
   }
 
   .homePage__content {
-    padding: 0 16px 70px 16px; /* Bottom padding for bottom nav + player */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 16px 140px; /* Top para header + bottom para player y nav */
+    overflow-x: visible;
   }
 
   .hero--loading {
     flex-direction: column;
     height: auto;
-    padding: 30px 20px;
+    padding: 24px 16px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .hero__cover--loading {
-    width: 150px;
-    height: 150px;
+    width: 160px;
+    height: 160px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .hero__title--loading,
@@ -203,8 +208,8 @@
   }
 
   .albumGrid__grid--loading {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
   }
 }
 
@@ -212,14 +217,24 @@
 @media (max-width: 480px) {
   .homePage__main {
     margin-left: 0;
+    padding-top: 0;
   }
 
   .homePage__content {
-    padding: 0 12px 80px 12px; /* More space for bottom nav + player */
+    padding: 90px 12px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .hero--loading {
+    padding: 20px 12px;
+  }
+
+  .hero__cover--loading {
+    width: 140px;
+    height: 140px;
   }
 
   .albumGrid__grid--loading {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
 }

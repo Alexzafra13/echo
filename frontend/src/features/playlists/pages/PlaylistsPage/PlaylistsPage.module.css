@@ -284,16 +284,15 @@
 }
 
 @media (max-width: 768px) {
-  .playlistsPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .playlistsPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .playlistsPage__content {
-    padding: 20px 16px 80px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .playlistsPage__title {
@@ -308,11 +307,24 @@
 
   .playlistsPage__header button {
     width: 100%;
+    border-radius: 20px; /* iOS rounded button */
+  }
+
+  .playlistsPage__createForm {
+    border-radius: 12px; /* iOS rounded */
   }
 
   .playlistsPage__grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 16px;
+  }
+
+  .playlistCard {
+    border-radius: 12px; /* iOS rounded */
+  }
+
+  .playlistCard__cover {
+    border-radius: 8px; /* iOS rounded */
   }
 
   .playlistCard__actions {
@@ -321,7 +333,16 @@
 }
 
 @media (max-width: 480px) {
+  .playlistsPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .playlistsPage__content {
-    padding: 20px 16px 90px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .playlistsPage__title {
+    font-size: 24px;
   }
 }

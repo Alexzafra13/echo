@@ -417,16 +417,15 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .profilePage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .profilePage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .profilePage__content {
-    padding: 0 20px 80px 20px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .profilePage__header {
@@ -435,13 +434,17 @@
     text-align: left;
   }
 
-  .profilePage__headerIcon {
-    width: 60px;
-    height: 60px;
+  .profilePage__avatarContainer {
+    width: 80px;
+    height: 80px;
   }
 
   .profilePage__header h1 {
     font-size: 24px;
+  }
+
+  .profilePage__card {
+    border-radius: 12px; /* iOS rounded */
   }
 
   .profilePage__cardBody {
@@ -452,15 +455,38 @@
     flex-wrap: wrap;
   }
 
+  .profilePage__btnIcon_save,
+  .profilePage__btnIcon_cancel {
+    border-radius: 8px; /* iOS rounded */
+  }
+
+  .profilePage__btnEdit {
+    border-radius: 20px; /* iOS rounded button */
+  }
+
   .profilePage__fieldNote,
   .profilePage__btnEdit {
     margin-left: 0;
     width: 100%;
   }
+
+  .profilePage__submitButton {
+    border-radius: 20px; /* iOS rounded button */
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
+  .profilePage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .profilePage__content {
-    padding: 0 20px 90px 20px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .profilePage__header h1 {
+    font-size: 20px;
   }
 }

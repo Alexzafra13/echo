@@ -249,16 +249,15 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .searchResultsPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
   .searchResultsPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    padding-top: 0;
   }
 
   .searchResultsPage__content {
-    padding: 0 16px 80px 16px; /* Bottom padding for bottom nav */
+    overflow: visible; /* Permitir que bottom nav sea visible */
+    margin-top: 0; /* Eliminar margin negativo */
+    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .searchResultsPage__header h1 {
@@ -274,19 +273,39 @@
     gap: 12px;
   }
 
+  .searchResultsPage__card {
+    border-radius: 12px; /* iOS rounded */
+  }
+
+  .searchResultsPage__cardImage,
+  .searchResultsPage__cardImage_round {
+    border-radius: 8px; /* iOS rounded */
+  }
+
   .searchResultsPage__listItem {
     grid-template-columns: 30px 40px 1fr auto;
     gap: 12px;
+    border-radius: 8px; /* iOS rounded */
   }
 
   .searchResultsPage__listImage {
     width: 40px;
     height: 40px;
+    border-radius: 6px; /* iOS rounded */
   }
 }
 
 @media (max-width: 480px) {
+  .searchResultsPage__main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
   .searchResultsPage__content {
-    padding: 0 16px 90px 16px; /* More space for bottom nav */
+    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+  }
+
+  .searchResultsPage__header h1 {
+    font-size: 20px;
   }
 }
