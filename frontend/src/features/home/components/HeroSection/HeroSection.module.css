@@ -316,6 +316,7 @@
     height: 300px; /* Más compacto */
     width: calc(100% + 32px);
     margin-left: -16px;
+    margin-top: 0; /* NO extend behind header on mobile - prevents overlap */
     margin-bottom: 24px;
   }
 
@@ -420,6 +421,7 @@
     height: 260px; /* Aún más compacto */
     width: calc(100% + 24px);
     margin-left: -12px;
+    margin-top: 0; /* NO extend behind header on mobile - prevents overlap */
     margin-bottom: 20px;
   }
 
