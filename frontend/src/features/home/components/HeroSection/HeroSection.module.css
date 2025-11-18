@@ -310,18 +310,123 @@
   }
 }
 
-/* Mobile */
+/* Mobile - iOS Compact Style */
 @media (max-width: 768px) {
   .heroSection {
-    height: 420px;
+    height: 300px; /* Más compacto */
     width: calc(100% + 32px);
     margin-left: -16px;
+    margin-bottom: 24px;
   }
 
   .heroSection__navButton {
-    width: 40px;
+    width: 34px;
+    height: 34px;
+    top: 60px; /* Debajo del header */
+    left: 12px;
+    backdrop-filter: blur(20px);
+  }
+
+  .heroSection__navButton--next {
+    right: 12px;
+  }
+
+  .heroSection__content {
+    flex-direction: row; /* Horizontal: cover + info */
+    justify-content: flex-start;
+    align-items: center;
+    text-align: left;
+    padding: 70px 20px 20px 20px; /* Menos padding top */
+    gap: 16px;
+  }
+
+  .heroSection__albumCoverButton {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    border-radius: 12px; /* iOS rounded */
+  }
+
+  .heroSection__albumCover {
+    width: 120px; /* Más pequeño */
+    height: 120px;
+    border-radius: 12px;
+  }
+
+  .heroSection__info {
+    flex: 1;
+    min-width: 0; /* Permite text truncation */
+  }
+
+  .heroSection__artistButton {
+    text-align: left;
+  }
+
+  .heroSection__artistLogo {
+    max-height: 32px; /* Más pequeño */
+    max-width: 200px;
+    object-position: left center;
+  }
+
+  .heroSection__artistName {
+    font-size: 18px; /* Más pequeño */
+    letter-spacing: -0.5px;
+  }
+
+  .heroSection__albumTitle {
+    font-size: 24px; /* Más pequeño */
+    letter-spacing: -1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .heroSection__meta {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .heroSection__albumArt {
+    display: none;
+  }
+
+  .heroSection__playButton {
+    width: 110px;
     height: 40px;
-    top: 20px;
+    margin: 10px 0 0 0; /* Alineado a la izquierda */
+    font-size: 13px;
+    border-radius: 20px; /* iOS pill shape */
+  }
+
+  .heroSection__playIcon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+  }
+
+  /* Simplificar animación en móvil */
+  .heroSection__playButton:hover .heroSection__playIcon {
+    transform: none;
+    margin-right: 6px;
+  }
+
+  .heroSection__playButton:hover .heroSection__playText {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Small Mobile - Ultra Compact */
+@media (max-width: 480px) {
+  .heroSection {
+    height: 260px; /* Aún más compacto */
+    width: calc(100% + 24px);
+    margin-left: -12px;
+    margin-bottom: 20px;
+  }
+
+  .heroSection__navButton {
+    width: 32px;
+    height: 32px;
+    top: 56px;
     left: 10px;
   }
 
@@ -330,120 +435,46 @@
   }
 
   .heroSection__content {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 114px 20px 30px 20px;
-    gap: 20px;
+    padding: 60px 16px 16px 16px;
+    gap: 12px;
   }
 
   .heroSection__albumCoverButton {
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
   }
 
   .heroSection__albumCover {
-    width: 170px;
-    height: 170px;
-  }
-
-  .heroSection__artistButton {
-    text-align: center;
+    width: 100px; /* Más pequeño aún */
+    height: 100px;
   }
 
   .heroSection__artistLogo {
-    max-height: 45px;
-    max-width: 280px;
-    object-position: center center;
+    max-height: 28px;
+    max-width: 160px;
   }
 
   .heroSection__artistName {
-    font-size: 32px;
+    font-size: 16px;
   }
 
   .heroSection__albumTitle {
-    font-size: 36px;
+    font-size: 20px;
   }
 
   .heroSection__meta {
+    font-size: 10px;
+  }
+
+  .heroSection__playButton {
+    width: 100px;
+    height: 36px;
+    margin: 8px 0 0 0;
     font-size: 12px;
   }
 
-  .heroSection__albumArt {
-    display: none; /* Hide on mobile */
-  }
-
-  .heroSection__playButton {
-    width: 140px;
-    height: 46px;
-    margin: 12px auto 0;
-    font-size: 14px;
-  }
-
   .heroSection__playIcon {
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-  }
-}
-
-/* Small Mobile */
-@media (max-width: 480px) {
-  .heroSection {
-    height: 370px;
-    width: calc(100% + 24px);
-    margin-left: -12px;
-    margin-bottom: 24px;
-  }
-
-  .heroSection__navButton {
-    width: 36px;
-    height: 36px;
-    top: 15px;
-    left: 8px;
-  }
-
-  .heroSection__navButton--next {
-    right: 8px;
-  }
-
-  .heroSection__content {
-    padding: 104px 16px 20px 16px;
-    gap: 16px;
-  }
-
-  .heroSection__albumCoverButton {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  }
-
-  .heroSection__albumCover {
-    width: 140px;
-    height: 140px;
-  }
-
-  .heroSection__artistLogo {
-    max-height: 35px;
-    max-width: 220px;
-  }
-
-  .heroSection__artistName {
-    font-size: 24px;
-  }
-
-  .heroSection__albumTitle {
-    font-size: 28px;
-  }
-
-  .heroSection__playButton {
-    width: 130px;
-    height: 44px;
-    margin: 8px auto 0;
-    font-size: 13px;
-  }
-
-  .heroSection__playIcon {
-    width: 18px;
-    height: 18px;
-    margin-right: 6px;
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
   }
 }
