@@ -168,7 +168,7 @@
   }
 }
 
-/* Mobile */
+/* Mobile - iOS Style */
 @media (max-width: 768px) {
   .radioPage__content {
     overflow: visible; /* Permitir que bottom nav sea visible */
@@ -179,38 +179,45 @@
   }
 
   .radioPage__content {
-    padding: 0 var(--space-4) 80px; /* Bottom padding for bottom nav */
+    padding: 8px 16px 80px; /* Bottom padding for bottom nav + iOS spacing */
   }
 
   .radioPage__topBar {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-3);
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
   }
 
   .radioPage__title {
-    font-size: 20px;
-    gap: var(--space-2);
+    font-size: 22px;
+    gap: 8px;
+    margin-bottom: 16px;
   }
 
   .radioPage__title svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .radioPage__section {
+    margin-bottom: 32px;
   }
 
   .radioPage__paginationButton {
     min-width: 80px;
-    padding: var(--space-2) var(--space-3);
-    font-size: 13px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 12px; /* iOS rounded */
   }
 
   .radioPage__paginationInfo {
-    font-size: 13px;
+    font-size: 14px;
     min-width: 100px;
   }
 }

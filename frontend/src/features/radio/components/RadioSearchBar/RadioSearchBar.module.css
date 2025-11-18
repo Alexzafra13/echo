@@ -162,23 +162,37 @@
   background: var(--color-text-tertiary);
 }
 
-/* Mobile responsive */
+/* Mobile responsive - iOS Style */
 @media (max-width: 768px) {
+  .searchBar__inputWrapper {
+    border-radius: 12px; /* iOS rounded */
+    padding: 0 14px;
+  }
+
   .searchBar__input {
-    font-size: 14px;
+    font-size: 15px; /* iOS standard */
     padding: 10px 0;
   }
 
+  .searchBar__results {
+    border-radius: 12px; /* iOS rounded */
+  }
+
   .searchBar__resultImage {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
   }
 
   .searchBar__resultName {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .searchBar__resultMeta {
-    font-size: 12px;
+    font-size: 13px;
+  }
+
+  .searchBar__resultItem {
+    padding: 14px 16px;
   }
 }
