@@ -267,34 +267,75 @@
   }
 
   .header__searchForm {
-    max-width: 500px; /* Ajustado de 400px → 500px (proporcional) */
+    max-width: 500px;
+    min-width: 250px; /* Más flexible que 400px */
+  }
+
+  .header__rightSection {
+    gap: 16px;
   }
 }
 
-/* Mobile */
+/* Mobile Large (855px crítico) */
+@media (max-width: 855px) {
+  .header__searchForm {
+    min-width: 200px; /* Todavía más flexible */
+    max-width: 400px;
+  }
+
+  .header__rightSection {
+    gap: 12px;
+  }
+}
+
+/* Mobile - iOS Style */
 @media (max-width: 768px) {
   .header {
-    padding: 12px 16px;
-    gap: 12px;
+    padding: 8px 16px;
+    gap: 8px;
+    height: 52px; /* iOS standard header height */
+    /* Blur más intenso estilo iOS */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .header--scrolled {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .header__rightSection {
+    gap: 8px;
   }
 
   .header__searchForm {
+    flex: 1;
     max-width: none;
+    min-width: 0;
   }
 
   .header__searchInput {
-    height: 40px;
-    font-size: 13px;
+    height: 36px;
+    font-size: 15px; /* iOS standard font */
+    border-radius: 10px; /* iOS rounded corners */
+    padding: 0 12px 0 40px;
   }
 
+  .header__searchIcon {
+    left: 12px;
+  }
+
+  /* Botones más compactos estilo iOS */
   .header__themeToggle {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
   }
 
   .header__userButton {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
   }
 
   .header__userAvatarLarge {
@@ -304,5 +345,52 @@
 
   .header__userInfo {
     padding: 10px 12px;
+  }
+
+  .header__userDropdown {
+    /* iOS style dropdown */
+    border-radius: 16px;
+    padding: 12px 8px;
+  }
+}
+
+/* Mobile Small - Search icon only */
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 12px;
+  }
+
+  .header__rightSection {
+    gap: 6px;
+  }
+
+  .header__searchForm {
+    flex: 1;
+    min-width: 120px; /* Mínimo razonable */
+  }
+
+  .header__searchInput {
+    font-size: 14px;
+    padding: 0 8px 0 36px;
+  }
+
+  .header__searchInput::placeholder {
+    font-size: 14px;
+  }
+
+  .header__searchIcon {
+    left: 10px;
+  }
+
+  .header__themeToggle,
+  .header__userButton {
+    width: 28px;
+    height: 28px;
+  }
+
+  .header__themeToggle svg,
+  .header__userButton svg {
+    width: 16px;
+    height: 16px;
   }
 }

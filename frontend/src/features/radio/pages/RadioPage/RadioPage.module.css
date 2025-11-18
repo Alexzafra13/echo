@@ -172,12 +172,11 @@
 /* Mobile */
 @media (max-width: 768px) {
   .radioPage__main {
-    margin-left: 80px;
+    margin-left: 0; /* No sidebar en mobile */
   }
 
   .radioPage__content {
-    padding: 0 var(--space-4);
-    padding-bottom: var(--space-8);
+    padding: 0 var(--space-4) 80px; /* Bottom padding for bottom nav */
   }
 
   .radioPage__topBar {
@@ -220,7 +219,7 @@
   }
 
   .radioPage__content {
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-3) 90px; /* More space for bottom nav */
   }
 
   .radioPage__grid {

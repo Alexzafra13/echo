@@ -128,6 +128,14 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .playlistDetailPage__main {
+    margin-left: 0; /* No sidebar en mobile */
+  }
+
+  .playlistDetailPage__content {
+    padding: calc(84px + 2rem) 3rem 80px; /* Bottom padding for bottom nav */
+  }
+
   .playlistDetailPage__heroContent {
     flex-direction: column;
     align-items: center;
@@ -144,5 +152,11 @@
 
   .playlistDetailPage__info {
     align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlistDetailPage__content {
+    padding: calc(84px + 2rem) 3rem 90px; /* More space for bottom nav */
   }
 }
