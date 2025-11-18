@@ -108,6 +108,7 @@
     right: 0;
     top: auto;
     bottom: 0;
+    position: fixed; /* Asegurar que siempre esté fijo */
     flex-direction: row;
     padding: 0;
     background: rgba(30, 41, 59, 0.85);
@@ -115,7 +116,7 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-right: none;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    z-index: var(--z-fixed, 1030);
+    z-index: 9999; /* Z-index muy alto para estar siempre visible */
     /* iOS safe area */
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
