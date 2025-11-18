@@ -2,44 +2,138 @@
 set -e
 
 echo "🚀 Starting Echo Music Server..."
+echo ""
 
-# Wait for PostgreSQL to be ready
+# ============================================
+# 0. Auto-generate JWT Secrets (Jellyfin-style)
+# ============================================
+CONFIG_DIR="/app/config"
+SECRETS_FILE="$CONFIG_DIR/secrets.env"
+
+# Create config directory if it doesn't exist
+mkdir -p "$CONFIG_DIR"
+
+# Generate secrets if they don't exist (FIRST RUN ONLY)
+if [ ! -f "$SECRETS_FILE" ]; then
+  echo "🔐 First run detected - generating secure JWT secrets..."
+
+  # Generate cryptographically secure secrets
+  JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
+  JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
+
+  # Save to persistent volume
+  cat > "$SECRETS_FILE" << EOF
+# Auto-generated JWT secrets (DO NOT EDIT MANUALLY)
+# Generated on: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+export JWT_SECRET="$JWT_SECRET"
+export JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
+EOF
+
+  echo "✅ Secure JWT secrets generated and saved to $SECRETS_FILE"
+  echo ""
+else
+  echo "ℹ️  Using existing JWT secrets from $SECRETS_FILE"
+  echo ""
+fi
+
+# Load secrets into environment
+. "$SECRETS_FILE"
+
+# Export for Node.js application
+export JWT_SECRET
+export JWT_REFRESH_SECRET
+
+# ============================================
+# 1. Wait for Dependencies
+# ============================================
 echo "⏳ Waiting for PostgreSQL..."
 until nc -z -v -w30 postgres 5432; do
-  echo "Waiting for database connection..."
+  echo "   Waiting for database connection..."
   sleep 1
 done
 echo "✅ PostgreSQL is ready!"
+echo ""
 
-# Wait for Redis to be ready
 echo "⏳ Waiting for Redis..."
 until nc -z -v -w30 redis 6379; do
-  echo "Waiting for Redis connection..."
+  echo "   Waiting for Redis connection..."
   sleep 1
 done
 echo "✅ Redis is ready!"
+echo ""
 
-# Run database migrations
-echo "🔄 Running database migrations..."
-npx prisma migrate deploy || {
-  echo "⚠️  Migration failed, but continuing..."
-}
+# ============================================
+# 2. Database Setup
+# ============================================
+echo "🔄 Setting up database..."
 
-# Generate Prisma Client (if not already generated)
-echo "🔄 Generating Prisma Client..."
+# Generate Prisma Client first
+echo "   📦 Generating Prisma Client..."
 npx prisma generate || {
   echo "⚠️  Prisma generate failed, but continuing..."
 }
 
+# Check if database is empty (first run)
+FIRST_RUN=false
+if ! npx prisma db execute --stdin <<< "SELECT 1 FROM \"User\" LIMIT 1;" > /dev/null 2>&1; then
+  echo "   🆕 First run detected - initializing database..."
+  FIRST_RUN=true
+fi
+
+# Run migrations
+echo "   🔄 Running database migrations..."
+npx prisma migrate deploy || {
+  echo "⚠️  Migration failed, but continuing..."
+}
+
+# ============================================
+# 3. Seed Database (First Run Only)
+# ============================================
+if [ "$FIRST_RUN" = true ]; then
+  echo ""
+  echo "🌱 Creating initial admin user..."
+
+  # Run seed to create admin user
+  if npx prisma db seed; then
+    echo "✅ Admin user created successfully!"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔐 IMPORTANT: Default Credentials"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "   Username: admin"
+    echo "   Password: admin123"
+    echo ""
+    echo "⚠️  CHANGE THIS PASSWORD IMMEDIATELY!"
+    echo "   You'll be prompted on first login."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+  else
+    echo "⚠️  Seed failed - you may need to create a user manually"
+  fi
+else
+  echo "   ℹ️  Database already initialized, skipping seed"
+fi
+
+echo ""
 echo "✅ Initialization complete!"
 echo ""
-echo "🎵 Starting Echo Music Server..."
-echo "📍 Environment: ${NODE_ENV:-production}"
-echo "🌐 Listening on: ${HOST:-0.0.0.0}:${PORT:-4567}"
+
+# ============================================
+# 4. Start Application
+# ============================================
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🎵 Echo Music Server - Starting"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "   Environment: ${NODE_ENV:-production}"
+echo "   Listening on: ${HOST:-0.0.0.0}:${PORT:-4567}"
 echo ""
-echo "Access your server at:"
-echo "  - http://localhost:${PORT:-4567} (from this machine)"
-echo "  - http://<SERVER_IP>:${PORT:-4567} (from network)"
+echo "   Access your server at:"
+echo "   → http://localhost:${PORT:-4567} (local)"
+echo "   → http://<YOUR_SERVER_IP>:${PORT:-4567} (network)"
+echo ""
+echo "   API Documentation:"
+echo "   → http://localhost:${PORT:-4567}/api/docs"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 # Start the application
