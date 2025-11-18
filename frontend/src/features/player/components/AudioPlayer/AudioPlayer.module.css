@@ -488,9 +488,11 @@
   .player {
     /* Spotify-like compact player */
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     height: auto;
-    padding: 0;
+    padding: 10px 14px;
     gap: 0;
     /* Position above bottom tab bar (50px) + safe area + margin */
     bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
@@ -506,14 +508,16 @@
     overflow: hidden;
   }
 
-  /* Progress bar super fina abajo */
+  /* Progress bar super fina abajo - ocupa toda la fila */
   .progressContainer {
-    order: 1; /* Mover abajo */
+    order: 10; /* Mover abajo */
     padding: 0;
+    margin: 0 -14px -10px -14px; /* Extender a los bordes */
     gap: 0;
     height: 3px;
-    width: 100%;
+    width: calc(100% + 28px);
     position: relative;
+    flex-basis: 100%;
   }
 
   .timeLabel {
@@ -545,14 +549,15 @@
     display: none; /* Sin handle en móvil */
   }
 
-  /* Layout horizontal compacto */
+  /* Layout horizontal compacto - izquierda */
   .trackInfo {
     display: flex;
     align-items: center;
     gap: 12px;
     flex: 1;
     min-width: 0;
-    padding: 10px 14px;
+    padding: 0;
+    order: 1;
   }
 
   .trackCover {
@@ -582,13 +587,13 @@
     white-space: nowrap;
   }
 
-  /* Solo botón play/pause */
+  /* Solo botón play/pause - derecha */
   .playerControls {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-top: -1.5px; /* Centrar en la zona del contenido (sin barra) */
+    position: relative;
+    display: flex;
+    align-items: center;
+    order: 2;
+    flex-shrink: 0;
   }
 
   .controlButtons {
@@ -630,13 +635,10 @@
 
   /* Live indicator más compacto */
   .liveIndicator {
-    position: absolute;
-    top: 50%;
-    right: 60px;
-    transform: translateY(-50%);
-    margin-top: -1.5px;
+    position: relative;
     padding: 3px 8px;
     font-size: 10px;
+    margin-right: 8px;
   }
 
   .liveText {
@@ -655,11 +657,17 @@
     left: 10px;
     right: 10px;
     border-radius: 14px;
+    padding: 8px 12px;
   }
 
   .trackInfo {
-    padding: 8px 12px;
+    padding: 0;
     gap: 10px;
+  }
+
+  .progressContainer {
+    margin: 0 -12px -8px -12px;
+    width: calc(100% + 24px);
   }
 
   .trackCover {
