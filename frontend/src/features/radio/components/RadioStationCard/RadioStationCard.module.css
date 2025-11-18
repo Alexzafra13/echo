@@ -8,7 +8,7 @@
   cursor: pointer;
   transition: transform 0.3s ease;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 8px; /* iOS rounded */
 }
 
 .radioCard:hover {
@@ -191,11 +191,16 @@
 
 /* ===== Responsive Design ===== */
 
-/* Mobile */
+/* Mobile - iOS Style */
 @media (max-width: 768px) {
   .radioCard {
-    gap: 8px;
-    padding: 4px;
+    gap: 10px;
+    padding: 6px;
+    border-radius: 12px; /* iOS rounded */
+  }
+
+  .radioCard__coverContainer {
+    border-radius: 8px;
   }
 
   .radioCard__title {
@@ -210,40 +215,46 @@
     font-size: 10px;
   }
 
+  /* En móvil, siempre mostrar botones (touch-friendly) */
   .radioCard__playButton {
-    width: 36px;
-    height: 36px;
-    bottom: 6px;
-    right: 6px;
+    width: 40px;
+    height: 40px;
+    bottom: 8px;
+    right: 8px;
+    opacity: 1; /* Siempre visible en móvil */
+    transform: translateY(0);
   }
 
   .radioCard__playButton svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .radioCard__favoriteButton {
+    width: 32px;
+    height: 32px;
+    top: 8px;
+    right: 8px;
+    opacity: 1; /* Siempre visible en móvil */
+    transform: translateY(0);
+  }
+
+  .radioCard__favoriteButton svg {
     width: 16px;
     height: 16px;
   }
 
-  .radioCard__favoriteButton {
-    width: 30px;
-    height: 30px;
-    top: 6px;
-    right: 6px;
-  }
-
-  .radioCard__favoriteButton svg {
-    width: 14px;
-    height: 14px;
+  /* Eliminar hover effects en móvil */
+  .radioCard:hover {
+    transform: none;
   }
 }
 
-/* Touch devices: show buttons on hover/tap */
+/* Touch devices: show buttons always */
 @media (hover: none) {
   .radioCard__playButton,
   .radioCard__favoriteButton {
-    opacity: 0;
-  }
-
-  .radioCard:active .radioCard__playButton,
-  .radioCard:active .radioCard__favoriteButton {
     opacity: 1;
+    transform: translateY(0);
   }
 }
