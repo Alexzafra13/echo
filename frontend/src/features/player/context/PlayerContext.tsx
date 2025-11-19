@@ -48,11 +48,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isPlaying: state.isPlaying && state.isRadioMode,
   });
 
-  // Sync radioMetadata to state when it changes
+  // Sync radioMetadata to state when it changes (including null)
   useEffect(() => {
-    if (radioMetadata) {
-      setState(prev => ({ ...prev, radioMetadata }));
-    }
+    setState(prev => ({ ...prev, radioMetadata }));
   }, [radioMetadata]);
 
   /**

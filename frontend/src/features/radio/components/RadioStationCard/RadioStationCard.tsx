@@ -1,4 +1,5 @@
 import { Play, Heart, HeartOff, Radio, Music } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
 import type { RadioMetadata } from '../../hooks/useRadioMetadata';
@@ -34,6 +35,9 @@ export function RadioStationCard({
   onPlay,
   onToggleFavorite,
 }: RadioStationCardProps) {
+  const metadataTextRef = useRef<HTMLSpanElement>(null);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onPlay?.();
@@ -54,6 +58,17 @@ export function RadioStationCard({
 
   // Format tags for display
   const genreTags = tags ? tags.split(',').slice(0, 2).join(', ') : 'Radio';
+
+  // Check if metadata text overflows and needs animation
+  useEffect(() => {
+    if (metadataTextRef.current && currentMetadata?.title) {
+      const element = metadataTextRef.current;
+      const isOverflowing = element.scrollWidth > element.clientWidth;
+      setShouldAnimate(isOverflowing);
+    } else {
+      setShouldAnimate(false);
+    }
+  }, [currentMetadata?.title]);
 
   return (
     <article className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}>
@@ -111,8 +126,13 @@ export function RadioStationCard({
         )}
         {isPlaying && currentMetadata?.title && (
           <p className={styles.radioCard__nowPlaying}>
-            <Music size={12} />
-            <span className={styles.radioCard__nowPlayingText}>{currentMetadata.title}</span>
+            <span
+              ref={metadataTextRef}
+              className={`${styles.radioCard__nowPlayingText} ${shouldAnimate ? styles['radioCard__nowPlayingText--animate'] : ''}`}
+            >
+              <Music size={12} />
+              {currentMetadata.title}
+            </span>
           </p>
         )}
       </div>
