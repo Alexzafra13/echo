@@ -41,10 +41,11 @@ Si tu router muestra una IP en estos rangos → **Tienes CGNAT**
 **Ventajas:**
 - ✅ Completamente gratis
 - ✅ No necesitas IP pública
-- ✅ No necesitas abrir puertos
+- ✅ No necesitas abrir puertos (funciona aunque 80/443 estén bloqueados)
 - ✅ SSL/HTTPS automático
 - ✅ Protección DDoS incluida
 - ✅ Fácil de configurar
+- ✅ **Ideal para Digi España y otros ISPs que bloquean puertos**
 
 **Desventajas:**
 - ❌ Requiere dominio (gratis en Cloudflare)
