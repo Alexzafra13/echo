@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Radio } from 'lucide-react';
 import { RadioStation } from '../../types';
 import styles from './RadioSearchPanel.module.css';
 
@@ -68,15 +69,21 @@ export function RadioSearchPanel({
                   className={styles.searchPanel__item}
                   onClick={() => handleResultClick(station)}
                 >
-                  <img
-                    src={station.favicon || '/images/radio_placeholder.png'}
-                    alt={station.name}
-                    className={styles.searchPanel__itemImage}
-                    onError={(e) => {
-                      const img = e.currentTarget;
-                      img.src = '/images/radio_placeholder.png';
-                    }}
-                  />
+                  <div className={styles.searchPanel__itemImageContainer}>
+                    <div className={styles.searchPanel__itemFallback}>
+                      <Radio size={20} />
+                    </div>
+                    {station.favicon && (
+                      <img
+                        src={station.favicon}
+                        alt={station.name}
+                        className={styles.searchPanel__itemImage}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
+                  </div>
                   <div className={styles.searchPanel__itemInfo}>
                     <p className={styles.searchPanel__itemName}>{station.name}</p>
                     <p className={styles.searchPanel__itemMeta}>
