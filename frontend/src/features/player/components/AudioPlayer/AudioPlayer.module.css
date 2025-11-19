@@ -5,15 +5,16 @@
   bottom: var(--space-4);
   left: var(--space-4);
   right: var(--space-4);
-  height: 90px;
+  height: auto; /* Auto height para acomodar la barra de progreso */
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.85));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   display: grid;
   grid-template-columns: 320px 1fr 260px;
+  grid-template-rows: auto auto; /* Fila para contenido principal y fila para progress bar */
   align-items: center;
-  padding: 0 var(--space-5);
-  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5); /* Añadido padding vertical */
+  gap: var(--space-4) var(--space-4); /* gap vertical y horizontal */
   z-index: var(--z-fixed);
   backdrop-filter: blur(var(--blur-xl));
   box-shadow: var(--shadow-2xl);
@@ -125,6 +126,8 @@
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
+  grid-column: 1; /* Primera columna */
+  grid-row: 1; /* Primera fila */
 }
 
 .trackCover {
@@ -164,6 +167,8 @@
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
+  grid-column: 2; /* Segunda columna */
+  grid-row: 1; /* Primera fila */
 }
 
 .controlButtons {
@@ -228,6 +233,9 @@
   align-items: center;
   gap: var(--space-2);
   width: 100%;
+  grid-column: 1 / -1; /* Ocupa todas las columnas */
+  grid-row: 2; /* Segunda fila */
+  padding-top: var(--space-2); /* Espacio superior */
 }
 
 .timeLabel {
@@ -282,6 +290,8 @@
   align-items: center;
   gap: var(--space-3);
   justify-content: flex-end;
+  grid-column: 3; /* Tercera columna */
+  grid-row: 1; /* Primera fila */
 }
 
 .volumeContainer {
