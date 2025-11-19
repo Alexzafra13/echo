@@ -26,7 +26,6 @@ export function CountrySelect({
   onChange,
   userCountryCode
 }: CountrySelectProps) {
-  const selectedCountryData = countries.find(c => c.code === selectedCountry);
 
   return (
     <div className={styles.countrySelect}>

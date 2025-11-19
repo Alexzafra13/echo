@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, X, User, Trash2, Check } from 'lucide-react';
+import { Camera, X, Trash2, Check } from 'lucide-react';
 import { useAuth } from '@shared/hooks';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';

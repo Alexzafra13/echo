@@ -26,7 +26,7 @@ export function useUploadCustomArtistImage() {
   return useMutation({
     mutationFn: (request: UploadCustomImageRequest) =>
       customArtistImagesApi.uploadImage(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate queries to refresh the image lists
       queryClient.invalidateQueries({ queryKey: ['custom-artist-images', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artistAvatars', variables.artistId] });
@@ -43,7 +43,7 @@ export function useApplyCustomArtistImage() {
   return useMutation({
     mutationFn: (request: ApplyCustomImageRequest) =>
       customArtistImagesApi.applyImage(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate queries to refresh artist data and images
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });
@@ -61,7 +61,7 @@ export function useDeleteCustomArtistImage() {
   return useMutation({
     mutationFn: (request: DeleteCustomImageRequest) =>
       customArtistImagesApi.deleteImage(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate queries to refresh the image lists
       queryClient.invalidateQueries({ queryKey: ['custom-artist-images', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
