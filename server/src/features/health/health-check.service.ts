@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import Redis from 'ioredis';
-import { cacheConfig } from '@/config/cache.config';
+import { cacheConfig } from '@config/cache.config';
 
 export interface HealthCheckResult {
   status: 'ok' | 'error';
