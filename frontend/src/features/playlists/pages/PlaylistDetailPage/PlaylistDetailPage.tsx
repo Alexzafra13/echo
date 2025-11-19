@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
-import { Play, Music, Trash2, Edit2, MoreHorizontal } from 'lucide-react';
+import { Play, Music, Edit2, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
-import { usePlaylist, usePlaylistTracks, useRemoveTrackFromPlaylist } from '../../hooks/usePlaylists';
+import { usePlaylist, usePlaylistTracks } from '../../hooks/usePlaylists';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic } from '../../components';
@@ -24,7 +24,7 @@ export default function PlaylistDetailPage() {
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
-  const removeTrackMutation = useRemoveTrackFromPlaylist();
+  // const removeTrackMutation = useRemoveTrackFromPlaylist(); // Available for future use
 
   // Extract dominant color from first album cover in playlist
   useEffect(() => {
@@ -67,21 +67,6 @@ export default function PlaylistDetailPage() {
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };
 
-  const handleRemoveTrack = async (trackId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta canción de la playlist?')) {
-      return;
-    }
-
-    try {
-      await removeTrackMutation.mutateAsync({
-        playlistId: id!,
-        trackId,
-      });
-    } catch (error) {
-      console.error('Error removing track:', error);
-      alert('Error al eliminar la canción');
-    }
-  };
 
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);

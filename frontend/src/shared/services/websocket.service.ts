@@ -69,7 +69,7 @@ export class WebSocketService {
       // Connection successful - silent
     });
 
-    socket.on('disconnect', (reason: string) => {
+    socket.on('disconnect', (_reason: string) => {
       // Disconnected - silent unless debugging
     });
 

@@ -91,7 +91,7 @@ export function useRadioMetadata({
         });
 
         // Handle keepalive
-        eventSource.addEventListener('keepalive', (event: MessageEvent) => {
+        eventSource.addEventListener('keepalive', (_event: MessageEvent) => {
           console.log('💓 [ICY] Keepalive received');
         });
 
