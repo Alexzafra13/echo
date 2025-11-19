@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useRef, useEffect, ReactNode } fro
 import { Track, PlayerState, PlayerContextValue } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { recordPlay, recordSkip, type PlayContext } from '@shared/services/play-tracking.service';
+import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
@@ -35,9 +36,24 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     repeatMode: 'off',
     currentRadioStation: null,
     isRadioMode: false,
+    radioMetadata: null,
   });
 
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
+
+  // ICY Metadata streaming for radio stations
+  const { metadata: radioMetadata } = useRadioMetadata({
+    stationUuid: state.currentRadioStation?.stationUuid || null,
+    streamUrl: state.currentRadioStation?.url || null,
+    isPlaying: state.isPlaying && state.isRadioMode,
+  });
+
+  // Sync radioMetadata to state when it changes
+  useEffect(() => {
+    if (radioMetadata) {
+      setState(prev => ({ ...prev, radioMetadata }));
+    }
+  }, [radioMetadata]);
 
   /**
    * Determine play context based on player state

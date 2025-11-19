@@ -49,6 +49,7 @@ export interface SearchStationsParams {
   offset?: number;
   limit?: number;
   hidebroken?: boolean;
+  removeDuplicates?: boolean;
 }
 
 /**
@@ -84,6 +85,7 @@ export class RadioBrowserApiService {
       if (params.offset !== undefined) queryParams.append('offset', params.offset.toString());
       if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
       if (params.hidebroken !== undefined) queryParams.append('hidebroken', params.hidebroken.toString());
+      if (params.removeDuplicates !== undefined) queryParams.append('removeDuplicates', params.removeDuplicates.toString());
 
       const url = `${this.BASE_URL}/json/stations/search?${queryParams.toString()}`;
 
@@ -110,64 +112,74 @@ export class RadioBrowserApiService {
 
   /**
    * Obtener estaciones por votos (top voted)
+   * Prioriza bitrate para mejor calidad, luego filtra duplicados
    */
   async getTopVotedStations(limit: number = 20): Promise<RadioBrowserStation[]> {
     return this.searchStations({
-      order: 'votes',
+      order: 'bitrate',
       reverse: true,
       limit,
       hidebroken: true,
+      removeDuplicates: true,
     });
   }
 
   /**
    * Obtener estaciones populares por clicks
+   * Prioriza bitrate para mejor calidad, luego filtra duplicados
    */
   async getPopularStations(limit: number = 20): Promise<RadioBrowserStation[]> {
     return this.searchStations({
-      order: 'clickcount',
+      order: 'bitrate',
       reverse: true,
       limit,
       hidebroken: true,
+      removeDuplicates: true,
     });
   }
 
   /**
    * Obtener estaciones por país
+   * Prioriza bitrate para mejor calidad, luego filtra duplicados
    */
   async getStationsByCountry(countryCode: string, limit: number = 50): Promise<RadioBrowserStation[]> {
     return this.searchStations({
       countrycode: countryCode,
-      order: 'votes',
+      order: 'bitrate',
       reverse: true,
       limit,
       hidebroken: true,
+      removeDuplicates: true,
     });
   }
 
   /**
    * Obtener estaciones por género/tag
+   * Prioriza bitrate para mejor calidad, luego filtra duplicados
    */
   async getStationsByTag(tag: string, limit: number = 50): Promise<RadioBrowserStation[]> {
     return this.searchStations({
       tag,
-      order: 'votes',
+      order: 'bitrate',
       reverse: true,
       limit,
       hidebroken: true,
+      removeDuplicates: true,
     });
   }
 
   /**
    * Buscar estaciones por nombre
+   * Prioriza bitrate para mejor calidad, luego filtra duplicados
    */
   async searchByName(name: string, limit: number = 20): Promise<RadioBrowserStation[]> {
     return this.searchStations({
       name,
-      order: 'votes',
+      order: 'bitrate',
       reverse: true,
       limit,
       hidebroken: true,
+      removeDuplicates: true,
     });
   }
 

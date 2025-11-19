@@ -6,7 +6,9 @@ import { usePlayer } from '@features/player/context/PlayerContext';
 import {
   RadioStationCard,
   RadioSearchBar,
-  CountrySelect,
+  RadioSearchPanel,
+  CountrySelectButton,
+  CountrySelectModal,
   FilterTabs
 } from '../../components';
 import {
@@ -17,11 +19,13 @@ import {
   useSearchStations,
   useFavoriteStations,
   useSaveFavoriteFromApi,
-  useDeleteFavoriteStation
+  useDeleteFavoriteStation,
+  useRadioCountries
 } from '../../hooks';
 import { radioService } from '../../services';
 import type { RadioStation, RadioBrowserStation } from '../../types';
 import type { Country } from '../../components/CountrySelect/CountrySelect';
+import { getCountryFlag, getCountryName } from '../../utils/country.utils';
 import { Radio } from 'lucide-react';
 import styles from './RadioPage.module.css';
 
@@ -41,7 +45,7 @@ const POPULAR_COUNTRIES: Country[] = [
 
 // Filtros disponibles
 const FILTER_TABS = [
-  { id: 'top', label: 'Top 20' },
+  { id: 'top', label: 'Top' },
   { id: 'all', label: 'Todas' },
   { id: 'rock', label: 'Rock' },
   { id: 'pop', label: 'Pop' },
@@ -63,11 +67,31 @@ export default function RadioPage() {
 
   // State
   const { data: userCountry } = useUserCountry();
+  const { data: apiCountries = [] } = useRadioCountries();
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('top');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [favoritesPage, setFavoritesPage] = useState(1);
+  const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
+  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+
+  // Transform API countries to Country format
+  const allCountries: Country[] = useMemo(() => {
+    if (apiCountries.length === 0) {
+      // Fallback to popular countries if API fails
+      return POPULAR_COUNTRIES;
+    }
+
+    return apiCountries
+      .filter(country => country.stationcount > 0) // Only countries with stations
+      .map(country => ({
+        code: country.iso_3166_1,
+        name: getCountryName(country.iso_3166_1, country.name),
+        flag: getCountryFlag(country.iso_3166_1),
+        stationCount: country.stationcount
+      }));
+  }, [apiCountries]);
 
   // Favorites
   const { data: favoriteStations = [] } = useFavoriteStations();
@@ -81,9 +105,16 @@ export default function RadioPage() {
     }
   }, [userCountry, selectedCountry]);
 
-  // Search stations query
+  // Search stations query (trae todos los resultados, pagina localmente)
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
-    { name: searchQuery, limit: 50 },
+    {
+      name: searchQuery,
+      limit: 10000, // Traer todas las emisoras que coincidan
+      order: 'bitrate',
+      reverse: true,
+      hidebroken: true,
+      removeDuplicates: true
+    },
     searchQuery.length >= 2
   );
 
@@ -95,51 +126,59 @@ export default function RadioPage() {
 
   // Queries for different filter combinations
 
-  // 1. Top 20 global (solo 20 emisoras, sin paginar)
-  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(20);
+  // 1. Top emisoras global (llenan exactamente 3 filas)
+  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(stationsPerView);
 
-  // 2. Top 20 por país (solo 20 emisoras, sin paginar)
+  // 2. Top emisoras por país (llenan exactamente 3 filas)
   const { data: countryTop20 = [], isLoading: loadingCountryTop } = useStationsByCountry(
     !isAllCountries && isTopFilter ? selectedCountry : '',
-    20
+    stationsPerView
   );
 
-  // 3. Todas las emisoras del país (muchas para paginar)
+  // 3. Todas las emisoras del país (traer todas, paginar localmente)
   const { data: allCountryStations = [], isLoading: loadingAllCountry } = useStationsByCountry(
     !isAllCountries && isAllFilter ? selectedCountry : '',
-    500
+    10000 // Traer todas las emisoras del país
   );
 
-  // 4. Todas las emisoras del mundo
+  // 4. Todas las emisoras del mundo (traer todas, paginar localmente)
   const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
-    { limit: 500, order: 'votes', reverse: true },
+    {
+      limit: 10000, // Traer todas las emisoras del mundo
+      order: 'bitrate',
+      reverse: true,
+      hidebroken: true,
+      removeDuplicates: true
+    },
     isAllCountries && isAllFilter
   );
 
-  // 5. Filtro por género + país
+  // 5. Filtro por género + país (traer todas, paginar localmente)
   const { data: genreCountryStations = [], isLoading: loadingGenreCountry } = useSearchStations(
     {
       tag: isGenreFilter ? activeFilter : undefined,
       countrycode: !isAllCountries && isGenreFilter ? selectedCountry : undefined,
-      limit: 500,
-      order: 'votes',
-      reverse: true
+      limit: 10000, // Traer todas las emisoras del género/país
+      order: 'bitrate',
+      reverse: true,
+      hidebroken: true,
+      removeDuplicates: true
     },
     isGenreFilter && !isAllCountries
   );
 
-  // 6. Filtro por género global
+  // 6. Filtro por género global (traer todas, paginar localmente)
   const { data: genreGlobalStations = [], isLoading: loadingGenreGlobal } = useStationsByTag(
     isGenreFilter && isAllCountries ? activeFilter : '',
-    500
+    10000 // Traer todas las emisoras del género
   );
 
   // Select the appropriate stations list
   const stations = useMemo(() => {
-    // Top 20 mundial
+    // Top emisoras mundial (mejor calidad/bitrate)
     if (isAllCountries && isTopFilter) return topVotedStations;
 
-    // Top 20 por país
+    // Top emisoras por país (mejor calidad/bitrate)
     if (!isAllCountries && isTopFilter) return countryTop20;
 
     // Todas del mundo
@@ -161,8 +200,8 @@ export default function RadioPage() {
     genreCountryStations, genreGlobalStations
   ]);
 
-  // Paginate stations (3 rows per page)
-  // Top 20 no se pagina, el resto sí
+  // Paginate stations (3 rows per page, dinámico según tamaño de pantalla)
+  // Top no se pagina (solo muestra 1 página completa), el resto sí
   const shouldPaginate = !isTopFilter;
   const totalPages = shouldPaginate ? Math.ceil(stations.length / stationsPerView) : 1;
   const paginatedStations = shouldPaginate
@@ -187,11 +226,32 @@ export default function RadioPage() {
   // Handlers
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
+    // Open panel when query has 2+ characters
+    setIsSearchPanelOpen(query.length >= 2);
+  }, []);
+
+  const handleSearchFocus = useCallback(() => {
+    if (searchQuery.length >= 2) {
+      setIsSearchPanelOpen(true);
+    }
+  }, [searchQuery]);
+
+  const handleSearchBlur = useCallback(() => {
+    // Don't close immediately - let click events fire first
+    setTimeout(() => {
+      // Panel will auto-close when query is cleared or user clicks result
+    }, 200);
   }, []);
 
   const handleResultSelect = useCallback((station: RadioStation | RadioBrowserStation) => {
     playRadio(station);
+    setIsSearchPanelOpen(false);
+    setSearchQuery(''); // Clear search
   }, [playRadio]);
+
+  const handleCloseSearchPanel = useCallback(() => {
+    setIsSearchPanelOpen(false);
+  }, []);
 
   const handleCountryChange = useCallback((countryCode: string) => {
     setSelectedCountry(countryCode);
@@ -266,9 +326,9 @@ export default function RadioPage() {
 
   // Get country name for display
   const selectedCountryName = useMemo(() => {
-    const country = POPULAR_COUNTRIES.find(c => c.code === selectedCountry);
+    const country = allCountries.find(c => c.code === selectedCountry);
     return country?.name || 'tu país';
-  }, [selectedCountry]);
+  }, [selectedCountry, allCountries]);
 
   // Get filter label for display
   const activeFilterLabel = useMemo(() => {
@@ -285,20 +345,28 @@ export default function RadioPage() {
           customSearch={
             <RadioSearchBar
               onSearch={handleSearch}
-              onResultSelect={handleResultSelect}
-              searchResults={searchResults}
-              isLoading={isSearching}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
               placeholder="Buscar emisora por nombre, país o género..."
             />
           }
           customContent={
-            <CountrySelect
-              countries={POPULAR_COUNTRIES}
+            <CountrySelectButton
+              countries={allCountries}
               selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
-              onChange={handleCountryChange}
-              userCountryCode={userCountry?.countryCode}
+              onClick={() => setIsCountryModalOpen(true)}
             />
           }
+        />
+
+        {/* Search Results Panel - Expands below header */}
+        <RadioSearchPanel
+          isOpen={isSearchPanelOpen}
+          searchResults={searchResults}
+          isLoading={isSearching}
+          query={searchQuery}
+          onResultSelect={handleResultSelect}
+          onClose={handleCloseSearchPanel}
         />
 
         <div className={styles.radioPage__content}>
@@ -319,6 +387,11 @@ export default function RadioPage() {
               {isAllCountries ? 'Top emisoras del mundo' :
                `Emisoras de ${selectedCountryName}`}
               {!isTopFilter && !isAllFilter && ` - ${activeFilterLabel}`}
+              {stations.length > 0 && (
+                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
+                  ({stations.length} {stations.length === 1 ? 'emisora' : 'emisoras'})
+                </span>
+              )}
             </h2>
 
             {isLoading ? (
@@ -351,7 +424,7 @@ export default function RadioPage() {
                       Anterior
                     </button>
                     <span className={styles.radioPage__paginationInfo}>
-                      Página {currentPage} de {totalPages}
+                      {`${(currentPage - 1) * stationsPerView + 1}-${Math.min(currentPage * stationsPerView, stations.length)} de ${stations.length}`}
                     </span>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
@@ -380,6 +453,9 @@ export default function RadioPage() {
               <h2 className={styles.radioPage__title}>
                 <Radio size={24} />
                 Mis favoritas
+                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
+                  ({favoriteStations.length} {favoriteStations.length === 1 ? 'emisora' : 'emisoras'})
+                </span>
               </h2>
 
               <div className={styles.radioPage__grid}>
@@ -406,7 +482,7 @@ export default function RadioPage() {
                     Anterior
                   </button>
                   <span className={styles.radioPage__paginationInfo}>
-                    Página {favoritesPage} de {totalFavoritesPages}
+                    {`${(favoritesPage - 1) * favoritesPerView + 1}-${Math.min(favoritesPage * favoritesPerView, favoriteStations.length)} de ${favoriteStations.length}`}
                   </span>
                   <button
                     onClick={() => handleFavoritesPageChange(favoritesPage + 1)}
@@ -421,6 +497,16 @@ export default function RadioPage() {
           )}
         </div>
       </main>
+
+      {/* Country Selection Modal */}
+      <CountrySelectModal
+        isOpen={isCountryModalOpen}
+        onClose={() => setIsCountryModalOpen(false)}
+        countries={allCountries}
+        selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
+        onChange={handleCountryChange}
+        userCountryCode={userCountry?.countryCode}
+      />
     </div>
   );
 }
