@@ -167,7 +167,7 @@
   }
 
   .albumsPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
+    overflow: hidden; /* Evitar desbordamiento horizontal */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
@@ -192,7 +192,7 @@
   .albumsPage__pageButton {
     padding: 10px 16px;
     font-size: 13px;
-    border-radius: 20px; /* iOS rounded */
+    border-radius: 16px; /* Menos redondeado */
   }
 
   .albumsPage__pageInfo {
@@ -238,7 +238,7 @@
     padding: 10px;
     min-width: 40px;
     justify-content: center;
-    border-radius: 20px;
+    border-radius: 12px; /* Menos redondeado */
   }
 
   .albumsPage__pageInfo {
