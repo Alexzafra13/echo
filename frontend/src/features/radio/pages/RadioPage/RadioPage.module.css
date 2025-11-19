@@ -179,7 +179,7 @@
   }
 
   .radioPage__content {
-    padding: 8px 16px 80px; /* Bottom padding for bottom nav + iOS spacing */
+    padding: 8px 16px 140px; /* Bottom padding for bottom nav + player + spacing */
   }
 
   .radioPage__topBar {
@@ -229,7 +229,7 @@
   }
 
   .radioPage__content {
-    padding: 0 var(--space-3) 90px; /* More space for bottom nav */
+    padding: 0 var(--space-3) 140px; /* Bottom nav + player + spacing */
   }
 
   .radioPage__grid {
