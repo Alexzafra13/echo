@@ -281,11 +281,8 @@ export default function RadioPage() {
       <Sidebar />
 
       <main className={styles.radioPage__main}>
-        <Header />
-
-        <div className={styles.radioPage__content}>
-          {/* Search bar and country selector */}
-          <div className={styles.radioPage__topBar}>
+        <Header
+          customSearch={
             <RadioSearchBar
               onSearch={handleSearch}
               onResultSelect={handleResultSelect}
@@ -293,13 +290,18 @@ export default function RadioPage() {
               isLoading={isSearching}
               placeholder="Buscar emisora por nombre, país o género..."
             />
+          }
+          customContent={
             <CountrySelect
               countries={POPULAR_COUNTRIES}
               selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
               onChange={handleCountryChange}
               userCountryCode={userCountry?.countryCode}
             />
-          </div>
+          }
+        />
+
+        <div className={styles.radioPage__content}>
 
           {/* Filter tabs */}
           <div className={styles.radioPage__filters}>
