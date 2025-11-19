@@ -118,7 +118,6 @@ export function RatingStars({
     >
       {[...Array(5)].map((_, index) => {
         const value = 5 - index; // Reverse order for CSS (5 to 1)
-        const displayIndex = index; // For display (0 to 4)
 
         return (
           <button

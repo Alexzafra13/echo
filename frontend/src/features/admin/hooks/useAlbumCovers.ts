@@ -21,7 +21,7 @@ export function useApplyAlbumCover() {
   return useMutation({
     mutationFn: (request: ApplyAlbumCoverRequest) =>
       albumCoversApi.applyCover(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar queries relacionadas para refrescar las imágenes
       // IMPORTANTE: WebSocket ya emitirá un evento que invalidará automáticamente,
       // pero hacemos invalidación local inmediata para feedback instantáneo

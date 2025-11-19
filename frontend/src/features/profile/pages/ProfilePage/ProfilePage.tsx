@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { User, Lock, Calendar, Check, X, Edit3 } from 'lucide-react';
+import { User, Lock, Calendar, Check, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
-import { AvatarUpload } from '../../components/AvatarUpload';
+// import { AvatarUpload } from '../../components/AvatarUpload'; // Available if needed
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import styles from './ProfilePage.module.css';

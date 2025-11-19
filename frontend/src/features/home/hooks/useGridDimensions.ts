@@ -137,7 +137,7 @@ function calculateColumns(
   windowWidth: number,
   minItemWidth: number,
   gap: number,
-  padding: number
+  _padding: number,
 ): number {
   // Calcular ancho del sidebar según breakpoints (sincronizado con Sidebar.module.css)
   let sidebarWidth = 200; // Desktop default

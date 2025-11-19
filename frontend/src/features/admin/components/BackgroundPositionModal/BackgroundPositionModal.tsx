@@ -61,7 +61,6 @@ export function BackgroundPositionModal({
 
         // Parse background-position to calculate initial offset
         const parts = initialPosition.split(' ');
-        const xPart = parts[0] || 'center';
         const yPart = parts[1] || 'top';
 
         let xOffset = 0;
@@ -89,7 +88,7 @@ export function BackgroundPositionModal({
   }, [backgroundUrl, initialPosition]);
 
   // Handle drag move with useCallback to avoid recreating on every render
-  const handleMove = useCallback((clientX: number, clientY: number) => {
+  const handleMove = useCallback((_clientX: number, clientY: number) => {
     if (!containerRef.current || !imageRef.current) return;
 
     const container = containerRef.current;

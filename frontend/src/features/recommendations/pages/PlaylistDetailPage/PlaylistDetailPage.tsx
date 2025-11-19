@@ -17,7 +17,7 @@ import styles from './PlaylistDetailPage.module.css';
  * Displays individual playlist with tracks
  */
 export function PlaylistDetailPage() {
-  const [match, params] = useRoute('/wave-mix/:id');
+  const [_match, _params] = useRoute('/wave-mix/:id');
   const [, setLocation] = useLocation();
   const { playQueue, currentTrack } = usePlayer();
   const [playlist, setPlaylist] = useState<AutoPlaylist | null>(null);

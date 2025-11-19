@@ -32,7 +32,7 @@ export function useScrollDetection(threshold: number = 120) {
       return null;
     };
 
-    const handleScroll = (e?: Event) => {
+    const handleScroll = (_e?: Event) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           // Re-detectar el contenedor en cada scroll por si cambió de página

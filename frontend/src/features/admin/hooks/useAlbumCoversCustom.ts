@@ -36,7 +36,7 @@ export function useApplyCustomCover() {
   return useMutation({
     mutationFn: (request: ApplyCustomCoverRequest) =>
       albumCoversApi.applyCustomCover(request),
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       console.log('[useApplyCustomCover] ✅ Cover applied, invalidating queries...');
 
       // Invalidate relevant queries
@@ -64,7 +64,7 @@ export function useDeleteCustomCover() {
   return useMutation({
     mutationFn: (request: DeleteCustomCoverRequest) =>
       albumCoversApi.deleteCustomCover(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       console.log('[useDeleteCustomCover] ✅ Cover deleted, invalidating queries...');
 
       // Invalidate relevant queries
