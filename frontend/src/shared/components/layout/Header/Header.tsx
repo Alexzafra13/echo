@@ -16,6 +16,10 @@ interface HeaderProps {
   showBackButton?: boolean;
   /** Always show glassmorphism effect (for pages with hero behind header) */
   alwaysGlass?: boolean;
+  /** Custom search component to replace default search */
+  customSearch?: React.ReactNode;
+  /** Additional custom content to show in header (e.g., country selector) */
+  customContent?: React.ReactNode;
 }
 
 /**
@@ -25,7 +29,7 @@ interface HeaderProps {
  * Supports admin mode with back navigation instead of search
  * Live search results with debouncing (300ms)
  */
-export function Header({ adminMode = false, showBackButton = false, alwaysGlass = false }: HeaderProps) {
+export function Header({ adminMode = false, showBackButton = false, alwaysGlass = false, customSearch, customContent }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -190,29 +194,38 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
       {/* Search + Theme toggle + User menu */}
       <div className={styles.header__rightSection}>
-        {/* Search bar (hidden in admin mode) */}
+        {/* Custom search or default search bar (hidden in admin mode) */}
         {!adminMode && (
-          <form className={styles.header__searchForm} onSubmit={handleSearchSubmit} ref={searchRef}>
-            <div className={styles.header__searchWrapper}>
-              <Search size={20} className={styles.header__searchIcon} />
-              <input
-                type="text"
-                placeholder="Busca Artistas, Canciones, Álbumes..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                onKeyDown={handleKeyDown}
-                onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-                className={styles.header__searchInput}
-                autoComplete="off"
-              />
+          customSearch ? (
+            <div className={styles.header__customSearch}>
+              {customSearch}
             </div>
+          ) : (
+            <form className={styles.header__searchForm} onSubmit={handleSearchSubmit} ref={searchRef}>
+              <div className={styles.header__searchWrapper}>
+                <Search size={20} className={styles.header__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Busca Artistas, Canciones, Álbumes..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
+                  className={styles.header__searchInput}
+                  autoComplete="off"
+                />
+              </div>
 
-            {/* Search Results Dropdown */}
-            {showResults && debouncedQuery.length > 0 && (
-              <SearchResults query={debouncedQuery} onClose={handleCloseResults} />
-            )}
-          </form>
+              {/* Search Results Dropdown */}
+              {showResults && debouncedQuery.length > 0 && (
+                <SearchResults query={debouncedQuery} onClose={handleCloseResults} />
+              )}
+            </form>
+          )
         )}
+
+        {/* Custom content (e.g., country selector) */}
+        {customContent}
 
         {/* Theme toggle */}
         <button
