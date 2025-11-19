@@ -223,48 +223,49 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
               onError={handleAvatarError}
             />
           </button>
-
-          {showUserMenu && (
-            <>
-              {/* Backdrop for mobile bottom sheet */}
-              <div
-                className={styles.header__backdrop}
-                onClick={() => setShowUserMenu(false)}
-                aria-label="Close menu"
-              />
-
-              <div className={styles.header__userDropdown}>
-                <div className={styles.header__userInfo}>
-                  <img
-                    src={getUserAvatarUrl(user?.id)}
-                    alt={user?.username || 'User'}
-                    className={styles.header__userAvatarLarge}
-                    onError={handleAvatarError}
-                  />
-                  <div>
-                    <p className={styles.header__userName}>{user?.username || 'User'}</p>
-                    <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
-                  </div>
-                </div>
-                <div className={styles.header__userDivider} />
-                <button className={styles.header__userMenuItem} onClick={() => { setLocation('/profile'); setShowUserMenu(false); }}>
-                  Profile
-                </button>
-                <button className={styles.header__userMenuItem} onClick={() => { setLocation('/settings'); setShowUserMenu(false); }}>
-                  Settings
-                </button>
-                <div className={styles.header__userDivider} />
-                <button
-                  className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--danger']}`}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
-            </>
-          )}
         </div>
       </div>
+
+      {/* User dropdown - rendered outside to allow proper fixed positioning */}
+      {showUserMenu && (
+        <>
+          {/* Backdrop for mobile bottom sheet */}
+          <div
+            className={styles.header__backdrop}
+            onClick={() => setShowUserMenu(false)}
+            aria-label="Close menu"
+          />
+
+          <div className={styles.header__userDropdown}>
+            <div className={styles.header__userInfo}>
+              <img
+                src={getUserAvatarUrl(user?.id)}
+                alt={user?.username || 'User'}
+                className={styles.header__userAvatarLarge}
+                onError={handleAvatarError}
+              />
+              <div>
+                <p className={styles.header__userName}>{user?.username || 'User'}</p>
+                <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
+              </div>
+            </div>
+            <div className={styles.header__userDivider} />
+            <button className={styles.header__userMenuItem} onClick={() => { setLocation('/profile'); setShowUserMenu(false); }}>
+              Profile
+            </button>
+            <button className={styles.header__userMenuItem} onClick={() => { setLocation('/settings'); setShowUserMenu(false); }}>
+              Settings
+            </button>
+            <div className={styles.header__userDivider} />
+            <button
+              className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--danger']}`}
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+        </>
+      )}
     </header>
   );
 }

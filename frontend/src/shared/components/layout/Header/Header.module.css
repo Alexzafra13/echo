@@ -146,9 +146,9 @@
   position: relative;
 }
 
-/* Backdrop - hidden on desktop, visible on mobile */
+/* Backdrop - hidden on desktop */
 .header__backdrop {
-  display: none; /* Hidden by default (desktop) */
+  display: none;
 }
 
 .header__userButton {
@@ -165,6 +165,8 @@
   transition: all 0.2s ease;
   padding: 0;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .header__userButton:hover {
@@ -187,12 +189,12 @@
 
 .header__userDropdown {
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  top: 60px; /* Debajo del header */
+  right: 30px; /* Alineado con padding del header */
   min-width: 200px;
   max-width: 280px;
-  max-height: calc(100vh - 80px); /* Evitar que se salga de la pantalla */
-  overflow-y: auto; /* Scroll si es necesario */
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   background: var(--color-bg-tertiary, #1e1f2e);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -355,10 +357,6 @@
     flex-shrink: 0;
   }
 
-  .header__userMenu {
-    position: static; /* Liberar del relative para que fixed funcione */
-  }
-
   .header__userButton {
     width: 32px;
     height: 32px;
@@ -367,35 +365,35 @@
 
   /* Backdrop visible en móvil */
   .header__backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: var(--z-modal, 2000); /* Stack alto para móvil */
-    animation: fadeIn 0.2s ease;
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 9998 !important;
+    animation: fadeIn 0.2s ease !important;
   }
 
   /* Bottom Sheet iOS Style */
   .header__userDropdown {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 60vh;
-    overflow-y: auto;
-    background: var(--color-bg-tertiary, #1e1f2e);
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
-    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
-    z-index: calc(var(--z-modal, 2000) + 1); /* Encima del backdrop */
-    animation: slideUpModal 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    /* Asegurar que los toques funcionen */
-    touch-action: manipulation;
-    pointer-events: auto;
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    background: var(--color-bg-tertiary, #1e1f2e) !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: none !important;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 9999 !important;
+    animation: slideUpModal 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
   }
 
   @keyframes slideUpModal {
