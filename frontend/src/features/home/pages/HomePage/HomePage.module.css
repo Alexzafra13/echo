@@ -193,13 +193,13 @@
     flex-direction: column;
     height: auto;
     padding: 24px 16px;
-    border-radius: 12px; /* iOS rounded */
+    border-radius: 8px; /* Menos redondeado */
   }
 
   .hero__cover--loading {
-    width: 160px;
-    height: 160px;
-    border-radius: 12px; /* iOS rounded */
+    width: 140px;
+    height: 140px;
+    border-radius: 8px; /* Menos redondeado, consistente con hero real */
   }
 
   .hero__title--loading,
@@ -208,8 +208,9 @@
   }
 
   .albumGrid__grid--loading {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Auto-fit consistente */
+    gap: 12px;
+    padding: 0 16px;
   }
 }
 
@@ -226,15 +227,18 @@
 
   .hero--loading {
     padding: 20px 12px;
+    border-radius: 6px; /* Menos redondeado */
   }
 
   .hero__cover--loading {
-    width: 140px;
-    height: 140px;
+    width: 120px;
+    height: 120px;
+    border-radius: 6px; /* Menos redondeado, consistente con hero real */
   }
 
   .albumGrid__grid--loading {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit consistente */
+    gap: 10px;
+    padding: 0 12px;
   }
 }
