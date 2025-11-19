@@ -235,7 +235,7 @@
   width: 100%;
   grid-column: 1 / -1; /* Ocupa todas las columnas */
   grid-row: 2; /* Segunda fila */
-  margin-bottom: var(--space-1); /* Pequeño margen para que no sea border */
+  margin-bottom: var(--space-3); /* Más espacio desde el borde inferior */
 }
 
 .timeLabel {
