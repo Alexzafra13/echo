@@ -1,4 +1,4 @@
-import { Play, Heart, HeartOff, Radio, Music } from 'lucide-react';
+import { Heart, HeartOff, Radio, Music } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
@@ -38,8 +38,7 @@ export function RadioStationCard({
   const metadataTextRef = useRef<HTMLSpanElement>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
-  const handlePlayClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCardClick = () => {
     onPlay?.();
   };
 
@@ -71,7 +70,10 @@ export function RadioStationCard({
   }, [currentMetadata?.title]);
 
   return (
-    <article className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}>
+    <article
+      className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}
+      onClick={handleCardClick}
+    >
       <div className={styles.radioCard__coverContainer}>
         <div className={styles.radioCard__fallback}>
           <Radio size={32} />
@@ -88,13 +90,6 @@ export function RadioStationCard({
           />
         )}
         <div className={styles.radioCard__overlay}>
-          <button
-            className={styles.radioCard__playButton}
-            onClick={handlePlayClick}
-            aria-label={`Play ${name}`}
-          >
-            <Play size={20} fill="currentColor" />
-          </button>
           {onToggleFavorite && (
             <button
               className={`${styles.radioCard__favoriteButton} ${
