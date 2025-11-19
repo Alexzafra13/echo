@@ -41,6 +41,7 @@
 }
 
 .searchBar__input:focus {
+  outline: none;
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--color-primary, #ed6842);
 }
@@ -77,5 +78,6 @@
   .searchBar__input {
     height: 40px;
     font-size: 15px;
+    border-radius: 10px; /* More square, less oval like other search bars */
   }
 }
