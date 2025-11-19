@@ -123,9 +123,10 @@ export const envValidationSchema = Joi.object({
   // CORS Configuration
   // ============================================
   CORS_ORIGINS: Joi.string()
-    .default('http://localhost:5173')
+    .optional()
+    .allow('')
     .custom((value, helpers) => {
-      // Allow empty string (will use default)
+      // Allow empty string (will auto-configure in main.ts)
       if (!value || value.trim() === '') {
         return value;
       }
