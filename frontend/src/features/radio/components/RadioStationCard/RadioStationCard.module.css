@@ -197,14 +197,41 @@
   align-items: center;
   gap: 6px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-style: italic;
+  position: relative;
+  width: 100%;
 }
 
 .radioCard__nowPlaying svg {
   flex-shrink: 0;
   opacity: 0.7;
+}
+
+.radioCard__nowPlayingText {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 15s linear infinite;
+  animation-play-state: paused;
+}
+
+/* Activar marquee en hover */
+.radioCard:hover .radioCard__nowPlayingText {
+  animation-play-state: running;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(0);
+  }
+  90% {
+    transform: translateX(calc(-100% + 200px));
+  }
+  100% {
+    transform: translateX(calc(-100% + 200px));
+  }
 }
 
 /* ===== Responsive Design ===== */

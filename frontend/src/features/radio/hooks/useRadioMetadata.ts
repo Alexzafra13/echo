@@ -34,6 +34,9 @@ export function useRadioMetadata({
   const reconnectAttemptsRef = useRef(0);
 
   useEffect(() => {
+    // Clear metadata immediately when station changes
+    setMetadata(null);
+
     // Only connect if we have required data and radio is playing
     if (!stationUuid || !streamUrl || !isPlaying) {
       // Cleanup existing connection
@@ -42,7 +45,6 @@ export function useRadioMetadata({
         eventSourceRef.current.close();
         eventSourceRef.current = null;
         setIsConnected(false);
-        setMetadata(null);
       }
       return;
     }
