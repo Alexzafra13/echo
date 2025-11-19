@@ -179,15 +179,16 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      profile: 'Perfil',
-      background: 'Fondo',
-      banner: 'Banner',
-      logo: 'Logo',
-    };
-    return labels[type] || type;
-  };
+  // Utility function for future use
+  // const getTypeLabel = (type: string) => {
+  //   const labels: Record<string, string> = {
+  //     profile: 'Perfil',
+  //     background: 'Fondo',
+  //     banner: 'Banner',
+  //     logo: 'Logo',
+  //   };
+  //   return labels[type] || type;
+  // };
 
   return (
     <div className={styles.container}>

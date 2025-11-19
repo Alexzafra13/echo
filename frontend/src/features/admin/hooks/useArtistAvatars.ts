@@ -28,7 +28,7 @@ export function useApplyArtistAvatar() {
   return useMutation({
     mutationFn: (request: ApplyArtistAvatarRequest) =>
       artistAvatarsApi.applyAvatar(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar queries relacionadas para refrescar las imágenes
       // IMPORTANTE: WebSocket ya emitirá un evento que invalidará automáticamente,
       // pero hacemos invalidación local inmediata para feedback instantáneo
@@ -48,7 +48,7 @@ export function useUpdateBackgroundPosition() {
   return useMutation({
     mutationFn: (request: UpdateBackgroundPositionRequest) =>
       artistAvatarsApi.updateBackgroundPosition(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar queries para refrescar los datos del artista
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });
@@ -65,7 +65,7 @@ export function useUploadCustomImage() {
   return useMutation({
     mutationFn: (request: UploadCustomImageRequest) =>
       artistAvatarsApi.uploadCustomImage(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar la lista de imágenes personalizadas para mostrar la nueva
       queryClient.invalidateQueries({ queryKey: ['customArtistImages', variables.artistId] });
     },
@@ -92,7 +92,7 @@ export function useApplyCustomImage() {
   return useMutation({
     mutationFn: (request: ApplyCustomImageRequest) =>
       artistAvatarsApi.applyCustomImage(request),
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       console.log('[useApplyCustomImage] ✅ Image applied, invalidating queries...');
 
       // Invalidar queries relacionadas para refrescar las imágenes
@@ -126,7 +126,7 @@ export function useDeleteCustomImage() {
   return useMutation({
     mutationFn: (request: DeleteCustomImageRequest) =>
       artistAvatarsApi.deleteCustomImage(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidar la lista de imágenes personalizadas
       queryClient.invalidateQueries({ queryKey: ['customArtistImages', variables.artistId] });
     },

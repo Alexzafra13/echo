@@ -1,5 +1,5 @@
 import { apiClient } from '@shared/services/api';
-import type { Artist, ArtistDetail, PaginatedArtists } from '../types';
+import type { ArtistDetail, PaginatedArtists } from '../types';
 
 /**
  * Artists Service

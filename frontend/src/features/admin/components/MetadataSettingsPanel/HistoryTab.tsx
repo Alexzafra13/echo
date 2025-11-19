@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Clock,
   TrendingUp,
   CheckCircle,
   AlertCircle,
   XCircle,
-  Search,
+
   RefreshCw,
   Music,
   Disc,

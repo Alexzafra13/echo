@@ -93,7 +93,7 @@ describe('RatingStars', () => {
 
       vi.mocked(interactionsService.removeRating).mockResolvedValue();
 
-      const { rerender } = render(
+      const { rerender: _rerender } = render(
         <RatingStars
           itemId={mockItemId}
           itemType={mockItemType}

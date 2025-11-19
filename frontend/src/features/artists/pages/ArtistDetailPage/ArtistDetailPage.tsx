@@ -19,7 +19,7 @@ import styles from './ArtistDetailPage.module.css';
  */
 export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
+  const [, _setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);

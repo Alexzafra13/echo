@@ -22,7 +22,7 @@ type TabType = 'providers' | 'upload';
 
 export function AlbumCoverSelectorModal({
   albumId,
-  albumName,
+  albumName: _albumName,
   onClose,
   onSuccess,
 }: AlbumCoverSelectorModalProps) {

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { useAuthStore } from '@shared/store';
 import * as authService from '@shared/services/auth.service';
-import React, { type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 // Mock wouter
 vi.mock('wouter', () => ({
