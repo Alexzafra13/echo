@@ -355,16 +355,81 @@
     flex-shrink: 0;
   }
 
-  /* Dropdown ajustado para móvil - igual que notifications */
+  /* Dropdown como modal full-width en móvil */
   .header__userDropdown {
-    width: 240px;
-    right: -16px; /* Ajustar para que no se salga del viewport */
-    max-height: 400px;
+    position: fixed;
+    top: 52px; /* Justo debajo del header */
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 52px);
+    background: rgba(30, 31, 46, 0.95); /* Semi-transparente dark */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 16px;
+    animation: slideDown 0.3s ease;
+    z-index: 1000; /* Por encima del hero */
+  }
+
+  /* Light theme para dropdown móvil */
+  [data-theme='light'] .header__userDropdown {
+    background: rgba(255, 255, 255, 0.95); /* Semi-transparente light */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .header__userInfo {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-bottom: none; /* Sin borde, ya tiene el card */
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+  }
+
+  .header__userAvatarLarge {
+    width: 56px;
+    height: 56px;
+  }
+
+  .header__userName {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .header__userRole {
+    font-size: 14px;
+    margin-top: 2px;
   }
 
   .header__userMenuItem {
-    padding: 12px;
-    font-size: 15px;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 10px;
+    margin-bottom: 4px;
+  }
+
+  .header__userMenuItem:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .header__userDivider {
+    margin: 12px 0;
   }
 }
 
