@@ -112,7 +112,7 @@ export function RadioStationCard({
         {isPlaying && currentMetadata?.title && (
           <p className={styles.radioCard__nowPlaying}>
             <Music size={12} />
-            <span>{currentMetadata.title}</span>
+            <span className={styles.radioCard__nowPlayingText}>{currentMetadata.title}</span>
           </p>
         )}
       </div>
