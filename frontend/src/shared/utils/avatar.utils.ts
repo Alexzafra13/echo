@@ -8,7 +8,7 @@
  * Ruta de la imagen placeholder por defecto para avatares
  * Puedes crear una imagen placeholder específica para usuarios
  */
-const DEFAULT_AVATAR_PLACEHOLDER = '/images/avatar-default.png';
+const DEFAULT_AVATAR_PLACEHOLDER = '/images/avatar-default.svg';
 
 /**
  * Obtiene la URL del avatar del usuario con fallback al placeholder
