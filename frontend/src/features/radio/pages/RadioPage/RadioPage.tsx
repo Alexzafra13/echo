@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
@@ -72,6 +72,9 @@ export default function RadioPage() {
   // Player context
   const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
 
+  // Ref for content to control scroll
+  const contentRef = useRef<HTMLDivElement>(null);
+
   // Calculate grid dimensions for 3 rows
   const { itemsPerPage: stationsPerView } = useGridDimensions({
     maxRows: 3,
@@ -118,6 +121,17 @@ export default function RadioPage() {
       setSelectedCountry(userCountry.countryCode);
     }
   }, [userCountry, selectedCountry]);
+
+  // Block content scroll when search panel is open
+  useEffect(() => {
+    if (contentRef.current) {
+      if (isSearchPanelOpen) {
+        contentRef.current.style.overflow = 'hidden';
+      } else {
+        contentRef.current.style.overflow = 'auto';
+      }
+    }
+  }, [isSearchPanelOpen]);
 
   // Search stations query (trae todos los resultados, pagina localmente)
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
@@ -383,7 +397,7 @@ export default function RadioPage() {
           onClose={handleCloseSearchPanel}
         />
 
-        <div className={styles.radioPage__content}>
+        <div ref={contentRef} className={styles.radioPage__content}>
 
           {/* Genre selector button */}
           <div className={styles.radioPage__filters}>
