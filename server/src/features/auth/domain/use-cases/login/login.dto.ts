@@ -10,6 +10,7 @@ export interface LoginOutput {
     email?: string;
     name?: string;
     isAdmin: boolean;
+    avatarPath?: string | null;
     createdAt: Date;
   };
   accessToken: string;
