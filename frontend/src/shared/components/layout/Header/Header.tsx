@@ -192,8 +192,8 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
         <BackButton className={styles.header__backButton} />
       )}
 
-      {/* Search + Theme toggle + User menu */}
-      <div className={styles.header__rightSection}>
+      {/* Left section - Search and custom content */}
+      <div className={styles.header__leftSection}>
         {/* Custom search or default search bar (hidden in admin mode) */}
         {!adminMode && (
           customSearch ? (
@@ -226,7 +226,10 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
         {/* Custom content (e.g., country selector) */}
         {customContent}
+      </div>
 
+      {/* Right section - Theme toggle, notifications, user menu */}
+      <div className={styles.header__rightSection}>
         {/* Theme toggle */}
         <button
           className={styles.header__themeToggle}
