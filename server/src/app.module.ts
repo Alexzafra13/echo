@@ -28,6 +28,8 @@ import { UserInteractionsModule } from './features/user-interactions/user-intera
 import { PlayTrackingModule } from './features/play-tracking/play-tracking.module';
 import { RecommendationsModule } from './features/recommendations/recommendations.module';
 import { LogsModule } from './features/logs/logs.module';
+import { HealthModule } from './features/health/health.module';
+import { validateEnvironment } from './config/env.validation';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { LogsModule } from './features/logs/logs.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate: validateEnvironment,
     }),
 
     // Pino Logger
@@ -81,6 +84,7 @@ import { LogsModule } from './features/logs/logs.module';
     LogsModule,
 
     // Features
+    HealthModule,
     AuthModule,
     UsersModule,
     AdminModule,

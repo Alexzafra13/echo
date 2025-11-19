@@ -36,6 +36,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - echo-network
 
@@ -56,6 +61,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - echo-network
 
@@ -75,6 +85,16 @@ services:
     restart: unless-stopped
     ports:
       - "${APP_PORT:-4567}:4567"
+    # Resource limits (recommended for production stability)
+    # Adjust based on your library size and concurrent users
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Max 2 CPU cores
+          memory: 2G       # Max 2GB RAM
+        reservations:
+          cpus: '0.5'      # Reserve 0.5 CPU core
+          memory: 512M     # Reserve 512MB RAM
     environment:
       # Application
       NODE_ENV: ${NODE_ENV:-production}
@@ -143,6 +163,12 @@ services:
       timeout: 10s
       start_period: 60s  # Extended for migrations
       retries: 3
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 # ----------------------------------------
 # Volumes (Persistent Data)
