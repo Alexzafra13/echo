@@ -90,6 +90,7 @@ export interface SearchStationsParams {
   offset?: number;
   limit?: number;
   hidebroken?: boolean;
+  removeDuplicates?: boolean;
 }
 
 /**

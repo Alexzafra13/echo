@@ -19,11 +19,13 @@ import {
   useSearchStations,
   useFavoriteStations,
   useSaveFavoriteFromApi,
-  useDeleteFavoriteStation
+  useDeleteFavoriteStation,
+  useRadioCountries
 } from '../../hooks';
 import { radioService } from '../../services';
 import type { RadioStation, RadioBrowserStation } from '../../types';
 import type { Country } from '../../components/CountrySelect/CountrySelect';
+import { getCountryFlag, getCountryName } from '../../utils/country.utils';
 import { Radio } from 'lucide-react';
 import styles from './RadioPage.module.css';
 
@@ -65,6 +67,7 @@ export default function RadioPage() {
 
   // State
   const { data: userCountry } = useUserCountry();
+  const { data: apiCountries = [] } = useRadioCountries();
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('top');
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +75,23 @@ export default function RadioPage() {
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+
+  // Transform API countries to Country format
+  const allCountries: Country[] = useMemo(() => {
+    if (apiCountries.length === 0) {
+      // Fallback to popular countries if API fails
+      return POPULAR_COUNTRIES;
+    }
+
+    return apiCountries
+      .filter(country => country.stationcount > 0) // Only countries with stations
+      .map(country => ({
+        code: country.iso_3166_1,
+        name: getCountryName(country.iso_3166_1, country.name),
+        flag: getCountryFlag(country.iso_3166_1),
+        stationCount: country.stationcount
+      }));
+  }, [apiCountries]);
 
   // Favorites
   const { data: favoriteStations = [] } = useFavoriteStations();
@@ -87,7 +107,14 @@ export default function RadioPage() {
 
   // Search stations query
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
-    { name: searchQuery, limit: 50 },
+    {
+      name: searchQuery,
+      limit: 50,
+      order: 'bitrate',
+      reverse: true,
+      hidebroken: true,
+      removeDuplicates: true
+    },
     searchQuery.length >= 2
   );
 
@@ -116,7 +143,13 @@ export default function RadioPage() {
 
   // 4. Todas las emisoras del mundo
   const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
-    { limit: 500, order: 'votes', reverse: true },
+    {
+      limit: 500,
+      order: 'bitrate',
+      reverse: true,
+      hidebroken: true,
+      removeDuplicates: true
+    },
     isAllCountries && isAllFilter
   );
 
@@ -126,8 +159,10 @@ export default function RadioPage() {
       tag: isGenreFilter ? activeFilter : undefined,
       countrycode: !isAllCountries && isGenreFilter ? selectedCountry : undefined,
       limit: 500,
-      order: 'votes',
-      reverse: true
+      order: 'bitrate',
+      reverse: true,
+      hidebroken: true,
+      removeDuplicates: true
     },
     isGenreFilter && !isAllCountries
   );
@@ -291,9 +326,9 @@ export default function RadioPage() {
 
   // Get country name for display
   const selectedCountryName = useMemo(() => {
-    const country = POPULAR_COUNTRIES.find(c => c.code === selectedCountry);
+    const country = allCountries.find(c => c.code === selectedCountry);
     return country?.name || 'tu país';
-  }, [selectedCountry]);
+  }, [selectedCountry, allCountries]);
 
   // Get filter label for display
   const activeFilterLabel = useMemo(() => {
@@ -317,7 +352,7 @@ export default function RadioPage() {
           }
           customContent={
             <CountrySelectButton
-              countries={POPULAR_COUNTRIES}
+              countries={allCountries}
               selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
               onClick={() => setIsCountryModalOpen(true)}
             />
@@ -459,7 +494,7 @@ export default function RadioPage() {
       <CountrySelectModal
         isOpen={isCountryModalOpen}
         onClose={() => setIsCountryModalOpen(false)}
-        countries={POPULAR_COUNTRIES}
+        countries={allCountries}
         selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
         onChange={handleCountryChange}
         userCountryCode={userCountry?.countryCode}
