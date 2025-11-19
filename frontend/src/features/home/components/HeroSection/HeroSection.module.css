@@ -387,23 +387,24 @@
   }
 
   .heroSection__playButton {
-    width: 100px;
-    height: 38px;
-    margin: 10px 0 0 0; /* Alineado a la izquierda */
-    font-size: 11px; /* Más pequeño para que quepa */
-    padding: 0 10px;
-    border-radius: 20px; /* iOS pill shape */
+    width: 120px; /* Más ancho para que quepa "Reproducir" */
+    height: 36px;
+    margin: 10px 0 0 0;
+    font-size: 12px;
+    padding: 0 12px;
+    border-radius: 18px; /* Menos redondo */
   }
 
   .heroSection__playIcon {
     width: 16px;
     height: 16px;
-    margin-right: 4px;
+    margin-right: 6px;
   }
 
   .heroSection__playText {
     white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Simplificar animación en móvil */
@@ -462,21 +463,23 @@
   }
 
   .heroSection__playButton {
-    width: 90px;
-    height: 34px;
+    width: 110px; /* Más ancho para que quepa */
+    height: 32px;
     margin: 8px 0 0 0;
-    font-size: 10px; /* Aún más pequeño en pantallas pequeñas */
-    padding: 0 8px;
+    font-size: 11px;
+    padding: 0 10px;
+    border-radius: 16px; /* Menos redondo */
   }
 
   .heroSection__playIcon {
     width: 14px;
     height: 14px;
-    margin-right: 4px;
+    margin-right: 5px;
   }
 
   .heroSection__playText {
     white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
