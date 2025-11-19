@@ -7,8 +7,9 @@
   z-index: var(--z-sticky, 1020);
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Changed from flex-end to space-between for back button */
+  justify-content: space-between;
   padding: 20px 30px;
+  gap: 20px;
   /* Transparent background by default - becomes glassmorphic on scroll or alwaysGlass */
   background: transparent;
   border-bottom: 1px solid transparent;
@@ -67,12 +68,21 @@
   flex-shrink: 0;
 }
 
-.header__rightSection {
+/* Left section - Search and custom content */
+.header__leftSection {
   display: flex;
   align-items: center;
   gap: 20px;
   flex: 1;
-  justify-content: flex-end;
+  justify-content: flex-start;
+}
+
+/* Right section - Theme toggle, notifications, user menu */
+.header__rightSection {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
 .header__searchForm,
@@ -270,12 +280,17 @@
 @media (max-width: 1024px) {
   .header {
     padding: 16px 24px;
+    gap: 16px;
   }
 
   .header__searchForm,
   .header__customSearch {
     max-width: 500px;
     min-width: 250px; /* Más flexible que 400px */
+  }
+
+  .header__leftSection {
+    gap: 16px;
   }
 
   .header__rightSection {
@@ -285,10 +300,18 @@
 
 /* Mobile Large (855px crítico) */
 @media (max-width: 855px) {
+  .header {
+    gap: 12px;
+  }
+
   .header__searchForm,
   .header__customSearch {
     min-width: 200px; /* Todavía más flexible */
     max-width: 400px;
+  }
+
+  .header__leftSection {
+    gap: 12px;
   }
 
   .header__rightSection {
@@ -325,6 +348,10 @@
   .header--scrolled {
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .header__leftSection {
+    gap: 8px;
   }
 
   .header__rightSection {
@@ -444,6 +471,11 @@
 @media (max-width: 480px) {
   .header {
     padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .header__leftSection {
+    gap: 6px;
   }
 
   .header__rightSection {
