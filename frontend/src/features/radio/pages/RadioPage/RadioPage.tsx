@@ -6,6 +6,7 @@ import { usePlayer } from '@features/player/context/PlayerContext';
 import {
   RadioStationCard,
   RadioSearchBar,
+  RadioSearchPanel,
   CountrySelectButton,
   CountrySelectModal,
   FilterTabs
@@ -70,6 +71,7 @@ export default function RadioPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
+  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
 
   // Favorites
   const { data: favoriteStations = [] } = useFavoriteStations();
@@ -189,11 +191,32 @@ export default function RadioPage() {
   // Handlers
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
+    // Open panel when query has 2+ characters
+    setIsSearchPanelOpen(query.length >= 2);
+  }, []);
+
+  const handleSearchFocus = useCallback(() => {
+    if (searchQuery.length >= 2) {
+      setIsSearchPanelOpen(true);
+    }
+  }, [searchQuery]);
+
+  const handleSearchBlur = useCallback(() => {
+    // Don't close immediately - let click events fire first
+    setTimeout(() => {
+      // Panel will auto-close when query is cleared or user clicks result
+    }, 200);
   }, []);
 
   const handleResultSelect = useCallback((station: RadioStation | RadioBrowserStation) => {
     playRadio(station);
+    setIsSearchPanelOpen(false);
+    setSearchQuery(''); // Clear search
   }, [playRadio]);
+
+  const handleCloseSearchPanel = useCallback(() => {
+    setIsSearchPanelOpen(false);
+  }, []);
 
   const handleCountryChange = useCallback((countryCode: string) => {
     setSelectedCountry(countryCode);
@@ -287,9 +310,8 @@ export default function RadioPage() {
           customSearch={
             <RadioSearchBar
               onSearch={handleSearch}
-              onResultSelect={handleResultSelect}
-              searchResults={searchResults}
-              isLoading={isSearching}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
               placeholder="Buscar emisora por nombre, país o género..."
             />
           }
@@ -300,6 +322,16 @@ export default function RadioPage() {
               onClick={() => setIsCountryModalOpen(true)}
             />
           }
+        />
+
+        {/* Search Results Panel - Expands below header */}
+        <RadioSearchPanel
+          isOpen={isSearchPanelOpen}
+          searchResults={searchResults}
+          isLoading={isSearching}
+          query={searchQuery}
+          onResultSelect={handleResultSelect}
+          onClose={handleCloseSearchPanel}
         />
 
         <div className={styles.radioPage__content}>
