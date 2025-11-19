@@ -148,12 +148,19 @@ export function AudioPlayer() {
 
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
-        <img
-          src={isRadioMode ? cover : getCoverUrl(cover)}
-          alt={title}
-          className={styles.trackCover}
-          onError={handleImageError}
-        />
+        <div className={styles.trackCoverContainer}>
+          {isRadioMode && (
+            <div className={styles.trackCoverFallback}>
+              <Radio size={24} />
+            </div>
+          )}
+          <img
+            src={isRadioMode ? cover : getCoverUrl(cover)}
+            alt={title}
+            className={styles.trackCover}
+            onError={handleImageError}
+          />
+        </div>
         <div className={styles.trackDetails}>
           <div className={styles.trackTitle}>{title}</div>
           <div className={styles.trackArtist}>{artist}</div>
