@@ -67,6 +67,7 @@ export class LoginUseCase {
         email: user.email,
         name: user.name,
         isAdmin: user.isAdmin,
+        avatarPath: user.avatarPath,
         createdAt: user.createdAt,
       },
       accessToken,

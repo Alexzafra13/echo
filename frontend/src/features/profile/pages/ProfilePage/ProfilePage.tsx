@@ -124,9 +124,9 @@ export function ProfilePage() {
               className={styles.profilePage__avatarContainer}
               onClick={() => setShowAvatarModal(true)}
             >
-              {getUserAvatarUrl(user?.id) ? (
+              {user?.hasAvatar ? (
                 <img
-                  src={getUserAvatarUrl(user?.id)}
+                  src={getUserAvatarUrl(user?.id, user?.hasAvatar)}
                   alt={user?.name || user?.username}
                   className={styles.profilePage__avatar}
                   onError={handleAvatarError}
