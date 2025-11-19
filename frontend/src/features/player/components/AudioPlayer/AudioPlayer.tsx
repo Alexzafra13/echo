@@ -24,6 +24,7 @@ export function AudioPlayer() {
     isShuffle,
     repeatMode,
     queue,
+    radioMetadata,
     togglePlayPause,
     playNext,
     playPrevious,
@@ -156,6 +157,12 @@ export function AudioPlayer() {
         <div className={styles.trackDetails}>
           <div className={styles.trackTitle}>{title}</div>
           <div className={styles.trackArtist}>{artist}</div>
+          {/* ICY Metadata - Now Playing for Radio */}
+          {isRadioMode && radioMetadata && (
+            <div className={styles.trackMetadata}>
+              🎵 {radioMetadata.title || `${radioMetadata.artist || ''} - ${radioMetadata.song || ''}`.trim()}
+            </div>
+          )}
         </div>
       </div>
 
