@@ -146,11 +146,6 @@
   position: relative;
 }
 
-/* Backdrop - hidden on desktop */
-.header__backdrop {
-  display: none;
-}
-
 .header__userButton {
   width: 40px;
   height: 40px;
@@ -165,8 +160,6 @@
   transition: all 0.2s ease;
   padding: 0;
   overflow: hidden;
-  position: relative;
-  z-index: 1;
 }
 
 .header__userButton:hover {
@@ -189,10 +182,9 @@
 
 .header__userDropdown {
   position: absolute;
-  top: 60px; /* Debajo del header */
-  right: 30px; /* Alineado con padding del header */
-  min-width: 200px;
-  max-width: 280px;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
   background: var(--color-bg-tertiary, #1e1f2e);
@@ -363,116 +355,16 @@
     flex-shrink: 0;
   }
 
-  /* Backdrop visible en móvil */
-  .header__backdrop {
-    display: block !important;
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.5) !important;
-    z-index: 9998 !important;
-    animation: fadeIn 0.2s ease !important;
-  }
-
-  /* Bottom Sheet iOS Style */
+  /* Dropdown ajustado para móvil - igual que notifications */
   .header__userDropdown {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 60vh !important;
-    overflow-y: auto !important;
-    background: var(--color-bg-tertiary, #1e1f2e) !important;
-    border-radius: 20px 20px 0 0 !important;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-bottom: none !important;
-    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-    z-index: 9999 !important;
-    animation: slideUpModal 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    touch-action: manipulation !important;
-    pointer-events: auto !important;
-  }
-
-  @keyframes slideUpModal {
-    from {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Handle visual iOS */
-  .header__userDropdown::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 36px;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-  }
-
-  .header__userInfo {
-    padding: 12px 16px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent;
-  }
-
-  .header__userAvatarLarge {
-    width: 56px;
-    height: 56px;
-  }
-
-  .header__userName {
-    font-size: 17px;
-    font-weight: 600;
-  }
-
-  .header__userRole {
-    font-size: 14px;
-    opacity: 0.7;
+    width: 240px;
+    right: -16px; /* Ajustar para que no se salga del viewport */
+    max-height: 400px;
   }
 
   .header__userMenuItem {
-    width: 100%;
-    padding: 16px 16px; /* Mejor touch target */
-    font-size: 17px; /* iOS standard */
-    font-weight: 500;
-    border-radius: 12px;
-    margin-bottom: 6px;
-    /* Asegurar que sean clickeables */
-    touch-action: manipulation;
-    cursor: pointer;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .header__userMenuItem:active {
-    transform: scale(0.98);
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .header__userDivider {
-    margin: 12px 0;
-    opacity: 0.5;
+    padding: 12px;
+    font-size: 15px;
   }
 }
 
