@@ -57,7 +57,7 @@ const FILTER_TABS = [
 
 export default function RadioPage() {
   // Player context
-  const { playRadio, currentRadioStation, isPlaying, isRadioMode } = usePlayer();
+  const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
 
   // Calculate grid dimensions for 3 rows
   const { itemsPerPage: stationsPerView } = useGridDimensions({
@@ -407,6 +407,7 @@ export default function RadioPage() {
                       station={station}
                       isFavorite={isStationFavorite(station)}
                       isPlaying={isStationPlaying(station)}
+                      currentMetadata={isStationPlaying(station) ? radioMetadata : null}
                       onPlay={() => handlePlayStation(station)}
                       onToggleFavorite={() => handleToggleFavorite(station)}
                     />
@@ -465,6 +466,7 @@ export default function RadioPage() {
                     station={station}
                     isFavorite={true}
                     isPlaying={isStationPlaying(station)}
+                    currentMetadata={isStationPlaying(station) ? radioMetadata : null}
                     onPlay={() => handlePlayStation(station)}
                     onToggleFavorite={() => station.id && handleRemoveFavorite(station.id)}
                   />
