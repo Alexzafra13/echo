@@ -35,7 +35,7 @@
   }
 }
 
-/* Mobile */
+/* Mobile - Fixed 2 columns for consistent sizing */
 @media (max-width: 768px) {
   .albumGrid {
     margin-bottom: 32px;
@@ -48,7 +48,7 @@
   }
 
   .albumGrid__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr); /* Fixed 2 columns instead of auto-fill */
     gap: 12px;
     padding: 0 16px;
   }
