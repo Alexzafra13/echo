@@ -337,7 +337,8 @@
   }
 
   .artistDetailPage__content {
-    overflow: hidden; /* Evitar desbordamiento horizontal */
+    overflow-x: hidden; /* Evitar desbordamiento horizontal */
+    overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
