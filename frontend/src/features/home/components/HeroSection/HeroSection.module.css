@@ -340,13 +340,13 @@
 
   .heroSection__albumCoverButton {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-    border-radius: 12px; /* iOS rounded */
+    border-radius: 8px; /* Menos redondeado */
   }
 
   .heroSection__albumCover {
     width: 140px; /* Más grande para que no se vea tan redondeado */
     height: 140px;
-    border-radius: 12px;
+    border-radius: 8px; /* Menos redondeado */
   }
 
   .heroSection__info {
@@ -440,11 +440,13 @@
 
   .heroSection__albumCoverButton {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+    border-radius: 6px; /* Menos redondeado */
   }
 
   .heroSection__albumCover {
     width: 120px; /* Más grande para mejor proporción */
     height: 120px;
+    border-radius: 6px; /* Menos redondeado */
   }
 
   .heroSection__artistLogo {

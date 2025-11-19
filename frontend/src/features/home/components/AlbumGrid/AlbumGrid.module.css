@@ -35,7 +35,7 @@
   }
 }
 
-/* Mobile - Fixed 2 columns for consistent sizing */
+/* Mobile - Responsive grid with auto-fit */
 @media (max-width: 768px) {
   .albumGrid {
     margin-bottom: 32px;
@@ -48,7 +48,7 @@
   }
 
   .albumGrid__grid {
-    grid-template-columns: repeat(2, 1fr); /* Fixed 2 columns instead of auto-fill */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Auto-fit para mejor responsividad */
     gap: 12px;
     padding: 0 16px;
   }
@@ -57,7 +57,7 @@
 /* Small Mobile */
 @media (max-width: 480px) {
   .albumGrid__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Ajuste automático */
     gap: 10px;
     padding: 0 12px;
   }
