@@ -211,7 +211,7 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo en móvil */
-    padding: 84px 16px 140px; /* Top para header + bottom para nav + player */
+    padding: 76px 16px 140px; /* Top reducido para botón género más cerca del header + bottom para nav + player */
     width: 100%;
     max-width: 100%;
   }
