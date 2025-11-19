@@ -123,12 +123,24 @@ export const envValidationSchema = Joi.object({
   // CORS Configuration
   // ============================================
   CORS_ORIGINS: Joi.string()
-    .default('http://localhost:4567')
+    .default('http://localhost:5173')
     .custom((value, helpers) => {
+      // Allow empty string (will use default)
+      if (!value || value.trim() === '') {
+        return value;
+      }
+
       const origins = value.split(',');
       const validOrigins = origins.every((origin: string) => {
+        const trimmedOrigin = origin.trim();
+
+        // Skip empty values
+        if (!trimmedOrigin) {
+          return true;
+        }
+
         try {
-          new URL(origin.trim());
+          new URL(trimmedOrigin);
           return true;
         } catch {
           return false;
@@ -142,7 +154,7 @@ export const envValidationSchema = Joi.object({
       return value;
     })
     .messages({
-      'any.invalid': 'CORS_ORIGINS must be comma-separated valid URLs (e.g., http://localhost:4567,https://example.com)',
+      'any.invalid': 'CORS_ORIGINS must be comma-separated valid URLs (e.g., http://localhost:5173,https://example.com)',
     }),
 
   // ============================================
