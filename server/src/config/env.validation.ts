@@ -126,7 +126,7 @@ export const envValidationSchema = Joi.object({
     .default('http://localhost:4567')
     .custom((value, helpers) => {
       const origins = value.split(',');
-      const validOrigins = origins.every(origin => {
+      const validOrigins = origins.every((origin: string) => {
         try {
           new URL(origin.trim());
           return true;
