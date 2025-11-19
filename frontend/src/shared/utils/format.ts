@@ -3,8 +3,8 @@
  * @param seconds - Time in seconds
  * @returns Formatted time string
  */
-export function formatDuration(seconds: number): string {
-  if (isNaN(seconds) || seconds < 0) {
+export function formatDuration(seconds: number | undefined): string {
+  if (seconds === undefined || isNaN(seconds) || seconds < 0) {
     return '0:00';
   }
 

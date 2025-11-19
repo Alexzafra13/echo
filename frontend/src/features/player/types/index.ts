@@ -1,32 +1,10 @@
-export interface Track {
-  id: string;
-  title: string;
-  artist: string;
-  albumName?: string;
-  duration: number;
-  coverImage?: string;
-  trackNumber?: number;
-}
+// Import shared types for use in this file
+import type { Track, TrackAlbum } from '@shared/types/track.types';
+import type { RadioStation, RadioMetadata } from '@shared/types/radio.types';
 
-export interface RadioMetadata {
-  stationUuid: string;
-  title?: string;
-  artist?: string;
-  song?: string;
-  timestamp: number;
-}
-
-export interface RadioStation {
-  id?: string;
-  stationUuid?: string;
-  name: string;
-  url: string;
-  favicon?: string | null;
-  country?: string | null;
-  tags?: string | null;
-  codec?: string | null;
-  bitrate?: number | null;
-}
+// Re-export shared types for player usage
+export type { Track, TrackAlbum };
+export type { RadioStation, RadioMetadata };
 
 export interface PlayerState {
   // Track playback

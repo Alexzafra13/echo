@@ -16,8 +16,13 @@ interface TrackInfoModalProps {
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   const coverUrl = track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined;
 
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes || !isFinite(bytes)) return 'Desconocido';
+  const formatFileSize = (bytes?: number | string): string => {
+    if (!bytes) return 'Desconocido';
+
+    // If already formatted as string, return it
+    if (typeof bytes === 'string') return bytes;
+
+    if (!isFinite(bytes)) return 'Desconocido';
 
     const kb = bytes / 1024;
     const mb = kb / 1024;
@@ -40,7 +45,8 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
     return `${bitrate} kbps`;
   };
 
-  const formatDate = (date: Date): string => {
+  const formatDate = (date: Date | string | undefined): string => {
+    if (!date) return 'Desconocida';
     return new Date(date).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',

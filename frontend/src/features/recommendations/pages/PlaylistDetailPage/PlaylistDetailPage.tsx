@@ -68,7 +68,6 @@ export function PlaylistDetailPage() {
         albumName: st.track!.albumName,
         duration: st.track!.duration || 0,
         coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
-        trackNumber: st.track!.trackNumber,
       }));
   };
 
