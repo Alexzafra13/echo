@@ -251,7 +251,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
             aria-label="User menu"
           >
             <img
-              src={getUserAvatarUrl(user?.id)}
+              src={getUserAvatarUrl(user?.id, user?.hasAvatar)}
               alt={user?.username || 'User'}
               className={styles.header__userAvatar}
               onError={handleAvatarError}
@@ -263,7 +263,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
             <div className={styles.header__userDropdown}>
               <div className={styles.header__userInfo}>
                 <img
-                  src={getUserAvatarUrl(user?.id)}
+                  src={getUserAvatarUrl(user?.id, user?.hasAvatar)}
                   alt={user?.username || 'User'}
                   className={styles.header__userAvatarLarge}
                   onError={handleAvatarError}

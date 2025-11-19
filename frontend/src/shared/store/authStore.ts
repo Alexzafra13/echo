@@ -7,6 +7,7 @@ export interface User {
   email?: string;
   name?: string;
   isAdmin: boolean;
+  hasAvatar?: boolean;
   mustChangePassword?: boolean;
   createdAt?: string;
 }

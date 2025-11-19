@@ -18,6 +18,9 @@ export class UserResponseDto {
   isAdmin!: boolean;
 
   @Expose()
+  hasAvatar?: boolean;
+
+  @Expose()
   createdAt!: Date;
 }
 
@@ -43,6 +46,7 @@ export class AuthResponseDto {
     dto.user.email = data.user.email;
     dto.user.name = data.user.name;
     dto.user.isAdmin = data.user.isAdmin;
+    dto.user.hasAvatar = !!data.user.avatarPath; // true if avatarPath exists
     dto.user.createdAt = data.user.createdAt;
 
     dto.accessToken = data.accessToken;
