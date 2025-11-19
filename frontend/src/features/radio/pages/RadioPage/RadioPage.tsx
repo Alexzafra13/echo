@@ -6,7 +6,8 @@ import { usePlayer } from '@features/player/context/PlayerContext';
 import {
   RadioStationCard,
   RadioSearchBar,
-  CountrySelect,
+  CountrySelectButton,
+  CountrySelectModal,
   FilterTabs
 } from '../../components';
 import {
@@ -68,6 +69,7 @@ export default function RadioPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [favoritesPage, setFavoritesPage] = useState(1);
+  const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
 
   // Favorites
   const { data: favoriteStations = [] } = useFavoriteStations();
@@ -292,11 +294,10 @@ export default function RadioPage() {
             />
           }
           customContent={
-            <CountrySelect
+            <CountrySelectButton
               countries={POPULAR_COUNTRIES}
               selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
-              onChange={handleCountryChange}
-              userCountryCode={userCountry?.countryCode}
+              onClick={() => setIsCountryModalOpen(true)}
             />
           }
         />
@@ -421,6 +422,16 @@ export default function RadioPage() {
           )}
         </div>
       </main>
+
+      {/* Country Selection Modal */}
+      <CountrySelectModal
+        isOpen={isCountryModalOpen}
+        onClose={() => setIsCountryModalOpen(false)}
+        countries={POPULAR_COUNTRIES}
+        selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
+        onChange={handleCountryChange}
+        userCountryCode={userCountry?.countryCode}
+      />
     </div>
   );
 }

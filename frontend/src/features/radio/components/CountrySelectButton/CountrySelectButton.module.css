@@ -1,0 +1,71 @@
+/* Country Select Button */
+.countryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.countryButton:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary-alpha);
+}
+
+.countryButton:active {
+  transform: scale(0.98);
+}
+
+.countryButton__icon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.countryButton__flag {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.countryButton__text {
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .countryButton {
+    padding: 6px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .countryButton__flag {
+    font-size: 16px;
+  }
+
+  .countryButton__icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .countryButton {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .countryButton__text {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
