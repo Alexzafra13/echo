@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter } from 'events';
-import * as IceCast from 'icecast-parser';
+import { Parser as IcecastParser } from 'icecast-parser';
 
 export interface RadioMetadata {
   stationUuid: string;
@@ -18,7 +18,7 @@ export interface RadioMetadata {
 @Injectable()
 export class IcyMetadataService {
   private readonly logger = new Logger(IcyMetadataService.name);
-  private activeStreams = new Map<string, IceCast>();
+  private activeStreams = new Map<string, IcecastParser>();
   private streamListeners = new Map<string, Set<EventEmitter>>();
 
   /**
@@ -73,10 +73,15 @@ export class IcyMetadataService {
     try {
       this.logger.log(`Creating ICY parser for ${stationUuid}: ${streamUrl}`);
 
-      const radioStation = new IceCast(streamUrl);
+      const radioStation = new IcecastParser({
+        url: streamUrl,
+        keepListen: false, // Don't keep listening after metadata
+        autoUpdate: true, // Automatically update metadata
+        notifyOnChangeOnly: true, // Only emit when metadata changes
+      });
 
       // Handle metadata events
-      radioStation.on('metadata', (metadata: any) => {
+      radioStation.on('metadata', (metadata: Map<string, string>) => {
         const parsedMetadata = this.parseMetadata(stationUuid, metadata);
         this.broadcastMetadata(stationUuid, parsedMetadata);
       });
@@ -114,11 +119,7 @@ export class IcyMetadataService {
     const stream = this.activeStreams.get(stationUuid);
     if (stream) {
       try {
-        // Destroy the stream
-        if (typeof stream.destroy === 'function') {
-          stream.destroy();
-        }
-        // Remove all listeners
+        // Remove all listeners to stop processing
         stream.removeAllListeners();
       } catch (error) {
         this.logger.error(`Error closing stream ${stationUuid}:`, error);
@@ -136,7 +137,7 @@ export class IcyMetadataService {
    */
   private parseMetadata(
     stationUuid: string,
-    metadata: any,
+    metadata: Map<string, string>,
   ): RadioMetadata {
     const result: RadioMetadata = {
       stationUuid,
@@ -146,19 +147,21 @@ export class IcyMetadataService {
     // ICY metadata comes in various formats:
     // - StreamTitle='Artist - Song'
     // - StreamTitle='Song'
-    if (metadata.StreamTitle) {
-      const streamTitle = metadata.StreamTitle.trim();
+    const streamTitle = metadata.get('StreamTitle');
+
+    if (streamTitle) {
+      const trimmedTitle = streamTitle.trim();
 
       // Try to split by ' - ' to get artist and song
-      const dashIndex = streamTitle.indexOf(' - ');
+      const dashIndex = trimmedTitle.indexOf(' - ');
       if (dashIndex > 0) {
-        result.artist = streamTitle.substring(0, dashIndex).trim();
-        result.song = streamTitle.substring(dashIndex + 3).trim();
-        result.title = streamTitle;
+        result.artist = trimmedTitle.substring(0, dashIndex).trim();
+        result.song = trimmedTitle.substring(dashIndex + 3).trim();
+        result.title = trimmedTitle;
       } else {
         // No artist separator, just song title
-        result.song = streamTitle;
-        result.title = streamTitle;
+        result.song = trimmedTitle;
+        result.title = trimmedTitle;
       }
     }
 
