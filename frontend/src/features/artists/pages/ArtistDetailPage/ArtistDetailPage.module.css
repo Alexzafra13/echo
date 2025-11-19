@@ -337,14 +337,14 @@
   }
 
   .artistDetailPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
+    overflow: hidden; /* Evitar desbordamiento horizontal */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
   .artistDetailPage__hero {
     min-height: 300px;
-    border-radius: 12px; /* iOS rounded */
+    border-radius: 8px; /* Menos redondeado */
   }
 
   .artistDetailPage__heroContent {
@@ -394,7 +394,7 @@
   }
 
   .artistDetailPage__biographyContent {
-    border-radius: 12px; /* iOS rounded */
+    border-radius: 8px; /* Menos redondeado */
   }
 }
 

@@ -84,7 +84,7 @@
 /* Grid Layout (for Artists and Albums) */
 .searchResultsPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* auto-fit para mejor responsividad */
   gap: 20px;
 }
 
@@ -255,7 +255,7 @@
   }
 
   .searchResultsPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
+    overflow: hidden; /* Evitar desbordamiento horizontal */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
@@ -269,29 +269,33 @@
   }
 
   .searchResultsPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit consistente */
     gap: 12px;
   }
 
   .searchResultsPage__card {
-    border-radius: 12px; /* iOS rounded */
+    padding: 12px; /* Menos padding en mobile */
+    border-radius: 8px; /* Menos redondeado */
   }
 
-  .searchResultsPage__cardImage,
+  .searchResultsPage__cardImage {
+    border-radius: 6px; /* Menos redondeado */
+  }
+
   .searchResultsPage__cardImage_round {
-    border-radius: 8px; /* iOS rounded */
+    border-radius: 50%; /* Mantener circular para artistas */
   }
 
   .searchResultsPage__listItem {
     grid-template-columns: 30px 40px 1fr auto;
     gap: 12px;
-    border-radius: 8px; /* iOS rounded */
+    border-radius: 6px; /* Menos redondeado */
   }
 
   .searchResultsPage__listImage {
     width: 40px;
     height: 40px;
-    border-radius: 6px; /* iOS rounded */
+    border-radius: 4px; /* Menos redondeado */
   }
 }
 
@@ -307,5 +311,14 @@
 
   .searchResultsPage__header h1 {
     font-size: 20px;
+  }
+
+  .searchResultsPage__grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* auto-fit consistente */
+    gap: 10px;
+  }
+
+  .searchResultsPage__card {
+    padding: 8px; /* Más compacto */
   }
 }
