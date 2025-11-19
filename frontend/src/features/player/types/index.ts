@@ -8,6 +8,14 @@ export interface Track {
   trackNumber?: number;
 }
 
+export interface RadioMetadata {
+  stationUuid: string;
+  title?: string;
+  artist?: string;
+  song?: string;
+  timestamp: number;
+}
+
 export interface RadioStation {
   id?: string;
   stationUuid?: string;
@@ -34,6 +42,7 @@ export interface PlayerState {
   // Radio playback
   currentRadioStation: RadioStation | null;
   isRadioMode: boolean;
+  radioMetadata: RadioMetadata | null;
 }
 
 export interface PlayerContextValue extends PlayerState {

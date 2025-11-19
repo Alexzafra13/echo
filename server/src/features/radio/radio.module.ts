@@ -7,6 +7,7 @@ import { DeleteFavoriteStationUseCase } from './domain/use-cases/delete-favorite
 import { SearchStationsUseCase } from './domain/use-cases/search-stations/search-stations.use-case';
 import { PrismaRadioStationRepository } from './infrastructure/persistence/radio-station.repository';
 import { RadioBrowserApiService } from './domain/services/radio-browser-api.service';
+import { IcyMetadataService } from './domain/services/icy-metadata.service';
 import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repository.port';
 
 /**
@@ -43,6 +44,7 @@ import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repositor
 
     // Services
     RadioBrowserApiService,
+    IcyMetadataService,
 
     // Repositories
     PrismaRadioStationRepository,
