@@ -11,7 +11,7 @@ import {
   Sse,
   Req,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
@@ -262,7 +262,7 @@ export class RadioController {
   streamMetadata(
     @Query('stationUuid') stationUuid: string,
     @Query('streamUrl') streamUrl: string,
-    @Req() request: Request,
+    @Req() request: FastifyRequest,
   ): Observable<MessageEvent> {
     return new Observable((subscriber) => {
       // Subscribe to metadata updates
@@ -290,14 +290,6 @@ export class RadioController {
       emitter.on('metadata', onMetadata);
       emitter.on('error', onError);
 
-      // Cleanup on client disconnect
-      request.on('close', () => {
-        emitter.off('metadata', onMetadata);
-        emitter.off('error', onError);
-        this.icyMetadataService.unsubscribe(stationUuid, emitter);
-        subscriber.complete();
-      });
-
       // Send keepalive every 30 seconds
       const keepaliveInterval = setInterval(() => {
         subscriber.next({
@@ -306,9 +298,13 @@ export class RadioController {
         } as MessageEvent);
       }, 30000);
 
-      // Cleanup interval on disconnect
-      request.on('close', () => {
+      // Cleanup on client disconnect (use request.raw for Node.js IncomingMessage)
+      request.raw.on('close', () => {
+        emitter.off('metadata', onMetadata);
+        emitter.off('error', onError);
+        this.icyMetadataService.unsubscribe(stationUuid, emitter);
         clearInterval(keepaliveInterval);
+        subscriber.complete();
       });
     });
   }
