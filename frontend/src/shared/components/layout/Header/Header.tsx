@@ -37,6 +37,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   const [isScrolled, setIsScrolled] = useState(alwaysGlass);
   const searchRef = useRef<HTMLFormElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
@@ -130,6 +131,23 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Navigate to dedicated search page on Enter press
@@ -210,7 +228,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
         <MetadataNotifications token={accessToken} isAdmin={user?.isAdmin || false} />
 
         {/* User menu */}
-        <div className={styles.header__userMenu}>
+        <div className={styles.header__userMenu} ref={userMenuRef}>
           <button
             className={styles.header__userButton}
             onClick={() => setShowUserMenu(!showUserMenu)}
@@ -223,49 +241,40 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
               onError={handleAvatarError}
             />
           </button>
+
+          {/* User dropdown - same approach as MetadataNotifications */}
+          {showUserMenu && (
+            <div className={styles.header__userDropdown}>
+              <div className={styles.header__userInfo}>
+                <img
+                  src={getUserAvatarUrl(user?.id)}
+                  alt={user?.username || 'User'}
+                  className={styles.header__userAvatarLarge}
+                  onError={handleAvatarError}
+                />
+                <div>
+                  <p className={styles.header__userName}>{user?.username || 'User'}</p>
+                  <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
+                </div>
+              </div>
+              <div className={styles.header__userDivider} />
+              <button className={styles.header__userMenuItem} onClick={() => { setLocation('/profile'); setShowUserMenu(false); }}>
+                Profile
+              </button>
+              <button className={styles.header__userMenuItem} onClick={() => { setLocation('/settings'); setShowUserMenu(false); }}>
+                Settings
+              </button>
+              <div className={styles.header__userDivider} />
+              <button
+                className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--danger']}`}
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* User dropdown - rendered outside to allow proper fixed positioning */}
-      {showUserMenu && (
-        <>
-          {/* Backdrop for mobile bottom sheet */}
-          <div
-            className={styles.header__backdrop}
-            onClick={() => setShowUserMenu(false)}
-            aria-label="Close menu"
-          />
-
-          <div className={styles.header__userDropdown}>
-            <div className={styles.header__userInfo}>
-              <img
-                src={getUserAvatarUrl(user?.id)}
-                alt={user?.username || 'User'}
-                className={styles.header__userAvatarLarge}
-                onError={handleAvatarError}
-              />
-              <div>
-                <p className={styles.header__userName}>{user?.username || 'User'}</p>
-                <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
-              </div>
-            </div>
-            <div className={styles.header__userDivider} />
-            <button className={styles.header__userMenuItem} onClick={() => { setLocation('/profile'); setShowUserMenu(false); }}>
-              Profile
-            </button>
-            <button className={styles.header__userMenuItem} onClick={() => { setLocation('/settings'); setShowUserMenu(false); }}>
-              Settings
-            </button>
-            <div className={styles.header__userDivider} />
-            <button
-              className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--danger']}`}
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-          </div>
-        </>
-      )}
     </header>
   );
 }
