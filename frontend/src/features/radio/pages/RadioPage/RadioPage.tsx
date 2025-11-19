@@ -45,7 +45,7 @@ const POPULAR_COUNTRIES: Country[] = [
 
 // Filtros disponibles
 const FILTER_TABS = [
-  { id: 'top', label: 'Top 20' },
+  { id: 'top', label: 'Top' },
   { id: 'all', label: 'Todas' },
   { id: 'rock', label: 'Rock' },
   { id: 'pop', label: 'Pop' },
@@ -109,7 +109,7 @@ export default function RadioPage() {
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
     {
       name: searchQuery,
-      limit: 50,
+      limit: Math.max(stationsPerView * 3, 60), // 3 páginas o mínimo 60
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -126,25 +126,25 @@ export default function RadioPage() {
 
   // Queries for different filter combinations
 
-  // 1. Top 20 global (solo 20 emisoras, sin paginar)
-  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(20);
+  // 1. Top emisoras global (llenan exactamente 3 filas)
+  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(stationsPerView);
 
-  // 2. Top 20 por país (solo 20 emisoras, sin paginar)
+  // 2. Top emisoras por país (llenan exactamente 3 filas)
   const { data: countryTop20 = [], isLoading: loadingCountryTop } = useStationsByCountry(
     !isAllCountries && isTopFilter ? selectedCountry : '',
-    20
+    stationsPerView
   );
 
-  // 3. Todas las emisoras del país (muchas para paginar)
+  // 3. Todas las emisoras del país (múltiplo de stationsPerView para paginación limpia)
   const { data: allCountryStations = [], isLoading: loadingAllCountry } = useStationsByCountry(
     !isAllCountries && isAllFilter ? selectedCountry : '',
-    500
+    Math.max(stationsPerView * 5, 100) // 5 páginas o mínimo 100
   );
 
   // 4. Todas las emisoras del mundo
   const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
     {
-      limit: 500,
+      limit: Math.max(stationsPerView * 5, 100), // 5 páginas o mínimo 100
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -158,7 +158,7 @@ export default function RadioPage() {
     {
       tag: isGenreFilter ? activeFilter : undefined,
       countrycode: !isAllCountries && isGenreFilter ? selectedCountry : undefined,
-      limit: 500,
+      limit: Math.max(stationsPerView * 5, 100), // 5 páginas o mínimo 100
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -170,15 +170,15 @@ export default function RadioPage() {
   // 6. Filtro por género global
   const { data: genreGlobalStations = [], isLoading: loadingGenreGlobal } = useStationsByTag(
     isGenreFilter && isAllCountries ? activeFilter : '',
-    500
+    Math.max(stationsPerView * 5, 100) // 5 páginas o mínimo 100
   );
 
   // Select the appropriate stations list
   const stations = useMemo(() => {
-    // Top 20 mundial
+    // Top emisoras mundial (mejor calidad/bitrate)
     if (isAllCountries && isTopFilter) return topVotedStations;
 
-    // Top 20 por país
+    // Top emisoras por país (mejor calidad/bitrate)
     if (!isAllCountries && isTopFilter) return countryTop20;
 
     // Todas del mundo
@@ -200,8 +200,8 @@ export default function RadioPage() {
     genreCountryStations, genreGlobalStations
   ]);
 
-  // Paginate stations (3 rows per page)
-  // Top 20 no se pagina, el resto sí
+  // Paginate stations (3 rows per page, dinámico según tamaño de pantalla)
+  // Top no se pagina (solo muestra 1 página completa), el resto sí
   const shouldPaginate = !isTopFilter;
   const totalPages = shouldPaginate ? Math.ceil(stations.length / stationsPerView) : 1;
   const paginatedStations = shouldPaginate
