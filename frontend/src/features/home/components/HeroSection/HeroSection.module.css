@@ -344,8 +344,8 @@
   }
 
   .heroSection__albumCover {
-    width: 120px; /* Más pequeño */
-    height: 120px;
+    width: 140px; /* Más grande para que no se vea tan redondeado */
+    height: 140px;
     border-radius: 12px;
   }
 
@@ -443,8 +443,8 @@
   }
 
   .heroSection__albumCover {
-    width: 100px; /* Más pequeño aún */
-    height: 100px;
+    width: 120px; /* Más grande para mejor proporción */
+    height: 120px;
   }
 
   .heroSection__artistLogo {
