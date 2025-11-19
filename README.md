@@ -431,10 +431,26 @@ REDIS_PASSWORD=tu_password_seguro
 - **Persistent config**: Secrets guardados en `/app/config` (volumen)
 - **Clear logs**: Credenciales y URLs mostradas prominentemente
 
+### 🌐 Despliegue para Internet
+
+**Red local (LAN):** Usa `docker-compose.yml` (arriba)
+
+**Internet con IP pública:** Ver [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+
+**Internet con CGNAT:** Ver [CGNAT_SOLUTIONS.md](./CGNAT_SOLUTIONS.md)
+
+**Puertos 80/443 bloqueados (Digi, Jazztel):** Ver [BLOCKED_PORTS_SOLUTION.md](./BLOCKED_PORTS_SOLUTION.md)
+
 ## 📚 Documentación
 
-- **[PRODUCTION.md](./PRODUCTION.md)** - 🚢 Guía de producción completa
-- [DOCKER.md](./DOCKER.md) - Deploy avanzado y troubleshooting
+### Despliegue
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - 🚀 Guía completa de despliegue (LAN/Internet)
+- **[PRODUCTION.md](./PRODUCTION.md)** - 🚢 Producción general
+- **[CGNAT_SOLUTIONS.md](./CGNAT_SOLUTIONS.md)** - 🔒 Soluciones para CGNAT
+- **[BLOCKED_PORTS_SOLUTION.md](./BLOCKED_PORTS_SOLUTION.md)** - 🚫 Puertos bloqueados (Digi/Jazztel)
+- [DOCKER.md](./DOCKER.md) - Deploy avanzado
+
+### Desarrollo
 - [server/](./server) - Documentación del backend
 - [frontend/](./frontend) - Documentación del frontend
 

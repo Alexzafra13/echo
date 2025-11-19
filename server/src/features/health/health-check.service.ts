@@ -53,7 +53,8 @@ export class HealthCheckService {
     } catch (error) {
       result.services.database = 'error';
       result.status = 'error';
-      result.error = `Database: ${error.message}`;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.error = `Database: ${errorMessage}`;
     }
 
     try {
@@ -62,9 +63,10 @@ export class HealthCheckService {
     } catch (error) {
       result.services.cache = 'error';
       result.status = 'error';
+      const errorMessage = error instanceof Error ? error.message : String(error);
       result.error = result.error
-        ? `${result.error}; Cache: ${error.message}`
-        : `Cache: ${error.message}`;
+        ? `${result.error}; Cache: ${errorMessage}`
+        : `Cache: ${errorMessage}`;
     }
 
     // If any service is down, return 503
