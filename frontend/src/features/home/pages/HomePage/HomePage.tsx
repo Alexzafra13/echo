@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, X } from 'lucide-react';
 import { HeroSection, AlbumGrid, Sidebar } from '../../components';
-import { Header } from '@shared/components/layout/Header';
+import { Header, SearchPanel } from '@shared/components/layout/Header';
 import { useFeaturedAlbum, useRecentAlbums, useGridDimensions } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
 import type { Album } from '../../types';
@@ -25,6 +26,11 @@ export default function HomePage() {
     Math.min(neededAlbums, 50) // Backend max is 50
   );
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+
   // Hero section rotation state
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
@@ -47,6 +53,38 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, [featuredAlbumsPool.length]);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+      // Open panel when query has 2+ characters
+      setIsSearchPanelOpen(searchQuery.length >= 2);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Search handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setIsSearchPanelOpen(false);
+  };
+
+  const handleClosePanel = useCallback(() => {
+    setIsSearchPanelOpen(false);
+    setSearchQuery('');
+  }, []);
+
+  const handleSearchFocus = () => {
+    if (searchQuery.length >= 2) {
+      setIsSearchPanelOpen(true);
+    }
+  };
 
   // Navigation handlers
   const handleNextHero = () => {
@@ -73,7 +111,42 @@ export default function HomePage() {
       <Sidebar />
 
       <main className={styles.homePage__main}>
-        <Header alwaysGlass />
+        <Header
+          alwaysGlass
+          customSearch={
+            <div className={styles.homePage__searchForm}>
+              <div className={styles.homePage__searchWrapper}>
+                <Search size={20} className={styles.homePage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Busca Artistas, Canciones, Álbumes..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={handleSearchFocus}
+                  className={styles.homePage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className={styles.homePage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
+
+        {/* Search Panel - Expands below header */}
+        <SearchPanel
+          isOpen={isSearchPanelOpen}
+          query={debouncedQuery}
+          onClose={handleClosePanel}
+        />
 
         <div className={styles.homePage__content}>
           {/* Hero Section */}

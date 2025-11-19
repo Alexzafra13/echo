@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
-import { Sidebar, AlbumGrid } from '../../components';
+import { Sidebar, AlbumGrid, AlbumsSearchPanel } from '../../components';
 import { useAlbums } from '../../hooks/useAlbums';
 import { useGridDimensions } from '../../hooks/useGridDimensions';
 import styles from './AlbumsPage.module.css';
 
 /**
  * AlbumsPage Component
- * Shows all albums with pagination
+ * Shows all albums with pagination and contextual search
  */
 export default function AlbumsPage() {
   const [page, setPage] = useState(0);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -31,6 +36,39 @@ export default function AlbumsPage() {
     setPage(0);
   }, [itemsPerPage]);
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+      // Open panel when query has 2+ characters
+      setIsSearchPanelOpen(searchQuery.length >= 2);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Search handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setIsSearchPanelOpen(false);
+  };
+
+  const handleClosePanel = useCallback(() => {
+    setIsSearchPanelOpen(false);
+    setSearchQuery('');
+  }, []);
+
+  const handleSearchFocus = () => {
+    if (searchQuery.length >= 2) {
+      setIsSearchPanelOpen(true);
+    }
+  };
+
+  // Pagination handlers
   const handlePreviousPage = () => {
     if (page > 0) {
       setPage(page - 1);
@@ -50,7 +88,41 @@ export default function AlbumsPage() {
       <Sidebar />
 
       <main className={styles.albumsPage__main}>
-        <Header />
+        <Header
+          customSearch={
+            <div className={styles.albumsPage__searchForm}>
+              <div className={styles.albumsPage__searchWrapper}>
+                <Search size={20} className={styles.albumsPage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Buscar álbumes..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={handleSearchFocus}
+                  className={styles.albumsPage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className={styles.albumsPage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
+
+        {/* Albums Search Panel - Expands below header */}
+        <AlbumsSearchPanel
+          isOpen={isSearchPanelOpen}
+          query={debouncedQuery}
+          onClose={handleClosePanel}
+        />
 
         <div className={styles.albumsPage__content}>
           {/* Page Header */}
