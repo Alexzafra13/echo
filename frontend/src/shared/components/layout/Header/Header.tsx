@@ -218,7 +218,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
               {/* Search Results Dropdown */}
               {showResults && debouncedQuery.length > 0 && (
-                <SearchResults query={debouncedQuery} onClose={handleCloseResults} />
+                <SearchPanel query={debouncedQuery} onClose={handleCloseResults} isOpen={true} />
               )}
             </form>
           )
