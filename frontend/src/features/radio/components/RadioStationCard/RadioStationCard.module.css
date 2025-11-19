@@ -75,40 +75,7 @@
 }
 
 .radioCard__playButton {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--color-primary, #ed6842);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 2px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: white;
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: auto;
-  box-shadow: 0 4px 12px rgba(255, 102, 51, 0.4);
-}
-
-.radioCard:hover .radioCard__playButton {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.radioCard__playButton:hover {
-  background: var(--color-primary-hover, #e04d28);
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(255, 102, 51, 0.5);
-}
-
-.radioCard__playButton:active {
-  transform: scale(1.05);
+  display: none; /* Ocultar botón - toda la tarjeta es clickeable */
 }
 
 .radioCard__favoriteButton {
