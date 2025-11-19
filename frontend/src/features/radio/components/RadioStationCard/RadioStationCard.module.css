@@ -193,29 +193,32 @@
   font-size: 12px;
   color: var(--color-text-tertiary, #8b8f9a);
   margin: 2px 0 0 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   overflow: hidden;
   font-style: italic;
   position: relative;
   width: 100%;
 }
 
-.radioCard__nowPlaying svg {
+.radioCard__nowPlayingText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.radioCard__nowPlayingText svg {
   flex-shrink: 0;
   opacity: 0.7;
 }
 
-.radioCard__nowPlayingText {
-  display: inline-block;
-  white-space: nowrap;
+/* Solo animar cuando desborda */
+.radioCard__nowPlayingText--animate {
   animation: marquee 15s linear infinite;
   animation-play-state: paused;
 }
 
-/* Activar marquee en hover */
-.radioCard:hover .radioCard__nowPlayingText {
+/* Activar marquee en hover solo si debe animar */
+.radioCard:hover .radioCard__nowPlayingText--animate {
   animation-play-state: running;
 }
 
