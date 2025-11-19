@@ -73,7 +73,10 @@ export function RadioStationCard({
   return (
     <article className={`${styles.radioCard} ${isPlaying ? styles['radioCard--playing'] : ''}`}>
       <div className={styles.radioCard__coverContainer}>
-        {favicon ? (
+        <div className={styles.radioCard__fallback}>
+          <Radio size={32} />
+        </div>
+        {favicon && (
           <img
             src={favicon}
             alt={name}
@@ -81,14 +84,9 @@ export function RadioStationCard({
             className={styles.radioCard__cover}
             onError={(e) => {
               e.currentTarget.style.display = 'none';
-              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = 'flex';
             }}
           />
-        ) : null}
-        <div className={styles.radioCard__fallback} style={{ display: favicon ? 'none' : 'flex' }}>
-          <Radio size={32} />
-        </div>
+        )}
         <div className={styles.radioCard__overlay}>
           <button
             className={styles.radioCard__playButton}
