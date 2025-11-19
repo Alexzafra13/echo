@@ -210,7 +210,7 @@
   .radioPage__content {
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
-    padding: 68px 16px 140px; /* Top para header (52px + 16px gap) + bottom para nav + player */
+    padding: 100px 16px 140px; /* Top para header + espacio extra + bottom para nav + player */
     width: 100%;
     max-width: 100%;
   }
