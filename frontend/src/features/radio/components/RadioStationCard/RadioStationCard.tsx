@@ -1,12 +1,14 @@
-import { Play, Heart, HeartOff, Radio } from 'lucide-react';
+import { Play, Heart, HeartOff, Radio, Music } from 'lucide-react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
+import type { RadioMetadata } from '../../hooks/useRadioMetadata';
 import styles from './RadioStationCard.module.css';
 
 interface RadioStationCardProps {
   station: RadioBrowserStation | RadioStation;
   isFavorite?: boolean;
   isPlaying?: boolean;
+  currentMetadata?: RadioMetadata | null;
   onPlay?: () => void;
   onToggleFavorite?: () => void;
 }
@@ -28,6 +30,7 @@ export function RadioStationCard({
   station,
   isFavorite = false,
   isPlaying = false,
+  currentMetadata,
   onPlay,
   onToggleFavorite,
 }: RadioStationCardProps) {
@@ -104,6 +107,12 @@ export function RadioStationCard({
             {codec && <span>{codec.toUpperCase()}</span>}
             {codec && bitrate && <span className={styles.radioCard__separator}>•</span>}
             {bitrate && <span>{bitrate} kbps</span>}
+          </p>
+        )}
+        {isPlaying && currentMetadata?.title && (
+          <p className={styles.radioCard__nowPlaying}>
+            <Music size={12} />
+            <span>{currentMetadata.title}</span>
           </p>
         )}
       </div>

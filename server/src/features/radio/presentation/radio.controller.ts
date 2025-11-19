@@ -8,13 +8,18 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Sse,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
+import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { SaveFavoriteStationUseCase } from '../domain/use-cases/save-favorite-station/save-favorite-station.use-case';
 import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/get-user-favorites.use-case';
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
+import { IcyMetadataService } from '../domain/services/icy-metadata.service';
 import { RadioStationResponseDto } from './dto/radio-station-response.dto';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
@@ -31,6 +36,7 @@ export class RadioController {
     private readonly getUserFavoritesUseCase: GetUserFavoritesUseCase,
     private readonly deleteFavoriteUseCase: DeleteFavoriteStationUseCase,
     private readonly searchStationsUseCase: SearchStationsUseCase,
+    private readonly icyMetadataService: IcyMetadataService,
   ) {}
 
   /**
@@ -236,5 +242,74 @@ export class RadioController {
     @Param('id') stationId: string,
   ) {
     await this.deleteFavoriteUseCase.execute({ stationId, userId });
+  }
+
+  /**
+   * GET /radio/metadata/stream
+   * Server-Sent Events endpoint for real-time ICY metadata
+   * Streams "now playing" information from radio stations
+   */
+  @Sse('metadata/stream')
+  @ApiOperation({
+    summary: 'Stream de metadata de radio',
+    description:
+      'Server-Sent Events que transmite metadata ICY en tiempo real (canción actual)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Stream de eventos de metadata',
+  })
+  streamMetadata(
+    @Query('stationUuid') stationUuid: string,
+    @Query('streamUrl') streamUrl: string,
+    @Req() request: Request,
+  ): Observable<MessageEvent> {
+    return new Observable((subscriber) => {
+      // Subscribe to metadata updates
+      const emitter = this.icyMetadataService.subscribe(
+        stationUuid,
+        streamUrl,
+      );
+
+      // Forward metadata events to SSE client
+      const onMetadata = (metadata: any) => {
+        subscriber.next({
+          type: 'metadata',
+          data: metadata,
+        } as MessageEvent);
+      };
+
+      // Forward error events to SSE client
+      const onError = (error: Error) => {
+        subscriber.next({
+          type: 'error',
+          data: { message: error.message },
+        } as MessageEvent);
+      };
+
+      emitter.on('metadata', onMetadata);
+      emitter.on('error', onError);
+
+      // Cleanup on client disconnect
+      request.on('close', () => {
+        emitter.off('metadata', onMetadata);
+        emitter.off('error', onError);
+        this.icyMetadataService.unsubscribe(stationUuid, emitter);
+        subscriber.complete();
+      });
+
+      // Send keepalive every 30 seconds
+      const keepaliveInterval = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: { timestamp: Date.now() },
+        } as MessageEvent);
+      }, 30000);
+
+      // Cleanup interval on disconnect
+      request.on('close', () => {
+        clearInterval(keepaliveInterval);
+      });
+    });
   }
 }
