@@ -1,38 +1,7 @@
 /**
- * Track Types - Tipos para canciones/tracks
+ * Track Types - Re-export shared track types
+ * @deprecated Import from @shared/types instead
  */
 
-export interface Track {
-  id: string;
-  title: string;
-  albumId?: string;
-  artistId?: string;
-  albumArtistId?: string;
-  trackNumber?: number;
-  discNumber: number;
-  year?: number;
-  duration?: number; // in seconds
-  path: string;
-  bitRate?: number;
-  size?: number; // File size in bytes
-  suffix?: string;
-  lyrics?: string;
-  comment?: string;
-  albumName?: string;
-  artistName?: string;
-  albumArtistName?: string;
-  compilation: boolean;
-  playlistOrder?: number; // Order in playlist (when track is from a playlist)
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * Helper para formatear duración en minutos:segundos
- */
-export function formatDuration(seconds?: number): string {
-  if (!seconds) return '--:--';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
+export type { Track, TrackAlbum } from '@shared/types/track.types';
+export { formatDuration } from '@shared/types/track.types';
