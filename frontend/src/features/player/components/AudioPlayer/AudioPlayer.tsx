@@ -45,11 +45,24 @@ export function AudioPlayer() {
   // Sistema de preferencias
   const { preference } = usePlayerPreference();
 
+  // Detectar si estamos en mobile (viewport <= 768px)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Lógica de visibilidad basada en preferencia
+  // - En mobile: NUNCA ocultar (no hay sidebar)
   // - 'footer': siempre visible en footer (shouldHide = false)
   // - 'sidebar': siempre oculto, usa mini-player en sidebar (shouldHide = true)
   // - 'dynamic': ocultar cuando hay scroll (shouldHide = isMiniMode)
-  const shouldHide =
+  const shouldHide = isMobile ? false :
     preference === 'footer' ? false :
     preference === 'sidebar' ? true :
     isMiniMode;
