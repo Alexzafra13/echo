@@ -31,6 +31,25 @@ async function bootstrap() {
     },
   });
 
+  // Security: Helmet - Protection against common web vulnerabilities
+  await app.register(require('@fastify/helmet'), {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for React
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'blob:'], // Allow data URIs and blobs for images
+        connectSrc: ["'self'"], // WebSocket connections
+        fontSrc: ["'self'", 'data:'],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", 'blob:'], // Allow blob URLs for audio streaming
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // Disable for audio streaming
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow audio streaming across origins
+  });
+
   // WebSocket Adapter
   app.useWebSocketAdapter(new WebSocketAdapter(app));
 
@@ -147,15 +166,50 @@ async function bootstrap() {
   // Start server
   await app.listen(appConfig.port, '0.0.0.0');
 
+  // Auto-detect server IPs for easier access
+  const networkInterfaces = require('os').networkInterfaces();
+  const networkIPs: string[] = [];
+
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    for (const iface of interfaces) {
+      // Skip internal (loopback) and non-IPv4 addresses
+      if (iface.family === 'IPv4' && !iface.internal) {
+        networkIPs.push(iface.address);
+      }
+    }
+  }
+
+  const isProd = process.env.NODE_ENV === 'production';
+  const version = process.env.VERSION || '1.0.0';
+
   logger.log(`
-Echo Music Server
-  Server running on: http://localhost:${appConfig.port}
-  API Prefix: ${appConfig.api_prefix}
-  Swagger Docs: http://localhost:${appConfig.port}/api/docs
-  CORS Origins: ${appConfig.cors_origins.join(', ')}
-  Guards: MustChangePasswordGuard (Global)
-  WebSocket: Enabled on port ${appConfig.port}
-  ${existsSync(frontendPath) ? 'Frontend: Served from single container (Jellyfin-style)' : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎵 Echo Music Server v${version}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Environment: ${isProd ? '🚀 PRODUCTION' : '🔧 DEVELOPMENT'}
+Node.js: ${process.version}
+
+📡 Access URLs:
+   Local:    http://localhost:${appConfig.port}${networkIPs.length > 0 ? `\n   Network:  ${networkIPs.map(ip => `http://${ip}:${appConfig.port}`).join('\n             ')}` : ''}
+
+📚 API Documentation:
+   Swagger:  http://localhost:${appConfig.port}/api/docs
+   Health:   http://localhost:${appConfig.port}/health
+
+🔒 Security:
+   CORS:     ${appConfig.cors_origins.join(', ')}
+   Helmet:   ✅ Enabled (XSS, Clickjacking, etc.)
+   Rate Limit: 100 req/min (global)
+   Auth:     JWT with ${process.env.BCRYPT_ROUNDS || 12} bcrypt rounds
+
+🎯 Features:
+   Frontend: ${existsSync(frontendPath) ? '✅ Served (Jellyfin-style single container)' : '❌ Not found (API-only mode)'}
+   WebSocket: ✅ Enabled
+   Cache:    ${process.env.ENABLE_CACHE !== 'false' ? '✅ Redis' : '❌ Disabled'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `);
 }
 
