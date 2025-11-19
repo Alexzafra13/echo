@@ -43,7 +43,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ICY Metadata streaming for radio stations
   const { metadata: radioMetadata } = useRadioMetadata({
-    stationUuid: state.currentRadioStation?.stationUuid || null,
+    stationUuid: (state.currentRadioStation as any)?.stationuuid || state.currentRadioStation?.stationUuid || null,
     streamUrl: state.currentRadioStation?.url || null,
     isPlaying: state.isPlaying && state.isRadioMode,
   });
