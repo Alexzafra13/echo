@@ -203,27 +203,6 @@ export function AudioPlayer() {
             </>
           )}
         </div>
-
-        {/* Progress bar - Solo para tracks, no para radio */}
-        {!isRadioMode && (
-          <div className={styles.progressContainer}>
-            <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
-            <div
-              className={styles.progressBar}
-              onClick={handleProgressClick}
-            >
-              <div
-                className={styles.progressFill}
-                style={{ width: `${progressPercent}%` }}
-              />
-              <div
-                className={styles.progressHandle}
-                style={{ left: `${progressPercent}%` }}
-              />
-            </div>
-            <span className={styles.timeLabel}>{formatDuration(duration)}</span>
-          </div>
-        )}
       </div>
 
       {/* Volume control - Right side */}
@@ -284,6 +263,27 @@ export function AudioPlayer() {
           size={16}
         />
       </div>
+
+      {/* Progress bar - Solo para tracks, no para radio - Ahora en la parte inferior del player */}
+      {!isRadioMode && (
+        <div className={styles.progressContainer}>
+          <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
+          <div
+            className={styles.progressBar}
+            onClick={handleProgressClick}
+          >
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progressPercent}%` }}
+            />
+            <div
+              className={styles.progressHandle}
+              style={{ left: `${progressPercent}%` }}
+            />
+          </div>
+          <span className={styles.timeLabel}>{formatDuration(duration)}</span>
+        </div>
+      )}
     </div>
   );
 }
