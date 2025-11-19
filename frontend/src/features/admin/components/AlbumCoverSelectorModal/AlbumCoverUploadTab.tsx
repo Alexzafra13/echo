@@ -241,7 +241,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
                   {!cover.isActive && (
                     <Button
                       variant="secondary"
-                      size="small"
+                      size="sm"
                       onClick={() => handleApply(cover.id)}
                       disabled={isApplying}
                     >

@@ -166,7 +166,6 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
               value={volume}
               onChange={handleVolumeChange}
               className={styles.volumeInput}
-              orient="vertical"
             />
           </div>
         </div>

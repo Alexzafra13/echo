@@ -12,6 +12,7 @@ export interface CoverOption {
 export interface AlbumInfo {
   id: string;
   name: string;
+  artistId?: string;
   artistName: string;
   mbzAlbumId?: string;
 }
