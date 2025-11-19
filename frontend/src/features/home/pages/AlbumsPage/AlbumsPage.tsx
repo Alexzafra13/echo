@@ -1,22 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
-import { Sidebar, AlbumGrid, AlbumsSearchPanel } from '../../components';
+import { Sidebar, AlbumGrid } from '../../components';
 import { useAlbums } from '../../hooks/useAlbums';
 import { useGridDimensions } from '../../hooks/useGridDimensions';
 import styles from './AlbumsPage.module.css';
 
 /**
  * AlbumsPage Component
- * Shows all albums with pagination and contextual search
+ * Shows all albums with pagination and inline search filtering
  */
 export default function AlbumsPage() {
   const [page, setPage] = useState(0);
-
-  // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -28,45 +24,19 @@ export default function AlbumsPage() {
     take: itemsPerPage,
   });
 
-  const albums = response?.data || [];
+  const allAlbums = response?.data || [];
   const hasMore = response?.hasMore || false;
+
+  // Filter albums by search query (client-side)
+  const filteredAlbums = allAlbums.filter(album =>
+    album.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    album.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Reset to first page when itemsPerPage changes (window resize)
   useEffect(() => {
     setPage(0);
   }, [itemsPerPage]);
-
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-      // Open panel when query has 2+ characters
-      setIsSearchPanelOpen(searchQuery.length >= 2);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Search handlers
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setIsSearchPanelOpen(false);
-  };
-
-  const handleClosePanel = useCallback(() => {
-    setIsSearchPanelOpen(false);
-    setSearchQuery('');
-  }, []);
-
-  const handleSearchFocus = () => {
-    if (searchQuery.length >= 2) {
-      setIsSearchPanelOpen(true);
-    }
-  };
 
   // Pagination handlers
   const handlePreviousPage = () => {
@@ -97,15 +67,14 @@ export default function AlbumsPage() {
                   type="text"
                   placeholder="Buscar álbumes..."
                   value={searchQuery}
-                  onChange={handleSearchChange}
-                  onFocus={handleSearchFocus}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className={styles.albumsPage__searchInput}
                   autoComplete="off"
                 />
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={handleClearSearch}
+                    onClick={() => setSearchQuery('')}
                     className={styles.albumsPage__searchClearButton}
                     aria-label="Limpiar búsqueda"
                   >
@@ -115,13 +84,6 @@ export default function AlbumsPage() {
               </div>
             </div>
           }
-        />
-
-        {/* Albums Search Panel - Expands below header */}
-        <AlbumsSearchPanel
-          isOpen={isSearchPanelOpen}
-          query={debouncedQuery}
-          onClose={handleClosePanel}
         />
 
         <div className={styles.albumsPage__content}>
@@ -149,9 +111,9 @@ export default function AlbumsPage() {
                 Reintentar
               </button>
             </div>
-          ) : albums && albums.length > 0 ? (
+          ) : filteredAlbums && filteredAlbums.length > 0 ? (
             <>
-              <AlbumGrid title="" albums={albums} />
+              <AlbumGrid title="" albums={filteredAlbums} />
 
               {/* Pagination Controls */}
               <div className={styles.albumsPage__pagination}>
@@ -182,10 +144,12 @@ export default function AlbumsPage() {
             </>
           ) : (
             <div className={styles.albumsPage__emptyState}>
-              <p>No se encontraron álbumes</p>
-              <p className={styles.albumsPage__emptyHint}>
-                Agrega música a tu biblioteca para empezar
-              </p>
+              <p>{searchQuery ? 'No se encontraron álbumes' : 'No hay álbumes en tu biblioteca'}</p>
+              {!searchQuery && (
+                <p className={styles.albumsPage__emptyHint}>
+                  Agrega música a tu biblioteca para empezar
+                </p>
+              )}
             </div>
           )}
         </div>
