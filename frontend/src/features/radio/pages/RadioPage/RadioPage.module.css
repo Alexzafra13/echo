@@ -64,7 +64,7 @@
 /* Grid */
 .radioPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* auto-fit para mejor responsividad */
   gap: var(--space-5);
   margin-bottom: var(--space-6);
 }
@@ -159,7 +159,7 @@
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* auto-fit consistente */
     gap: var(--space-4);
   }
 
@@ -171,7 +171,7 @@
 /* Mobile - iOS Style */
 @media (max-width: 768px) {
   .radioPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
+    overflow: hidden; /* Evitar desbordamiento horizontal */
   }
 
   .radioPage__main {
@@ -190,7 +190,7 @@
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit consistente */
     gap: 12px;
   }
 
@@ -213,7 +213,7 @@
     min-width: 80px;
     padding: 10px 16px;
     font-size: 14px;
-    border-radius: 12px; /* iOS rounded */
+    border-radius: 8px; /* Menos redondeado */
   }
 
   .radioPage__paginationInfo {
@@ -233,7 +233,7 @@
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* auto-fit en lugar de fixed */
     gap: var(--space-2);
   }
 
@@ -266,6 +266,7 @@
   .radioPage__paginationButton {
     min-width: auto;
     flex: 1;
+    border-radius: 6px; /* Menos redondeado */
   }
 
   .radioPage__paginationInfo {
