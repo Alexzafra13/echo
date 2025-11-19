@@ -239,13 +239,68 @@
 /* Mobile */
 @media (max-width: 768px) {
   .notifications__button {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 
+  /* Dropdown como modal full-width en móvil */
   .notifications__dropdown {
-    width: 320px;
-    right: -16px; /* Ajustar para evitar salir del viewport */
+    position: fixed;
+    top: 52px; /* Justo debajo del header */
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 52px);
+    background: rgba(30, 31, 46, 0.95); /* Semi-transparente dark */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideDown 0.3s ease;
+    z-index: 1000; /* Por encima del hero */
+  }
+
+  /* Light theme para dropdown móvil */
+  [data-theme='light'] .notifications__dropdown {
+    background: rgba(255, 255, 255, 0.95); /* Semi-transparente light */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .notifications__header {
+    padding: 16px;
+  }
+
+  .notifications__title {
+    font-size: 18px;
+  }
+
+  .notifications__list {
+    max-height: calc(100vh - 160px);
+  }
+
+  .notifications__item {
+    padding: 14px 16px;
+  }
+
+  .notifications__itemTitle {
+    font-size: 15px;
+  }
+
+  .notifications__itemMessage {
+    font-size: 14px;
   }
 
   .notifications__badge {

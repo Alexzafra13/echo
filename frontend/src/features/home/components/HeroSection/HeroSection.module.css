@@ -387,24 +387,26 @@
   }
 
   .heroSection__playButton {
-    width: 120px; /* Más ancho para que quepa "Reproducir" */
-    height: 36px;
+    width: 105px; /* Ajustado para que quepa "Reproducir" */
+    height: 32px;
     margin: 10px 0 0 0;
-    font-size: 12px;
-    padding: 0 12px;
-    border-radius: 18px; /* Menos redondo */
+    font-size: 10px; /* Más pequeño para que quepa */
+    padding: 0 10px;
+    border-radius: 8px; /* Más cuadrado */
+    letter-spacing: 0.3px; /* Mejor espaciado */
   }
 
   .heroSection__playIcon {
-    width: 16px;
-    height: 16px;
-    margin-right: 6px;
+    width: 14px;
+    height: 14px;
+    margin-right: 5px;
   }
 
   .heroSection__playText {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-transform: uppercase; /* Mayúsculas para mejor legibilidad */
   }
 
   /* Simplificar animación en móvil */
@@ -463,23 +465,25 @@
   }
 
   .heroSection__playButton {
-    width: 110px; /* Más ancho para que quepa */
-    height: 32px;
+    width: 95px; /* Ajustado */
+    height: 28px;
     margin: 8px 0 0 0;
-    font-size: 11px;
-    padding: 0 10px;
-    border-radius: 16px; /* Menos redondo */
+    font-size: 9px; /* Más pequeño */
+    padding: 0 8px;
+    border-radius: 6px; /* Más cuadrado */
+    letter-spacing: 0.3px;
   }
 
   .heroSection__playIcon {
-    width: 14px;
-    height: 14px;
-    margin-right: 5px;
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
   }
 
   .heroSection__playText {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-transform: uppercase;
   }
 }
