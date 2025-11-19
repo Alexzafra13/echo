@@ -57,9 +57,7 @@ export function useRadioMetadata({
 
         console.log('🎵 [ICY] Connecting to SSE:', url);
 
-        const eventSource = new EventSource(url, {
-          withCredentials: true, // Include cookies for auth
-        });
+        const eventSource = new EventSource(url);
 
         eventSource.onopen = () => {
           console.log('✅ [ICY] SSE Connected:', stationUuid);
