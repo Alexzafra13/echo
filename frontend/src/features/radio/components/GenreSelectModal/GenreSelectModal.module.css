@@ -206,8 +206,7 @@
   .modal__content {
     max-width: 100%;
     width: 100%;
-    max-height: calc(100vh - 70px);
-    margin-top: 70px;
+    max-height: 100vh;
     border-radius: 0 0 20px 20px;
     animation: slideDownMobile 0.3s ease-out;
   }
