@@ -186,7 +186,7 @@
   .homePage__content {
     margin-top: 0; /* Eliminar margin negativo */
     padding: 0 16px 140px; /* Sin padding-top para que hero llegue arriba + bottom para player y nav */
-    overflow-x: visible;
+    overflow-x: hidden; /* Evitar desbordamiento horizontal */
   }
 
   .hero--loading {
