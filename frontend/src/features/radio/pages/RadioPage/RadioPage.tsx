@@ -105,11 +105,11 @@ export default function RadioPage() {
     }
   }, [userCountry, selectedCountry]);
 
-  // Search stations query
+  // Search stations query (trae todos los resultados, pagina localmente)
   const { data: searchResults = [], isLoading: isSearching } = useSearchStations(
     {
       name: searchQuery,
-      limit: Math.max(stationsPerView * 3, 60), // 3 páginas o mínimo 60
+      limit: 10000, // Traer todas las emisoras que coincidan
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -135,16 +135,16 @@ export default function RadioPage() {
     stationsPerView
   );
 
-  // 3. Todas las emisoras del país (múltiplo de stationsPerView para paginación limpia)
+  // 3. Todas las emisoras del país (traer todas, paginar localmente)
   const { data: allCountryStations = [], isLoading: loadingAllCountry } = useStationsByCountry(
     !isAllCountries && isAllFilter ? selectedCountry : '',
-    Math.max(stationsPerView * 5, 100) // 5 páginas o mínimo 100
+    10000 // Traer todas las emisoras del país
   );
 
-  // 4. Todas las emisoras del mundo
+  // 4. Todas las emisoras del mundo (traer todas, paginar localmente)
   const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
     {
-      limit: Math.max(stationsPerView * 5, 100), // 5 páginas o mínimo 100
+      limit: 10000, // Traer todas las emisoras del mundo
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -153,12 +153,12 @@ export default function RadioPage() {
     isAllCountries && isAllFilter
   );
 
-  // 5. Filtro por género + país
+  // 5. Filtro por género + país (traer todas, paginar localmente)
   const { data: genreCountryStations = [], isLoading: loadingGenreCountry } = useSearchStations(
     {
       tag: isGenreFilter ? activeFilter : undefined,
       countrycode: !isAllCountries && isGenreFilter ? selectedCountry : undefined,
-      limit: Math.max(stationsPerView * 5, 100), // 5 páginas o mínimo 100
+      limit: 10000, // Traer todas las emisoras del género/país
       order: 'bitrate',
       reverse: true,
       hidebroken: true,
@@ -167,10 +167,10 @@ export default function RadioPage() {
     isGenreFilter && !isAllCountries
   );
 
-  // 6. Filtro por género global
+  // 6. Filtro por género global (traer todas, paginar localmente)
   const { data: genreGlobalStations = [], isLoading: loadingGenreGlobal } = useStationsByTag(
     isGenreFilter && isAllCountries ? activeFilter : '',
-    Math.max(stationsPerView * 5, 100) // 5 páginas o mínimo 100
+    10000 // Traer todas las emisoras del género
   );
 
   // Select the appropriate stations list
@@ -387,6 +387,11 @@ export default function RadioPage() {
               {isAllCountries ? 'Top emisoras del mundo' :
                `Emisoras de ${selectedCountryName}`}
               {!isTopFilter && !isAllFilter && ` - ${activeFilterLabel}`}
+              {stations.length > 0 && (
+                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
+                  ({stations.length} {stations.length === 1 ? 'emisora' : 'emisoras'})
+                </span>
+              )}
             </h2>
 
             {isLoading ? (
@@ -419,7 +424,7 @@ export default function RadioPage() {
                       Anterior
                     </button>
                     <span className={styles.radioPage__paginationInfo}>
-                      Página {currentPage} de {totalPages}
+                      {`${(currentPage - 1) * stationsPerView + 1}-${Math.min(currentPage * stationsPerView, stations.length)} de ${stations.length}`}
                     </span>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
@@ -448,6 +453,9 @@ export default function RadioPage() {
               <h2 className={styles.radioPage__title}>
                 <Radio size={24} />
                 Mis favoritas
+                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
+                  ({favoriteStations.length} {favoriteStations.length === 1 ? 'emisora' : 'emisoras'})
+                </span>
               </h2>
 
               <div className={styles.radioPage__grid}>
@@ -474,7 +482,7 @@ export default function RadioPage() {
                     Anterior
                   </button>
                   <span className={styles.radioPage__paginationInfo}>
-                    Página {favoritesPage} de {totalFavoritesPages}
+                    {`${(favoritesPage - 1) * favoritesPerView + 1}-${Math.min(favoritesPage * favoritesPerView, favoriteStations.length)} de ${favoriteStations.length}`}
                   </span>
                   <button
                     onClick={() => handleFavoritesPageChange(favoritesPage + 1)}
