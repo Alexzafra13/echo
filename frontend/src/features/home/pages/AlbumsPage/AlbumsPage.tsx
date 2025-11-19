@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '../../components';
 import { useAlbums } from '../../hooks/useAlbums';
@@ -8,10 +8,11 @@ import styles from './AlbumsPage.module.css';
 
 /**
  * AlbumsPage Component
- * Shows all albums with pagination
+ * Shows all albums with pagination and inline search filtering
  */
 export default function AlbumsPage() {
   const [page, setPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -23,14 +24,21 @@ export default function AlbumsPage() {
     take: itemsPerPage,
   });
 
-  const albums = response?.data || [];
+  const allAlbums = response?.data || [];
   const hasMore = response?.hasMore || false;
+
+  // Filter albums by search query (client-side)
+  const filteredAlbums = allAlbums.filter(album =>
+    album.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    album.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Reset to first page when itemsPerPage changes (window resize)
   useEffect(() => {
     setPage(0);
   }, [itemsPerPage]);
 
+  // Pagination handlers
   const handlePreviousPage = () => {
     if (page > 0) {
       setPage(page - 1);
@@ -50,7 +58,33 @@ export default function AlbumsPage() {
       <Sidebar />
 
       <main className={styles.albumsPage__main}>
-        <Header />
+        <Header
+          customSearch={
+            <div className={styles.albumsPage__searchForm}>
+              <div className={styles.albumsPage__searchWrapper}>
+                <Search size={20} className={styles.albumsPage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Buscar álbumes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.albumsPage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className={styles.albumsPage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
 
         <div className={styles.albumsPage__content}>
           {/* Page Header */}
@@ -77,9 +111,9 @@ export default function AlbumsPage() {
                 Reintentar
               </button>
             </div>
-          ) : albums && albums.length > 0 ? (
+          ) : filteredAlbums && filteredAlbums.length > 0 ? (
             <>
-              <AlbumGrid title="" albums={albums} />
+              <AlbumGrid title="" albums={filteredAlbums} />
 
               {/* Pagination Controls */}
               <div className={styles.albumsPage__pagination}>
@@ -110,10 +144,12 @@ export default function AlbumsPage() {
             </>
           ) : (
             <div className={styles.albumsPage__emptyState}>
-              <p>No se encontraron álbumes</p>
-              <p className={styles.albumsPage__emptyHint}>
-                Agrega música a tu biblioteca para empezar
-              </p>
+              <p>{searchQuery ? 'No se encontraron álbumes' : 'No hay álbumes en tu biblioteca'}</p>
+              {!searchQuery && (
+                <p className={styles.albumsPage__emptyHint}>
+                  Agrega música a tu biblioteca para empezar
+                </p>
+              )}
             </div>
           )}
         </div>

@@ -48,10 +48,19 @@
   margin: 0;
 }
 
-.artistsPage__searchContainer {
+/* Search Styles - Now in header (left side) */
+.artistsPage__searchForm {
   position: relative;
-  max-width: 500px;
-  margin-bottom: 40px;
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.artistsPage__searchWrapper {
+  position: relative;
+  width: 100%;
 }
 
 .artistsPage__searchIcon {
@@ -65,13 +74,13 @@
 
 .artistsPage__searchInput {
   width: 100%;
-  height: 48px;
-  padding: 0 16px 0 48px;
+  height: 44px;
+  padding: 0 40px 0 48px; /* Extra padding right for clear button */
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text-primary, #ffffff);
-  font-size: 15px;
+  font-size: 14px;
   transition: all 0.2s ease;
 }
 
@@ -82,7 +91,29 @@
 .artistsPage__searchInput:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-primary, #ed6842);
+  border-color: var(--color-primary, #ff6b6b);
+}
+
+.artistsPage__searchClearButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.artistsPage__searchClearButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
 }
 
 .artistsPage__loading,
@@ -157,10 +188,13 @@
     font-size: 14px;
   }
 
+  .artistsPage__searchForm {
+    max-width: none;
+  }
+
   .artistsPage__searchInput {
-    height: 44px;
-    font-size: 14px;
-    border-radius: 16px; /* Menos redondeado */
+    font-size: 15px;
+    padding: 0 40px 0 44px;
   }
 
   .artistsPage__groupLetter {

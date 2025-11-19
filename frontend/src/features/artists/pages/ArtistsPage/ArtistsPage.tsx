@@ -5,7 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { ArtistCard } from '../../components';
 import { useArtists } from '../../hooks';
 import { useArtistMetadataSync } from '@shared/hooks';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import styles from './ArtistsPage.module.css';
 
 /**
@@ -48,7 +48,33 @@ export default function ArtistsPage() {
       <Sidebar />
 
       <main className={styles.artistsPage__main}>
-        <Header />
+        <Header
+          customSearch={
+            <div className={styles.artistsPage__searchForm}>
+              <div className={styles.artistsPage__searchWrapper}>
+                <Search size={20} className={styles.artistsPage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Buscar artistas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.artistsPage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className={styles.artistsPage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
 
         <div className={styles.artistsPage__content}>
           {/* Header Section */}
@@ -57,18 +83,6 @@ export default function ArtistsPage() {
             <p className={styles.artistsPage__subtitle}>
               {data?.total || 0} artistas en tu biblioteca
             </p>
-          </div>
-
-          {/* Search Bar */}
-          <div className={styles.artistsPage__searchContainer}>
-            <Search size={20} className={styles.artistsPage__searchIcon} />
-            <input
-              type="text"
-              placeholder="Buscar artistas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.artistsPage__searchInput}
-            />
           </div>
 
           {/* Loading State */}
