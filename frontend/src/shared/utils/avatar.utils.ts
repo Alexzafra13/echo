@@ -32,9 +32,11 @@ export function getUserAvatarUrl(userId?: string | null, hasAvatar?: boolean): s
     return DEFAULT_AVATAR_PLACEHOLDER;
   }
 
-  // Construir URL del endpoint de avatar
-  // El backend incluye ?v=timestamp para cache busting automático
-  return `/api/images/users/${userId}/avatar`;
+  // TEMPORAL: Usar placeholder hasta que el backend proporcione info de avatar
+  // Esto evita errores 404 en consola
+  // TODO: Cuando el backend incluya un campo 'hasAvatar' en User, descomentar la línea de abajo
+  // return `/api/images/users/${userId}/avatar`;
+  return DEFAULT_AVATAR_PLACEHOLDER;
 }
 
 /**
