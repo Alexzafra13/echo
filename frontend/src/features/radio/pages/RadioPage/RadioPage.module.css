@@ -5,6 +5,7 @@
   display: flex;
   min-height: 100vh;
   background: var(--bg-base);
+  overflow-x: hidden; /* Evitar desbordamiento horizontal */
 }
 
 .radioPage__main {
@@ -14,6 +15,8 @@
   margin-left: 200px;
   position: relative; /* Creates stacking context for sticky header */
   transition: margin-left 0.3s ease;
+  max-width: 100%;
+  overflow-x: hidden; /* Evitar desbordamiento horizontal */
 }
 
 .radioPage__content {
@@ -24,6 +27,7 @@
   max-width: 1800px;
   width: 100%;
   overflow-y: auto;
+  overflow-x: hidden; /* Evitar desbordamiento horizontal */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -60,9 +64,10 @@
 /* Grid */
 .radioPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* auto-fit para mejor responsividad */
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); /* auto-fill con min() para evitar overflow */
   gap: var(--space-5);
   margin-bottom: var(--space-6);
+  width: 100%;
 }
 
 /* Loading state */
@@ -155,7 +160,7 @@
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* auto-fit consistente */
+    grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
     gap: var(--space-4);
   }
 
@@ -174,6 +179,8 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     padding: 68px 16px 140px; /* Top para header (52px + 16px gap) + bottom para nav + player */
+    width: 100%;
+    max-width: 100%;
   }
 
   .radioPage__topBar {
@@ -183,10 +190,12 @@
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit consistente */
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
     gap: 12px;
   }
 
@@ -226,16 +235,20 @@
 
   .radioPage__content {
     padding: 68px var(--space-3) 140px; /* Top para header + bottom para nav + player */
+    width: 100%;
+    max-width: 100%;
   }
 
   .radioPage__topBar {
     padding: 10px var(--space-3);
     margin: -68px calc(-1 * var(--space-3)) 16px;
     gap: 10px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .radioPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* auto-fit en lugar de fixed */
+    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
     gap: var(--space-2);
   }
 
