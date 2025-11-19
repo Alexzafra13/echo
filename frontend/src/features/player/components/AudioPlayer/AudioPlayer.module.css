@@ -130,12 +130,34 @@
   grid-row: 1; /* Primera fila */
 }
 
-.trackCover {
+.trackCoverContainer {
+  position: relative;
   width: 56px;
   height: 56px;
   border-radius: var(--radius-sm);
-  object-fit: cover;
+  overflow: hidden;
   flex-shrink: 0;
+}
+
+.trackCoverFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+  color: var(--color-text-secondary);
+  z-index: 1;
+}
+
+.trackCover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  z-index: 2;
 }
 
 .trackDetails {
@@ -581,11 +603,10 @@
     padding: 0;
   }
 
-  .trackCover {
+  .trackCoverContainer {
     width: 44px;
     height: 44px;
     border-radius: 8px;
-    flex-shrink: 0;
   }
 
   .trackDetails {
@@ -697,7 +718,7 @@
     margin-top: 8px;
   }
 
-  .trackCover {
+  .trackCoverContainer {
     width: 40px;
     height: 40px;
   }
