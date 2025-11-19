@@ -75,10 +75,14 @@
   justify-content: flex-end;
 }
 
-.header__searchForm {
+.header__searchForm,
+.header__customSearch {
   position: relative; /* For search results dropdown positioning */
   max-width: 700px; /* Aumentado de 600px → 700px (más larga hacia la izquierda) */
   min-width: 400px; /* Aumentado de 300px → 400px (más visible en pantallas pequeñas) */
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header__searchWrapper {
@@ -268,7 +272,8 @@
     padding: 16px 24px;
   }
 
-  .header__searchForm {
+  .header__searchForm,
+  .header__customSearch {
     max-width: 500px;
     min-width: 250px; /* Más flexible que 400px */
   }
@@ -280,7 +285,8 @@
 
 /* Mobile Large (855px crítico) */
 @media (max-width: 855px) {
-  .header__searchForm {
+  .header__searchForm,
+  .header__customSearch {
     min-width: 200px; /* Todavía más flexible */
     max-width: 400px;
   }
@@ -325,7 +331,8 @@
     gap: 8px;
   }
 
-  .header__searchForm {
+  .header__searchForm,
+  .header__customSearch {
     flex: 1;
     max-width: none;
     min-width: 0;
@@ -443,7 +450,8 @@
     gap: 6px;
   }
 
-  .header__searchForm {
+  .header__searchForm,
+  .header__customSearch {
     flex: 1;
     min-width: 120px; /* Mínimo razonable */
   }

@@ -32,19 +32,9 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
-/* Top bar - Search + Country selector - Sticky debajo del header */
+/* Top bar - Search + Country selector - Ahora en el header */
 .radioPage__topBar {
-  position: sticky;
-  top: 84px; /* Altura del header desktop */
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
-  margin: calc(-1 * var(--space-8)) 0 var(--space-6); /* Negative margin para subir al top */
-  background: var(--bg-base);
-  border-bottom: 1px solid var(--border-base);
-  backdrop-filter: blur(12px);
+  display: none; /* Contenido movido al header como customSearch y customContent */
 }
 
 /* Filters */
