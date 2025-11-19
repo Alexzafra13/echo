@@ -116,7 +116,7 @@
   }
 
   .adminPage__content {
-    padding: 104px 20px 80px; /* Bottom padding for bottom nav */
+    padding: 104px 20px 140px; /* Bottom padding for bottom nav + player */
   }
 
   .title {
@@ -130,6 +130,6 @@
 
 @media (max-width: 480px) {
   .adminPage__content {
-    padding: 104px 20px 90px; /* More space for bottom nav */
+    padding: 104px 20px 140px; /* Bottom nav + player + spacing */
   }
 }

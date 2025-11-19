@@ -13,7 +13,7 @@
   grid-template-columns: 320px 1fr 260px;
   grid-template-rows: auto auto; /* Fila para contenido principal y fila para progress bar */
   align-items: center;
-  padding: var(--space-2) var(--space-5) var(--space-1); /* Reducido padding vertical, mínimo abajo */
+  padding: var(--space-2) var(--space-5) var(--space-3); /* Padding inferior suficiente para la barra */
   gap: var(--space-2) var(--space-4); /* gap vertical reducido */
   z-index: var(--z-fixed);
   backdrop-filter: blur(var(--blur-xl));
@@ -235,7 +235,6 @@
   width: 100%;
   grid-column: 1 / -1; /* Ocupa todas las columnas */
   grid-row: 2; /* Segunda fila */
-  margin-bottom: var(--space-3); /* Más espacio desde el borde inferior */
 }
 
 .timeLabel {
