@@ -6,11 +6,18 @@ Esta guía te ayuda a elegir el método correcto según tu caso de uso.
 
 ## 📋 **Resumen Rápido**
 
-| Caso de uso | Archivo a usar | Complejidad | CGNAT OK? |
-|-------------|----------------|-------------|-----------|
-| **Red local (casa)** | `docker-compose.yml` | ⭐ Fácil | ✅ |
-| **Internet (IP pública)** | `docker-compose.production.yml` | ⭐⭐ Media | ✅ |
-| **Internet (CGNAT)** | Ver `CGNAT_SOLUTIONS.md` | ⭐⭐⭐ Avanzada | ✅ |
+| Caso de uso | Archivo a usar | Complejidad | CGNAT OK? | Puertos bloqueados OK? |
+|-------------|----------------|-------------|-----------|----------------------|
+| **Red local (casa)** | `docker-compose.yml` | ⭐ Fácil | ✅ | ✅ |
+| **Internet (IP pública)** | `docker-compose.production.yml` | ⭐⭐ Media | ✅ | ⚠️ Requiere 80/443 |
+| **Internet (CGNAT)** | Ver `CGNAT_SOLUTIONS.md` | ⭐⭐⭐ Avanzada | ✅ | ✅ |
+| **Internet (puertos bloqueados)** | Ver `BLOCKED_PORTS_SOLUTION.md` | ⭐⭐ Media | ✅ | ✅ |
+
+### ⚠️ **ISPs con Limitaciones Conocidas**
+
+**Digi España, Jazztel, MásMóvil:** Bloquean puertos 80/443 → Ver `BLOCKED_PORTS_SOLUTION.md`
+
+**Recomendación para estos casos:** Usar **Cloudflare Tunnel** (gratis, no requiere puertos)
 
 ---
 
