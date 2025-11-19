@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
-import { Search, User, Sun, Moon } from 'lucide-react';
+import { Search, User, Sun, Moon, X } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { MetadataNotifications } from './MetadataNotifications';
-import { SearchResults } from './SearchResults';
+import { SearchPanel } from './SearchPanel';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './Header.module.css';
 
