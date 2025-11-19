@@ -9,7 +9,8 @@ import {
   RadioSearchPanel,
   CountrySelectButton,
   CountrySelectModal,
-  FilterTabs
+  GenreSelectModal,
+  type Genre
 } from '../../components';
 import {
   useUserCountry,
@@ -26,7 +27,7 @@ import { radioService } from '../../services';
 import type { RadioStation, RadioBrowserStation } from '../../types';
 import type { Country } from '../../components/CountrySelect/CountrySelect';
 import { getCountryFlag, getCountryName } from '../../utils/country.utils';
-import { Radio } from 'lucide-react';
+import { Radio, Music2 } from 'lucide-react';
 import styles from './RadioPage.module.css';
 
 // Países populares con banderas
@@ -43,16 +44,28 @@ const POPULAR_COUNTRIES: Country[] = [
   { code: 'JP', name: 'Japón', flag: '🇯🇵' },
 ];
 
-// Filtros disponibles
-const FILTER_TABS = [
-  { id: 'top', label: 'Top' },
-  { id: 'all', label: 'Todas' },
-  { id: 'rock', label: 'Rock' },
-  { id: 'pop', label: 'Pop' },
-  { id: 'news', label: 'News' },
-  { id: 'jazz', label: 'Jazz' },
-  { id: 'dance', label: 'Dance' },
-  { id: 'electronic', label: 'Electronic' },
+// Géneros disponibles
+const GENRES: Genre[] = [
+  { id: 'top', label: 'Top', icon: '🔥' },
+  { id: 'all', label: 'Todas', icon: '🌐' },
+  { id: 'rock', label: 'Rock', icon: '🎸' },
+  { id: 'pop', label: 'Pop', icon: '🎤' },
+  { id: 'news', label: 'News', icon: '📰' },
+  { id: 'jazz', label: 'Jazz', icon: '🎷' },
+  { id: 'dance', label: 'Dance', icon: '💃' },
+  { id: 'electronic', label: 'Electronic', icon: '🎹' },
+  { id: 'classical', label: 'Clásica', icon: '🎻' },
+  { id: 'country', label: 'Country', icon: '🤠' },
+  { id: 'metal', label: 'Metal', icon: '🤘' },
+  { id: 'hip hop', label: 'Hip Hop', icon: '🎤' },
+  { id: 'reggae', label: 'Reggae', icon: '🌴' },
+  { id: 'blues', label: 'Blues', icon: '🎺' },
+  { id: 'folk', label: 'Folk', icon: '🪕' },
+  { id: 'latin', label: 'Latina', icon: '💃' },
+  { id: 'ambient', label: 'Ambient', icon: '🌊' },
+  { id: 'techno', label: 'Techno', icon: '🔊' },
+  { id: 'house', label: 'House', icon: '🏠' },
+  { id: 'indie', label: 'Indie', icon: '🎧' },
 ];
 
 export default function RadioPage() {
@@ -74,6 +87,7 @@ export default function RadioPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
+  const [isGenreModalOpen, setIsGenreModalOpen] = useState(false);
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
 
   // Transform API countries to Country format
@@ -332,7 +346,7 @@ export default function RadioPage() {
 
   // Get filter label for display
   const activeFilterLabel = useMemo(() => {
-    const filter = FILTER_TABS.find(f => f.id === activeFilter);
+    const filter = GENRES.find(f => f.id === activeFilter);
     return filter?.label || '';
   }, [activeFilter]);
 
@@ -371,13 +385,16 @@ export default function RadioPage() {
 
         <div className={styles.radioPage__content}>
 
-          {/* Filter tabs */}
+          {/* Genre selector button */}
           <div className={styles.radioPage__filters}>
-            <FilterTabs
-              tabs={FILTER_TABS}
-              activeTab={activeFilter}
-              onTabChange={handleFilterChange}
-            />
+            <button
+              className={styles.radioPage__genreButton}
+              onClick={() => setIsGenreModalOpen(true)}
+            >
+              <Music2 size={20} />
+              <span>Género: {activeFilterLabel}</span>
+              <span className={styles.radioPage__genreButtonArrow}>▼</span>
+            </button>
           </div>
 
           {/* Main stations grid */}
@@ -508,6 +525,15 @@ export default function RadioPage() {
         selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
         onChange={handleCountryChange}
         userCountryCode={userCountry?.countryCode}
+      />
+
+      {/* Genre Selection Modal */}
+      <GenreSelectModal
+        isOpen={isGenreModalOpen}
+        onClose={() => setIsGenreModalOpen(false)}
+        genres={GENRES}
+        selectedGenre={activeFilter}
+        onChange={handleFilterChange}
       />
     </div>
   );
