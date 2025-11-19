@@ -62,11 +62,16 @@ export class SearchStationsDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  @Max(500)
+  @Max(10000)
   limit?: number;
 
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
   hidebroken?: boolean;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  removeDuplicates?: boolean;
 }
