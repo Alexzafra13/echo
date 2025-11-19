@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
@@ -55,6 +55,18 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
   const { addToQueue } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
   const [selectedTrackForInfo, setSelectedTrackForInfo] = useState<Track | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile viewport to conditionally render rating components
+  // This prevents unnecessary API calls on mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handlePlay = (track: Track) => {
     onTrackPlay?.(track);
@@ -179,11 +191,13 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
                 {formatDuration(track.duration)}
               </span>
 
-              {/* Rating (Like/Dislike + Stars) */}
-              <div className={styles.trackList__trackRating}>
-                <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
-                <RatingStars itemId={track.id} itemType="track" size={14} />
-              </div>
+              {/* Rating (Like/Dislike + Stars) - Only render on desktop to avoid API rate limits */}
+              {!isMobile && (
+                <div className={styles.trackList__trackRating}>
+                  <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
+                  <RatingStars itemId={track.id} itemType="track" size={14} />
+                </div>
+              )}
 
               {/* Options Menu */}
               <TrackOptionsMenu
