@@ -38,25 +38,31 @@ export function useRadioMetadata({
     if (!stationUuid || !streamUrl || !isPlaying) {
       // Cleanup existing connection
       if (eventSourceRef.current) {
+        console.log('🎵 [ICY] Closing metadata connection:', stationUuid);
         eventSourceRef.current.close();
         eventSourceRef.current = null;
         setIsConnected(false);
+        setMetadata(null);
       }
       return;
     }
 
+    console.log('🎵 [ICY] Attempting to connect:', { stationUuid, streamUrl, isPlaying });
+
     // Create SSE connection
     const connectSSE = () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4567/api';
         const url = `${apiUrl}/radio/metadata/stream?stationUuid=${encodeURIComponent(stationUuid)}&streamUrl=${encodeURIComponent(streamUrl)}`;
+
+        console.log('🎵 [ICY] Connecting to SSE:', url);
 
         const eventSource = new EventSource(url, {
           withCredentials: true, // Include cookies for auth
         });
 
         eventSource.onopen = () => {
-          console.log('✅ SSE Connected:', stationUuid);
+          console.log('✅ [ICY] SSE Connected:', stationUuid);
           setIsConnected(true);
           setError(null);
           reconnectAttemptsRef.current = 0; // Reset reconnect counter
@@ -67,9 +73,9 @@ export function useRadioMetadata({
           try {
             const data = JSON.parse(event.data);
             setMetadata(data);
-            console.log('🎵 Metadata received:', data);
+            console.log('🎵 [ICY] Metadata received:', data);
           } catch (err) {
-            console.error('Failed to parse metadata:', err);
+            console.error('[ICY] Failed to parse metadata:', err);
           }
         });
 
@@ -77,7 +83,7 @@ export function useRadioMetadata({
         eventSource.addEventListener('error', (event: MessageEvent) => {
           try {
             const data = JSON.parse(event.data);
-            console.warn('⚠️ Metadata error:', data.message);
+            console.warn('⚠️ [ICY] Metadata error:', data.message);
             setError(data.message);
           } catch (err) {
             // Ignore parse errors for error events
@@ -85,8 +91,8 @@ export function useRadioMetadata({
         });
 
         // Handle keepalive
-        eventSource.addEventListener('keepalive', () => {
-          // Just keep connection alive, no action needed
+        eventSource.addEventListener('keepalive', (event: MessageEvent) => {
+          console.log('💓 [ICY] Keepalive received');
         });
 
         // Handle connection errors
