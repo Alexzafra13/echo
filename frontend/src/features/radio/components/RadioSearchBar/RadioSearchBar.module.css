@@ -164,6 +164,10 @@
 
 /* Mobile responsive - iOS Style */
 @media (max-width: 768px) {
+  .searchBar {
+    max-width: none; /* Ocupar todo el ancho disponible */
+  }
+
   .searchBar__inputWrapper {
     border-radius: 12px; /* iOS rounded */
     padding: 0 14px;
