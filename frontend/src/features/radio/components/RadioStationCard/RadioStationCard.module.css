@@ -67,6 +67,7 @@
   background: transparent;
   pointer-events: none;
   transition: background 0.2s ease;
+  z-index: 3;
 }
 
 .radioCard:hover .radioCard__overlay {
