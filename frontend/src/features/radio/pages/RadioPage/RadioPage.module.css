@@ -32,13 +32,19 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
-/* Top bar - Search + Country selector */
+/* Top bar - Search + Country selector - Sticky debajo del header */
 .radioPage__topBar {
+  position: sticky;
+  top: 84px; /* Altura del header desktop */
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
-  /* margin-top removed - parent container already has padding-top for header */
+  padding: var(--space-4) 0;
+  margin: calc(-1 * var(--space-8)) 0 var(--space-6); /* Negative margin para subir al top */
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-base);
+  backdrop-filter: blur(12px);
 }
 
 /* Filters */
@@ -177,14 +183,16 @@
   .radioPage__content {
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
-    padding: 60px 16px 140px; /* Top para header + bottom para nav + player */
+    padding: 68px 16px 140px; /* Top para header (52px + 16px gap) + bottom para nav + player */
   }
 
   .radioPage__topBar {
+    top: 52px; /* Altura del header mobile */
+    padding: 12px 16px;
+    margin: -68px -16px 16px; /* Negative margin para que esté en el top */
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-    margin-bottom: 20px;
   }
 
   .radioPage__grid {
@@ -227,7 +235,13 @@
   }
 
   .radioPage__content {
-    padding: 60px var(--space-3) 140px; /* Top para header + bottom para nav + player */
+    padding: 68px var(--space-3) 140px; /* Top para header + bottom para nav + player */
+  }
+
+  .radioPage__topBar {
+    padding: 10px var(--space-3);
+    margin: -68px calc(-1 * var(--space-3)) 16px;
+    gap: 10px;
   }
 
   .radioPage__grid {
