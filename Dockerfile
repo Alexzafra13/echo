@@ -88,9 +88,8 @@ RUN cp -p scripts/docker-entrypoint.sh /tmp/docker-entrypoint.sh
 # Build the backend application
 RUN pnpm build
 
-# Remove development dependencies (reduces size significantly)
-# CI=true prevents TTY errors in Docker
-RUN CI=true pnpm prune --prod
+# NOTE: We don't run pnpm prune in workspace mode as it can break dependencies
+# The frozen-lockfile install already optimized the dependencies
 
 # ----------------------------------------
 # Stage 4: Production Runtime
