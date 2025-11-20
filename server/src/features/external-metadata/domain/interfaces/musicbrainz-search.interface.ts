@@ -33,6 +33,24 @@ export interface MusicBrainzAlbumMatch {
 }
 
 /**
+ * MusicBrainz search result for recording (track/song)
+ */
+export interface MusicBrainzRecordingMatch {
+  mbid: string; // Recording MBID
+  title: string;
+  artistName: string;
+  artistMbid?: string;
+  length?: number; // Duration in milliseconds
+  releases?: Array<{
+    mbid: string; // Release MBID
+    title: string;
+    trackNumber?: number;
+    trackCount?: number;
+  }>;
+  score: number; // Match confidence (0-100)
+}
+
+/**
  * Interface for agents that can search MusicBrainz database
  */
 export interface IMusicBrainzSearch extends IAgent {
@@ -73,4 +91,23 @@ export interface IMusicBrainzSearch extends IAgent {
    * @returns Album details or null if not found
    */
   getAlbumByMbid(mbid: string): Promise<MusicBrainzAlbumMatch | null>;
+
+  /**
+   * Search for recordings (tracks) by metadata
+   * Uses multi-field search (artist + release + recording + track#) for high accuracy
+   * @param params Search parameters
+   * @param limit Maximum number of results (default: 5)
+   * @returns Array of recording matches sorted by score
+   */
+  searchRecording(
+    params: {
+      artist: string;
+      release?: string;
+      recording: string;
+      trackNumber?: number;
+      duration?: number; // Duration in seconds (±10s tolerance)
+      isrc?: string; // International Standard Recording Code
+    },
+    limit?: number
+  ): Promise<MusicBrainzRecordingMatch[]>;
 }
