@@ -81,6 +81,10 @@ COPY --from=backend-dependencies /build/package.json* /build/
 # Copy backend source code
 COPY server/ ./
 
+# IMPORTANT: Copy entrypoint script to a safe location BEFORE pnpm prune
+# (pnpm prune might delete the scripts/ directory)
+RUN cp -p scripts/docker-entrypoint.sh /tmp/docker-entrypoint.sh
+
 # Build the backend application
 RUN pnpm build
 
@@ -129,8 +133,8 @@ COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
-# Copy entrypoint script from backend-builder stage (we know it exists there)
-COPY --from=backend-builder /build/server/scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Copy entrypoint script from /tmp where we saved it before pnpm prune
+COPY --from=backend-builder /tmp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create upload directories with proper permissions
