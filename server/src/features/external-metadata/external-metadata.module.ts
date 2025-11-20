@@ -13,6 +13,7 @@ import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
 import { CleanupService } from './infrastructure/services/cleanup.service';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
+import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -36,6 +37,7 @@ import { AdminSettingsController } from './presentation/admin-settings.controlle
 import { MaintenanceController } from './presentation/maintenance.controller';
 import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
+import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -76,6 +78,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     ImageDownloadService,
     CleanupService,
     MetadataConflictService,
+    MbidAutoSearchService,
 
     // Persistence
     SettingsRepository,
@@ -102,6 +105,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     MaintenanceController,
     MetadataConflictsController,
     MusicBrainzSearchController,
+    MbidAutoSearchController,
   ],
   exports: [
     ExternalMetadataService,
@@ -113,6 +117,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     StorageService,
     ImageDownloadService,
     MetadataConflictService,
+    MbidAutoSearchService,
     MetadataEnrichmentGateway,
   ],
 })

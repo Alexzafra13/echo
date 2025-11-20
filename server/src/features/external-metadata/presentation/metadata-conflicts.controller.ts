@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus, UseGuards, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MetadataConflictService } from '../infrastructure/services/metadata-conflict.service';
+import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import {
   GetConflictsQueryDto,
   ResolveConflictDto,
@@ -29,7 +30,10 @@ import {
 @UseGuards(JwtAuthGuard, AdminGuard)
 @ApiBearerAuth()
 export class MetadataConflictsController {
-  constructor(private readonly conflictService: MetadataConflictService) {}
+  constructor(
+    private readonly conflictService: MetadataConflictService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * GET /admin/metadata-conflicts
@@ -215,5 +219,145 @@ export class MetadataConflictsController {
   ): Promise<ConflictResponseDto[]> {
     const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as any);
     return conflicts as any[];
+  }
+
+  /**
+   * POST /admin/metadata-conflicts/:id/apply-suggestion
+   * Apply a specific suggestion from multiple options (for MBID auto-search conflicts)
+   */
+  @Post(':id/apply-suggestion')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Apply specific MBID suggestion',
+    description:
+      'For conflicts with multiple MBID suggestions (Picard-style), apply a specific suggestion by index',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        suggestionIndex: {
+          type: 'number',
+          description: 'Index of the suggestion to apply (0-based)',
+          example: 0,
+        },
+        userId: {
+          type: 'string',
+          description: 'User ID who is applying the suggestion',
+          example: 'user-123',
+        },
+      },
+      required: ['suggestionIndex'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Suggestion applied successfully',
+    type: ConflictResolvedResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid suggestion index or conflict not found',
+  })
+  async applySuggestion(
+    @Param('id') conflictId: string,
+    @Body() body: { suggestionIndex: number; userId?: string },
+  ): Promise<ConflictResolvedResponseDto> {
+    // Get the conflict
+    const conflict = await this.prisma.metadataConflict.findUnique({
+      where: { id: conflictId },
+    });
+
+    if (!conflict) {
+      throw new BadRequestException(`Conflict ${conflictId} not found`);
+    }
+
+    if (conflict.status !== 'pending') {
+      throw new BadRequestException(`Conflict ${conflictId} is already ${conflict.status}`);
+    }
+
+    // Parse metadata to get suggestions
+    const metadata = conflict.metadata ? JSON.parse(conflict.metadata) : null;
+
+    if (!metadata || !metadata.suggestions || !Array.isArray(metadata.suggestions)) {
+      throw new BadRequestException(
+        'This conflict does not have multiple suggestions. Use /accept endpoint instead.',
+      );
+    }
+
+    const { suggestionIndex } = body;
+
+    if (
+      suggestionIndex < 0 ||
+      suggestionIndex >= metadata.suggestions.length ||
+      !Number.isInteger(suggestionIndex)
+    ) {
+      throw new BadRequestException(
+        `Invalid suggestion index: ${suggestionIndex}. Must be between 0 and ${metadata.suggestions.length - 1}`,
+      );
+    }
+
+    // Get the selected suggestion
+    const selectedSuggestion = metadata.suggestions[suggestionIndex];
+
+    // Apply MBID based on entity type
+    let updatedEntity;
+    switch (conflict.entityType) {
+      case 'artist':
+        updatedEntity = await this.prisma.artist.update({
+          where: { id: conflict.entityId },
+          data: {
+            mbzArtistId: selectedSuggestion.mbid,
+          },
+        });
+        break;
+
+      case 'album':
+        updatedEntity = await this.prisma.album.update({
+          where: { id: conflict.entityId },
+          data: {
+            mbzAlbumId: selectedSuggestion.mbid,
+            mbzAlbumArtistId: selectedSuggestion.details?.artistMbid || undefined,
+          },
+        });
+        break;
+
+      case 'track':
+        updatedEntity = await this.prisma.track.update({
+          where: { id: conflict.entityId },
+          data: {
+            mbzTrackId: selectedSuggestion.mbid,
+            mbzArtistId: selectedSuggestion.details?.artistMbid || undefined,
+          },
+        });
+        break;
+
+      default:
+        throw new BadRequestException(`Unsupported entity type: ${conflict.entityType}`);
+    }
+
+    // Mark conflict as accepted
+    await this.prisma.metadataConflict.update({
+      where: { id: conflictId },
+      data: {
+        status: 'accepted',
+        resolvedAt: new Date(),
+        resolvedBy: body.userId || 'admin',
+        // Update suggested value to show which one was selected
+        suggestedValue: selectedSuggestion.name,
+        metadata: JSON.stringify({
+          ...metadata,
+          selectedSuggestionIndex: suggestionIndex,
+          selectedSuggestion,
+        }),
+      },
+    });
+
+    return {
+      id: conflictId,
+      status: 'accepted',
+      message: `Applied suggestion #${suggestionIndex}: "${selectedSuggestion.name}" (score: ${selectedSuggestion.score})`,
+      updatedEntity,
+    };
   }
 }
