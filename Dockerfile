@@ -1,99 +1,47 @@
 # ============================================
-# ECHO MUSIC SERVER - FULL-STACK BUILD
+# ECHO MUSIC SERVER - OPTIMIZED BUILD
 # ============================================
-# Single container with Backend + Frontend (Jellyfin-style)
-# Multi-stage build for optimal image size (~250MB)
+# Single container with Backend + Frontend
+# Optimized multi-stage build (~200-250MB)
 # ============================================
 
 # ----------------------------------------
-# Stage 1: Build Frontend
+# Stage 1: Dependencies & Build (Combined)
 # ----------------------------------------
-FROM node:22-alpine AS frontend-builder
+FROM node:22-alpine AS builder
 
 WORKDIR /build
 
-# Install pnpm globally
+# Install pnpm globally (only once!)
 RUN npm install -g pnpm@10.18.3
 
-# Copy workspace configuration files
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
+# Copy workspace configuration
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 
-# Copy package.json files for workspace packages
+# Copy package.json files for all workspace packages
 COPY frontend/package.json ./frontend/
 COPY server/package.json ./server/
-
-# Install ALL workspace dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy frontend source code
-COPY frontend/ ./frontend/
-
-# Build frontend for production
-WORKDIR /build/frontend
-RUN pnpm build
-
-# ----------------------------------------
-# Stage 2: Backend Dependencies
-# ----------------------------------------
-FROM node:22-alpine AS backend-dependencies
-
-WORKDIR /build
-
-# Install pnpm globally
-RUN npm install -g pnpm@10.18.3
-
-# Copy workspace configuration files
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
-
-# Copy package.json files for workspace packages
-COPY server/package.json ./server/
-COPY frontend/package.json ./frontend/
-
-# Copy prisma schema (needed for dependency installation)
 COPY server/prisma ./server/prisma/
 
-# Install ALL workspace dependencies (pnpm will install for all workspace packages)
+# Install ALL dependencies (frontend + backend) in one go
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma Client
+# Generate Prisma Client (only needed for build, not for final image)
 WORKDIR /build/server
-RUN pnpm db:generate || PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 pnpm db:generate
+RUN pnpm db:generate
 
-WORKDIR /build
-
-# ----------------------------------------
-# Stage 3: Build Backend
-# ----------------------------------------
-FROM node:22-alpine AS backend-builder
-
-WORKDIR /build/server
-
-# Install pnpm globally
-RUN npm install -g pnpm@10.18.3
-
-# Copy workspace files and node_modules from previous stage
-COPY --from=backend-dependencies /build/node_modules /build/node_modules
-COPY --from=backend-dependencies /build/server/node_modules ./node_modules
-COPY --from=backend-dependencies /build/server/prisma ./prisma
-COPY --from=backend-dependencies /build/pnpm-workspace.yaml /build/
-COPY --from=backend-dependencies /build/package.json* /build/
-
-# Copy backend source code
-COPY server/ ./
-
-# IMPORTANT: Copy scripts to a safe location BEFORE pnpm prune
-# (pnpm prune might delete the scripts/ directory)
-RUN cp -p scripts/docker-entrypoint.sh /tmp/docker-entrypoint.sh && \
-    cp -p scripts/reset-admin-password.js /tmp/reset-admin-password.js
-
-# Build the backend application
+# Build Frontend
+WORKDIR /build/frontend
+COPY frontend/ ./
 RUN pnpm build
 
-# NOTE: We don't run pnpm prune in workspace mode as it can break dependencies
-# The frozen-lockfile install already optimized the dependencies
+# Build Backend
+WORKDIR /build/server
+COPY server/ ./
+RUN pnpm build
 
 # ----------------------------------------
-# Stage 4: Production Runtime
+# Stage 2: Production Runtime
 # ----------------------------------------
 FROM node:22-alpine AS production
 
@@ -103,7 +51,7 @@ ARG VCS_REF
 ARG VERSION=latest
 
 LABEL org.opencontainers.image.title="Echo Music Server" \
-      org.opencontainers.image.description="Self-hosted music streaming platform (Full-stack single container)" \
+      org.opencontainers.image.description="Self-hosted music streaming platform" \
       org.opencontainers.image.vendor="Echo" \
       org.opencontainers.image.source="https://github.com/Alexzafra13/echo" \
       org.opencontainers.image.created="${BUILD_DATE}" \
@@ -113,92 +61,66 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 # Set production environment
 ENV NODE_ENV=production
 
-# Install runtime dependencies for health checks and signal handling
-# netcat-openbsd: for database connection checks
-# dumb-init: proper signal handling (PID 1)
-RUN apk add --no-cache netcat-openbsd dumb-init
+# Install runtime dependencies
+RUN apk add --no-cache \
+    netcat-openbsd \
+    dumb-init \
+    su-exec
 
 # Install pnpm
 RUN npm install -g pnpm@10.18.3
 
-# Create non-root user for security
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S echoapp -u 1001
 
 WORKDIR /app
 
-# Copy workspace structure for pnpm deploy
+# Copy workspace configuration
 COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY --chown=echoapp:nodejs server/package.json ./server/
 
-# Use pnpm deploy to create production-ready deployment in /prod directory
-# This installs ONLY production dependencies for the specified workspace package
-# --legacy flag: Required for pnpm v10+ with non-injected workspaces
-RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod
+# Install ONLY production dependencies using pnpm deploy
+# This creates a clean production install without dev dependencies
+RUN pnpm --filter=echo-server-backend deploy --prod --legacy .
 
-# Switch to production directory
-WORKDIR /prod
-
-# Copy Prisma schema
+# Copy Prisma schema and generate client for Alpine
 COPY --chown=echoapp:nodejs server/prisma ./prisma
-
-# Generate Prisma Client for Alpine/Musl (critical for binary compatibility)
-# Use npx to run prisma without needing it in dependencies
 RUN npx prisma@6.17.1 generate
 
-# Copy built files
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
-COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
+# Copy built files from builder stage
+COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
+COPY --from=builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
-# Move everything to /app (expected location for runtime)
-WORKDIR /app
-RUN cp -r /prod/* ./ && rm -rf /prod
+# Copy scripts (entrypoint + admin reset)
+COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /usr/local/bin/
+COPY --chown=echoapp:nodejs server/scripts/reset-admin-password.js ./scripts/
 
-# Copy scripts from /tmp where we saved them before pnpm prune
-COPY --from=backend-builder /tmp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Fix line endings and permissions
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create scripts directory and copy admin reset script
-RUN mkdir -p /app/scripts
-COPY --from=backend-builder /tmp/reset-admin-password.js /app/scripts/reset-admin-password.js
+# Create directories with proper permissions
+RUN mkdir -p /app/uploads/music /app/uploads/covers /app/storage /app/config /app/logs && \
+    chown -R echoapp:nodejs /app/uploads /app/storage /app/config /app/logs
 
-# Fix Windows line endings (CRLF → LF) - critical for script execution
-RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
+# Create wrapper script (inline - no temp files needed)
+RUN printf '#!/bin/sh\n\
+set -e\n\
+chown -R echoapp:nodejs /app/config /app/uploads /app/logs 2>/dev/null || true\n\
+exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+> /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
-# Create upload and storage directories with proper permissions
-RUN mkdir -p /app/uploads/music /app/uploads/covers /app/storage && \
-    chown -R echoapp:nodejs /app/uploads /app/storage
-
-# Create config directory with proper permissions (for JWT secrets generation)
-RUN mkdir -p /app/config && \
-    chown -R echoapp:nodejs /app/config
-
-# Install su-exec for running as non-root user after fixing permissions
-RUN apk add --no-cache su-exec
-
-# Create wrapper script to fix volume permissions then run as echoapp
-RUN echo '#!/bin/sh' > /entrypoint-wrapper.sh && \
-    echo 'set -e' >> /entrypoint-wrapper.sh && \
-    echo '# Fix permissions for volumes (may be owned by root on Windows Docker Desktop)' >> /entrypoint-wrapper.sh && \
-    echo 'chown -R echoapp:nodejs /app/config /app/uploads /app/logs 2>/dev/null || true' >> /entrypoint-wrapper.sh && \
-    echo '# Execute main entrypoint as echoapp user' >> /entrypoint-wrapper.sh && \
-    echo 'exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"' >> /entrypoint-wrapper.sh && \
-    sed -i 's/\r$//' /entrypoint-wrapper.sh && \
-    chmod +x /entrypoint-wrapper.sh
-
-# Stay as root (wrapper will switch to echoapp after fixing permissions)
-
-# Default port (configurable via environment)
+# Default port
 ENV PORT=4567
 EXPOSE ${PORT}
 
-# Health check with dynamic port support
-# Extended start period (60s) to allow time for database migrations
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD node -e "const port = process.env.PORT || 4567; require('http').get('http://localhost:' + port + '/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Use dumb-init for proper signal handling (graceful shutdown)
+# Use dumb-init for proper signal handling
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-# Start the application using wrapper script
-# (fixes volume permissions, then runs entrypoint as echoapp)
+# Start application
 CMD ["/entrypoint-wrapper.sh"]
