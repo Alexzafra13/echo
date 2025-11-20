@@ -70,9 +70,10 @@ import { validateEnvironment } from './config/env.validation';
     }),
 
     // Rate Limiting (protección contra fuerza bruta y DoS)
+    // Very permissive for authenticated users - only protects against massive DDoS
     ThrottlerModule.forRoot([{
       ttl: 60000, // 60 segundos
-      limit: 500, // 500 requests por minuto (increased for interactions/metadata queries)
+      limit: 10000, // 10,000 requests/min - effectively unlimited for normal user behavior
     }]),
 
     // Global Infrastructure
