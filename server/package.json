@@ -31,6 +31,7 @@
     "db:fix": "prisma migrate deploy && prisma generate && echo '✅ Base de datos sincronizada'",
     "db:studio": "prisma studio",
     "db:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
+    "admin:reset": "ts-node -r tsconfig-paths/register scripts/reset-admin-password.ts",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:full": "docker-compose -f docker-compose.full.yml up -d",
