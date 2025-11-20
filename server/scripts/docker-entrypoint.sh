@@ -21,12 +21,12 @@ if [ ! -f "$SECRETS_FILE" ]; then
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
   JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
 
-  # Save to persistent volume
+  # Save to persistent volume (without 'export' keyword - will be handled by set -a)
   cat > "$SECRETS_FILE" << EOF
 # Auto-generated JWT secrets (DO NOT EDIT MANUALLY)
 # Generated on: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-export JWT_SECRET="$JWT_SECRET"
-export JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
+JWT_SECRET="$JWT_SECRET"
+JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
 EOF
 
   echo "✅ Secure JWT secrets generated and saved to $SECRETS_FILE"
@@ -37,11 +37,20 @@ else
 fi
 
 # Load secrets into environment
+# Source the file to load variables into current shell
+set -a  # Automatically export all variables
 . "$SECRETS_FILE"
+set +a
 
-# Export for Node.js application
-export JWT_SECRET
-export JWT_REFRESH_SECRET
+# Verify secrets are loaded
+if [ -z "$JWT_SECRET" ] || [ -z "$JWT_REFRESH_SECRET" ]; then
+  echo "❌ ERROR: JWT secrets failed to load from $SECRETS_FILE"
+  echo "   JWT_SECRET length: ${#JWT_SECRET}"
+  echo "   JWT_REFRESH_SECRET length: ${#JWT_REFRESH_SECRET}"
+  exit 1
+fi
+
+echo "✅ JWT secrets loaded successfully (${#JWT_SECRET} and ${#JWT_REFRESH_SECRET} characters)"
 
 # ============================================
 # 1. Wait for Dependencies
