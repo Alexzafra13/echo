@@ -159,9 +159,9 @@ COPY --from=backend-builder /tmp/docker-entrypoint.sh /usr/local/bin/docker-entr
 # Fix Windows line endings (CRLF → LF) - critical for script execution
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create upload directories with proper permissions
-RUN mkdir -p /app/uploads/music /app/uploads/covers && \
-    chown -R echoapp:nodejs /app/uploads
+# Create upload and storage directories with proper permissions
+RUN mkdir -p /app/uploads/music /app/uploads/covers /app/storage && \
+    chown -R echoapp:nodejs /app/uploads /app/storage
 
 # Create config directory with proper permissions (for JWT secrets generation)
 RUN mkdir -p /app/config && \
@@ -189,7 +189,7 @@ EXPOSE ${PORT}
 # Health check with dynamic port support
 # Extended start period (60s) to allow time for database migrations
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "const port = process.env.PORT || 4567; require('http').get('http://localhost:' + port + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "const port = process.env.PORT || 4567; require('http').get('http://localhost:' + port + '/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Use dumb-init for proper signal handling (graceful shutdown)
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]

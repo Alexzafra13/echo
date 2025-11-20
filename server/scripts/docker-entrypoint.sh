@@ -70,6 +70,30 @@ echo "🔄 Running database migrations..."
 # Run migrations using npx (Prisma CLI installed temporarily)
 if npx prisma@6.17.1 migrate deploy; then
   echo "✅ Database migrations completed!"
+
+  # Check if admin user exists
+  USER_COUNT=$(npx prisma@6.17.1 db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" 2>/dev/null | grep -o '[0-9]\+' | tail -1 || echo "0")
+
+  if [ "$USER_COUNT" = "0" ]; then
+    echo ""
+    echo "🌱 Creating initial admin user..."
+    if npx -y tsx prisma/seed.ts; then
+      echo "✅ Admin user created!"
+      echo ""
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "🔐 IMPORTANT: Default Credentials"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "   Username: admin"
+      echo "   Password: admin123"
+      echo ""
+      echo "⚠️  CHANGE THIS PASSWORD IMMEDIATELY!"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    else
+      echo "⚠️  Seed failed - create admin user manually"
+    fi
+  else
+    echo "✅ Users already exist, skipping seed"
+  fi
 else
   echo "⚠️  Migrations failed, but continuing..."
 fi
