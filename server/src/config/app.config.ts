@@ -1,3 +1,5 @@
+import { networkInterfaces } from 'os';
+
 /**
  * Auto-detect CORS origins based on environment
  */
@@ -11,12 +13,12 @@ function getDefaultCorsOrigins(): string {
 
   // Production: Auto-detect IPs
   const port = process.env.PORT || '4567';
-  const networkInterfaces = require('os').networkInterfaces();
+  const ifaces = networkInterfaces();
   const origins: string[] = [`http://localhost:${port}`];
 
   // Add all network IPs
-  for (const interfaceName in networkInterfaces) {
-    const interfaces = networkInterfaces[interfaceName];
+  for (const interfaceName in ifaces) {
+    const interfaces = ifaces[interfaceName];
     for (const iface of interfaces) {
       // Skip internal (loopback) and non-IPv4 addresses
       if (iface.family === 'IPv4' && !iface.internal) {

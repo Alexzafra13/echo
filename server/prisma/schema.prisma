@@ -102,6 +102,7 @@ model Artist {
 
   @@index([name], map: "idx_artists_name")
   @@index([albumCount(sort: Desc)], map: "idx_artists_album_count")
+  @@index([mbzArtistId], map: "idx_artists_mbid")
   @@map("artists")
 }
 
@@ -209,6 +210,8 @@ model Album {
   @@index([albumArtistId], map: "idx_albums_album_artist")
   @@index([year(sort: Desc)], map: "idx_albums_year")
   @@index([name], map: "idx_albums_name")
+  @@index([mbzAlbumId], map: "idx_albums_mbid")
+  @@index([mbzAlbumArtistId], map: "idx_albums_artist_mbid")
   @@map("albums")
 }
 
@@ -275,6 +278,9 @@ model Track {
   @@index([title], map: "idx_tracks_title")
   @@index([path], map: "idx_tracks_path")
   @@index([albumId, trackNumber], map: "idx_tracks_album_track")
+  @@index([mbzTrackId], map: "idx_tracks_mbid")
+  @@index([mbzArtistId], map: "idx_tracks_artist_mbid")
+  @@index([mbzAlbumId], map: "idx_tracks_album_mbid")
   @@map("tracks")
 }
 
@@ -562,6 +568,24 @@ model MetadataCache {
   @@map("metadata_cache")
 }
 
+model MbidSearchCache {
+  id           String   @id @default(uuid())
+  queryText    String   @map("query_text")
+  queryType    String   @map("query_type") @db.VarChar(20)
+  queryParams  Json     @default("{}") @map("query_params")
+  results      Json     @map("results")
+  resultCount  Int      @default(0) @map("result_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+  expiresAt    DateTime @map("expires_at")
+  hitCount     Int      @default(0) @map("hit_count")
+  lastHitAt    DateTime? @map("last_hit_at")
+
+  @@unique([queryText, queryType, queryParams], map: "unique_mbid_search")
+  @@index([queryText, queryType], map: "idx_mbid_search_lookup")
+  @@index([expiresAt], map: "idx_mbid_search_expires")
+  @@map("mbid_search_cache")
+}
+
 model LibraryScan {
   id            String    @id @default(uuid())
   status        String    @db.VarChar(50)
@@ -585,7 +609,7 @@ model MetadataConflict {
   source         String    @db.VarChar(50)
   status         String    @default("pending") @db.VarChar(20)
   priority       Int       @default(1)
-  metadata       String?
+  metadata       Json?
   createdAt      DateTime  @default(now()) @map("created_at")
   resolvedAt     DateTime? @map("resolved_at")
   resolvedBy     String?   @map("resolved_by") @db.VarChar(36)

@@ -146,7 +146,7 @@ export class ScoringService {
 
     // Get artist play stats for diversity calculation
     let artistPlayCount = 0;
-    let totalPlayCount = playStats.reduce((sum, s) => sum + s.playCount, 0);
+    const totalPlayCount = playStats.reduce((sum, s) => sum + s.playCount, 0);
 
     if (trackArtistId) {
       const artistStats = await this.playTrackingRepo.getUserPlayStats(userId, 'artist');

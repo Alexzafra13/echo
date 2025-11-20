@@ -7,12 +7,14 @@ import { ConfigModule } from '@nestjs/config';
 // Infrastructure - Services
 import { AgentRegistryService } from './infrastructure/services/agent-registry.service';
 import { MetadataCacheService } from './infrastructure/services/metadata-cache.service';
+import { MbidSearchCacheService } from './infrastructure/services/mbid-search-cache.service';
 import { RateLimiterService } from './infrastructure/services/rate-limiter.service';
 import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
 import { CleanupService } from './infrastructure/services/cleanup.service';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
+import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -36,6 +38,7 @@ import { AdminSettingsController } from './presentation/admin-settings.controlle
 import { MaintenanceController } from './presentation/maintenance.controller';
 import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
+import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Shared
@@ -70,12 +73,14 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     // Core services
     AgentRegistryService,
     MetadataCacheService,
+    MbidSearchCacheService,
     RateLimiterService,
     SettingsService,
     StorageService,
     ImageDownloadService,
     CleanupService,
     MetadataConflictService,
+    MbidAutoSearchService,
 
     // Persistence
     SettingsRepository,
@@ -102,6 +107,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     MaintenanceController,
     MetadataConflictsController,
     MusicBrainzSearchController,
+    MbidAutoSearchController,
   ],
   exports: [
     ExternalMetadataService,
@@ -109,10 +115,12 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     LocalImageProvider,
     AgentRegistryService,
     MetadataCacheService,
+    MbidSearchCacheService,
     SettingsService,
     StorageService,
     ImageDownloadService,
     MetadataConflictService,
+    MbidAutoSearchService,
     MetadataEnrichmentGateway,
   ],
 })

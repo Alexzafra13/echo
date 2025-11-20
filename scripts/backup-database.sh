@@ -1,162 +1,269 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 # ============================================
 # Echo Music Server - Database Backup Script
 # ============================================
-# Crea un backup completo de PostgreSQL y los volúmenes importantes
+# This script creates a backup of your PostgreSQL database
 #
-# Uso:
-#   ./scripts/backup-database.sh
+# Usage:
+#   ./scripts/backup-database.sh                    # Interactive mode
+#   ./scripts/backup-database.sh --auto             # Auto mode (for cron)
+#   ./scripts/backup-database.sh --restore FILE     # Restore from backup
 #
-# El backup se guarda en: ./backups/backup_YYYY-MM-DD_HH-MM-SS/
+# Setup automatic daily backups (3 AM):
+#   crontab -e
+#   0 3 * * * /path/to/echo/scripts/backup-database.sh --auto
+#
 # ============================================
 
 set -e
 
-# Colores para output
-RED='\033[0;31m'
+# Colors
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-echo -e "${BLUE}🗄️  Echo Music Server - Database Backup${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
+# Configuration
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.simple.yml}"
+BACKUP_DIR="${BACKUP_DIR:-./backups}"
+POSTGRES_USER="${POSTGRES_USER:-music_admin}"
+POSTGRES_DB="${POSTGRES_DB:-music_server}"
+RETENTION_DAYS="${RETENTION_DAYS:-7}"
+AUTO_MODE=false
+RESTORE_MODE=false
+RESTORE_FILE=""
 
-# Verificar que el contenedor de postgres esté corriendo
-if ! docker ps | grep -q echo-postgres; then
-    echo -e "${RED}❌ Error: El contenedor echo-postgres no está corriendo${NC}"
-    echo "   Inicia los servicios con: docker compose -f docker-compose.simple.yml up -d"
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --auto)
+      AUTO_MODE=true
+      shift
+      ;;
+    --restore)
+      RESTORE_MODE=true
+      RESTORE_FILE="$2"
+      shift 2
+      ;;
+    --compose-file)
+      COMPOSE_FILE="$2"
+      shift 2
+      ;;
+    --backup-dir)
+      BACKUP_DIR="$2"
+      shift 2
+      ;;
+    --retention-days)
+      RETENTION_DAYS="$2"
+      shift 2
+      ;;
+    --help)
+      echo "Usage: $0 [OPTIONS]"
+      echo ""
+      echo "Options:"
+      echo "  --auto                 Run in automatic mode (no prompts)"
+      echo "  --restore FILE         Restore from backup file"
+      echo "  --compose-file FILE    Docker compose file (default: docker-compose.simple.yml)"
+      echo "  --backup-dir DIR       Backup directory (default: ./backups)"
+      echo "  --retention-days N     Keep backups for N days (default: 7)"
+      echo "  --help                 Show this help message"
+      echo ""
+      echo "Examples:"
+      echo "  $0                                       # Create backup (interactive)"
+      echo "  $0 --auto                                # Create backup (auto mode)"
+      echo "  $0 --restore backups/backup-20240101.sql.gz"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
+done
+
+# Functions
+log_info() {
+  if [ "$AUTO_MODE" = false ]; then
+    echo -e "${BLUE}ℹ️  $1${NC}"
+  fi
+}
+
+log_success() {
+  if [ "$AUTO_MODE" = false ]; then
+    echo -e "${GREEN}✅ $1${NC}"
+  else
+    echo "✅ $1"
+  fi
+}
+
+log_error() {
+  echo -e "${RED}❌ ERROR: $1${NC}" >&2
+}
+
+log_warning() {
+  echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+# Check if Docker is running
+check_docker() {
+  if ! docker info &> /dev/null; then
+    log_error "Docker is not running. Please start Docker first."
     exit 1
-fi
+  fi
+}
 
-# Crear directorio de backups
-BACKUP_DIR="./backups"
-TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-BACKUP_PATH="$BACKUP_DIR/backup_$TIMESTAMP"
+# Check if containers are running
+check_containers() {
+  if ! docker compose -f "$COMPOSE_FILE" ps postgres | grep -q "Up"; then
+    log_error "PostgreSQL container is not running."
+    log_info "Start it with: docker compose -f $COMPOSE_FILE up -d"
+    exit 1
+  fi
+}
 
-mkdir -p "$BACKUP_PATH"
+# Create backup directory
+ensure_backup_dir() {
+  if [ ! -d "$BACKUP_DIR" ]; then
+    mkdir -p "$BACKUP_DIR"
+    log_success "Created backup directory: $BACKUP_DIR"
+  fi
+}
 
-echo -e "${YELLOW}📁 Creando backup en: $BACKUP_PATH${NC}"
-echo ""
+# Backup database
+backup_database() {
+  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local backup_file="$BACKUP_DIR/echo-db-backup-${timestamp}.sql.gz"
 
-# Obtener credenciales de la base de datos
-POSTGRES_USER=$(docker inspect echo-postgres | grep -A 10 '"Env"' | grep POSTGRES_USER | cut -d'=' -f2 | tr -d '",' || echo "music_admin")
-POSTGRES_DB=$(docker inspect echo-postgres | grep -A 10 '"Env"' | grep POSTGRES_DB | cut -d'=' -f2 | tr -d '",' || echo "music_server")
+  log_info "Starting database backup..."
+  log_info "Compose file: $COMPOSE_FILE"
+  log_info "Database: $POSTGRES_DB"
+  log_info "Output: $backup_file"
+  echo ""
 
-# 1. Backup de PostgreSQL (dump SQL)
-echo -e "${GREEN}1️⃣  Haciendo backup de PostgreSQL...${NC}"
-docker exec echo-postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F c -b -v -f "/tmp/backup.dump" 2>&1 | grep -v "^pg_dump:"
-docker cp echo-postgres:/tmp/backup.dump "$BACKUP_PATH/postgres_dump.backup"
-docker exec echo-postgres rm /tmp/backup.dump
-echo -e "   ✅ PostgreSQL dump guardado: postgres_dump.backup"
-echo ""
+  # Create backup
+  if docker compose -f "$COMPOSE_FILE" exec -T postgres \
+    pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+    --format=plain --no-owner --no-acl | gzip > "$backup_file"; then
 
-# 2. Backup de PostgreSQL (SQL plano - más fácil de restaurar)
-echo -e "${GREEN}2️⃣  Creando backup SQL plano...${NC}"
-docker exec echo-postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" > "$BACKUP_PATH/postgres_dump.sql"
-echo -e "   ✅ SQL plano guardado: postgres_dump.sql"
-echo ""
+    local size=$(du -h "$backup_file" | cut -f1)
+    log_success "Backup completed successfully!"
+    log_success "File: $backup_file"
+    log_success "Size: $size"
 
-# 3. Backup del volumen de uploads (covers, avatars)
-echo -e "${GREEN}3️⃣  Haciendo backup de uploads (covers, avatars)...${NC}"
-if docker volume inspect echo-uploads > /dev/null 2>&1; then
-    docker run --rm \
-        -v echo-uploads:/source:ro \
-        -v "$(pwd)/$BACKUP_PATH":/backup \
-        alpine \
-        tar czf /backup/uploads.tar.gz -C /source .
-    echo -e "   ✅ Uploads backup guardado: uploads.tar.gz"
-else
-    echo -e "   ⚠️  Volumen echo-uploads no existe, saltando..."
-fi
-echo ""
+    # Clean old backups
+    cleanup_old_backups
 
-# 4. Backup del volumen de config (JWT secrets)
-echo -e "${GREEN}4️⃣  Haciendo backup de configuración (JWT secrets)...${NC}"
-if docker volume inspect echo-config > /dev/null 2>&1; then
-    docker run --rm \
-        -v echo-config:/source:ro \
-        -v "$(pwd)/$BACKUP_PATH":/backup \
-        alpine \
-        tar czf /backup/config.tar.gz -C /source .
-    echo -e "   ✅ Config backup guardado: config.tar.gz"
-else
-    echo -e "   ⚠️  Volumen echo-config no existe, saltando..."
-fi
-echo ""
+  else
+    log_error "Backup failed!"
+    rm -f "$backup_file"
+    exit 1
+  fi
+}
 
-# 5. Información del sistema
-echo -e "${GREEN}5️⃣  Guardando información del sistema...${NC}"
-cat > "$BACKUP_PATH/backup_info.txt" <<EOF
-Echo Music Server - Backup Information
-======================================
-Backup Date: $(date)
-Timestamp: $TIMESTAMP
+# Restore database
+restore_database() {
+  if [ ! -f "$RESTORE_FILE" ]; then
+    log_error "Backup file not found: $RESTORE_FILE"
+    exit 1
+  fi
 
-Database:
----------
-POSTGRES_USER: $POSTGRES_USER
-POSTGRES_DB: $POSTGRES_DB
+  log_warning "This will OVERWRITE your current database!"
+  echo ""
 
-Docker Containers:
-------------------
-$(docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" | grep echo)
-
-Docker Volumes:
----------------
-$(docker volume ls | grep echo)
-
-Docker Images:
---------------
-$(docker images | grep echo)
-
-EOF
-echo -e "   ✅ Info del sistema guardada: backup_info.txt"
-echo ""
-
-# Calcular tamaño del backup
-BACKUP_SIZE=$(du -sh "$BACKUP_PATH" | cut -f1)
-
-echo ""
-echo -e "${GREEN}✅ Backup completado exitosamente!${NC}"
-echo ""
-echo -e "${BLUE}📊 Resumen:${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📁 Ubicación: $BACKUP_PATH"
-echo "💾 Tamaño total: $BACKUP_SIZE"
-echo ""
-echo -e "${BLUE}📦 Contenido:${NC}"
-ls -lh "$BACKUP_PATH" | tail -n +2 | awk '{printf "   %s  %s\n", $9, $5}'
-echo ""
-
-# Listar backups existentes
-echo -e "${YELLOW}📚 Backups disponibles:${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-if [ -d "$BACKUP_DIR" ]; then
-    BACKUP_COUNT=$(ls -1 "$BACKUP_DIR" | grep -c "^backup_" || echo "0")
-    if [ "$BACKUP_COUNT" -gt 0 ]; then
-        ls -1t "$BACKUP_DIR" | grep "^backup_" | head -5 | while read backup; do
-            BACKUP_SIZE=$(du -sh "$BACKUP_DIR/$backup" | cut -f1)
-            echo "   📦 $backup ($BACKUP_SIZE)"
-        done
-        if [ "$BACKUP_COUNT" -gt 5 ]; then
-            echo "   ... y $(($BACKUP_COUNT - 5)) más"
-        fi
-    else
-        echo "   (ninguno)"
+  if [ "$AUTO_MODE" = false ]; then
+    read -p "Are you sure you want to restore from $RESTORE_FILE? (yes/NO): " -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+      echo "Restore cancelled."
+      exit 0
     fi
-else
-    echo "   (ninguno)"
-fi
-echo ""
+  fi
 
-echo -e "${BLUE}🔄 Para restaurar este backup:${NC}"
-echo "   ./scripts/restore-database.sh $BACKUP_PATH"
-echo ""
+  log_info "Restoring database from: $RESTORE_FILE"
+  echo ""
 
-echo -e "${YELLOW}⚠️  IMPORTANTE:${NC}"
-echo "   - Guarda este backup en un lugar seguro (USB, NAS, cloud)"
-echo "   - Los backups NO sobreviven a 'docker-compose down -v'"
-echo "   - Recomendado: Hacer backup antes de actualizar/rebuild"
-echo ""
+  # Decompress and restore
+  if gunzip -c "$RESTORE_FILE" | docker compose -f "$COMPOSE_FILE" exec -T postgres \
+    psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"; then
+
+    log_success "Database restored successfully!"
+
+  else
+    log_error "Restore failed!"
+    exit 1
+  fi
+}
+
+# Clean up old backups
+cleanup_old_backups() {
+  log_info "Cleaning up backups older than $RETENTION_DAYS days..."
+
+  local count=$(find "$BACKUP_DIR" -name "echo-db-backup-*.sql.gz" -type f -mtime +$RETENTION_DAYS | wc -l)
+
+  if [ "$count" -gt 0 ]; then
+    find "$BACKUP_DIR" -name "echo-db-backup-*.sql.gz" -type f -mtime +$RETENTION_DAYS -delete
+    log_success "Deleted $count old backup(s)"
+  else
+    log_info "No old backups to clean"
+  fi
+
+  # List remaining backups
+  local remaining=$(find "$BACKUP_DIR" -name "echo-db-backup-*.sql.gz" -type f | wc -l)
+  log_info "Total backups: $remaining"
+}
+
+# List backups
+list_backups() {
+  if [ ! -d "$BACKUP_DIR" ]; then
+    log_info "No backups directory found."
+    return
+  fi
+
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "📦 Available Backups"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  if [ -z "$(ls -A "$BACKUP_DIR"/echo-db-backup-*.sql.gz 2>/dev/null)" ]; then
+    echo "  No backups found"
+  else
+    ls -lh "$BACKUP_DIR"/echo-db-backup-*.sql.gz | awk '{print "  " $9 " (" $5 ", " $6 " " $7 ")"}'
+  fi
+
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+}
+
+# Main
+main() {
+  if [ "$AUTO_MODE" = false ]; then
+    echo -e "${BLUE}"
+    echo "═══════════════════════════════════════════════════════"
+    echo "  🎵 Echo Music Server - Database Backup"
+    echo "═══════════════════════════════════════════════════════"
+    echo -e "${NC}"
+    echo ""
+  fi
+
+  check_docker
+  check_containers
+  ensure_backup_dir
+
+  if [ "$RESTORE_MODE" = true ]; then
+    restore_database
+  else
+    backup_database
+
+    if [ "$AUTO_MODE" = false ]; then
+      list_backups
+    fi
+  fi
+
+  echo ""
+  log_success "Done! 🎵"
+}
+
+main

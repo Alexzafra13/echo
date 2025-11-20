@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, Check, X, EyeOff } from 'lucide-react';
+import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import {
@@ -7,6 +7,7 @@ import {
   useAcceptConflict,
   useRejectConflict,
   useIgnoreConflict,
+  useApplySuggestion,
   type MetadataConflict,
 } from '../../hooks/useMetadataConflicts';
 import styles from './MetadataConflictsPanel.module.css';
@@ -54,15 +55,23 @@ function ArtistSidebarItem({
 
 /**
  * Single conflict card component - Compact visual design
+ * Supports both simple conflicts and multi-suggestion conflicts (Picard-style)
  */
 function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const [isRemoved, setIsRemoved] = useState(false);
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const { addToast } = useToast();
   const { mutate: accept, isPending: isAccepting } = useAcceptConflict();
   const { mutate: reject, isPending: isRejecting } = useRejectConflict();
   const { mutate: ignore, isPending: isIgnoring } = useIgnoreConflict();
+  const { mutate: applySuggestion, isPending: isApplying } = useApplySuggestion();
 
-  const isProcessing = isAccepting || isRejecting || isIgnoring;
+  const isProcessing = isAccepting || isRejecting || isIgnoring || isApplying;
+
+  // Check if this is a multi-suggestion conflict (Picard-style MBID auto-search)
+  const hasMultipleSuggestions = conflict.metadata?.suggestions && Array.isArray(conflict.metadata.suggestions) && conflict.metadata.suggestions.length > 1;
+  const suggestions = hasMultipleSuggestions ? conflict.metadata.suggestions : [];
 
   const handleAccept = () => {
     accept(conflict.id, {
@@ -98,6 +107,25 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
         addToast('Error al ignorar: ' + (error as Error).message, 'error');
       },
     });
+  };
+
+  const handleApplySuggestion = () => {
+    applySuggestion(
+      { conflictId: conflict.id, suggestionIndex: selectedSuggestionIndex },
+      {
+        onSuccess: (data) => {
+          setIsRemoved(true);
+          const suggestion = suggestions[selectedSuggestionIndex];
+          addToast(
+            `MBID aplicado: "${suggestion.name}" (score: ${suggestion.score})`,
+            'success'
+          );
+        },
+        onError: (error) => {
+          addToast('Error al aplicar sugerencia: ' + (error as Error).message, 'error');
+        },
+      }
+    );
   };
 
   // Hide card with fade-out animation when removed
@@ -284,38 +312,167 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
         </div>
       </div>
 
+      {/* Multiple Suggestions Section (Picard-style) */}
+      {hasMultipleSuggestions && (
+        <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+              {suggestions.length} sugerencias encontradas (selecciona una)
+            </div>
+            <button
+              onClick={() => setShowAllSuggestions(!showAllSuggestions)}
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--accent-primary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              {showAllSuggestions ? (
+                <>
+                  Mostrar menos <ChevronUp size={14} />
+                </>
+              ) : (
+                <>
+                  Mostrar todas <ChevronDown size={14} />
+                </>
+              )}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {(showAllSuggestions ? suggestions : suggestions.slice(0, 3)).map((suggestion: any, index: number) => (
+              <label
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem',
+                  padding: '0.75rem',
+                  backgroundColor: selectedSuggestionIndex === index ? 'var(--accent-primary-alpha)' : 'var(--bg-primary)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  border: selectedSuggestionIndex === index ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <input
+                  type="radio"
+                  name={`suggestion-${conflict.id}`}
+                  checked={selectedSuggestionIndex === index}
+                  onChange={() => setSelectedSuggestionIndex(index)}
+                  style={{ marginTop: '2px' }}
+                />
+                <div style={{ flex: 1, fontSize: '0.875rem' }}>
+                  <div style={{ fontWeight: 500, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
+                    {suggestion.name}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span style={{
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: suggestion.score >= 90 ? 'var(--status-success-bg)' : suggestion.score >= 75 ? 'var(--status-warning-bg)' : 'var(--status-error-bg)',
+                      color: suggestion.score >= 90 ? 'var(--status-success)' : suggestion.score >= 75 ? 'var(--status-warning)' : 'var(--status-error)',
+                      fontWeight: 600,
+                    }}>
+                      Score: {suggestion.score}
+                    </span>
+                    {suggestion.details?.disambiguation && (
+                      <span>({suggestion.details.disambiguation})</span>
+                    )}
+                    {suggestion.details?.artistName && (
+                      <span>Artista: {suggestion.details.artistName}</span>
+                    )}
+                    {suggestion.details?.country && (
+                      <span>País: {suggestion.details.country}</span>
+                    )}
+                    {suggestion.details?.primaryType && (
+                      <span>Tipo: {suggestion.details.primaryType}</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-quaternary)', marginTop: '0.25rem' }}>
+                    MBID: {suggestion.mbid}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div className={styles.conflictCardActions}>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleAccept}
-          loading={isAccepting}
-          disabled={isProcessing}
-          leftIcon={<Check size={16} />}
-        >
-          Aceptar
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReject}
-          loading={isRejecting}
-          disabled={isProcessing}
-          leftIcon={<X size={16} />}
-        >
-          Rechazar
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleIgnore}
-          loading={isIgnoring}
-          disabled={isProcessing}
-          leftIcon={<EyeOff size={16} />}
-        >
-          Ignorar
-        </Button>
+        {hasMultipleSuggestions ? (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleApplySuggestion}
+              loading={isApplying}
+              disabled={isProcessing}
+              leftIcon={<Check size={16} />}
+            >
+              Aplicar selección
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReject}
+              loading={isRejecting}
+              disabled={isProcessing}
+              leftIcon={<X size={16} />}
+            >
+              Rechazar todas
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleIgnore}
+              loading={isIgnoring}
+              disabled={isProcessing}
+              leftIcon={<EyeOff size={16} />}
+            >
+              Ignorar
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleAccept}
+              loading={isAccepting}
+              disabled={isProcessing}
+              leftIcon={<Check size={16} />}
+            >
+              Aceptar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReject}
+              loading={isRejecting}
+              disabled={isProcessing}
+              leftIcon={<X size={16} />}
+            >
+              Rechazar
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleIgnore}
+              loading={isIgnoring}
+              disabled={isProcessing}
+              leftIcon={<EyeOff size={16} />}
+            >
+              Ignorar
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

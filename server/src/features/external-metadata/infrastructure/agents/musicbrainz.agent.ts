@@ -3,6 +3,7 @@ import {
   IMusicBrainzSearch,
   MusicBrainzArtistMatch,
   MusicBrainzAlbumMatch,
+  MusicBrainzRecordingMatch,
 } from '../../domain/interfaces/musicbrainz-search.interface';
 import { RateLimiterService } from '../services/rate-limiter.service';
 
@@ -249,6 +250,130 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         `Error fetching album MBID ${mbid}: ${(error as Error).message}`
       );
       return null;
+    }
+  }
+
+  /**
+   * Search for recordings (tracks) using multi-field search
+   * Inspired by MusicBrainz Picard for high-accuracy matching
+   *
+   * Uses Lucene query syntax for precise matching:
+   * - artist: Artist name
+   * - release: Album/Release name
+   * - recording: Track/song title
+   * - tnum: Track number
+   * - dur: Duration (in milliseconds, ±10s tolerance)
+   * - isrc: International Standard Recording Code
+   *
+   * @example
+   * searchRecording({
+   *   artist: "Radiohead",
+   *   release: "OK Computer",
+   *   recording: "Karma Police",
+   *   trackNumber: 6,
+   *   duration: 263
+   * })
+   */
+  async searchRecording(
+    params: {
+      artist: string;
+      release?: string;
+      recording: string;
+      trackNumber?: number;
+      duration?: number; // in seconds
+      isrc?: string;
+    },
+    limit = 5
+  ): Promise<MusicBrainzRecordingMatch[]> {
+    try {
+      await this.rateLimiter.waitForRateLimit(this.name);
+
+      // Build multi-field Lucene query (like Picard)
+      const queryParts: string[] = [];
+
+      // Required fields
+      queryParts.push(`artist:"${params.artist}"`);
+      queryParts.push(`recording:"${params.recording}"`);
+
+      // Optional fields for better accuracy
+      if (params.release) {
+        queryParts.push(`release:"${params.release}"`);
+      }
+
+      if (params.trackNumber) {
+        queryParts.push(`tnum:${params.trackNumber}`);
+      }
+
+      if (params.duration) {
+        // Convert to milliseconds and add ±10s tolerance
+        const durationMs = params.duration * 1000;
+        const tolerance = 10000; // 10 seconds
+        const minDur = durationMs - tolerance;
+        const maxDur = durationMs + tolerance;
+        queryParts.push(`dur:[${minDur} TO ${maxDur}]`);
+      }
+
+      if (params.isrc) {
+        queryParts.push(`isrc:${params.isrc}`);
+      }
+
+      const query = queryParts.join(' AND ');
+      const encodedQuery = encodeURIComponent(query);
+      const url = `${this.baseUrl}/recording?query=${encodedQuery}&limit=${limit}&fmt=json`;
+
+      this.logger.debug(
+        `Searching MusicBrainz for recording: "${params.recording}" by ${params.artist}`
+      );
+      this.logger.debug(`Query: ${query}`);
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': this.userAgent,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Parse and map results
+      const matches: MusicBrainzRecordingMatch[] = (
+        data.recordings || []
+      ).map((rec: any) => {
+        // Extract releases information
+        const releases = (rec.releases || []).map((rel: any) => ({
+          mbid: rel.id,
+          title: rel.title,
+          trackNumber: rel.media?.[0]?.track?.[0]?.number
+            ? parseInt(rel.media[0].track[0].number)
+            : undefined,
+          trackCount: rel.media?.[0]?.['track-count'],
+        }));
+
+        return {
+          mbid: rec.id,
+          title: rec.title,
+          artistName: rec['artist-credit']?.[0]?.name || 'Unknown',
+          artistMbid: rec['artist-credit']?.[0]?.artist?.id,
+          length: rec.length, // in milliseconds
+          releases,
+          score: rec.score || 0,
+        };
+      });
+
+      this.logger.debug(
+        `Found ${matches.length} recording matches. Top score: ${matches[0]?.score || 0}`
+      );
+
+      return matches;
+    } catch (error) {
+      this.logger.error(
+        `Error searching recording "${params.recording}": ${(error as Error).message}`
+      );
+      return [];
     }
   }
 }
