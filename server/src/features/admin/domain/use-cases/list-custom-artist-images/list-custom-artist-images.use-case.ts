@@ -52,7 +52,7 @@ export class ListCustomArtistImagesUseCase {
       imageType: img.imageType,
       filePath: img.filePath,
       fileName: img.fileName,
-      fileSize: Number(img.fileSize),
+      fileSize: String(img.fileSize),
       mimeType: img.mimeType,
       isActive: img.isActive,
       uploadedBy: img.uploadedBy,
@@ -66,7 +66,7 @@ export class ListCustomArtistImagesUseCase {
     );
 
     return {
-      images: imageItems,
+      customImages: imageItems,
       total: images.length,
     };
   }

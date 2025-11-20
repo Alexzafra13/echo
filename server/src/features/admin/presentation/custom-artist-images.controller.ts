@@ -114,8 +114,8 @@ export class CustomArtistImagesController {
       );
     }
 
-    // Get imageType from fields
-    const fields = data.fields as any;
+    // Get imageType from fields with proper type checking
+    const fields = data.fields as Record<string, { value: string }>;
     const imageType = fields.imageType?.value;
 
     if (!imageType) {
