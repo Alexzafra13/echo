@@ -52,7 +52,9 @@ export class AddTrackToPlaylistUseCase {
 
     // 6. Actualizar metadata de la playlist (duration, size, songCount)
     playlist.updateDuration(playlist.duration + (track.duration ?? 0));
-    playlist.updateSize(playlist.size + (track.size ?? BigInt(0)));
+    // Safe BigInt addition - ensure both operands are BigInt
+    const trackSize = track.size !== null && track.size !== undefined ? track.size : BigInt(0);
+    playlist.updateSize(playlist.size + trackSize);
     playlist.updateSongCount(playlist.songCount + 1);
     await this.playlistRepository.update(playlist.id, playlist);
 
