@@ -72,7 +72,7 @@ import { validateEnvironment } from './config/env.validation';
     // Rate Limiting (protección contra fuerza bruta y DoS)
     ThrottlerModule.forRoot([{
       ttl: 60000, // 60 segundos
-      limit: 100, // 100 requests por minuto (general)
+      limit: 500, // 500 requests por minuto (increased for interactions/metadata queries)
     }]),
 
     // Global Infrastructure
