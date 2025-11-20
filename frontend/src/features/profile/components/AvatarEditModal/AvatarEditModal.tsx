@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Upload, Trash2, } from 'lucide-react';
 import { useAuth } from '@shared/hooks';
+import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';
 import styles from './AvatarEditModal.module.css';
@@ -15,17 +16,18 @@ interface AvatarEditModalProps {
  */
 export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const { user } = useAuth();
+  const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
+  const updateAvatarTimestamp = useAuthStore((state) => state.updateAvatarTimestamp);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
   const { mutate: deleteAvatar, isPending: isDeleting } = useDeleteAvatar();
 
-  const avatarUrl = user?.id && user?.hasAvatar ? getUserAvatarUrl(user.id, user.hasAvatar, cacheBuster) : null;
+  const avatarUrl = user?.id && user?.hasAvatar ? getUserAvatarUrl(user.id, user.hasAvatar, avatarTimestamp) : null;
   const initials = getUserInitials(user?.name, user?.username);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,15 +63,15 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
 
     uploadAvatar(selectedFile, {
       onSuccess: () => {
-        // Actualizar cache buster para forzar recarga de la imagen
-        setCacheBuster(Date.now());
+        // Actualizar timestamp global para que todos los componentes recarguen el avatar
+        updateAvatarTimestamp();
         // Limpiar preview y archivo seleccionado
         setPreviewUrl(null);
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        // Recargar página para actualizar el estado global del usuario
+        // Recargar página para actualizar el estado global del usuario (hasAvatar flag)
         setTimeout(() => {
           window.location.reload();
         }, 300);
@@ -83,11 +85,11 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const handleDelete = () => {
     deleteAvatar(undefined, {
       onSuccess: () => {
-        // Actualizar cache buster
-        setCacheBuster(Date.now());
+        // Actualizar timestamp global para que todos los componentes recarguen el avatar
+        updateAvatarTimestamp();
         // Cerrar confirmación
         setShowDeleteConfirm(false);
-        // Recargar página para actualizar el estado global del usuario
+        // Recargar página para actualizar el estado global del usuario (hasAvatar flag)
         setTimeout(() => {
           window.location.reload();
         }, 300);
