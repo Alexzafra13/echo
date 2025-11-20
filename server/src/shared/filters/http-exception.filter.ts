@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
+import { BaseError } from '@shared/errors/base.error';
 
 /**
  * HttpExceptionFilter - Maneja todas las excepciones HTTP de forma global
@@ -31,16 +32,28 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<FastifyRequest>();
 
     // Determinar status code
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number;
+
+    if (exception instanceof BaseError) {
+      // Custom domain errors (UnauthorizedError, ValidationError, etc.)
+      status = exception.statusCode;
+    } else if (exception instanceof HttpException) {
+      // NestJS HTTP exceptions
+      status = exception.getStatus();
+    } else {
+      // Unknown errors
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
 
     // Determinar mensaje
     let message: string;
     let error: string;
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof BaseError) {
+      // Custom domain errors
+      message = exception.message;
+      error = exception.code;
+    } else if (exception instanceof HttpException) {
       const exceptionResponse = exception.getResponse();
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
