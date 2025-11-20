@@ -76,13 +76,17 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy workspace configuration
-COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-COPY --chown=echoapp:nodejs server/package.json ./server/
+# Copy workspace configuration to temporary location for pnpm deploy
+COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json /tmp/build/
+COPY --chown=echoapp:nodejs server/package.json /tmp/build/server/
 
-# Install ONLY production dependencies using pnpm deploy
-# This creates a clean production install without dev dependencies
-RUN pnpm --filter=echo-server-backend deploy --prod --legacy .
+# Install ONLY production dependencies using pnpm deploy to /app
+# pnpm deploy requires an empty directory, so we use /tmp/build for config
+WORKDIR /tmp/build
+RUN pnpm --filter=echo-server-backend deploy --prod --legacy /app
+
+# Switch to final app directory
+WORKDIR /app
 
 # Copy Prisma schema and generate client for Alpine
 COPY --chown=echoapp:nodejs server/prisma ./prisma
