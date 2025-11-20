@@ -111,9 +111,9 @@ export class MetadataConflictService {
       });
 
       if (existingConflict) {
-        // Parse existing metadata
+        // Get existing metadata (already parsed as JSONB)
         const existingMeta = existingConflict.metadata
-          ? JSON.parse(existingConflict.metadata)
+          ? (existingConflict.metadata as Record<string, any>)
           : {};
         const newMeta = data.metadata || {};
 

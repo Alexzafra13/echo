@@ -595,7 +595,8 @@ export class MbidAutoSearchService {
     const conflictsCreated = await this.prisma.metadataConflict.count({
       where: {
         metadata: {
-          contains: '"autoSearched":true',
+          path: ['autoSearched'],
+          equals: true,
         },
         status: 'pending',
       },
