@@ -27,10 +27,16 @@ export class ListCustomAlbumCoversUseCase {
     }
 
     // Get all custom covers for this album
-    const customCovers = await this.prisma.customAlbumCover.findMany({
+    const customCoversRaw = await this.prisma.customAlbumCover.findMany({
       where: { albumId: input.albumId },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Map to ensure fileSize is a string for JSON serialization
+    const customCovers = customCoversRaw.map((cover) => ({
+      ...cover,
+      fileSize: String(cover.fileSize),
+    }));
 
     this.logger.debug(`Found ${customCovers.length} custom covers for album ${album.name}`);
 
