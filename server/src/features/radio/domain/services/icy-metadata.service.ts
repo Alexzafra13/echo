@@ -80,19 +80,26 @@ export class IcyMetadataService {
         notifyOnChangeOnly: true, // Only emit when metadata changes
       });
 
+      // CRITICAL: Register error handler IMMEDIATELY to prevent unhandled errors
+      // This must be the first listener registered to catch connection errors
+      radioStation.on('error', (error: Error) => {
+        this.logger.error(
+          `ICY parser error for ${stationUuid}: ${error.message}`,
+          error.stack,
+        );
+        // Emit error to all listeners
+        this.broadcastError(stationUuid, error);
+        // Close stream on error to prevent resource leaks
+        this.closeStream(stationUuid);
+      });
+
+      // Increase max listeners to prevent warnings (parser can have many listeners)
+      radioStation.setMaxListeners(20);
+
       // Handle metadata events
       radioStation.on('metadata', (metadata: Map<string, string>) => {
         const parsedMetadata = this.parseMetadata(stationUuid, metadata);
         this.broadcastMetadata(stationUuid, parsedMetadata);
-      });
-
-      // Handle errors
-      radioStation.on('error', (error: Error) => {
-        this.logger.error(
-          `ICY parser error for ${stationUuid}: ${error.message}`,
-        );
-        // Emit error to all listeners
-        this.broadcastError(stationUuid, error);
       });
 
       // Store active stream
@@ -121,6 +128,12 @@ export class IcyMetadataService {
       try {
         // Remove all listeners to stop processing
         stream.removeAllListeners();
+
+        // Destroy the parser if it has a destroy method
+        // This closes the underlying HTTP connection
+        if (typeof (stream as any).destroy === 'function') {
+          (stream as any).destroy();
+        }
       } catch (error) {
         this.logger.error(`Error closing stream ${stationUuid}:`, error);
       }
