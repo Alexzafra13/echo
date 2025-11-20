@@ -33,13 +33,15 @@
 *~
 .DS_Store
 
-# Logs
-**/logs
+# Log files (but not source code directories named "logs")
 **/*.log
 **/npm-debug.log*
 **/pnpm-debug.log*
 **/yarn-debug.log*
 **/yarn-error.log*
+**/logs/*.log
+# Exclude logs directory only at root level, not feature modules
+/logs
 
 # Testing
 **/coverage
