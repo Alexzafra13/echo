@@ -25,9 +25,10 @@ export class GetPlaylistUseCase {
       throw new NotFoundException(`Playlist with ID ${input.id} not found`);
     }
 
-    // 3. Obtener nombre del usuario owner (preferir name, si no username)
+    // 3. Obtener información del usuario owner (name/username y hasAvatar)
     const owner = await this.userRepository.findById(playlist.ownerId);
     const ownerName = owner?.name || owner?.username;
+    const ownerHasAvatar = owner?.avatarPath ? true : false;
 
     // 4. Retornar output
     return {
@@ -39,6 +40,7 @@ export class GetPlaylistUseCase {
       size: playlist.size,
       ownerId: playlist.ownerId,
       ownerName,
+      ownerHasAvatar,
       public: playlist.public,
       songCount: playlist.songCount,
       path: playlist.path,
