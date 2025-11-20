@@ -10,21 +10,26 @@
 # ----------------------------------------
 FROM node:22-alpine AS frontend-builder
 
-WORKDIR /build/frontend
+WORKDIR /build
 
 # Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
-# Copy only package files first (better layer caching)
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+# Copy workspace configuration files
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
 
-# Install frontend dependencies
-RUN pnpm install --frozen-lockfile
+# Copy package.json files for workspace packages
+COPY frontend/package.json ./frontend/
+COPY server/package.json ./server/
+
+# Install frontend dependencies (workspace mode)
+RUN pnpm install --frozen-lockfile --filter frontend...
 
 # Copy frontend source code
-COPY frontend/ ./
+COPY frontend/ ./frontend/
 
 # Build frontend for production
+WORKDIR /build/frontend
 RUN pnpm build
 
 # ----------------------------------------
