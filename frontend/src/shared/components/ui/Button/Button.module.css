@@ -81,6 +81,23 @@
   background: rgba(237, 104, 66, 0.1);
 }
 
+.danger {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: var(--button-shadow);
+}
+
+.danger:hover:not(:disabled) {
+  background: #dc2626;
+  box-shadow: var(--button-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.danger:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--button-shadow);
+}
+
 /* Sizes */
 .sm {
   padding: var(--space-2) var(--space-4);
