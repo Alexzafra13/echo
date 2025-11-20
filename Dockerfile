@@ -134,6 +134,9 @@ COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 # Install production dependencies
 RUN pnpm install --prod
 
+# Generate Prisma Client explicitly (postinstall might not run in prod mode)
+RUN pnpm exec prisma generate
+
 # Copy built files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
