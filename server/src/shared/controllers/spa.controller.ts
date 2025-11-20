@@ -13,7 +13,8 @@ import { existsSync, readFileSync } from 'fs';
  */
 @Controller()
 export class SpaController {
-  private readonly frontendPath = join(__dirname, '..', '..', '..', 'frontend', 'dist');
+  // Frontend is at /app/frontend/dist (compiled code is in /app/dist/src)
+  private readonly frontendPath = join(__dirname, '..', '..', '..', '..', 'frontend', 'dist');
   private readonly indexHtmlPath = join(this.frontendPath, 'index.html');
   private readonly indexHtml: string | null = null;
 
@@ -21,6 +22,9 @@ export class SpaController {
     // Load index.html once at startup if it exists
     if (existsSync(this.indexHtmlPath)) {
       this.indexHtml = readFileSync(this.indexHtmlPath, 'utf-8');
+      console.log(`✅ SpaController: index.html loaded from ${this.indexHtmlPath}`);
+    } else {
+      console.warn(`⚠️  SpaController: index.html not found at ${this.indexHtmlPath}`);
     }
   }
 
