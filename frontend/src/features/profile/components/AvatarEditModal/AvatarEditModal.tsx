@@ -20,11 +20,12 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
   const { mutate: deleteAvatar, isPending: isDeleting } = useDeleteAvatar();
 
-  const avatarUrl = user?.id ? getUserAvatarUrl(user.id) : null;
+  const avatarUrl = user?.id && user?.hasAvatar ? getUserAvatarUrl(user.id, user.hasAvatar, cacheBuster) : null;
   const initials = getUserInitials(user?.name, user?.username);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +61,18 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
 
     uploadAvatar(selectedFile, {
       onSuccess: () => {
-        window.location.reload();
+        // Actualizar cache buster para forzar recarga de la imagen
+        setCacheBuster(Date.now());
+        // Limpiar preview y archivo seleccionado
+        setPreviewUrl(null);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        // Recargar página para actualizar el estado global del usuario
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
       },
       onError: (error: any) => {
         setError(error.message || 'Error al subir la imagen');
@@ -71,7 +83,14 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const handleDelete = () => {
     deleteAvatar(undefined, {
       onSuccess: () => {
-        window.location.reload();
+        // Actualizar cache buster
+        setCacheBuster(Date.now());
+        // Cerrar confirmación
+        setShowDeleteConfirm(false);
+        // Recargar página para actualizar el estado global del usuario
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
       },
       onError: (error: any) => {
         setError(error.message || 'Error al eliminar el avatar');
@@ -111,7 +130,6 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
                 alt={user?.name || user?.username}
                 className={styles.modal__avatar}
                 onError={handleAvatarError}
-                key={Date.now()}
               />
             ) : (
               <div className={styles.modal__avatarPlaceholder}>
