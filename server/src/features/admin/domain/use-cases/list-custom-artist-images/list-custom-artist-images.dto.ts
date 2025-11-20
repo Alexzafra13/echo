@@ -13,7 +13,7 @@ export interface CustomArtistImageItem {
   imageType: string;
   filePath: string;
   fileName: string;
-  fileSize: number;
+  fileSize: string;
   mimeType: string;
   isActive: boolean;
   uploadedBy: string | null;
@@ -23,6 +23,6 @@ export interface CustomArtistImageItem {
 }
 
 export interface ListCustomArtistImagesOutput {
-  images: CustomArtistImageItem[];
+  customImages: CustomArtistImageItem[];
   total: number;
 }

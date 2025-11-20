@@ -11,7 +11,7 @@ export interface CustomAlbumCoverDto {
   albumId: string;
   filePath: string;
   fileName: string;
-  fileSize: bigint;
+  fileSize: string;
   mimeType: string;
   isActive: boolean;
   uploadedBy: string | null;
