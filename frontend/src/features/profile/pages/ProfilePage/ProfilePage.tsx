@@ -265,6 +265,7 @@ export function ProfilePage() {
                       className={styles.profilePage__input}
                       placeholder="••••••••"
                       disabled={isPendingPassword}
+                      autoComplete="current-password"
                     />
                   </div>
 
@@ -278,6 +279,7 @@ export function ProfilePage() {
                       className={styles.profilePage__input}
                       placeholder="Mínimo 8 caracteres"
                       disabled={isPendingPassword}
+                      autoComplete="new-password"
                     />
                   </div>
 
@@ -291,6 +293,7 @@ export function ProfilePage() {
                       className={styles.profilePage__input}
                       placeholder="Repite la nueva contraseña"
                       disabled={isPendingPassword}
+                      autoComplete="new-password"
                     />
                   </div>
                 </div>
