@@ -131,43 +131,39 @@ async function bootstrap() {
   if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
-    // Serve static assets
-    app.useStaticAssets({
+    const fastify = app.getHttpAdapter().getInstance();
+
+    // Register @fastify/static with decorateReply: false to avoid HEAD route conflicts
+    await fastify.register(require('@fastify/static'), {
       root: frontendPath,
       prefix: '/',
+      decorateReply: false, // Prevents HEAD route conflicts with wildcards
     });
 
-    logger.log('Frontend static assets configured');
+    // SPA fallback: serve index.html for all non-API 404s
+    fastify.setNotFoundHandler((request, reply) => {
+      // If it's an API route, return JSON 404
+      if (request.url.startsWith('/api/')) {
+        reply.status(404).send({
+          statusCode: 404,
+          message: `Cannot ${request.method} ${request.url}`,
+          error: 'Not Found',
+        });
+        return;
+      }
+
+      // For all other routes, serve index.html (SPA fallback)
+      reply.type('text/html').send(readFileSync(indexHtmlPath, 'utf-8'));
+    });
+
+    logger.log('Frontend static assets and SPA fallback configured');
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
     logger.warn(`Running in API-only mode (development)`);
   }
 
-  // Start server (this will initialize all routes)
+  // Start server
   await app.listen(appConfig.port, '0.0.0.0');
-
-  // AFTER server is listening, register SPA fallback for 404s
-  // This must be done after app.listen() so all routes are registered
-  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
-    const fastify = app.getHttpAdapter().getInstance();
-    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
-
-    // Intercept 404 responses for non-API routes and serve SPA
-    fastify.addHook('onSend', async (request, reply, payload) => {
-      // Only handle 404s for GET requests on non-API routes
-      if (
-        reply.statusCode === 404 &&
-        request.method === 'GET' &&
-        !request.url.startsWith('/api/')
-      ) {
-        reply.type('text/html');
-        return indexHtml;
-      }
-      return payload;
-    });
-
-    logger.log('SPA fallback registered for client-side routing');
-  }
 
   // Auto-detect server IPs for easier access
   const networkInterfaces = require('os').networkInterfaces();
