@@ -88,7 +88,9 @@ export class MbidSearchCacheService {
         where: {
           queryText: cacheKey.queryText,
           queryType: cacheKey.queryType,
-          queryParams: cacheKey.queryParams,
+          queryParams: {
+            equals: cacheKey.queryParams,
+          },
         },
       });
 
@@ -152,19 +154,19 @@ export class MbidSearchCacheService {
           queryText_queryType_queryParams: {
             queryText: cacheKey.queryText,
             queryType: cacheKey.queryType,
-            queryParams: cacheKey.queryParams,
+            queryParams: cacheKey.queryParams as any,
           },
         },
         create: {
           queryText: cacheKey.queryText,
           queryType: cacheKey.queryType,
-          queryParams: cacheKey.queryParams,
-          results: entry.results as Prisma.JsonValue,
+          queryParams: cacheKey.queryParams as any,
+          results: entry.results as any,
           resultCount: entry.resultCount,
           expiresAt,
         },
         update: {
-          results: entry.results as Prisma.JsonValue,
+          results: entry.results as any,
           resultCount: entry.resultCount,
           expiresAt,
           // Reset hit count on update
@@ -259,8 +261,9 @@ export class MbidSearchCacheService {
       let oldestDate = entries[0].createdAt;
 
       entries.forEach((entry) => {
-        stats.hitsByType[entry.queryType] =
-          (stats.hitsByType[entry.queryType] || 0) + entry.hitCount;
+        const queryType = entry.queryType as 'artist' | 'album' | 'recording';
+        stats.hitsByType[queryType] =
+          (stats.hitsByType[queryType] || 0) + entry.hitCount;
         totalHits += entry.hitCount;
 
         if (entry.createdAt < oldestDate) {

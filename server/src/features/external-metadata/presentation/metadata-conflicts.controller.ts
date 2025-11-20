@@ -276,8 +276,8 @@ export class MetadataConflictsController {
       throw new BadRequestException(`Conflict ${conflictId} is already ${conflict.status}`);
     }
 
-    // Parse metadata to get suggestions
-    const metadata = conflict.metadata ? JSON.parse(conflict.metadata) : null;
+    // Get metadata (already parsed as JSONB)
+    const metadata = conflict.metadata ? (conflict.metadata as Record<string, any>) : null;
 
     if (!metadata || !metadata.suggestions || !Array.isArray(metadata.suggestions)) {
       throw new BadRequestException(
