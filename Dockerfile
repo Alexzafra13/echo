@@ -129,9 +129,9 @@ COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
-# Copy entrypoint script directly from build context
-COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /app/
-RUN chmod +x /app/docker-entrypoint.sh
+# Copy entrypoint script to /usr/local/bin (as root, before switching users)
+COPY server/scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create upload directories with proper permissions
 RUN mkdir -p /app/uploads/music /app/uploads/covers && \
@@ -154,4 +154,4 @@ ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 # Start the application using entrypoint script
 # (waits for DB/Redis, runs migrations, starts server)
-CMD ["/app/docker-entrypoint.sh"]
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
