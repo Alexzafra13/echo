@@ -26,11 +26,6 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     clearAll,
   } = useMetadataEnrichment(token, isAdmin);
 
-  // Solo mostrar para admin
-  if (!isAdmin) {
-    return null;
-  }
-
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -85,6 +80,11 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     const diffDays = Math.floor(diffHours / 24);
     return `Hace ${diffDays}d`;
   };
+
+  // Solo mostrar para admin (después de todos los hooks)
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className={styles.notifications} ref={dropdownRef}>
