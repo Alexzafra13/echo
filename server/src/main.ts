@@ -140,23 +140,7 @@ async function bootstrap() {
       decorateReply: false, // Prevents HEAD route conflicts with wildcards
     });
 
-    // SPA fallback: serve index.html for all non-API 404s
-    fastify.setNotFoundHandler((request, reply) => {
-      // If it's an API route, return JSON 404
-      if (request.url.startsWith('/api/')) {
-        reply.status(404).send({
-          statusCode: 404,
-          message: `Cannot ${request.method} ${request.url}`,
-          error: 'Not Found',
-        });
-        return;
-      }
-
-      // For all other routes, serve index.html (SPA fallback)
-      reply.type('text/html').send(readFileSync(indexHtmlPath, 'utf-8'));
-    });
-
-    logger.log('Frontend static assets and SPA fallback configured');
+    logger.log('Frontend static assets configured');
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
     logger.warn(`Running in API-only mode (development)`);
@@ -164,6 +148,28 @@ async function bootstrap() {
 
   // Start server
   await app.listen(appConfig.port, '0.0.0.0');
+
+  // AFTER server is listening, configure SPA fallback using onSend hook
+  // This intercepts 404 responses AFTER NestJS has processed them
+  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
+    const fastify = app.getHttpAdapter().getInstance();
+    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
+
+    // Intercept 404 responses and serve SPA for non-API routes
+    fastify.addHook('onSend', async (request, reply, payload) => {
+      if (
+        reply.statusCode === 404 &&
+        request.method === 'GET' &&
+        !request.url.startsWith('/api/')
+      ) {
+        reply.type('text/html');
+        return indexHtml;
+      }
+      return payload;
+    });
+
+    logger.log('SPA fallback configured for client-side routing');
+  }
 
   // Auto-detect server IPs for easier access
   const networkInterfaces = require('os').networkInterfaces();
