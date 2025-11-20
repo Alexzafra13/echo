@@ -125,9 +125,11 @@ WORKDIR /app
 
 # Copy built backend from builder stage
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/node_modules ./node_modules
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/package.json ./
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
+
+# Copy node_modules from workspace root (pnpm hoisting puts all deps here)
+COPY --from=backend-builder --chown=echoapp:nodejs /build/node_modules ./node_modules
 
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
