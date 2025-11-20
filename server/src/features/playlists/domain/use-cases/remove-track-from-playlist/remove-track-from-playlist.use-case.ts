@@ -55,9 +55,15 @@ export class RemoveTrackFromPlaylistUseCase {
 
     // 6. Actualizar metadata de la playlist (duration, size, songCount)
     const trackDuration = track.duration ?? 0;
-    const trackSize = track.size ?? BigInt(0);
+    // Safe BigInt subtraction - ensure BOTH operands are valid BigInt
+    const playlistSize = playlist.size !== null && playlist.size !== undefined
+      ? (typeof playlist.size === 'bigint' ? playlist.size : BigInt(playlist.size))
+      : BigInt(0);
+    const trackSize = track.size !== null && track.size !== undefined
+      ? (typeof track.size === 'bigint' ? track.size : BigInt(track.size))
+      : BigInt(0);
     playlist.updateDuration(Math.max(0, playlist.duration - trackDuration));
-    playlist.updateSize(playlist.size > trackSize ? playlist.size - trackSize : BigInt(0));
+    playlist.updateSize(playlistSize > trackSize ? playlistSize - trackSize : BigInt(0));
     playlist.updateSongCount(Math.max(0, playlist.songCount - 1));
     await this.playlistRepository.update(playlist.id, playlist);
 
