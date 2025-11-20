@@ -151,3 +151,23 @@ export function useIgnoreConflict() {
     },
   });
 }
+
+/**
+ * Hook to apply a specific suggestion from multiple options (Picard-style)
+ */
+export function useApplySuggestion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ conflictId, suggestionIndex }: { conflictId: string; suggestionIndex: number }) => {
+      const response = await apiClient.post(
+        `/admin/metadata-conflicts/${conflictId}/apply-suggestion`,
+        { suggestionIndex }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['metadata-conflicts'] });
+    },
+  });
+}
