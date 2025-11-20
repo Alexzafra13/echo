@@ -34,6 +34,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -251,7 +252,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
             aria-label="User menu"
           >
             <img
-              src={getUserAvatarUrl(user?.id, user?.hasAvatar)}
+              src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
               alt={user?.username || 'User'}
               className={styles.header__userAvatar}
               onError={handleAvatarError}
@@ -263,7 +264,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
             <div className={styles.header__userDropdown}>
               <div className={styles.header__userInfo}>
                 <img
-                  src={getUserAvatarUrl(user?.id, user?.hasAvatar)}
+                  src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
                   alt={user?.username || 'User'}
                   className={styles.header__userAvatarLarge}
                   onError={handleAvatarError}
