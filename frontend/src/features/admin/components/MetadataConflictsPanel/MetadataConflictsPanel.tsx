@@ -113,7 +113,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
     applySuggestion(
       { conflictId: conflict.id, suggestionIndex: selectedSuggestionIndex },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           setIsRemoved(true);
           const suggestion = suggestions[selectedSuggestionIndex];
           addToast(
