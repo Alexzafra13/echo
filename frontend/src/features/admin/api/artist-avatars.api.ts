@@ -63,7 +63,7 @@ export interface CustomImage {
   imageType: 'profile' | 'background' | 'banner' | 'logo';
   filePath: string;
   fileName: string;
-  fileSize: number;
+  fileSize: string;
   mimeType: string;
   isActive: boolean;
   uploadedBy: string;
