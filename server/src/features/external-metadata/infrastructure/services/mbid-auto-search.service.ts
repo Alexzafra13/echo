@@ -3,6 +3,7 @@ import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { MusicBrainzAgent } from '../agents/musicbrainz.agent';
 import { MetadataConflictService, ConflictPriority } from './metadata-conflict.service';
 import { SettingsService } from './settings.service';
+import { MbidSearchCacheService } from './mbid-search-cache.service';
 
 /**
  * MBID Auto-Search Result
@@ -53,6 +54,7 @@ export class MbidAutoSearchService {
     private readonly musicBrainzAgent: MusicBrainzAgent,
     private readonly conflictService: MetadataConflictService,
     private readonly settingsService: SettingsService,
+    private readonly searchCache: MbidSearchCacheService,
   ) {}
 
   /**
@@ -86,8 +88,27 @@ export class MbidAutoSearchService {
 
       this.logger.debug(`Searching MBID for artist: ${artistName}`);
 
-      // Buscar en MusicBrainz (top 10 para tener buenas opciones)
-      const matches = await this.musicBrainzAgent.searchArtist(artistName, 10);
+      // Intentar obtener del caché primero
+      const cachedMatches = await this.searchCache.get(artistName, 'artist');
+      let matches;
+
+      if (cachedMatches) {
+        this.logger.debug(`Using cached results for artist: ${artistName}`);
+        matches = cachedMatches;
+      } else {
+        // Buscar en MusicBrainz (top 10 para tener buenas opciones)
+        matches = await this.musicBrainzAgent.searchArtist(artistName, 10);
+
+        // Guardar en caché (TTL: 7 días)
+        if (matches && matches.length > 0) {
+          await this.searchCache.set({
+            queryText: artistName,
+            queryType: 'artist',
+            results: matches,
+            resultCount: matches.length,
+          });
+        }
+      }
 
       if (!matches || matches.length === 0) {
         this.logger.debug(`No MBID matches found for artist: ${artistName}`);
@@ -229,8 +250,29 @@ export class MbidAutoSearchService {
 
       this.logger.debug(`Searching MBID for album: "${albumName}" by ${artistName}`);
 
-      // Buscar en MusicBrainz (top 10)
-      const matches = await this.musicBrainzAgent.searchAlbum(albumName, artistName, 10);
+      // Intentar obtener del caché primero
+      const cacheKey = `${albumName}|${artistName}`;
+      const cachedMatches = await this.searchCache.get(cacheKey, 'album', { artist: artistName });
+      let matches;
+
+      if (cachedMatches) {
+        this.logger.debug(`Using cached results for album: "${albumName}"`);
+        matches = cachedMatches;
+      } else {
+        // Buscar en MusicBrainz (top 10)
+        matches = await this.musicBrainzAgent.searchAlbum(albumName, artistName, 10);
+
+        // Guardar en caché (TTL: 7 días)
+        if (matches && matches.length > 0) {
+          await this.searchCache.set({
+            queryText: cacheKey,
+            queryType: 'album',
+            queryParams: { artist: artistName },
+            results: matches,
+            resultCount: matches.length,
+          });
+        }
+      }
 
       if (!matches || matches.length === 0) {
         this.logger.debug(
@@ -386,17 +428,44 @@ export class MbidAutoSearchService {
         `Searching MBID for track: "${params.title}" by ${params.artist}${params.album ? ` from "${params.album}"` : ''}`,
       );
 
-      // Buscar en MusicBrainz usando multi-field search (como Picard)
-      const matches = await this.musicBrainzAgent.searchRecording(
-        {
-          artist: params.artist,
-          release: params.album,
-          recording: params.title,
-          trackNumber: params.trackNumber,
-          duration: params.duration,
-        },
-        10,
-      );
+      // Intentar obtener del caché primero
+      const cacheKey = `${params.artist}|${params.title}|${params.album || ''}`;
+      const searchParams = {
+        artist: params.artist,
+        album: params.album,
+        trackNumber: params.trackNumber,
+        duration: params.duration,
+      };
+      const cachedMatches = await this.searchCache.get(cacheKey, 'recording', searchParams);
+      let matches;
+
+      if (cachedMatches) {
+        this.logger.debug(`Using cached results for track: "${params.title}"`);
+        matches = cachedMatches;
+      } else {
+        // Buscar en MusicBrainz usando multi-field search (como Picard)
+        matches = await this.musicBrainzAgent.searchRecording(
+          {
+            artist: params.artist,
+            release: params.album,
+            recording: params.title,
+            trackNumber: params.trackNumber,
+            duration: params.duration,
+          },
+          10,
+        );
+
+        // Guardar en caché (TTL: 7 días)
+        if (matches && matches.length > 0) {
+          await this.searchCache.set({
+            queryText: cacheKey,
+            queryType: 'recording',
+            queryParams: searchParams,
+            results: matches,
+            resultCount: matches.length,
+          });
+        }
+      }
 
       if (!matches || matches.length === 0) {
         this.logger.debug(
