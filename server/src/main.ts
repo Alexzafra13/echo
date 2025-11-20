@@ -131,34 +131,43 @@ async function bootstrap() {
   if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
-    // Serve static assets (js, css, images, etc.)
+    // Serve static assets
     app.useStaticAssets({
       root: frontendPath,
       prefix: '/',
     });
 
-    // SPA fallback: serve index.html for all non-API routes
-    // Must be registered AFTER all other routes (NestJS registers routes during init)
-    const fastify = app.getHttpAdapter().getInstance();
-    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
-
-    // Wait for NestJS to initialize all routes first
-    await app.init();
-
-    // Register catch-all handler for SPA routing (AFTER all API routes are registered)
-    fastify.get('/*', (request, reply) => {
-      // Serve index.html for SPA routing
-      reply.type('text/html').send(indexHtml);
-    });
-
-    logger.log('SPA fallback registered for client-side routing');
+    logger.log('Frontend static assets configured');
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
     logger.warn(`Running in API-only mode (development)`);
   }
 
-  // Start server
+  // Start server (this will initialize all routes)
   await app.listen(appConfig.port, '0.0.0.0');
+
+  // AFTER server is listening, register SPA fallback for 404s
+  // This must be done after app.listen() so all routes are registered
+  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
+    const fastify = app.getHttpAdapter().getInstance();
+    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
+
+    // Intercept 404 responses for non-API routes and serve SPA
+    fastify.addHook('onSend', async (request, reply, payload) => {
+      // Only handle 404s for GET requests on non-API routes
+      if (
+        reply.statusCode === 404 &&
+        request.method === 'GET' &&
+        !request.url.startsWith('/api/')
+      ) {
+        reply.type('text/html');
+        return indexHtml;
+      }
+      return payload;
+    });
+
+    logger.log('SPA fallback registered for client-side routing');
+  }
 
   // Auto-detect server IPs for easier access
   const networkInterfaces = require('os').networkInterfaces();
