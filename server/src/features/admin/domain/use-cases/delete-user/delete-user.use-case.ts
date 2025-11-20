@@ -4,6 +4,7 @@ import {
   IUserRepository,
 } from '@features/auth/domain/ports';
 import { NotFoundError, ValidationError } from '@shared/errors';
+import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { DeleteUserInput, DeleteUserOutput } from './delete-user.dto';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class DeleteUserUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
+    private readonly logService: LogService,
   ) {}
 
   async execute(input: DeleteUserInput): Promise<DeleteUserOutput> {
@@ -49,6 +51,17 @@ export class DeleteUserUseCase {
     await this.userRepository.updatePartial(input.userId, {
       isActive: false,
     });
+
+    // 6. Log user deletion
+    await this.logService.info(
+      LogCategory.AUTH,
+      `User deactivated by admin: ${user.username}`,
+      {
+        userId: user.id,
+        username: user.username,
+        deletedBy: input.adminId,
+      },
+    );
 
     return {
       success: true,

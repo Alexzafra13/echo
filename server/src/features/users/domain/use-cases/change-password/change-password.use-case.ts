@@ -10,6 +10,7 @@ import {
   ValidationError,
   UnauthorizedError,
 } from '@shared/errors';
+import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { ChangePasswordInput } from './change-password.dto';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class ChangePasswordUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    private readonly logService: LogService,
   ) {}
 
   async execute(input: ChangePasswordInput): Promise<void> {
@@ -62,12 +64,23 @@ export class ChangePasswordUseCase {
 
     // 6. Actualizar contraseña
     await this.userRepository.updatePassword(user.id, newPasswordHash);
-    
+
     // 7. Si era primer login, quitar el flag
     if (user.mustChangePassword) {
       await this.userRepository.updatePartial(user.id, {
         mustChangePassword: false,
       });
     }
+
+    // 8. Log password change
+    await this.logService.info(
+      LogCategory.AUTH,
+      `Password changed: ${user.username}`,
+      {
+        userId: user.id,
+        username: user.username,
+        wasFirstLogin: user.mustChangePassword,
+      },
+    );
   }
 }

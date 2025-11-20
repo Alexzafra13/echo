@@ -8,6 +8,7 @@ import {
 import { User } from '@features/auth/domain/entities/user.entity';
 import { ConflictError, ValidationError } from '@shared/errors';
 import { PasswordUtil } from '@shared/utils/password.util';
+import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { CreateUserInput, CreateUserOutput } from './create-user.dto';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class CreateUserUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    private readonly logService: LogService,
   ) {}
 
   async execute(input: CreateUserInput): Promise<CreateUserOutput> {
@@ -61,7 +63,19 @@ export class CreateUserUseCase {
     // 6. Persistir
     const savedUser = await this.userRepository.create(user);
 
-    // 7. Retornar credenciales
+    // 7. Log user creation
+    await this.logService.info(
+      LogCategory.AUTH,
+      `User created by admin: ${savedUser.username}`,
+      {
+        userId: savedUser.id,
+        username: savedUser.username,
+        isAdmin: savedUser.isAdmin,
+        createdBy: input.adminId,
+      },
+    );
+
+    // 8. Retornar credenciales
     return {
       user: {
         id: savedUser.id,
