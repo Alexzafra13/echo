@@ -126,15 +126,19 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy ONLY server package.json (NO workspace)
+# Copy ONLY server package.json + lockfile (NO workspace)
 COPY --chown=echoapp:nodejs server/package.json ./package.json
+COPY --chown=echoapp:nodejs pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 
-# Install production dependencies as STANDALONE (not workspace)
-RUN pnpm install --prod
+# Install ALL dependencies (including Prisma CLI from devDependencies)
+RUN pnpm install --frozen-lockfile
 
 # Generate Prisma Client for THIS Alpine/Musl container
 RUN pnpm exec prisma generate
+
+# Remove devDependencies to keep image small (Prisma Client stays in dependencies)
+RUN pnpm prune --prod
 
 # Copy built application files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
