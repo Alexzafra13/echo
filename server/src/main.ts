@@ -8,7 +8,7 @@ import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
 import { WebSocketAdapter } from '@infrastructure/websocket';
 import { join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 
 async function bootstrap() {
   // Configure Fastify to handle BigInt serialization
@@ -132,11 +132,26 @@ async function bootstrap() {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
     // Serve static assets (js, css, images, etc.)
-    // The SPA fallback is handled by SpaController (catch-all route)
     app.useStaticAssets({
       root: frontendPath,
       prefix: '/',
     });
+
+    // SPA fallback: serve index.html for all non-API routes
+    // Must be registered AFTER all other routes (NestJS registers routes during init)
+    const fastify = app.getHttpAdapter().getInstance();
+    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
+
+    // Wait for NestJS to initialize all routes first
+    await app.init();
+
+    // Register catch-all handler for SPA routing (AFTER all API routes are registered)
+    fastify.get('/*', (request, reply) => {
+      // Serve index.html for SPA routing
+      reply.type('text/html').send(indexHtml);
+    });
+
+    logger.log('SPA fallback registered for client-side routing');
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
     logger.warn(`Running in API-only mode (development)`);
