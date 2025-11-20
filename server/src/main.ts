@@ -131,32 +131,11 @@ async function bootstrap() {
   if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
-    // Read index.html once at startup
-    const indexHtmlContent = readFileSync(indexHtmlPath, 'utf-8');
-
     // Serve static assets (js, css, images, etc.)
+    // Including index.html which will be served at /
     app.useStaticAssets({
       root: frontendPath,
       prefix: '/',
-    });
-
-    // SPA fallback: todas las rutas no-API sirven index.html
-    // Necesitamos acceder a la instancia de Fastify subyacente
-    const fastifyInstance = app.getHttpAdapter().getInstance();
-    fastifyInstance.setNotFoundHandler((request, reply) => {
-      const url = request.url;
-
-      // Si es una ruta API, devuelve 404 JSON
-      if (url.startsWith('/api/') || url.startsWith('/health')) {
-        reply.code(404).send({
-          statusCode: 404,
-          message: 'Not Found',
-          error: 'Not Found',
-        });
-      } else {
-        // Para cualquier otra ruta, sirve el index.html (SPA)
-        reply.type('text/html').send(indexHtmlContent);
-      }
     });
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
