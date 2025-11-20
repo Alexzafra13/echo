@@ -14,6 +14,7 @@ import {
 import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
+import { CurrentUser } from '@shared/decorators';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -69,12 +70,16 @@ export class AdminController {
     status: 403,
     description: 'No tiene permisos de administrador'
   })
-  async createUser(@Body() dto: CreateUserRequestDto) {
+  async createUser(
+    @Body() dto: CreateUserRequestDto,
+    @CurrentUser() currentUser: any,
+  ) {
     const result = await this.createUserUseCase.execute({
       username: dto.username,
       email: dto.email,
       name: dto.name,
       isAdmin: dto.isAdmin,
+      adminId: currentUser?.id,
     });
 
     return CreateUserResponseDto.fromDomain(result);
@@ -204,8 +209,14 @@ export class AdminController {
     status: 404,
     description: 'Usuario no encontrado'
   })
-  async deleteUser(@Param('id') id: string): Promise<void> {
-    await this.deleteUserUseCase.execute({ userId: id });
+  async deleteUser(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<void> {
+    await this.deleteUserUseCase.execute({
+      userId: id,
+      adminId: currentUser?.id,
+    });
   }
 
   @Delete(':id/permanently')
@@ -271,8 +282,14 @@ export class AdminController {
     status: 404,
     description: 'Usuario no encontrado'
   })
-  async resetUserPassword(@Param('id') id: string): Promise<ResetPasswordResponseDto> {
-    const result = await this.resetUserPasswordUseCase.execute({ userId: id });
+  async resetUserPassword(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<ResetPasswordResponseDto> {
+    const result = await this.resetUserPasswordUseCase.execute({
+      userId: id,
+      adminId: currentUser?.id,
+    });
     return ResetPasswordResponseDto.fromDomain(result);
   }
 }
