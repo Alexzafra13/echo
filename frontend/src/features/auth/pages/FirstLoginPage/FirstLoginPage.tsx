@@ -16,7 +16,7 @@ const passwordRequirements = {
   hasUpperCase: (password: string) => /[A-Z]/.test(password),
   hasLowerCase: (password: string) => /[a-z]/.test(password),
   hasNumber: (password: string) => /[0-9]/.test(password),
-  hasSpecialChar: (password: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+  hasSpecialChar: (password: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
 };
 
 // Schema de validación
