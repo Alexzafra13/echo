@@ -131,7 +131,7 @@ export class CustomArtistImagesController {
 
     return await this.uploadCustomImage.execute({
       artistId,
-      imageType,
+      imageType: imageType as 'profile' | 'background' | 'banner' | 'logo',
       file: {
         buffer,
         mimetype: data.mimetype,
