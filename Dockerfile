@@ -85,7 +85,8 @@ COPY server/ ./
 RUN pnpm build
 
 # Remove development dependencies (reduces size significantly)
-RUN pnpm prune --prod
+# CI=true prevents TTY errors in Docker
+RUN CI=true pnpm prune --prod
 
 # ----------------------------------------
 # Stage 4: Production Runtime
