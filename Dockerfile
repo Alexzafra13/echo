@@ -126,23 +126,22 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy workspace structure (needed for pnpm-lock.yaml to work)
+# Copy workspace files
 COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
 COPY --chown=echoapp:nodejs server/package.json ./server/package.json
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./server/prisma
 
-# Install ALL dependencies for server workspace (including Prisma CLI)
-RUN pnpm install --frozen-lockfile
+# Copy node_modules and Prisma schema from backend-dependencies (already has everything)
+COPY --from=backend-dependencies --chown=echoapp:nodejs /build/node_modules ./node_modules
+COPY --from=backend-dependencies --chown=echoapp:nodejs /build/server/prisma ./server/prisma
 
-# Generate Prisma Client for THIS Alpine/Musl container
+# Regenerate Prisma Client for Alpine/Musl (critical for compatibility)
 WORKDIR /app/server
 RUN pnpm exec prisma generate
 
-# Remove devDependencies to keep image small (Prisma Client stays)
-RUN pnpm prune --prod
-
-# Copy built application files to /app root
+# Back to root
 WORKDIR /app
+
+# Copy built files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
