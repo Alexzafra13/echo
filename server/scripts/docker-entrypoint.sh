@@ -81,7 +81,7 @@ if npx prisma@6.17.1 migrate deploy; then
   echo "✅ Database migrations completed!"
 
   # Check if admin user exists
-  USER_COUNT=$(npx prisma@6.17.1 db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" 2>/dev/null | grep -o '[0-9]\+' | tail -1 || echo "0")
+  USER_COUNT=$(echo "SELECT COUNT(*) FROM \"User\";" | npx prisma@6.17.1 db execute --stdin 2>/dev/null | grep -o '[0-9]\+' | tail -1 || echo "0")
 
   if [ "$USER_COUNT" = "0" ]; then
     echo ""
