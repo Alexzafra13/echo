@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Settings, History } from 'lucide-react';
+import { Settings, History, Search } from 'lucide-react';
 import { ProvidersTab } from './ProvidersTab';
 import { HistoryTab } from './HistoryTab';
+import { AutoSearchTab } from './AutoSearchTab';
 import styles from './MetadataSettingsPanel.module.css';
 
-type Tab = 'providers' | 'history';
+type Tab = 'providers' | 'autosearch' | 'history';
 
 /**
  * MetadataSettingsPanel Component
@@ -23,6 +24,12 @@ export function MetadataSettingsPanel() {
       label: 'Providers',
       icon: <Settings size={18} />,
       description: 'Configurar API keys y proveedores',
+    },
+    {
+      id: 'autosearch' as Tab,
+      label: 'Auto-Search',
+      icon: <Search size={18} />,
+      description: 'Auto-búsqueda de MusicBrainz IDs',
     },
     {
       id: 'history' as Tab,
@@ -62,6 +69,7 @@ export function MetadataSettingsPanel() {
       {/* Tab Content */}
       <div className={styles.tabContent}>
         {activeTab === 'providers' && <ProvidersTab />}
+        {activeTab === 'autosearch' && <AutoSearchTab />}
         {activeTab === 'history' && <HistoryTab />}
       </div>
     </div>

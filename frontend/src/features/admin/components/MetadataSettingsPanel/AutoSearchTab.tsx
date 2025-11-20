@@ -1,0 +1,294 @@
+import { useState, useEffect } from 'react';
+import { Search, Check, AlertCircle, Info } from 'lucide-react';
+import { Button } from '@shared/components/ui';
+import { apiClient } from '@shared/services/api';
+import { useToast } from '@shared/context/ToastContext';
+import styles from './ProvidersTab.module.css';
+
+interface AutoSearchConfig {
+  enabled: boolean;
+  confidenceThreshold: number;
+  description: string;
+}
+
+interface AutoSearchStats {
+  totalAutoSearched: number;
+  autoApplied: number;
+  conflictsCreated: number;
+  ignored: number;
+}
+
+/**
+ * AutoSearchTab Component
+ * Configuración de auto-búsqueda de MusicBrainz IDs (Picard-style)
+ */
+export function AutoSearchTab() {
+  const [config, setConfig] = useState<AutoSearchConfig>({
+    enabled: false,
+    confidenceThreshold: 95,
+    description: '',
+  });
+  const [stats, setStats] = useState<AutoSearchStats>({
+    totalAutoSearched: 0,
+    autoApplied: 0,
+    conflictsCreated: 0,
+    ignored: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const { addToast } = useToast();
+
+  // Load config and stats on mount
+  useEffect(() => {
+    loadConfig();
+    loadStats();
+  }, []);
+
+  const loadConfig = async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiClient.get('/admin/mbid-auto-search/config');
+      setConfig(response.data);
+    } catch (error) {
+      console.error('Error loading auto-search config:', error);
+      addToast('Error al cargar configuración de auto-búsqueda', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await apiClient.get('/admin/mbid-auto-search/stats');
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error loading auto-search stats:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+
+      await apiClient.put('/admin/mbid-auto-search/config', {
+        enabled: config.enabled,
+        confidenceThreshold: config.confidenceThreshold,
+      });
+
+      addToast('Configuración guardada correctamente', 'success');
+
+      // Reload config to get updated description
+      await loadConfig();
+    } catch (error: any) {
+      console.error('Error saving auto-search config:', error);
+      addToast(
+        error.response?.data?.message || 'Error al guardar configuración',
+        'error'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.loading}>
+        <p>Cargando configuración...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.providersTab}>
+      {/* Header */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <Search size={20} />
+          <h3 className={styles.sectionTitle}>Auto-búsqueda de MusicBrainz IDs</h3>
+        </div>
+        <p className={styles.sectionDescription}>
+          Busca automáticamente MusicBrainz IDs durante el escaneo de biblioteca cuando las etiquetas no los contienen.
+          Similar a cómo funciona MusicBrainz Picard.
+        </p>
+      </div>
+
+      {/* Enable/Disable Toggle */}
+      <div className={styles.section}>
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <label className={styles.settingLabel}>
+              <input
+                type="checkbox"
+                checked={config.enabled}
+                onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
+                className={styles.checkbox}
+              />
+              <span>Habilitar auto-búsqueda durante el scan</span>
+            </label>
+            <p className={styles.settingDescription}>
+              Cuando está habilitado, el scanner buscará automáticamente MusicBrainz IDs para artistas, álbumes y tracks
+              que no los tengan en sus etiquetas ID3.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Confidence Threshold */}
+      {config.enabled && (
+        <div className={styles.section}>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <label className={styles.settingLabel}>
+                Umbral de confianza para auto-aplicación
+              </label>
+              <p className={styles.settingDescription}>
+                Score mínimo (0-100) para aplicar MBID automáticamente sin confirmación.
+              </p>
+            </div>
+          </div>
+
+          {/* Slider */}
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <input
+                type="range"
+                min="75"
+                max="100"
+                step="1"
+                value={config.confidenceThreshold}
+                onChange={(e) =>
+                  setConfig({ ...config, confidenceThreshold: parseInt(e.target.value) })
+                }
+                style={{
+                  flex: 1,
+                  height: '6px',
+                  borderRadius: '3px',
+                  outline: 'none',
+                  background: `linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) ${((config.confidenceThreshold - 75) / 25) * 100}%, var(--border-secondary) ${((config.confidenceThreshold - 75) / 25) * 100}%, var(--border-secondary) 100%)`,
+                }}
+              />
+              <span
+                style={{
+                  minWidth: '60px',
+                  textAlign: 'right',
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)',
+                  fontSize: '1.125rem',
+                }}
+              >
+                {config.confidenceThreshold}
+              </span>
+            </div>
+
+            {/* Threshold explanation */}
+            <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <span style={{ color: 'var(--status-success)' }}>●</span>
+                <span>
+                  <strong>Score ≥{config.confidenceThreshold}:</strong> Auto-aplicado automáticamente
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <span style={{ color: 'var(--status-warning)' }}>●</span>
+                <span>
+                  <strong>Score 75-{config.confidenceThreshold - 1}:</strong> Crea conflicto para revisión manual
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <span style={{ color: 'var(--text-tertiary)' }}>●</span>
+                <span>
+                  <strong>Score &lt;75:</strong> Ignorado (baja confianza)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Recommended values */}
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem 1rem',
+              backgroundColor: 'var(--bg-secondary)',
+              borderRadius: '8px',
+              display: 'flex',
+              gap: '0.5rem',
+              fontSize: '0.875rem',
+            }}
+          >
+            <Info size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <strong>Recomendaciones:</strong>
+              <ul style={{ margin: '0.5rem 0 0 1.25rem', lineHeight: '1.6' }}>
+                <li><strong>95 (Conservador):</strong> Máxima seguridad, menos automatización</li>
+                <li><strong>90 (Recomendado):</strong> Balance entre seguridad y automatización</li>
+                <li><strong>85 (Agresivo):</strong> Más automatización, puede tener falsos positivos</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Statistics */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Estadísticas</h3>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{stats.autoApplied}</div>
+            <div className={styles.statLabel}>Auto-aplicados</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{stats.conflictsCreated}</div>
+            <div className={styles.statLabel}>Conflictos creados</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statValue}>{stats.ignored}</div>
+            <div className={styles.statLabel}>Ignorados</div>
+          </div>
+        </div>
+        {stats.conflictsCreated > 0 && (
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            <AlertCircle size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} />
+            Tienes {stats.conflictsCreated} conflictos pendientes de revisión en la pestaña "Metadata"
+          </p>
+        )}
+      </div>
+
+      {/* Info Box */}
+      <div
+        style={{
+          marginTop: '1.5rem',
+          padding: '1rem',
+          backgroundColor: 'var(--bg-tertiary)',
+          borderLeft: '4px solid var(--accent-primary)',
+          borderRadius: '4px',
+        }}
+      >
+        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: 600 }}>
+          ¿Cómo funciona?
+        </h4>
+        <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem', lineHeight: '1.6' }}>
+          <li>Durante el scan, busca MBIDs en MusicBrainz para entidades sin MBID en tags</li>
+          <li>Usa búsqueda multi-campo (artista + álbum + track + duración + ISRC)</li>
+          <li>Coincidencias de alta confianza se aplican automáticamente</li>
+          <li>Coincidencias medias te permiten elegir entre múltiples opciones (estilo Picard)</li>
+          <li>Los MBIDs correctos mejoran el enriquecimiento (Fanart.tv requiere MBIDs)</li>
+        </ul>
+      </div>
+
+      {/* Save Button */}
+      <div className={styles.actions}>
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          loading={isSaving}
+          disabled={isSaving}
+          leftIcon={<Check size={16} />}
+        >
+          Guardar cambios
+        </Button>
+      </div>
+    </div>
+  );
+}
