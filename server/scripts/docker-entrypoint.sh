@@ -69,20 +69,20 @@ echo "🔄 Setting up database..."
 
 # Generate Prisma Client first
 echo "   📦 Generating Prisma Client..."
-npx prisma generate || {
+npx --no-install prisma generate || {
   echo "⚠️  Prisma generate failed, but continuing..."
 }
 
 # Check if database is empty (first run)
 FIRST_RUN=false
-if ! npx prisma db execute --stdin <<< "SELECT 1 FROM \"User\" LIMIT 1;" > /dev/null 2>&1; then
+if ! echo "SELECT 1 FROM \"User\" LIMIT 1;" | npx --no-install prisma db execute --stdin > /dev/null 2>&1; then
   echo "   🆕 First run detected - initializing database..."
   FIRST_RUN=true
 fi
 
 # Run migrations
 echo "   🔄 Running database migrations..."
-npx prisma migrate deploy || {
+npx --no-install prisma migrate deploy || {
   echo "⚠️  Migration failed, but continuing..."
 }
 
@@ -94,7 +94,7 @@ if [ "$FIRST_RUN" = true ]; then
   echo "🌱 Creating initial admin user..."
 
   # Run seed to create admin user
-  if npx prisma db seed; then
+  if npx --no-install prisma db seed; then
     echo "✅ Admin user created successfully!"
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
