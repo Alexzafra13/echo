@@ -132,10 +132,29 @@ async function bootstrap() {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
     // Serve static assets (js, css, images, etc.)
-    // Including index.html which will be served at /
     app.useStaticAssets({
       root: frontendPath,
       prefix: '/',
+    });
+
+    // SPA fallback: serve index.html for all non-API routes
+    // This allows client-side routing to work (e.g., /login, /albums, etc.)
+    const fastify = app.getHttpAdapter().getInstance();
+    fastify.setNotFoundHandler((request, reply) => {
+      const { url } = request;
+
+      // If request is for API or health endpoint, return 404
+      if (url.startsWith('/api/') || url === '/api') {
+        reply.code(404).send({
+          statusCode: 404,
+          message: `Cannot ${request.method} ${url}`,
+          error: 'Not Found',
+        });
+        return;
+      }
+
+      // For all other routes, serve index.html (SPA fallback)
+      reply.type('text/html').sendFile('index.html', frontendPath);
     });
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
