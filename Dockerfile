@@ -157,6 +157,7 @@ RUN echo '#!/bin/sh' > /entrypoint-wrapper.sh && \
     echo 'chown -R echoapp:nodejs /app/config /app/uploads /app/logs 2>/dev/null || true' >> /entrypoint-wrapper.sh && \
     echo '# Execute main entrypoint as echoapp user' >> /entrypoint-wrapper.sh && \
     echo 'exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"' >> /entrypoint-wrapper.sh && \
+    sed -i 's/\r$//' /entrypoint-wrapper.sh && \
     chmod +x /entrypoint-wrapper.sh
 
 # Stay as root (wrapper will switch to echoapp after fixing permissions)
