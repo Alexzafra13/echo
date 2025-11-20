@@ -117,21 +117,25 @@ ENV NODE_ENV=production
 # dumb-init: proper signal handling (PID 1)
 RUN apk add --no-cache netcat-openbsd dumb-init
 
+# Install pnpm
+RUN npm install -g pnpm@10.18.3
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S echoapp -u 1001
 
 WORKDIR /app
 
-# Copy built backend from builder stage
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/package.json ./
+# Copy server files for installation
+COPY --chown=echoapp:nodejs server/package.json ./
+COPY --chown=echoapp:nodejs pnpm-lock.yaml ./
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 
-# Copy node_modules from workspace root (pnpm hoisting puts all deps here)
-COPY --from=backend-builder --chown=echoapp:nodejs /build/node_modules ./node_modules
+# Install production dependencies
+RUN pnpm install --prod
 
-# Copy built frontend from frontend-builder stage
+# Copy built files
+COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
 # Copy entrypoint script from /tmp where we saved it before pnpm prune
