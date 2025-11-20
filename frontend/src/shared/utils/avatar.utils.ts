@@ -15,27 +15,26 @@ const DEFAULT_AVATAR_PLACEHOLDER = '/images/avatar-default.svg';
  *
  * @param userId - ID del usuario
  * @param hasAvatar - Indica si el usuario tiene avatar (opcional)
+ * @param cacheBuster - Timestamp para invalidar cache (opcional)
  * @returns URL válida del avatar o placeholder por defecto
  *
  * @example
  * ```tsx
- * const avatarUrl = getUserAvatarUrl(user.id);
+ * const avatarUrl = getUserAvatarUrl(user.id, user.hasAvatar);
  * <img src={avatarUrl} alt={user.name} />
  * ```
- *
- * Note: El backend puede incluir un parámetro ?v=timestamp cuando
- * la imagen cambia, por lo que no necesitamos cache busting manual aquí.
  */
-export function getUserAvatarUrl(userId?: string | null, hasAvatar?: boolean): string {
+export function getUserAvatarUrl(userId?: string | null, hasAvatar?: boolean, cacheBuster?: number): string {
   // Si no hay userId o explícitamente no tiene avatar, usar placeholder
   if (!userId || hasAvatar === false) {
     return DEFAULT_AVATAR_PLACEHOLDER;
   }
 
   // Si tiene avatar, construir URL del endpoint
-  // El backend incluye ?v=timestamp para cache busting automático si es necesario
   if (hasAvatar === true) {
-    return `/api/images/users/${userId}/avatar`;
+    const baseUrl = `/api/images/users/${userId}/avatar`;
+    // Añadir cache buster si se proporciona para forzar recarga
+    return cacheBuster ? `${baseUrl}?v=${cacheBuster}` : baseUrl;
   }
 
   // Si no se proporcionó hasAvatar (undefined), usar placeholder por defecto
