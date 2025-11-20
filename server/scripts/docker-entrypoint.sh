@@ -63,14 +63,16 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 2. Database Initialization (if needed)
+# 2. Database Migrations
 # ============================================
-# NOTE: Prisma Client is pre-generated during Docker build
-# Migrations should be run manually or via a separate init container
-# For first-time setup, run: docker exec echo-app node dist/src/scripts/init-db.js
+echo "🔄 Running database migrations..."
 
-echo "ℹ️  Database will auto-migrate on application startup"
-echo "   If this is your first run, the database will be initialized automatically"
+# Run migrations using npx (Prisma CLI installed temporarily)
+if npx prisma@6.17.1 migrate deploy; then
+  echo "✅ Database migrations completed!"
+else
+  echo "⚠️  Migrations failed, but continuing..."
+fi
 
 echo ""
 echo "✅ Initialization complete!"
