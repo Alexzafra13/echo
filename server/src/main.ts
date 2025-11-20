@@ -132,6 +132,7 @@ async function bootstrap() {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
     const fastify = app.getHttpAdapter().getInstance();
+    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
 
     // Register @fastify/static with decorateReply: false to avoid HEAD route conflicts
     await fastify.register(require('@fastify/static'), {
@@ -140,22 +141,8 @@ async function bootstrap() {
       decorateReply: false, // Prevents HEAD route conflicts with wildcards
     });
 
-    logger.log('Frontend static assets configured');
-  } else {
-    logger.warn(`Frontend not found at ${frontendPath}`);
-    logger.warn(`Running in API-only mode (development)`);
-  }
-
-  // Start server
-  await app.listen(appConfig.port, '0.0.0.0');
-
-  // AFTER server is listening, configure SPA fallback using onSend hook
-  // This intercepts 404 responses AFTER NestJS has processed them
-  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
-    const fastify = app.getHttpAdapter().getInstance();
-    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
-
-    // Intercept 404 responses and serve SPA for non-API routes
+    // Configure SPA fallback using onSend hook BEFORE server starts
+    // This intercepts 404 responses AFTER NestJS has processed them
     fastify.addHook('onSend', async (request, reply, payload) => {
       if (
         reply.statusCode === 404 &&
@@ -168,8 +155,15 @@ async function bootstrap() {
       return payload;
     });
 
+    logger.log('Frontend static assets configured');
     logger.log('SPA fallback configured for client-side routing');
+  } else {
+    logger.warn(`Frontend not found at ${frontendPath}`);
+    logger.warn(`Running in API-only mode (development)`);
   }
+
+  // Start server
+  await app.listen(appConfig.port, '0.0.0.0');
 
   // Auto-detect server IPs for easier access
   const networkInterfaces = require('os').networkInterfaces();
