@@ -134,10 +134,9 @@ COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 # Install production dependencies
 RUN pnpm install --prod
 
-# CRITICAL: Copy the pre-generated Prisma Client from the build stage
-# This is where the Prisma Client was already generated during build
-COPY --from=backend-dependencies --chown=echoapp:nodejs /build/server/node_modules/.prisma ./node_modules/.prisma
-COPY --from=backend-dependencies --chown=echoapp:nodejs /build/server/node_modules/@prisma ./node_modules/@prisma
+# CRITICAL: Generate Prisma Client using npx (comes with @prisma/client package)
+# @prisma/client is in dependencies, so we can use npx prisma without the CLI in devDependencies
+RUN npx prisma generate
 
 # Copy built files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
