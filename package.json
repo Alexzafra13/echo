@@ -17,7 +17,8 @@
     "quickstart:windows": "powershell -ExecutionPolicy Bypass -File scripts/quickstart.ps1",
     "reset": "bash scripts/reset-and-init.sh",
     "dev": "pnpm --filter echo-server-backend dev",
-    "dev:all": "pnpm --parallel --filter echo-server-backend --filter echo-frontend dev",
+    "dev:all": "concurrently -n \"server,client\" -c \"bgBlue.bold,bgMagenta.bold\" \"pnpm --filter echo-server-backend dev\" \"pnpm --filter echo-frontend dev\"",
+    "dev:all:legacy": "pnpm --parallel --filter echo-server-backend --filter echo-frontend dev",
     "build": "pnpm --filter echo-frontend build && pnpm --filter echo-server-backend build",
     "docker:dev": "docker-compose -f docker-compose.dev.yml up -d",
     "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",
@@ -45,6 +46,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "socket.io-client": "^4.8.1"
   }
 }

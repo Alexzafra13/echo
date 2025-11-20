@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { RequestWithUser } from '@shared/types/request.types';
 import {
@@ -153,6 +154,7 @@ export class UserInteractionsController {
    * GET /interactions/me
    * Get all interactions for the current user
    */
+  @SkipThrottle() // Skip rate limiting for read-only endpoint
   @Get('me')
   @ApiOperation({ summary: 'Get all interactions for the current user' })
   @ApiResponse({
@@ -183,6 +185,7 @@ export class UserInteractionsController {
    * GET /interactions/item/:itemType/:itemId
    * Get interaction summary for an item
    */
+  @SkipThrottle() // Skip rate limiting for read-only endpoint (prevents 429 errors on track lists)
   @Get('item/:itemType/:itemId')
   @ApiOperation({ summary: 'Get interaction summary for an item' })
   @ApiResponse({
