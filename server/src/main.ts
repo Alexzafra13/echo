@@ -132,47 +132,45 @@ async function bootstrap() {
     logger.log(`Serving frontend from: ${frontendPath}`);
 
     const fastify = app.getHttpAdapter().getInstance();
+    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
 
-    // Register @fastify/static with decorateReply: false to avoid HEAD route conflicts
+    // Register @fastify/static for serving static assets
     await fastify.register(require('@fastify/static'), {
       root: frontendPath,
       prefix: '/',
-      decorateReply: false, // Prevents HEAD route conflicts with wildcards
+      decorateReply: false,
+    });
+
+    // Use preHandler hook to implement SPA routing
+    // This runs BEFORE NestJS routing, so it can intercept and serve index.html
+    fastify.addHook('preHandler', async (request, reply) => {
+      const url = request.url;
+
+      // Skip API routes - let NestJS handle them
+      if (url.startsWith('/api/')) {
+        return;
+      }
+
+      // Skip if it's a static file that exists
+      // @fastify/static will handle: /, /assets/*, /vite.svg, etc.
+      // We only want to serve index.html for unknown routes like /login, /albums
+      const filePath = join(frontendPath, url === '/' ? 'index.html' : url);
+      if (existsSync(filePath)) {
+        return;
+      }
+
+      // Serve index.html for SPA client-side routing
+      reply.type('text/html').send(indexHtml);
     });
 
     logger.log('Frontend static assets configured');
+    logger.log('SPA fallback configured for client-side routing');
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
     logger.warn(`Running in API-only mode (development)`);
   }
 
-  // Initialize NestJS application (sets up routes and default handlers)
-  await app.init();
-
-  // Configure SPA fallback by overriding NotFoundHandler AFTER NestJS init
-  if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
-    const fastify = app.getHttpAdapter().getInstance();
-    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
-
-    // Override NotFoundHandler to serve SPA for non-API routes
-    fastify.setNotFoundHandler((request, reply) => {
-      if (!request.url.startsWith('/api/')) {
-        // Serve SPA for client-side routing
-        reply.type('text/html').send(indexHtml);
-      } else {
-        // Return proper JSON 404 for API routes
-        reply.status(404).send({
-          statusCode: 404,
-          message: `Cannot ${request.method} ${request.url}`,
-          error: 'Not Found',
-        });
-      }
-    });
-
-    logger.log('SPA fallback configured for client-side routing');
-  }
-
-  // Start server
+  // Start server (this calls app.init() automatically)
   await app.listen(appConfig.port, '0.0.0.0');
 
   // Auto-detect server IPs for easier access
