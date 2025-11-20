@@ -36,11 +36,11 @@ async function bootstrap() {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for React
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // Allow inline styles and Google Fonts
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", 'data:', 'blob:'], // Allow data URIs and blobs for images
         connectSrc: ["'self'"], // WebSocket connections
-        fontSrc: ["'self'", 'data:'],
+        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], // Allow Google Fonts
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:'], // Allow blob URLs for audio streaming
         frameSrc: ["'none'"],
