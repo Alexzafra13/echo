@@ -126,25 +126,30 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy workspace structure (needed for pnpm-lock.yaml to work)
-COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
-COPY --chown=echoapp:nodejs server/package.json ./server/package.json
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./server/prisma
+# Copy workspace structure for pnpm deploy
+COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY --chown=echoapp:nodejs server/package.json ./server/
 
-# Install ALL dependencies for server workspace (including Prisma CLI)
-RUN pnpm install --frozen-lockfile
+# Use pnpm deploy to create production-ready deployment in /prod directory
+# This installs ONLY production dependencies for the specified workspace package
+RUN pnpm --filter=echo-server-backend deploy --prod /prod
 
-# Generate Prisma Client for THIS Alpine/Musl container
-WORKDIR /app/server
+# Switch to production directory
+WORKDIR /prod
+
+# Copy Prisma schema
+COPY --chown=echoapp:nodejs server/prisma ./prisma
+
+# Generate Prisma Client for Alpine/Musl (critical for binary compatibility)
 RUN pnpm exec prisma generate
 
-# Remove devDependencies to keep image small (Prisma Client stays)
-RUN pnpm prune --prod
-
-# Copy built application files to /app root
-WORKDIR /app
+# Copy built files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
+
+# Move everything to /app (expected location for runtime)
+WORKDIR /app
+RUN cp -r /prod/* ./ && rm -rf /prod
 
 # Copy entrypoint script from /tmp where we saved it before pnpm prune
 COPY --from=backend-builder /tmp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
