@@ -30,6 +30,7 @@ import { RecommendationsModule } from './features/recommendations/recommendation
 import { LogsModule } from './features/logs/logs.module';
 import { HealthModule } from './features/health/health.module';
 import { validateEnvironment } from './config/env.validation';
+import { SpaController } from './shared/controllers/spa.controller';
 
 @Module({
   imports: [
@@ -100,7 +101,9 @@ import { validateEnvironment } from './config/env.validation';
     PlayTrackingModule,
     RecommendationsModule,
   ],
-  controllers: [],
+  controllers: [
+    SpaController, // MUST be last - catch-all for SPA routing
+  ],
   providers: [
     // Global Rate Limiting Guard
     {
