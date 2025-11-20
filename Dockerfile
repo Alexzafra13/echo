@@ -143,6 +143,10 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/
 RUN mkdir -p /app/uploads/music /app/uploads/covers && \
     chown -R echoapp:nodejs /app/uploads
 
+# Create config directory with proper permissions (for JWT secrets generation)
+RUN mkdir -p /app/config && \
+    chown -R echoapp:nodejs /app/config
+
 # Switch to non-root user
 USER echoapp
 
