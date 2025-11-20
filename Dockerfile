@@ -129,8 +129,8 @@ COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
-# Copy entrypoint script from builder stage
-COPY --from=backend-builder --chown=echoapp:nodejs /build/server/scripts/docker-entrypoint.sh /app/
+# Copy entrypoint script directly from build context
+COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /app/
 RUN chmod +x /app/docker-entrypoint.sh
 
 # Create upload directories with proper permissions
