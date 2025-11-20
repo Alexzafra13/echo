@@ -147,8 +147,19 @@ RUN mkdir -p /app/uploads/music /app/uploads/covers && \
 RUN mkdir -p /app/config && \
     chown -R echoapp:nodejs /app/config
 
-# Switch to non-root user
-USER echoapp
+# Install su-exec for running as non-root user after fixing permissions
+RUN apk add --no-cache su-exec
+
+# Create wrapper script to fix volume permissions then run as echoapp
+RUN echo '#!/bin/sh' > /entrypoint-wrapper.sh && \
+    echo 'set -e' >> /entrypoint-wrapper.sh && \
+    echo '# Fix permissions for volumes (may be owned by root on Windows Docker Desktop)' >> /entrypoint-wrapper.sh && \
+    echo 'chown -R echoapp:nodejs /app/config /app/uploads /app/logs 2>/dev/null || true' >> /entrypoint-wrapper.sh && \
+    echo '# Execute main entrypoint as echoapp user' >> /entrypoint-wrapper.sh && \
+    echo 'exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"' >> /entrypoint-wrapper.sh && \
+    chmod +x /entrypoint-wrapper.sh
+
+# Stay as root (wrapper will switch to echoapp after fixing permissions)
 
 # Default port (configurable via environment)
 ENV PORT=4567
@@ -162,6 +173,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # Use dumb-init for proper signal handling (graceful shutdown)
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-# Start the application using entrypoint script
-# (waits for DB/Redis, runs migrations, starts server)
-CMD ["/usr/local/bin/docker-entrypoint.sh"]
+# Start the application using wrapper script
+# (fixes volume permissions, then runs entrypoint as echoapp)
+CMD ["/entrypoint-wrapper.sh"]
