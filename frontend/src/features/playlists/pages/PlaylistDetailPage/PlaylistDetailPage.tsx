@@ -10,6 +10,7 @@ import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic } from '../../components';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
+import { useAuthStore } from '@shared/store';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -19,6 +20,7 @@ import styles from './PlaylistDetailPage.module.css';
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { playQueue, currentTrack } = usePlayer();
+  const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
 
@@ -155,7 +157,7 @@ export default function PlaylistDetailPage() {
                   <>
                     <span className={styles.playlistDetailPage__heroOwner}>
                       <img
-                        src={getUserAvatarUrl(playlist.ownerId)}
+                        src={getUserAvatarUrl(playlist.ownerId, playlist.ownerHasAvatar, avatarTimestamp)}
                         alt={playlist.ownerName}
                         className={styles.playlistDetailPage__heroOwnerAvatar}
                         onError={handleAvatarError}

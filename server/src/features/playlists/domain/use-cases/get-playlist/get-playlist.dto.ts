@@ -11,6 +11,7 @@ export interface GetPlaylistOutput {
   size: bigint;
   ownerId: string;
   ownerName?: string;
+  ownerHasAvatar?: boolean; // Si el owner tiene avatar
   public: boolean;
   songCount: number;
   path?: string;

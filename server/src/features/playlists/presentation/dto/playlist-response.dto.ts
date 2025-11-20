@@ -30,6 +30,9 @@ export class PlaylistResponseDto {
   @ApiPropertyOptional({ example: 'johndoe' })
   ownerName?: string;
 
+  @ApiPropertyOptional({ example: true, description: 'Si el owner tiene avatar' })
+  ownerHasAvatar?: boolean;
+
   @ApiProperty({ example: false })
   public!: boolean;
 
@@ -61,6 +64,7 @@ export class PlaylistResponseDto {
       size: output.size.toString(),
       ownerId: output.ownerId,
       ownerName: output.ownerName,
+      ownerHasAvatar: output.ownerHasAvatar,
       public: output.public,
       songCount: output.songCount,
       path: output.path,
