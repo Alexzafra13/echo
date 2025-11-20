@@ -89,7 +89,7 @@ export class MbidSearchCacheService {
           queryText: cacheKey.queryText,
           queryType: cacheKey.queryType,
           queryParams: {
-            equals: cacheKey.queryParams,
+            equals: cacheKey.queryParams as any,
           },
         },
       });
