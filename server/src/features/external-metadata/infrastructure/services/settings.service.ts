@@ -75,7 +75,27 @@ export class SettingsService {
   async set(key: string, value: any): Promise<void> {
     const stringValue = this.valueToString(value);
 
-    await this.repository.update(key, stringValue);
+    // Check if setting exists to preserve metadata
+    const existing = await this.repository.findOne(key);
+
+    if (existing) {
+      // Update existing setting
+      await this.repository.update(key, stringValue);
+    } else {
+      // Create new setting with sensible defaults
+      // Extract category from key (e.g., "metadata.auto_search_mbid.enabled" -> "metadata")
+      const category = key.split('.')[0] || 'general';
+      const type = typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'string';
+
+      await this.repository.upsert({
+        key,
+        value: stringValue,
+        category,
+        type,
+        description: `Auto-created setting for ${key}`,
+        isPublic: false,
+      });
+    }
 
     // Update cache
     this.cache.set(key, value);
