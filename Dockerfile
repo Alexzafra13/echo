@@ -142,7 +142,8 @@ WORKDIR /prod
 COPY --chown=echoapp:nodejs server/prisma ./prisma
 
 # Generate Prisma Client for Alpine/Musl (critical for binary compatibility)
-RUN pnpm exec prisma generate
+# Use npx to run prisma without needing it in dependencies
+RUN npx prisma@6.17.1 generate
 
 # Copy built files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
