@@ -131,12 +131,12 @@ COPY --chown=echoapp:nodejs server/package.json ./
 COPY --chown=echoapp:nodejs pnpm-lock.yaml ./
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./prisma
 
-# Install production dependencies
+# Install production dependencies (clean install without devDependencies)
 RUN pnpm install --prod
 
-# CRITICAL: Generate Prisma Client using npx (comes with @prisma/client package)
-# @prisma/client is in dependencies, so we can use npx prisma without the CLI in devDependencies
-RUN npx prisma generate
+# Copy pre-generated Prisma Client (NO prisma generate here!)
+# This was already generated in backend-dependencies stage
+COPY --from=backend-dependencies --chown=echoapp:nodejs /build/server/node_modules/@prisma ./node_modules/@prisma
 
 # Copy built files
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/dist ./dist
