@@ -38,8 +38,8 @@ async function bootstrap() {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // Allow inline styles and Google Fonts
         scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'blob:'], // Allow data URIs and blobs for images
-        connectSrc: ["'self'", 'ws:', 'wss:'], // WebSocket connections (ws: for dev, wss: for production)
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'], // Allow external images (radio logos, covers)
+        connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'], // WebSocket + geolocation API
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], // Allow Google Fonts
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:'], // Allow blob URLs for audio streaming
