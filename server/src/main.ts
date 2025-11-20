@@ -141,25 +141,20 @@ async function bootstrap() {
       decorateReply: false,
     });
 
-    // Use preHandler hook to implement SPA routing
-    // This runs BEFORE NestJS routing, so it can intercept and serve index.html
-    fastify.addHook('preHandler', async (request, reply) => {
-      const url = request.url;
-
-      // Skip API routes - let NestJS handle them
-      if (url.startsWith('/api/')) {
+    // Configure SPA fallback - MUST be set BEFORE app.listen()
+    // This is the ONLY NotFoundHandler - registered before NestJS sets its own
+    fastify.setNotFoundHandler((request, reply) => {
+      // API routes: return JSON 404
+      if (request.url.startsWith('/api/')) {
+        reply.status(404).send({
+          statusCode: 404,
+          message: `Cannot ${request.method} ${request.url}`,
+          error: 'Not Found',
+        });
         return;
       }
 
-      // Skip if it's a static file that exists
-      // @fastify/static will handle: /, /assets/*, /vite.svg, etc.
-      // We only want to serve index.html for unknown routes like /login, /albums
-      const filePath = join(frontendPath, url === '/' ? 'index.html' : url);
-      if (existsSync(filePath)) {
-        return;
-      }
-
-      // Serve index.html for SPA client-side routing
+      // Non-API routes: serve index.html for SPA client-side routing
       reply.type('text/html').send(indexHtml);
     });
 
