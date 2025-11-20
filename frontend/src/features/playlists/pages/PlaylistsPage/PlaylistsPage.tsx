@@ -5,7 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist } from '../../hooks/usePlaylists';
-import { PlaylistCoverMosaic, CreatePlaylistModal } from '../../components';
+import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal } from '../../components';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -15,6 +15,8 @@ import styles from './PlaylistsPage.module.css';
 export default function PlaylistsPage() {
   const [, setLocation] = useLocation();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deletePlaylistId, setDeletePlaylistId] = useState<string | null>(null);
+  const [deletePlaylistName, setDeletePlaylistName] = useState('');
 
   const { data: playlistsData, isLoading } = usePlaylists();
   const createPlaylistMutation = useCreatePlaylist();
@@ -29,17 +31,25 @@ export default function PlaylistsPage() {
     });
   };
 
-  const handleDeletePlaylist = async (playlistId: string, playlistName: string) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar "${playlistName}"?`)) {
-      return;
-    }
+  const handleDeleteClick = (playlistId: string, playlistName: string) => {
+    setDeletePlaylistId(playlistId);
+    setDeletePlaylistName(playlistName);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletePlaylistId) return;
 
     try {
-      await deletePlaylistMutation.mutateAsync(playlistId);
+      await deletePlaylistMutation.mutateAsync(deletePlaylistId);
     } catch (error: any) {
       console.error('Error deleting playlist:', error);
       alert('Error al eliminar la playlist');
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeletePlaylistId(null);
+    setDeletePlaylistName('');
   };
 
   const formatDuration = (seconds: number): string => {
@@ -139,7 +149,7 @@ export default function PlaylistsPage() {
                       className={styles.playlistCard__actionButton}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeletePlaylist(playlist.id, playlist.name);
+                        handleDeleteClick(playlist.id, playlist.name);
                       }}
                       title="Eliminar playlist"
                       disabled={deletePlaylistMutation.isPending}
@@ -160,6 +170,16 @@ export default function PlaylistsPage() {
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreatePlaylist}
           isLoading={createPlaylistMutation.isPending}
+        />
+      )}
+
+      {/* Delete Playlist Modal */}
+      {deletePlaylistId && (
+        <DeletePlaylistModal
+          playlistName={deletePlaylistName}
+          onClose={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          isLoading={deletePlaylistMutation.isPending}
         />
       )}
     </div>
