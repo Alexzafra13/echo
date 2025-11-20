@@ -19,6 +19,7 @@ function getDefaultCorsOrigins(): string {
   // Add all network IPs
   for (const interfaceName in ifaces) {
     const interfaces = ifaces[interfaceName];
+    if (!interfaces) continue;
     for (const iface of interfaces) {
       // Skip internal (loopback) and non-IPv4 addresses
       if (iface.family === 'IPv4' && !iface.internal) {

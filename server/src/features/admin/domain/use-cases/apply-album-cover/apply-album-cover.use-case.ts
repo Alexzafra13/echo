@@ -81,6 +81,7 @@ export class ApplyAlbumCoverUseCase {
 
     // Download to temporary path first
     const tempPath = path.join(targetFolder, `cover-temp-${Date.now()}.jpg`);
+    let finalCoverPath: string;
 
     try {
       await this.imageDownload.downloadAndSave(input.coverUrl, tempPath);
@@ -118,7 +119,7 @@ export class ApplyAlbumCoverUseCase {
       this.logger.log(`Saved cover to: ${coverPath} (${width}x${height})`);
 
       // Store the final path for database update
-      const finalCoverPath = coverPath;
+      finalCoverPath = coverPath;
     } catch (error) {
       // Clean up temp file on error
       try {
