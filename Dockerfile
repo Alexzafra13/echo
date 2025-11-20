@@ -32,20 +32,29 @@ RUN pnpm build
 # ----------------------------------------
 FROM node:22-alpine AS backend-dependencies
 
-WORKDIR /build/server
+WORKDIR /build
 
 # Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
-# Copy only package files first (better layer caching)
-COPY server/package.json server/pnpm-lock.yaml ./
-COPY server/prisma ./prisma/
+# Copy workspace configuration files
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
 
-# Install ALL dependencies (including dev for build)
+# Copy package.json files for workspace packages
+COPY server/package.json ./server/
+COPY frontend/package.json ./frontend/
+
+# Copy prisma schema (needed for dependency installation)
+COPY server/prisma ./server/prisma/
+
+# Install ALL workspace dependencies (pnpm will install for all workspace packages)
 RUN pnpm install --frozen-lockfile
 
 # Generate Prisma Client
+WORKDIR /build/server
 RUN pnpm db:generate || PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 pnpm db:generate
+
+WORKDIR /build
 
 # ----------------------------------------
 # Stage 3: Build Backend
@@ -57,9 +66,12 @@ WORKDIR /build/server
 # Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
-# Copy dependencies from previous stage
+# Copy workspace files and node_modules from previous stage
+COPY --from=backend-dependencies /build/node_modules /build/node_modules
 COPY --from=backend-dependencies /build/server/node_modules ./node_modules
 COPY --from=backend-dependencies /build/server/prisma ./prisma
+COPY --from=backend-dependencies /build/pnpm-workspace.yaml /build/
+COPY --from=backend-dependencies /build/package.json* /build/
 
 # Copy backend source code
 COPY server/ ./
