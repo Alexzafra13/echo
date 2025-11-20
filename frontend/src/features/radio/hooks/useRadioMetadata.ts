@@ -54,7 +54,7 @@ export function useRadioMetadata({
     // Create SSE connection
     const connectSSE = () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4567/api';
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
         const url = `${apiUrl}/radio/metadata/stream?stationUuid=${encodeURIComponent(stationUuid)}&streamUrl=${encodeURIComponent(streamUrl)}`;
 
         console.log('🎵 [ICY] Connecting to SSE:', url);
