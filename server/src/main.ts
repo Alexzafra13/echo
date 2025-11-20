@@ -140,6 +140,8 @@ async function bootstrap() {
     // SPA fallback: serve index.html for all non-API routes
     // This allows client-side routing to work (e.g., /login, /albums, etc.)
     const fastify = app.getHttpAdapter().getInstance();
+    const indexHtml = readFileSync(indexHtmlPath, 'utf-8');
+
     fastify.setNotFoundHandler((request, reply) => {
       const { url } = request;
 
@@ -154,7 +156,7 @@ async function bootstrap() {
       }
 
       // For all other routes, serve index.html (SPA fallback)
-      reply.type('text/html').sendFile('index.html', frontendPath);
+      reply.type('text/html').send(indexHtml);
     });
   } else {
     logger.warn(`Frontend not found at ${frontendPath}`);
