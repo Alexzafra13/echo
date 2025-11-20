@@ -127,7 +127,7 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy workspace structure (needed for pnpm-lock.yaml to work)
-COPY --chown=echoapp:nodejs pnpm-workspace.yaml package.json* ./
+COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json* ./
 COPY --chown=echoapp:nodejs server/package.json ./server/package.json
 COPY --from=backend-builder --chown=echoapp:nodejs /build/server/prisma ./server/prisma
 
