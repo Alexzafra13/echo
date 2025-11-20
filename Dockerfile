@@ -132,7 +132,8 @@ COPY --chown=echoapp:nodejs server/package.json ./server/
 
 # Use pnpm deploy to create production-ready deployment in /prod directory
 # This installs ONLY production dependencies for the specified workspace package
-RUN pnpm --filter=echo-server-backend deploy --prod /prod
+# --legacy flag: Required for pnpm v10+ with non-injected workspaces
+RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod
 
 # Switch to production directory
 WORKDIR /prod
