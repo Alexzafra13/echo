@@ -14,6 +14,7 @@ import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { MbidAutoSearchService } from '@features/external-metadata/infrastructure/services/mbid-auto-search.service';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import * as path from 'path';
 
@@ -63,6 +64,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly cachedAlbumRepository: CachedAlbumRepository,
     private readonly externalMetadataService: ExternalMetadataService,
     private readonly settingsService: SettingsService,
+    private readonly mbidAutoSearchService: MbidAutoSearchService,
     private readonly logService: LogService,
   ) {}
 
@@ -507,6 +509,18 @@ export class ScanProcessorService implements OnModuleInit {
         tracker.artistsCreated++;
       }
 
+      // 🎯 Auto-búsqueda MBID estilo Picard: si el artista no tiene MBID, buscarlo
+      if (!mbzArtistId && artist.created) {
+        // Ejecutar en background para no bloquear el scan
+        this.mbidAutoSearchService
+          .searchArtistMbid(artist.id, artistName, true)
+          .catch((error) => {
+            this.logger.warn(
+              `Auto-search MBID failed for artist "${artistName}": ${error.message}`,
+            );
+          });
+      }
+
       // ============================================================
       // 3. BUSCAR O CREAR ÁLBUM (atómico, vinculado al artista)
       // ============================================================
@@ -532,6 +546,18 @@ export class ScanProcessorService implements OnModuleInit {
       if (tracker) {
         if (album.created) tracker.albumsCreated++;
         if (album.coverExtracted) tracker.coversExtracted++;
+      }
+
+      // 🎯 Auto-búsqueda MBID estilo Picard: si el álbum no tiene MBID, buscarlo
+      if (!mbzAlbumId && album.created) {
+        // Ejecutar en background para no bloquear el scan
+        this.mbidAutoSearchService
+          .searchAlbumMbid(album.id, albumName, artistName, true)
+          .catch((error) => {
+            this.logger.warn(
+              `Auto-search MBID failed for album "${albumName}": ${error.message}`,
+            );
+          });
       }
 
       // ============================================================
@@ -607,9 +633,31 @@ export class ScanProcessorService implements OnModuleInit {
         return 'updated';
       } else {
         // Crear nuevo track
-        await this.prisma.track.create({
+        const newTrack = await this.prisma.track.create({
           data: trackData,
         });
+
+        // 🎯 Auto-búsqueda MBID estilo Picard: si el track no tiene MBID, buscarlo
+        if (!metadata.musicBrainzTrackId) {
+          // Ejecutar en background para no bloquear el scan
+          this.mbidAutoSearchService
+            .searchTrackMbid(
+              newTrack.id,
+              {
+                artist: metadata.artist || artistName,
+                album: albumName,
+                title: metadata.title || path.basename(filePath, path.extname(filePath)),
+                trackNumber: metadata.trackNumber,
+                duration: metadata.duration,
+              },
+              true,
+            )
+            .catch((error) => {
+              this.logger.warn(
+                `Auto-search MBID failed for track "${metadata.title}": ${error.message}`,
+              );
+            });
+        }
 
         // Actualizar contadores del álbum
         await this.updateAlbumStats(album.id);
