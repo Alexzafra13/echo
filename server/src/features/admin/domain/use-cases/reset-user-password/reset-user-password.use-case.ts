@@ -7,6 +7,7 @@ import {
 } from '@features/auth/domain/ports';
 import { NotFoundError } from '@shared/errors';
 import { PasswordUtil } from '@shared/utils/password.util';
+import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { ResetUserPasswordInput, ResetUserPasswordOutput } from './reset-user-password.dto';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class ResetUserPasswordUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    private readonly logService: LogService,
   ) {}
 
   async execute(input: ResetUserPasswordInput): Promise<ResetUserPasswordOutput> {
@@ -35,7 +37,18 @@ export class ResetUserPasswordUseCase {
       mustChangePassword: true,
     });
 
-    // 4. Retornar contraseña temporal para que admin la comunique al usuario
+    // 4. Log password reset
+    await this.logService.info(
+      LogCategory.AUTH,
+      `Password reset by admin: ${user.username}`,
+      {
+        userId: user.id,
+        username: user.username,
+        resetBy: input.adminId,
+      },
+    );
+
+    // 5. Retornar contraseña temporal para que admin la comunique al usuario
     return {
       temporaryPassword,
     };
