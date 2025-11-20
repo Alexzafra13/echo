@@ -30,7 +30,7 @@ export function usePlaylist(id: string) {
     queryKey: ['playlists', id],
     queryFn: () => playlistsService.getPlaylist(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Always refetch to ensure metadata is up-to-date
   });
 }
 
@@ -42,7 +42,7 @@ export function usePlaylistTracks(playlistId: string) {
     queryKey: ['playlists', playlistId, 'tracks'],
     queryFn: () => playlistsService.getPlaylistTracks(playlistId),
     enabled: !!playlistId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Always refetch to ensure tracks list is up-to-date
   });
 }
 
