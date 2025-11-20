@@ -81,9 +81,10 @@ COPY --from=backend-dependencies /build/package.json* /build/
 # Copy backend source code
 COPY server/ ./
 
-# IMPORTANT: Copy entrypoint script to a safe location BEFORE pnpm prune
+# IMPORTANT: Copy scripts to a safe location BEFORE pnpm prune
 # (pnpm prune might delete the scripts/ directory)
-RUN cp -p scripts/docker-entrypoint.sh /tmp/docker-entrypoint.sh
+RUN cp -p scripts/docker-entrypoint.sh /tmp/docker-entrypoint.sh && \
+    cp -p scripts/reset-admin-password.js /tmp/reset-admin-password.js
 
 # Build the backend application
 RUN pnpm build
@@ -153,8 +154,12 @@ COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./front
 WORKDIR /app
 RUN cp -r /prod/* ./ && rm -rf /prod
 
-# Copy entrypoint script from /tmp where we saved it before pnpm prune
+# Copy scripts from /tmp where we saved them before pnpm prune
 COPY --from=backend-builder /tmp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+# Create scripts directory and copy admin reset script
+RUN mkdir -p /app/scripts
+COPY --from=backend-builder /tmp/reset-admin-password.js /app/scripts/reset-admin-password.js
 
 # Fix Windows line endings (CRLF → LF) - critical for script execution
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
