@@ -63,56 +63,14 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 2. Database Setup
+# 2. Database Initialization (if needed)
 # ============================================
-echo "🔄 Setting up database..."
+# NOTE: Prisma Client is pre-generated during Docker build
+# Migrations should be run manually or via a separate init container
+# For first-time setup, run: docker exec echo-app node dist/src/scripts/init-db.js
 
-# Generate Prisma Client first
-echo "   📦 Generating Prisma Client..."
-./node_modules/.bin/prisma generate || {
-  echo "⚠️  Prisma generate failed, but continuing..."
-}
-
-# Check if database is empty (first run)
-FIRST_RUN=false
-if ! echo "SELECT 1 FROM \"User\" LIMIT 1;" | ./node_modules/.bin/prisma db execute --stdin > /dev/null 2>&1; then
-  echo "   🆕 First run detected - initializing database..."
-  FIRST_RUN=true
-fi
-
-# Run migrations
-echo "   🔄 Running database migrations..."
-./node_modules/.bin/prisma migrate deploy || {
-  echo "⚠️  Migration failed, but continuing..."
-}
-
-# ============================================
-# 3. Seed Database (First Run Only)
-# ============================================
-if [ "$FIRST_RUN" = true ]; then
-  echo ""
-  echo "🌱 Creating initial admin user..."
-
-  # Run seed to create admin user
-  if ./node_modules/.bin/prisma db seed; then
-    echo "✅ Admin user created successfully!"
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "🔐 IMPORTANT: Default Credentials"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "   Username: admin"
-    echo "   Password: admin123"
-    echo ""
-    echo "⚠️  CHANGE THIS PASSWORD IMMEDIATELY!"
-    echo "   You'll be prompted on first login."
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-  else
-    echo "⚠️  Seed failed - you may need to create a user manually"
-  fi
-else
-  echo "   ℹ️  Database already initialized, skipping seed"
-fi
+echo "ℹ️  Database will auto-migrate on application startup"
+echo "   If this is your first run, the database will be initialized automatically"
 
 echo ""
 echo "✅ Initialization complete!"
