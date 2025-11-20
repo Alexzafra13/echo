@@ -30,7 +30,6 @@ import { RecommendationsModule } from './features/recommendations/recommendation
 import { LogsModule } from './features/logs/logs.module';
 import { HealthModule } from './features/health/health.module';
 import { validateEnvironment } from './config/env.validation';
-import { SpaController } from './shared/controllers/spa.controller';
 
 @Module({
   imports: [
@@ -102,7 +101,7 @@ import { SpaController } from './shared/controllers/spa.controller';
     RecommendationsModule,
   ],
   controllers: [
-    SpaController, // MUST be last - catch-all for SPA routing
+    // SPA fallback is registered manually in main.ts (must be outside /api prefix)
   ],
   providers: [
     // Global Rate Limiting Guard
