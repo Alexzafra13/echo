@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 // Infrastructure - Services
 import { AgentRegistryService } from './infrastructure/services/agent-registry.service';
 import { MetadataCacheService } from './infrastructure/services/metadata-cache.service';
+import { MbidSearchCacheService } from './infrastructure/services/mbid-search-cache.service';
 import { RateLimiterService } from './infrastructure/services/rate-limiter.service';
 import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
@@ -72,6 +73,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     // Core services
     AgentRegistryService,
     MetadataCacheService,
+    MbidSearchCacheService,
     RateLimiterService,
     SettingsService,
     StorageService,
@@ -113,6 +115,7 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
     LocalImageProvider,
     AgentRegistryService,
     MetadataCacheService,
+    MbidSearchCacheService,
     SettingsService,
     StorageService,
     ImageDownloadService,
