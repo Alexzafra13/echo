@@ -42,7 +42,7 @@ async function bootstrap() {
         connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'], // WebSocket + geolocation API
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], // Allow Google Fonts
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'", 'blob:'], // Allow blob URLs for audio streaming
+        mediaSrc: ["'self'", 'blob:', 'https:'], // Allow blob URLs + external radio streams
         frameSrc: ["'none'"],
       },
     },
