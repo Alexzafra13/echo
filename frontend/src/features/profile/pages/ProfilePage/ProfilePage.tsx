@@ -17,6 +17,7 @@ import styles from './ProfilePage.module.css';
 export function ProfilePage() {
   const { user } = useAuth();
   const updateUser = useAuthStore((state) => state.updateUser);
+  const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
 
   // Avatar modal
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -126,7 +127,7 @@ export function ProfilePage() {
             >
               {user?.hasAvatar ? (
                 <img
-                  src={getUserAvatarUrl(user?.id, user?.hasAvatar)}
+                  src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
                   alt={user?.name || user?.username}
                   className={styles.profilePage__avatar}
                   onError={handleAvatarError}
