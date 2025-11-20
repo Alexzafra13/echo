@@ -54,7 +54,13 @@ export interface LogMetadata {
  */
 @Injectable()
 export class LogService {
-  private readonly PERSIST_LEVELS = new Set([LogLevel.CRITICAL, LogLevel.ERROR, LogLevel.WARNING]);
+  // Persist CRITICAL, ERROR, WARNING, and INFO by default (excludes only DEBUG to reduce noise)
+  private readonly PERSIST_LEVELS = new Set([
+    LogLevel.CRITICAL,
+    LogLevel.ERROR,
+    LogLevel.WARNING,
+    LogLevel.INFO, // Now persisting INFO logs too
+  ]);
 
   constructor(
     @InjectPinoLogger(LogService.name)
