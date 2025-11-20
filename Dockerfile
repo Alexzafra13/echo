@@ -135,7 +135,9 @@ COPY --from=frontend-builder --chown=echoapp:nodejs /build/frontend/dist ./front
 
 # Copy entrypoint script from /tmp where we saved it before pnpm prune
 COPY --from=backend-builder /tmp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Fix Windows line endings (CRLF → LF) - critical for script execution
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create upload directories with proper permissions
 RUN mkdir -p /app/uploads/music /app/uploads/covers && \
