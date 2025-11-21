@@ -157,7 +157,7 @@ export default function PlaylistDetailPage() {
                   <>
                     <span className={styles.playlistDetailPage__heroOwner}>
                       <img
-                        src={getUserAvatarUrl(playlist.ownerId, playlist.ownerHasAvatar, avatarTimestamp)}
+                        src={getUserAvatarUrl(playlist.ownerId, undefined, avatarTimestamp)}
                         alt={playlist.ownerName}
                         className={styles.playlistDetailPage__heroOwnerAvatar}
                         onError={handleAvatarError}
