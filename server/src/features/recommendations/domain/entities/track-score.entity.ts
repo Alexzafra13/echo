@@ -6,10 +6,10 @@ export interface TrackScore {
 }
 
 export interface ScoreBreakdown {
-  explicitFeedback: number;  // 0-45 points from likes/ratings
-  implicitBehavior: number;  // 0-35 points from play behavior
-  recency: number;           // 0-15 points from temporal relevance
-  diversity: number;         // 0-5 points from variety/exploration
+  explicitFeedback: number;  // 0-30 points from likes/ratings
+  implicitBehavior: number;  // 0-50 points from play behavior (main factor)
+  recency: number;           // 0-18 points from temporal relevance
+  diversity: number;         // 0-2 points from variety/exploration
 }
 
 export interface RecommendationOptions {
@@ -77,11 +77,12 @@ export interface SmartPlaylistConfig {
 }
 
 // Scoring algorithm weights
+// Optimized to focus on what users actually listen to, not just likes
 export const SCORING_WEIGHTS = {
-  explicitFeedback: 0.45,  // 45% weight
-  implicitBehavior: 0.35,  // 35% weight
-  recency: 0.15,           // 15% weight
-  diversity: 0.05,         // 5% weight
+  explicitFeedback: 0.30,  // 30% weight (reduced - many users don't like/rate)
+  implicitBehavior: 0.50,  // 50% weight (increased - focus on what they actually play)
+  recency: 0.18,           // 18% weight (slightly increased - recent activity matters)
+  diversity: 0.02,         // 2% weight (reduced - don't force diversity too much)
 };
 
 // Explicit feedback scoring
@@ -93,6 +94,7 @@ export const FEEDBACK_SCORES = {
 };
 
 // Recency decay factor (lambda for exponential decay)
+// Lower lambda = gentler decay = tracks stay relevant longer
 export const RECENCY_DECAY = {
-  lambda: 0.05,  // 5% decay per day
+  lambda: 0.03,  // 3% decay per day (reduced from 5% for better retention)
 };
