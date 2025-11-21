@@ -113,73 +113,111 @@ function findVibrantColor(pixels: RGB[]): RGB {
  */
 export async function extractDominantColor(imageSrc: string): Promise<string> {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
+    // For local API images, fetch as blob first to avoid CORS issues
+    const isLocalApiImage = imageSrc.startsWith('/api/') || imageSrc.startsWith('/uploads/');
 
-    img.onload = () => {
-      try {
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-        if (!ctx) {
+    if (isLocalApiImage) {
+      // Fetch the image as blob with credentials to ensure CORS works
+      fetch(imageSrc, { credentials: 'include' })
+        .then(response => response.blob())
+        .then(blob => {
+          const objectUrl = URL.createObjectURL(blob);
+          loadImageAndExtractColor(objectUrl, resolve, () => {
+            URL.revokeObjectURL(objectUrl);
+          });
+        })
+        .catch(() => {
           resolve('64, 71, 114'); // Dark blue fallback
-          return;
-        }
-
-        // Resize for performance (100x100 like Spotify's approach)
-        const size = 100;
-        canvas.width = size;
-        canvas.height = size;
-
-        // Draw image
-        ctx.drawImage(img, 0, 0, size, size);
-
-        // Get image data
-        const imageData = ctx.getImageData(0, 0, size, size);
-        const data = imageData.data;
-
-        // Extract non-background pixels
-        const pixels: RGB[] = [];
-
-        // Sample pixels (skip every 2 pixels for performance)
-        for (let i = 0; i < data.length; i += 8) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const a = data[i + 3];
-
-          // Skip transparent pixels
-          if (a < 125) continue;
-
-          // Skip near-white pixels (often background)
-          if (r > 240 && g > 240 && b > 240) continue;
-
-          // Skip near-black pixels (often shadows/borders)
-          if (r < 15 && g < 15 && b < 15) continue;
-
-          pixels.push({ r, g, b });
-        }
-
-        // Find vibrant color using simplified k-means
-        const vibrantColor = findVibrantColor(pixels);
-
-        // Boost saturation slightly for better visual effect
-        const boosted = boostSaturation(vibrantColor, 1.2);
-
-        resolve(`${boosted.r}, ${boosted.g}, ${boosted.b}`);
-      } catch (error) {
-        console.error('Error extracting color:', error);
-        resolve('64, 71, 114'); // Dark blue fallback
-      }
-    };
-
-    img.onerror = () => {
-      resolve('64, 71, 114'); // Dark blue fallback
-    };
-
-    img.src = imageSrc;
+        });
+    } else {
+      // For external images (like radio favicons), use crossOrigin
+      loadImageAndExtractColor(imageSrc, resolve);
+    }
   });
+}
+
+/**
+ * Helper function to load image and extract color
+ */
+function loadImageAndExtractColor(
+  imageSrc: string,
+  resolve: (value: string) => void,
+  onComplete?: () => void
+) {
+  const img = new Image();
+
+  // Only set crossOrigin for external URLs
+  if (!imageSrc.startsWith('blob:')) {
+    img.crossOrigin = 'Anonymous';
+  }
+
+  img.onload = () => {
+    try {
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      if (!ctx) {
+        resolve('64, 71, 114'); // Dark blue fallback
+        onComplete?.();
+        return;
+      }
+
+      // Resize for performance (100x100 like Spotify's approach)
+      const size = 100;
+      canvas.width = size;
+      canvas.height = size;
+
+      // Draw image
+      ctx.drawImage(img, 0, 0, size, size);
+
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const data = imageData.data;
+
+      // Extract non-background pixels
+      const pixels: RGB[] = [];
+
+      // Sample pixels (skip every 2 pixels for performance)
+      for (let i = 0; i < data.length; i += 8) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+
+        // Skip transparent pixels
+        if (a < 125) continue;
+
+        // Skip near-white pixels (often background)
+        if (r > 240 && g > 240 && b > 240) continue;
+
+        // Skip near-black pixels (often shadows/borders)
+        if (r < 15 && g < 15 && b < 15) continue;
+
+        pixels.push({ r, g, b });
+      }
+
+      // Find vibrant color using simplified k-means
+      const vibrantColor = findVibrantColor(pixels);
+
+      // Boost saturation slightly for better visual effect
+      const boosted = boostSaturation(vibrantColor, 1.2);
+
+      resolve(`${boosted.r}, ${boosted.g}, ${boosted.b}`);
+      onComplete?.();
+    } catch (error) {
+      console.error('Error extracting color:', error);
+      resolve('64, 71, 114'); // Dark blue fallback
+      onComplete?.();
+    }
+  };
+
+  img.onerror = () => {
+    resolve('64, 71, 114'); // Dark blue fallback
+    onComplete?.();
+  };
+
+  img.src = imageSrc;
 }
 
 /**
