@@ -146,18 +146,35 @@ export class StorageService {
 
   /**
    * Save an image file
+   * Uses atomic write (temp file + rename) to avoid file locking issues on Windows
    * @param filePath Full path where to save
    * @param buffer Image buffer
    */
   async saveImage(filePath: string, buffer: Buffer): Promise<void> {
     try {
       // Ensure parent directory exists
-      await this.ensureDirectoryExists(path.dirname(filePath));
+      const dir = path.dirname(filePath);
+      await this.ensureDirectoryExists(dir);
 
-      // Write file
-      await fs.writeFile(filePath, buffer);
+      // Write to temporary file first (avoids file locking conflicts)
+      const tempPath = `${filePath}.tmp.${Date.now()}`;
 
-      this.logger.debug(`Saved image: ${filePath} (${buffer.length} bytes)`);
+      try {
+        await fs.writeFile(tempPath, buffer);
+
+        // Atomic rename - this works even if destination file is in use
+        await fs.rename(tempPath, filePath);
+
+        this.logger.debug(`Saved image: ${filePath} (${buffer.length} bytes)`);
+      } catch (renameError) {
+        // Clean up temp file if rename failed
+        try {
+          await fs.unlink(tempPath);
+        } catch (unlinkError) {
+          // Ignore cleanup errors
+        }
+        throw renameError;
+      }
     } catch (error) {
       this.logger.error(`Error saving image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
