@@ -1,6 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import * as path from 'path';
 import { AutoPlaylist, WaveMixConfig, PlaylistMetadata, TrackScore } from '../entities/track-score.entity';
 import { ScoringService } from './scoring.service';
 import {
@@ -8,10 +7,7 @@ import {
   PLAY_TRACKING_REPOSITORY,
 } from '@features/play-tracking/domain/ports';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
-import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
 // Wave Mix Configuration
 // Optimized for faster first mix generation and better user experience
@@ -57,10 +53,7 @@ export class WaveMixService {
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepo: IPlayTrackingRepository,
     private readonly prisma: PrismaService,
-    private readonly externalMetadataService: ExternalMetadataService,
     private readonly redis: RedisService,
-    private readonly storageService: StorageService,
-    private readonly imageDownloadService: ImageDownloadService,
   ) {}
 
   /**
@@ -570,49 +563,32 @@ export class WaveMixService {
   }
 
   /**
-   * Get artist cover image (cached or download from FanArt.tv)
-   * Extracted to avoid code duplication
+   * Get artist cover image URL
+   * Reuses images already downloaded by the artist page to avoid duplication
    */
   private async getArtistCoverImage(artist: { id: string; name: string; mbzArtistId: string | null }): Promise<string> {
-    try {
-      if (artist.mbzArtistId) {
-        // Check if we already have the FanArt image saved locally
-        const artistMetadataPath = await this.storageService.getArtistMetadataPath(artist.id);
-        const fanartPath = path.join(artistMetadataPath, 'fanart-thumb.jpg');
-        const exists = await this.storageService.fileExists(fanartPath);
+    // Check if artist already has an external profile image downloaded
+    // (This would have been downloaded when visiting the artist page)
+    const artistWithImages = await this.prisma.artist.findUnique({
+      where: { id: artist.id },
+      select: {
+        externalProfilePath: true,
+        profileImagePath: true,
+      },
+    });
 
-        if (exists) {
-          // Use cached image
-          this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'Using cached FanArt image');
-          return `/api/images/artist/${artist.id}/fanart-thumb`;
-        }
-
-        // Fetch from FanArt.tv and save to storage
-        const artistImages = await this.externalMetadataService['getArtistImages'](
-          artist.mbzArtistId,
-          artist.name,
-          false // don't force refresh
-        );
-
-        if (artistImages) {
-          const bestImage = artistImages.getBestProfileUrl();
-          if (bestImage) {
-            // Download and save image to storage
-            const artistMetadataPath = await this.storageService.getArtistMetadataPath(artist.id);
-            const destinationPath = path.join(artistMetadataPath, 'fanart-thumb.jpg');
-            await this.imageDownloadService.downloadAndSave(bestImage, destinationPath);
-            this.logger.info({ artistId: artist.id, artistName: artist.name }, 'Downloaded and saved FanArt image');
-            return `/api/images/artist/${artist.id}/fanart-thumb`;
-          }
-        }
-      }
-    } catch (error) {
-      // If FanArt fails, we'll just use fallback
-      this.logger.warn({ artistId: artist.id, artistName: artist.name, error }, 'Failed to fetch/save FanArt image');
+    // If artist has either external or local profile image, use it
+    // The ImageService will handle the priority: Custom > Local > External
+    if (artistWithImages?.externalProfilePath || artistWithImages?.profileImagePath) {
+      this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'Reusing existing artist profile image');
+      return `/api/images/artists/${artist.id}/profile`;
     }
 
-    // Fallback to local artist profile
-    return `/api/images/artist/${artist.id}/profile`;
+    // If no image exists yet, still return the profile URL
+    // The image will be a placeholder until the user visits the artist page
+    // (where the external-metadata service will download it)
+    this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'No artist image found, using profile endpoint');
+    return `/api/images/artists/${artist.id}/profile`;
   }
 
   /**
