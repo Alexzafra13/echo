@@ -122,30 +122,22 @@ export async function extractDominantColor(imageSrc: string): Promise<string> {
       imageSrc.includes('localhost:5173') ||
       (imageSrc.startsWith('http') && imageSrc.includes(window.location.host));
 
-    console.log('[ColorExtractor] Processing:', imageSrc, 'isLocal:', isLocalApiImage);
-
     if (isLocalApiImage) {
       // Fetch the image as blob to avoid CORS issues with canvas
       // Note: Not using credentials since images are public resources
       fetch(imageSrc)
-        .then(response => {
-          console.log('[ColorExtractor] Fetch response:', response.status, response.ok);
-          return response.blob();
-        })
+        .then(response => response.blob())
         .then(blob => {
-          console.log('[ColorExtractor] Blob created:', blob.size, 'bytes');
           const objectUrl = URL.createObjectURL(blob);
           loadImageAndExtractColor(objectUrl, resolve, () => {
             URL.revokeObjectURL(objectUrl);
           });
         })
-        .catch((error) => {
-          console.error('[ColorExtractor] Fetch error:', error);
+        .catch(() => {
           resolve('64, 71, 114'); // Dark blue fallback
         });
     } else {
       // For external images (like radio favicons), use crossOrigin
-      console.log('[ColorExtractor] Using crossOrigin for external image');
       loadImageAndExtractColor(imageSrc, resolve);
     }
   });
@@ -219,7 +211,6 @@ function loadImageAndExtractColor(
       const boosted = boostColorForDisplay(vibrantColor);
 
       const colorString = `${boosted.r}, ${boosted.g}, ${boosted.b}`;
-      console.log('[ColorExtractor] Extracted color:', colorString);
       resolve(colorString);
       onComplete?.();
     } catch (error) {
