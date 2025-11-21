@@ -5,6 +5,7 @@
   display: flex;
   min-height: 100vh;
   background: var(--bg-base);
+  background-image: var(--gradient-textured);
   overflow-x: hidden; /* Evitar desbordamiento horizontal */
 }
 
