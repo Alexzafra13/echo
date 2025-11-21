@@ -12,6 +12,11 @@ export const envValidationSchema = Joi.object({
     .valid('development', 'production', 'test')
     .default('development'),
 
+  LOG_LEVEL: Joi.string()
+    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace')
+    .default('debug')
+    .description('Logging level for Pino logger'),
+
   PORT: Joi.number()
     .port()
     .default(4567),
