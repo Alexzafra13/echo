@@ -280,6 +280,7 @@
 
 .progressBar {
   flex: 1;
+  max-width: 400px;
   height: 4px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-sm);
