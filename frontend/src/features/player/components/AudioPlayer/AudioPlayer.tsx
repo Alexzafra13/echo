@@ -96,7 +96,7 @@ export function AudioPlayer() {
     let coverUrl: string | undefined;
 
     if (isRadioMode) {
-      coverUrl = currentRadioStation?.favicon;
+      coverUrl = currentRadioStation?.favicon || undefined;
     } else if (currentTrack) {
       // Try multiple sources for the cover URL
       coverUrl = currentTrack.album?.cover ||
