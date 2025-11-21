@@ -55,7 +55,8 @@ import { validateEnvironment } from './config/env.validation';
               },
             }
           : undefined,
-        level: process.env.LOG_LEVEL || 'debug',
+        // Auto-configure log level based on environment, but allow override via LOG_LEVEL
+        level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
         serializers: {
           req: (req: any) => ({
             method: req.method,
