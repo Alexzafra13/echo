@@ -963,8 +963,13 @@ export class ScanProcessorService implements OnModuleInit {
       const artistsToEnrich = await this.prisma.artist.findMany({
         where: {
           OR: [
-            // Sin MBID - SIEMPRE intentar buscar
-            { mbzArtistId: null },
+            // Sin MBID y nunca buscado - intentar buscar UNA VEZ
+            {
+              AND: [
+                { mbzArtistId: null },
+                { mbidSearchedAt: null },
+              ],
+            },
             // Sin ninguna imagen externa - necesita enriquecimiento completo
             {
               AND: [
@@ -984,6 +989,7 @@ export class ScanProcessorService implements OnModuleInit {
           id: true,
           name: true,
           mbzArtistId: true,
+          mbidSearchedAt: true,
         },
       });
 
@@ -1010,7 +1016,13 @@ export class ScanProcessorService implements OnModuleInit {
         where: {
           OR: [
             { externalCoverPath: null }, // No tiene portada externa
-            { mbzAlbumId: null }, // No tiene MBID - SIEMPRE intentar buscar
+            // Sin MBID y nunca buscado - intentar buscar UNA VEZ
+            {
+              AND: [
+                { mbzAlbumId: null },
+                { mbidSearchedAt: null },
+              ],
+            },
             {
               AND: [
                 { externalCoverPath: { not: null } }, // Tiene path
@@ -1033,6 +1045,7 @@ export class ScanProcessorService implements OnModuleInit {
           id: true,
           name: true,
           mbzAlbumId: true,
+          mbidSearchedAt: true,
           externalCoverPath: true,
           externalInfoUpdatedAt: true,
         },
@@ -1073,7 +1086,7 @@ export class ScanProcessorService implements OnModuleInit {
    * Enriquece artistas en background
    */
   private async enrichArtistsInBackground(
-    artists: Array<{ id: string; name: string; mbzArtistId: string | null }>,
+    artists: Array<{ id: string; name: string; mbzArtistId: string | null; mbidSearchedAt: Date | null }>,
   ): Promise<void> {
     for (const artist of artists) {
       try {
@@ -1095,6 +1108,7 @@ export class ScanProcessorService implements OnModuleInit {
       id: string;
       name: string;
       mbzAlbumId: string | null;
+      mbidSearchedAt: Date | null;
       externalCoverPath?: string | null;
       externalInfoUpdatedAt?: Date | null;
     }>,
