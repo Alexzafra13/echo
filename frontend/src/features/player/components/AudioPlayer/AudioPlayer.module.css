@@ -544,8 +544,8 @@
     border-radius: 16px; /* iOS rounded pero sin llegar a extremos */
     /* iOS style blur + gradient con color dominante del álbum - más visible */
     background: linear-gradient(135deg,
-      rgba(var(--player-color, 0, 0, 0), 0.7) 0%,
-      rgba(var(--player-color, 0, 0, 0), 0.85) 40%,
+      rgba(var(--player-color), 0.7) 0%,
+      rgba(var(--player-color), 0.85) 40%,
       rgba(0, 0, 0, 0.75) 100%
     );
     backdrop-filter: blur(40px) saturate(180%);
