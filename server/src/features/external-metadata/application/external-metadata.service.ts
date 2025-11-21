@@ -83,7 +83,10 @@ export class ExternalMetadataService {
             if (topMatch.score >= 90) {
               await this.prisma.artist.update({
                 where: { id: artistId },
-                data: { mbzArtistId: topMatch.mbid },
+                data: {
+                  mbzArtistId: topMatch.mbid,
+                  mbidSearchedAt: new Date(),
+                },
               });
               this.logger.log(
                 `Auto-applied MBID for "${artist.name}": ${topMatch.mbid} (score: ${topMatch.score})`
@@ -115,17 +118,37 @@ export class ExternalMetadataService {
               this.logger.log(
                 `Created MBID conflict for "${artist.name}": score ${topMatch.score}, needs manual review`
               );
+              // Mark MBID as searched even if we created a conflict
+              await this.prisma.artist.update({
+                where: { id: artistId },
+                data: { mbidSearchedAt: new Date() },
+              });
             } else {
               this.logger.log(
                 `Low confidence matches for "${artist.name}" (best: ${topMatch.score}), skipping MBID assignment`
               );
+              // Mark MBID as searched even if confidence was too low
+              await this.prisma.artist.update({
+                where: { id: artistId },
+                data: { mbidSearchedAt: new Date() },
+              });
             }
           } else {
             this.logger.log(`No MusicBrainz matches found for "${artist.name}"`);
+            // Mark MBID as searched even if no matches found
+            await this.prisma.artist.update({
+              where: { id: artistId },
+              data: { mbidSearchedAt: new Date() },
+            });
           }
         } catch (error) {
           this.logger.warn(`Error searching MBID for "${artist.name}": ${(error as Error).message}`);
           errors.push(`MBID search failed: ${(error as Error).message}`);
+          // Mark MBID as searched even if there was an error (avoid infinite retries)
+          await this.prisma.artist.update({
+            where: { id: artistId },
+            data: { mbidSearchedAt: new Date() },
+          });
         }
       }
 
@@ -366,7 +389,10 @@ export class ExternalMetadataService {
             if (topMatch.score >= 90) {
               await this.prisma.album.update({
                 where: { id: albumId },
-                data: { mbzAlbumId: topMatch.mbid },
+                data: {
+                  mbzAlbumId: topMatch.mbid,
+                  mbidSearchedAt: new Date(),
+                },
               });
               this.logger.log(
                 `Auto-applied MBID for "${album.name}": ${topMatch.mbid} (score: ${topMatch.score})`
@@ -399,17 +425,37 @@ export class ExternalMetadataService {
               this.logger.log(
                 `Created MBID conflict for "${album.name}": score ${topMatch.score}, needs manual review`
               );
+              // Mark MBID as searched even if we created a conflict
+              await this.prisma.album.update({
+                where: { id: albumId },
+                data: { mbidSearchedAt: new Date() },
+              });
             } else {
               this.logger.log(
                 `Low confidence matches for "${album.name}" (best: ${topMatch.score}), skipping MBID assignment`
               );
+              // Mark MBID as searched even if confidence was too low
+              await this.prisma.album.update({
+                where: { id: albumId },
+                data: { mbidSearchedAt: new Date() },
+              });
             }
           } else {
             this.logger.log(`No MusicBrainz matches found for "${album.name}"`);
+            // Mark MBID as searched even if no matches found
+            await this.prisma.album.update({
+              where: { id: albumId },
+              data: { mbidSearchedAt: new Date() },
+            });
           }
         } catch (error) {
           this.logger.warn(`Error searching MBID for "${album.name}": ${(error as Error).message}`);
           errors.push(`MBID search failed: ${(error as Error).message}`);
+          // Mark MBID as searched even if there was an error (avoid infinite retries)
+          await this.prisma.album.update({
+            where: { id: albumId },
+            data: { mbidSearchedAt: new Date() },
+          });
         }
       }
 
