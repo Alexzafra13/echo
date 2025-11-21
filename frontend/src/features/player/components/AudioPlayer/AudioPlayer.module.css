@@ -280,7 +280,7 @@
 
 .progressBar {
   flex: 1;
-  height: 5px;
+  height: 4px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -289,7 +289,7 @@
 }
 
 .progressBar:hover {
-  height: 7px;
+  height: 6px;
 }
 
 .progressBar:hover .progressHandle {
@@ -546,7 +546,7 @@
     background: linear-gradient(135deg,
       rgba(var(--player-color), 0.25) 0%,
       rgba(var(--player-color), 0.35) 30%,
-      rgba(0, 0, 0, 0.6) 100%
+      rgba(0, 0, 0, 0.7) 100%
     );
     backdrop-filter: blur(60px) saturate(150%);
     -webkit-backdrop-filter: blur(60px) saturate(150%);
