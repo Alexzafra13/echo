@@ -970,6 +970,8 @@ export class ScanProcessorService implements OnModuleInit {
                 { mbidSearchedAt: null },
               ],
             },
+            // Sin biografía - necesita enriquecimiento de bio
+            { biography: null },
             // Sin ninguna imagen externa - necesita enriquecimiento completo
             {
               AND: [
@@ -990,14 +992,16 @@ export class ScanProcessorService implements OnModuleInit {
           name: true,
           mbzArtistId: true,
           mbidSearchedAt: true,
+          biography: true,
         },
       });
 
       // Enriquecer artistas en background (no esperar)
       if (artistsToEnrich.length > 0) {
         const withoutMbid = artistsToEnrich.filter(a => !a.mbzArtistId).length;
+        const withoutBio = artistsToEnrich.filter(a => !a.biography).length;
         this.logger.log(
-          `Enriqueciendo ${artistsToEnrich.length} artistas en background (${withoutMbid} sin MBID)`,
+          `Enriqueciendo ${artistsToEnrich.length} artistas en background (${withoutMbid} sin MBID, ${withoutBio} sin biografía)`,
         );
 
         // Ejecutar en background sin bloquear
@@ -1086,7 +1090,7 @@ export class ScanProcessorService implements OnModuleInit {
    * Enriquece artistas en background
    */
   private async enrichArtistsInBackground(
-    artists: Array<{ id: string; name: string; mbzArtistId: string | null; mbidSearchedAt: Date | null }>,
+    artists: Array<{ id: string; name: string; mbzArtistId: string | null; mbidSearchedAt: Date | null; biography: string | null }>,
   ): Promise<void> {
     for (const artist of artists) {
       try {
