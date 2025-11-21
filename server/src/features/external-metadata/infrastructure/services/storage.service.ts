@@ -147,6 +147,7 @@ export class StorageService {
   /**
    * Save an image file
    * Uses atomic write (temp file + rename) to avoid file locking issues on Windows
+   * Implements retry logic and fallback strategies for Windows file locks
    * @param filePath Full path where to save
    * @param buffer Image buffer
    */
@@ -156,24 +157,80 @@ export class StorageService {
       const dir = path.dirname(filePath);
       await this.ensureDirectoryExists(dir);
 
+      // Check if destination file exists and is identical (skip if same)
+      const destExists = await this.fileExists(filePath);
+      if (destExists) {
+        try {
+          const existingBuffer = await fs.readFile(filePath);
+          if (existingBuffer.equals(buffer)) {
+            this.logger.debug(`Skipping save: ${filePath} is already identical`);
+            return;
+          }
+        } catch (readError) {
+          // File might be locked, continue with write attempt
+          this.logger.debug(`Could not read existing file for comparison: ${(readError as Error).message}`);
+        }
+      }
+
       // Write to temporary file first (avoids file locking conflicts)
       const tempPath = `${filePath}.tmp.${Date.now()}`;
 
       try {
         await fs.writeFile(tempPath, buffer);
 
-        // Atomic rename - this works even if destination file is in use
-        await fs.rename(tempPath, filePath);
+        // Try atomic rename with retry logic for Windows
+        const maxRetries = 3;
+        let lastError: Error | null = null;
 
-        this.logger.debug(`Saved image: ${filePath} (${buffer.length} bytes)`);
-      } catch (renameError) {
-        // Clean up temp file if rename failed
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            await fs.rename(tempPath, filePath);
+            this.logger.debug(`Saved image: ${filePath} (${buffer.length} bytes)`);
+            return; // Success!
+          } catch (renameError) {
+            lastError = renameError as Error;
+            const isEperm = (renameError as NodeJS.ErrnoException).code === 'EPERM';
+
+            if (isEperm && attempt < maxRetries) {
+              // Windows file lock - wait and retry
+              const waitMs = attempt * 100; // 100ms, 200ms, 300ms
+              this.logger.debug(`Rename failed (EPERM), retrying in ${waitMs}ms (attempt ${attempt}/${maxRetries})`);
+              await new Promise(resolve => setTimeout(resolve, waitMs));
+            } else if (isEperm && attempt === maxRetries) {
+              // Last attempt: try Windows fallback (delete + rename)
+              this.logger.debug('Trying Windows fallback: delete + rename');
+              try {
+                if (destExists) {
+                  await fs.unlink(filePath);
+                  // Small delay after delete
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                await fs.rename(tempPath, filePath);
+                this.logger.debug(`Saved image using fallback: ${filePath} (${buffer.length} bytes)`);
+                return; // Success with fallback!
+              } catch (fallbackError) {
+                lastError = fallbackError as Error;
+                // Fallback also failed, throw
+                break;
+              }
+            } else {
+              // Non-EPERM error or other issue
+              throw renameError;
+            }
+          }
+        }
+
+        // All retries failed
+        throw lastError || new Error('Failed to save image after retries');
+
+      } catch (writeError) {
+        // Clean up temp file if operation failed
         try {
           await fs.unlink(tempPath);
         } catch (unlinkError) {
           // Ignore cleanup errors
         }
-        throw renameError;
+        throw writeError;
       }
     } catch (error) {
       this.logger.error(`Error saving image ${filePath}: ${(error as Error).message}`, (error as Error).stack);
