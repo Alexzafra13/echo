@@ -53,6 +53,7 @@ export function WaveMixPage() {
   // Separate playlists by type
   const dailyPlaylists = playlists.filter(p => p.type === 'wave-mix');
   const artistPlaylists = playlists.filter(p => p.type === 'artist');
+  const genrePlaylists = playlists.filter(p => p.type === 'genre');
 
   return (
     <div className={styles.waveMixPage}>
@@ -176,6 +177,39 @@ export function WaveMixPage() {
                           coverColor={playlist.coverColor}
                           coverImageUrl={playlist.coverImageUrl}
                           artistName={playlist.metadata.artistName}
+                          size="medium"
+                        />
+                        <div className={styles.playlistCard__info}>
+                          <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
+                          <p className={styles.playlistCard__description}>
+                            {playlist.description}
+                          </p>
+                          <div className={styles.playlistCard__meta}>
+                            <span>{playlist.metadata.totalTracks} canciones</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Genre Recommendations Section */}
+              {genrePlaylists.length > 0 && (
+                <div className={styles.waveMixPage__section}>
+                  <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Género</h2>
+                  <div className={styles.waveMixPage__grid}>
+                    {genrePlaylists.map((playlist) => (
+                      <div
+                        key={playlist.id}
+                        className={styles.playlistCard}
+                        onClick={() => handlePlaylistClick(playlist)}
+                      >
+                        <PlaylistCover
+                          type={playlist.type}
+                          name={playlist.name}
+                          coverColor={playlist.coverColor}
+                          coverImageUrl={playlist.coverImageUrl}
                           size="medium"
                         />
                         <div className={styles.playlistCard__info}>
