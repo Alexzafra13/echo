@@ -208,12 +208,14 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  transition: border-color 0.2s;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .header__userButton:hover .header__userAvatar {
-  border-color: var(--color-primary, #ff6b6b);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+  transform: scale(1.05);
 }
 
 .header__userDropdown {
@@ -245,7 +247,8 @@
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--color-primary, #ff6b6b);
+  border: none;
+  box-shadow: 0 2px 12px rgba(255, 107, 107, 0.3);
   flex-shrink: 0;
 }
 
