@@ -962,12 +962,18 @@ export class ScanProcessorService implements OnModuleInit {
       // Enriquecer tanto artistas con MBID (para Fanart.tv) como sin MBID (para buscar en MusicBrainz)
       const artistsToEnrich = await this.prisma.artist.findMany({
         where: {
-          // V2: No enriquecido si no tiene ninguna external image timestamp
-          AND: [
-            { externalProfileUpdatedAt: null },
-            { externalBackgroundUpdatedAt: null },
-            { externalBannerUpdatedAt: null },
-            { externalLogoUpdatedAt: null },
+          OR: [
+            // Sin MBID - SIEMPRE intentar buscar
+            { mbzArtistId: null },
+            // Sin ninguna imagen externa - necesita enriquecimiento completo
+            {
+              AND: [
+                { externalProfileUpdatedAt: null },
+                { externalBackgroundUpdatedAt: null },
+                { externalBannerUpdatedAt: null },
+                { externalLogoUpdatedAt: null },
+              ],
+            },
           ],
         },
         orderBy: {
@@ -983,8 +989,9 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Enriquecer artistas en background (no esperar)
       if (artistsToEnrich.length > 0) {
+        const withoutMbid = artistsToEnrich.filter(a => !a.mbzArtistId).length;
         this.logger.log(
-          `Enriqueciendo ${artistsToEnrich.length} artistas en background`,
+          `Enriqueciendo ${artistsToEnrich.length} artistas en background (${withoutMbid} sin MBID)`,
         );
 
         // Ejecutar en background sin bloquear
@@ -1003,6 +1010,7 @@ export class ScanProcessorService implements OnModuleInit {
         where: {
           OR: [
             { externalCoverPath: null }, // No tiene portada externa
+            { mbzAlbumId: null }, // No tiene MBID - SIEMPRE intentar buscar
             {
               AND: [
                 { externalCoverPath: { not: null } }, // Tiene path
@@ -1033,12 +1041,13 @@ export class ScanProcessorService implements OnModuleInit {
       // Enriquecer álbumes en background (no esperar)
       if (albumsToEnrich.length > 0) {
         const withoutCover = albumsToEnrich.filter(a => !a.externalCoverPath).length;
+        const withoutMbid = albumsToEnrich.filter(a => !a.mbzAlbumId).length;
         const withIncomplete = albumsToEnrich.filter(a => a.externalCoverPath && !a.externalInfoUpdatedAt).length;
         const recentWithCover = albumsToEnrich.filter(a => a.externalCoverPath && a.externalInfoUpdatedAt).length;
 
         this.logger.log(
           `Enriqueciendo ${albumsToEnrich.length} álbumes en background: ` +
-          `${withoutCover} sin cover, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
+          `${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
         );
 
         // Ejecutar en background sin bloquear
