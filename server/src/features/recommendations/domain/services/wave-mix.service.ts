@@ -1,6 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import * as path from 'path';
 import { AutoPlaylist, WaveMixConfig, PlaylistMetadata, TrackScore } from '../entities/track-score.entity';
 import { ScoringService } from './scoring.service';
 import {
@@ -8,10 +7,7 @@ import {
   PLAY_TRACKING_REPOSITORY,
 } from '@features/play-tracking/domain/ports';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
-import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
 // Wave Mix Configuration
 // Optimized for faster first mix generation and better user experience
@@ -57,10 +53,7 @@ export class WaveMixService {
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepo: IPlayTrackingRepository,
     private readonly prisma: PrismaService,
-    private readonly externalMetadataService: ExternalMetadataService,
     private readonly redis: RedisService,
-    private readonly storageService: StorageService,
-    private readonly imageDownloadService: ImageDownloadService,
   ) {}
 
   /**
@@ -299,7 +292,215 @@ export class WaveMixService {
   }
 
   /**
-   * Get all auto playlists for a user (Wave Mix + Artist playlists)
+   * Generate genre-based playlists for user's top genres
+   * Generates playlists based on listening history per genre
+   * Optimized to avoid N+1 queries by batch loading
+   */
+  async generateGenrePlaylists(userId: string, limit: number = 5): Promise<AutoPlaylist[]> {
+    // Get user's top genres based on tracks they've listened to
+    const topGenres = await this.getTopUserGenres(userId, limit);
+
+    if (topGenres.length === 0) {
+      return [];
+    }
+
+    const playlists: AutoPlaylist[] = [];
+    const now = new Date();
+
+    // Get user's listening history
+    const allPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+    const trackIds = allPlayStats.map(t => t.itemId);
+
+    if (trackIds.length === 0) {
+      return [];
+    }
+
+    // Batch load all tracks with genres
+    const allTracks = await this.prisma.track.findMany({
+      where: { id: { in: trackIds } },
+      select: {
+        id: true,
+        artistId: true,
+        albumId: true,
+        title: true,
+        genres: {
+          select: {
+            genre: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Group tracks by genre
+    const tracksByGenre = new Map<string, typeof allTracks>();
+    for (const track of allTracks) {
+      for (const tg of track.genres) {
+        const genreId = tg.genre.id;
+        if (!tracksByGenre.has(genreId)) {
+          tracksByGenre.set(genreId, []);
+        }
+        tracksByGenre.get(genreId)!.push(track);
+      }
+    }
+
+    // Process each genre playlist
+    for (const genreData of topGenres) {
+      const tracks = tracksByGenre.get(genreData.genreId);
+      if (!tracks || tracks.length === 0) continue;
+
+      const trackIdsList = tracks.map(t => t.id);
+      const trackArtistMap = new Map(tracks.map((t) => [t.id, t.artistId || '']));
+
+      // Score tracks
+      const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIdsList, trackArtistMap);
+
+      // Take top 30 tracks for this genre
+      const topTracks = scoredTracks.slice(0, 30);
+
+      if (topTracks.length === 0) continue;
+
+      const metadata: PlaylistMetadata = {
+        totalTracks: topTracks.length,
+        avgScore: topTracks.reduce((sum, t) => sum + t.totalScore, 0) / topTracks.length,
+        topGenres: [genreData.genreName],
+        topArtists: [],
+        temporalDistribution: {
+          lastWeek: 0,
+          lastMonth: 0,
+          lastYear: 0,
+          older: 0,
+        },
+      };
+
+      // Use a genre-themed color or generate one based on genre name
+      const coverColor = this.getGenreColor(genreData.genreName);
+
+      playlists.push({
+        id: `genre-mix-${genreData.genreId}-${userId}-${now.getTime()}`,
+        type: 'genre',
+        userId,
+        name: `${genreData.genreName} Mix`,
+        description: `Tus mejores canciones de ${genreData.genreName}`,
+        tracks: topTracks,
+        createdAt: now,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        metadata,
+        coverColor,
+      });
+    }
+
+    return playlists;
+  }
+
+  /**
+   * Get user's top genres based on their listening history
+   * Returns genres sorted by play count
+   */
+  private async getTopUserGenres(userId: string, limit: number): Promise<Array<{ genreId: string; genreName: string; playCount: number }>> {
+    // Get user's play history
+    const playStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+    const trackIds = playStats.map(p => p.itemId);
+
+    if (trackIds.length === 0) {
+      return [];
+    }
+
+    // Get genres for these tracks with play counts
+    const genreStats = await this.prisma.trackGenre.groupBy({
+      by: ['genreId'],
+      where: {
+        trackId: { in: trackIds },
+      },
+      _count: {
+        trackId: true,
+      },
+      orderBy: {
+        _count: {
+          trackId: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    if (genreStats.length === 0) {
+      return [];
+    }
+
+    // Batch load genre names
+    const genreIds = genreStats.map(g => g.genreId);
+    const genres = await this.prisma.genre.findMany({
+      where: { id: { in: genreIds } },
+      select: { id: true, name: true },
+    });
+    const genreMap = new Map(genres.map(g => [g.id, g.name]));
+
+    return genreStats.map(stat => ({
+      genreId: stat.genreId,
+      genreName: genreMap.get(stat.genreId) || 'Unknown',
+      playCount: stat._count.trackId,
+    }));
+  }
+
+  /**
+   * Get a color for a genre (based on genre name for consistency)
+   */
+  private getGenreColor(genreName: string): string {
+    const genreColors: Record<string, string> = {
+      // Rock family
+      'Rock': '#E74C3C',
+      'Alternative': '#C0392B',
+      'Indie': '#E67E22',
+      'Metal': '#34495E',
+      'Punk': '#8E44AD',
+      // Pop family
+      'Pop': '#FF6B9D',
+      'Synthpop': '#9B59B6',
+      'Dance': '#E91E63',
+      'Electronic': '#3498DB',
+      // Hip-hop family
+      'Hip hop': '#95A5A6',
+      'Rap': '#7F8C8D',
+      'R&b': '#BDC3C7',
+      // Jazz/Soul
+      'Jazz': '#D35400',
+      'Soul': '#CA6F1E',
+      'Funk': '#F39C12',
+      'Blues': '#2980B9',
+      // Latin
+      'Reggaeton': '#1ABC9C',
+      'Latin': '#16A085',
+      'Salsa': '#E74C3C',
+      // Other
+      'Classical': '#8E44AD',
+      'Folk': '#27AE60',
+      'Country': '#D68910',
+      'Reggae': '#229954',
+    };
+
+    // Try exact match first
+    if (genreColors[genreName]) {
+      return genreColors[genreName];
+    }
+
+    // Try partial match
+    for (const [key, color] of Object.entries(genreColors)) {
+      if (genreName.toLowerCase().includes(key.toLowerCase())) {
+        return color;
+      }
+    }
+
+    // Fallback: generate color from genre name hash
+    const hash = genreName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return WAVE_MIX_COLORS[hash % WAVE_MIX_COLORS.length];
+  }
+
+  /**
+   * Get all auto playlists for a user (Wave Mix + Artist playlists + Genre playlists)
    * Uses Redis cache with 24-hour TTL - regenerates once per day or on force refresh
    */
   async getAllAutoPlaylists(userId: string, forceRefresh: boolean = false): Promise<AutoPlaylist[]> {
@@ -316,16 +517,17 @@ export class WaveMixService {
 
     // Generate fresh playlists
     this.logger.info({ userId }, 'Generating fresh playlists');
-    const [waveMix, artistPlaylists] = await Promise.all([
+    const [waveMix, artistPlaylists, genrePlaylists] = await Promise.all([
       this.generateWaveMix(userId),
       this.generateArtistPlaylists(userId, 5), // Generate 5 artist playlists
+      this.generateGenrePlaylists(userId, 5),  // Generate 5 genre playlists
     ]);
 
-    const playlists = [waveMix, ...artistPlaylists];
+    const playlists = [waveMix, ...artistPlaylists, ...genrePlaylists];
 
     // Don't cache empty playlists - user is still building listening history
     // This ensures new users see fresh playlists as they listen to more music
-    const hasContent = waveMix.tracks.length > 0 || artistPlaylists.length > 0;
+    const hasContent = waveMix.tracks.length > 0 || artistPlaylists.length > 0 || genrePlaylists.length > 0;
     if (hasContent) {
       // Cache in Redis for 24 hours
       await this.redis.set(cacheKey, playlists, this.CACHE_TTL_SECONDS);
@@ -334,6 +536,7 @@ export class WaveMixService {
         ttlSeconds: this.CACHE_TTL_SECONDS,
         waveMixTracks: waveMix.tracks.length,
         artistPlaylists: artistPlaylists.length,
+        genrePlaylists: genrePlaylists.length,
       }, 'Cached playlists in Redis');
     } else {
       this.logger.info({ userId }, 'Skipping cache - playlists are empty (user building listening history)');
@@ -570,49 +773,32 @@ export class WaveMixService {
   }
 
   /**
-   * Get artist cover image (cached or download from FanArt.tv)
-   * Extracted to avoid code duplication
+   * Get artist cover image URL
+   * Reuses images already downloaded by the artist page to avoid duplication
    */
   private async getArtistCoverImage(artist: { id: string; name: string; mbzArtistId: string | null }): Promise<string> {
-    try {
-      if (artist.mbzArtistId) {
-        // Check if we already have the FanArt image saved locally
-        const artistMetadataPath = await this.storageService.getArtistMetadataPath(artist.id);
-        const fanartPath = path.join(artistMetadataPath, 'fanart-thumb.jpg');
-        const exists = await this.storageService.fileExists(fanartPath);
+    // Check if artist already has an external profile image downloaded
+    // (This would have been downloaded when visiting the artist page)
+    const artistWithImages = await this.prisma.artist.findUnique({
+      where: { id: artist.id },
+      select: {
+        externalProfilePath: true,
+        profileImagePath: true,
+      },
+    });
 
-        if (exists) {
-          // Use cached image
-          this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'Using cached FanArt image');
-          return `/api/images/artist/${artist.id}/fanart-thumb`;
-        }
-
-        // Fetch from FanArt.tv and save to storage
-        const artistImages = await this.externalMetadataService['getArtistImages'](
-          artist.mbzArtistId,
-          artist.name,
-          false // don't force refresh
-        );
-
-        if (artistImages) {
-          const bestImage = artistImages.getBestProfileUrl();
-          if (bestImage) {
-            // Download and save image to storage
-            const artistMetadataPath = await this.storageService.getArtistMetadataPath(artist.id);
-            const destinationPath = path.join(artistMetadataPath, 'fanart-thumb.jpg');
-            await this.imageDownloadService.downloadAndSave(bestImage, destinationPath);
-            this.logger.info({ artistId: artist.id, artistName: artist.name }, 'Downloaded and saved FanArt image');
-            return `/api/images/artist/${artist.id}/fanart-thumb`;
-          }
-        }
-      }
-    } catch (error) {
-      // If FanArt fails, we'll just use fallback
-      this.logger.warn({ artistId: artist.id, artistName: artist.name, error }, 'Failed to fetch/save FanArt image');
+    // If artist has either external or local profile image, use it
+    // The ImageService will handle the priority: Custom > Local > External
+    if (artistWithImages?.externalProfilePath || artistWithImages?.profileImagePath) {
+      this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'Reusing existing artist profile image');
+      return `/api/images/artists/${artist.id}/profile`;
     }
 
-    // Fallback to local artist profile
-    return `/api/images/artist/${artist.id}/profile`;
+    // If no image exists yet, still return the profile URL
+    // The image will be a placeholder until the user visits the artist page
+    // (where the external-metadata service will download it)
+    this.logger.debug({ artistId: artist.id, artistName: artist.name }, 'No artist image found, using profile endpoint');
+    return `/api/images/artists/${artist.id}/profile`;
   }
 
   /**

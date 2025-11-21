@@ -30,6 +30,8 @@ export class DailyMixMetadataDto {
   @ApiProperty() avgScore!: number;
   @ApiProperty({ type: [String] }) topGenres!: string[];
   @ApiProperty({ type: [String] }) topArtists!: string[];
+  @ApiProperty({ required: false }) artistId?: string;
+  @ApiProperty({ required: false }) artistName?: string;
   @ApiProperty()
   temporalDistribution!: {
     lastWeek: number;

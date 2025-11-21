@@ -1,6 +1,14 @@
 import { IAgent } from './agent.interface';
 
 /**
+ * MusicBrainz tag (genre/style/descriptor)
+ */
+export interface MusicBrainzTag {
+  name: string;
+  count: number; // Vote count - higher = more agreed upon
+}
+
+/**
  * MusicBrainz search result for artist
  */
 export interface MusicBrainzArtistMatch {
@@ -14,6 +22,7 @@ export interface MusicBrainzArtistMatch {
     begin?: string;
     end?: string;
   };
+  tags?: MusicBrainzTag[]; // Genre tags from MusicBrainz
   score: number; // Match confidence (0-100)
 }
 
@@ -29,6 +38,7 @@ export interface MusicBrainzAlbumMatch {
   secondaryTypes?: string[];
   firstReleaseDate?: string;
   disambiguation?: string;
+  tags?: MusicBrainzTag[]; // Genre tags from MusicBrainz
   score: number; // Match confidence (0-100)
 }
 
