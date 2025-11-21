@@ -219,9 +219,9 @@ export default function AlbumPage() {
           className={styles.albumPage__content}
           style={{
             background: `linear-gradient(180deg,
-              rgba(${dominantColor}, 0.6) 0%,
-              rgba(${dominantColor}, 0.3) 25%,
-              rgba(10, 14, 39, 1) 60%)`
+              rgba(${dominantColor}, 0.4) 0%,
+              rgba(${dominantColor}, 0.2) 25%,
+              transparent 60%)`
           }}
         >
           {/* Album hero section */}
