@@ -152,6 +152,19 @@ export class ExternalMetadataService {
         }
       }
 
+      // Enrich genres from MusicBrainz tags (if MBID is available)
+      if (artist.mbzArtistId) {
+        try {
+          const genresAdded = await this.enrichArtistGenres(artistId, artist.mbzArtistId);
+          if (genresAdded > 0) {
+            this.logger.log(`Added ${genresAdded} genres for artist: ${artist.name}`);
+          }
+        } catch (error) {
+          this.logger.warn(`Error enriching genres for "${artist.name}": ${(error as Error).message}`);
+          errors.push(`Genre enrichment failed: ${(error as Error).message}`);
+        }
+      }
+
       // Enrich biography - Strategy based on source priority
       const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh);
       if (bio) {
@@ -456,6 +469,19 @@ export class ExternalMetadataService {
             where: { id: albumId },
             data: { mbidSearchedAt: new Date() },
           });
+        }
+      }
+
+      // Enrich genres from MusicBrainz tags (if MBID is available)
+      if (album.mbzAlbumId) {
+        try {
+          const genresAdded = await this.enrichAlbumGenres(albumId, album.mbzAlbumId);
+          if (genresAdded > 0) {
+            this.logger.log(`Added ${genresAdded} genres for album: ${album.name}`);
+          }
+        } catch (error) {
+          this.logger.warn(`Error enriching genres for "${album.name}": ${(error as Error).message}`);
+          errors.push(`Genre enrichment failed: ${(error as Error).message}`);
         }
       }
 
@@ -1040,6 +1066,142 @@ export class ExternalMetadataService {
     } catch (error) {
       this.logger.error(`Error searching MusicBrainz for album: ${(error as Error).message}`);
       return [];
+    }
+  }
+
+  /**
+   * Enrich artist with genre tags from MusicBrainz
+   * Fetches tags using the artist's MBID and saves them to the database
+   *
+   * @param artistId Internal artist ID
+   * @param mbzArtistId MusicBrainz Artist ID
+   * @returns Number of genres saved
+   */
+  private async enrichArtistGenres(artistId: string, mbzArtistId: string): Promise<number> {
+    try {
+      // Get MB agent
+      const mbAgent = this.agentRegistry.getAgentsFor('IMusicBrainzSearch')[0];
+      if (!mbAgent || !mbAgent.isEnabled()) {
+        return 0;
+      }
+
+      // Fetch artist details with tags
+      const artistData = await (mbAgent as any).getArtistByMbid(mbzArtistId);
+      if (!artistData || !artistData.tags || artistData.tags.length === 0) {
+        return 0;
+      }
+
+      // Only take top genres (with count >= 3 for quality)
+      const topTags = artistData.tags
+        .filter((tag: any) => tag.count >= 3)
+        .slice(0, 10); // Max 10 genres per artist
+
+      if (topTags.length === 0) {
+        return 0;
+      }
+
+      // Upsert genres and associate with artist
+      let savedCount = 0;
+      for (const tag of topTags) {
+        try {
+          // Normalize genre name
+          const genreName = tag.name.charAt(0).toUpperCase() + tag.name.slice(1);
+
+          // Upsert genre
+          const genre = await this.prisma.genre.upsert({
+            where: { name: genreName },
+            create: { name: genreName },
+            update: {},
+            select: { id: true },
+          });
+
+          // Associate with artist (skip if already exists)
+          await this.prisma.artistGenre.create({
+            data: {
+              artistId,
+              genreId: genre.id,
+            },
+          }).catch(() => {}); // Ignore if already exists
+
+          savedCount++;
+        } catch (error) {
+          this.logger.warn(`Failed to save genre "${tag.name}" for artist: ${(error as Error).message}`);
+        }
+      }
+
+      this.logger.debug(`Saved ${savedCount} genres for artist ${artistId}`);
+      return savedCount;
+    } catch (error) {
+      this.logger.error(`Error enriching artist genres: ${(error as Error).message}`);
+      return 0;
+    }
+  }
+
+  /**
+   * Enrich album with genre tags from MusicBrainz
+   * Fetches tags using the album's MBID and saves them to the database
+   *
+   * @param albumId Internal album ID
+   * @param mbzAlbumId MusicBrainz Release-Group ID
+   * @returns Number of genres saved
+   */
+  private async enrichAlbumGenres(albumId: string, mbzAlbumId: string): Promise<number> {
+    try {
+      // Get MB agent
+      const mbAgent = this.agentRegistry.getAgentsFor('IMusicBrainzSearch')[0];
+      if (!mbAgent || !mbAgent.isEnabled()) {
+        return 0;
+      }
+
+      // Fetch album details with tags
+      const albumData = await (mbAgent as any).getAlbumByMbid(mbzAlbumId);
+      if (!albumData || !albumData.tags || albumData.tags.length === 0) {
+        return 0;
+      }
+
+      // Only take top genres (with count >= 3 for quality)
+      const topTags = albumData.tags
+        .filter((tag: any) => tag.count >= 3)
+        .slice(0, 10); // Max 10 genres per album
+
+      if (topTags.length === 0) {
+        return 0;
+      }
+
+      // Upsert genres and associate with album
+      let savedCount = 0;
+      for (const tag of topTags) {
+        try {
+          // Normalize genre name
+          const genreName = tag.name.charAt(0).toUpperCase() + tag.name.slice(1);
+
+          // Upsert genre
+          const genre = await this.prisma.genre.upsert({
+            where: { name: genreName },
+            create: { name: genreName },
+            update: {},
+            select: { id: true },
+          });
+
+          // Associate with album (skip if already exists)
+          await this.prisma.albumGenre.create({
+            data: {
+              albumId,
+              genreId: genre.id,
+            },
+          }).catch(() => {}); // Ignore if already exists
+
+          savedCount++;
+        } catch (error) {
+          this.logger.warn(`Failed to save genre "${tag.name}" for album: ${(error as Error).message}`);
+        }
+      }
+
+      this.logger.debug(`Saved ${savedCount} genres for album ${albumId}`);
+      return savedCount;
+    } catch (error) {
+      this.logger.error(`Error enriching album genres: ${(error as Error).message}`);
+      return 0;
     }
   }
 

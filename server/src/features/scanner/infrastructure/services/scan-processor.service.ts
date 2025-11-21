@@ -626,6 +626,9 @@ export class ScanProcessorService implements OnModuleInit {
           data: trackData,
         });
 
+        // Guardar géneros desde tags de audio
+        await this.saveTrackGenres(existingTrack.id, metadata.genre);
+
         // Actualizar contadores del álbum
         await this.updateAlbumStats(album.id);
         await this.updateArtistStats(artist.id);
@@ -636,6 +639,9 @@ export class ScanProcessorService implements OnModuleInit {
         const newTrack = await this.prisma.track.create({
           data: trackData,
         });
+
+        // Guardar géneros desde tags de audio
+        await this.saveTrackGenres(newTrack.id, metadata.genre);
 
         // 🎯 Auto-búsqueda MBID estilo Picard: si el track no tiene MBID, buscarlo
         if (!metadata.musicBrainzTrackId) {
@@ -1145,6 +1151,69 @@ export class ScanProcessorService implements OnModuleInit {
           `Error enriching album ${album.name}: ${(error as Error).message}`,
         );
       }
+    }
+  }
+
+  /**
+   * Process and save genres from audio file tags
+   * Creates genre entries if they don't exist and associates them with the track
+   *
+   * @param trackId - Track ID to associate genres with
+   * @param genreTags - Array of genre names from audio metadata
+   */
+  private async saveTrackGenres(trackId: string, genreTags?: string[]): Promise<void> {
+    if (!genreTags || genreTags.length === 0) {
+      return;
+    }
+
+    try {
+      // Normalize genre names (trim, lowercase, remove duplicates)
+      const normalizedGenres = [...new Set(
+        genreTags
+          .map(g => g.trim())
+          .filter(g => g.length > 0 && g.length <= 100) // Max 100 chars per schema
+          .map(g => g.charAt(0).toUpperCase() + g.slice(1)) // Capitalize first letter
+      )];
+
+      if (normalizedGenres.length === 0) {
+        return;
+      }
+
+      // Upsert genres (create if not exist)
+      const genreRecords = await Promise.all(
+        normalizedGenres.map(async (genreName) => {
+          return await this.prisma.genre.upsert({
+            where: { name: genreName },
+            create: { name: genreName },
+            update: {}, // No updates needed, just ensure it exists
+            select: { id: true, name: true },
+          });
+        })
+      );
+
+      // Associate genres with track (skip if already associated)
+      await Promise.all(
+        genreRecords.map(async (genre) => {
+          try {
+            await this.prisma.trackGenre.create({
+              data: {
+                trackId,
+                genreId: genre.id,
+              },
+            });
+          } catch (error) {
+            // Ignore if already exists (unique constraint violation)
+            if (!(error as any).code || (error as any).code !== 'P2002') {
+              this.logger.warn(`Failed to associate genre ${genre.name} with track: ${(error as Error).message}`);
+            }
+          }
+        })
+      );
+
+      this.logger.debug(`Saved ${genreRecords.length} genres for track ${trackId}`);
+    } catch (error) {
+      this.logger.error(`Error saving track genres: ${(error as Error).message}`);
+      // Don't throw - genre saving shouldn't block track processing
     }
   }
 }
