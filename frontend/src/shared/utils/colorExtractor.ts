@@ -123,8 +123,9 @@ export async function extractDominantColor(imageSrc: string): Promise<string> {
       (imageSrc.startsWith('http') && imageSrc.includes(window.location.host));
 
     if (isLocalApiImage) {
-      // Fetch the image as blob with credentials to ensure CORS works
-      fetch(imageSrc, { credentials: 'include' })
+      // Fetch the image as blob to avoid CORS issues with canvas
+      // Note: Not using credentials since images are public resources
+      fetch(imageSrc)
         .then(response => response.blob())
         .then(blob => {
           const objectUrl = URL.createObjectURL(blob);
