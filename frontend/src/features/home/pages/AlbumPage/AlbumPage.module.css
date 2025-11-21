@@ -5,6 +5,7 @@
   display: flex;
   min-height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
+  background-image: var(--gradient-textured);
 }
 
 .albumPage__main {
@@ -232,7 +233,7 @@
   .albumPage__content {
     overflow: visible; /* Permitir que bottom nav sea visible */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
+    padding: 100px 20px 160px; /* Top para header + bottom para player y nav */
   }
 
   .albumPage__hero {
@@ -287,7 +288,7 @@
   }
 
   .albumPage__content {
-    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+    padding: 90px 16px 160px; /* Ajustado para header más pequeño + espacio para player */
   }
 
   .albumPage__hero {
