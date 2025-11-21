@@ -229,19 +229,6 @@ function loadImageAndExtractColor(
 }
 
 /**
- * Boost saturation of a color
- */
-function boostSaturation(rgb: RGB, factor: number): RGB {
-  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-
-  // Boost saturation
-  hsl.s = Math.min(100, hsl.s * factor);
-
-  // Convert back to RGB
-  return hslToRgb(hsl.h, hsl.s, hsl.l);
-}
-
-/**
  * Boost color for better display in UI - increase saturation and lightness
  * Especially important for dark colors that would be invisible in gradients
  */
