@@ -541,16 +541,18 @@
     bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
     left: 12px;
     right: 12px;
-    border-radius: 16px; /* iOS rounded pero sin llegar a extremos */
-    /* iOS style blur + gradient con color dominante del álbum - más visible */
+    border-radius: 16px; /* iOS rounded */
+    /* Glassmorphism style con color dominante sutil */
     background: linear-gradient(135deg,
-      rgba(var(--player-color), 0.7) 0%,
-      rgba(var(--player-color), 0.85) 40%,
-      rgba(0, 0, 0, 0.75) 100%
+      rgba(var(--player-color), 0.25) 0%,
+      rgba(var(--player-color), 0.35) 30%,
+      rgba(0, 0, 0, 0.6) 100%
     );
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(60px) saturate(150%);
+    -webkit-backdrop-filter: blur(60px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 1px rgba(255, 255, 255, 0.05);
     z-index: 9998; /* Justo debajo de la bottom nav (9999) */
     overflow: visible;
   }
