@@ -265,6 +265,7 @@
 .progressContainer {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
   width: 100%;
   grid-column: 1 / -1; /* Ocupa todas las columnas */
