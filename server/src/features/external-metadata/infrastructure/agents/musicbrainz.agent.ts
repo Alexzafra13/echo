@@ -157,12 +157,14 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
   /**
    * Get detailed artist information by MBID
+   * Includes tags (genres/styles) with inc=tags
    */
   async getArtistByMbid(mbid: string): Promise<MusicBrainzArtistMatch | null> {
     try {
       await this.rateLimiter.waitForRateLimit(this.name);
 
-      const url = `${this.baseUrl}/artist/${mbid}?fmt=json`;
+      // Include tags for genre information
+      const url = `${this.baseUrl}/artist/${mbid}?inc=tags&fmt=json`;
 
       this.logger.debug(`Fetching artist details for MBID: ${mbid}`);
 
@@ -183,6 +185,15 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
       const artist = await response.json();
 
+      // Parse tags (genres) - only include tags with at least 1 vote
+      const tags = (artist.tags || [])
+        .filter((tag: any) => tag.count >= 1)
+        .map((tag: any) => ({
+          name: tag.name,
+          count: tag.count,
+        }))
+        .sort((a: any, b: any) => b.count - a.count); // Sort by popularity
+
       return {
         mbid: artist.id,
         name: artist.name,
@@ -196,6 +207,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
               end: artist['life-span'].end,
             }
           : undefined,
+        tags: tags.length > 0 ? tags : undefined,
         score: 100, // Direct lookup = perfect match
       };
     } catch (error) {
@@ -208,12 +220,14 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
   /**
    * Get detailed album information by MBID
+   * Includes tags (genres/styles) with inc=tags
    */
   async getAlbumByMbid(mbid: string): Promise<MusicBrainzAlbumMatch | null> {
     try {
       await this.rateLimiter.waitForRateLimit(this.name);
 
-      const url = `${this.baseUrl}/release-group/${mbid}?inc=artist-credits&fmt=json`;
+      // Include tags for genre information
+      const url = `${this.baseUrl}/release-group/${mbid}?inc=artist-credits+tags&fmt=json`;
 
       this.logger.debug(`Fetching album details for MBID: ${mbid}`);
 
@@ -234,6 +248,15 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
       const rg = await response.json();
 
+      // Parse tags (genres) - only include tags with at least 1 vote
+      const tags = (rg.tags || [])
+        .filter((tag: any) => tag.count >= 1)
+        .map((tag: any) => ({
+          name: tag.name,
+          count: tag.count,
+        }))
+        .sort((a: any, b: any) => b.count - a.count); // Sort by popularity
+
       return {
         mbid: rg.id,
         title: rg.title,
@@ -243,6 +266,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         secondaryTypes: rg['secondary-types'] || [],
         firstReleaseDate: rg['first-release-date'],
         disambiguation: rg.disambiguation,
+        tags: tags.length > 0 ? tags : undefined,
         score: 100, // Direct lookup = perfect match
       };
     } catch (error) {
