@@ -13,11 +13,13 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
+// Wave Mix Configuration
+// Optimized for faster first mix generation and better user experience
 const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
   maxTracks: 50,
-  minScore: 20,
-  freshnessRatio: 0.2,
-  genreDiversity: 0.3,
+  minScore: 10,         // Bajado de 20 a 10 para generar mix más rápido (especialmente para usuarios nuevos)
+  freshnessRatio: 0.3,  // Subido de 0.2 a 0.3 para más variedad
+  genreDiversity: 0.2,  // Bajado de 0.3 a 0.2 para ser menos estricto
   temporalBalance: {
     lastWeek: 0.4,
     lastMonth: 0.3,
@@ -64,12 +66,11 @@ export class WaveMixService {
   /**
    * Generate Wave Mix for a user
    * Algorithm:
-   * 1. Get user's listening history
-   * 2. Score all tracks the user has interacted with
-   * 3. Select top tracks with min score threshold
-   * 4. Add "fresh" tracks (20%) - tracks listened recently but not heavily
-   * 5. Add exploration tracks (10%) - from genres/artists less explored
-   * 6. Shuffle intelligently (avoid consecutive tracks from same artist/album)
+   * 1. Get user's listening history (top 200 tracks)
+   * 2. Score all tracks using scoring algorithm (implicit behavior 50%, explicit 30%, recency 18%, diversity 2%)
+   * 3. Select up to 50 best tracks above minimum score threshold
+   * 4. Fallback: Lower threshold if needed to reach 50 tracks
+   * 5. Shuffle intelligently (avoid consecutive same artist/album)
    */
   async generateWaveMix(userId: string, config?: Partial<WaveMixConfig>): Promise<AutoPlaylist> {
     // Filter out undefined values from config to preserve defaults
@@ -113,42 +114,54 @@ export class WaveMixService {
       }, 'Score range calculated');
     }
 
-    // Step 3: Filter tracks above minimum score
-    const qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
+    // Step 3: Select best tracks for the mix
+    // Strategy: Always try to get maxTracks (50) by taking the best scored tracks
+    let qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
     this.logger.info({
       userId,
       qualifiedCount: qualifiedTracks.length,
       minScore: finalConfig.minScore,
+      targetTracks: finalConfig.maxTracks,
     }, 'Tracks qualified above minimum score');
 
+    // Fallback: If we don't have enough tracks, progressively lower the threshold
+    if (qualifiedTracks.length < finalConfig.maxTracks && scoredTracks.length > 0) {
+      // Try with 50% lower threshold
+      if (qualifiedTracks.length < finalConfig.maxTracks) {
+        const fallbackMinScore = finalConfig.minScore * 0.5;
+        qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= fallbackMinScore);
+        this.logger.info({
+          userId,
+          fallbackMinScore,
+          qualifiedCount: qualifiedTracks.length,
+        }, 'Applied fallback with lower threshold');
+      }
+
+      // Final fallback: Just take the best available tracks regardless of score
+      if (qualifiedTracks.length < finalConfig.maxTracks) {
+        qualifiedTracks = scoredTracks;
+        this.logger.info({
+          userId,
+          tracksUsed: qualifiedTracks.length,
+        }, 'Using all available tracks regardless of score');
+      }
+    }
+
+    // If no tracks at all (user has no play history), return empty mix
     if (qualifiedTracks.length === 0) {
-      this.logger.info({ userId, minScore: finalConfig.minScore }, 'No tracks qualified, returning empty mix');
+      this.logger.info({ userId }, 'No tracks available, returning empty mix');
       return this.createEmptyWaveMix(userId);
     }
 
-    // Step 4: Select core tracks (70%)
-    const coreCount = Math.floor(finalConfig.maxTracks * 0.7);
-    const coreTracksSelection = qualifiedTracks.slice(0, coreCount);
+    // Step 4: Take up to maxTracks (50) best tracks
+    const finalTracks = qualifiedTracks.slice(0, finalConfig.maxTracks);
+    this.logger.info({
+      userId,
+      selectedTracks: finalTracks.length,
+      maxTracks: finalConfig.maxTracks,
+    }, 'Selected tracks for Wave Mix');
 
-    // Step 5: Add fresh tracks (20%) - high recency but medium overall score
-    const freshCount = Math.floor(finalConfig.maxTracks * finalConfig.freshnessRatio);
-    const freshTracks = qualifiedTracks
-      .filter((t) => t.breakdown.recency > 70 && !coreTracksSelection.includes(t))
-      .slice(0, freshCount);
-
-    // Step 6: Add exploration tracks (10%) - diversity-focused
-    const explorationCount = finalConfig.maxTracks - coreCount - freshTracks.length;
-    const explorationTracks = qualifiedTracks
-      .filter((t) => t.breakdown.diversity > 70 && !coreTracksSelection.includes(t) && !freshTracks.includes(t))
-      .slice(0, explorationCount);
-
-    // Combine all tracks
-    let finalTracks = [...coreTracksSelection, ...freshTracks, ...explorationTracks];
-
-    // Ensure we don't exceed maxTracks
-    finalTracks = finalTracks.slice(0, finalConfig.maxTracks);
-
-    // Step 7: Intelligent shuffle (avoid consecutive same artist/album)
+    // Step 5: Intelligent shuffle (avoid consecutive same artist/album)
     const shuffledTracks = this.intelligentShuffle(finalTracks, tracks);
 
     // Calculate metadata
