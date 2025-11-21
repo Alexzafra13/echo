@@ -323,9 +323,21 @@ export class WaveMixService {
 
     const playlists = [waveMix, ...artistPlaylists];
 
-    // Cache in Redis for 24 hours
-    await this.redis.set(cacheKey, playlists, this.CACHE_TTL_SECONDS);
-    this.logger.info({ userId, ttlSeconds: this.CACHE_TTL_SECONDS }, 'Cached playlists in Redis');
+    // Don't cache empty playlists - user is still building listening history
+    // This ensures new users see fresh playlists as they listen to more music
+    const hasContent = waveMix.tracks.length > 0 || artistPlaylists.length > 0;
+    if (hasContent) {
+      // Cache in Redis for 24 hours
+      await this.redis.set(cacheKey, playlists, this.CACHE_TTL_SECONDS);
+      this.logger.info({
+        userId,
+        ttlSeconds: this.CACHE_TTL_SECONDS,
+        waveMixTracks: waveMix.tracks.length,
+        artistPlaylists: artistPlaylists.length,
+      }, 'Cached playlists in Redis');
+    } else {
+      this.logger.info({ userId }, 'Skipping cache - playlists are empty (user building listening history)');
+    }
 
     return playlists;
   }
