@@ -51,11 +51,11 @@ import { validateEnvironment } from './config/env.validation';
                 colorize: true,
                 translateTime: 'HH:MM:ss Z',
                 ignore: 'pid,hostname',
-                singleLine: true,
+                singleLine: false, // Changed to false for better readability of different log levels
               },
             }
           : undefined,
-        level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+        level: process.env.LOG_LEVEL || 'debug',
         serializers: {
           req: (req: any) => ({
             method: req.method,
