@@ -114,7 +114,13 @@ function findVibrantColor(pixels: RGB[]): RGB {
 export async function extractDominantColor(imageSrc: string): Promise<string> {
   return new Promise((resolve) => {
     // For local API images, fetch as blob first to avoid CORS issues
-    const isLocalApiImage = imageSrc.startsWith('/api/') || imageSrc.startsWith('/uploads/');
+    // Detect: /api/, /uploads/, localhost, or current origin paths
+    const isLocalApiImage =
+      imageSrc.startsWith('/api/') ||
+      imageSrc.startsWith('/uploads/') ||
+      imageSrc.includes('localhost:3000') ||
+      imageSrc.includes('localhost:5173') ||
+      (imageSrc.startsWith('http') && imageSrc.includes(window.location.host));
 
     if (isLocalApiImage) {
       // Fetch the image as blob with credentials to ensure CORS works
