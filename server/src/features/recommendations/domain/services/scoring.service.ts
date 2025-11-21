@@ -94,13 +94,16 @@ export class ScoringService {
    * Calculate recency score (0-100 points)
    * Exponential decay: score = 100 * e^(-lambda * days)
    */
-  calculateRecency(lastPlayedAt?: Date): number {
+  calculateRecency(lastPlayedAt?: Date | string): number {
     if (!lastPlayedAt) {
       return 0;
     }
 
+    // Convert to Date if it's a string (can happen when data comes from Redis/database)
+    const lastPlayedDate = typeof lastPlayedAt === 'string' ? new Date(lastPlayedAt) : lastPlayedAt;
+
     const now = new Date();
-    const daysSinceLastPlay = (now.getTime() - lastPlayedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceLastPlay = (now.getTime() - lastPlayedDate.getTime()) / (1000 * 60 * 60 * 24);
 
     // Exponential decay
     const score = 100 * Math.exp(-RECENCY_DECAY.lambda * daysSinceLastPlay);
