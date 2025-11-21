@@ -962,12 +962,23 @@ export class ScanProcessorService implements OnModuleInit {
       // Enriquecer tanto artistas con MBID (para Fanart.tv) como sin MBID (para buscar en MusicBrainz)
       const artistsToEnrich = await this.prisma.artist.findMany({
         where: {
-          // V2: No enriquecido si no tiene ninguna external image timestamp
-          AND: [
-            { externalProfileUpdatedAt: null },
-            { externalBackgroundUpdatedAt: null },
-            { externalBannerUpdatedAt: null },
-            { externalLogoUpdatedAt: null },
+          OR: [
+            // Sin MBID y nunca buscado - intentar buscar UNA VEZ
+            {
+              AND: [
+                { mbzArtistId: null },
+                { mbidSearchedAt: null },
+              ],
+            },
+            // Sin ninguna imagen externa - necesita enriquecimiento completo
+            {
+              AND: [
+                { externalProfileUpdatedAt: null },
+                { externalBackgroundUpdatedAt: null },
+                { externalBannerUpdatedAt: null },
+                { externalLogoUpdatedAt: null },
+              ],
+            },
           ],
         },
         orderBy: {
@@ -978,13 +989,15 @@ export class ScanProcessorService implements OnModuleInit {
           id: true,
           name: true,
           mbzArtistId: true,
+          mbidSearchedAt: true,
         },
       });
 
       // Enriquecer artistas en background (no esperar)
       if (artistsToEnrich.length > 0) {
+        const withoutMbid = artistsToEnrich.filter(a => !a.mbzArtistId).length;
         this.logger.log(
-          `Enriqueciendo ${artistsToEnrich.length} artistas en background`,
+          `Enriqueciendo ${artistsToEnrich.length} artistas en background (${withoutMbid} sin MBID)`,
         );
 
         // Ejecutar en background sin bloquear
@@ -1003,6 +1016,13 @@ export class ScanProcessorService implements OnModuleInit {
         where: {
           OR: [
             { externalCoverPath: null }, // No tiene portada externa
+            // Sin MBID y nunca buscado - intentar buscar UNA VEZ
+            {
+              AND: [
+                { mbzAlbumId: null },
+                { mbidSearchedAt: null },
+              ],
+            },
             {
               AND: [
                 { externalCoverPath: { not: null } }, // Tiene path
@@ -1025,6 +1045,7 @@ export class ScanProcessorService implements OnModuleInit {
           id: true,
           name: true,
           mbzAlbumId: true,
+          mbidSearchedAt: true,
           externalCoverPath: true,
           externalInfoUpdatedAt: true,
         },
@@ -1033,12 +1054,13 @@ export class ScanProcessorService implements OnModuleInit {
       // Enriquecer álbumes en background (no esperar)
       if (albumsToEnrich.length > 0) {
         const withoutCover = albumsToEnrich.filter(a => !a.externalCoverPath).length;
+        const withoutMbid = albumsToEnrich.filter(a => !a.mbzAlbumId).length;
         const withIncomplete = albumsToEnrich.filter(a => a.externalCoverPath && !a.externalInfoUpdatedAt).length;
         const recentWithCover = albumsToEnrich.filter(a => a.externalCoverPath && a.externalInfoUpdatedAt).length;
 
         this.logger.log(
           `Enriqueciendo ${albumsToEnrich.length} álbumes en background: ` +
-          `${withoutCover} sin cover, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
+          `${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
         );
 
         // Ejecutar en background sin bloquear
@@ -1064,7 +1086,7 @@ export class ScanProcessorService implements OnModuleInit {
    * Enriquece artistas en background
    */
   private async enrichArtistsInBackground(
-    artists: Array<{ id: string; name: string; mbzArtistId: string | null }>,
+    artists: Array<{ id: string; name: string; mbzArtistId: string | null; mbidSearchedAt: Date | null }>,
   ): Promise<void> {
     for (const artist of artists) {
       try {
@@ -1086,6 +1108,7 @@ export class ScanProcessorService implements OnModuleInit {
       id: string;
       name: string;
       mbzAlbumId: string | null;
+      mbidSearchedAt: Date | null;
       externalCoverPath?: string | null;
       externalInfoUpdatedAt?: Date | null;
     }>,

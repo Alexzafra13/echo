@@ -62,6 +62,7 @@ model Artist {
   albumCount                  Int                 @default(0) @map("album_count")
   songCount                   Int                 @default(0) @map("song_count")
   mbzArtistId                 String?             @map("mbz_artist_id") @db.VarChar(36)
+  mbidSearchedAt              DateTime?           @map("mbid_searched_at")
   biography                   String?
   biographySource             String?             @map("biography_source") @db.VarChar(50)
   profileImagePath            String?             @map("profile_image_path") @db.VarChar(512)
@@ -188,6 +189,7 @@ model Album {
   mbzAlbumId            String?            @map("mbz_album_id") @db.VarChar(36)
   mbzAlbumArtistId      String?            @map("mbz_album_artist_id") @db.VarChar(36)
   mbzAlbumType          String?            @map("mbz_album_type") @db.VarChar(100)
+  mbidSearchedAt        DateTime?          @map("mbid_searched_at")
   catalogNum            String?            @map("catalog_num") @db.VarChar(255)
   comment               String?            @db.VarChar(255)
   orderAlbumName        String?            @map("order_album_name") @db.VarChar(255)
@@ -254,6 +256,7 @@ model Track {
   mbzArtistId          String?          @map("mbz_artist_id") @db.VarChar(36)
   mbzAlbumArtistId     String?          @map("mbz_album_artist_id") @db.VarChar(36)
   mbzReleaseTrackId    String?          @map("mbz_release_track_id") @db.VarChar(36)
+  mbidSearchedAt       DateTime?        @map("mbid_searched_at")
   catalogNum           String?          @map("catalog_num") @db.VarChar(255)
   path                 String           @unique @db.VarChar(512)
   bpm                  Int?
