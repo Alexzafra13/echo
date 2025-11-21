@@ -93,11 +93,24 @@ export function AudioPlayer() {
 
   // Extraer color dominante del cover para gradient móvil
   useEffect(() => {
-    const coverUrl = isRadioMode
-      ? currentRadioStation?.favicon
-      : currentTrack?.album?.cover;
+    let coverUrl: string | undefined;
+
+    if (isRadioMode) {
+      coverUrl = currentRadioStation?.favicon;
+    } else if (currentTrack) {
+      // Try multiple sources for the cover URL
+      coverUrl = currentTrack.album?.cover ||
+                 currentTrack.coverImage ||
+                 // If we have albumId, construct the URL
+                 (currentTrack.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : undefined);
+    }
 
     console.log('[AudioPlayer] Mode:', isRadioMode ? 'RADIO' : 'TRACK', 'Cover URL:', coverUrl);
+    console.log('[AudioPlayer] Track data:', {
+      albumCover: currentTrack?.album?.cover,
+      coverImage: currentTrack?.coverImage,
+      albumId: currentTrack?.albumId
+    });
 
     if (coverUrl) {
       const finalCoverUrl = isRadioMode ? coverUrl : getCoverUrl(coverUrl);
