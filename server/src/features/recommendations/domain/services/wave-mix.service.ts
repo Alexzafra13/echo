@@ -13,11 +13,13 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
+// Wave Mix Configuration
+// Optimized for faster first mix generation and better user experience
 const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
   maxTracks: 50,
-  minScore: 20,
-  freshnessRatio: 0.2,
-  genreDiversity: 0.3,
+  minScore: 10,         // Bajado de 20 a 10 para generar mix más rápido (especialmente para usuarios nuevos)
+  freshnessRatio: 0.3,  // Subido de 0.2 a 0.3 para más variedad
+  genreDiversity: 0.2,  // Bajado de 0.3 a 0.2 para ser menos estricto
   temporalBalance: {
     lastWeek: 0.4,
     lastMonth: 0.3,
@@ -114,15 +116,34 @@ export class WaveMixService {
     }
 
     // Step 3: Filter tracks above minimum score
-    const qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
+    let qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= finalConfig.minScore);
     this.logger.info({
       userId,
       qualifiedCount: qualifiedTracks.length,
       minScore: finalConfig.minScore,
     }, 'Tracks qualified above minimum score');
 
+    // Fallback: If no tracks qualified, lower threshold by 50% and try again
+    if (qualifiedTracks.length === 0 && scoredTracks.length > 0) {
+      const fallbackMinScore = finalConfig.minScore * 0.5;
+      qualifiedTracks = scoredTracks.filter((t) => t.totalScore >= fallbackMinScore);
+      this.logger.warn({
+        userId,
+        originalMinScore: finalConfig.minScore,
+        fallbackMinScore,
+        fallbackQualifiedCount: qualifiedTracks.length,
+      }, 'Applied fallback with lower score threshold');
+
+      // Final fallback: If still no tracks, just take top 20
+      if (qualifiedTracks.length === 0) {
+        qualifiedTracks = scoredTracks.slice(0, Math.min(20, scoredTracks.length));
+        this.logger.warn({ userId, tracksUsed: qualifiedTracks.length }, 'Using top tracks regardless of score');
+      }
+    }
+
+    // If still no tracks (user literally has no play history), return empty mix
     if (qualifiedTracks.length === 0) {
-      this.logger.info({ userId, minScore: finalConfig.minScore }, 'No tracks qualified, returning empty mix');
+      this.logger.info({ userId }, 'No tracks available, returning empty mix');
       return this.createEmptyWaveMix(userId);
     }
 
