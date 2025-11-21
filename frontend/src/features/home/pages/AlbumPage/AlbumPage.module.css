@@ -231,9 +231,10 @@
   }
 
   .albumPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
+    overflow-y: auto; /* Permitir scroll vertical */
+    overflow-x: hidden; /* Evitar scroll horizontal */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 160px; /* Top para header + bottom para player y nav */
+    padding: 100px 20px 200px; /* Top para header + bottom amplio para player y nav */
   }
 
   .albumPage__hero {
@@ -288,7 +289,7 @@
   }
 
   .albumPage__content {
-    padding: 90px 16px 160px; /* Ajustado para header más pequeño + espacio para player */
+    padding: 90px 16px 200px; /* Ajustado para header más pequeño + espacio amplio para player */
   }
 
   .albumPage__hero {
