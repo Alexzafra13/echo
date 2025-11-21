@@ -97,12 +97,22 @@ export function AudioPlayer() {
       ? currentRadioStation?.favicon
       : currentTrack?.album?.cover;
 
+    console.log('[AudioPlayer] Mode:', isRadioMode ? 'RADIO' : 'TRACK', 'Cover URL:', coverUrl);
+
     if (coverUrl) {
       const finalCoverUrl = isRadioMode ? coverUrl : getCoverUrl(coverUrl);
+      console.log('[AudioPlayer] Final cover URL:', finalCoverUrl);
       extractDominantColor(finalCoverUrl)
-        .then(color => setDominantColor(color))
-        .catch(() => setDominantColor('0, 0, 0'));
+        .then(color => {
+          console.log('[AudioPlayer] Setting dominant color:', color);
+          setDominantColor(color);
+        })
+        .catch(() => {
+          console.log('[AudioPlayer] Color extraction failed, using fallback');
+          setDominantColor('0, 0, 0');
+        });
     } else {
+      console.log('[AudioPlayer] No cover URL, using black');
       setDominantColor('0, 0, 0');
     }
   }, [currentTrack, currentRadioStation, isRadioMode]);
@@ -139,6 +149,8 @@ export function AudioPlayer() {
     currentRadioStation,
     currentTrack
   );
+
+  console.log('[AudioPlayer] Rendering with dominant color:', dominantColor, 'Mode:', isRadioMode ? 'RADIO' : 'TRACK');
 
   return (
     <div
