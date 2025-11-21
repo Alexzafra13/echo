@@ -215,8 +215,8 @@ function loadImageAndExtractColor(
       // Find vibrant color using simplified k-means
       const vibrantColor = findVibrantColor(pixels);
 
-      // Boost saturation slightly for better visual effect
-      const boosted = boostSaturation(vibrantColor, 1.2);
+      // Boost saturation and lightness for better visual effect
+      const boosted = boostColorForDisplay(vibrantColor);
 
       const colorString = `${boosted.r}, ${boosted.g}, ${boosted.b}`;
       console.log('[ColorExtractor] Extracted color:', colorString);
@@ -245,6 +245,29 @@ function boostSaturation(rgb: RGB, factor: number): RGB {
 
   // Boost saturation
   hsl.s = Math.min(100, hsl.s * factor);
+
+  // Convert back to RGB
+  return hslToRgb(hsl.h, hsl.s, hsl.l);
+}
+
+/**
+ * Boost color for better display in UI - increase saturation and lightness
+ * Especially important for dark colors that would be invisible in gradients
+ */
+function boostColorForDisplay(rgb: RGB): RGB {
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+  // Boost saturation
+  hsl.s = Math.min(100, hsl.s * 1.3);
+
+  // Boost lightness for dark colors to make them more visible
+  // If lightness is below 30%, boost it to at least 35-45%
+  if (hsl.l < 30) {
+    hsl.l = Math.min(45, hsl.l + 20);
+  } else if (hsl.l < 50) {
+    // For medium-dark colors, boost slightly
+    hsl.l = Math.min(55, hsl.l + 10);
+  }
 
   // Convert back to RGB
   return hslToRgb(hsl.h, hsl.s, hsl.l);
