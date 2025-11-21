@@ -85,9 +85,9 @@ export class GetEnrichmentStatsUseCase {
       }
       const stats = providerMap.get(group.provider)!;
       stats.total += group._count.id;
-      if (group.status === 'success') stats.success = group._count.id;
-      if (group.status === 'partial') stats.partial = group._count.id;
-      if (group.status === 'error') stats.error = group._count.id;
+      if (group.status === 'success') stats.success += group._count.id;
+      if (group.status === 'partial') stats.partial += group._count.id;
+      if (group.status === 'error') stats.error += group._count.id;
     });
 
     // Calcular success rate por proveedor
