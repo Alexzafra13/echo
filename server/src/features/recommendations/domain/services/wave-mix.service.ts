@@ -300,7 +300,10 @@ export class WaveMixService {
     // Get user's top genres based on tracks they've listened to
     const topGenres = await this.getTopUserGenres(userId, limit);
 
+    this.logger.info({ userId, topGenresCount: topGenres.length, topGenres }, 'Top genres for user');
+
     if (topGenres.length === 0) {
+      this.logger.warn({ userId }, 'No genres found for user - tracks may not have genre tags');
       return [];
     }
 
@@ -406,6 +409,8 @@ export class WaveMixService {
     const playStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
     const trackIds = playStats.map(p => p.itemId);
 
+    this.logger.debug({ userId, tracksPlayed: trackIds.length }, 'User play history');
+
     if (trackIds.length === 0) {
       return [];
     }
@@ -427,7 +432,10 @@ export class WaveMixService {
       take: limit,
     });
 
+    this.logger.debug({ userId, genreStatsCount: genreStats.length }, 'Genre stats from DB');
+
     if (genreStats.length === 0) {
+      this.logger.warn({ userId, trackCount: trackIds.length }, 'No genres found for user tracks - they may need genre tags');
       return [];
     }
 
