@@ -4,6 +4,7 @@
   display: flex;
   min-height: 100vh;
   background: var(--bg-base, #0f1218);
+  background-image: var(--gradient-textured);
 }
 
 .playlistsPage__main {
