@@ -1,0 +1,230 @@
+/* AdminSidebar Component Styles */
+
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background: rgba(10, 10, 10, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Custom scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Header */
+.header {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--color-primary, #ff6b6b);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  margin: 4px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Navigation */
+.nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #b8bcc8);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  width: 100%;
+  text-align: left;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary, #ffffff);
+}
+
+.navItem--active {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--color-primary, #ff6b6b);
+  font-weight: 600;
+}
+
+.navItem--active:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.navItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.navItemLabel {
+  font-size: 14px;
+}
+
+.navItemRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navItemBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--color-primary, #ff6b6b);
+  color: white;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Sub Navigation */
+.subNav {
+  padding-left: 48px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subNavItem {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary, #6b7280);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+  width: 100%;
+  text-align: left;
+}
+
+.subNavItem:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.subNavItem--active {
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--color-primary, #ff6b6b);
+  font-weight: 600;
+}
+
+.subNavItemLabel {
+  font-size: 13px;
+}
+
+/* Footer */
+.footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footerLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 600;
+}
+
+.footerVersion {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #6b7280);
+  font-family: monospace;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .header {
+    padding: 24px 16px 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .nav {
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none; /* Hide sidebar on mobile, show tabs instead */
+  }
+}
