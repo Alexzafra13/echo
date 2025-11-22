@@ -789,7 +789,7 @@ export class ExternalMetadataService {
   ): Promise<string> {
     const saveInFolder = await this.settings.getBoolean(
       'metadata.download.save_in_album_folder',
-      true
+      false  // Changed to false: save to metadata storage by default (music folder is read-only)
     );
 
     let coverPath: string;
