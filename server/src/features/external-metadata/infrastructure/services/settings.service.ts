@@ -436,7 +436,7 @@ export class SettingsService {
       }
 
       // If doesn't exist, check if parent exists and is writable
-      if (!exists) {
+      if (!exists || !pathStats) {
         const parent = path.dirname(normalizedPath);
         try {
           await fs.access(parent, fs.constants.W_OK);
