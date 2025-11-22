@@ -13,9 +13,9 @@ SECRETS_FILE="$CONFIG_DIR/secrets.env"
 # Create config directory if it doesn't exist
 mkdir -p "$CONFIG_DIR"
 
-# Generate secrets if they don't exist (FIRST RUN ONLY)
-if [ ! -f "$SECRETS_FILE" ]; then
-  echo "🔐 First run detected - generating secure JWT secrets..."
+# Generate secrets if they don't exist OR if they're empty (FIRST RUN ONLY)
+if [ ! -f "$SECRETS_FILE" ] || [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = '""' ] || [ "$JWT_SECRET" = "''" ]; then
+  echo "🔐 Generating secure JWT secrets..."
 
   # Generate cryptographically secure secrets
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
