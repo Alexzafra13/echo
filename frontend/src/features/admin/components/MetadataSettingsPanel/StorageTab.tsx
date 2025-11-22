@@ -390,7 +390,7 @@ export function StorageTab() {
         <Button
           onClick={saveSettings}
           disabled={isSaving || (validationResult !== null && !validationResult.valid)}
-          isLoading={isSaving}
+          loading={isSaving}
           variant="primary"
         >
           Guardar configuración
