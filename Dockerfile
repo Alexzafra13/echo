@@ -67,8 +67,8 @@ RUN apk add --no-cache \
     dumb-init \
     su-exec
 
-# Install pnpm
-RUN npm install -g pnpm@10.18.3
+# Install pnpm and tsx (for running TypeScript in seed)
+RUN npm install -g pnpm@10.18.3 tsx@4.19.2
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

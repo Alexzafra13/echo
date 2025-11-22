@@ -13,9 +13,9 @@ SECRETS_FILE="$CONFIG_DIR/secrets.env"
 # Create config directory if it doesn't exist
 mkdir -p "$CONFIG_DIR"
 
-# Generate secrets if they don't exist (FIRST RUN ONLY)
-if [ ! -f "$SECRETS_FILE" ]; then
-  echo "🔐 First run detected - generating secure JWT secrets..."
+# Generate secrets if they don't exist OR if they're empty (FIRST RUN ONLY)
+if [ ! -f "$SECRETS_FILE" ] || [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = '""' ] || [ "$JWT_SECRET" = "''" ]; then
+  echo "🔐 Generating secure JWT secrets..."
 
   # Generate cryptographically secure secrets
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
@@ -72,13 +72,22 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 2. Database Migrations
+# 2. Database Migrations & Seed
 # ============================================
 echo "🔄 Running database migrations..."
 
 # Run migrations using npx (Prisma CLI installed temporarily)
 if npx prisma@6.17.1 migrate deploy; then
   echo "✅ Database migrations completed!"
+
+  # Seed database with default settings (idempotent - safe to run multiple times)
+  echo ""
+  echo "🌱 Seeding database with default settings..."
+  if npx tsx prisma/seed.ts 2>/dev/null; then
+    echo "✅ Database seeded successfully!"
+  else
+    echo "⚠️  Seed failed (may be normal if already seeded)"
+  fi
 
   # Always ensure admin user exists (create if missing, update if exists)
   echo ""
