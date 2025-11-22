@@ -45,10 +45,17 @@ describe('LoginUseCase', () => {
       compare: jest.fn(),
     } as any;
 
+    const mockLogService = {
+      info: jest.fn(),
+      warning: jest.fn(),
+      error: jest.fn(),
+    } as any;
+
     useCase = new LoginUseCase(
       mockUserRepository,
       mockPasswordService,
       mockTokenService,
+      mockLogService,
     );
   });
 

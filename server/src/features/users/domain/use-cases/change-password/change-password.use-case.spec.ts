@@ -6,6 +6,7 @@ describe('ChangePasswordUseCase', () => {
   let useCase: ChangePasswordUseCase;
   let mockUserRepository: any;
   let mockPasswordService: any;
+  let mockLogService: any;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -19,9 +20,16 @@ describe('ChangePasswordUseCase', () => {
       hash: jest.fn(),
     };
 
+    mockLogService = {
+      info: jest.fn(),
+      warning: jest.fn(),
+      error: jest.fn(),
+    };
+
     useCase = new ChangePasswordUseCase(
       mockUserRepository,
       mockPasswordService,
+      mockLogService,
     );
   });
 
