@@ -838,3 +838,99 @@ ALTER TABLE "players" ADD CONSTRAINT "players_user_id_fkey" FOREIGN KEY ("user_i
 
 -- AddForeignKey
 ALTER TABLE "players" ADD CONSTRAINT "players_transcoding_id_fkey" FOREIGN KEY ("transcoding_id") REFERENCES "transcoding"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- Enable pg_trgm extension for fast text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Create trigram indexes on tracks table for fast search
+CREATE INDEX IF NOT EXISTS idx_tracks_title_trgm ON tracks USING GIN (title gin_trgm_ops);
+
+-- Create trigram indexes on albums table for fast search (albums use 'name', not 'title')
+CREATE INDEX IF NOT EXISTS idx_albums_name_trgm ON albums USING GIN (name gin_trgm_ops);
+
+-- Create trigram indexes on artists table for fast search
+CREATE INDEX IF NOT EXISTS idx_artists_name_trgm ON artists USING GIN (name gin_trgm_ops);
+
+-- Add comment explaining the indexes
+COMMENT ON INDEX idx_tracks_title_trgm IS 'Trigram index for fast fuzzy text search on track titles';
+COMMENT ON INDEX idx_albums_name_trgm IS 'Trigram index for fast fuzzy text search on album names';
+COMMENT ON INDEX idx_artists_name_trgm IS 'Trigram index for fast fuzzy text search on artist names';
+-- DropIndex
+DROP INDEX "public"."idx_albums_name_trgm";
+
+-- DropIndex
+DROP INDEX "public"."idx_artists_name_trgm";
+
+-- DropIndex
+DROP INDEX "public"."idx_tracks_title_trgm";
+-- CreateTable: mbid_search_cache
+CREATE TABLE "mbid_search_cache" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "query_text" TEXT NOT NULL,
+    "query_type" VARCHAR(20) NOT NULL,
+    "query_params" JSONB NOT NULL DEFAULT '{}'::jsonb,
+    "results" JSONB NOT NULL,
+    "result_count" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "hit_count" INTEGER NOT NULL DEFAULT 0,
+    "last_hit_at" TIMESTAMP(3),
+
+    CONSTRAINT "mbid_search_cache_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex: Unique constraint for query deduplication
+CREATE UNIQUE INDEX "unique_mbid_search" ON "mbid_search_cache"("query_text", "query_type", "query_params");
+
+-- CreateIndex: Lookup index for fast cache retrieval
+CREATE INDEX "idx_mbid_search_lookup" ON "mbid_search_cache"("query_text", "query_type");
+
+-- CreateIndex: Expiration index for cleanup
+CREATE INDEX "idx_mbid_search_expires" ON "mbid_search_cache"("expires_at");
+
+-- AlterTable: metadata_conflicts - Change metadata column from TEXT to JSONB
+ALTER TABLE "metadata_conflicts"
+  ALTER COLUMN "metadata" TYPE JSONB USING
+    CASE
+      WHEN "metadata" IS NULL THEN NULL
+      WHEN "metadata" = '' THEN NULL
+      ELSE "metadata"::jsonb
+    END;
+
+-- CreateIndex: MBID indexes for Artist table (partial index for better performance)
+CREATE INDEX "idx_artists_mbid" ON "artists"("mbz_artist_id") WHERE "mbz_artist_id" IS NOT NULL;
+
+-- CreateIndex: MBID indexes for Album table
+CREATE INDEX "idx_albums_mbid" ON "albums"("mbz_album_id") WHERE "mbz_album_id" IS NOT NULL;
+CREATE INDEX "idx_albums_artist_mbid" ON "albums"("mbz_album_artist_id") WHERE "mbz_album_artist_id" IS NOT NULL;
+
+-- CreateIndex: MBID indexes for Track table
+CREATE INDEX "idx_tracks_mbid" ON "tracks"("mbz_track_id") WHERE "mbz_track_id" IS NOT NULL;
+CREATE INDEX "idx_tracks_artist_mbid" ON "tracks"("mbz_artist_id") WHERE "mbz_artist_id" IS NOT NULL;
+CREATE INDEX "idx_tracks_album_mbid" ON "tracks"("mbz_album_id") WHERE "mbz_album_id" IS NOT NULL;
+
+-- CreateFunction: Cleanup expired cache entries
+CREATE OR REPLACE FUNCTION cleanup_expired_mbid_cache()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM "mbid_search_cache" WHERE "expires_at" < NOW();
+  DELETE FROM "metadata_cache" WHERE "expires_at" < NOW();
+END;
+$$ LANGUAGE plpgsql;
+
+-- Comment: Add helpful comments
+COMMENT ON TABLE "mbid_search_cache" IS 'Cache for MusicBrainz API search queries to avoid repeated API calls and rate limiting';
+COMMENT ON COLUMN "mbid_search_cache"."query_params" IS 'Additional parameters for cache key (artist, album, duration, etc.)';
+COMMENT ON COLUMN "mbid_search_cache"."hit_count" IS 'Number of times this cached result has been used';
+COMMENT ON COLUMN "metadata_conflicts"."metadata" IS 'JSONB for efficient queries on suggestions array and scores';
+-- Add mbid_searched_at field to Artist, Album, and Track tables
+-- This field tracks when we last attempted to search for a MusicBrainz ID
+-- Prevents redundant searches for entities without MBIDs
+
+-- Add to artists table
+ALTER TABLE "artists" ADD COLUMN "mbid_searched_at" TIMESTAMP(3);
+
+-- Add to albums table
+ALTER TABLE "albums" ADD COLUMN "mbid_searched_at" TIMESTAMP(3);
+
+-- Add to tracks table
+ALTER TABLE "tracks" ADD COLUMN "mbid_searched_at" TIMESTAMP(3);
