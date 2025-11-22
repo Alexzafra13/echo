@@ -46,6 +46,22 @@ class ValidateApiKeyDto {
 }
 
 /**
+ * DTO para navegar directorios
+ */
+class BrowseDirectoriesDto {
+  @IsString()
+  path!: string;
+}
+
+/**
+ * DTO para validar ruta de almacenamiento
+ */
+class ValidateStoragePathDto {
+  @IsString()
+  path!: string;
+}
+
+/**
  * Admin Settings Controller
  * HTTP endpoints for managing external metadata settings (admin only)
  *
@@ -396,6 +412,107 @@ export class AdminSettingsController {
       };
     } catch (error) {
       this.logger.error(`Error deleting setting ${key}: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Navega directorios del servidor
+   * POST /api/admin/settings/browse-directories
+   */
+  @Post('browse-directories')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Browse server directories',
+    description: 'Lists directories and subdirectories for file browser (admin only)',
+  })
+  @ApiBody({
+    description: 'Path to browse',
+    schema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', example: '/app' },
+      },
+      required: ['path'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Directory listing retrieved',
+    schema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string' },
+        parent: { type: 'string' },
+        directories: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              path: { type: 'string' },
+              writable: { type: 'boolean' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async browseDirectories(@Body() dto: BrowseDirectoriesDto) {
+    try {
+      const result = await this.settingsService.browseDirectories(dto.path);
+      this.logger.debug(`Browsed directory: ${dto.path}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error browsing directory ${dto.path}: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Valida una ruta de almacenamiento
+   * POST /api/admin/settings/validate-storage-path
+   */
+  @Post('validate-storage-path')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Validate storage path',
+    description: 'Validates a storage path for metadata (checks permissions, space, etc.) (admin only)',
+  })
+  @ApiBody({
+    description: 'Path to validate',
+    schema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', example: '/app/uploads/metadata' },
+      },
+      required: ['path'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Validation result',
+    schema: {
+      type: 'object',
+      properties: {
+        valid: { type: 'boolean' },
+        writable: { type: 'boolean' },
+        exists: { type: 'boolean' },
+        readOnly: { type: 'boolean' },
+        spaceAvailable: { type: 'string' },
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async validateStoragePath(@Body() dto: ValidateStoragePathDto) {
+    try {
+      const result = await this.settingsService.validateStoragePath(dto.path);
+      this.logger.debug(`Validated storage path: ${dto.path}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error validating path ${dto.path}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }

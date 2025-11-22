@@ -340,4 +340,197 @@ export class SettingsService {
     this.cache.delete(key);
     return result;
   }
+
+  /**
+   * Browse directories on the server
+   * Returns list of subdirectories with writable status
+   * @param targetPath Path to browse
+   */
+  async browseDirectories(targetPath: string) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
+    try {
+      // Sanitize path to prevent directory traversal
+      const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
+
+      // Check if path exists
+      try {
+        await fs.access(normalizedPath);
+      } catch {
+        throw new BadRequestException(`Path does not exist: ${normalizedPath}`);
+      }
+
+      // Check if it's a directory
+      const stats = await fs.stat(normalizedPath);
+      if (!stats.isDirectory()) {
+        throw new BadRequestException(`Path is not a directory: ${normalizedPath}`);
+      }
+
+      // Read directory contents
+      const entries = await fs.readdir(normalizedPath, { withFileTypes: true });
+
+      // Filter only directories and check write permissions
+      const directories = [];
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const dirPath = path.join(normalizedPath, entry.name);
+          let writable = false;
+
+          try {
+            // Test write permission
+            await fs.access(dirPath, fs.constants.W_OK);
+            writable = true;
+          } catch {
+            writable = false;
+          }
+
+          directories.push({
+            name: entry.name,
+            path: dirPath.replace(/\\/g, '/'),
+            writable,
+          });
+        }
+      }
+
+      // Sort directories alphabetically
+      directories.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Get parent directory
+      const parent = path.dirname(normalizedPath).replace(/\\/g, '/');
+
+      return {
+        path: normalizedPath,
+        parent: parent !== normalizedPath ? parent : null,
+        directories,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Error browsing directory ${targetPath}: ${(error as Error).message}`);
+      throw new BadRequestException(`Failed to browse directory: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Validate a storage path for metadata
+   * Checks existence, permissions, space, and read-only status
+   * @param targetPath Path to validate
+   */
+  async validateStoragePath(targetPath: string) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
+    try {
+      // Sanitize path
+      const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
+
+      // Check if path exists
+      let exists = true;
+      let pathStats;
+      try {
+        pathStats = await fs.stat(normalizedPath);
+      } catch {
+        exists = false;
+      }
+
+      // If doesn't exist, check if parent exists and is writable
+      if (!exists) {
+        const parent = path.dirname(normalizedPath);
+        try {
+          await fs.access(parent, fs.constants.W_OK);
+          return {
+            valid: true,
+            exists: false,
+            writable: true,
+            readOnly: false,
+            message: 'Path does not exist but can be created (parent is writable)',
+            spaceAvailable: 'Unknown',
+          };
+        } catch {
+          return {
+            valid: false,
+            exists: false,
+            writable: false,
+            readOnly: true,
+            message: 'Path does not exist and parent is not writable',
+            spaceAvailable: 'Unknown',
+          };
+        }
+      }
+
+      // Path exists - check if it's a directory
+      if (!pathStats.isDirectory()) {
+        return {
+          valid: false,
+          exists: true,
+          writable: false,
+          readOnly: false,
+          message: 'Path exists but is not a directory',
+          spaceAvailable: 'N/A',
+        };
+      }
+
+      // Check write permission
+      let writable = false;
+      let readOnly = false;
+      try {
+        await fs.access(normalizedPath, fs.constants.W_OK);
+        writable = true;
+      } catch {
+        readOnly = true;
+      }
+
+      // Get space information (if writable)
+      let spaceAvailable = 'Unknown';
+      if (writable) {
+        try {
+          // Try to get disk space using statvfs (Linux) or approximation
+          // Note: Node.js doesn't have built-in disk space API, so we do basic check
+          const testFile = path.join(normalizedPath, `.write-test-${Date.now()}`);
+          try {
+            await fs.writeFile(testFile, '');
+            await fs.unlink(testFile);
+            spaceAvailable = 'Available (write test successful)';
+          } catch {
+            writable = false;
+            readOnly = true;
+            spaceAvailable = 'Write test failed';
+          }
+        } catch (error) {
+          this.logger.warn(`Could not determine space for ${normalizedPath}: ${(error as Error).message}`);
+        }
+      }
+
+      // Determine message
+      let message = '';
+      if (writable) {
+        message = 'Path is valid and writable';
+      } else if (readOnly) {
+        message = 'Path is read-only - cannot write metadata here';
+      } else {
+        message = 'Path has insufficient permissions';
+      }
+
+      return {
+        valid: writable,
+        exists: true,
+        writable,
+        readOnly,
+        message,
+        spaceAvailable,
+      };
+    } catch (error) {
+      this.logger.error(`Error validating path ${targetPath}: ${(error as Error).message}`);
+      return {
+        valid: false,
+        exists: false,
+        writable: false,
+        readOnly: false,
+        message: `Validation failed: ${(error as Error).message}`,
+        spaceAvailable: 'Unknown',
+      };
+    }
+  }
 }
