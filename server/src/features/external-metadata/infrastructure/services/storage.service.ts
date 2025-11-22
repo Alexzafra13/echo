@@ -38,12 +38,12 @@ export class StorageService {
       if (storageLocation === 'centralized') {
         const storagePath = await this.settings.getString(
           'metadata.storage.path',
-          '/storage/metadata'
+          '/app/uploads/metadata'
         );
         this.basePath = path.resolve(process.cwd(), storagePath.replace(/^\//, ''));
       } else {
         // Portable: use music library path
-        const musicPath = this.config.get<string>('MUSIC_PATH', '/music');
+        const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
         this.basePath = path.join(musicPath, '.echo-metadata');
       }
 
