@@ -1,0 +1,297 @@
+/* DashboardPanel Component Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 4px 0 0 0;
+}
+
+.refreshButton {
+  padding: 10px 20px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 8px;
+  color: var(--color-primary, #ff6b6b);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refreshButton:hover {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* Stats Row (for smaller cards) */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Card */
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0 0 16px 0;
+}
+
+/* Activity Stats */
+.activityStats {
+  display: flex;
+  gap: 24px;
+}
+
+.activityStat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.activityLabel {
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.activityValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+/* Enrichment Stats */
+.enrichmentStats {
+  display: flex;
+  gap: 32px;
+}
+
+.enrichmentPeriod {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.periodLabel {
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.periodStats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.periodValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.periodDetails {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.successCount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #10b981;
+}
+
+.failedCount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ef4444;
+}
+
+/* Scan Info */
+.scanInfo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.scanStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scanLabel {
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.scanValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.noScanInfo {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.loadingIcon {
+  color: var(--color-primary, #ff6b6b);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading p {
+  font-size: 16px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+}
+
+/* Error State */
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.error p {
+  font-size: 16px;
+  color: #ef4444;
+  margin: 0;
+}
+
+.retryButton {
+  padding: 10px 24px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 8px;
+  color: var(--color-primary, #ff6b6b);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .activityStats,
+  .enrichmentStats {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .scanInfo {
+    grid-template-columns: 1fr;
+  }
+}
