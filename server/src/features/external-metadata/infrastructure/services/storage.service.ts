@@ -25,25 +25,30 @@ export class StorageService {
 
   /**
    * Initialize storage paths
+   * Priority order: ENV vars (.env) > Database settings > Hardcoded defaults
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
     try {
-      const storageLocation = await this.settings.getString(
+      // Priority: ENV > DB > default
+      const envStorageMode = this.config.get<string>('METADATA_STORAGE_MODE');
+      const storageLocation = envStorageMode || await this.settings.getString(
         'metadata.storage.location',
         'centralized'
       );
 
       if (storageLocation === 'centralized') {
-        const storagePath = await this.settings.getString(
+        // Priority: ENV > DB > default
+        const envStoragePath = this.config.get<string>('METADATA_STORAGE_PATH');
+        const storagePath = envStoragePath || await this.settings.getString(
           'metadata.storage.path',
-          '/storage/metadata'
+          '/app/uploads/metadata'
         );
         this.basePath = path.resolve(process.cwd(), storagePath.replace(/^\//, ''));
       } else {
         // Portable: use music library path
-        const musicPath = this.config.get<string>('MUSIC_PATH', '/music');
+        const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
         this.basePath = path.join(musicPath, '.echo-metadata');
       }
 
@@ -61,7 +66,7 @@ export class StorageService {
       await this.initializeDefaultImages();
 
       this.initialized = true;
-      this.logger.log(`Storage initialized at: ${this.basePath}`);
+      this.logger.log(`Storage initialized at: ${this.basePath} (mode: ${storageLocation})`);
     } catch (error) {
       this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
       throw error;
