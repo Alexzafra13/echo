@@ -2,17 +2,17 @@
 # 🎵 Echo Music Server - Jellyfin-Style Setup
 # ============================================
 #
-# QUICK START (2 steps):
+# QUICK START (2 options):
 #
-# 1. Change line 21 to YOUR music folder path
-# 2. Run: docker compose -f docker-compose.jellyfin-style.yml up -d
+# Option 1 - Edit docker-compose directly:
+#   1. Change line 54 to YOUR music folder path
+#   2. Run: docker compose -f docker-compose.jellyfin-style.yml up -d
 #
-# Done! Open http://localhost:4567
-# Login: admin / admin123
+# Option 2 - Use .env file (recommended):
+#   1. Create .env file: echo "MUSIC_PATH=/your/music" > .env
+#   2. Run: docker compose -f docker-compose.jellyfin-style.yml up -d
 #
-# Optional .env file (only if you want to customize):
-#   MUSIC_PATH=/your/music/folder  # Default: ./music
-#   APP_PORT=4567                  # Default: 4567
+# Then open http://localhost:4567 and login with admin/admin123
 #
 # ============================================
 
@@ -50,10 +50,11 @@ services:
       JWT_SECRET: ""
       JWT_REFRESH_SECRET: ""
     volumes:
-      # 👇 CHANGE THIS - Your music folder
-      - ${MUSIC_PATH:-/mnt/navidrome/musica}:/music:ro
+      # Music library (read-only for safety)
+      # Set MUSIC_PATH in .env or edit default below
+      - ${MUSIC_PATH:-./music}:/music:ro
 
-      # Everything else is automatic
+      # Application data (auto-managed)
       - echo-config:/app/config
       - echo-data:/app/uploads
     depends_on:
