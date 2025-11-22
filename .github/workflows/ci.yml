@@ -80,11 +80,11 @@ jobs:
         working-directory: server
         run: pnpm db:generate
 
-      - name: Run migrations (dev)
+      - name: Run migrations (deploy)
         working-directory: server
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
-        run: pnpm db:migrate
+        run: pnpm prisma migrate deploy
 
       - name: Run migrations (test DBs)
         working-directory: server
