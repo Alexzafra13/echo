@@ -222,7 +222,10 @@ describe('SettingsService', () => {
       await service.set('test.key', 'new-value');
 
       // Assert
-      expect(repository.update).toHaveBeenCalledWith('test.key', 'new-value');
+      expect(repository.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'test.key',
+        value: 'new-value',
+      }));
     });
 
     it('debería convertir boolean a string', async () => {
@@ -233,7 +236,11 @@ describe('SettingsService', () => {
       await service.set('bool.key', true);
 
       // Assert
-      expect(repository.update).toHaveBeenCalledWith('bool.key', 'true');
+      expect(repository.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'bool.key',
+        value: 'true',
+        type: 'boolean',
+      }));
     });
 
     it('debería convertir número a string', async () => {
@@ -244,7 +251,11 @@ describe('SettingsService', () => {
       await service.set('num.key', 42);
 
       // Assert
-      expect(repository.update).toHaveBeenCalledWith('num.key', '42');
+      expect(repository.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'num.key',
+        value: '42',
+        type: 'number',
+      }));
     });
   });
 
@@ -261,10 +272,20 @@ describe('SettingsService', () => {
       });
 
       // Assert
-      expect(repository.update).toHaveBeenCalledTimes(3);
-      expect(repository.update).toHaveBeenCalledWith('key1', 'value1');
-      expect(repository.update).toHaveBeenCalledWith('key2', 'value2');
-      expect(repository.update).toHaveBeenCalledWith('key3', 'true');
+      expect(repository.upsert).toHaveBeenCalledTimes(3);
+      expect(repository.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'key1',
+        value: 'value1',
+      }));
+      expect(repository.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'key2',
+        value: 'value2',
+      }));
+      expect(repository.upsert).toHaveBeenCalledWith(expect.objectContaining({
+        key: 'key3',
+        value: 'true',
+        type: 'boolean',
+      }));
     });
   });
 
