@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Library, Music2, Wrench, Users, FileText } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { LayoutDashboard, Library, Music2, Wrench, Users, FileText } from 'lucide-react';
 import { Tabs, Tab } from '../../components/Tabs';
 import { Header } from '@shared/components/layout/Header';
-import { Sidebar } from '@features/home/components';
+import { AdminSidebar } from '../../components/AdminSidebar';
+import { Breadcrumbs } from '../../components/Breadcrumbs';
+import { DashboardPanel } from '../../components/DashboardPanel';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
@@ -17,9 +19,37 @@ import styles from './AdminPage.module.css';
  * Solo accesible para usuarios con rol admin
  */
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('library');
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Tab labels map
+  const tabLabels: Record<string, string> = {
+    dashboard: 'Dashboard',
+    library: 'Librería',
+    metadata: 'Metadata',
+    maintenance: 'Mantenimiento',
+    users: 'Usuarios',
+    logs: 'Logs',
+  };
+
+  // Breadcrumbs
+  const breadcrumbs = useMemo(() => {
+    return [
+      { label: 'Admin', onClick: () => setActiveTab('dashboard') },
+      { label: tabLabels[activeTab] || 'Dashboard' },
+    ];
+  }, [activeTab]);
 
   const tabs: Tab[] = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <LayoutDashboard size={20} />,
+      content: (
+        <div className={styles.tabContent}>
+          <DashboardPanel />
+        </div>
+      ),
+    },
     {
       id: 'library',
       label: 'Librería',
@@ -73,23 +103,51 @@ export default function AdminPage() {
     },
   ];
 
+  // Render content based on active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardPanel />;
+      case 'library':
+        return <ScannerPanel />;
+      case 'metadata':
+        return (
+          <>
+            <MetadataConflictsPanel />
+            <MetadataSettingsPanel />
+          </>
+        );
+      case 'maintenance':
+        return <MaintenanceTab />;
+      case 'users':
+        return <UsersPanel />;
+      case 'logs':
+        return <LogsPanel />;
+      default:
+        return <DashboardPanel />;
+    }
+  };
+
   return (
     <div className={styles.adminPage}>
-      <Sidebar />
+      {/* Admin Sidebar (hidden on mobile) */}
+      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className={styles.adminPage__main}>
-        <Header showBackButton />
+        <Header adminMode showBackButton />
 
         <div className={styles.adminPage__content}>
-          <div className={styles.header}>
-            <h1 className={styles.title}>Panel de Administración</h1>
-            <p className={styles.subtitle}>
-              Gestiona tu librería musical y configuración del servidor
-            </p>
+          {/* Breadcrumbs */}
+          <Breadcrumbs items={breadcrumbs} />
+
+          {/* Mobile tabs (shown only on mobile when sidebar is hidden) */}
+          <div className={styles.mobileTabs}>
+            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
           </div>
 
+          {/* Content */}
           <div className={styles.content}>
-            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            {renderContent()}
           </div>
         </div>
       </main>
