@@ -179,7 +179,7 @@ describe('WaveMixService', () => {
       );
     });
 
-    it('debería retornar un Wave Mix vacío cuando ningún track supera el score mínimo', async () => {
+    it('debería usar fallback cuando ningún track supera el score mínimo pero hay tracks disponibles', async () => {
       // Arrange
       const userId = 'user-123';
       const mockTopTracks = [{ trackId: 'track-1', playCount: 5 }];
@@ -204,10 +204,15 @@ describe('WaveMixService', () => {
 
       // Assert
       expect(result).toBeDefined();
-      expect(result.tracks).toEqual([]);
+      // El servicio usa lógica de fallback, así que debería incluir el track de todas formas
+      expect(result.tracks).toHaveLength(1);
+      expect(result.tracks[0].trackId).toBe('track-1');
       expect(mockLogger.info).toHaveBeenCalledWith(
-        { userId, minScore: 20 },
-        'No tracks qualified, returning empty mix'
+        expect.objectContaining({
+          userId,
+          tracksUsed: 1,
+        }),
+        'Using all available tracks regardless of score'
       );
     });
   });
@@ -256,7 +261,7 @@ describe('WaveMixService', () => {
       );
     });
 
-    it('debería generar playlists frescas si no hay cache', async () => {
+    it('debería generar playlists frescas si no hay cache pero no cachear si están vacías', async () => {
       // Arrange
       const userId = 'user-123';
       mockRedis.get.mockResolvedValue(null);
@@ -270,10 +275,15 @@ describe('WaveMixService', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.length).toBeGreaterThan(0);
-      expect(mockRedis.set).toHaveBeenCalled();
+      // No debería cachear playlists vacías (usuario sin historial)
+      expect(mockRedis.set).not.toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         { userId },
         'Generating fresh playlists'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        { userId },
+        'Skipping cache - playlists are empty (user building listening history)'
       );
     });
   });
@@ -292,7 +302,8 @@ describe('WaveMixService', () => {
       // Assert
       expect(result).toBeDefined();
       expect(mockRedis.get).not.toHaveBeenCalled();
-      expect(mockRedis.set).toHaveBeenCalled();
+      // No debería cachear playlists vacías (usuario sin historial)
+      expect(mockRedis.set).not.toHaveBeenCalled();
     });
   });
 });
