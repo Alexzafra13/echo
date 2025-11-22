@@ -8,3 +8,4 @@ export * from './list-enrichment-logs.request.dto';
 export * from './list-enrichment-logs.response.dto';
 export * from './get-enrichment-stats.request.dto';
 export * from './get-enrichment-stats.response.dto';
+export * from './get-dashboard-stats.response.dto';

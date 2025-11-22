@@ -1,0 +1,128 @@
+/* HealthPanel Component Styles */
+
+.container {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.healthItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.healthHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.healthLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.healthStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.iconHealthy {
+  color: #10b981;
+}
+
+.iconWarning {
+  color: #f59e0b;
+}
+
+.iconError {
+  color: #ef4444;
+}
+
+/* Alerts Section */
+.alertsSection {
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.alertsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f59e0b;
+  margin-bottom: 12px;
+}
+
+.alertsTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.alertsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  font-size: 13px;
+  color: #f59e0b;
+}
+
+.alert svg {
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

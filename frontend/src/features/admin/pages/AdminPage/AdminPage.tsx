@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Library, Music2, Wrench, Users, FileText } from 'lucide-react';
+import { LayoutDashboard, Library, Music2, Wrench, Users, FileText } from 'lucide-react';
 import { Tabs, Tab } from '../../components/Tabs';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
+import { DashboardPanel } from '../../components/DashboardPanel';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
@@ -17,9 +18,19 @@ import styles from './AdminPage.module.css';
  * Solo accesible para usuarios con rol admin
  */
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('library');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const tabs: Tab[] = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <LayoutDashboard size={20} />,
+      content: (
+        <div className={styles.tabContent}>
+          <DashboardPanel />
+        </div>
+      ),
+    },
     {
       id: 'library',
       label: 'Librería',
