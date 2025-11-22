@@ -44,6 +44,7 @@ async function bootstrap() {
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:', 'https:'], // Allow blob URLs + external radio streams
         frameSrc: ["'none'"],
+        upgradeInsecureRequests: null, // Disable HTTPS redirect - allow HTTP for local networks
       },
     },
     crossOriginEmbedderPolicy: false, // Disable for audio streaming
