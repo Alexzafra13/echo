@@ -43,4 +43,30 @@ export class AdminDashboardController {
     const result = await this.getDashboardStatsUseCase.execute({});
     return GetDashboardStatsResponseDto.fromDomain(result);
   }
+
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get system health status (Admin)',
+    description: 'Returns quick system health status for header indicator. Only accessible by administrators.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'System health retrieved successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Not authenticated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No admin permissions',
+  })
+  async getSystemHealth() {
+    const result = await this.getDashboardStatsUseCase.execute({});
+    return {
+      systemHealth: result.systemHealth,
+      activeAlerts: result.activeAlerts,
+    };
+  }
 }

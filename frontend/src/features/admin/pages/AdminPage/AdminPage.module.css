@@ -10,10 +10,10 @@
 
 .adminPage__main {
   flex: 1;
-  margin-left: 200px; /* Compensate for fixed sidebar width */
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
+  min-width: 0; /* Allows flex child to shrink below content size */
 }
 
 .adminPage__content {
@@ -55,6 +55,12 @@
   flex-direction: column;
   width: 100%; /* Match container width */
   max-width: 100%; /* Prevent overflow */
+  gap: 24px;
+}
+
+/* Mobile tabs - only shown on mobile when sidebar is hidden */
+.mobileTabs {
+  display: none;
 }
 
 .tabContent {
@@ -93,10 +99,6 @@
 
 /* Tablet */
 @media (max-width: 1024px) {
-  .adminPage__main {
-    margin-left: 200px;
-  }
-
   .adminPage__content {
     padding: 116px 32px 32px; /* 84px + 32px */
   }
@@ -110,14 +112,13 @@
 @media (max-width: 768px) {
   .adminPage__content {
     overflow: visible; /* Permitir que bottom nav sea visible */
-  }
-
-  .adminPage__main {
-    margin-left: 0; /* No sidebar en mobile */
-  }
-
-  .adminPage__content {
     padding: 104px 20px 140px; /* Bottom padding for bottom nav + player */
+  }
+
+  /* Show mobile tabs on mobile */
+  .mobileTabs {
+    display: block;
+    margin-bottom: 24px;
   }
 
   .title {

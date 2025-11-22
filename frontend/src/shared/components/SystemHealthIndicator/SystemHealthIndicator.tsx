@@ -1,0 +1,201 @@
+import { useEffect, useState } from 'react';
+import { Activity, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { apiClient } from '@shared/services/api';
+import { useAuth } from '@shared/hooks/useAuth';
+import styles from './SystemHealthIndicator.module.css';
+
+interface SystemHealth {
+  database: 'healthy' | 'degraded' | 'down';
+  redis: 'healthy' | 'degraded' | 'down';
+  scanner: 'idle' | 'running' | 'error';
+  metadataApis: {
+    lastfm: 'healthy' | 'degraded' | 'down';
+    fanart: 'healthy' | 'degraded' | 'down';
+    musicbrainz: 'healthy' | 'degraded' | 'down';
+  };
+  storage: 'healthy' | 'warning' | 'critical';
+}
+
+interface ActiveAlerts {
+  orphanedFiles: number;
+  pendingConflicts: number;
+  storageWarning: boolean;
+  scanErrors: number;
+}
+
+type OverallStatus = 'healthy' | 'warning' | 'critical';
+
+/**
+ * SystemHealthIndicator Component
+ * Muestra un indicador de estado del sistema en el header (estilo Navidrome)
+ */
+export function SystemHealthIndicator() {
+  const { user } = useAuth();
+  const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [alerts, setAlerts] = useState<ActiveAlerts | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Solo mostrar para admins
+  if (!user?.isAdmin) {
+    return null;
+  }
+
+  useEffect(() => {
+    loadHealth();
+
+    // Poll every 60 seconds
+    const interval = setInterval(loadHealth, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadHealth = async () => {
+    try {
+      const response = await apiClient.get('/admin/dashboard/health');
+      setHealth(response.data.systemHealth);
+      setAlerts(response.data.activeAlerts);
+    } catch (err) {
+      console.error('Error loading system health:', err);
+      // Si falla, asumir estado degradado
+      setHealth(null);
+    }
+  };
+
+  const getOverallStatus = (): OverallStatus => {
+    if (!health) return 'critical';
+
+    // Critical if anything is down, critical, or error
+    if (
+      health.database === 'down' ||
+      health.storage === 'critical' ||
+      health.scanner === 'error'
+    ) {
+      return 'critical';
+    }
+
+    // Warning if anything is degraded, warning, or running
+    if (
+      health.database === 'degraded' ||
+      health.redis === 'degraded' ||
+      health.storage === 'warning' ||
+      health.scanner === 'running' ||
+      (alerts && (alerts.orphanedFiles > 0 || alerts.pendingConflicts > 0 || alerts.scanErrors > 0))
+    ) {
+      return 'warning';
+    }
+
+    return 'healthy';
+  };
+
+  const status = getOverallStatus();
+
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'healthy':
+        return <CheckCircle2 size={18} className={styles.iconHealthy} />;
+      case 'warning':
+        return <AlertCircle size={18} className={styles.iconWarning} />;
+      case 'critical':
+        return <XCircle size={18} className={styles.iconCritical} />;
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (status) {
+      case 'healthy':
+        return 'Sistema saludable';
+      case 'warning':
+        return 'Sistema con advertencias';
+      case 'critical':
+        return 'Sistema con errores críticos';
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'healthy':
+        return '#10b981';
+      case 'warning':
+        return '#f59e0b';
+      case 'critical':
+        return '#ef4444';
+    }
+  };
+
+  return (
+    <div
+      className={styles.container}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <div className={styles.indicator} style={{ backgroundColor: getStatusColor() }}>
+        <Activity size={12} />
+      </div>
+
+      {showTooltip && health && (
+        <div className={styles.tooltip}>
+          <div className={styles.tooltipHeader}>
+            {getStatusIcon()}
+            <span className={styles.tooltipTitle}>{getStatusLabel()}</span>
+          </div>
+
+          <div className={styles.tooltipContent}>
+            <div className={styles.tooltipSection}>
+              <span className={styles.tooltipLabel}>Base de Datos:</span>
+              <span className={styles[`status-${health.database}`]}>
+                {health.database === 'healthy' ? 'Activa' : health.database === 'degraded' ? 'Degradada' : 'Inactiva'}
+              </span>
+            </div>
+
+            <div className={styles.tooltipSection}>
+              <span className={styles.tooltipLabel}>Caché:</span>
+              <span className={styles[`status-${health.redis}`]}>
+                {health.redis === 'healthy' ? 'Activo' : health.redis === 'degraded' ? 'Degradado' : 'Inactivo'}
+              </span>
+            </div>
+
+            <div className={styles.tooltipSection}>
+              <span className={styles.tooltipLabel}>Escáner:</span>
+              <span className={styles[`status-${health.scanner}`]}>
+                {health.scanner === 'idle' ? 'Inactivo' : health.scanner === 'running' ? 'En ejecución' : 'Error'}
+              </span>
+            </div>
+
+            <div className={styles.tooltipSection}>
+              <span className={styles.tooltipLabel}>Almacenamiento:</span>
+              <span className={styles[`status-${health.storage}`]}>
+                {health.storage === 'healthy' ? 'Normal' : health.storage === 'warning' ? 'Advertencia' : 'Crítico'}
+              </span>
+            </div>
+
+            {alerts && (alerts.orphanedFiles > 0 || alerts.pendingConflicts > 0 || alerts.scanErrors > 0) && (
+              <>
+                <div className={styles.tooltipDivider} />
+                <div className={styles.tooltipAlerts}>
+                  {alerts.orphanedFiles > 0 && (
+                    <div className={styles.tooltipAlert}>
+                      • {alerts.orphanedFiles} archivos huérfanos
+                    </div>
+                  )}
+                  {alerts.pendingConflicts > 0 && (
+                    <div className={styles.tooltipAlert}>
+                      • {alerts.pendingConflicts} conflictos pendientes
+                    </div>
+                  )}
+                  {alerts.scanErrors > 0 && (
+                    <div className={styles.tooltipAlert}>
+                      • {alerts.scanErrors} errores de escaneo
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className={styles.tooltipFooter}>
+              Ver detalles en Dashboard →
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
