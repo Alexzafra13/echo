@@ -64,11 +64,11 @@ async function main() {
     { key: 'metadata.download.enabled', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Download images locally' },
     { key: 'metadata.download.album_covers', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Download album covers' },
     { key: 'metadata.download.artist_images', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Download artist images' },
-    { key: 'metadata.download.save_in_album_folder', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Save covers in album folder' },
+    { key: 'metadata.download.save_in_album_folder', value: 'false', category: 'external_metadata', type: 'boolean', description: 'Save covers in album folder' },
 
     // Storage Settings
     { key: 'metadata.storage.location', value: 'centralized', category: 'external_metadata', type: 'string', description: 'Storage location: centralized or portable' },
-    { key: 'metadata.storage.path', value: '/storage/metadata', category: 'external_metadata', type: 'string', description: 'Base path for metadata storage' },
+    { key: 'metadata.storage.path', value: '/app/uploads/metadata', category: 'external_metadata', type: 'string', description: 'Base path for metadata storage' },
     { key: 'metadata.storage.max_size_mb', value: '500', category: 'external_metadata', type: 'number', description: 'Max storage per artist (MB)' },
 
     // Embed Settings

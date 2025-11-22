@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import {
   IArtistBioRetriever,
@@ -34,7 +35,8 @@ export class ExternalMetadataService {
     private readonly storage: StorageService,
     private readonly imageDownload: ImageDownloadService,
     private readonly settings: SettingsService,
-    private readonly conflictService: MetadataConflictService
+    private readonly conflictService: MetadataConflictService,
+    private readonly config: ConfigService
   ) {}
 
   /**
@@ -782,15 +784,20 @@ export class ExternalMetadataService {
   /**
    * Download album cover and save it
    * Saves to album folder as cover.jpg (if configured) or to metadata storage
+   * Priority: ENV vars > Database settings > Defaults
    */
   private async downloadAlbumCover(
     albumId: string,
     cover: AlbumCover
   ): Promise<string> {
-    const saveInFolder = await this.settings.getBoolean(
-      'metadata.download.save_in_album_folder',
-      true
-    );
+    // Priority: ENV > DB > default
+    const envSaveInFolder = this.config.get<string>('METADATA_SAVE_COVERS_IN_ALBUM_FOLDER');
+    const saveInFolder = envSaveInFolder !== undefined
+      ? envSaveInFolder === 'true'
+      : await this.settings.getBoolean(
+          'metadata.download.save_in_album_folder',
+          false  // Default: save to metadata storage (music folder is read-only)
+        );
 
     let coverPath: string;
 
