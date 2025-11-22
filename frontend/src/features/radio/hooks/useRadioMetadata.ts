@@ -30,7 +30,7 @@ export function useRadioMetadata({
   const [isConnected, setIsConnected] = useState(false);
 
   const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
 
   useEffect(() => {

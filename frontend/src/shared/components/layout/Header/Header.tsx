@@ -4,6 +4,7 @@ import { Search, Sun, Moon } from 'lucide-react';
 import { useAuth, useTheme } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
+import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchPanel } from './SearchPanel';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
@@ -240,6 +241,9 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
+
+        {/* System health indicator (solo admin) */}
+        <SystemHealthIndicator />
 
         {/* Metadata notifications (solo admin) */}
         <MetadataNotifications token={accessToken} isAdmin={user?.isAdmin || false} />

@@ -1,0 +1,74 @@
+/* StatCard Component Styles */
+
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 13px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  color: var(--color-primary, #ff6b6b);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  line-height: 1;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.change svg {
+  flex-shrink: 0;
+}

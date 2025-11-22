@@ -6,3 +6,4 @@ export { ResetUserPasswordUseCase, type ResetUserPasswordInput, type ResetUserPa
 export { PermanentlyDeleteUserUseCase, type PermanentlyDeleteUserInput, type PermanentlyDeleteUserOutput } from './permanently-delete-user';
 export { ListEnrichmentLogsUseCase, type ListEnrichmentLogsInput, type ListEnrichmentLogsOutput } from './list-enrichment-logs';
 export { GetEnrichmentStatsUseCase, type GetEnrichmentStatsInput, type GetEnrichmentStatsOutput } from './get-enrichment-stats';
+export { GetDashboardStatsUseCase, type GetDashboardStatsInput, type GetDashboardStatsOutput } from './get-dashboard-stats';

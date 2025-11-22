@@ -3,6 +3,7 @@ import { AuthModule } from '@features/auth/auth.module';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { AdminController } from './presentation/admin.controller';
+import { AdminDashboardController } from './presentation/admin-dashboard.controller';
 import { EnrichmentHistoryController } from './presentation/enrichment-history.controller';
 import { AlbumCoversController } from './presentation/album-covers.controller';
 import { ArtistAvatarsController } from './presentation/artist-avatars.controller';
@@ -18,6 +19,7 @@ import {
   PermanentlyDeleteUserUseCase,
   ListEnrichmentLogsUseCase,
   GetEnrichmentStatsUseCase,
+  GetDashboardStatsUseCase,
 } from './domain/use-cases';
 import { SearchAlbumCoversUseCase } from './domain/use-cases/search-album-covers';
 import { ApplyAlbumCoverUseCase } from './domain/use-cases/apply-album-cover';
@@ -38,6 +40,7 @@ import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-al
   imports: [AuthModule, PrismaModule, ExternalMetadataModule],
   controllers: [
     AdminController,
+    AdminDashboardController,
     EnrichmentHistoryController,
     AlbumCoversController,
     ArtistAvatarsController,
@@ -54,6 +57,7 @@ import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-al
     PermanentlyDeleteUserUseCase,
     ListEnrichmentLogsUseCase,
     GetEnrichmentStatsUseCase,
+    GetDashboardStatsUseCase,
     SearchAlbumCoversUseCase,
     ApplyAlbumCoverUseCase,
     SearchArtistAvatarsUseCase,
