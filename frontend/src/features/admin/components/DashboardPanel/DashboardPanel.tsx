@@ -3,6 +3,9 @@ import { LayoutDashboard, TrendingUp, TrendingDown } from 'lucide-react';
 import { apiClient } from '@shared/services/api';
 import { StatCard } from './StatCard';
 import { HealthPanel } from './HealthPanel';
+import { ActivityTimelineChart } from './ActivityTimelineChart';
+import { StorageBreakdownChart } from './StorageBreakdownChart';
+import { RecentActivityFeed } from './RecentActivityFeed';
 import styles from './DashboardPanel.module.css';
 
 interface DashboardStats {
@@ -74,6 +77,20 @@ interface DashboardStats {
     storageWarning: boolean;
     scanErrors: number;
   };
+  activityTimeline: Array<{
+    date: string;
+    scans: number;
+    enrichments: number;
+    errors: number;
+  }>;
+  recentActivities: Array<{
+    id: string;
+    type: 'scan' | 'enrichment' | 'user' | 'system';
+    action: string;
+    details: string;
+    timestamp: string;
+    status: 'success' | 'warning' | 'error';
+  }>;
 }
 
 /**
@@ -315,6 +332,18 @@ export function DashboardPanel() {
             <p className={styles.noScanInfo}>No hay escaneos registrados</p>
           )}
         </div>
+      </div>
+
+      {/* Activity Timeline Chart */}
+      <ActivityTimelineChart data={stats.activityTimeline} />
+
+      {/* Charts Row */}
+      <div className={styles.chartsRow}>
+        {/* Storage Breakdown */}
+        <StorageBreakdownChart data={stats.storageBreakdown} />
+
+        {/* Recent Activity Feed */}
+        <RecentActivityFeed activities={stats.recentActivities} />
       </div>
     </div>
   );

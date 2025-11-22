@@ -11,6 +11,8 @@ import {
   ActivityStats,
   ScanStats,
   ActiveAlerts,
+  ActivityTimelineDay,
+  RecentActivity,
 } from './get-dashboard-stats.dto';
 
 @Injectable()
@@ -33,6 +35,8 @@ export class GetDashboardStatsUseCase {
         activityStats,
         scanStats,
         activeAlerts,
+        activityTimeline,
+        recentActivities,
       ] = await Promise.all([
         this.getLibraryStats(),
         this.getStorageBreakdown(),
@@ -41,6 +45,8 @@ export class GetDashboardStatsUseCase {
         this.getActivityStats(),
         this.getScanStats(),
         this.getActiveAlerts(),
+        this.getActivityTimeline(),
+        this.getRecentActivities(),
       ]);
 
       return {
@@ -51,6 +57,8 @@ export class GetDashboardStatsUseCase {
         activityStats,
         scanStats,
         activeAlerts,
+        activityTimeline,
+        recentActivities,
       };
     } catch (error) {
       this.logger.error(`Error getting dashboard stats: ${(error as Error).message}`, (error as Error).stack);
@@ -337,5 +345,137 @@ export class GetDashboardStatsUseCase {
       storageWarning,
       scanErrors: recentScanErrors,
     };
+  }
+
+  private async getActivityTimeline(): Promise<ActivityTimelineDay[]> {
+    const timeline: ActivityTimelineDay[] = [];
+    const now = new Date();
+
+    // Generate last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      // Get scans for this day
+      const scans = await this.prisma.libraryScan.count({
+        where: {
+          startedAt: {
+            gte: date,
+            lt: nextDate,
+          },
+        },
+      });
+
+      // Get enrichments for this day
+      const enrichments = await this.prisma.enrichmentLog.count({
+        where: {
+          createdAt: {
+            gte: date,
+            lt: nextDate,
+          },
+          status: { in: ['success', 'completed'] },
+        },
+      });
+
+      // Get errors for this day
+      const errors = await this.prisma.enrichmentLog.count({
+        where: {
+          createdAt: {
+            gte: date,
+            lt: nextDate,
+          },
+          status: { in: ['failed', 'error'] },
+        },
+      });
+
+      timeline.push({
+        date: date.toISOString().split('T')[0], // YYYY-MM-DD
+        scans,
+        enrichments,
+        errors,
+      });
+    }
+
+    return timeline;
+  }
+
+  private async getRecentActivities(): Promise<RecentActivity[]> {
+    const activities: RecentActivity[] = [];
+
+    // Get recent scans (last 3)
+    const recentScans = await this.prisma.libraryScan.findMany({
+      orderBy: { startedAt: 'desc' },
+      take: 3,
+    });
+
+    recentScans.forEach((scan) => {
+      activities.push({
+        id: scan.id,
+        type: 'scan',
+        action: 'Escaneo de librería',
+        details: `${scan.tracksAdded} agregadas, ${scan.tracksUpdated} actualizadas, ${scan.tracksDeleted} eliminadas`,
+        timestamp: scan.startedAt,
+        status: scan.status === 'completed' ? 'success' : scan.status === 'failed' ? 'error' : 'warning',
+      });
+    });
+
+    // Get recent enrichments (last 5)
+    const recentEnrichments = await this.prisma.enrichmentLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      where: {
+        status: { in: ['success', 'completed', 'failed', 'error'] },
+      },
+    });
+
+    recentEnrichments.forEach((enrichment) => {
+      const entityTypeLabel = enrichment.entityType === 'album' ? 'Álbum' : 'Artista';
+      const metadataTypeLabel =
+        enrichment.metadataType === 'cover'
+          ? 'portada'
+          : enrichment.metadataType === 'avatar'
+            ? 'avatar'
+            : enrichment.metadataType === 'banner'
+              ? 'banner'
+              : 'metadata';
+
+      activities.push({
+        id: enrichment.id,
+        type: 'enrichment',
+        action: `${entityTypeLabel} enriquecido`,
+        details: `${metadataTypeLabel} de "${enrichment.entityName}" desde ${enrichment.provider}`,
+        timestamp: enrichment.createdAt,
+        status: enrichment.status === 'success' || enrichment.status === 'completed' ? 'success' : 'error',
+      });
+    });
+
+    // Get recent user logins (last 2)
+    const recentLogins = await this.prisma.user.findMany({
+      where: {
+        lastLoginAt: { not: null },
+      },
+      orderBy: { lastLoginAt: 'desc' },
+      take: 2,
+    });
+
+    recentLogins.forEach((user) => {
+      if (user.lastLoginAt) {
+        activities.push({
+          id: `login-${user.id}`,
+          type: 'user',
+          action: 'Inicio de sesión',
+          details: `Usuario ${user.username}`,
+          timestamp: user.lastLoginAt,
+          status: 'success',
+        });
+      }
+    });
+
+    // Sort all activities by timestamp and return last 10
+    return activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10);
   }
 }

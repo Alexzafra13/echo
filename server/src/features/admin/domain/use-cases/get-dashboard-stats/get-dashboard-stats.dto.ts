@@ -89,6 +89,22 @@ export interface ActiveAlerts {
   scanErrors: number;
 }
 
+export interface ActivityTimelineDay {
+  date: string; // ISO date string (YYYY-MM-DD)
+  scans: number;
+  enrichments: number;
+  errors: number;
+}
+
+export interface RecentActivity {
+  id: string;
+  type: 'scan' | 'enrichment' | 'user' | 'system';
+  action: string;
+  details: string;
+  timestamp: Date;
+  status: 'success' | 'warning' | 'error';
+}
+
 export interface GetDashboardStatsOutput {
   libraryStats: LibraryStats;
   storageBreakdown: StorageBreakdown;
@@ -97,4 +113,6 @@ export interface GetDashboardStatsOutput {
   activityStats: ActivityStats;
   scanStats: ScanStats;
   activeAlerts: ActiveAlerts;
+  activityTimeline: ActivityTimelineDay[]; // Last 7 days
+  recentActivities: RecentActivity[]; // Last 10 activities
 }

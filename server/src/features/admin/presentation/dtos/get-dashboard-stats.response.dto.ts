@@ -167,6 +167,40 @@ class ActiveAlertsDto {
   scanErrors!: number;
 }
 
+class ActivityTimelineDayDto {
+  @ApiProperty({ example: '2025-01-15', description: 'Date in ISO format (YYYY-MM-DD)' })
+  date!: string;
+
+  @ApiProperty({ example: 3, description: 'Number of scans this day' })
+  scans!: number;
+
+  @ApiProperty({ example: 45, description: 'Number of enrichments this day' })
+  enrichments!: number;
+
+  @ApiProperty({ example: 2, description: 'Number of errors this day' })
+  errors!: number;
+}
+
+class RecentActivityDto {
+  @ApiProperty({ example: 'abc-123', description: 'Activity ID' })
+  id!: string;
+
+  @ApiProperty({ enum: ['scan', 'enrichment', 'user', 'system'], example: 'scan' })
+  type!: 'scan' | 'enrichment' | 'user' | 'system';
+
+  @ApiProperty({ example: 'Escaneo de librería', description: 'Activity action' })
+  action!: string;
+
+  @ApiProperty({ example: '12 agregadas, 5 actualizadas', description: 'Activity details' })
+  details!: string;
+
+  @ApiProperty({ example: '2025-01-15T10:30:00Z', description: 'Activity timestamp' })
+  timestamp!: Date;
+
+  @ApiProperty({ enum: ['success', 'warning', 'error'], example: 'success' })
+  status!: 'success' | 'warning' | 'error';
+}
+
 export class GetDashboardStatsResponseDto {
   @ApiProperty({ type: LibraryStatsDto })
   libraryStats!: LibraryStatsDto;
@@ -188,6 +222,12 @@ export class GetDashboardStatsResponseDto {
 
   @ApiProperty({ type: ActiveAlertsDto })
   activeAlerts!: ActiveAlertsDto;
+
+  @ApiProperty({ type: [ActivityTimelineDayDto], description: 'Activity timeline for last 7 days' })
+  activityTimeline!: ActivityTimelineDayDto[];
+
+  @ApiProperty({ type: [RecentActivityDto], description: 'Recent activities (last 10)' })
+  recentActivities!: RecentActivityDto[];
 
   static fromDomain(output: GetDashboardStatsOutput): GetDashboardStatsResponseDto {
     return output as GetDashboardStatsResponseDto;
