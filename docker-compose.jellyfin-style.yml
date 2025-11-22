@@ -1,0 +1,62 @@
+# ============================================
+# 🎵 Echo Music Server - Jellyfin-Style Setup
+# ============================================
+#
+# QUICK START (2 steps):
+#
+# 1. Change line 29 to YOUR music folder path
+# 2. Run: docker compose -f docker-compose.jellyfin-style.yml up -d
+#
+# Done! Open http://localhost:4567
+# Login: admin / admin123
+#
+# ============================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: music
+      POSTGRES_PASSWORD: music
+      POSTGRES_DB: echo
+    volumes:
+      - echo-db:/var/lib/postgresql/data
+    networks:
+      - echo
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - echo-cache:/data
+    networks:
+      - echo
+
+  app:
+    image: ghcr.io/alexzafra13/echo:latest
+    ports:
+      - "4567:4567"
+    environment:
+      DATABASE_URL: postgresql://music:music@postgres:5432/echo
+      REDIS_HOST: redis
+      MUSIC_LIBRARY_PATH: /music
+    volumes:
+      # 👇 CHANGE THIS - Your music folder
+      - /mnt/navidrome/musica:/music:ro
+
+      # Everything else is automatic
+      - echo-config:/app/config
+      - echo-data:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - echo
+
+volumes:
+  echo-db:
+  echo-cache:
+  echo-config:
+  echo-data:
+
+networks:
+  echo:
