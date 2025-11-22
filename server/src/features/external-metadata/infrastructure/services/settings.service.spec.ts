@@ -18,6 +18,7 @@ describe('SettingsService', () => {
       findByCategory: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      upsert: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

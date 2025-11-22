@@ -195,6 +195,7 @@ describe('WaveMixService', () => {
       ];
 
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
+      mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue([]);
       mockPrisma.track.findMany.mockResolvedValue(mockTracks);
       mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
 
@@ -261,6 +262,7 @@ describe('WaveMixService', () => {
       mockRedis.get.mockResolvedValue(null);
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
       mockPlayTrackingRepo.getUserTopArtists.mockResolvedValue([]);
+      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([]);
 
       // Act
       const result = await service.getAllAutoPlaylists(userId);
@@ -282,6 +284,7 @@ describe('WaveMixService', () => {
       const userId = 'user-123';
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
       mockPlayTrackingRepo.getUserTopArtists.mockResolvedValue([]);
+      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([]);
 
       // Act
       const result = await service.refreshAutoPlaylists(userId);

@@ -6,6 +6,7 @@ describe('ResetUserPasswordUseCase', () => {
   let useCase: ResetUserPasswordUseCase;
   let mockUserRepository: any;
   let mockPasswordService: any;
+  let mockLogService: any;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -18,9 +19,16 @@ describe('ResetUserPasswordUseCase', () => {
       hash: jest.fn(),
     };
 
+    mockLogService = {
+      info: jest.fn(),
+      warning: jest.fn(),
+      error: jest.fn(),
+    };
+
     useCase = new ResetUserPasswordUseCase(
       mockUserRepository,
       mockPasswordService,
+      mockLogService,
     );
   });
 
