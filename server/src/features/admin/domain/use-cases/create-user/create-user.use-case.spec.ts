@@ -6,6 +6,7 @@ describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let mockUserRepository: any;
   let mockPasswordService: any;
+  let mockLogService: any;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -18,9 +19,16 @@ describe('CreateUserUseCase', () => {
       hash: jest.fn(),
     };
 
+    mockLogService = {
+      info: jest.fn(),
+      warning: jest.fn(),
+      error: jest.fn(),
+    };
+
     useCase = new CreateUserUseCase(
       mockUserRepository,
       mockPasswordService,
+      mockLogService,
     );
   });
 

@@ -5,6 +5,7 @@ import { DeleteUserUseCase } from './delete-user.use-case';
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
   let mockUserRepository: any;
+  let mockLogService: any;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -13,7 +14,13 @@ describe('DeleteUserUseCase', () => {
       updatePartial: jest.fn(),
     };
 
-    useCase = new DeleteUserUseCase(mockUserRepository);
+    mockLogService = {
+      info: jest.fn(),
+      warning: jest.fn(),
+      error: jest.fn(),
+    };
+
+    useCase = new DeleteUserUseCase(mockUserRepository, mockLogService);
   });
 
   describe('execute', () => {
