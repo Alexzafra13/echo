@@ -65,6 +65,13 @@
   gap: 20px;
 }
 
+/* Charts Row (for timeline and storage) */
+.chartsRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
 /* Card */
 .card {
   background: rgba(255, 255, 255, 0.03);
@@ -270,6 +277,10 @@
   }
 
   .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .chartsRow {
     grid-template-columns: 1fr;
   }
 
