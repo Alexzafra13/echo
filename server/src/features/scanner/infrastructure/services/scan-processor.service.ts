@@ -49,7 +49,7 @@ class ScanProgress {
 export class ScanProcessorService implements OnModuleInit {
   private readonly logger = new Logger(ScanProcessorService.name);
   private readonly QUEUE_NAME = 'library-scan';
-  private readonly uploadPath = process.env.UPLOAD_PATH || './uploads/music';
+  private readonly musicLibraryPath = process.env.MUSIC_LIBRARY_PATH || '/music';
 
   constructor(
     @Inject(SCANNER_REPOSITORY)
@@ -92,7 +92,7 @@ export class ScanProcessorService implements OnModuleInit {
       'scan',
       {
         scanId,
-        path: options?.path || this.uploadPath,
+        path: options?.path || this.musicLibraryPath,
         recursive: options?.recursive !== false,
         pruneDeleted: options?.pruneDeleted !== false,
       },
