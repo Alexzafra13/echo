@@ -107,6 +107,14 @@ export async function getAutoPlaylists(): Promise<AutoPlaylist[]> {
 }
 
 /**
+ * Force refresh Wave Mix playlists (regenerates all playlists)
+ */
+export async function refreshWaveMix(): Promise<AutoPlaylist[]> {
+  const response = await apiClient.post('/recommendations/wave-mix/refresh');
+  return response.data;
+}
+
+/**
  * Get paginated Wave Mix artist playlists
  * For the dedicated artist playlists page
  */

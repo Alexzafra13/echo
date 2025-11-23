@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Mic2, RefreshCw, Sparkles } from 'lucide-react';
+import { Mic2, RefreshCw, Sparkles, Search, X } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
@@ -78,46 +78,62 @@ export function ArtistPlaylistsPage() {
       <Sidebar />
 
       <main className={styles.artistPlaylistsPage__main}>
-        <Header adminMode />
+        <Header
+          alwaysGlass
+          customSearch={
+            <div className={styles.artistPlaylistsPage__searchForm}>
+              <div className={styles.artistPlaylistsPage__searchWrapper}>
+                <Search size={20} className={styles.artistPlaylistsPage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Buscar playlists de artistas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.artistPlaylistsPage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className={styles.artistPlaylistsPage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
 
         <div className={styles.artistPlaylistsPage__content}>
           {/* Hero Section */}
           <div className={styles.artistPlaylistsPage__hero}>
             <div className={styles.artistPlaylistsPage__heroContent}>
-              <div className={styles.artistPlaylistsPage__heroHeader}>
-                <Mic2 size={48} className={styles.artistPlaylistsPage__heroIcon} />
-                <div className={styles.artistPlaylistsPage__heroText}>
-                  <h1 className={styles.artistPlaylistsPage__heroTitle}>
-                    Playlists de Artistas
-                  </h1>
-                  <p className={styles.artistPlaylistsPage__heroDescription}>
-                    Lo mejor de tus artistas favoritos, {user?.name || user?.username || 'personalizado para ti'}
+              <Mic2 size={48} className={styles.artistPlaylistsPage__heroIcon} />
+              <div className={styles.artistPlaylistsPage__heroText}>
+                <h1 className={styles.artistPlaylistsPage__heroTitle}>
+                  Playlists de Artistas
+                </h1>
+                <p className={styles.artistPlaylistsPage__heroDescription}>
+                  Lo mejor de tus artistas favoritos, {user?.name || user?.username || 'personalizado para ti'}
+                </p>
+                {total > 0 && (
+                  <p className={styles.artistPlaylistsPage__heroMeta}>
+                    {total} {total === 1 ? 'artista' : 'artistas'} encontrados
                   </p>
-                  {total > 0 && (
-                    <p className={styles.artistPlaylistsPage__heroMeta}>
-                      {total} {total === 1 ? 'artista' : 'artistas'} encontrados
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
-              <div className={styles.artistPlaylistsPage__heroActions}>
-                <input
-                  type="text"
-                  placeholder="Buscar playlists..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={styles.artistPlaylistsPage__searchInput}
-                />
-                <Button
-                  variant="secondary"
-                  onClick={() => loadPlaylists(currentPage)}
-                  disabled={isLoading}
-                  className={styles.artistPlaylistsPage__refreshButton}
-                >
-                  <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
-                  Actualizar
-                </Button>
-              </div>
+              <Button
+                variant="secondary"
+                onClick={() => loadPlaylists(currentPage)}
+                disabled={isLoading}
+                className={styles.artistPlaylistsPage__refreshButton}
+              >
+                <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
+                Actualizar
+              </Button>
             </div>
           </div>
 

@@ -5,7 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
-import { getAutoPlaylists, type AutoPlaylist } from '@shared/services/recommendations.service';
+import { getAutoPlaylists, refreshWaveMix, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
 import styles from './WaveMixPage.module.css';
 
@@ -50,25 +50,12 @@ export function WaveMixPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Force refresh - calls backend endpoint to regenerate playlists
-      const response = await fetch('/api/recommendations/wave-mix/refresh', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${useAuthStore.getState().accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to refresh playlists');
-      }
-
-      const data = await response.json();
+      const data = await refreshWaveMix();
       console.log('[WaveMix] Playlists refreshed:', data);
       setPlaylists(data);
     } catch (err: any) {
       console.error('[WaveMix] Failed to refresh:', err);
-      setError(err.message || 'Error al actualizar las playlists');
+      setError(err.response?.data?.message || 'Error al actualizar las playlists');
     } finally {
       setIsLoading(false);
     }
