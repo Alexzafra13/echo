@@ -28,7 +28,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 124px 48px 40px; /* 84px + 40px for header glassmorphism effect */
+  padding: 124px 48px 120px; /* 84px + 40px for header glassmorphism effect + 120px for player */
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
@@ -102,7 +102,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .adminPage__content {
-    padding: 116px 32px 32px; /* 84px + 32px */
+    padding: 116px 32px 120px; /* 84px + 32px + 120px for player */
   }
 
   .title {
