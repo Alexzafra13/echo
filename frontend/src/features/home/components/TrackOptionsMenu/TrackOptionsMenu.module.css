@@ -94,6 +94,23 @@
   color: var(--color-primary-500, #ed6842);
 }
 
+/* Danger Option (for destructive actions like remove) */
+.trackOptionsMenu__optionDanger {
+  color: #ef4444;
+}
+
+.trackOptionsMenu__optionDanger svg {
+  color: #ef4444;
+}
+
+.trackOptionsMenu__optionDanger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.trackOptionsMenu__optionDanger:hover svg {
+  color: #dc2626;
+}
+
 /* Separator */
 .trackOptionsMenu__separator {
   height: 1px;

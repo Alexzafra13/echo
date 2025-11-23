@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, ListPlus, Plus, Disc, User, Info } from 'lucide-react';
+import { MoreVertical, ListPlus, Plus, Disc, User, Info, Trash2 } from 'lucide-react';
 import { useDropdownPosition } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import type { Track } from '../../types';
@@ -12,6 +12,7 @@ interface TrackOptionsMenuProps {
   onGoToAlbum?: (track: Track) => void;
   onGoToArtist?: (track: Track) => void;
   onShowInfo?: (track: Track) => void;
+  onRemoveFromPlaylist?: (track: Track) => void;
 }
 
 /**
@@ -26,6 +27,7 @@ export function TrackOptionsMenu({
   onGoToAlbum,
   onGoToArtist,
   onShowInfo,
+  onRemoveFromPlaylist,
 }: TrackOptionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -121,6 +123,16 @@ export function TrackOptionsMenu({
               >
                 <Plus size={16} />
                 <span>Agregar a la cola</span>
+              </button>
+            )}
+
+            {onRemoveFromPlaylist && (
+              <button
+                className={`${styles.trackOptionsMenu__option} ${styles.trackOptionsMenu__optionDanger}`}
+                onClick={(e) => handleOptionClick(e, onRemoveFromPlaylist)}
+              >
+                <Trash2 size={16} />
+                <span>Quitar de la playlist</span>
               </button>
             )}
 

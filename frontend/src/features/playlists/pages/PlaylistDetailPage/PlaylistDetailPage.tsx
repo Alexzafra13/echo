@@ -4,10 +4,11 @@ import { Play, Music, Edit2, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
-import { usePlaylist, usePlaylistTracks } from '../../hooks/usePlaylists';
+import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist } from '../../hooks/usePlaylists';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
-import { PlaylistCoverMosaic } from '../../components';
+import { PlaylistCoverMosaic, EditPlaylistModal } from '../../components';
+import { UpdatePlaylistDto } from '../../types';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { useAuthStore } from '@shared/store';
@@ -23,10 +24,12 @@ export default function PlaylistDetailPage() {
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
-  // const removeTrackMutation = useRemoveTrackFromPlaylist(); // Available for future use
+  const updatePlaylistMutation = useUpdatePlaylist();
+  const removeTrackMutation = useRemoveTrackFromPlaylist();
 
   // Extract dominant color from first album cover in playlist
   useEffect(() => {
@@ -69,6 +72,18 @@ export default function PlaylistDetailPage() {
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };
 
+  const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
+    await updatePlaylistMutation.mutateAsync({ id, data });
+  };
+
+  const handleRemoveTrack = async (track: any) => {
+    if (!id) return;
+    try {
+      await removeTrackMutation.mutateAsync({ playlistId: id, trackId: track.id });
+    } catch (error) {
+      console.error('Error removing track from playlist:', error);
+    }
+  };
 
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -191,6 +206,7 @@ export default function PlaylistDetailPage() {
                   className={styles.playlistDetailPage__heroActionButton}
                   aria-label="Edit playlist"
                   title="Editar playlist"
+                  onClick={() => setShowEditModal(true)}
                 >
                   <Edit2 size={20} />
                 </button>
@@ -215,6 +231,7 @@ export default function PlaylistDetailPage() {
                 tracks={tracks}
                 onTrackPlay={handleTrackPlay}
                 currentTrackId={currentTrack?.id}
+                onRemoveFromPlaylist={handleRemoveTrack}
               />
             ) : (
               <div className={styles.playlistDetailPage__emptyTracks}>
@@ -246,6 +263,16 @@ export default function PlaylistDetailPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Edit Playlist Modal */}
+      {showEditModal && playlist && (
+        <EditPlaylistModal
+          playlist={playlist}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleUpdatePlaylist}
+          isLoading={updatePlaylistMutation.isPending}
+        />
       )}
     </div>
   );
