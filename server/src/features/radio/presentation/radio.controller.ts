@@ -17,6 +17,7 @@ import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
+import { Public } from '@shared/decorators/public.decorator';
 import { SaveFavoriteStationUseCase } from '../domain/use-cases/save-favorite-station/save-favorite-station.use-case';
 import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/get-user-favorites.use-case';
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
@@ -251,8 +252,10 @@ export class RadioController {
    * GET /radio/metadata/stream
    * Server-Sent Events endpoint for real-time ICY metadata
    * Streams "now playing" information from radio stations
+   * PUBLIC: EventSource cannot send JWT headers, metadata is non-sensitive public data
    */
   @Sse('metadata/stream')
+  @Public()
   @ApiOperation({
     summary: 'Stream de metadata de radio',
     description:
