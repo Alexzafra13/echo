@@ -13,9 +13,11 @@ import styles from './AlbumGrid.module.css';
  * <AlbumGrid
  *   title="Recently Added"
  *   albums={recentAlbums}
+ *   showViewAll={true}
+ *   viewAllPath="/albums"
  * />
  */
-export function AlbumGrid({ title, albums }: AlbumGridProps) {
+export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/albums' }: AlbumGridProps & { showViewAll?: boolean; viewAllPath?: string }) {
   const [, setLocation] = useLocation();
   const { playQueue } = usePlayer();
 
@@ -48,13 +50,27 @@ export function AlbumGrid({ title, albums }: AlbumGridProps) {
     }
   };
 
+  const handleViewAllClick = () => {
+    setLocation(viewAllPath);
+  };
+
   if (!albums || albums.length === 0) {
     return null;
   }
 
   return (
     <section className={styles.albumGrid}>
-      <h2 className={styles.albumGrid__title}>{title}</h2>
+      <div className={styles.albumGrid__header}>
+        <h2 className={styles.albumGrid__title}>{title}</h2>
+        {showViewAll && (
+          <button
+            className={styles.albumGrid__viewAllButton}
+            onClick={handleViewAllClick}
+          >
+            Ver todos →
+          </button>
+        )}
+      </div>
       <div className={styles.albumGrid__grid}>
         {albums.map((album) => (
           <AlbumCard

@@ -683,6 +683,109 @@ export class WaveMixService {
   }
 
   /**
+   * Get paginated genre playlists
+   * Used in the dedicated genres playlists page
+   * Optimized to reuse the batch loading logic from generateGenrePlaylists
+   */
+  async getGenrePlaylistsPaginated(
+    userId: string,
+    skip: number = 0,
+    take: number = 10
+  ): Promise<{ playlists: AutoPlaylist[]; total: number; hasMore: boolean }> {
+    // Get all top genres (up to 50)
+    const allTopGenres = await this.playTrackingRepo.getUserTopGenres(userId, 50);
+    const total = allTopGenres.length;
+
+    // Paginate - slice the genre list
+    const paginatedGenres = allTopGenres.slice(skip, skip + take);
+
+    if (paginatedGenres.length === 0) {
+      return { playlists: [], total, hasMore: false };
+    }
+
+    // OPTIMIZATION: Fetch all user play stats once
+    const allPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+    const trackIds = allPlayStats.map(t => t.itemId);
+
+    // OPTIMIZATION: Batch load all tracks for paginated genres
+    const allTracks = await this.prisma.track.findMany({
+      where: {
+        id: { in: trackIds },
+        genre: { in: paginatedGenres.map(g => g.genre) },
+      },
+      select: {
+        id: true,
+        artistId: true,
+        albumId: true,
+        title: true,
+        genre: true,
+      },
+    });
+
+    // Group tracks by genre
+    const tracksByGenre = new Map<string, typeof allTracks>();
+    for (const track of allTracks) {
+      if (!track.genre) continue;
+      if (!tracksByGenre.has(track.genre)) {
+        tracksByGenre.set(track.genre, []);
+      }
+      tracksByGenre.get(track.genre)!.push(track);
+    }
+
+    const playlists: AutoPlaylist[] = [];
+    const now = new Date();
+
+    // Process each paginated genre
+    for (const genreStat of paginatedGenres) {
+      const genre = genreStat.genre;
+      const tracks = tracksByGenre.get(genre);
+      if (!tracks || tracks.length === 0) continue;
+
+      const trackIdsList = tracks.map(t => t.id);
+      const trackArtistMap = new Map(tracks.map((t) => [t.id, t.artistId || '']));
+
+      // Score tracks
+      const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIdsList, trackArtistMap);
+
+      // Take top 30 tracks for this genre
+      const topTracks = scoredTracks.slice(0, 30);
+
+      if (topTracks.length === 0) continue;
+
+      const metadata: PlaylistMetadata = {
+        totalTracks: topTracks.length,
+        avgScore: topTracks.reduce((sum, t) => sum + t.totalScore, 0) / topTracks.length,
+        topGenres: [genre],
+        topArtists: [],
+        temporalDistribution: {
+          lastWeek: 0,
+          lastMonth: 0,
+          lastYear: 0,
+          older: 0,
+        },
+      };
+
+      playlists.push({
+        id: `genre-mix-${genre}-${userId}-${now.getTime()}`,
+        type: 'genre',
+        userId,
+        name: `Mix de ${genre}`,
+        description: `Las mejores canciones de ${genre} basadas en tu historial de escucha`,
+        tracks: topTracks,
+        createdAt: now,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        metadata,
+      });
+    }
+
+    return {
+      playlists,
+      total,
+      hasMore: skip + take < total,
+    };
+  }
+
+  /**
    * Intelligent shuffle to avoid consecutive tracks from same artist/album
    */
   private intelligentShuffle(tracks: TrackScore[], trackDetails: any[]): TrackScore[] {

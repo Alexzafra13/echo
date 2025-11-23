@@ -133,6 +133,24 @@ export async function getArtistPlaylistsPaginated(
 }
 
 /**
+ * Get paginated Wave Mix genre playlists
+ * For the dedicated genre playlists page
+ */
+export async function getGenrePlaylistsPaginated(
+  skip: number = 0,
+  take: number = 10
+): Promise<{
+  playlists: AutoPlaylist[];
+  total: number;
+  hasMore: boolean;
+}> {
+  const response = await apiClient.get('/recommendations/wave-mix/genres', {
+    params: { skip, take },
+  });
+  return response.data;
+}
+
+/**
  * Get Daily Mix (legacy - use getAutoPlaylists for new code)
  * Fetches a personalized mix of 50 tracks based on user preferences
  */
