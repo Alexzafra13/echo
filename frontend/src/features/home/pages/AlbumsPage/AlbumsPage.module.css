@@ -24,6 +24,8 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  display: flex;
+  flex-direction: column;
 }
 
 .albumsPage__content::-webkit-scrollbar {
@@ -98,6 +100,13 @@
   font-size: 14px;
   color: var(--color-text-tertiary, #6b7280);
   margin-top: 8px;
+}
+
+/* Pagination positioning - push to bottom */
+.albumsPage__content > :global(.pagination) {
+  margin-top: auto;
+  padding-top: 48px;
+  padding-bottom: 16px;
 }
 
 /* ===== Responsive Design ===== */
