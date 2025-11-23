@@ -26,6 +26,8 @@
 .pagination__list::before {
   content: '';
   position: absolute;
+  top: var(--pagination-inset);
+  left: var(--pagination-inset);
   width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   background: rgba(255, 255, 255, 0.1);
@@ -45,6 +47,8 @@
 .pagination__list::after {
   content: '';
   position: absolute;
+  top: var(--pagination-inset);
+  left: var(--pagination-inset);
   width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
@@ -60,7 +64,7 @@
 
 /* Position indicator on current page */
 .pagination[data-ready="true"] .pagination__list::after {
-  left: calc(var(--current-page-offset, 0) * 1px);
+  left: calc(var(--current-page-offset, 0) * 1px + var(--pagination-inset));
 }
 
 /* Pagination Items */
