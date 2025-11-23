@@ -86,6 +86,11 @@ export interface ActiveAlerts {
   orphanedFiles: number;
   pendingConflicts: number;
   storageWarning: boolean;
+  storageDetails?: {
+    currentMB: number;
+    limitMB: number;
+    percentUsed: number;
+  };
   scanErrors: number;
 }
 
