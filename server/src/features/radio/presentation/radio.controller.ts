@@ -10,10 +10,12 @@ import {
   HttpStatus,
   Sse,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { SaveFavoriteStationUseCase } from '../domain/use-cases/save-favorite-station/save-favorite-station.use-case';
 import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/get-user-favorites.use-case';
@@ -30,6 +32,7 @@ import { SaveApiStationDto } from './dto/save-api-station.dto';
  */
 @ApiTags('radio')
 @Controller('radio')
+@UseGuards(JwtAuthGuard)
 export class RadioController {
   constructor(
     private readonly saveFavoriteUseCase: SaveFavoriteStationUseCase,
