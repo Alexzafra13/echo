@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
+import { Pagination } from '@shared/components/ui';
 import { useGridDimensions } from '@features/home/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import {
@@ -430,7 +431,7 @@ export default function RadioPage() {
                 <p>Cargando emisoras...</p>
               </div>
             ) : paginatedStations.length > 0 ? (
-              <>
+              <div className={styles.radioPage__gridWrapper}>
                 <div className={styles.radioPage__grid}>
                   {paginatedStations.map((station) => (
                     <RadioStationCard
@@ -446,28 +447,13 @@ export default function RadioPage() {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className={styles.radioPage__pagination}>
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={styles.radioPage__paginationButton}
-                    >
-                      Anterior
-                    </button>
-                    <span className={styles.radioPage__paginationInfo}>
-                      {`${(currentPage - 1) * stationsPerView + 1}-${Math.min(currentPage * stationsPerView, stations.length)} de ${stations.length}`}
-                    </span>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={styles.radioPage__paginationButton}
-                    >
-                      Siguiente
-                    </button>
-                  </div>
-                )}
-              </>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  disabled={isLoading}
+                />
+              </div>
             ) : (
               <div className={styles.radioPage__empty}>
                 <Radio size={48} />
@@ -490,42 +476,29 @@ export default function RadioPage() {
                 </span>
               </h2>
 
-              <div className={styles.radioPage__grid}>
-                {paginatedFavorites.map((station) => (
-                  <RadioStationCard
-                    key={station.id || station.stationUuid}
-                    station={station}
-                    isFavorite={true}
-                    isPlaying={isStationPlaying(station)}
-                    currentMetadata={isStationPlaying(station) ? radioMetadata : null}
-                    onPlay={() => handlePlayStation(station)}
-                    onToggleFavorite={() => station.id && handleRemoveFavorite(station.id)}
-                  />
-                ))}
-              </div>
-
-              {/* Favorites pagination */}
-              {totalFavoritesPages > 1 && (
-                <div className={styles.radioPage__pagination}>
-                  <button
-                    onClick={() => handleFavoritesPageChange(favoritesPage - 1)}
-                    disabled={favoritesPage === 1}
-                    className={styles.radioPage__paginationButton}
-                  >
-                    Anterior
-                  </button>
-                  <span className={styles.radioPage__paginationInfo}>
-                    {`${(favoritesPage - 1) * favoritesPerView + 1}-${Math.min(favoritesPage * favoritesPerView, favoriteStations.length)} de ${favoriteStations.length}`}
-                  </span>
-                  <button
-                    onClick={() => handleFavoritesPageChange(favoritesPage + 1)}
-                    disabled={favoritesPage === totalFavoritesPages}
-                    className={styles.radioPage__paginationButton}
-                  >
-                    Siguiente
-                  </button>
+              <div className={styles.radioPage__gridWrapper}>
+                <div className={styles.radioPage__grid}>
+                  {paginatedFavorites.map((station) => (
+                    <RadioStationCard
+                      key={station.id || station.stationUuid}
+                      station={station}
+                      isFavorite={true}
+                      isPlaying={isStationPlaying(station)}
+                      currentMetadata={isStationPlaying(station) ? radioMetadata : null}
+                      onPlay={() => handlePlayStation(station)}
+                      onToggleFavorite={() => station.id && handleRemoveFavorite(station.id)}
+                    />
+                  ))}
                 </div>
-              )}
+
+                {/* Favorites pagination */}
+                <Pagination
+                  currentPage={favoritesPage}
+                  totalPages={totalFavoritesPages}
+                  onPageChange={handleFavoritesPageChange}
+                  disabled={false}
+                />
+              </div>
             </div>
           )}
         </div>

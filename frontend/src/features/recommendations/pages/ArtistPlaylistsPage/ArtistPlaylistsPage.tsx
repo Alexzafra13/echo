@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Mic2, RefreshCw, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Mic2, RefreshCw, Sparkles } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
-import { Button } from '@shared/components/ui';
+import { Button, Pagination } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getArtistPlaylistsPaginated, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
@@ -133,7 +133,7 @@ export function ArtistPlaylistsPage() {
 
           {/* Playlists Grid */}
           {!isLoading && !error && playlists.length > 0 && (
-            <>
+            <div className={styles.artistPlaylistsPage__gridWrapper}>
               <div className={styles.artistPlaylistsPage__grid}>
                 {playlists.map((playlist) => (
                   <div
@@ -163,34 +163,13 @@ export function ArtistPlaylistsPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className={styles.artistPlaylistsPage__pagination}>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={styles.paginationButton}
-                  >
-                    <ChevronLeft size={20} />
-                    Anterior
-                  </Button>
-
-                  <div className={styles.paginationInfo}>
-                    Página {currentPage} de {totalPages}
-                  </div>
-
-                  <Button
-                    variant="secondary"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={!hasMore}
-                    className={styles.paginationButton}
-                  >
-                    Siguiente
-                    <ChevronRight size={20} />
-                  </Button>
-                </div>
-              )}
-            </>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                disabled={isLoading}
+              />
+            </div>
           )}
         </div>
       </main>

@@ -102,8 +102,16 @@
   margin-top: 8px;
 }
 
+/* Grid wrapper - enables sticky pagination */
+.albumsPage__gridWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 /* Pagination positioning - push to bottom */
-.albumsPage__content > :global(.pagination) {
+.albumsPage__gridWrapper > :global(.pagination) {
   margin-top: auto;
   padding-top: 48px;
   padding-bottom: 16px;

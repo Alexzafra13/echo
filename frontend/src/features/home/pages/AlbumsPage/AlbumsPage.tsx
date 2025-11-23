@@ -105,7 +105,7 @@ export default function AlbumsPage() {
               </button>
             </div>
           ) : filteredAlbums && filteredAlbums.length > 0 ? (
-            <>
+            <div className={styles.albumsPage__gridWrapper}>
               <AlbumGrid title="" albums={filteredAlbums} />
 
               {/* Pagination Controls */}
@@ -115,7 +115,7 @@ export default function AlbumsPage() {
                 onPageChange={handlePageChange}
                 disabled={isLoading}
               />
-            </>
+            </div>
           ) : (
             <div className={styles.albumsPage__emptyState}>
               <p>{searchQuery ? 'No se encontraron álbumes' : 'No hay álbumes en tu biblioteca'}</p>
