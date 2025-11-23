@@ -136,13 +136,15 @@ export default function AdminPage() {
       <main className={styles.adminPage__main}>
         <Header adminMode showBackButton />
 
-        <div className={styles.adminPage__content}>
-          {/* Breadcrumbs */}
-          <Breadcrumbs items={breadcrumbs} />
+        {/* Mobile tabs (shown only on mobile when sidebar is hidden) */}
+        <div className={styles.mobileTabs}>
+          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
 
-          {/* Mobile tabs (shown only on mobile when sidebar is hidden) */}
-          <div className={styles.mobileTabs}>
-            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className={styles.adminPage__content}>
+          {/* Breadcrumbs (hidden on mobile) */}
+          <div className={styles.breadcrumbsWrapper}>
+            <Breadcrumbs items={breadcrumbs} />
           </div>
 
           {/* Content */}
