@@ -21,20 +21,20 @@ export function Pagination({
   disabled = false,
   className = ''
 }: PaginationProps) {
-  const paginationRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const pages = generatePageNumbers(currentPage, totalPages);
 
   // Update indicator position when current page changes
   useEffect(() => {
-    if (!paginationRef.current) return;
+    if (!listRef.current) return;
 
-    const currentButton = paginationRef.current.querySelector(`[aria-current="page"]`);
+    const currentButton = listRef.current.querySelector(`[aria-current="page"]`);
     if (currentButton) {
-      const paginationRect = paginationRef.current.getBoundingClientRect();
+      const listRect = listRef.current.getBoundingClientRect();
       const buttonRect = currentButton.getBoundingClientRect();
-      const offset = buttonRect.left - paginationRect.left;
+      const offset = buttonRect.left - listRect.left;
 
-      paginationRef.current.style.setProperty('--current-page-offset', offset.toString());
+      listRef.current.style.setProperty('--current-page-offset', offset.toString());
     }
   }, [currentPage]);
 
@@ -61,8 +61,8 @@ export function Pagination({
   }
 
   return (
-    <nav ref={paginationRef} className={`${styles.pagination} ${className}`} aria-label="Paginación" data-ready="true">
-      <ul className={styles.pagination__list} role="list">
+    <nav className={`${styles.pagination} ${className}`} aria-label="Paginación" data-ready="true">
+      <ul ref={listRef} className={styles.pagination__list} role="list">
         {/* Previous Button */}
         <li className={styles.pagination__item}>
           <button
