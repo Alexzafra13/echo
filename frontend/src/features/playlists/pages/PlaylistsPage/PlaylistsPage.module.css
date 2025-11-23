@@ -23,7 +23,7 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding: 116px 48px 32px; /* 84px + 32px for header glassmorphism effect */
+  padding: 116px 48px 120px; /* 84px + 32px for header glassmorphism effect + 120px for player */
 }
 
 /* Header Section */
@@ -272,7 +272,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .playlistsPage__content {
-    padding: 24px 32px;
+    padding: 24px 32px 120px; /* Add bottom padding for player */
   }
 
   .playlistsPage__grid {
