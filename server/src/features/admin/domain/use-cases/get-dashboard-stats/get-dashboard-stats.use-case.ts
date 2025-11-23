@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { HealthCheckService } from '@features/health/health-check.service';
 import {
   GetDashboardStatsInput,
   GetDashboardStatsOutput,
@@ -22,6 +23,7 @@ export class GetDashboardStatsUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly healthCheck: HealthCheckService,
   ) {}
 
   async execute(input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {
@@ -152,10 +154,15 @@ export class GetDashboardStatsUseCase {
       databaseHealth = 'down';
     }
 
-    // Redis health - check if Redis is configured
+    // Redis health - actually check if Redis is connected
     let redisHealth: 'healthy' | 'degraded' | 'down' = 'healthy';
-    const redisEnabled = this.config.get<string>('ENABLE_CACHE', 'true') === 'true';
-    if (!redisEnabled) {
+    try {
+      const healthCheck = await this.healthCheck.check();
+      if (healthCheck.services.cache === 'error') {
+        redisHealth = 'down';
+      }
+    } catch (error) {
+      // Health check throws if services are down
       redisHealth = 'down';
     }
 
