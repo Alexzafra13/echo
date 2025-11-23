@@ -1,4 +1,4 @@
-import { Settings } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import styles from './AdminSidebar.module.css';
 
 interface Tab {
@@ -27,7 +27,7 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
       {/* Logo/Header - Hidden on mobile */}
       <div className={styles.sidebar__logoContainer}>
         <div className={styles.header}>
-          <Settings size={24} />
+          <Shield size={24} />
           <div>
             <h2 className={styles.title}>Admin</h2>
             <p className={styles.subtitle}>Panel</p>
