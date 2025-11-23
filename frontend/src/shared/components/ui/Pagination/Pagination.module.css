@@ -147,29 +147,15 @@
     z-index: 10; /* Ensure pagination is above other content */
     overflow-x: auto; /* Allow horizontal scroll on very small screens */
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   .pagination__list {
     min-width: max-content; /* Prevent wrapping */
   }
 
-  /* En mobile, el indicador siempre está centrado */
-  .pagination__list::after {
-    left: 50% !important;
-    transform: translateX(-50%);
-  }
-
   .pagination__link {
     font-size: 13px;
-  }
-
-  /* Simplify pagination on mobile - show only essential pages */
-  .pagination__item:nth-child(n+5):nth-last-child(n+5):not(.pagination__gap) {
-    display: none;
-  }
-
-  .pagination__item:nth-child(n+5):nth-last-child(n+5).pagination__gap {
-    display: grid;
   }
 }
 
