@@ -28,13 +28,25 @@ export function Pagination({
   useEffect(() => {
     if (!listRef.current) return;
 
-    const currentButton = listRef.current.querySelector(`[aria-current="page"]`);
+    const currentButton = listRef.current.querySelector(`[aria-current="page"]`) as HTMLElement;
     if (currentButton) {
-      const listRect = listRef.current.getBoundingClientRect();
-      const buttonRect = currentButton.getBoundingClientRect();
-      const offset = buttonRect.left - listRect.left;
+      // Get the button's offset relative to the list, accounting for scroll
+      const buttonOffsetLeft = currentButton.offsetLeft;
 
-      listRef.current.style.setProperty('--current-page-offset', offset.toString());
+      listRef.current.style.setProperty('--current-page-offset', buttonOffsetLeft.toString());
+
+      // Auto-scroll to center the current page button on mobile
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        const listWidth = listRef.current.offsetWidth;
+        const buttonWidth = currentButton.offsetWidth;
+        const scrollPosition = buttonOffsetLeft - (listWidth / 2) + (buttonWidth / 2);
+
+        listRef.current.scrollTo({
+          left: Math.max(0, scrollPosition),
+          behavior: 'smooth'
+        });
+      }
     }
   }, [currentPage]);
 
