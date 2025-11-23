@@ -28,20 +28,24 @@
 
 /* Variants */
 .primary {
-  background: var(--color-primary-500);
-  color: var(--text-on-primary);
-  box-shadow: var(--button-shadow);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary, #ffffff);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--color-primary-600);
-  box-shadow: var(--button-shadow-hover);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   transform: translateY(-2px);
 }
 
 .primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: var(--button-shadow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .secondary {
@@ -64,12 +68,12 @@
 .outline {
   background: transparent;
   color: var(--text-primary);
-  border: 2px solid var(--color-primary-500);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .outline:hover:not(:disabled) {
-  background: rgba(237, 104, 66, 0.1);
-  border-color: var(--color-primary-400);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .ghost {
@@ -78,7 +82,7 @@
 }
 
 .ghost:hover:not(:disabled) {
-  background: rgba(237, 104, 66, 0.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .danger {
