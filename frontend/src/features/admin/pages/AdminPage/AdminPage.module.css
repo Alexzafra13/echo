@@ -115,6 +115,12 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+  /* Remove fixed height on mobile to prevent conflicts with bottom nav */
+  .adminPage {
+    max-height: none;
+    min-height: 100vh;
+  }
+
   /* Mobile tabs visible and sticky */
   .mobileTabs {
     display: block;
