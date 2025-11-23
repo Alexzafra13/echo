@@ -18,7 +18,6 @@
   overflow-y: auto; /* Enable scroll for entire page */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding-bottom: calc(40px + var(--player-bottom-spacer, 0px)); /* Base padding + player spacer */
 }
 
 .adminPage__main::-webkit-scrollbar {
@@ -29,7 +28,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 124px 48px 0; /* 84px + 40px for header glassmorphism effect */
+  padding: 124px 48px calc(40px + var(--player-bottom-spacer, 0px)); /* Top for header + base padding + player spacer */
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
@@ -103,7 +102,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .adminPage__content {
-    padding: 116px 32px 0; /* 84px + 32px */
+    padding: 116px 32px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px + base padding + player spacer */
   }
 
   .title {
@@ -119,7 +118,6 @@
 
   .adminPage__main {
     padding-top: 0;
-    padding-bottom: calc(60px + var(--player-bottom-spacer, 0px)); /* More padding on mobile for bottom nav */
   }
 
   /* Hide breadcrumbs on mobile to save space */
@@ -129,7 +127,7 @@
 
   .adminPage__content {
     margin-top: 0; /* Remove negative margin */
-    padding: 0 20px 0; /* No top padding */
+    padding: 0 20px calc(60px + var(--player-bottom-spacer, 0px)); /* No top padding + base padding + player spacer */
   }
 
   .title {
@@ -143,6 +141,6 @@
 
 @media (max-width: 480px) {
   .adminPage__content {
-    padding: 0 16px 0;
+    padding: 0 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 }
