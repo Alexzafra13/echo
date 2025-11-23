@@ -102,6 +102,13 @@
   margin-top: 8px;
 }
 
+/* Pagination positioning - push to bottom */
+.albumsPage__content > :global(.pagination) {
+  margin-top: auto;
+  padding-top: 48px;
+  padding-bottom: 16px;
+}
+
 /* ===== Responsive Design ===== */
 
 /* Tablet */
