@@ -51,15 +51,15 @@
   left: var(--pagination-inset);
   width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
-  border: 1px solid rgba(255, 107, 107, 0.4);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.25), rgba(255, 107, 107, 0.15));
+  border: none;
   border-radius: calc(var(--pagination-radius) * 1px);
   backdrop-filter: blur(12px);
   opacity: 1;
   pointer-events: none;
   z-index: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
 }
 
 /* Position indicator on current page */
