@@ -5,7 +5,7 @@ import styles from './Pagination.module.css';
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number);
+  onPageChange: (page: number) => void;
   disabled?: boolean;
   className?: string;
 }
