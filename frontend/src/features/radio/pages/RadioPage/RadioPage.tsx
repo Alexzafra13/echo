@@ -89,7 +89,6 @@ export default function RadioPage() {
   const [activeFilter, setActiveFilter] = useState<string>('top');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [favoritesPage, setFavoritesPage] = useState(1);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
   const [isGenreModalOpen, setIsGenreModalOpen] = useState(false);
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
@@ -115,6 +114,23 @@ export default function RadioPage() {
   const { data: favoriteStations = [] } = useFavoriteStations();
   const saveFavoriteMutation = useSaveFavoriteFromApi();
   const deleteFavoriteMutation = useDeleteFavoriteStation();
+
+  // Dynamic genres list - add Favorites if user has any
+  const availableGenres = useMemo(() => {
+    const genres = [...GENRES];
+
+    // Add "Favoritas" option if user has favorite stations
+    if (favoriteStations.length > 0) {
+      // Insert after "Todas" (index 1)
+      genres.splice(2, 0, {
+        id: 'favorites',
+        label: `Favoritas (${favoriteStations.length})`,
+        icon: '💙'
+      });
+    }
+
+    return genres;
+  }, [favoriteStations.length]);
 
   // Initialize selected country when user country is detected
   useEffect(() => {
@@ -151,7 +167,8 @@ export default function RadioPage() {
   const isAllCountries = selectedCountry === 'ALL';
   const isTopFilter = activeFilter === 'top';
   const isAllFilter = activeFilter === 'all';
-  const isGenreFilter = !isTopFilter && !isAllFilter;
+  const isFavoritesFilter = activeFilter === 'favorites';
+  const isGenreFilter = !isTopFilter && !isAllFilter && !isFavoritesFilter;
 
   // Queries for different filter combinations
 
@@ -204,6 +221,9 @@ export default function RadioPage() {
 
   // Select the appropriate stations list
   const stations = useMemo(() => {
+    // Favoritas (prioridad máxima)
+    if (isFavoritesFilter) return favoriteStations;
+
     // Top emisoras mundial (mejor calidad/bitrate)
     if (isAllCountries && isTopFilter) return topVotedStations;
 
@@ -224,9 +244,9 @@ export default function RadioPage() {
 
     return [];
   }, [
-    isAllCountries, isTopFilter, isAllFilter, isGenreFilter,
+    isAllCountries, isTopFilter, isAllFilter, isFavoritesFilter, isGenreFilter,
     topVotedStations, countryTop20, allWorldStations, allCountryStations,
-    genreCountryStations, genreGlobalStations
+    genreCountryStations, genreGlobalStations, favoriteStations
   ]);
 
   // Paginate stations (3 rows per page, dinámico según tamaño de pantalla)
@@ -240,17 +260,6 @@ export default function RadioPage() {
   // Loading state
   const isLoading = loadingTopVoted || loadingCountryTop || loadingAllCountry ||
                     loadingAllWorld || loadingGenreCountry || loadingGenreGlobal;
-
-  // Favorites pagination
-  const { itemsPerPage: favoritesPerView } = useGridDimensions({
-    maxRows: 2,
-    headerHeight: 100,
-  });
-  const totalFavoritesPages = Math.ceil(favoriteStations.length / favoritesPerView);
-  const paginatedFavorites = favoriteStations.slice(
-    (favoritesPage - 1) * favoritesPerView,
-    favoritesPage * favoritesPerView
-  );
 
   // Handlers
   const handleSearch = useCallback((query: string) => {
@@ -295,10 +304,6 @@ export default function RadioPage() {
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  const handleFavoritesPageChange = useCallback((page: number) => {
-    setFavoritesPage(page);
   }, []);
 
   // Play station handler
@@ -361,9 +366,9 @@ export default function RadioPage() {
 
   // Get filter label for display
   const activeFilterLabel = useMemo(() => {
-    const filter = GENRES.find(f => f.id === activeFilter);
+    const filter = availableGenres.find(f => f.id === activeFilter);
     return filter?.label || '';
-  }, [activeFilter]);
+  }, [activeFilter, availableGenres]);
 
   return (
     <div className={styles.radioPage}>
@@ -416,9 +421,12 @@ export default function RadioPage() {
           <div className={styles.radioPage__section}>
             <h2 className={styles.radioPage__title}>
               <Radio size={24} />
-              {isAllCountries ? 'Top emisoras del mundo' :
-               `Emisoras de ${selectedCountryName}`}
-              {!isTopFilter && !isAllFilter && ` - ${activeFilterLabel}`}
+              {isFavoritesFilter
+                ? 'Mis favoritas'
+                : isAllCountries
+                  ? 'Top emisoras del mundo'
+                  : `Emisoras de ${selectedCountryName}`}
+              {!isTopFilter && !isAllFilter && !isFavoritesFilter && ` - ${activeFilterLabel}`}
               {stations.length > 0 && (
                 <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
                   ({stations.length} {stations.length === 1 ? 'emisora' : 'emisoras'})
@@ -476,55 +484,6 @@ export default function RadioPage() {
               </div>
             )}
           </div>
-
-          {/* Favorites section */}
-          {favoriteStations.length > 0 && (
-            <div className={styles.radioPage__section}>
-              <h2 className={styles.radioPage__title}>
-                <Radio size={24} />
-                Mis favoritas
-                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
-                  ({favoriteStations.length} {favoriteStations.length === 1 ? 'emisora' : 'emisoras'})
-                </span>
-              </h2>
-
-              {/* Top Pagination - Mobile Only */}
-              {totalFavoritesPages > 1 && (
-                <div className={styles.radioPage__paginationTop}>
-                  <Pagination
-                    currentPage={favoritesPage}
-                    totalPages={totalFavoritesPages}
-                    onPageChange={handleFavoritesPageChange}
-                    disabled={false}
-                  />
-                </div>
-              )}
-
-              <div className={styles.radioPage__gridWrapper}>
-                <div className={styles.radioPage__grid}>
-                  {paginatedFavorites.map((station) => (
-                    <RadioStationCard
-                      key={station.id || station.stationUuid}
-                      station={station}
-                      isFavorite={true}
-                      isPlaying={isStationPlaying(station)}
-                      currentMetadata={isStationPlaying(station) ? radioMetadata : null}
-                      onPlay={() => handlePlayStation(station)}
-                      onToggleFavorite={() => station.id && handleRemoveFavorite(station.id)}
-                    />
-                  ))}
-                </div>
-
-                {/* Favorites pagination */}
-                <Pagination
-                  currentPage={favoritesPage}
-                  totalPages={totalFavoritesPages}
-                  onPageChange={handleFavoritesPageChange}
-                  disabled={false}
-                />
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
@@ -542,7 +501,7 @@ export default function RadioPage() {
       <GenreSelectModal
         isOpen={isGenreModalOpen}
         onClose={() => setIsGenreModalOpen(false)}
-        genres={GENRES}
+        genres={availableGenres}
         selectedGenre={activeFilter}
         onChange={handleFilterChange}
       />
