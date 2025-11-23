@@ -1,7 +1,8 @@
 .playlistDetailPage {
   display: flex;
   height: 100vh;
-  background: var(--background-primary);
+  background: var(--bg-base, #0f1218);
+  background-image: var(--gradient-textured);
   color: var(--text-primary);
 }
 
@@ -182,4 +183,10 @@
   .playlistName {
     font-size: 1.75rem;
   }
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .playlistDetailPage {
+  background: var(--bg-base);
+  background-image: var(--gradient-textured);
 }
