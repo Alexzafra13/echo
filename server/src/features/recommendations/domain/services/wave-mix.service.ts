@@ -692,8 +692,8 @@ export class WaveMixService {
     skip: number = 0,
     take: number = 10
   ): Promise<{ playlists: AutoPlaylist[]; total: number; hasMore: boolean }> {
-    // Get all top genres (up to 50)
-    const allTopGenres = await this.playTrackingRepo.getUserTopGenres(userId, 50);
+    // Get all top genres (up to 50) using existing private method
+    const allTopGenres = await this.getTopUserGenres(userId, 50);
     const total = allTopGenres.length;
 
     // Paginate - slice the genre list
@@ -707,38 +707,52 @@ export class WaveMixService {
     const allPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
     const trackIds = allPlayStats.map(t => t.itemId);
 
-    // OPTIMIZATION: Batch load all tracks for paginated genres
+    if (trackIds.length === 0) {
+      return { playlists: [], total, hasMore: false };
+    }
+
+    // OPTIMIZATION: Batch load all tracks with genres relation
     const allTracks = await this.prisma.track.findMany({
-      where: {
-        id: { in: trackIds },
-        genre: { in: paginatedGenres.map(g => g.genre) },
-      },
+      where: { id: { in: trackIds } },
       select: {
         id: true,
         artistId: true,
         albumId: true,
         title: true,
-        genre: true,
+        genres: {
+          select: {
+            genre: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    // Group tracks by genre
+    // Group tracks by genre ID (only for paginated genres)
+    const paginatedGenreIds = new Set(paginatedGenres.map(g => g.genreId));
     const tracksByGenre = new Map<string, typeof allTracks>();
     for (const track of allTracks) {
-      if (!track.genre) continue;
-      if (!tracksByGenre.has(track.genre)) {
-        tracksByGenre.set(track.genre, []);
+      for (const tg of track.genres) {
+        const genreId = tg.genre.id;
+        // Only include tracks for the genres we're showing on this page
+        if (!paginatedGenreIds.has(genreId)) continue;
+        if (!tracksByGenre.has(genreId)) {
+          tracksByGenre.set(genreId, []);
+        }
+        tracksByGenre.get(genreId)!.push(track);
       }
-      tracksByGenre.get(track.genre)!.push(track);
     }
 
     const playlists: AutoPlaylist[] = [];
     const now = new Date();
 
     // Process each paginated genre
-    for (const genreStat of paginatedGenres) {
-      const genre = genreStat.genre;
-      const tracks = tracksByGenre.get(genre);
+    for (const genreData of paginatedGenres) {
+      const tracks = tracksByGenre.get(genreData.genreId);
       if (!tracks || tracks.length === 0) continue;
 
       const trackIdsList = tracks.map(t => t.id);
@@ -755,7 +769,7 @@ export class WaveMixService {
       const metadata: PlaylistMetadata = {
         totalTracks: topTracks.length,
         avgScore: topTracks.reduce((sum, t) => sum + t.totalScore, 0) / topTracks.length,
-        topGenres: [genre],
+        topGenres: [genreData.genreName],
         topArtists: [],
         temporalDistribution: {
           lastWeek: 0,
@@ -765,16 +779,20 @@ export class WaveMixService {
         },
       };
 
+      // Use a genre-themed color or generate one based on genre name
+      const coverColor = this.getGenreColor(genreData.genreName);
+
       playlists.push({
-        id: `genre-mix-${genre}-${userId}-${now.getTime()}`,
+        id: `genre-mix-${genreData.genreId}-${userId}-${now.getTime()}`,
         type: 'genre',
         userId,
-        name: `Mix de ${genre}`,
-        description: `Las mejores canciones de ${genre} basadas en tu historial de escucha`,
+        name: `${genreData.genreName} Mix`,
+        description: `Tus mejores canciones de ${genreData.genreName}`,
         tracks: topTracks,
         createdAt: now,
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
         metadata,
+        coverColor,
       });
     }
 
