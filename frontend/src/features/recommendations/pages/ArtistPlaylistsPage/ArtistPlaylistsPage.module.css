@@ -14,12 +14,10 @@
 
 .artistPlaylistsPage__content {
   flex: 1;
-  padding: 2rem 2rem 12rem; /* 12rem bottom for player space */
+  padding: 2rem 2rem 8rem; /* 8rem bottom for player space */
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Hero Section */
@@ -73,27 +71,14 @@
   gap: 0.5rem;
 }
 
-/* Grid wrapper - enables sticky pagination */
+/* Grid wrapper */
 .artistPlaylistsPage__gridWrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  justify-content: space-between; /* Distribute space evenly */
+  /* Simple container, no complex flexbox */
 }
 
-/* Grid takes remaining space with minimum height */
-.artistPlaylistsPage__gridWrapper > :first-child {
-  flex: 1 0 auto; /* Can grow, don't shrink, auto size */
-  min-height: 500px; /* Minimum height to keep pagination position consistent */
-}
-
-/* Pagination positioning - always centered at bottom with fixed spacing */
+/* Pagination spacing */
 .artistPlaylistsPage__gridWrapper > :global(.pagination) {
-  margin-top: auto;
-  padding-top: 64px; /* Fixed top spacing */
-  padding-bottom: 0;
-  flex-shrink: 0;
+  margin-top: 48px; /* Simple fixed spacing */
 }
 
 /* Grid */
@@ -215,17 +200,12 @@
   .artistPlaylistsPage__content {
     overflow: visible; /* Permitir que bottom nav sea visible */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 200px; /* Top para header + bottom para player y nav + pagination */
-  }
-
-  /* Remove min-height on mobile for natural content flow */
-  .artistPlaylistsPage__gridWrapper > :first-child {
-    min-height: 0;
+    padding: 100px 20px 180px; /* Top para header + bottom para player y nav */
   }
 
   /* Adjust spacing on mobile */
   .artistPlaylistsPage__gridWrapper > :global(.pagination) {
-    padding-top: 32px; /* Reduced spacing on mobile */
+    margin-top: 32px; /* Reduced spacing on mobile */
   }
 
   .artistPlaylistsPage__hero {
@@ -264,7 +244,7 @@
   }
 
   .artistPlaylistsPage__content {
-    padding: 90px 16px 200px; /* Ajustado para header más pequeño + extra space for pagination */
+    padding: 90px 16px 180px; /* Ajustado para header más pequeño + player + nav */
   }
 
   .artistPlaylistsPage__heroTitle {
