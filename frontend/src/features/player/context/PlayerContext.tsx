@@ -396,17 +396,28 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return;
     }
 
-    audioRef.current.src = streamUrl;
-    audioRef.current.load();
+    const audio = audioRef.current;
 
-    // Error handler for radio loading issues
-    audioRef.current.onerror = () => {
-      console.error('[Player] Failed to load radio station:', station.name);
+    // Clear previous event listeners to avoid duplicates
+    audio.oncanplay = null;
+    audio.onerror = null;
+
+    audio.src = streamUrl;
+    audio.load();
+
+    // Wait for audio to be ready before playing
+    audio.oncanplay = () => {
+      audio.play().catch((error) => {
+        console.error('[Player] Failed to play radio:', error.message);
+      });
+      audio.oncanplay = null; // Clean up after playing
     };
 
-    audioRef.current.play().catch((error) => {
-      console.error('[Player] Failed to play radio:', error.message);
-    });
+    // Error handler for radio loading issues
+    audio.onerror = () => {
+      console.error('[Player] Failed to load radio station:', station.name);
+      audio.onerror = null;
+    };
 
     setState(prev => ({
       ...prev,

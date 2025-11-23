@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res } from '@nestj
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
-import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
+import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetTopPlayedAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -28,6 +28,7 @@ export class AlbumsController {
     private readonly getAlbumsUseCase: GetAlbumsUseCase,
     private readonly searchAlbumsUseCase: SearchAlbumsUseCase,
     private readonly getRecentAlbumsUseCase: GetRecentAlbumsUseCase,
+    private readonly getTopPlayedAlbumsUseCase: GetTopPlayedAlbumsUseCase,
     private readonly getFeaturedAlbumUseCase: GetFeaturedAlbumUseCase,
     private readonly getAlbumTracksUseCase: GetAlbumTracksUseCase,
     private readonly getAlbumCoverUseCase: GetAlbumCoverUseCase,
@@ -64,6 +65,43 @@ export class AlbumsController {
     const takeNum = Math.max(1, parseInt(take, 10) || 12);
 
     const result = await this.getRecentAlbumsUseCase.execute({
+      take: takeNum,
+    });
+
+    return result.map((album) => AlbumResponseDto.fromDomain(album));
+  }
+
+  /**
+   * GET /albums/top-played
+   * Obtener álbumes más reproducidos basado en estadísticas de reproducción
+   *
+   * Query params:
+   * - take: número de álbumes a traer (default: 10, máximo: 50)
+   */
+  @Get('top-played')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener álbumes más reproducidos',
+    description: 'Retorna los álbumes con más reproducciones basado en estadísticas reales de reproducción del usuario'
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Número de álbumes a retornar (1-50)',
+    example: 10
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes más reproducidos obtenida exitosamente',
+    type: [AlbumResponseDto]
+  })
+  async getTopPlayedAlbums(
+    @Query('take') take: string = '10',
+  ): Promise<AlbumResponseDto[]> {
+    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+
+    const result = await this.getTopPlayedAlbumsUseCase.execute({
       take: takeNum,
     });
 

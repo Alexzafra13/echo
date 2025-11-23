@@ -122,18 +122,43 @@ export class PrismaAlbumRepository implements IAlbumRepository {
   }
 
   /**
-   * Obtiene álbumes más reproducidos
+   * Obtiene álbumes más reproducidos basado en PlayStats
+   * Usa datos reales de reproducción del usuario
    */
   async findMostPlayed(take: number): Promise<Album[]> {
+    // Get album IDs ordered by play count from PlayStats
+    const topAlbumIds = await this.prisma.$queryRaw<{ albumId: string; playCount: bigint }[]>`
+      SELECT t."albumId", COUNT(ps.id) as "playCount"
+      FROM play_stats ps
+      INNER JOIN tracks t ON ps."trackId" = t.id
+      WHERE t."albumId" IS NOT NULL
+      GROUP BY t."albumId"
+      ORDER BY "playCount" DESC
+      LIMIT ${take}
+    `;
+
+    if (topAlbumIds.length === 0) {
+      // Fallback to recent albums if no play stats exist
+      return this.findRecent(take);
+    }
+
+    // Fetch full album data maintaining play count order
     const albums = await this.prisma.album.findMany({
-      take,
-      orderBy: { songCount: 'desc' },
+      where: {
+        id: { in: topAlbumIds.map((a) => a.albumId) },
+      },
       include: {
-        artist: true, // Include artist relation to get artist name
+        artist: true,
       },
     });
 
-    return AlbumMapper.toDomainArray(albums);
+    // Maintain original order by play count
+    const albumMap = new Map(albums.map((a) => [a.id, a]));
+    const orderedAlbums = topAlbumIds
+      .map((item) => albumMap.get(item.albumId))
+      .filter(Boolean) as any[];
+
+    return AlbumMapper.toDomainArray(orderedAlbums);
   }
 
   /**
