@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { LayoutDashboard, Library, Music2, Wrench, Users, FileText } from 'lucide-react';
-import { Tabs, Tab } from '../../components/Tabs';
 import { Header } from '@shared/components/layout/Header';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
@@ -12,6 +11,12 @@ import { MaintenanceTab } from '../../components/MetadataSettingsPanel/Maintenan
 import { UsersPanel } from '../../components/UsersPanel';
 import { LogsPanel } from '../../components/LogsPanel';
 import styles from './AdminPage.module.css';
+
+interface Tab {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
 /**
  * AdminPage Component
@@ -40,67 +45,12 @@ export default function AdminPage() {
   }, [activeTab]);
 
   const tabs: Tab[] = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <LayoutDashboard size={20} />,
-      content: (
-        <div className={styles.tabContent}>
-          <DashboardPanel />
-        </div>
-      ),
-    },
-    {
-      id: 'library',
-      label: 'Librería',
-      icon: <Library size={20} />,
-      content: (
-        <div className={styles.tabContent}>
-          <ScannerPanel />
-        </div>
-      ),
-    },
-    {
-      id: 'metadata',
-      label: 'Metadata',
-      icon: <Music2 size={20} />,
-      content: (
-        <div className={styles.tabContent}>
-          <MetadataConflictsPanel />
-          <MetadataSettingsPanel />
-        </div>
-      ),
-    },
-    {
-      id: 'maintenance',
-      label: 'Mantenimiento',
-      icon: <Wrench size={20} />,
-      content: (
-        <div className={styles.tabContent}>
-          <MaintenanceTab />
-        </div>
-      ),
-    },
-    {
-      id: 'users',
-      label: 'Usuarios',
-      icon: <Users size={20} />,
-      content: (
-        <div className={styles.tabContent}>
-          <UsersPanel />
-        </div>
-      ),
-    },
-    {
-      id: 'logs',
-      label: 'Logs',
-      icon: <FileText size={20} />,
-      content: (
-        <div className={styles.tabContent}>
-          <LogsPanel />
-        </div>
-      ),
-    },
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { id: 'library', label: 'Librería', icon: <Library size={20} /> },
+    { id: 'metadata', label: 'Metadata', icon: <Music2 size={20} /> },
+    { id: 'maintenance', label: 'Mantenimiento', icon: <Wrench size={20} /> },
+    { id: 'users', label: 'Usuarios', icon: <Users size={20} /> },
+    { id: 'logs', label: 'Logs', icon: <FileText size={20} /> },
   ];
 
   // Render content based on active tab
@@ -130,16 +80,11 @@ export default function AdminPage() {
 
   return (
     <div className={styles.adminPage}>
-      {/* Admin Sidebar (hidden on mobile) */}
-      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Admin Sidebar (hidden on mobile, bottom nav on mobile) */}
+      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
 
       <main className={styles.adminPage__main}>
         <Header adminMode showBackButton />
-
-        {/* Mobile tabs (shown only on mobile when sidebar is hidden) */}
-        <div className={styles.mobileTabs}>
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
 
         <div className={styles.adminPage__content}>
           {/* Breadcrumbs (hidden on mobile) */}
