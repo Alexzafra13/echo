@@ -1,4 +1,4 @@
-import { Heart, HeartOff, Radio, Music } from 'lucide-react';
+import { Heart, Radio, Music } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
@@ -55,8 +55,10 @@ export function RadioStationCard({
   const codec = 'codec' in station ? station.codec : null;
   const bitrate = 'bitrate' in station ? station.bitrate : null;
 
-  // Format tags for display
-  const genreTags = tags ? tags.split(',').slice(0, 2).join(', ') : 'Radio';
+  // Format tags for display (handle null, empty string, and valid strings)
+  const genreTags = tags && typeof tags === 'string' && tags.trim()
+    ? tags.split(',').slice(0, 2).join(', ')
+    : 'Radio';
 
   // Check if metadata text overflows and needs animation
   useEffect(() => {
@@ -98,7 +100,7 @@ export function RadioStationCard({
               onClick={handleFavoriteClick}
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
-              {isFavorite ? <HeartOff size={18} /> : <Heart size={18} />}
+              <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
             </button>
           )}
         </div>
