@@ -14,23 +14,23 @@
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
   min-width: 0; /* Allows flex child to shrink below content size */
+  overflow-y: auto; /* Scroll happens here for sticky header to work */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.adminPage__main::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .adminPage__content {
-  flex: 1 1 0;
-  min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
+  flex: 1;
+  min-height: 0;
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
   padding: 124px 48px 40px; /* 84px + 40px for header glassmorphism effect */
   max-width: 1400px;
   width: 100%;
   box-sizing: border-box; /* Include padding in width */
-}
-
-.adminPage__content::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
 }
 
 .header {
@@ -111,14 +111,21 @@
 /* Mobile */
 @media (max-width: 768px) {
   .adminPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
-    padding: 104px 20px 140px; /* Bottom padding for bottom nav + player */
+    padding: 84px 20px 140px; /* Reduced top padding since tabs move up */
   }
 
   /* Show mobile tabs on mobile */
   .mobileTabs {
     display: block;
-    margin-bottom: 24px;
+    position: sticky;
+    top: 84px; /* Below header */
+    background: var(--color-bg-primary, #0a0e27);
+    z-index: 10;
+    padding: 12px 0;
+    margin: -84px -20px 24px; /* Negative margins to extend full width */
+    padding-left: 20px;
+    padding-right: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .title {
@@ -132,6 +139,12 @@
 
 @media (max-width: 480px) {
   .adminPage__content {
-    padding: 104px 20px 140px; /* Bottom nav + player + spacing */
+    padding: 84px 16px 140px; /* Bottom nav + player + spacing */
+  }
+
+  .mobileTabs {
+    margin: -84px -16px 20px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
