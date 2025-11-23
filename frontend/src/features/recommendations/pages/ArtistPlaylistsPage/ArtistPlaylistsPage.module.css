@@ -70,10 +70,9 @@
 .artistPlaylistsPage__searchInput {
   width: 100%;
   padding: 0.75rem 3rem 0.75rem 3rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 2rem;
-  background: rgba(var(--surface-rgb), 0.5);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   font-size: 0.875rem;
   transition: all 0.2s ease;
@@ -81,8 +80,8 @@
 
 .artistPlaylistsPage__searchInput:focus {
   outline: none;
-  border-color: var(--accent-color);
-  background: var(--surface-primary);
+  border-color: var(--accent-primary, #ff6b6b);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .artistPlaylistsPage__searchInput::placeholder {

@@ -115,7 +115,7 @@ export function PlaylistDetailPage() {
       <Sidebar />
 
       <main className={styles.playlistDetailPage__main}>
-        <Header />
+        <Header disableSearch />
 
         <div className={styles.playlistDetailPage__content}>
           {/* Hero Section */}
