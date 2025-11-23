@@ -18,8 +18,10 @@ export function ArtistPlaylistsPage() {
   const user = useAuthStore((state) => state.user);
 
   const [playlists, setPlaylists] = useState<AutoPlaylist[]>([]);
+  const [allPlaylists, setAllPlaylists] = useState<AutoPlaylist[]>([]); // Store all playlists for search
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +37,7 @@ export function ArtistPlaylistsPage() {
       const data = await getArtistPlaylistsPaginated(skip, ITEMS_PER_PAGE);
 
       setPlaylists(data.playlists);
+      setAllPlaylists(data.playlists);
       setTotal(data.total);
       setHasMore(data.hasMore);
       setCurrentPage(page);
@@ -45,6 +48,14 @@ export function ArtistPlaylistsPage() {
       setIsLoading(false);
     }
   };
+
+  // Filter playlists based on search query
+  const filteredPlaylists = searchQuery.trim()
+    ? allPlaylists.filter(playlist =>
+        playlist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        playlist.metadata.artistName?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : playlists;
 
   useEffect(() => {
     loadPlaylists(1);
@@ -72,31 +83,42 @@ export function ArtistPlaylistsPage() {
         <div className={styles.artistPlaylistsPage__content}>
           {/* Hero Section */}
           <div className={styles.artistPlaylistsPage__hero}>
-            <div className={styles.artistPlaylistsPage__heroIcon}>
-              <Mic2 size={48} />
+            <div className={styles.artistPlaylistsPage__heroContent}>
+              <div className={styles.artistPlaylistsPage__heroHeader}>
+                <Mic2 size={48} className={styles.artistPlaylistsPage__heroIcon} />
+                <div className={styles.artistPlaylistsPage__heroText}>
+                  <h1 className={styles.artistPlaylistsPage__heroTitle}>
+                    Playlists de Artistas
+                  </h1>
+                  <p className={styles.artistPlaylistsPage__heroDescription}>
+                    Lo mejor de tus artistas favoritos, {user?.name || user?.username || 'personalizado para ti'}
+                  </p>
+                  {total > 0 && (
+                    <p className={styles.artistPlaylistsPage__heroMeta}>
+                      {total} {total === 1 ? 'artista' : 'artistas'} encontrados
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className={styles.artistPlaylistsPage__heroActions}>
+                <input
+                  type="text"
+                  placeholder="Buscar playlists..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.artistPlaylistsPage__searchInput}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => loadPlaylists(currentPage)}
+                  disabled={isLoading}
+                  className={styles.artistPlaylistsPage__refreshButton}
+                >
+                  <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
+                  Actualizar
+                </Button>
+              </div>
             </div>
-            <div className={styles.artistPlaylistsPage__heroText}>
-              <h1 className={styles.artistPlaylistsPage__heroTitle}>
-                Playlists de Artistas
-              </h1>
-              <p className={styles.artistPlaylistsPage__heroDescription}>
-                Lo mejor de tus artistas favoritos, {user?.name || user?.username || 'personalizado para ti'}
-              </p>
-              {total > 0 && (
-                <p className={styles.artistPlaylistsPage__heroMeta}>
-                  {total} {total === 1 ? 'artista' : 'artistas'} encontrados
-                </p>
-              )}
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => loadPlaylists(currentPage)}
-              disabled={isLoading}
-              className={styles.artistPlaylistsPage__refreshButton}
-            >
-              <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
-              Actualizar
-            </Button>
           </div>
 
           {/* Loading State */}
@@ -144,10 +166,10 @@ export function ArtistPlaylistsPage() {
           )}
 
           {/* Playlists Grid */}
-          {!isLoading && !error && playlists.length > 0 && (
+          {!isLoading && !error && filteredPlaylists.length > 0 && (
             <div className={styles.artistPlaylistsPage__gridWrapper}>
               <div className={styles.artistPlaylistsPage__grid}>
-                {playlists.map((playlist) => (
+                {filteredPlaylists.map((playlist) => (
                   <div
                     key={playlist.id}
                     className={styles.playlistCard}
