@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Mic2, RefreshCw, Sparkles, Search, X } from 'lucide-react';
+import { RefreshCw, Sparkles, Search, X, ArrowLeft } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
@@ -72,6 +72,10 @@ export function ArtistPlaylistsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleBack = () => {
+    setLocation('/wave-mix');
+  };
+
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   return (
@@ -108,10 +112,19 @@ export function ArtistPlaylistsPage() {
         />
 
         <div className={styles.artistPlaylistsPage__content}>
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            className={styles.backButton}
+          >
+            <ArrowLeft size={20} />
+            Volver
+          </Button>
+
           {/* Hero Section */}
           <div className={styles.artistPlaylistsPage__hero}>
             <div className={styles.artistPlaylistsPage__heroContent}>
-              <Mic2 size={48} className={styles.artistPlaylistsPage__heroIcon} />
               <div className={styles.artistPlaylistsPage__heroText}>
                 <h1 className={styles.artistPlaylistsPage__heroTitle}>
                   Playlists de Artistas
