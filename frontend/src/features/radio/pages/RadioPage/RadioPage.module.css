@@ -24,14 +24,12 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 84px 40px 200px; /* 84px for header + 200px bottom for player space */
+  padding: 84px 40px 120px; /* 84px for header + 120px bottom for player */
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden; /* Evitar desbordamiento horizontal */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  display: flex;
-  flex-direction: column;
 }
 
 .radioPage__content::-webkit-scrollbar {
@@ -83,33 +81,16 @@
 /* Section */
 .radioPage__section {
   margin-bottom: var(--space-10);
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
 }
 
-/* Grid wrapper - enables sticky pagination */
+/* Grid wrapper */
 .radioPage__gridWrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  justify-content: space-between; /* Distribute space evenly */
+  /* Simple container, no complex flexbox */
 }
 
-/* Grid takes remaining space with minimum height */
-.radioPage__gridWrapper > :first-child {
-  flex: 1 0 auto; /* Can grow, don't shrink, auto size */
-  min-height: 500px; /* Minimum height to keep pagination position consistent */
-}
-
-/* Pagination positioning - always centered at bottom with fixed spacing */
+/* Pagination spacing */
 .radioPage__gridWrapper > :global(.pagination) {
-  margin-top: auto;
-  padding-top: 64px; /* Fixed top spacing */
-  padding-bottom: 0;
-  flex-shrink: 0;
+  margin-top: 48px; /* Simple fixed spacing */
 }
 
 .radioPage__title {
@@ -200,19 +181,14 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo en móvil */
-    padding: 70px 16px 220px; /* Top reducido para botón género más cerca del header + bottom para nav + player + pagination */
+    padding: 70px 16px 180px; /* Top reducido para botón género más cerca del header + bottom para nav + player */
     width: 100%;
     max-width: 100%;
   }
 
-  /* Remove min-height on mobile for natural content flow */
-  .radioPage__gridWrapper > :first-child {
-    min-height: 0;
-  }
-
   /* Adjust spacing on mobile */
   .radioPage__gridWrapper > :global(.pagination) {
-    padding-top: 32px; /* Reduced spacing on mobile */
+    margin-top: 32px; /* Reduced spacing on mobile */
   }
 
   .radioPage__topBar {
@@ -254,7 +230,7 @@
   }
 
   .radioPage__content {
-    padding: 68px var(--space-3) 220px; /* Top para header + bottom para nav + player + pagination */
+    padding: 68px var(--space-3) 180px; /* Top para header + bottom para nav + player */
     width: 100%;
     max-width: 100%;
   }

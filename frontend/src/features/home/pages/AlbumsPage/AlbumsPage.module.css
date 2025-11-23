@@ -20,12 +20,10 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 116px 40px 180px; /* 84px + 32px for header + 180px bottom for player space */
+  padding: 116px 40px 120px; /* 84px + 32px for header + 120px bottom for player */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  display: flex;
-  flex-direction: column;
 }
 
 .albumsPage__content::-webkit-scrollbar {
@@ -102,27 +100,14 @@
   margin-top: 8px;
 }
 
-/* Grid wrapper - enables sticky pagination */
+/* Grid wrapper */
 .albumsPage__gridWrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  justify-content: space-between; /* Distribute space evenly */
+  /* Simple container, no complex flexbox */
 }
 
-/* Grid takes remaining space with minimum height */
-.albumsPage__gridWrapper > :first-child {
-  flex: 1 0 auto; /* Can grow, don't shrink, auto size */
-  min-height: 500px; /* Minimum height to keep pagination position consistent */
-}
-
-/* Pagination positioning - always centered at bottom with fixed spacing */
+/* Pagination spacing */
 .albumsPage__gridWrapper > :global(.pagination) {
-  margin-top: auto;
-  padding-top: 64px; /* Fixed top spacing */
-  padding-bottom: 0;
-  flex-shrink: 0;
+  margin-top: 48px; /* Simple fixed spacing */
 }
 
 /* ===== Responsive Design ===== */
@@ -153,17 +138,12 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 200px; /* Top para header + bottom para player y nav + pagination */
-  }
-
-  /* Remove min-height on mobile for natural content flow */
-  .albumsPage__gridWrapper > :first-child {
-    min-height: 0;
+    padding: 100px 20px 180px; /* Top para header + bottom para player + nav */
   }
 
   /* Adjust spacing on mobile */
   .albumsPage__gridWrapper > :global(.pagination) {
-    padding-top: 32px; /* Reduced spacing on mobile */
+    margin-top: 32px; /* Reduced spacing on mobile */
   }
 
   .albumsPage__pageHeader {
@@ -187,7 +167,7 @@
   }
 
   .albumsPage__content {
-    padding: 90px 16px 200px; /* Ajustado para header más pequeño + extra space for pagination */
+    padding: 90px 16px 180px; /* Ajustado para header más pequeño + player + nav */
   }
 
   .albumsPage__pageHeader {
