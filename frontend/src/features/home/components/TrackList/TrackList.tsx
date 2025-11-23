@@ -38,6 +38,7 @@ interface TrackListProps {
   currentTrackId?: string;
   hideGoToAlbum?: boolean; // Hide "Go to Album" option when already in album view
   hideAlbumCover?: boolean; // Hide album cover icon when in album view (only useful in playlists)
+  onRemoveFromPlaylist?: (track: Track) => void; // Handler to remove track from playlist (only in playlist view)
 }
 
 /**
@@ -50,7 +51,7 @@ interface TrackListProps {
  *   onTrackPlay={(track) => play(track.id)}
  * />
  */
-export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false }: TrackListProps) {
+export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false, onRemoveFromPlaylist }: TrackListProps) {
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
@@ -207,6 +208,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
                 onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
                 onGoToArtist={handleGoToArtist}
                 onShowInfo={handleShowInfo}
+                onRemoveFromPlaylist={onRemoveFromPlaylist}
               />
             </div>
           );
