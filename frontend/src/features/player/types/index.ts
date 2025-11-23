@@ -21,6 +21,7 @@ export interface PlayerState {
   currentRadioStation: RadioStation | null;
   isRadioMode: boolean;
   radioMetadata: RadioMetadata | null;
+  radioSignalStatus: 'good' | 'weak' | 'error' | null; // Radio signal quality
 }
 
 export interface PlayerContextValue extends PlayerState {
