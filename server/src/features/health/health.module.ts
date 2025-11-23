@@ -7,5 +7,6 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
   imports: [PrismaModule],
   controllers: [HealthController],
   providers: [HealthCheckService],
+  exports: [HealthCheckService],
 })
 export class HealthModule {}
