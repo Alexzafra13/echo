@@ -333,6 +333,8 @@ export default function RadioPage() {
         if ('stationuuid' in station) {
           const dto = radioService.convertToSaveDto(station);
           await saveFavoriteMutation.mutateAsync(dto);
+          // Auto-switch to favorites filter after adding
+          setActiveFilter('favorites');
         }
       }
     } catch (error) {

@@ -25,11 +25,16 @@ export function getPlayerDisplayInfo(
   currentTrack: Track | null
 ): PlayerDisplayInfo {
   if (isRadioMode && currentRadioStation) {
+    // Handle tags safely - can be null, empty string, or valid string
+    const firstTag = currentRadioStation.tags && typeof currentRadioStation.tags === 'string' && currentRadioStation.tags.trim()
+      ? currentRadioStation.tags.split(',')[0]
+      : null;
+
     return {
       title: currentRadioStation.name,
       artist: [
         currentRadioStation.country,
-        currentRadioStation.tags?.split(',')[0]
+        firstTag
       ].filter(Boolean).join(' • ') || 'Radio',
       cover: currentRadioStation.favicon || '/images/covers/placeholder.jpg'
     };

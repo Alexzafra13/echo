@@ -17,6 +17,16 @@ export const albumsService = {
   },
 
   /**
+   * Get top played albums based on play statistics
+   */
+  getTopPlayed: async (take?: number): Promise<Album[]> => {
+    const { data } = await apiClient.get<Album[]>('/albums/top-played', {
+      params: take ? { take } : undefined,
+    });
+    return data;
+  },
+
+  /**
    * Get featured album for hero section
    */
   getFeatured: async (): Promise<Album> => {
