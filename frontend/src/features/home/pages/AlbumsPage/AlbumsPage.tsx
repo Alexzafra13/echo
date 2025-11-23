@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
+import { Pagination } from '@shared/components/ui';
 import { Sidebar, AlbumGrid } from '../../components';
 import { useAlbums } from '../../hooks/useAlbums';
 import { useGridDimensions } from '../../hooks/useGridDimensions';
@@ -11,7 +12,7 @@ import styles from './AlbumsPage.module.css';
  * Shows all albums with pagination and inline search filtering
  */
 export default function AlbumsPage() {
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1); // Changed to 1-based
   const [searchQuery, setSearchQuery] = useState('');
 
   // Calculate dynamic grid dimensions to fill the screen
@@ -20,12 +21,13 @@ export default function AlbumsPage() {
   });
 
   const { data: response, isLoading, error } = useAlbums({
-    skip: page * itemsPerPage,
+    skip: (page - 1) * itemsPerPage, // Adjust for 1-based
     take: itemsPerPage,
   });
 
   const allAlbums = response?.data || [];
-  const hasMore = response?.hasMore || false;
+  const total = response?.total || 0;
+  const totalPages = Math.ceil(total / itemsPerPage);
 
   // Filter albums by search query (client-side)
   const filteredAlbums = allAlbums.filter(album =>
@@ -35,22 +37,13 @@ export default function AlbumsPage() {
 
   // Reset to first page when itemsPerPage changes (window resize)
   useEffect(() => {
-    setPage(0);
+    setPage(1);
   }, [itemsPerPage]);
 
-  // Pagination handlers
-  const handlePreviousPage = () => {
-    if (page > 0) {
-      setPage(page - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleNextPage = () => {
-    if (hasMore) {
-      setPage(page + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  // Pagination handler
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -116,31 +109,12 @@ export default function AlbumsPage() {
               <AlbumGrid title="" albums={filteredAlbums} />
 
               {/* Pagination Controls */}
-              <div className={styles.albumsPage__pagination}>
-                <button
-                  onClick={handlePreviousPage}
-                  disabled={page === 0}
-                  className={styles.albumsPage__pageButton}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={20} />
-                  <span>Anterior</span>
-                </button>
-
-                <span className={styles.albumsPage__pageInfo}>
-                  Página {page + 1}
-                </span>
-
-                <button
-                  onClick={handleNextPage}
-                  disabled={!hasMore}
-                  className={styles.albumsPage__pageButton}
-                  aria-label="Next page"
-                >
-                  <span>Siguiente</span>
-                  <ChevronRight size={20} />
-                </button>
-              </div>
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                disabled={isLoading}
+              />
             </>
           ) : (
             <div className={styles.albumsPage__emptyState}>
