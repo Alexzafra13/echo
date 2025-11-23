@@ -426,6 +426,18 @@ export default function RadioPage() {
               )}
             </h2>
 
+            {/* Top Pagination - Mobile Only */}
+            {!isLoading && paginatedStations.length > 0 && totalPages > 1 && (
+              <div className={styles.radioPage__paginationTop}>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
             {isLoading ? (
               <div className={styles.radioPage__loading}>
                 <p>Cargando emisoras...</p>
@@ -475,6 +487,18 @@ export default function RadioPage() {
                   ({favoriteStations.length} {favoriteStations.length === 1 ? 'emisora' : 'emisoras'})
                 </span>
               </h2>
+
+              {/* Top Pagination - Mobile Only */}
+              {totalFavoritesPages > 1 && (
+                <div className={styles.radioPage__paginationTop}>
+                  <Pagination
+                    currentPage={favoritesPage}
+                    totalPages={totalFavoritesPages}
+                    onPageChange={handleFavoritesPageChange}
+                    disabled={false}
+                  />
+                </div>
+              )}
 
               <div className={styles.radioPage__gridWrapper}>
                 <div className={styles.radioPage__grid}>
