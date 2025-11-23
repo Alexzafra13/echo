@@ -83,14 +83,18 @@
   margin-bottom: var(--space-10);
 }
 
-/* Grid wrapper */
+/* Grid wrapper - mantener paginación en posición fija */
 .radioPage__gridWrapper {
-  /* Simple container */
+  min-height: 70vh; /* Altura mínima del contenedor completo */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Grid arriba, paginación abajo */
 }
 
 /* Pagination spacing */
 .radioPage__gridWrapper > :global(.pagination) {
   margin-top: 48px;
+  flex-shrink: 0; /* Evitar que la paginación se comprima */
 }
 
 /* Top pagination - only visible on mobile */
@@ -115,7 +119,7 @@
   gap: var(--space-5);
   margin-bottom: var(--space-6);
   width: 100%;
-  min-height: 75vh; /* Mantener altura mínima para posición consistente de paginación */
+  /* NO min-height aquí - el grid debe ocupar solo lo necesario */
 }
 
 /* Loading state */

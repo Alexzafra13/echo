@@ -100,14 +100,18 @@
   margin-top: 8px;
 }
 
-/* Grid wrapper */
+/* Grid wrapper - mantener paginación en posición fija */
 .albumsPage__gridWrapper {
-  /* El min-height está en AlbumGrid.module.css para consistencia */
+  min-height: 75vh; /* Altura mínima del contenedor completo */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Grid arriba, paginación abajo */
 }
 
 /* Pagination spacing */
 .albumsPage__gridWrapper > :global(.pagination) {
   margin-top: 48px;
+  flex-shrink: 0; /* Evitar que la paginación se comprima */
 }
 
 /* Top pagination - only visible on mobile */
