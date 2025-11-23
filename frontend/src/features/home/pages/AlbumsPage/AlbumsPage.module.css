@@ -110,11 +110,18 @@
   min-height: 0;
 }
 
+/* Grid takes remaining space */
+.albumsPage__gridWrapper > :first-child {
+  flex: 1;
+  min-height: 400px; /* Minimum height to keep pagination at bottom */
+}
+
 /* Pagination positioning - push to bottom */
 .albumsPage__gridWrapper > :global(.pagination) {
   margin-top: auto;
   padding-top: 48px;
   padding-bottom: 16px;
+  flex-shrink: 0;
 }
 
 /* ===== Responsive Design ===== */
@@ -146,6 +153,11 @@
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
+  }
+
+  /* Remove min-height on mobile to allow natural content flow */
+  .albumsPage__gridWrapper > :first-child {
+    min-height: 0;
   }
 
   .albumsPage__pageHeader {

@@ -97,11 +97,18 @@
   min-height: 0;
 }
 
+/* Grid takes remaining space */
+.radioPage__gridWrapper > :first-child {
+  flex: 1;
+  min-height: 400px; /* Minimum height to keep pagination at bottom */
+}
+
 /* Pagination positioning - push to bottom */
 .radioPage__gridWrapper > :global(.pagination) {
   margin-top: auto;
   padding-top: 48px;
   padding-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .radioPage__title {
@@ -195,6 +202,11 @@
     padding: 70px 16px 140px; /* Top reducido para botón género más cerca del header + bottom para nav + player */
     width: 100%;
     max-width: 100%;
+  }
+
+  /* Remove min-height on mobile to allow natural content flow */
+  .radioPage__gridWrapper > :first-child {
+    min-height: 0;
   }
 
   .radioPage__topBar {
