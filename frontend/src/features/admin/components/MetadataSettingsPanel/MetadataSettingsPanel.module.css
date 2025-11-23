@@ -1,14 +1,20 @@
 /* MetadataSettingsPanel Component Styles */
 
 .panel {
-  background: var(--color-bg-secondary, #14151f);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
   padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   width: 100%; /* Ensure full width in admin container */
   max-width: 100%; /* Prevent overflow */
   box-sizing: border-box; /* Include padding in width calculation */
   overflow-x: hidden; /* Clip overflowing content */
+  transition: all 0.2s ease;
+}
+
+.panel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .header {

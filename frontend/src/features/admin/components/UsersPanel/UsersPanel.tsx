@@ -302,7 +302,7 @@ export function UsersPanel() {
             <tbody>
               {paginatedUsers.map((user) => (
                 <tr key={user.id}>
-                  <td>
+                  <td data-label="Usuario">
                     <div className={styles.userInfo}>
                       <div className={styles.userAvatar}>
                         {user.avatarPath ? (
@@ -328,7 +328,7 @@ export function UsersPanel() {
                       </div>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Rol">
                     {user.isSystemAdmin ? (
                       <span className={`${styles.badge} ${styles.badgeSystemAdmin}`}>
                         Administrador Principal
@@ -343,7 +343,7 @@ export function UsersPanel() {
                       </span>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     <span
                       className={`${styles.badge} ${
                         user.isActive ? styles.badgeActive : styles.badgeInactive
@@ -352,8 +352,8 @@ export function UsersPanel() {
                       {user.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td>{formatDate(user.lastLoginAt)}</td>
-                  <td>
+                  <td data-label="Último acceso">{formatDate(user.lastLoginAt)}</td>
+                  <td data-label="Acciones">
                     <div className={styles.actions}>
                       <button
                         className={styles.actionButton}
