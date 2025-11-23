@@ -13,6 +13,17 @@ export function useRecentAlbums(take?: number) {
 }
 
 /**
+ * Hook to fetch top played albums based on play statistics
+ */
+export function useTopPlayedAlbums(take?: number) {
+  return useQuery({
+    queryKey: ['albums', 'top-played', take],
+    queryFn: () => albumsService.getTopPlayed(take),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+}
+
+/**
  * Hook to fetch featured album for hero section
  */
 export function useFeaturedAlbum() {
