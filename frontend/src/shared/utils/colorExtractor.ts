@@ -225,6 +225,9 @@ function loadImageAndExtractColor(
     onComplete?.();
   };
 
+  // Try to load with CORS support for external images
+  // If CORS fails, onerror handler will use fallback color
+  img.crossOrigin = 'anonymous';
   img.src = imageSrc;
 }
 
