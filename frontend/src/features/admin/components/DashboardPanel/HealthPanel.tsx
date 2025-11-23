@@ -17,6 +17,11 @@ interface ActiveAlerts {
   orphanedFiles: number;
   pendingConflicts: number;
   storageWarning: boolean;
+  storageDetails?: {
+    currentMB: number;
+    limitMB: number;
+    percentUsed: number;
+  };
   scanErrors: number;
 }
 
@@ -186,7 +191,11 @@ export function HealthPanel({ health, alerts }: HealthPanelProps) {
             {alerts.storageWarning && (
               <div className={styles.alert}>
                 <AlertCircle size={14} />
-                <span>Almacenamiento cerca del límite</span>
+                <span>
+                  {alerts.storageDetails
+                    ? `Almacenamiento de metadata al ${alerts.storageDetails.percentUsed}% (${alerts.storageDetails.currentMB}MB / ${alerts.storageDetails.limitMB}MB)`
+                    : 'Almacenamiento cerca del límite'}
+                </span>
               </div>
             )}
             {alerts.scanErrors > 0 && (
