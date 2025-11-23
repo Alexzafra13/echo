@@ -12,3 +12,5 @@ export { BackButton } from './BackButton';
 export { Portal } from './Portal';
 
 export { ToastContainer } from './Toast/ToastContainer';
+
+export { CollapsibleInfo } from './CollapsibleInfo';
