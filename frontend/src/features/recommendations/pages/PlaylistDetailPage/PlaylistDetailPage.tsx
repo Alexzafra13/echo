@@ -53,8 +53,10 @@ export function PlaylistDetailPage() {
   };
 
   const handleBack = () => {
+    const returnPath = sessionStorage.getItem('playlistReturnPath') || '/wave-mix';
     sessionStorage.removeItem('currentPlaylist');
-    setLocation('/wave-mix');
+    sessionStorage.removeItem('playlistReturnPath');
+    setLocation(returnPath);
   };
 
   // Convert to Player Tracks (for playback)
