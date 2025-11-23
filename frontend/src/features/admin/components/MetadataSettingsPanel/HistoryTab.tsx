@@ -94,6 +94,35 @@ export function HistoryTab() {
     return type === 'artist' ? <Music size={16} /> : <Disc size={16} />;
   };
 
+  // Build complete image URLs for preview
+  const buildImageUrl = (log: any): string | null => {
+    const value = log.previewUrl;
+    if (!value) return null;
+
+    // Already a complete URL (http/https)
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+
+    // API path (new format) - just use it directly, the proxy will handle it
+    if (value.startsWith('/api/')) {
+      return value;
+    }
+
+    // Old format: file path - construct API URL using entityId
+    // Examples: "uploads\music\..." or "/uploads/music/..."
+    if (value.includes('uploads') || value.includes('\\')) {
+      if (log.entityType === 'album') {
+        return `/api/images/albums/${log.entityId || log.id}/cover`;
+      } else if (log.entityType === 'artist') {
+        return `/api/images/artists/${log.entityId || log.id}/profile`;
+      }
+    }
+
+    // Default: treat as relative API path
+    return `/api${value.startsWith('/') ? value : '/' + value}`;
+  };
+
   return (
     <div className={styles.container}>
       {/* Statistics Section */}
@@ -267,7 +296,10 @@ export function HistoryTab() {
                     <tr
                       key={log.id}
                       className={log.previewUrl ? styles.clickableRow : ''}
-                      onClick={() => log.previewUrl && setPreviewImage(log.previewUrl)}
+                      onClick={() => {
+                        const imageUrl = buildImageUrl(log);
+                        if (imageUrl) setPreviewImage(imageUrl);
+                      }}
                       title={log.previewUrl ? 'Clic para ver imagen' : ''}
                     >
                       <td>{formatDate(log.createdAt)}</td>
