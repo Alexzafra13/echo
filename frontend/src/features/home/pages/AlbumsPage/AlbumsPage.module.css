@@ -20,7 +20,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 116px 40px 32px; /* 84px + 32px for header glassmorphism effect */
+  padding: 116px 40px 120px; /* 84px + 32px for header + 120px bottom for player space */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -108,19 +108,19 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  justify-content: space-between; /* Distribute space evenly */
 }
 
 /* Grid takes remaining space */
 .albumsPage__gridWrapper > :first-child {
-  flex: 1;
-  min-height: 400px; /* Minimum height to keep pagination at bottom */
+  flex: 0 1 auto; /* Don't grow, can shrink, auto size */
 }
 
-/* Pagination positioning - push to bottom */
+/* Pagination positioning - always centered at bottom with fixed spacing */
 .albumsPage__gridWrapper > :global(.pagination) {
   margin-top: auto;
-  padding-top: 48px;
-  padding-bottom: 16px;
+  padding-top: 64px; /* Fixed top spacing */
+  padding-bottom: 0;
   flex-shrink: 0;
 }
 
@@ -155,9 +155,9 @@
     padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
   }
 
-  /* Remove min-height on mobile to allow natural content flow */
-  .albumsPage__gridWrapper > :first-child {
-    min-height: 0;
+  /* Adjust spacing on mobile */
+  .albumsPage__gridWrapper > :global(.pagination) {
+    padding-top: 32px; /* Reduced spacing on mobile */
   }
 
   .albumsPage__pageHeader {
