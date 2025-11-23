@@ -305,143 +305,143 @@
 
 /* ===== Light Theme ===== */
 :root[data-theme="light"] {
-  /* Background Colors - Tonos crema/beige cálidos, mucho más agradables a la vista */
-  --bg-base: #f8f6f3; /* Warm cream - base cálida y suave */
-  --bg-elevated: #f0ede7; /* Light latte - beige claro elegante */
-  --bg-surface: #e8e3dc; /* Soft beige - beige presente pero suave */
-  --bg-overlay: rgba(248, 246, 243, 0.95);
-  --bg-card: rgba(240, 237, 231, 0.85);
-  --bg-card-hover: rgba(232, 227, 220, 0.95);
+  /* Background Colors - Tonos grises suaves, no blanco puro */
+  --bg-base: #e5e7eb; /* Soft gray - base grisácea clara */
+  --bg-elevated: #d1d5db; /* Medium gray - elevado más oscuro */
+  --bg-surface: #b8bcc8; /* Slate gray - superficie con presencia */
+  --bg-overlay: rgba(229, 231, 235, 0.95);
+  --bg-card: rgba(209, 213, 219, 0.85);
+  --bg-card-hover: rgba(184, 188, 200, 0.95);
 
-  /* Text Colors - Más suaves que negro puro */
-  --text-primary: #292524; /* Stone 900 - casi negro pero más suave */
-  --text-secondary: #57534e; /* Stone 700 */
-  --text-tertiary: #78716c; /* Stone 600 */
-  --text-disabled: #a8a29e; /* Stone 400 */
+  /* Text Colors - Alto contraste con fondo gris */
+  --text-primary: #1f2937; /* Gray 800 - oscuro para buen contraste */
+  --text-secondary: #4b5563; /* Gray 600 - medio */
+  --text-tertiary: #6b7280; /* Gray 500 - terciario */
+  --text-disabled: #9ca3af; /* Gray 400 - deshabilitado */
   --text-on-primary: #ffffff;
-  --text-on-secondary: #fafaf9;
+  --text-on-secondary: #e5e7eb;
 
-  /* Border Colors - Coherentes con backgrounds cálidos */
-  --border-base: #e8e3dc; /* Soft beige - coherente con surface */
-  --border-subtle: #f0ede7; /* Light latte - coherente con elevated */
+  /* Border Colors - Coherentes con backgrounds grises */
+  --border-base: #b8bcc8; /* Slate gray - coherente con surface */
+  --border-subtle: #d1d5db; /* Medium gray - coherente con elevated */
   --border-focus: var(--color-primary-500);
   --border-error: var(--color-error);
 
-  /* Shadows - Más suaves y cálidas */
-  --shadow-sm: 0 1px 2px 0 rgba(41, 37, 36, 0.06);
-  --shadow-base: 0 1px 3px 0 rgba(41, 37, 36, 0.1), 0 1px 2px -1px rgba(41, 37, 36, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(41, 37, 36, 0.1), 0 2px 4px -2px rgba(41, 37, 36, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(41, 37, 36, 0.1), 0 4px 6px -4px rgba(41, 37, 36, 0.06);
-  --shadow-xl: 0 20px 25px -5px rgba(41, 37, 36, 0.1), 0 8px 10px -6px rgba(41, 37, 36, 0.06);
-  --shadow-2xl: 0 25px 50px -12px rgba(41, 37, 36, 0.25);
-  --shadow-inner: inset 0 2px 4px 0 rgba(41, 37, 36, 0.06);
+  /* Shadows - Grises suaves */
+  --shadow-sm: 0 1px 2px 0 rgba(31, 41, 55, 0.08);
+  --shadow-base: 0 1px 3px 0 rgba(31, 41, 55, 0.12), 0 1px 2px -1px rgba(31, 41, 55, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(31, 41, 55, 0.12), 0 2px 4px -2px rgba(31, 41, 55, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(31, 41, 55, 0.12), 0 4px 6px -4px rgba(31, 41, 55, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(31, 41, 55, 0.12), 0 8px 10px -6px rgba(31, 41, 55, 0.08);
+  --shadow-2xl: 0 25px 50px -12px rgba(31, 41, 55, 0.28);
+  --shadow-inner: inset 0 2px 4px 0 rgba(31, 41, 55, 0.08);
 
   /* Glow Effects - Adapted for light theme */
   --shadow-glow-primary: 0 0 20px rgba(237, 104, 66, 0.15), 0 0 40px rgba(237, 104, 66, 0.06);
   --shadow-glow-secondary: 0 0 20px rgba(34, 211, 238, 0.15), 0 0 40px rgba(34, 211, 238, 0.06);
 
-  /* Gradients - Tonos cálidos coherentes */
+  /* Gradients - Tonos grises coherentes */
   --gradient-primary: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
   --gradient-secondary: linear-gradient(135deg, var(--color-secondary-400) 0%, var(--color-secondary-600) 100%);
-  --gradient-dark: linear-gradient(180deg, #f8f6f3 0%, #f0ede7 100%);
-  --gradient-overlay: linear-gradient(180deg, transparent 0%, rgba(248, 246, 243, 0.85) 100%);
+  --gradient-dark: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);
+  --gradient-overlay: linear-gradient(180deg, transparent 0%, rgba(229, 231, 235, 0.85) 100%);
 
-  /* Hero/Banner Gradients - Cálidos y suaves */
+  /* Hero/Banner Gradients - Grises suaves */
   --gradient-hero: linear-gradient(
     135deg,
-    #f0ede7 0%,
-    #f8f6f3 50%,
-    #f0ede7 100%
+    #d1d5db 0%,
+    #e5e7eb 50%,
+    #d1d5db 100%
   );
 
   /* Radial Background Gradients - App Background (Light Theme) */
-  /* Organic gradient: más presencia visual con tonos cálidos */
+  /* Organic gradient: tonos grises con acentos de color */
   --gradient-radial-organic: radial-gradient(
     ellipse 1000px 700px at 90% 15%,
-    rgba(237, 104, 66, 0.07) 0%,
+    rgba(237, 104, 66, 0.08) 0%,
     transparent 45%
   ),
   radial-gradient(
     ellipse 900px 600px at 10% 85%,
-    rgba(34, 211, 238, 0.08) 0%,
+    rgba(34, 211, 238, 0.09) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse 1200px 900px at 60% 50%,
-    rgba(34, 211, 238, 0.03) 0%,
+    rgba(34, 211, 238, 0.04) 0%,
     transparent 60%
   ),
   radial-gradient(
     ellipse 800px 500px at 25% 30%,
-    rgba(237, 104, 66, 0.04) 0%,
+    rgba(237, 104, 66, 0.05) 0%,
     transparent 55%
   ),
   linear-gradient(
     180deg,
-    #f0ede7 0%,
-    #f8f6f3 40%,
-    #ebe7e0 100%
+    #d1d5db 0%,
+    #e5e7eb 40%,
+    #c4c8d0 100%
   );
 
   /* Warm variant: more coral emphasis */
   --gradient-radial-warm: radial-gradient(
     ellipse 1100px 800px at 80% 20%,
-    rgba(237, 104, 66, 0.1) 0%,
+    rgba(237, 104, 66, 0.12) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse 900px 600px at 20% 80%,
-    rgba(34, 211, 238, 0.05) 0%,
+    rgba(34, 211, 238, 0.06) 0%,
     transparent 50%
   ),
   linear-gradient(
     180deg,
-    #f0ede7 0%,
-    #f8f6f3 50%,
-    #ebe7e0 100%
+    #d1d5db 0%,
+    #e5e7eb 50%,
+    #c4c8d0 100%
   );
 
   /* Cool variant: more cyan emphasis */
   --gradient-radial-cool: radial-gradient(
     ellipse 1000px 700px at 15% 20%,
-    rgba(34, 211, 238, 0.1) 0%,
+    rgba(34, 211, 238, 0.12) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse 950px 650px at 85% 80%,
-    rgba(237, 104, 66, 0.05) 0%,
+    rgba(237, 104, 66, 0.06) 0%,
     transparent 50%
   ),
   linear-gradient(
     180deg,
-    #f0ede7 0%,
-    #f8f6f3 50%,
-    #ebe7e0 100%
+    #d1d5db 0%,
+    #e5e7eb 50%,
+    #c4c8d0 100%
   );
 
   /* Default App Background Gradient */
   --gradient-app-background: var(--gradient-radial-organic);
 
-  /* Textured gradient for light theme - Warm beige tones with more presence */
-  --gradient-textured: linear-gradient(116deg, rgba(232, 227, 220, 0.06) 0%, rgba(232, 227, 220, 0.06) 10%, rgba(240, 237, 231, 0.05) 10%, rgba(240, 237, 231, 0.05) 66%, rgba(248, 246, 243, 0.05) 66%, rgba(248, 246, 243, 0.05) 72%, rgba(232, 227, 220, 0.05) 72%, rgba(232, 227, 220, 0.05) 81%, rgba(214, 208, 200, 0.04) 81%, rgba(214, 208, 200, 0.04) 100%), linear-gradient(109deg, rgba(194, 186, 176, 0.05) 0%, rgba(194, 186, 176, 0.05) 23%, rgba(248, 246, 243, 0.06) 23%, rgba(248, 246, 243, 0.06) 63%, rgba(232, 227, 220, 0.05) 63%, rgba(232, 227, 220, 0.05) 73%, rgba(214, 208, 200, 0.05) 73%, rgba(214, 208, 200, 0.05) 84%, rgba(248, 246, 243, 0.05) 84%, rgba(248, 246, 243, 0.05) 100%), linear-gradient(79deg, rgba(172, 165, 156, 0.04) 0%, rgba(172, 165, 156, 0.04) 27%, rgba(214, 208, 200, 0.05) 27%, rgba(214, 208, 200, 0.05) 33%, rgba(34, 211, 238, 0.025) 33%, rgba(34, 211, 238, 0.025) 34%, rgba(232, 227, 220, 0.05) 34%, rgba(232, 227, 220, 0.05) 63%, rgba(194, 186, 176, 0.05) 63%, rgba(194, 186, 176, 0.05) 100%), linear-gradient(109deg, rgba(248, 246, 243, 0.05) 0%, rgba(248, 246, 243, 0.05) 3%, rgba(232, 227, 220, 0.05) 3%, rgba(232, 227, 220, 0.05) 40%, rgba(240, 237, 231, 0.05) 40%, rgba(240, 237, 231, 0.05) 55%, rgba(248, 246, 243, 0.05) 55%, rgba(248, 246, 243, 0.05) 73%, rgba(34, 211, 238, 0.02) 73%, rgba(34, 211, 238, 0.02) 100%), linear-gradient(271deg, rgba(232, 227, 220, 0.05) 0%, rgba(232, 227, 220, 0.05) 11%, rgba(214, 208, 200, 0.05) 11%, rgba(214, 208, 200, 0.05) 23%, rgba(248, 246, 243, 0.04) 23%, rgba(248, 246, 243, 0.04) 72%, rgba(194, 186, 176, 0.05) 72%, rgba(194, 186, 176, 0.05) 86%, rgba(232, 227, 220, 0.05) 86%, rgba(232, 227, 220, 0.05) 100%), linear-gradient(90deg, rgb(248, 246, 243), rgb(240, 237, 231));
+  /* Textured gradient for light theme - Gray tones with more presence */
+  --gradient-textured: linear-gradient(116deg, rgba(184, 188, 200, 0.06) 0%, rgba(184, 188, 200, 0.06) 10%, rgba(209, 213, 219, 0.05) 10%, rgba(209, 213, 219, 0.05) 66%, rgba(229, 231, 235, 0.05) 66%, rgba(229, 231, 235, 0.05) 72%, rgba(184, 188, 200, 0.05) 72%, rgba(184, 188, 200, 0.05) 81%, rgba(156, 163, 175, 0.04) 81%, rgba(156, 163, 175, 0.04) 100%), linear-gradient(109deg, rgba(107, 114, 128, 0.05) 0%, rgba(107, 114, 128, 0.05) 23%, rgba(229, 231, 235, 0.06) 23%, rgba(229, 231, 235, 0.06) 63%, rgba(184, 188, 200, 0.05) 63%, rgba(184, 188, 200, 0.05) 73%, rgba(156, 163, 175, 0.05) 73%, rgba(156, 163, 175, 0.05) 84%, rgba(229, 231, 235, 0.05) 84%, rgba(229, 231, 235, 0.05) 100%), linear-gradient(79deg, rgba(75, 85, 99, 0.04) 0%, rgba(75, 85, 99, 0.04) 27%, rgba(156, 163, 175, 0.05) 27%, rgba(156, 163, 175, 0.05) 33%, rgba(34, 211, 238, 0.025) 33%, rgba(34, 211, 238, 0.025) 34%, rgba(184, 188, 200, 0.05) 34%, rgba(184, 188, 200, 0.05) 63%, rgba(107, 114, 128, 0.05) 63%, rgba(107, 114, 128, 0.05) 100%), linear-gradient(109deg, rgba(229, 231, 235, 0.05) 0%, rgba(229, 231, 235, 0.05) 3%, rgba(184, 188, 200, 0.05) 3%, rgba(184, 188, 200, 0.05) 40%, rgba(209, 213, 219, 0.05) 40%, rgba(209, 213, 219, 0.05) 55%, rgba(229, 231, 235, 0.05) 55%, rgba(229, 231, 235, 0.05) 73%, rgba(34, 211, 238, 0.02) 73%, rgba(34, 211, 238, 0.02) 100%), linear-gradient(271deg, rgba(184, 188, 200, 0.05) 0%, rgba(184, 188, 200, 0.05) 11%, rgba(156, 163, 175, 0.05) 11%, rgba(156, 163, 175, 0.05) 23%, rgba(229, 231, 235, 0.04) 23%, rgba(229, 231, 235, 0.04) 72%, rgba(107, 114, 128, 0.05) 72%, rgba(107, 114, 128, 0.05) 86%, rgba(184, 188, 200, 0.05) 86%, rgba(184, 188, 200, 0.05) 100%), linear-gradient(90deg, rgb(229, 231, 235), rgb(209, 213, 219));
 
-  /* Sidebar textured gradient for light theme - Warm beige pattern with more presence */
-  --gradient-sidebar: linear-gradient(326deg, rgba(214, 208, 200, 0.15) 0%, rgba(214, 208, 200, 0.15) 6%, rgba(232, 227, 220, 0.12) 6%, rgba(232, 227, 220, 0.12) 29%, rgba(248, 246, 243, 0.12) 29%, rgba(248, 246, 243, 0.12) 100%), linear-gradient(164deg, rgba(214, 208, 200, 0.15) 0%, rgba(214, 208, 200, 0.15) 36%, rgba(232, 227, 220, 0.12) 36%, rgba(232, 227, 220, 0.12) 61%, rgba(248, 246, 243, 0.12) 61%, rgba(248, 246, 243, 0.12) 100%), linear-gradient(336deg, rgba(214, 208, 200, 0.15) 0%, rgba(214, 208, 200, 0.15) 64%, rgba(232, 227, 220, 0.12) 64%, rgba(232, 227, 220, 0.12) 69%, rgba(248, 246, 243, 0.12) 69%, rgba(248, 246, 243, 0.12) 100%), linear-gradient(90deg, rgb(240, 237, 231), rgb(240, 237, 231));
+  /* Sidebar textured gradient for light theme - Darker gray pattern with strong presence */
+  --gradient-sidebar: linear-gradient(326deg, rgba(107, 114, 128, 0.18) 0%, rgba(107, 114, 128, 0.18) 6%, rgba(156, 163, 175, 0.15) 6%, rgba(156, 163, 175, 0.15) 29%, rgba(184, 188, 200, 0.15) 29%, rgba(184, 188, 200, 0.15) 100%), linear-gradient(164deg, rgba(107, 114, 128, 0.18) 0%, rgba(107, 114, 128, 0.18) 36%, rgba(156, 163, 175, 0.15) 36%, rgba(156, 163, 175, 0.15) 61%, rgba(184, 188, 200, 0.15) 61%, rgba(184, 188, 200, 0.15) 100%), linear-gradient(336deg, rgba(107, 114, 128, 0.18) 0%, rgba(107, 114, 128, 0.18) 64%, rgba(156, 163, 175, 0.15) 64%, rgba(156, 163, 175, 0.15) 69%, rgba(184, 188, 200, 0.15) 69%, rgba(184, 188, 200, 0.15) 100%), linear-gradient(90deg, rgb(156, 163, 175), rgb(156, 163, 175));
 
   /* Component Specific */
-  --player-bg: rgba(240, 237, 231, 0.95);
-  --player-border: #e8e3dc;
+  --player-bg: rgba(209, 213, 219, 0.95);
+  --player-border: #b8bcc8;
 
   --sidebar-bg: var(--bg-elevated);
   --sidebar-border: var(--border-subtle);
 
   /* Header - Glassmorphism effect for light theme */
-  --header-bg-scrolled: rgba(248, 246, 243, 0.3);
-  --header-border-scrolled: rgba(41, 37, 36, 0.12);
-  --header-shadow-scrolled: 0 8px 32px rgba(41, 37, 36, 0.2);
+  --header-bg-scrolled: rgba(229, 231, 235, 0.3);
+  --header-border-scrolled: rgba(31, 41, 55, 0.12);
+  --header-shadow-scrolled: 0 8px 32px rgba(31, 41, 55, 0.2);
 
-  --input-bg: #f8f6f3;
-  --input-border: #dcd7cf; /* Warm beige border */
+  --input-bg: #e5e7eb;
+  --input-border: #b8bcc8; /* Gray border */
   --input-focus-ring: 0 0 0 3px rgba(237, 104, 66, 0.15);
 
   --button-shadow: var(--shadow-md);
@@ -456,6 +456,6 @@
   --color-bg-secondary: var(--bg-elevated);
   --color-bg-tertiary: var(--bg-surface);
 
-  --color-hover: rgba(41, 37, 36, 0.05);
+  --color-hover: rgba(31, 41, 55, 0.06);
   --color-primary-light: rgba(237, 104, 66, 0.08);
 }
