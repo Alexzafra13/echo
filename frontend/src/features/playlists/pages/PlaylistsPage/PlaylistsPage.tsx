@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Music, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2, Search, X } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
@@ -19,13 +19,22 @@ export default function PlaylistsPage() {
   const [deletePlaylistId, setDeletePlaylistId] = useState<string | null>(null);
   const [deletePlaylistName, setDeletePlaylistName] = useState('');
   const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: playlistsData, isLoading } = usePlaylists();
   const createPlaylistMutation = useCreatePlaylist();
   const deletePlaylistMutation = useDeletePlaylist();
   const updatePlaylistMutation = useUpdatePlaylist();
 
-  const playlists = playlistsData?.items || [];
+  const allPlaylists = playlistsData?.items || [];
+
+  // Filter playlists based on search query
+  const playlists = searchQuery.trim()
+    ? allPlaylists.filter(playlist =>
+        playlist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        playlist.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allPlaylists;
 
   const handleCreatePlaylist = async (name: string) => {
     await createPlaylistMutation.mutateAsync({
@@ -74,7 +83,33 @@ export default function PlaylistsPage() {
       <Sidebar />
 
       <main className={styles.playlistsPage__main}>
-        <Header />
+        <Header
+          customSearch={
+            <div className={styles.playlistsPage__searchForm}>
+              <div className={styles.playlistsPage__searchWrapper}>
+                <Search size={20} className={styles.playlistsPage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Buscar playlists..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.playlistsPage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className={styles.playlistsPage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
 
         <div className={styles.playlistsPage__content}>
           {/* Header Section */}

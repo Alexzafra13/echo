@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
-import { Play, ArrowLeft } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { TrackList } from '@features/home/components/TrackList';
@@ -50,13 +50,6 @@ export function PlaylistDetailPage() {
     const tracks = convertToPlayerTracks(playlist);
     const index = tracks.findIndex((t) => t.id === track.id);
     playQueue(tracks, index);
-  };
-
-  const handleBack = () => {
-    const returnPath = sessionStorage.getItem('playlistReturnPath') || '/wave-mix';
-    sessionStorage.removeItem('currentPlaylist');
-    sessionStorage.removeItem('playlistReturnPath');
-    setLocation(returnPath);
   };
 
   // Convert to Player Tracks (for playback)
@@ -115,20 +108,11 @@ export function PlaylistDetailPage() {
       <Sidebar />
 
       <main className={styles.playlistDetailPage__main}>
-        <Header disableSearch />
+        <Header showBackButton disableSearch />
 
         <div className={styles.playlistDetailPage__content}>
           {/* Hero Section */}
           <div className={styles.playlistDetailPage__hero}>
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              className={styles.backButton}
-            >
-              <ArrowLeft size={20} />
-              Volver
-            </Button>
-
             <div className={styles.playlistDetailPage__heroContent}>
               <PlaylistCover
                 type={playlist.type}

@@ -178,7 +178,7 @@ export default function AlbumPage() {
       <div className={styles.albumPage}>
         <Sidebar />
         <main className={styles.albumPage__main}>
-          <Header showBackButton />
+          <Header showBackButton disableSearch />
           <div className={styles.albumPage__content}>
             <div className={styles.albumPage__loadingState}>
               <p>Cargando álbum...</p>
@@ -194,7 +194,7 @@ export default function AlbumPage() {
       <div className={styles.albumPage}>
         <Sidebar />
         <main className={styles.albumPage__main}>
-          <Header showBackButton />
+          <Header showBackButton disableSearch />
           <div className={styles.albumPage__content}>
             <div className={styles.albumPage__errorState}>
               <p>Error al cargar el álbum</p>
