@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '@features/auth/auth.module';
 import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
+import { HealthModule } from '@features/health/health.module';
 import { AdminController } from './presentation/admin.controller';
 import { AdminDashboardController } from './presentation/admin-dashboard.controller';
 import { EnrichmentHistoryController } from './presentation/enrichment-history.controller';
@@ -37,7 +38,7 @@ import { DeleteCustomAlbumCoverUseCase } from './domain/use-cases/delete-custom-
 import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-album-cover';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ExternalMetadataModule],
+  imports: [AuthModule, PrismaModule, ExternalMetadataModule, HealthModule],
   controllers: [
     AdminController,
     AdminDashboardController,

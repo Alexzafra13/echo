@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Activity, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { apiClient } from '@shared/services/api';
 import { useAuth } from '@shared/hooks/useAuth';
 import styles from './SystemHealthIndicator.module.css';
@@ -36,6 +37,7 @@ type OverallStatus = 'healthy' | 'warning' | 'critical';
  */
 export function SystemHealthIndicator() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [alerts, setAlerts] = useState<ActiveAlerts | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -144,6 +146,11 @@ export function SystemHealthIndicator() {
     setHideTimeout(timeout);
   };
 
+  const handleNavigateToDashboard = () => {
+    setShowTooltip(false);
+    setLocation('/admin');
+  };
+
   return (
     <div
       className={styles.container}
@@ -220,9 +227,9 @@ export function SystemHealthIndicator() {
               </>
             )}
 
-            <div className={styles.tooltipFooter}>
+            <button className={styles.tooltipFooter} onClick={handleNavigateToDashboard}>
               Ver detalles en Dashboard →
-            </div>
+            </button>
           </div>
         </div>
       )}
