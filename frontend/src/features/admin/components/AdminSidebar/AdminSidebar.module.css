@@ -3,14 +3,32 @@
 .sidebar {
   width: 280px;
   height: 100vh;
-  background: rgba(10, 10, 10, 0.95);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 14, 39, 0.50),
+    rgba(15, 23, 42, 0.60)
+  );
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   overflow-y: auto;
   flex-shrink: 0;
+}
+
+/* Light theme glassmorphism override */
+[data-theme='light'] .sidebar {
+  background: linear-gradient(
+    to bottom,
+    rgba(250, 250, 249, 0.50),
+    rgba(255, 255, 255, 0.60)
+  );
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
 }
 
 /* Custom scrollbar */
@@ -34,7 +52,12 @@
 /* Header */
 .header {
   padding: 32px 24px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 107, 107, 0.05),
+    transparent
+  );
   display: flex;
   align-items: center;
   gap: 16px;
@@ -90,18 +113,34 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.04)
+  );
   color: var(--color-text-primary, #ffffff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .navItem--active {
-  background: rgba(255, 107, 107, 0.15);
+  background: linear-gradient(
+    to right,
+    rgba(255, 107, 107, 0.20),
+    rgba(255, 107, 107, 0.12)
+  );
   color: var(--color-primary, #ff6b6b);
   font-weight: 600;
+  box-shadow: 0 2px 12px rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
 .navItem--active:hover {
-  background: rgba(255, 107, 107, 0.2);
+  background: linear-gradient(
+    to right,
+    rgba(255, 107, 107, 0.25),
+    rgba(255, 107, 107, 0.15)
+  );
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.2);
 }
 
 .navItemLeft {
