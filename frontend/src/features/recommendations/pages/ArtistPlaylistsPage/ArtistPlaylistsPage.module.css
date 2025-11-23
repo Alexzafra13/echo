@@ -71,17 +71,14 @@
   gap: 0.5rem;
 }
 
-/* Grid wrapper - simple approach to maintain pagination position */
+/* Grid wrapper */
 .artistPlaylistsPage__gridWrapper {
-  min-height: calc(100vh - 500px); /* Reserve space to keep pagination at consistent position */
-  display: flex;
-  flex-direction: column;
+  /* Simple container */
 }
 
-/* Pagination spacing - push to bottom */
+/* Pagination spacing */
 .artistPlaylistsPage__gridWrapper > :global(.pagination) {
-  margin-top: auto;
-  padding-top: 48px;
+  margin-top: 48px;
 }
 
 /* Top pagination - only visible on mobile */
@@ -95,6 +92,7 @@
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  min-height: 60vh; /* Mantener altura mínima para posición consistente de paginación */
 }
 
 .playlistCard {
@@ -250,6 +248,7 @@
   .artistPlaylistsPage__grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
+    min-height: 0; /* Eliminar min-height en mobile para flujo natural */
   }
 
   .playlistCard {
