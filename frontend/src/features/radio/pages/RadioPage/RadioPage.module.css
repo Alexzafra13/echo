@@ -98,9 +98,10 @@
   justify-content: space-between; /* Distribute space evenly */
 }
 
-/* Grid takes remaining space */
+/* Grid takes remaining space with minimum height */
 .radioPage__gridWrapper > :first-child {
-  flex: 0 1 auto; /* Don't grow, can shrink, auto size */
+  flex: 1 0 auto; /* Can grow, don't shrink, auto size */
+  min-height: 500px; /* Minimum height to keep pagination position consistent */
 }
 
 /* Pagination positioning - always centered at bottom with fixed spacing */
@@ -199,9 +200,14 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo en móvil */
-    padding: 70px 16px 140px; /* Top reducido para botón género más cerca del header + bottom para nav + player */
+    padding: 70px 16px 220px; /* Top reducido para botón género más cerca del header + bottom para nav + player + pagination */
     width: 100%;
     max-width: 100%;
+  }
+
+  /* Remove min-height on mobile for natural content flow */
+  .radioPage__gridWrapper > :first-child {
+    min-height: 0;
   }
 
   /* Adjust spacing on mobile */
@@ -248,7 +254,7 @@
   }
 
   .radioPage__content {
-    padding: 68px var(--space-3) 140px; /* Top para header + bottom para nav + player */
+    padding: 68px var(--space-3) 220px; /* Top para header + bottom para nav + player + pagination */
     width: 100%;
     max-width: 100%;
   }
