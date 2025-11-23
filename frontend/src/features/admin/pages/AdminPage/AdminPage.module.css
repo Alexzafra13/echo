@@ -18,6 +18,7 @@
   overflow-y: auto; /* Enable scroll for entire page */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  padding-bottom: calc(40px + var(--player-bottom-spacer, 0px)); /* Base padding + player spacer */
 }
 
 .adminPage__main::-webkit-scrollbar {
@@ -28,7 +29,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 124px 48px 120px; /* 84px + 40px for header glassmorphism effect + 120px for player */
+  padding: 124px 48px 0; /* 84px + 40px for header glassmorphism effect */
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
@@ -102,7 +103,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .adminPage__content {
-    padding: 116px 32px 120px; /* 84px + 32px + 120px for player */
+    padding: 116px 32px 0; /* 84px + 32px */
   }
 
   .title {
@@ -118,6 +119,7 @@
 
   .adminPage__main {
     padding-top: 0;
+    padding-bottom: calc(60px + var(--player-bottom-spacer, 0px)); /* More padding on mobile for bottom nav */
   }
 
   /* Hide breadcrumbs on mobile to save space */
@@ -127,7 +129,7 @@
 
   .adminPage__content {
     margin-top: 0; /* Remove negative margin */
-    padding: 0 20px 140px; /* No top padding + bottom for player and nav */
+    padding: 0 20px 0; /* No top padding */
   }
 
   .title {
@@ -141,6 +143,6 @@
 
 @media (max-width: 480px) {
   .adminPage__content {
-    padding: 0 16px 140px; /* Bottom nav + player + spacing */
+    padding: 0 16px 0;
   }
 }
