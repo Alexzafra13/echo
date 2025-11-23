@@ -70,28 +70,31 @@ export class IcyMetadataService {
    * Create ICY metadata parser for stream
    */
   private createStreamParser(stationUuid: string, streamUrl: string): void {
+    let radioStation: IcecastParser | null = null;
+
     try {
       this.logger.log(`Creating ICY parser for ${stationUuid}: ${streamUrl}`);
 
-      const radioStation = new IcecastParser({
+      radioStation = new IcecastParser({
         url: streamUrl,
         keepListen: false, // Don't keep listening after metadata
         autoUpdate: true, // Automatically update metadata
         notifyOnChangeOnly: true, // Only emit when metadata changes
       });
 
-      // CRITICAL: Register error handler IMMEDIATELY to prevent unhandled errors
-      // This must be the first listener registered to catch connection errors
-      radioStation.on('error', (error: Error) => {
+      // CRITICAL: Register error handler IMMEDIATELY before any other operations
+      // This prevents unhandled error events from crashing the server
+      const errorHandler = (error: Error) => {
         this.logger.error(
           `ICY parser error for ${stationUuid}: ${error.message}`,
-          error.stack,
         );
         // Emit error to all listeners
         this.broadcastError(stationUuid, error);
         // Close stream on error to prevent resource leaks
         this.closeStream(stationUuid);
-      });
+      };
+
+      radioStation.on('error', errorHandler);
 
       // Increase max listeners to prevent warnings (parser can have many listeners)
       radioStation.setMaxListeners(20);
@@ -111,6 +114,19 @@ export class IcyMetadataService {
         `Failed to create ICY parser for ${stationUuid}:`,
         error,
       );
+
+      // Clean up partially created parser if it exists
+      if (radioStation) {
+        try {
+          radioStation.removeAllListeners();
+          if (typeof (radioStation as any).destroy === 'function') {
+            (radioStation as any).destroy();
+          }
+        } catch (cleanupError) {
+          // Ignore cleanup errors
+        }
+      }
+
       // Emit error to all listeners
       this.broadcastError(
         stationUuid,
