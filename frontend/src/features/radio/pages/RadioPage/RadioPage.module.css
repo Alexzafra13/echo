@@ -30,6 +30,8 @@
   overflow-x: hidden; /* Evitar desbordamiento horizontal */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  display: flex;
+  flex-direction: column;
 }
 
 .radioPage__content::-webkit-scrollbar {
@@ -81,6 +83,25 @@
 /* Section */
 .radioPage__section {
   margin-bottom: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Grid wrapper - enables sticky pagination */
+.radioPage__gridWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Pagination positioning - push to bottom */
+.radioPage__gridWrapper > :global(.pagination) {
+  margin-top: auto;
+  padding-top: 48px;
+  padding-bottom: 16px;
 }
 
 .radioPage__title {
@@ -142,46 +163,6 @@
   color: var(--color-text-secondary) !important;
 }
 
-/* Pagination */
-.radioPage__pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  margin-top: var(--space-6);
-  padding: var(--space-4) 0;
-}
-
-.radioPage__paginationButton {
-  padding: var(--space-2) var(--space-4);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-base);
-  border-radius: 8px;
-  color: var(--color-text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
-}
-
-.radioPage__paginationButton:hover:not(:disabled) {
-  background: var(--bg-hover);
-  border-color: var(--color-primary);
-}
-
-.radioPage__paginationButton:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.radioPage__paginationInfo {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  min-width: 120px;
-  text-align: center;
-}
 
 /* ===== Responsive Design ===== */
 
@@ -246,18 +227,6 @@
   .radioPage__section {
     margin-bottom: 32px;
   }
-
-  .radioPage__paginationButton {
-    min-width: 80px;
-    padding: 10px 16px;
-    font-size: 14px;
-    border-radius: 8px; /* Menos redondeado */
-  }
-
-  .radioPage__paginationInfo {
-    font-size: 14px;
-    min-width: 100px;
-  }
 }
 
 /* Small Mobile */
@@ -304,22 +273,5 @@
 
   .radioPage__emptyHint {
     font-size: 13px !important;
-  }
-
-  .radioPage__pagination {
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .radioPage__paginationButton {
-    min-width: auto;
-    flex: 1;
-    border-radius: 6px; /* Menos redondeado */
-  }
-
-  .radioPage__paginationInfo {
-    width: 100%;
-    order: -1;
-    margin-bottom: var(--space-2);
   }
 }
