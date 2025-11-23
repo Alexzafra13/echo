@@ -67,7 +67,7 @@ export function ArtistPlaylistsPage() {
       <Sidebar />
 
       <main className={styles.artistPlaylistsPage__main}>
-        <Header />
+        <Header adminMode />
 
         <div className={styles.artistPlaylistsPage__content}>
           {/* Hero Section */}

@@ -127,7 +127,7 @@ export default function HomePage() {
   }, [recentAlbums, topPlayedAlbums, autoPlaylists]);
 
   // Prepare Wave Mix playlists for home page
-  // Wave Mix (always) + random 2-3 artist playlists + random 2-3 genre playlists
+  // Wave Mix (always) + enough artist and genre playlists to fill at least one row
   const homePagePlaylists = useMemo(() => {
     if (!autoPlaylists || autoPlaylists.length === 0) return [];
 
@@ -141,15 +141,16 @@ export default function HomePage() {
       playlists.push(waveMix);
     }
 
-    // Add 2-3 random artist playlists
-    const randomArtists = randomSelect(artistPlaylists, 3);
+    // Add random artist playlists (take more to ensure we fill a row)
+    const randomArtists = randomSelect(artistPlaylists, 5);
     playlists.push(...randomArtists);
 
-    // Add 2-3 random genre playlists
-    const randomGenres = randomSelect(genrePlaylists, 3);
+    // Add random genre playlists (take more to ensure we fill a row)
+    const randomGenres = randomSelect(genrePlaylists, 5);
     playlists.push(...randomGenres);
 
-    return playlists;
+    // Limit to 11 total playlists to avoid overwhelming the homepage
+    return playlists.slice(0, 11);
   }, [autoPlaylists]);
 
   // Auto-rotate hero section every 20 seconds
