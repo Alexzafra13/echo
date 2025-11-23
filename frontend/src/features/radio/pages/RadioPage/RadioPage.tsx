@@ -312,22 +312,28 @@ export default function RadioPage() {
   }, [playRadio]);
 
   // Toggle favorite handler
-  const handleToggleFavorite = useCallback(async (station: RadioBrowserStation) => {
+  const handleToggleFavorite = useCallback(async (station: RadioBrowserStation | RadioStation) => {
     try {
+      // Get stationUuid - handle both RadioBrowserStation and RadioStation
+      const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
+
       const isInFavorites = favoriteStations.some(
-        (fav) => fav.stationUuid === station.stationuuid
+        (fav) => fav.stationUuid === stationUuid
       );
 
       if (isInFavorites) {
         const favoriteStation = favoriteStations.find(
-          (fav) => fav.stationUuid === station.stationuuid
+          (fav) => fav.stationUuid === stationUuid
         );
         if (favoriteStation?.id) {
           await deleteFavoriteMutation.mutateAsync(favoriteStation.id);
         }
       } else {
-        const dto = radioService.convertToSaveDto(station);
-        await saveFavoriteMutation.mutateAsync(dto);
+        // Only RadioBrowserStation can be added as favorite
+        if ('stationuuid' in station) {
+          const dto = radioService.convertToSaveDto(station);
+          await saveFavoriteMutation.mutateAsync(dto);
+        }
       }
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
@@ -354,8 +360,9 @@ export default function RadioPage() {
   }, [isRadioMode, currentRadioStation, isPlaying]);
 
   // Helper: Check if station is favorite
-  const isStationFavorite = useCallback((station: RadioBrowserStation) => {
-    return favoriteStations.some((fav) => fav.stationUuid === station.stationuuid);
+  const isStationFavorite = useCallback((station: RadioBrowserStation | RadioStation) => {
+    const stationUuid = 'stationuuid' in station ? station.stationuuid : station.stationUuid;
+    return favoriteStations.some((fav) => fav.stationUuid === stationUuid);
   }, [favoriteStations]);
 
   // Get country name for display
@@ -453,17 +460,24 @@ export default function RadioPage() {
             ) : paginatedStations.length > 0 ? (
               <div className={styles.radioPage__gridWrapper}>
                 <div className={styles.radioPage__grid}>
-                  {paginatedStations.map((station) => (
-                    <RadioStationCard
-                      key={station.stationuuid}
-                      station={station}
-                      isFavorite={isStationFavorite(station)}
-                      isPlaying={isStationPlaying(station)}
-                      currentMetadata={isStationPlaying(station) ? radioMetadata : null}
-                      onPlay={() => handlePlayStation(station)}
-                      onToggleFavorite={() => handleToggleFavorite(station)}
-                    />
-                  ))}
+                  {paginatedStations.map((station) => {
+                    // Get unique key - handle both RadioBrowserStation and RadioStation
+                    const key = 'stationuuid' in station
+                      ? station.stationuuid
+                      : (station.id || station.stationUuid || station.url);
+
+                    return (
+                      <RadioStationCard
+                        key={key}
+                        station={station}
+                        isFavorite={isStationFavorite(station)}
+                        isPlaying={isStationPlaying(station)}
+                        currentMetadata={isStationPlaying(station) ? radioMetadata : null}
+                        onPlay={() => handlePlayStation(station)}
+                        onToggleFavorite={() => handleToggleFavorite(station)}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}
