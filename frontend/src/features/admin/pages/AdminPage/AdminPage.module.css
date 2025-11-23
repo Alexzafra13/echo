@@ -15,6 +15,13 @@
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
   min-width: 0; /* Allows flex child to shrink below content size */
+  overflow-y: auto; /* Enable scroll for entire page */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.adminPage__main::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .adminPage__content {
@@ -27,14 +34,6 @@
   margin-left: auto;
   margin-right: auto;
   box-sizing: border-box; /* Include padding in width */
-  overflow-y: auto; /* Scroll happens at this level */
-  overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.adminPage__content::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
 }
 
 .breadcrumbsWrapper {
@@ -129,7 +128,6 @@
   .adminPage__content {
     margin-top: 0; /* Remove negative margin */
     padding: 0 20px 140px; /* No top padding + bottom for player and nav */
-    overflow-x: hidden; /* Prevent horizontal overflow */
   }
 
   .title {
