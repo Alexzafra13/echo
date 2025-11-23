@@ -20,7 +20,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 116px 40px 120px; /* 84px + 32px for header + 120px bottom for player space */
+  padding: 116px 40px 180px; /* 84px + 32px for header + 180px bottom for player space */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
