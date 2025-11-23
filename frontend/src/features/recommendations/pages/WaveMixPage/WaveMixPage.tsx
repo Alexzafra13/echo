@@ -46,8 +46,32 @@ export function WaveMixPage() {
     setLocation(`/wave-mix/${playlist.id}`);
   };
 
-  const handleRefresh = () => {
-    loadPlaylists();
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Force refresh - calls backend endpoint to regenerate playlists
+      const response = await fetch('/api/recommendations/wave-mix/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${useAuthStore.getState().accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh playlists');
+      }
+
+      const data = await response.json();
+      console.log('[WaveMix] Playlists refreshed:', data);
+      setPlaylists(data);
+    } catch (err: any) {
+      console.error('[WaveMix] Failed to refresh:', err);
+      setError(err.message || 'Error al actualizar las playlists');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Separate playlists by type
@@ -65,19 +89,21 @@ export function WaveMixPage() {
         <div className={styles.waveMixPage__content}>
           {/* Hero Section */}
           <div className={styles.waveMixPage__hero}>
-            <h1 className={styles.waveMixPage__heroTitle}>Wave Mix</h1>
-            <p className={styles.waveMixPage__heroDescription}>
-              Recomendaciones personalizadas para {user?.name || user?.username || 'ti'}
-            </p>
-            <Button
-              variant="secondary"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className={styles.waveMixPage__refreshButton}
-            >
-              <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
-              {isLoading ? 'Actualizando...' : 'Actualizar'}
-            </Button>
+            <div className={styles.waveMixPage__heroContent}>
+              <h1 className={styles.waveMixPage__heroTitle}>Wave Mix</h1>
+              <p className={styles.waveMixPage__heroDescription}>
+                Recomendaciones personalizadas para {user?.name || user?.username || 'ti'}
+              </p>
+              <Button
+                variant="secondary"
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className={styles.waveMixPage__refreshButton}
+              >
+                <RefreshCw size={18} className={isLoading ? styles.spinning : ''} />
+                {isLoading ? 'Actualizando...' : 'Actualizar'}
+              </Button>
+            </div>
           </div>
 
           {/* Loading State */}
@@ -155,6 +181,14 @@ export function WaveMixPage() {
               {artistPlaylists.length > 0 && (
                 <div className={styles.waveMixPage__section}>
                   <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Artista</h2>
+                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
+                    <button
+                      onClick={() => setLocation('/artist-playlists')}
+                      className={styles.waveMixPage__viewAllButton}
+                    >
+                      Ver todas →
+                    </button>
+                  </div>
                   <div className={styles.waveMixPage__grid}>
                     {artistPlaylists.map((playlist) => (
                       <div
@@ -182,15 +216,6 @@ export function WaveMixPage() {
                       </div>
                     ))}
                   </div>
-                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setLocation('/artist-playlists')}
-                      className={styles.waveMixPage__viewAllButton}
-                    >
-                      Ver todas →
-                    </Button>
-                  </div>
                 </div>
               )}
 
@@ -198,6 +223,14 @@ export function WaveMixPage() {
               {genrePlaylists.length > 0 && (
                 <div className={styles.waveMixPage__section}>
                   <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Género</h2>
+                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
+                    <button
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      className={styles.waveMixPage__viewAllButton}
+                    >
+                      Ver todas las playlists →
+                    </button>
+                  </div>
                   <div className={styles.waveMixPage__grid}>
                     {genrePlaylists.map((playlist) => (
                       <div
@@ -223,15 +256,6 @@ export function WaveMixPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                      className={styles.waveMixPage__viewAllButton}
-                    >
-                      Ver todas las playlists →
-                    </Button>
                   </div>
                 </div>
               )}
