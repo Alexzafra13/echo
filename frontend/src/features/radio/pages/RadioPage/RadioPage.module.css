@@ -83,14 +83,26 @@
   margin-bottom: var(--space-10);
 }
 
-/* Grid wrapper */
+/* Grid wrapper - maintain pagination position */
 .radioPage__gridWrapper {
-  /* Simple container, no complex flexbox */
+  min-height: calc(100vh - 350px); /* Keep pagination at bottom even with less content */
+  display: flex;
+  flex-direction: column;
+}
+
+.radioPage__gridWrapper > :first-child {
+  flex: 0 0 auto; /* Don't grow or shrink */
 }
 
 /* Pagination spacing */
 .radioPage__gridWrapper > :global(.pagination) {
-  margin-top: 48px; /* Simple fixed spacing */
+  margin-top: auto; /* Push to bottom */
+  padding-top: 48px;
+}
+
+/* Top pagination - only visible on mobile */
+.radioPage__paginationTop {
+  display: none;
 }
 
 .radioPage__title {
@@ -186,9 +198,25 @@
     max-width: 100%;
   }
 
-  /* Adjust spacing on mobile */
+  /* Remove min-height on mobile for natural content flow */
+  .radioPage__gridWrapper {
+    min-height: 0;
+  }
+
+  /* Hide bottom pagination on mobile */
   .radioPage__gridWrapper > :global(.pagination) {
-    margin-top: 32px; /* Reduced spacing on mobile */
+    display: none;
+  }
+
+  /* Show top pagination on mobile */
+  .radioPage__paginationTop {
+    display: block;
+    margin-bottom: 24px;
+    margin-top: 16px;
+  }
+
+  .radioPage__title {
+    margin-bottom: 0; /* Reduced since pagination is below */
   }
 
   .radioPage__topBar {

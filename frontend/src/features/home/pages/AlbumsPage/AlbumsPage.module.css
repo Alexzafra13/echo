@@ -153,13 +153,24 @@
     padding: 100px 20px 180px; /* Top para header + bottom para player + nav */
   }
 
-  /* Adjust spacing on mobile */
+  /* Remove min-height on mobile for natural content flow */
+  .albumsPage__gridWrapper {
+    min-height: 0;
+  }
+
+  /* Hide bottom pagination on mobile */
   .albumsPage__gridWrapper > :global(.pagination) {
-    margin-top: 32px; /* Reduced spacing on mobile */
+    display: none;
+  }
+
+  /* Show top pagination on mobile */
+  .albumsPage__paginationTop {
+    display: block;
+    margin-bottom: 24px;
   }
 
   .albumsPage__pageHeader {
-    margin-bottom: 32px;
+    margin-bottom: 16px; /* Reduced since pagination is below */
   }
 
   .albumsPage__title {
