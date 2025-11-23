@@ -4,6 +4,7 @@
   display: flex;
   min-height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
+  background-image: var(--gradient-textured);
 }
 
 .artistDetailPage__main {
@@ -468,4 +469,17 @@
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
   object-fit: contain;
+}
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .artistDetailPage__biographyText__collapsed::after {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(229, 231, 235, 0.9) 70%
+  );
+}
+
+:root[data-theme="light"] .artistDetailPage__imageModal {
+  background: rgba(229, 231, 235, 0.95);
 }
