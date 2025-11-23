@@ -100,49 +100,6 @@
   margin-top: 8px;
 }
 
-/* Pagination */
-.albumsPage__pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 48px;
-  padding: 24px 0;
-}
-
-.albumsPage__pageButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  color: var(--color-text-primary, #ffffff);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.albumsPage__pageButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.albumsPage__pageButton:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.albumsPage__pageInfo {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-secondary, #b8bcc8);
-  padding: 0 16px;
-}
-
 /* ===== Responsive Design ===== */
 
 /* Tablet */
@@ -185,22 +142,6 @@
   .albumsPage__subtitle {
     font-size: 14px;
   }
-
-  .albumsPage__pagination {
-    gap: 16px;
-    margin-top: 32px;
-  }
-
-  .albumsPage__pageButton {
-    padding: 10px 16px;
-    font-size: 13px;
-    border-radius: 16px; /* Menos redondeado */
-  }
-
-  .albumsPage__pageInfo {
-    font-size: 13px;
-    padding: 0 8px;
-  }
 }
 
 /* Small Mobile */
@@ -224,30 +165,6 @@
 
   .albumsPage__subtitle {
     font-size: 13px;
-  }
-
-  .albumsPage__pagination {
-    gap: 12px;
-    margin-top: 24px;
-    flex-wrap: wrap;
-  }
-
-  .albumsPage__pageButton span {
-    display: none;
-  }
-
-  .albumsPage__pageButton {
-    padding: 10px;
-    min-width: 40px;
-    justify-content: center;
-    border-radius: 12px; /* Menos redondeado */
-  }
-
-  .albumsPage__pageInfo {
-    flex-basis: 100%;
-    text-align: center;
-    order: -1;
-    margin-bottom: 8px;
   }
 }
 

@@ -14,3 +14,6 @@ export { Portal } from './Portal';
 export { ToastContainer } from './Toast/ToastContainer';
 
 export { CollapsibleInfo } from './CollapsibleInfo';
+
+export { Pagination } from './Pagination';
+export type { PaginationProps } from './Pagination';

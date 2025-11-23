@@ -29,15 +29,19 @@ export class ArtistResponseDto {
   @Expose()
   biography?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'V2 unified profile image URL' })
+  @Expose()
+  profileImageUrl?: string;
+
+  @ApiProperty({ required: false, deprecated: true, description: 'Legacy: use profileImageUrl instead' })
   @Expose()
   smallImageUrl?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, deprecated: true, description: 'Legacy: use profileImageUrl instead' })
   @Expose()
   mediumImageUrl?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, deprecated: true, description: 'Legacy: use profileImageUrl instead' })
   @Expose()
   largeImageUrl?: string;
 
@@ -81,9 +85,13 @@ export class ArtistResponseDto {
     const timestamp = data.externalInfoUpdatedAt || data.updatedAt;
     const versionParam = timestamp ? `?v=${new Date(timestamp).getTime()}` : '';
 
-    dto.smallImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-small${versionParam}` : undefined;
-    dto.mediumImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-medium${versionParam}` : undefined;
-    dto.largeImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile-large${versionParam}` : undefined;
+    // V2 unified profile image (prioritizes: custom > large > medium > small)
+    dto.profileImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile${versionParam}` : undefined;
+
+    // Legacy fields (deprecated but kept for backwards compatibility)
+    dto.smallImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile${versionParam}` : undefined;
+    dto.mediumImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile${versionParam}` : undefined;
+    dto.largeImageUrl = hasAnyProfileImage ? `/api/images/artists/${data.id}/profile${versionParam}` : undefined;
 
     dto.externalUrl = data.externalUrl;
     dto.externalInfoUpdatedAt = data.externalInfoUpdatedAt;
