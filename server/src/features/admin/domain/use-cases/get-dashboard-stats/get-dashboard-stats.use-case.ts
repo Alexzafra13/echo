@@ -178,14 +178,16 @@ export class GetDashboardStatsUseCase {
     const fanartKey = this.config.get<string>('FANART_API_KEY');
 
     // Storage health - check if storage is approaching limits
+    // Only count metadata + avatars (not music files)
     const storageBreakdown = await this.getStorageBreakdown();
-    const maxStorageMB = 500; // Default from settings
+    const maxStorageMB = 5120; // 5GB default limit (configurable in settings)
     const maxStorageBytes = maxStorageMB * 1024 * 1024;
+    const managedStorageBytes = storageBreakdown.metadata + storageBreakdown.avatars; // Exclude music
     let storageHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
 
-    if (storageBreakdown.total > maxStorageBytes * 0.9) {
+    if (managedStorageBytes > maxStorageBytes * 0.9) {
       storageHealth = 'critical';
-    } else if (storageBreakdown.total > maxStorageBytes * 0.75) {
+    } else if (managedStorageBytes > maxStorageBytes * 0.75) {
       storageHealth = 'warning';
     }
 
@@ -335,14 +337,23 @@ export class GetDashboardStatsUseCase {
     ]);
 
     const storageBreakdown = await this.getStorageBreakdown();
-    const maxStorageMB = 500;
+    const maxStorageMB = 5120; // 5GB default limit
     const maxStorageBytes = maxStorageMB * 1024 * 1024;
-    const storageWarning = storageBreakdown.total > maxStorageBytes * 0.75;
+    const managedStorageBytes = storageBreakdown.metadata + storageBreakdown.avatars; // Exclude music
+    const storageWarning = managedStorageBytes > maxStorageBytes * 0.75;
+
+    const currentMB = Math.round(managedStorageBytes / (1024 * 1024));
+    const percentUsed = Math.round((managedStorageBytes / maxStorageBytes) * 100);
 
     return {
       orphanedFiles: orphanedArtistImages + orphanedAlbumCovers,
       pendingConflicts,
       storageWarning,
+      storageDetails: storageWarning ? {
+        currentMB,
+        limitMB: maxStorageMB,
+        percentUsed,
+      } : undefined,
       scanErrors: recentScanErrors,
     };
   }

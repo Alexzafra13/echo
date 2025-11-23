@@ -153,6 +153,17 @@ class ScanStatsDto {
   currentScan!: CurrentScanDto;
 }
 
+class StorageDetailsDto {
+  @ApiProperty({ example: 3840, description: 'Current storage usage in MB' })
+  currentMB!: number;
+
+  @ApiProperty({ example: 5120, description: 'Storage limit in MB' })
+  limitMB!: number;
+
+  @ApiProperty({ example: 75, description: 'Percentage of storage used' })
+  percentUsed!: number;
+}
+
 class ActiveAlertsDto {
   @ApiProperty({ example: 5, description: 'Number of orphaned files' })
   orphanedFiles!: number;
@@ -162,6 +173,9 @@ class ActiveAlertsDto {
 
   @ApiProperty({ example: false, description: 'Storage warning flag' })
   storageWarning!: boolean;
+
+  @ApiProperty({ required: false, description: 'Detailed storage information when warning is active' })
+  storageDetails?: StorageDetailsDto;
 
   @ApiProperty({ example: 0, description: 'Number of recent scan errors' })
   scanErrors!: number;

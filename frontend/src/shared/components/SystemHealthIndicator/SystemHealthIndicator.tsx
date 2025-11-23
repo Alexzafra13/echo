@@ -20,6 +20,11 @@ interface ActiveAlerts {
   orphanedFiles: number;
   pendingConflicts: number;
   storageWarning: boolean;
+  storageDetails?: {
+    currentMB: number;
+    limitMB: number;
+    percentUsed: number;
+  };
   scanErrors: number;
 }
 
@@ -34,6 +39,7 @@ export function SystemHealthIndicator() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [alerts, setAlerts] = useState<ActiveAlerts | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [hideTimeout, setHideTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Solo mostrar para admins
   if (!user?.isAdmin) {
@@ -121,11 +127,28 @@ export function SystemHealthIndicator() {
     }
   };
 
+  const handleMouseEnter = () => {
+    // Clear any pending hide timeout
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      setHideTimeout(null);
+    }
+    setShowTooltip(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Delay hiding to allow moving to tooltip
+    const timeout = setTimeout(() => {
+      setShowTooltip(false);
+    }, 200);
+    setHideTimeout(timeout);
+  };
+
   return (
     <div
       className={styles.container}
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className={styles.indicator} style={{ backgroundColor: getStatusColor() }}>
         <Activity size={12} />
@@ -167,7 +190,7 @@ export function SystemHealthIndicator() {
               </span>
             </div>
 
-            {alerts && (alerts.orphanedFiles > 0 || alerts.pendingConflicts > 0 || alerts.scanErrors > 0) && (
+            {alerts && (alerts.orphanedFiles > 0 || alerts.pendingConflicts > 0 || alerts.storageWarning || alerts.scanErrors > 0) && (
               <>
                 <div className={styles.tooltipDivider} />
                 <div className={styles.tooltipAlerts}>
@@ -179,6 +202,13 @@ export function SystemHealthIndicator() {
                   {alerts.pendingConflicts > 0 && (
                     <div className={styles.tooltipAlert}>
                       • {alerts.pendingConflicts} conflictos pendientes
+                    </div>
+                  )}
+                  {alerts.storageWarning && (
+                    <div className={styles.tooltipAlert}>
+                      • {alerts.storageDetails
+                          ? `Metadata al ${alerts.storageDetails.percentUsed}% (${alerts.storageDetails.currentMB}MB / ${alerts.storageDetails.limitMB}MB)`
+                          : 'Almacenamiento cerca del límite'}
                     </div>
                   )}
                   {alerts.scanErrors > 0 && (
