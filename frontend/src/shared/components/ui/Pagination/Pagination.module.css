@@ -1,0 +1,185 @@
+/* Pagination Component Styles */
+
+.pagination {
+  --pagination-size: 40px;
+  --pagination-inset: 2px;
+  --pagination-radius: 8;
+  --pagination-gap: 4px;
+
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+.pagination__list {
+  display: flex;
+  list-style: none;
+  align-items: center;
+  gap: var(--pagination-gap);
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* Animated indicator background */
+.pagination__list::before {
+  content: '';
+  position: absolute;
+  width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
+  height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: calc(var(--pagination-radius) * 1px);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination__list:hover::before {
+  opacity: 1;
+}
+
+/* Active page indicator */
+.pagination__list::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
+  height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: calc(var(--pagination-radius) * 1px);
+  backdrop-filter: blur(12px);
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.15);
+}
+
+/* Position indicator on current page */
+.pagination[data-ready="true"] .pagination__list::after {
+  left: calc(var(--current-page-offset, 0) * 1px);
+}
+
+/* Pagination Items */
+.pagination__item {
+  width: var(--pagination-size);
+  height: var(--pagination-size);
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Pagination Links/Buttons */
+.pagination__link {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-primary, #ffffff);
+  text-decoration: none;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  position: relative;
+  outline-color: var(--color-primary, #ff6b6b);
+  outline-offset: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: calc(var(--pagination-radius) * 1px);
+  transition: all 0.2s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pagination__link:hover:not(.pagination__link__disabled):not(.pagination__link__current) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-primary, #ff6b6b);
+}
+
+.pagination__link:focus-visible {
+  outline: 2px solid var(--color-primary, #ff6b6b);
+}
+
+/* Current page */
+.pagination__link__current {
+  color: var(--color-primary, #ff6b6b);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Arrow buttons */
+.pagination__link__arrow {
+  font-weight: 600;
+}
+
+/* Disabled state */
+.pagination__link__disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Ellipsis */
+.pagination__gap {
+  pointer-events: none;
+}
+
+.pagination__link__gap {
+  color: var(--color-text-tertiary, #6b7280);
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pagination {
+    --pagination-size: 36px;
+  }
+
+  .pagination__link {
+    font-size: 13px;
+  }
+
+  /* On mobile, hide some middle pages to save space */
+  .pagination__item:nth-child(n+4):nth-last-child(n+4):not(.pagination__gap) {
+    display: none;
+  }
+
+  .pagination__item:nth-child(n+4):nth-last-child(n+4).pagination__gap {
+    display: grid;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination {
+    --pagination-size: 32px;
+    --pagination-gap: 2px;
+  }
+
+  .pagination__link {
+    font-size: 12px;
+  }
+}
+
+/* Animations */
+@media (prefers-reduced-motion: no-preference) {
+  .pagination__list::before,
+  .pagination__list::after {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .pagination__link {
+    transition: all 0.2s ease-out;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .pagination__link:hover:not(.pagination__link__disabled):not(.pagination__link__current) {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
