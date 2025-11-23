@@ -300,6 +300,8 @@ export default function HomePage() {
               <AlbumGrid
                 title="Recientemente Añadidos"
                 albums={displayedRecentAlbums}
+                showViewAll={true}
+                viewAllPath="/albums"
               />
               {/* Wave Mix recommendations */}
               {homePagePlaylists.length > 0 && (
