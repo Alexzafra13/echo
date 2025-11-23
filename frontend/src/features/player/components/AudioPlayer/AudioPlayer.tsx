@@ -25,6 +25,7 @@ export function AudioPlayer() {
     repeatMode,
     queue,
     radioMetadata,
+    radioSignalStatus,
     togglePlayPause,
     playNext,
     playPrevious,
@@ -242,11 +243,21 @@ export function AudioPlayer() {
 
       {/* Volume control - Right side */}
       <div className={styles.volumeControl}>
-        {/* Indicador EN VIVO para radio - al lado del volumen */}
+        {/* Indicador EN VIVO para radio con estado de señal */}
         {isRadioMode && (
-          <div className={styles.liveIndicator}>
+          <div className={`${styles.liveIndicator} ${
+            radioSignalStatus === 'good' ? styles['liveIndicator--good'] :
+            radioSignalStatus === 'weak' ? styles['liveIndicator--weak'] :
+            radioSignalStatus === 'error' ? styles['liveIndicator--error'] :
+            ''
+          }`}>
             <Radio size={16} className={styles.liveAntenna} />
-            <span className={styles.liveText}>EN VIVO</span>
+            <span className={styles.liveText}>
+              {radioSignalStatus === 'good' ? 'EN VIVO' :
+               radioSignalStatus === 'weak' ? 'SEÑAL DÉBIL' :
+               radioSignalStatus === 'error' ? 'SIN SEÑAL' :
+               'EN VIVO'}
+            </span>
           </div>
         )}
 

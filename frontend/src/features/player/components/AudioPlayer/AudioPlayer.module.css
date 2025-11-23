@@ -488,18 +488,51 @@
   white-space: nowrap;
 }
 
-.liveAntenna {
+/* Signal status variants */
+.liveIndicator--good {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.liveIndicator--good .liveAntenna {
   color: #22c55e; /* Verde - buena señal */
   animation: pulse-antenna 2s ease-in-out infinite;
-  flex-shrink: 0;
 }
 
-.liveAntenna.warning {
-  color: #eab308; /* Amarillo - señal media */
+.liveIndicator--good .liveText {
+  color: #22c55e;
 }
 
-.liveAntenna.error {
+.liveIndicator--weak {
+  background: rgba(234, 179, 8, 0.08);
+  border-color: rgba(234, 179, 8, 0.2);
+}
+
+.liveIndicator--weak .liveAntenna {
+  color: #eab308; /* Amarillo - señal débil */
+  animation: pulse-weak 1.5s ease-in-out infinite;
+}
+
+.liveIndicator--weak .liveText {
+  color: #eab308;
+}
+
+.liveIndicator--error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.liveIndicator--error .liveAntenna {
   color: #ef4444; /* Rojo - sin señal */
+  animation: none;
+}
+
+.liveIndicator--error .liveText {
+  color: #ef4444;
+}
+
+.liveAntenna {
+  flex-shrink: 0;
 }
 
 .liveText {
@@ -524,6 +557,15 @@
   }
   50% {
     opacity: 0.3;
+  }
+}
+
+@keyframes pulse-weak {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 

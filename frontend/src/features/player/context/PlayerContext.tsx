@@ -37,6 +37,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     currentRadioStation: null,
     isRadioMode: false,
     radioMetadata: null,
+    radioSignalStatus: null,
   });
 
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
@@ -204,16 +205,58 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setState(prev => ({ ...prev, isPlaying: false }));
     };
 
+    // Radio signal status handlers
+    const handlePlaying = () => {
+      setState(prev => ({
+        ...prev,
+        isPlaying: true,
+        // Only update signal status if in radio mode
+        radioSignalStatus: prev.isRadioMode ? 'good' : prev.radioSignalStatus
+      }));
+    };
+
+    const handleWaiting = () => {
+      setState(prev => ({
+        ...prev,
+        // Only update signal status if in radio mode
+        radioSignalStatus: prev.isRadioMode ? 'weak' : prev.radioSignalStatus
+      }));
+    };
+
+    const handleStalled = () => {
+      setState(prev => ({
+        ...prev,
+        // Only update signal status if in radio mode
+        radioSignalStatus: prev.isRadioMode ? 'weak' : prev.radioSignalStatus
+      }));
+    };
+
+    const handleError = () => {
+      setState(prev => ({
+        ...prev,
+        // Only update signal status if in radio mode
+        radioSignalStatus: prev.isRadioMode ? 'error' : prev.radioSignalStatus
+      }));
+    };
+
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
+    audio.addEventListener('playing', handlePlaying); // Stream is playing
+    audio.addEventListener('waiting', handleWaiting); // Buffering
+    audio.addEventListener('stalled', handleStalled); // Network stalled
+    audio.addEventListener('error', handleError); // Load/playback error
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('stalled', handleStalled);
+      audio.removeEventListener('error', handleError);
       audio.pause();
     };
   }, []);
@@ -252,6 +295,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         // Clear radio state when playing a track
         currentRadioStation: null,
         isRadioMode: false,
+        radioSignalStatus: null, // Clear signal status when exiting radio mode
       }));
 
       // Start new play session for tracking
@@ -424,6 +468,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       currentRadioStation: station,
       isRadioMode: true,
       isPlaying: true,
+      radioSignalStatus: 'good', // Initialize signal status (will update based on events)
       // Clear track state when playing radio
       currentTrack: null,
       queue: [],
