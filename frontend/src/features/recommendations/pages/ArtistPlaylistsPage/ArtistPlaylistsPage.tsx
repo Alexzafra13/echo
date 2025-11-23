@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { RefreshCw, Sparkles, Search, X, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Sparkles, Search, X, ArrowLeft, Mic2 } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
@@ -26,7 +26,6 @@ export function ArtistPlaylistsPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
   const ITEMS_PER_PAGE = 12;
 
   const loadPlaylists = async (page: number) => {
@@ -39,7 +38,6 @@ export function ArtistPlaylistsPage() {
       setPlaylists(data.playlists);
       setAllPlaylists(data.playlists);
       setTotal(data.total);
-      setHasMore(data.hasMore);
       setCurrentPage(page);
     } catch (err: any) {
       console.error('[ArtistPlaylists] Failed to load:', err);
