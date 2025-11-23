@@ -1,0 +1,202 @@
+/* EditPlaylistModal Styles */
+
+.editPlaylistModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.editPlaylistModal__content {
+  background: var(--color-bg-secondary, #1e293b);
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.editPlaylistModal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.editPlaylistModal__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+}
+
+.editPlaylistModal__closeButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #b8bcc8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editPlaylistModal__closeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary, #ffffff);
+}
+
+/* Form */
+.editPlaylistModal__form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.editPlaylistModal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editPlaylistModal__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.editPlaylistModal__input,
+.editPlaylistModal__textarea {
+  padding: 14px 16px;
+  background: var(--color-bg-base, #0f1218);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--color-text-primary, #ffffff);
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.editPlaylistModal__input:focus,
+.editPlaylistModal__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #ed6842);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.editPlaylistModal__input::placeholder,
+.editPlaylistModal__textarea::placeholder {
+  color: var(--color-text-tertiary, #6b7280);
+}
+
+.editPlaylistModal__input:disabled,
+.editPlaylistModal__textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.editPlaylistModal__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.editPlaylistModal__error {
+  color: #ef4444;
+  font-size: 13px;
+  margin: 4px 0 0 0;
+}
+
+/* Checkbox Field */
+.editPlaylistModal__checkboxField {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.editPlaylistModal__checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--color-text-primary, #ffffff);
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.editPlaylistModal__checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-primary, #ed6842);
+}
+
+.editPlaylistModal__checkbox:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Actions */
+.editPlaylistModal__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.editPlaylistModal__actions button {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .editPlaylistModal {
+    padding: 16px;
+  }
+
+  .editPlaylistModal__content {
+    max-width: 100%;
+  }
+
+  .editPlaylistModal__header {
+    padding: 20px 20px 16px;
+  }
+
+  .editPlaylistModal__title {
+    font-size: 18px;
+  }
+
+  .editPlaylistModal__form {
+    padding: 20px;
+  }
+}

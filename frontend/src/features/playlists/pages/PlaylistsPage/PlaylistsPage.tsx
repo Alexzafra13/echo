@@ -4,8 +4,9 @@ import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
-import { usePlaylists, useDeletePlaylist, useCreatePlaylist } from '../../hooks/usePlaylists';
-import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal } from '../../components';
+import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist } from '../../hooks/usePlaylists';
+import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
+import { Playlist, UpdatePlaylistDto } from '../../types';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -17,10 +18,12 @@ export default function PlaylistsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deletePlaylistId, setDeletePlaylistId] = useState<string | null>(null);
   const [deletePlaylistName, setDeletePlaylistName] = useState('');
+  const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
 
   const { data: playlistsData, isLoading } = usePlaylists();
   const createPlaylistMutation = useCreatePlaylist();
   const deletePlaylistMutation = useDeletePlaylist();
+  const updatePlaylistMutation = useUpdatePlaylist();
 
   const playlists = playlistsData?.items || [];
 
@@ -50,6 +53,10 @@ export default function PlaylistsPage() {
   const handleDeleteCancel = () => {
     setDeletePlaylistId(null);
     setDeletePlaylistName('');
+  };
+
+  const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
+    await updatePlaylistMutation.mutateAsync({ id, data });
   };
 
   const formatDuration = (seconds: number): string => {
@@ -138,8 +145,7 @@ export default function PlaylistsPage() {
                       className={styles.playlistCard__actionButton}
                       onClick={(e) => {
                         e.stopPropagation();
-                        // TODO: Implement edit
-                        console.log('Edit playlist:', playlist.id);
+                        setEditPlaylist(playlist);
                       }}
                       title="Editar playlist"
                     >
@@ -180,6 +186,16 @@ export default function PlaylistsPage() {
           onClose={handleDeleteCancel}
           onConfirm={handleDeleteConfirm}
           isLoading={deletePlaylistMutation.isPending}
+        />
+      )}
+
+      {/* Edit Playlist Modal */}
+      {editPlaylist && (
+        <EditPlaylistModal
+          playlist={editPlaylist}
+          onClose={() => setEditPlaylist(null)}
+          onSubmit={handleUpdatePlaylist}
+          isLoading={updatePlaylistMutation.isPending}
         />
       )}
     </div>
