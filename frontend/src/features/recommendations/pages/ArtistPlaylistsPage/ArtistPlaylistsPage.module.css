@@ -27,24 +27,78 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Search Form (in Header) */
+.artistPlaylistsPage__searchForm {
+  flex: 1;
+  max-width: 600px;
+}
+
+.artistPlaylistsPage__searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.artistPlaylistsPage__searchIcon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.artistPlaylistsPage__searchInput {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 3rem;
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  background: rgba(var(--surface-rgb), 0.5);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.artistPlaylistsPage__searchInput:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background: var(--surface-primary);
+}
+
+.artistPlaylistsPage__searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.artistPlaylistsPage__searchClearButton {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.artistPlaylistsPage__searchClearButton:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
 /* Hero Section */
 .artistPlaylistsPage__hero {
   margin-bottom: 3rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-tertiary) 100%);
-  border-radius: 1rem;
-  border: 1px solid var(--border-color);
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .artistPlaylistsPage__heroContent {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.artistPlaylistsPage__heroHeader {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.5rem;
 }
 
@@ -61,7 +115,7 @@
 }
 
 .artistPlaylistsPage__heroTitle {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 0.5rem 0;
@@ -77,33 +131,6 @@
   font-size: 0.875rem;
   color: var(--text-tertiary);
   margin: 0.5rem 0 0 0;
-}
-
-.artistPlaylistsPage__heroActions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.artistPlaylistsPage__searchInput {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  background: var(--background-primary);
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.artistPlaylistsPage__searchInput:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
-}
-
-.artistPlaylistsPage__searchInput::placeholder {
-  color: var(--text-tertiary);
 }
 
 .artistPlaylistsPage__refreshButton {
