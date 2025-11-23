@@ -307,7 +307,7 @@ export class ExternalMetadataService {
               status: 'success',
               fieldsUpdated: Object.keys(updateData).filter(key => key.includes('Url') || key === 'metadataStorageSize'),
               processingTime: Date.now() - startTime,
-              previewUrl: `/api/images/artists/${artistId}/profile-small`,
+              previewUrl: `/api/images/artists/${artistId}/profile`,
             });
           }
         }
