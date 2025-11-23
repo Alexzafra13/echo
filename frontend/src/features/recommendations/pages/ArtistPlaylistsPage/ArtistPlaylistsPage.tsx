@@ -131,6 +131,18 @@ export function ArtistPlaylistsPage() {
             </div>
           )}
 
+          {/* Top Pagination - Mobile Only */}
+          {!isLoading && !error && playlists.length > 0 && totalPages > 1 && (
+            <div className={styles.artistPlaylistsPage__paginationTop}>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
           {/* Playlists Grid */}
           {!isLoading && !error && playlists.length > 0 && (
             <div className={styles.artistPlaylistsPage__gridWrapper}>

@@ -88,6 +88,18 @@ export default function AlbumsPage() {
             </p>
           </div>
 
+          {/* Top Pagination - Mobile Only */}
+          {!isLoading && !error && filteredAlbums && filteredAlbums.length > 0 && totalPages > 1 && (
+            <div className={styles.albumsPage__paginationTop}>
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
           {/* Albums Grid */}
           {isLoading ? (
             <div className={styles.albumsPage__loadingState}>

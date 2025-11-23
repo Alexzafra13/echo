@@ -71,14 +71,26 @@
   gap: 0.5rem;
 }
 
-/* Grid wrapper */
+/* Grid wrapper - maintain pagination position */
 .artistPlaylistsPage__gridWrapper {
-  /* Simple container, no complex flexbox */
+  min-height: calc(100vh - 400px); /* Keep pagination at bottom even with less content */
+  display: flex;
+  flex-direction: column;
+}
+
+.artistPlaylistsPage__gridWrapper > :first-child {
+  flex: 0 0 auto; /* Don't grow or shrink */
 }
 
 /* Pagination spacing */
 .artistPlaylistsPage__gridWrapper > :global(.pagination) {
-  margin-top: 48px; /* Simple fixed spacing */
+  margin-top: auto; /* Push to bottom */
+  padding-top: 48px;
+}
+
+/* Top pagination - only visible on mobile */
+.artistPlaylistsPage__paginationTop {
+  display: none;
 }
 
 /* Grid */
@@ -203,9 +215,21 @@
     padding: 100px 20px 180px; /* Top para header + bottom para player y nav */
   }
 
-  /* Adjust spacing on mobile */
+  /* Remove min-height on mobile for natural content flow */
+  .artistPlaylistsPage__gridWrapper {
+    min-height: 0;
+  }
+
+  /* Hide bottom pagination on mobile */
   .artistPlaylistsPage__gridWrapper > :global(.pagination) {
-    margin-top: 32px; /* Reduced spacing on mobile */
+    display: none;
+  }
+
+  /* Show top pagination on mobile */
+  .artistPlaylistsPage__paginationTop {
+    display: block;
+    margin-bottom: 24px;
+    margin-top: 16px;
   }
 
   .artistPlaylistsPage__hero {
