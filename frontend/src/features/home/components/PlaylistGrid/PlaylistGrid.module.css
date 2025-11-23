@@ -1,0 +1,116 @@
+.playlistGrid {
+  margin-bottom: 3rem;
+}
+
+.playlistGrid__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.playlistGrid__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.playlistGrid__viewAllButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.playlistGrid__viewAllButton:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.playlistGrid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Playlist Card */
+.playlistCard {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: background-color 0.2s ease;
+  background-color: var(--surface-secondary);
+}
+
+.playlistCard:hover {
+  background-color: var(--surface-hover);
+}
+
+.playlistCard__info {
+  margin-top: 1rem;
+}
+
+.playlistCard__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  min-height: 2.6em;
+}
+
+.playlistCard__description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.playlistCard__meta {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .playlistGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .playlistGrid__title {
+    font-size: 1.5rem;
+  }
+
+  .playlistGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .playlistCard {
+    padding: 0.75rem;
+  }
+}
