@@ -30,22 +30,25 @@ export function Pagination({
 
     const currentButton = listRef.current.querySelector(`[aria-current="page"]`) as HTMLElement;
     if (currentButton) {
-      // Get the button's offset relative to the list, accounting for scroll
       const buttonOffsetLeft = currentButton.offsetLeft;
 
+      // En desktop, actualizar posición del indicador
       listRef.current.style.setProperty('--current-page-offset', buttonOffsetLeft.toString());
 
-      // Auto-scroll to center the current page button on mobile
+      // En mobile, centrar el botón actual (el indicador ya está centrado en CSS)
       const isMobile = window.innerWidth <= 768;
       if (isMobile) {
-        const listWidth = listRef.current.offsetWidth;
-        const buttonWidth = currentButton.offsetWidth;
-        const scrollPosition = buttonOffsetLeft - (listWidth / 2) + (buttonWidth / 2);
+        const paginationContainer = listRef.current.parentElement;
+        if (paginationContainer) {
+          const containerWidth = paginationContainer.offsetWidth;
+          const buttonWidth = currentButton.offsetWidth;
+          const scrollPosition = buttonOffsetLeft - (containerWidth / 2) + (buttonWidth / 2);
 
-        listRef.current.scrollTo({
-          left: Math.max(0, scrollPosition),
-          behavior: 'smooth'
-        });
+          paginationContainer.scrollTo({
+            left: Math.max(0, scrollPosition),
+            behavior: 'smooth'
+          });
+        }
       }
     }
   }, [currentPage]);

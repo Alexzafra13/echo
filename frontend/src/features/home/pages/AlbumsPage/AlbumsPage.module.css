@@ -100,17 +100,14 @@
   margin-top: 8px;
 }
 
-/* Grid wrapper - simple approach to maintain pagination position */
+/* Grid wrapper */
 .albumsPage__gridWrapper {
-  min-height: calc(100vh - 400px); /* Reserve space to keep pagination at consistent position */
-  display: flex;
-  flex-direction: column;
+  /* El min-height está en AlbumGrid.module.css para consistencia */
 }
 
-/* Pagination spacing - push to bottom */
+/* Pagination spacing */
 .albumsPage__gridWrapper > :global(.pagination) {
-  margin-top: auto;
-  padding-top: 48px;
+  margin-top: 48px;
 }
 
 /* Top pagination - only visible on mobile */
