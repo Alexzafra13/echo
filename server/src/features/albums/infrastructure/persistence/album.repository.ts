@@ -122,18 +122,18 @@ export class PrismaAlbumRepository implements IAlbumRepository {
   }
 
   /**
-   * Obtiene álbumes más reproducidos basado en PlayStats
-   * Usa datos reales de reproducción del usuario
+   * Obtiene álbumes más reproducidos basado en UserPlayStats
+   * Usa datos reales de reproducción agregados por usuario
    */
   async findMostPlayed(take: number): Promise<Album[]> {
-    // Get album IDs ordered by play count from PlayStats
-    const topAlbumIds = await this.prisma.$queryRaw<{ albumId: string; playCount: bigint }[]>`
-      SELECT t."albumId", COUNT(ps.id) as "playCount"
-      FROM play_stats ps
-      INNER JOIN tracks t ON ps."trackId" = t.id
-      WHERE t."albumId" IS NOT NULL
-      GROUP BY t."albumId"
-      ORDER BY "playCount" DESC
+    // Get album IDs ordered by total play count from UserPlayStats
+    // Aggregate all users' play counts for each album
+    const topAlbumIds = await this.prisma.$queryRaw<{ albumId: string; totalPlayCount: bigint }[]>`
+      SELECT item_id as "albumId", SUM(play_count) as "totalPlayCount"
+      FROM user_play_stats
+      WHERE item_type = 'album'
+      GROUP BY item_id
+      ORDER BY "totalPlayCount" DESC
       LIMIT ${take}
     `;
 
