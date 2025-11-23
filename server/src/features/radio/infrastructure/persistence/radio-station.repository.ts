@@ -17,10 +17,18 @@ export class PrismaRadioStationRepository implements IRadioStationRepository {
   async save(station: RadioStation): Promise<RadioStation> {
     const data = RadioStationMapper.toPersistence(station);
 
+    // Separate userId from data for proper Prisma relation handling
+    const { userId, ...stationData } = data;
+
     const savedStation = await this.prisma.radioStation.upsert({
       where: { id: data.id },
-      create: data,
-      update: data,
+      create: {
+        ...stationData,
+        user: {
+          connect: { id: userId },
+        },
+      },
+      update: stationData,
     });
 
     return RadioStationMapper.toDomain(savedStation);
