@@ -305,13 +305,13 @@
 
 /* ===== Light Theme ===== */
 :root[data-theme="light"] {
-  /* Background Colors - Tonos cálidos suaves, más agradables */
-  --bg-base: #fafaf9; /* Warm white - más cálido y suave que blanco puro */
-  --bg-elevated: #f5f5f4; /* Stone 100 - gris cálido muy claro */
-  --bg-surface: #e7e5e4; /* Stone 200 - gris cálido claro */
-  --bg-overlay: rgba(250, 250, 249, 0.95);
-  --bg-card: rgba(245, 245, 244, 0.85);
-  --bg-card-hover: rgba(231, 229, 228, 0.95);
+  /* Background Colors - Tonos crema/beige cálidos, mucho más agradables a la vista */
+  --bg-base: #f8f6f3; /* Warm cream - base cálida y suave */
+  --bg-elevated: #f0ede7; /* Light latte - beige claro elegante */
+  --bg-surface: #e8e3dc; /* Soft beige - beige presente pero suave */
+  --bg-overlay: rgba(248, 246, 243, 0.95);
+  --bg-card: rgba(240, 237, 231, 0.85);
+  --bg-card-hover: rgba(232, 227, 220, 0.95);
 
   /* Text Colors - Más suaves que negro puro */
   --text-primary: #292524; /* Stone 900 - casi negro pero más suave */
@@ -321,9 +321,9 @@
   --text-on-primary: #ffffff;
   --text-on-secondary: #fafaf9;
 
-  /* Border Colors - Coherentes con backgrounds */
-  --border-base: #e7e5e4; /* Stone 200 */
-  --border-subtle: #f5f5f4; /* Stone 100 */
+  /* Border Colors - Coherentes con backgrounds cálidos */
+  --border-base: #e8e3dc; /* Soft beige - coherente con surface */
+  --border-subtle: #f0ede7; /* Light latte - coherente con elevated */
   --border-focus: var(--color-primary-500);
   --border-error: var(--color-error);
 
@@ -343,105 +343,105 @@
   /* Gradients - Tonos cálidos coherentes */
   --gradient-primary: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
   --gradient-secondary: linear-gradient(135deg, var(--color-secondary-400) 0%, var(--color-secondary-600) 100%);
-  --gradient-dark: linear-gradient(180deg, #fafaf9 0%, #f5f5f4 100%);
-  --gradient-overlay: linear-gradient(180deg, transparent 0%, rgba(250, 250, 249, 0.85) 100%);
+  --gradient-dark: linear-gradient(180deg, #f8f6f3 0%, #f0ede7 100%);
+  --gradient-overlay: linear-gradient(180deg, transparent 0%, rgba(248, 246, 243, 0.85) 100%);
 
-  /* Hero/Banner Gradients - Más suaves */
+  /* Hero/Banner Gradients - Cálidos y suaves */
   --gradient-hero: linear-gradient(
     135deg,
-    #f5f5f4 0%,
-    #fafaf9 50%,
-    #f5f5f4 100%
+    #f0ede7 0%,
+    #f8f6f3 50%,
+    #f0ede7 100%
   );
 
   /* Radial Background Gradients - App Background (Light Theme) */
-  /* Organic gradient: subtle color accents on light background */
+  /* Organic gradient: más presencia visual con tonos cálidos */
   --gradient-radial-organic: radial-gradient(
     ellipse 1000px 700px at 90% 15%,
-    rgba(237, 104, 66, 0.04) 0%,
+    rgba(237, 104, 66, 0.07) 0%,
     transparent 45%
   ),
   radial-gradient(
     ellipse 900px 600px at 10% 85%,
-    rgba(34, 211, 238, 0.045) 0%,
+    rgba(34, 211, 238, 0.08) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse 1200px 900px at 60% 50%,
-    rgba(34, 211, 238, 0.015) 0%,
+    rgba(34, 211, 238, 0.03) 0%,
     transparent 60%
   ),
   radial-gradient(
     ellipse 800px 500px at 25% 30%,
-    rgba(237, 104, 66, 0.02) 0%,
+    rgba(237, 104, 66, 0.04) 0%,
     transparent 55%
   ),
   linear-gradient(
     180deg,
-    #f5f5f4 0%,
-    #fafaf9 50%,
-    #ffffff 100%
+    #f0ede7 0%,
+    #f8f6f3 40%,
+    #ebe7e0 100%
   );
 
   /* Warm variant: more coral emphasis */
   --gradient-radial-warm: radial-gradient(
     ellipse 1100px 800px at 80% 20%,
-    rgba(237, 104, 66, 0.06) 0%,
+    rgba(237, 104, 66, 0.1) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse 900px 600px at 20% 80%,
-    rgba(34, 211, 238, 0.03) 0%,
+    rgba(34, 211, 238, 0.05) 0%,
     transparent 50%
   ),
   linear-gradient(
     180deg,
-    #f5f5f4 0%,
-    #fafaf9 50%,
-    #ffffff 100%
+    #f0ede7 0%,
+    #f8f6f3 50%,
+    #ebe7e0 100%
   );
 
   /* Cool variant: more cyan emphasis */
   --gradient-radial-cool: radial-gradient(
     ellipse 1000px 700px at 15% 20%,
-    rgba(34, 211, 238, 0.06) 0%,
+    rgba(34, 211, 238, 0.1) 0%,
     transparent 50%
   ),
   radial-gradient(
     ellipse 950px 650px at 85% 80%,
-    rgba(237, 104, 66, 0.03) 0%,
+    rgba(237, 104, 66, 0.05) 0%,
     transparent 50%
   ),
   linear-gradient(
     180deg,
-    #f5f5f4 0%,
-    #fafaf9 50%,
-    #ffffff 100%
+    #f0ede7 0%,
+    #f8f6f3 50%,
+    #ebe7e0 100%
   );
 
   /* Default App Background Gradient */
   --gradient-app-background: var(--gradient-radial-organic);
 
-  /* Textured gradient for light theme - Stone tones with subtle accents */
-  --gradient-textured: linear-gradient(116deg, rgba(214, 211, 209, 0.04) 0%, rgba(214, 211, 209, 0.04) 10%, rgba(245, 245, 244, 0.03) 10%, rgba(245, 245, 244, 0.03) 66%, rgba(231, 229, 228, 0.03) 66%, rgba(231, 229, 228, 0.03) 72%, rgba(214, 211, 209, 0.03) 72%, rgba(214, 211, 209, 0.03) 81%, rgba(168, 162, 158, 0.02) 81%, rgba(168, 162, 158, 0.02) 100%), linear-gradient(109deg, rgba(120, 113, 108, 0.03) 0%, rgba(120, 113, 108, 0.03) 23%, rgba(231, 229, 228, 0.04) 23%, rgba(231, 229, 228, 0.04) 63%, rgba(214, 211, 209, 0.03) 63%, rgba(214, 211, 209, 0.03) 73%, rgba(168, 162, 158, 0.03) 73%, rgba(168, 162, 158, 0.03) 84%, rgba(231, 229, 228, 0.03) 84%, rgba(231, 229, 228, 0.03) 100%), linear-gradient(79deg, rgba(87, 83, 78, 0.02) 0%, rgba(87, 83, 78, 0.02) 27%, rgba(168, 162, 158, 0.03) 27%, rgba(168, 162, 158, 0.03) 33%, rgba(34, 211, 238, 0.015) 33%, rgba(34, 211, 238, 0.015) 34%, rgba(214, 211, 209, 0.03) 34%, rgba(214, 211, 209, 0.03) 63%, rgba(120, 113, 108, 0.03) 63%, rgba(120, 113, 108, 0.03) 100%), linear-gradient(109deg, rgba(231, 229, 228, 0.03) 0%, rgba(231, 229, 228, 0.03) 3%, rgba(214, 211, 209, 0.03) 3%, rgba(214, 211, 209, 0.03) 40%, rgba(245, 245, 244, 0.03) 40%, rgba(245, 245, 244, 0.03) 55%, rgba(250, 250, 249, 0.03) 55%, rgba(250, 250, 249, 0.03) 73%, rgba(34, 211, 238, 0.01) 73%, rgba(34, 211, 238, 0.01) 100%), linear-gradient(271deg, rgba(214, 211, 209, 0.03) 0%, rgba(214, 211, 209, 0.03) 11%, rgba(168, 162, 158, 0.03) 11%, rgba(168, 162, 158, 0.03) 23%, rgba(231, 229, 228, 0.02) 23%, rgba(231, 229, 228, 0.02) 72%, rgba(120, 113, 108, 0.03) 72%, rgba(120, 113, 108, 0.03) 86%, rgba(214, 211, 209, 0.03) 86%, rgba(214, 211, 209, 0.03) 100%), linear-gradient(90deg, rgb(250, 250, 249), rgb(245, 245, 244));
+  /* Textured gradient for light theme - Warm beige tones with more presence */
+  --gradient-textured: linear-gradient(116deg, rgba(232, 227, 220, 0.06) 0%, rgba(232, 227, 220, 0.06) 10%, rgba(240, 237, 231, 0.05) 10%, rgba(240, 237, 231, 0.05) 66%, rgba(248, 246, 243, 0.05) 66%, rgba(248, 246, 243, 0.05) 72%, rgba(232, 227, 220, 0.05) 72%, rgba(232, 227, 220, 0.05) 81%, rgba(214, 208, 200, 0.04) 81%, rgba(214, 208, 200, 0.04) 100%), linear-gradient(109deg, rgba(194, 186, 176, 0.05) 0%, rgba(194, 186, 176, 0.05) 23%, rgba(248, 246, 243, 0.06) 23%, rgba(248, 246, 243, 0.06) 63%, rgba(232, 227, 220, 0.05) 63%, rgba(232, 227, 220, 0.05) 73%, rgba(214, 208, 200, 0.05) 73%, rgba(214, 208, 200, 0.05) 84%, rgba(248, 246, 243, 0.05) 84%, rgba(248, 246, 243, 0.05) 100%), linear-gradient(79deg, rgba(172, 165, 156, 0.04) 0%, rgba(172, 165, 156, 0.04) 27%, rgba(214, 208, 200, 0.05) 27%, rgba(214, 208, 200, 0.05) 33%, rgba(34, 211, 238, 0.025) 33%, rgba(34, 211, 238, 0.025) 34%, rgba(232, 227, 220, 0.05) 34%, rgba(232, 227, 220, 0.05) 63%, rgba(194, 186, 176, 0.05) 63%, rgba(194, 186, 176, 0.05) 100%), linear-gradient(109deg, rgba(248, 246, 243, 0.05) 0%, rgba(248, 246, 243, 0.05) 3%, rgba(232, 227, 220, 0.05) 3%, rgba(232, 227, 220, 0.05) 40%, rgba(240, 237, 231, 0.05) 40%, rgba(240, 237, 231, 0.05) 55%, rgba(248, 246, 243, 0.05) 55%, rgba(248, 246, 243, 0.05) 73%, rgba(34, 211, 238, 0.02) 73%, rgba(34, 211, 238, 0.02) 100%), linear-gradient(271deg, rgba(232, 227, 220, 0.05) 0%, rgba(232, 227, 220, 0.05) 11%, rgba(214, 208, 200, 0.05) 11%, rgba(214, 208, 200, 0.05) 23%, rgba(248, 246, 243, 0.04) 23%, rgba(248, 246, 243, 0.04) 72%, rgba(194, 186, 176, 0.05) 72%, rgba(194, 186, 176, 0.05) 86%, rgba(232, 227, 220, 0.05) 86%, rgba(232, 227, 220, 0.05) 100%), linear-gradient(90deg, rgb(248, 246, 243), rgb(240, 237, 231));
 
-  /* Sidebar textured gradient for light theme - Stone pattern */
-  --gradient-sidebar: linear-gradient(326deg, rgba(168, 162, 158, 0.12) 0%, rgba(168, 162, 158, 0.12) 6%, rgba(214, 211, 209, 0.10) 6%, rgba(214, 211, 209, 0.10) 29%, rgba(231, 229, 228, 0.10) 29%, rgba(231, 229, 228, 0.10) 100%), linear-gradient(164deg, rgba(168, 162, 158, 0.12) 0%, rgba(168, 162, 158, 0.12) 36%, rgba(214, 211, 209, 0.10) 36%, rgba(214, 211, 209, 0.10) 61%, rgba(231, 229, 228, 0.10) 61%, rgba(231, 229, 228, 0.10) 100%), linear-gradient(336deg, rgba(168, 162, 158, 0.12) 0%, rgba(168, 162, 158, 0.12) 64%, rgba(214, 211, 209, 0.10) 64%, rgba(214, 211, 209, 0.10) 69%, rgba(231, 229, 228, 0.10) 69%, rgba(231, 229, 228, 0.10) 100%), linear-gradient(90deg, rgb(245, 245, 244), rgb(245, 245, 244));
+  /* Sidebar textured gradient for light theme - Warm beige pattern with more presence */
+  --gradient-sidebar: linear-gradient(326deg, rgba(214, 208, 200, 0.15) 0%, rgba(214, 208, 200, 0.15) 6%, rgba(232, 227, 220, 0.12) 6%, rgba(232, 227, 220, 0.12) 29%, rgba(248, 246, 243, 0.12) 29%, rgba(248, 246, 243, 0.12) 100%), linear-gradient(164deg, rgba(214, 208, 200, 0.15) 0%, rgba(214, 208, 200, 0.15) 36%, rgba(232, 227, 220, 0.12) 36%, rgba(232, 227, 220, 0.12) 61%, rgba(248, 246, 243, 0.12) 61%, rgba(248, 246, 243, 0.12) 100%), linear-gradient(336deg, rgba(214, 208, 200, 0.15) 0%, rgba(214, 208, 200, 0.15) 64%, rgba(232, 227, 220, 0.12) 64%, rgba(232, 227, 220, 0.12) 69%, rgba(248, 246, 243, 0.12) 69%, rgba(248, 246, 243, 0.12) 100%), linear-gradient(90deg, rgb(240, 237, 231), rgb(240, 237, 231));
 
   /* Component Specific */
-  --player-bg: rgba(245, 245, 244, 0.95);
-  --player-border: #e7e5e4;
+  --player-bg: rgba(240, 237, 231, 0.95);
+  --player-border: #e8e3dc;
 
   --sidebar-bg: var(--bg-elevated);
   --sidebar-border: var(--border-subtle);
 
   /* Header - Glassmorphism effect for light theme */
-  --header-bg-scrolled: rgba(250, 250, 249, 0.3);
+  --header-bg-scrolled: rgba(248, 246, 243, 0.3);
   --header-border-scrolled: rgba(41, 37, 36, 0.12);
   --header-shadow-scrolled: 0 8px 32px rgba(41, 37, 36, 0.2);
 
-  --input-bg: #fafaf9;
-  --input-border: #d6d3d1; /* Stone 300 */
+  --input-bg: #f8f6f3;
+  --input-border: #dcd7cf; /* Warm beige border */
   --input-focus-ring: 0 0 0 3px rgba(237, 104, 66, 0.15);
 
   --button-shadow: var(--shadow-md);
