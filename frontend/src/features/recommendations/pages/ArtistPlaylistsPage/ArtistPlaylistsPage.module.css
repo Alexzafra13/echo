@@ -27,6 +27,26 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Back Button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
 /* Search Form (in Header) */
 .artistPlaylistsPage__searchForm {
   flex: 1;
@@ -99,15 +119,8 @@
 .artistPlaylistsPage__heroContent {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 1.5rem;
-}
-
-.artistPlaylistsPage__heroIcon {
-  padding: 1rem;
-  background: var(--accent-primary);
-  border-radius: 1rem;
-  color: white;
-  flex-shrink: 0;
 }
 
 .artistPlaylistsPage__heroText {
@@ -301,13 +314,11 @@
   }
 
   .artistPlaylistsPage__hero {
-    flex-direction: column;
-    text-align: center;
-    border-radius: 12px; /* iOS rounded */
+    margin-bottom: 2rem;
   }
 
-  .artistPlaylistsPage__heroIcon {
-    border-radius: 12px; /* iOS rounded */
+  .artistPlaylistsPage__heroContent {
+    flex-direction: column;
   }
 
   .artistPlaylistsPage__heroTitle {
