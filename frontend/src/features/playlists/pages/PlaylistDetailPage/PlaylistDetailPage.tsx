@@ -100,7 +100,7 @@ export default function PlaylistDetailPage() {
       <div className={styles.playlistDetailPage}>
         <Sidebar />
         <main className={styles.playlistDetailPage__main}>
-          <Header showBackButton />
+          <Header showBackButton disableSearch />
           <div className={styles.playlistDetailPage__content}>
             <div className={styles.playlistDetailPage__loadingState}>
               <p>Cargando playlist...</p>
@@ -116,7 +116,7 @@ export default function PlaylistDetailPage() {
       <div className={styles.playlistDetailPage}>
         <Sidebar />
         <main className={styles.playlistDetailPage__main}>
-          <Header showBackButton />
+          <Header showBackButton disableSearch />
           <div className={styles.playlistDetailPage__content}>
             <div className={styles.playlistDetailPage__errorState}>
               <p>Error al cargar la playlist</p>
@@ -140,7 +140,7 @@ export default function PlaylistDetailPage() {
       <Sidebar />
 
       <main className={styles.playlistDetailPage__main}>
-        <Header showBackButton />
+        <Header showBackButton disableSearch />
 
         <div
           className={styles.playlistDetailPage__content}

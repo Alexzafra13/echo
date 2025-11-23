@@ -247,14 +247,6 @@ export function WaveMixPage() {
               {genrePlaylists.length > 0 && (
                 <div className={styles.waveMixPage__section}>
                   <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Género</h2>
-                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
-                    <button
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                      className={styles.waveMixPage__viewAllButton}
-                    >
-                      Ver todas las playlists →
-                    </button>
-                  </div>
                   <div className={styles.waveMixPage__grid}>
                     {genrePlaylists.map((playlist) => (
                       <div

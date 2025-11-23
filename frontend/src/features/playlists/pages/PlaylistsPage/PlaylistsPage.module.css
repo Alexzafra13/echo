@@ -26,6 +26,67 @@
   padding: 116px 48px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px for header glassmorphism + base padding + player spacer */
 }
 
+/* Search Form (in Header) */
+.playlistsPage__searchForm {
+  flex: 1;
+  max-width: 600px;
+}
+
+.playlistsPage__searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.playlistsPage__searchIcon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.playlistsPage__searchInput {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.playlistsPage__searchInput:focus {
+  outline: none;
+  border-color: var(--accent-primary, #ff6b6b);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.playlistsPage__searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.playlistsPage__searchClearButton {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.playlistsPage__searchClearButton:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
 /* Header Section */
 .playlistsPage__header {
   display: flex;
