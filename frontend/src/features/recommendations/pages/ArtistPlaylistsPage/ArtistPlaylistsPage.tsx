@@ -63,6 +63,7 @@ export function ArtistPlaylistsPage() {
 
   const handlePlaylistClick = (playlist: AutoPlaylist) => {
     sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    sessionStorage.setItem('playlistReturnPath', '/artist-playlists');
     setLocation(`/wave-mix/${playlist.id}`);
   };
 
@@ -79,7 +80,6 @@ export function ArtistPlaylistsPage() {
 
       <main className={styles.artistPlaylistsPage__main}>
         <Header
-          alwaysGlass
           customSearch={
             <div className={styles.artistPlaylistsPage__searchForm}>
               <div className={styles.artistPlaylistsPage__searchWrapper}>
