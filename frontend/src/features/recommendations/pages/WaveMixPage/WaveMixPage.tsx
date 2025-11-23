@@ -43,6 +43,7 @@ export function WaveMixPage() {
     // Navigate to individual playlist page with state
     // Note: wouter doesn't support state in navigation, so we'll store in sessionStorage
     sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    sessionStorage.setItem('playlistReturnPath', '/wave-mix');
     setLocation(`/wave-mix/${playlist.id}`);
   };
 
