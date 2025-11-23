@@ -21,6 +21,8 @@ interface HeaderProps {
   customSearch?: React.ReactNode;
   /** Additional custom content to show in header (e.g., country selector) */
   customContent?: React.ReactNode;
+  /** Disable search (hides both default and custom search) */
+  disableSearch?: boolean;
 }
 
 /**
@@ -30,7 +32,7 @@ interface HeaderProps {
  * Supports admin mode with back navigation instead of search
  * Live search results with debouncing (300ms)
  */
-export function Header({ adminMode = false, showBackButton = false, alwaysGlass = false, customSearch, customContent }: HeaderProps) {
+export function Header({ adminMode = false, showBackButton = false, alwaysGlass = false, customSearch, customContent, disableSearch = false }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -204,8 +206,8 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
       {/* Left section - Search and custom content */}
       <div className={styles.header__leftSection}>
-        {/* Custom search or default search bar (hidden in admin mode) */}
-        {!adminMode && (
+        {/* Custom search or default search bar (hidden in admin mode or when disableSearch is true) */}
+        {!adminMode && !disableSearch && (
           customSearch ? (
             <div className={styles.header__customSearch}>
               {customSearch}

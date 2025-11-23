@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Waves, RefreshCw, Sparkles } from 'lucide-react';
+import { Waves, RefreshCw, Sparkles, Search, X } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
@@ -19,6 +19,7 @@ export function WaveMixPage() {
   const [playlists, setPlaylists] = useState<AutoPlaylist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadPlaylists = async () => {
     setIsLoading(true);
@@ -62,17 +63,52 @@ export function WaveMixPage() {
     }
   };
 
+  // Filter playlists based on search query
+  const filteredPlaylists = searchQuery.trim()
+    ? playlists.filter(playlist =>
+        playlist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        playlist.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        playlist.metadata.artistName?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : playlists;
+
   // Separate playlists by type
-  const dailyPlaylists = playlists.filter(p => p.type === 'wave-mix');
-  const artistPlaylists = playlists.filter(p => p.type === 'artist');
-  const genrePlaylists = playlists.filter(p => p.type === 'genre');
+  const dailyPlaylists = filteredPlaylists.filter(p => p.type === 'wave-mix');
+  const artistPlaylists = filteredPlaylists.filter(p => p.type === 'artist');
+  const genrePlaylists = filteredPlaylists.filter(p => p.type === 'genre');
 
   return (
     <div className={styles.waveMixPage}>
       <Sidebar />
 
       <main className={styles.waveMixPage__main}>
-        <Header />
+        <Header
+          customSearch={
+            <div className={styles.waveMixPage__searchForm}>
+              <div className={styles.waveMixPage__searchWrapper}>
+                <Search size={20} className={styles.waveMixPage__searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Buscar playlists de Wave Mix..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.waveMixPage__searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className={styles.waveMixPage__searchClearButton}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          }
+        />
 
         <div className={styles.waveMixPage__content}>
           {/* Hero Section */}
