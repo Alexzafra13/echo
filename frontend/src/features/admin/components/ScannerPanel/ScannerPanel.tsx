@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
 import { useAuthStore } from '@shared/store';
@@ -108,16 +108,23 @@ export function ScannerPanel() {
             Escanea tu carpeta de música para importar canciones, álbumes y artistas
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
+        <button
+          className={styles.scanButton}
           onClick={handleStartScan}
-          loading={isScanning}
-          leftIcon={<Play size={18} />}
           disabled={isScanning}
         >
-          {isScanning ? 'Escaneando...' : 'Escanear Ahora'}
-        </Button>
+          {isScanning ? (
+            <>
+              <RefreshCw size={16} className={styles.scanButton__spinner} />
+              Escaneando...
+            </>
+          ) : (
+            <>
+              <Play size={16} />
+              Escanear Ahora
+            </>
+          )}
+        </button>
       </div>
 
       {/* Real-time Scan Progress */}
@@ -236,16 +243,14 @@ export function ScannerPanel() {
       )}
 
       {/* Info Box */}
-      <div className={styles.infoBox}>
-        <AlertCircle size={20} className={styles.infoIcon} />
-        <div className={styles.infoContent}>
-          <p className={styles.infoTitle}>Escaneo de música:</p>
-          <p className={styles.infoHint}>
-            El servidor escaneará la carpeta configurada en UPLOAD_PATH (por defecto: ./uploads/music).
-            Asegúrate de que la carpeta contiene archivos MP3, FLAC, M4A u otros formatos soportados.
-          </p>
-        </div>
-      </div>
+      <CollapsibleInfo title="Escaneo de música">
+        <p>
+          El servidor escaneará la carpeta configurada en UPLOAD_PATH (por defecto: <code>./uploads/music</code>).
+        </p>
+        <p>
+          Asegúrate de que la carpeta contiene archivos MP3, FLAC, M4A u otros formatos soportados.
+        </p>
+      </CollapsibleInfo>
 
       {/* History Toggle */}
       <button
