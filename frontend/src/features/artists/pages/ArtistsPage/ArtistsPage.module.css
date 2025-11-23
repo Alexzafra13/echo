@@ -26,7 +26,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
-  padding: 114px 30px 30px; /* 84px + 30px for header glassmorphism effect */
+  padding: 114px 30px 120px; /* 84px + 30px for header glassmorphism effect + 120px for player */
   max-width: 1400px;
   width: 100%;
 }
@@ -159,7 +159,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .artistsPage__content {
-    padding: 24px;
+    padding: 24px 24px 120px; /* Add bottom padding for player */
   }
 
   .artistsPage__title {
