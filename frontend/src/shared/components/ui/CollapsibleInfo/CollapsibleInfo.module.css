@@ -1,0 +1,122 @@
+/* CollapsibleInfo Component Styles */
+
+.infoBox {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.infoBox:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.infoBox__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.infoBox__header:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.infoBox__headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.infoBox__icon {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.infoBox__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  text-align: left;
+}
+
+.infoBox__toggle {
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.infoBox__content {
+  padding: 0 20px 20px;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 14px;
+  line-height: 1.6;
+  animation: slideDown 0.3s ease;
+}
+
+.infoBox__content p {
+  margin: 0 0 12px 0;
+}
+
+.infoBox__content p:last-child {
+  margin-bottom: 0;
+}
+
+.infoBox__content ul,
+.infoBox__content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.infoBox__content li {
+  margin-bottom: 6px;
+}
+
+.infoBox__content code {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #60a5fa;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .infoBox__header {
+    padding: 14px 16px;
+  }
+
+  .infoBox__content {
+    padding: 0 16px 16px;
+    font-size: 13px;
+  }
+
+  .infoBox__title {
+    font-size: 13px;
+  }
+}
