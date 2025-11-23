@@ -197,17 +197,17 @@ export class RecommendationsController {
   }
 
   /**
-   * GET /recommendations/auto-playlists
-   * Get all auto-generated playlists (Wave Mix + Artist playlists)
+   * GET /recommendations/wave-mix
+   * Get all Wave Mix playlists (daily mix + artist playlists + genre playlists)
    */
-  @Get('auto-playlists')
-  @ApiOperation({ summary: 'Get all auto-generated playlists (Wave Mix + artist playlists)' })
+  @Get('wave-mix')
+  @ApiOperation({ summary: 'Get all Wave Mix playlists (daily mix + artist + genre)' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Auto playlists generated successfully',
+    description: 'Wave Mix playlists generated successfully',
     type: [AutoPlaylistDto],
   })
-  async getAutoPlaylists(@Req() req: RequestWithUser): Promise<AutoPlaylistDto[]> {
+  async getWaveMixPlaylists(@Req() req: RequestWithUser): Promise<AutoPlaylistDto[]> {
     const userId = req.user.id;
     const playlists = await this.getAutoPlaylistsUseCase.execute(userId);
 
@@ -216,18 +216,18 @@ export class RecommendationsController {
   }
 
   /**
-   * POST /recommendations/auto-playlists/refresh
-   * Force refresh auto-generated playlists (ignores Redis cache)
+   * POST /recommendations/wave-mix/refresh
+   * Force refresh Wave Mix playlists (ignores Redis cache)
    */
-  @Post('auto-playlists/refresh')
+  @Post('wave-mix/refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Force refresh auto-generated playlists (ignores 24h cache)' })
+  @ApiOperation({ summary: 'Force refresh Wave Mix playlists (ignores 24h cache)' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Auto playlists refreshed successfully',
+    description: 'Wave Mix playlists refreshed successfully',
     type: [AutoPlaylistDto],
   })
-  async refreshAutoPlaylists(@Req() req: RequestWithUser): Promise<AutoPlaylistDto[]> {
+  async refreshWaveMix(@Req() req: RequestWithUser): Promise<AutoPlaylistDto[]> {
     const userId = req.user.id;
     const playlists = await this.waveMixService.refreshAutoPlaylists(userId);
 
@@ -236,13 +236,13 @@ export class RecommendationsController {
   }
 
   /**
-   * GET /recommendations/artist-playlists
-   * Get paginated artist playlists for dedicated artists page
+   * GET /recommendations/wave-mix/artists
+   * Get paginated Wave Mix artist playlists
    */
-  @Get('artist-playlists')
-  @ApiOperation({ summary: 'Get paginated artist playlists (for artists page)' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Artist playlists retrieved successfully' })
-  async getArtistPlaylists(
+  @Get('wave-mix/artists')
+  @ApiOperation({ summary: 'Get paginated Wave Mix artist playlists' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix artist playlists retrieved successfully' })
+  async getWaveMixArtistPlaylists(
     @Req() req: RequestWithUser, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
   ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
     const userId = req.user.id;
