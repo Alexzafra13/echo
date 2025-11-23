@@ -13,3 +13,4 @@ export { useArtistImages, getArtistImageUrl } from './useArtistImages';
 export { useAlbumCoverMetadata, getAlbumCoverUrl } from './useAlbumCoverMetadata';
 export { useAutoEnrichArtist } from './useAutoEnrichArtist';
 export { useGridDimensions } from './useGridDimensions';
+export { useAutoPlaylists, categorizeAutoPlaylists, randomSelect } from './useAutoPlaylists';

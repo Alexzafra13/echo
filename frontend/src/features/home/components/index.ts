@@ -1,5 +1,6 @@
 export { AlbumCard } from './AlbumCard';
 export { AlbumGrid } from './AlbumGrid';
+export { PlaylistGrid } from './PlaylistGrid';
 export { HeroSection } from './HeroSection';
 export { Sidebar } from './Sidebar';
 export { TrackList } from './TrackList';

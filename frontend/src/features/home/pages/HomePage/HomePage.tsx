@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
-import { HeroSection, AlbumGrid, Sidebar } from '../../components';
+import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { Header, SearchPanel } from '@shared/components/layout/Header';
-import { useFeaturedAlbum, useRecentAlbums, useGridDimensions } from '../../hooks';
+import { useFeaturedAlbum, useRecentAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
 import type { Album } from '../../types';
 import styles from './HomePage.module.css';
 
 /**
  * HomePage Component
- * Main page after login - displays featured album, recent albums, and daily mixes
+ * Main page after login - displays featured album, recent albums, and Wave Mix recommendations
  */
 export default function HomePage() {
   // Auto-refresh when scan completes ✨
@@ -25,6 +25,7 @@ export default function HomePage() {
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
     Math.min(neededAlbums, 50) // Backend max is 50
   );
+  const { data: autoPlaylists, isLoading: loadingPlaylists } = useAutoPlaylists();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,6 +43,32 @@ export default function HomePage() {
     const shuffled = [...recentAlbums].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, Math.min(10, recentAlbums.length));
   }, [recentAlbums]);
+
+  // Prepare Wave Mix playlists for home page
+  // Wave Mix (always) + random 2-3 artist playlists + random 2-3 genre playlists
+  const homePagePlaylists = useMemo(() => {
+    if (!autoPlaylists || autoPlaylists.length === 0) return [];
+
+    const { waveMix, artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
+
+    // Build playlist array: Wave Mix + random artists + random genres
+    const playlists = [];
+
+    // Always add Wave Mix first (if exists)
+    if (waveMix) {
+      playlists.push(waveMix);
+    }
+
+    // Add 2-3 random artist playlists
+    const randomArtists = randomSelect(artistPlaylists, 3);
+    playlists.push(...randomArtists);
+
+    // Add 2-3 random genre playlists
+    const randomGenres = randomSelect(genrePlaylists, 3);
+    playlists.push(...randomGenres);
+
+    return playlists;
+  }, [autoPlaylists]);
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
@@ -104,7 +131,6 @@ export default function HomePage() {
 
   // Display albums based on calculated grid size (2 rows that fill the screen width)
   const displayedRecentAlbums = recentAlbums?.slice(0, neededAlbums) || [];
-  const dailyMix: Album[] = recentAlbums?.slice(0, 4) || [];
 
   return (
     <div className={styles.homePage}>
@@ -192,8 +218,14 @@ export default function HomePage() {
                 title="Recientemente Añadidos"
                 albums={displayedRecentAlbums}
               />
-              {dailyMix.length > 0 && (
-                <AlbumGrid title="Daily Mix" albums={dailyMix} />
+              {/* Wave Mix recommendations */}
+              {homePagePlaylists.length > 0 && (
+                <PlaylistGrid
+                  title="Wave Mix"
+                  playlists={homePagePlaylists}
+                  showViewAll={true}
+                  viewAllPath="/wave-mix"
+                />
               )}
             </>
           ) : (
