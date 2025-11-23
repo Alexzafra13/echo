@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Button, CollapsibleInfo } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import {
   useMetadataConflicts,
@@ -614,32 +614,28 @@ export function MetadataConflictsPanel() {
       )}
 
       {/* Info Box */}
-      <div className={styles.infoBox}>
-        <AlertCircle size={20} className={styles.infoIcon} />
-        <div className={styles.infoContent}>
-          <p className={styles.infoTitle}>Sobre las sugerencias:</p>
-          <ul className={styles.infoList}>
-            <li>
-              <strong>Alta prioridad (MusicBrainz):</strong> Se aplican automáticamente por su alta
-              confiabilidad
-            </li>
-            <li>
-              <strong>Media prioridad (Last.fm, Fanart):</strong> Requieren tu aprobación antes de
-              aplicarse
-            </li>
-            <li>
-              <strong>Aceptar:</strong> Aplica la sugerencia y reemplaza el dato actual
-            </li>
-            <li>
-              <strong>Rechazar:</strong> Mantiene el dato actual y marca la sugerencia como
-              rechazada
-            </li>
-            <li>
-              <strong>Ignorar:</strong> Oculta permanentemente esta sugerencia
-            </li>
-          </ul>
-        </div>
-      </div>
+      <CollapsibleInfo title="Sobre las sugerencias" defaultExpanded={false}>
+        <ul>
+          <li>
+            <strong>Alta prioridad (MusicBrainz):</strong> Se aplican automáticamente por su alta
+            confiabilidad
+          </li>
+          <li>
+            <strong>Media prioridad (Last.fm, Fanart):</strong> Requieren tu aprobación antes de
+            aplicarse
+          </li>
+          <li>
+            <strong>Aceptar:</strong> Aplica la sugerencia y reemplaza el dato actual
+          </li>
+          <li>
+            <strong>Rechazar:</strong> Mantiene el dato actual y marca la sugerencia como
+            rechazada
+          </li>
+          <li>
+            <strong>Ignorar:</strong> Oculta permanentemente esta sugerencia
+          </li>
+        </ul>
+      </CollapsibleInfo>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Check, AlertCircle, Info } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Button, CollapsibleInfo } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { useToast } from '@shared/context/ToastContext';
 import styles from './ProvidersTab.module.css';
@@ -181,22 +181,31 @@ export function AutoSearchTab() {
             </div>
 
             {/* Threshold explanation */}
-            <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--status-success)' }}>●</span>
-                <span>
+            <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div className={styles.thresholdBox} style={{
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+              }}>
+                <span style={{ color: '#10b981', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
                   <strong>Score ≥{config.confidenceThreshold}:</strong> Auto-aplicado automáticamente
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--status-warning)' }}>●</span>
-                <span>
+              <div className={styles.thresholdBox} style={{
+                background: 'rgba(251, 191, 36, 0.08)',
+                border: '1px solid rgba(251, 191, 36, 0.2)',
+              }}>
+                <span style={{ color: '#fbbf24', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
                   <strong>Score 75-{config.confidenceThreshold - 1}:</strong> Crea conflicto para revisión manual
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>●</span>
-                <span>
+              <div className={styles.thresholdBox} style={{
+                background: 'rgba(107, 114, 128, 0.08)',
+                border: '1px solid rgba(107, 114, 128, 0.2)',
+              }}>
+                <span style={{ color: '#6b7280', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
                   <strong>Score &lt;75:</strong> Ignorado (baja confianza)
                 </span>
               </div>
@@ -234,15 +243,15 @@ export function AutoSearchTab() {
           <h3 className={styles.sectionTitle}>Estadísticas</h3>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <div className={styles.statCard}>
+          <div className={`${styles.statCard} ${styles.statCardSuccess}`}>
             <div className={styles.statValue}>{stats.autoApplied}</div>
             <div className={styles.statLabel}>Auto-aplicados</div>
           </div>
-          <div className={styles.statCard}>
+          <div className={`${styles.statCard} ${styles.statCardWarning}`}>
             <div className={styles.statValue}>{stats.conflictsCreated}</div>
             <div className={styles.statLabel}>Conflictos creados</div>
           </div>
-          <div className={styles.statCard}>
+          <div className={`${styles.statCard} ${styles.statCardInfo}`}>
             <div className={styles.statValue}>{stats.ignored}</div>
             <div className={styles.statLabel}>Ignorados</div>
           </div>
@@ -256,26 +265,15 @@ export function AutoSearchTab() {
       </div>
 
       {/* Info Box */}
-      <div
-        style={{
-          marginTop: '1.5rem',
-          padding: '1rem',
-          backgroundColor: 'var(--bg-tertiary)',
-          borderLeft: '4px solid var(--accent-primary)',
-          borderRadius: '4px',
-        }}
-      >
-        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: 600 }}>
-          ¿Cómo funciona?
-        </h4>
-        <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem', lineHeight: '1.6' }}>
+      <CollapsibleInfo title="¿Cómo funciona?" defaultExpanded={false} className={styles.infoBoxSpacing}>
+        <ul>
           <li>Durante el scan, busca MBIDs en MusicBrainz para entidades sin MBID en tags</li>
           <li>Usa búsqueda multi-campo (artista + álbum + track + duración + ISRC)</li>
           <li>Coincidencias de alta confianza se aplican automáticamente</li>
           <li>Coincidencias medias te permiten elegir entre múltiples opciones (estilo Picard)</li>
           <li>Los MBIDs correctos mejoran el enriquecimiento (Fanart.tv requiere MBIDs)</li>
         </ul>
-      </div>
+      </CollapsibleInfo>
 
       {/* Save Button */}
       <div className={styles.actions}>
