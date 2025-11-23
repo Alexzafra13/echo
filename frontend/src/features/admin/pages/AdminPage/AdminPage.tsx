@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { LayoutDashboard, Library, Music2, Wrench, Users, FileText } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { AdminSidebar } from '../../components/AdminSidebar';
@@ -25,6 +25,14 @@ interface Tab {
  */
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Reset scroll position when tab changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeTab]);
 
   // Tab labels map
   const tabLabels: Record<string, string> = {
@@ -86,7 +94,7 @@ export default function AdminPage() {
       <main className={styles.adminPage__main}>
         <Header adminMode showBackButton />
 
-        <div className={styles.adminPage__content}>
+        <div className={styles.adminPage__content} ref={contentRef}>
           {/* Breadcrumbs (hidden on mobile) */}
           <div className={styles.breadcrumbsWrapper}>
             <Breadcrumbs items={breadcrumbs} />

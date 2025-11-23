@@ -2,50 +2,45 @@
 
 .backButton {
   position: relative;
-  width: 140px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  height: 40px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
   color: var(--color-text-secondary, #b8bcc8);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  display: flex;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
 }
 
 .backButton:hover {
-  border-color: var(--color-primary, #ed6842);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
   color: var(--color-text-primary, #ffffff);
+  transform: translateX(-2px);
+}
+
+.backButton:active {
+  transform: translateX(-2px) scale(0.98);
 }
 
 .backButton__iconContainer {
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 38px;
-  height: 38px;
-  background: var(--color-primary, #ed6842);
-  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.backButton:hover .backButton__iconContainer {
-  width: 134px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .backButton__icon {
-  color: #ffffff;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .backButton:hover .backButton__icon {
@@ -53,47 +48,39 @@
 }
 
 .backButton__text {
-  position: relative;
-  transform: translateX(8px);
-  transition: all 0.3s ease;
-  z-index: 5;
-}
-
-.backButton:hover .backButton__text {
-  color: #ffffff;
+  white-space: nowrap;
+  transition: opacity 0.25s ease;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .backButton {
-    width: 120px;
-    height: 40px;
+    height: 36px;
+    padding: 0 12px;
     font-size: 13px;
+    gap: 6px;
   }
 
   .backButton__iconContainer {
-    width: 34px;
-    height: 34px;
-  }
-
-  .backButton:hover .backButton__iconContainer {
-    width: 114px;
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (max-width: 480px) {
   .backButton {
-    width: 110px;
-    height: 36px;
+    height: 32px;
+    padding: 0 10px;
     font-size: 12px;
   }
 
   .backButton__iconContainer {
-    width: 30px;
-    height: 30px;
+    width: 16px;
+    height: 16px;
   }
 
-  .backButton:hover .backButton__iconContainer {
-    width: 104px;
+  .backButton__icon {
+    width: 16px;
+    height: 16px;
   }
 }
