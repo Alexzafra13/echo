@@ -16,7 +16,6 @@
   overflow-y: auto; /* Enable scroll for entire page */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding-bottom: calc(40px + var(--player-bottom-spacer, 0px)); /* Base padding + player spacer */
 }
 
 .artistsPage__main::-webkit-scrollbar {
@@ -27,7 +26,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin: -84px auto 0; /* Content starts behind header, centered horizontally */
-  padding: 114px 30px 0; /* 84px + 30px for header glassmorphism effect */
+  padding: 114px 30px calc(40px + var(--player-bottom-spacer, 0px)); /* Top for header + base padding + player spacer */
   max-width: 1400px;
   width: 100%;
 }
@@ -160,7 +159,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .artistsPage__content {
-    padding: 24px 24px 0;
+    padding: 24px 24px calc(40px + var(--player-bottom-spacer, 0px));
   }
 
   .artistsPage__title {
@@ -172,12 +171,11 @@
   .artistsPage__main {
     margin-left: 0; /* No sidebar en mobile */
     padding-top: 0;
-    padding-bottom: calc(60px + var(--player-bottom-spacer, 0px)); /* More padding on mobile for bottom nav */
   }
 
   .artistsPage__content {
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 0; /* Top para header */
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + base padding + player spacer */
   }
 
   .artistsPage__title {
@@ -204,7 +202,7 @@
 
 @media (max-width: 480px) {
   .artistsPage__content {
-    padding: 90px 16px 0; /* Ajustado para header más pequeño */
+    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño */
   }
 
   .artistsPage__title {
