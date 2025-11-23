@@ -139,6 +139,13 @@ export default function RadioPage() {
     }
   }, [userCountry, selectedCountry]);
 
+  // Auto-select Favorites filter if user has favorites on initial load
+  useEffect(() => {
+    if (favoriteStations.length > 0 && activeFilter === 'top') {
+      setActiveFilter('favorites');
+    }
+  }, [favoriteStations.length]); // Only run when favorites change
+
   // Block content scroll when search panel is open
   useEffect(() => {
     if (contentRef.current) {
