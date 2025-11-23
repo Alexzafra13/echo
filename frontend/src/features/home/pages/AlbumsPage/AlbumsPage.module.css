@@ -100,17 +100,17 @@
   margin-top: 8px;
 }
 
-/* Grid wrapper - maintain pagination position */
+/* Grid wrapper - simple approach to maintain pagination position */
 .albumsPage__gridWrapper {
-  display: grid;
-  grid-template-rows: auto auto; /* Grid auto, pagination auto */
-  min-height: 70vh; /* Keep consistent height to prevent pagination jumping */
-  align-content: space-between; /* Distribute space between grid and pagination */
+  min-height: calc(100vh - 400px); /* Reserve space to keep pagination at consistent position */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Pagination spacing */
+/* Pagination spacing - push to bottom */
 .albumsPage__gridWrapper > :global(.pagination) {
-  margin-top: 48px;
+  margin-top: auto;
+  padding-top: 48px;
 }
 
 /* Top pagination - only visible on mobile */
