@@ -258,6 +258,28 @@ export class RecommendationsController {
   }
 
   /**
+   * GET /recommendations/wave-mix/genres
+   * Get paginated Wave Mix genre playlists
+   */
+  @Get('wave-mix/genres')
+  @ApiOperation({ summary: 'Get paginated Wave Mix genre playlists' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix genre playlists retrieved successfully' })
+  async getWaveMixGenrePlaylists(
+    @Req() req: RequestWithUser, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
+  ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
+    const userId = req.user.id;
+    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
+    const takeNum = Math.min(50, Math.max(1, parseInt(take, 10) || 10));
+
+    const result = await this.waveMixService.getGenrePlaylistsPaginated(userId, skipNum, takeNum);
+
+    // OPTIMIZATION: Use batch enrichment to avoid N+1 query
+    const playlistsWithTracks = await this.enrichPlaylistsWithTracks(result.playlists);
+
+    return { playlists: playlistsWithTracks, total: result.total, skip: skipNum, take: takeNum, hasMore: result.hasMore };
+  }
+
+  /**
    * OPTIMIZATION: Private helper methods to avoid code duplication
    */
 
