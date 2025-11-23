@@ -16,7 +16,6 @@ import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
-import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { SaveFavoriteStationUseCase } from '../domain/use-cases/save-favorite-station/save-favorite-station.use-case';
 import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/get-user-favorites.use-case';
@@ -47,7 +46,6 @@ export class RadioController {
    * GET /radio/search
    * Buscar emisoras en Radio Browser API
    */
-  @Public()
   @Get('search')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -64,7 +62,6 @@ export class RadioController {
    * GET /radio/top-voted
    * Obtener emisoras más votadas
    */
-  @Public()
   @Get('top-voted')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -80,7 +77,6 @@ export class RadioController {
    * GET /radio/popular
    * Obtener emisoras más populares por clicks
    */
-  @Public()
   @Get('popular')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -96,7 +92,6 @@ export class RadioController {
    * GET /radio/by-country/:code
    * Obtener emisoras por código de país
    */
-  @Public()
   @Get('by-country/:code')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -118,7 +113,6 @@ export class RadioController {
    * GET /radio/by-tag/:tag
    * Obtener emisoras por género/tag
    */
-  @Public()
   @Get('by-tag/:tag')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -137,7 +131,6 @@ export class RadioController {
    * GET /radio/tags
    * Obtener todos los géneros/tags disponibles
    */
-  @Public()
   @Get('tags')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -152,7 +145,6 @@ export class RadioController {
    * GET /radio/countries
    * Obtener todos los países disponibles
    */
-  @Public()
   @Get('countries')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -260,7 +252,6 @@ export class RadioController {
    * Server-Sent Events endpoint for real-time ICY metadata
    * Streams "now playing" information from radio stations
    */
-  @Public()
   @Sse('metadata/stream')
   @ApiOperation({
     summary: 'Stream de metadata de radio',
