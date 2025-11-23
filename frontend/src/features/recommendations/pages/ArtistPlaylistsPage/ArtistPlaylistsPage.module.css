@@ -29,9 +29,6 @@
 
 /* Hero Section */
 .artistPlaylistsPage__hero {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
   margin-bottom: 3rem;
   padding: 2rem;
   background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-tertiary) 100%);
@@ -39,14 +36,24 @@
   border: 1px solid var(--border-color);
 }
 
+.artistPlaylistsPage__heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.artistPlaylistsPage__heroHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .artistPlaylistsPage__heroIcon {
   padding: 1rem;
   background: var(--accent-primary);
   border-radius: 1rem;
   color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
 }
 
 .artistPlaylistsPage__heroText {
@@ -72,10 +79,38 @@
   margin: 0.5rem 0 0 0;
 }
 
+.artistPlaylistsPage__heroActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.artistPlaylistsPage__searchInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.artistPlaylistsPage__searchInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
+}
+
+.artistPlaylistsPage__searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
 .artistPlaylistsPage__refreshButton {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 /* Grid wrapper - mantener paginación en posición fija */
