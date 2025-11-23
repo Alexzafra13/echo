@@ -142,20 +142,27 @@
 @media (max-width: 768px) {
   .pagination {
     --pagination-size: 36px;
+    --pagination-gap: 6px;
     position: relative;
     z-index: 10; /* Ensure pagination is above other content */
+    overflow-x: auto; /* Allow horizontal scroll on very small screens */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pagination__list {
+    min-width: max-content; /* Prevent wrapping */
   }
 
   .pagination__link {
     font-size: 13px;
   }
 
-  /* On mobile, hide some middle pages to save space */
-  .pagination__item:nth-child(n+4):nth-last-child(n+4):not(.pagination__gap) {
+  /* Simplify pagination on mobile - show only essential pages */
+  .pagination__item:nth-child(n+5):nth-last-child(n+5):not(.pagination__gap) {
     display: none;
   }
 
-  .pagination__item:nth-child(n+4):nth-last-child(n+4).pagination__gap {
+  .pagination__item:nth-child(n+5):nth-last-child(n+5).pagination__gap {
     display: grid;
   }
 }
