@@ -153,6 +153,12 @@
     min-width: max-content; /* Prevent wrapping */
   }
 
+  /* En mobile, el indicador siempre está centrado */
+  .pagination__list::after {
+    left: 50% !important;
+    transform: translateX(-50%);
+  }
+
   .pagination__link {
     font-size: 13px;
   }
