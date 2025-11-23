@@ -10,6 +10,9 @@ export { SearchAlbumsUseCase, type SearchAlbumsInput, type SearchAlbumsOutput } 
 // Obtener álbumes recientes
 export { GetRecentAlbumsUseCase, type GetRecentAlbumsInput, type GetRecentAlbumsOutput } from './get-recent-albums';
 
+// Obtener álbumes más reproducidos
+export { GetTopPlayedAlbumsUseCase, type GetTopPlayedAlbumsInput, type GetTopPlayedAlbumsOutput } from './get-top-played-albums';
+
 // Obtener álbum destacado
 export { GetFeaturedAlbumUseCase, type GetFeaturedAlbumOutput } from './get-featured-album';
 
