@@ -79,12 +79,10 @@ export default function PlaylistsPage() {
         <div className={styles.playlistsPage__content}>
           {/* Header Section */}
           <div className={styles.playlistsPage__header}>
-            <div className={styles.playlistsPage__headerLeft}>
-              <h1 className={styles.playlistsPage__title}>Mis Playlists</h1>
-              <p className={styles.playlistsPage__subtitle}>
-                {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'}
-              </p>
-            </div>
+            <h1 className={styles.playlistsPage__title}>Mis Playlists</h1>
+            <p className={styles.playlistsPage__subtitle}>
+              {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'}
+            </p>
             <Button
               variant="primary"
               onClick={() => setShowCreateModal(true)}

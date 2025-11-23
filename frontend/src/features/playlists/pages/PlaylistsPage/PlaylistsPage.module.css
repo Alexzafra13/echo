@@ -29,20 +29,17 @@
 /* Header Section */
 .playlistsPage__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 32px;
-}
-
-.playlistsPage__headerLeft {
-  flex: 1;
 }
 
 .playlistsPage__title {
   font-size: 36px;
   font-weight: 800;
   color: var(--text-primary, #ffffff);
-  margin: 0 0 8px 0;
+  margin: 0;
 }
 
 .playlistsPage__subtitle {
@@ -298,12 +295,6 @@
 
   .playlistsPage__title {
     font-size: 28px;
-  }
-
-  .playlistsPage__header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
   }
 
   .playlistsPage__header button {
