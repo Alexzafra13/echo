@@ -99,15 +99,15 @@ export interface CalculateScoreRequest {
 }
 
 /**
- * Get all auto-generated playlists (Wave Mix + Artist playlists)
+ * Get all Wave Mix playlists (daily mix + artist playlists + genre playlists)
  */
 export async function getAutoPlaylists(): Promise<AutoPlaylist[]> {
-  const response = await apiClient.get('/recommendations/auto-playlists');
+  const response = await apiClient.get('/recommendations/wave-mix');
   return response.data;
 }
 
 /**
- * Get paginated artist playlists
+ * Get paginated Wave Mix artist playlists
  * For the dedicated artist playlists page
  */
 export async function getArtistPlaylistsPaginated(
@@ -118,7 +118,7 @@ export async function getArtistPlaylistsPaginated(
   total: number;
   hasMore: boolean;
 }> {
-  const response = await apiClient.get('/recommendations/artist-playlists', {
+  const response = await apiClient.get('/recommendations/wave-mix/artists', {
     params: { skip, take },
   });
   return response.data;

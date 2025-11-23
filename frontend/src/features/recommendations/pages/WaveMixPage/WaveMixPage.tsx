@@ -154,16 +154,7 @@ export function WaveMixPage() {
               {/* Artist Recommendations Section */}
               {artistPlaylists.length > 0 && (
                 <div className={styles.waveMixPage__section}>
-                  <div className={styles.waveMixPage__sectionHeader}>
-                    <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Artista</h2>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setLocation('/artist-playlists')}
-                      className={styles.waveMixPage__viewAllButton}
-                    >
-                      Ver todas →
-                    </Button>
-                  </div>
+                  <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones por Artista</h2>
                   <div className={styles.waveMixPage__grid}>
                     {artistPlaylists.map((playlist) => (
                       <div
@@ -190,6 +181,15 @@ export function WaveMixPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setLocation('/artist-playlists')}
+                      className={styles.waveMixPage__viewAllButton}
+                    >
+                      Ver todas →
+                    </Button>
                   </div>
                 </div>
               )}
@@ -223,6 +223,15 @@ export function WaveMixPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                  <div className={styles.waveMixPage__viewAllButtonWrapper}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      className={styles.waveMixPage__viewAllButton}
+                    >
+                      Ver todas las playlists →
+                    </Button>
                   </div>
                 </div>
               )}
