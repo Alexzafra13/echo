@@ -18,7 +18,7 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   padding: 0 20px;
-  min-height: 60vh; /* Mantener altura mínima para posición consistente de paginación */
+  min-height: 75vh; /* Mantener altura mínima para posición consistente de paginación */
 }
 
 /* ===== Responsive Design ===== */

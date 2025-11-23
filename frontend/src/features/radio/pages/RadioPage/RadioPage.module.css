@@ -115,7 +115,7 @@
   gap: var(--space-5);
   margin-bottom: var(--space-6);
   width: 100%;
-  min-height: 60vh; /* Mantener altura mínima para posición consistente de paginación */
+  min-height: 75vh; /* Mantener altura mínima para posición consistente de paginación */
 }
 
 /* Loading state */
