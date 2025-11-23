@@ -1,0 +1,1 @@
+export { CollapsibleInfo } from './CollapsibleInfo';

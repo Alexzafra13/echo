@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Button, CollapsibleInfo } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
 import { useToast } from '@shared/context/ToastContext';
@@ -113,15 +113,23 @@ export function MaintenanceTab() {
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3 className={styles.sectionTitle}>Almacenamiento</h3>
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            className={styles.refreshButton}
             onClick={loadStats}
-            loading={isLoadingStats}
-            leftIcon={<RefreshCw size={16} />}
+            disabled={isLoadingStats}
           >
-            Actualizar
-          </Button>
+            {isLoadingStats ? (
+              <>
+                <RefreshCw size={16} className={styles.refreshButton__spinner} />
+                Actualizando...
+              </>
+            ) : (
+              <>
+                <RefreshCw size={16} />
+                Actualizar
+              </>
+            )}
+          </button>
         </div>
 
         {isLoadingStats ? (
@@ -267,17 +275,15 @@ export function MaintenanceTab() {
       </div>
 
       {/* Info Box */}
-      <div className={styles.infoBox}>
-        <AlertCircle size={20} className={styles.infoIcon} />
-        <div className={styles.infoContent}>
-          <p className={styles.infoTitle}>Sobre la limpieza:</p>
-          <p className={styles.infoText}>
-            La limpieza eliminará archivos que no están referenciados en la base de datos.
-            Se recomienda ejecutarla periódicamente para liberar espacio en disco.
-            El caché se reconstruirá automáticamente cuando sea necesario.
-          </p>
-        </div>
-      </div>
+      <CollapsibleInfo title="Sobre la limpieza">
+        <p>
+          La limpieza eliminará archivos que no están referenciados en la base de datos.
+          Se recomienda ejecutarla periódicamente para liberar espacio en disco.
+        </p>
+        <p>
+          El caché se reconstruirá automáticamente cuando sea necesario.
+        </p>
+      </CollapsibleInfo>
 
       {/* Modals */}
       {showCleanupConfirm && (
