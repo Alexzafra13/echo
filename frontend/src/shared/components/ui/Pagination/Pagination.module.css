@@ -142,6 +142,8 @@
 @media (max-width: 768px) {
   .pagination {
     --pagination-size: 36px;
+    position: relative;
+    z-index: 10; /* Ensure pagination is above other content */
   }
 
   .pagination__link {
