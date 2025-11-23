@@ -457,5 +457,5 @@
   --color-bg-tertiary: var(--bg-surface);
 
   --color-hover: rgba(31, 41, 55, 0.06);
-  --color-primary-light: rgba(237, 104, 66, 0.08);
+  --color-primary-light: rgba(237, 104, 66, 0.18); /* Darkened from 0.08 to 0.18 for better visibility */
 }
