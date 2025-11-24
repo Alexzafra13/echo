@@ -21,9 +21,9 @@ export default function HomePage() {
     headerHeight: 450,
   });
 
-  // Calculate how many playlists we need for 2 rows dynamically
+  // Calculate how many playlists we need for 1 row dynamically
   const { itemsPerPage: neededPlaylists } = useGridDimensions({
-    maxRows: 2,
+    maxRows: 1,
     headerHeight: 450,
   });
 
