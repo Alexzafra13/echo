@@ -332,26 +332,24 @@
   /* Dropdown como modal full-width en móvil */
   .notifications__dropdown {
     position: fixed;
-    top: 52px; /* Justo debajo del header */
+    top: 48px; /* Pegado al bottom del header */
     left: 0;
     right: 0;
     width: 100%;
-    max-height: calc(100vh - 52px);
-    background: rgba(30, 31, 46, 0.95); /* Semi-transparente dark */
+    max-height: calc(100vh - 48px);
+    margin-top: 0; /* Sin margen en móvil */
+    background: rgba(15, 18, 28, 0.95); /* Mismo color que desktop */
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 0; /* Sin bordes redondeados */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     animation: slideDown 0.3s ease;
-    z-index: 1000; /* Por encima del hero */
+    z-index: 1001; /* Mayor que hero buttons */
   }
 
   /* Light theme para dropdown móvil */
   [data-theme='light'] .notifications__dropdown {
-    background: rgba(255, 255, 255, 0.95); /* Semi-transparente light */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(240, 242, 245, 0.95); /* Light theme */
   }
 
   @keyframes slideDown {
