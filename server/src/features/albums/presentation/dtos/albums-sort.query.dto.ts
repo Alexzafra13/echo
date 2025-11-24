@@ -54,19 +54,19 @@ export class AlbumsLimitQueryDto {
  */
 export class AlbumsPaginatedResponseDto {
   @ApiPropertyOptional({ description: 'Lista de álbumes' })
-  albums: any[];
+  albums!: any[];
 
   @ApiPropertyOptional({ description: 'Total de álbumes' })
-  total: number;
+  total!: number;
 
   @ApiPropertyOptional({ description: 'Página actual' })
-  page: number;
+  page!: number;
 
   @ApiPropertyOptional({ description: 'Límite por página' })
-  limit: number;
+  limit!: number;
 
   @ApiPropertyOptional({ description: 'Total de páginas' })
-  totalPages: number;
+  totalPages!: number;
 }
 
 /**
@@ -74,7 +74,7 @@ export class AlbumsPaginatedResponseDto {
  */
 export class AlbumsListResponseDto {
   @ApiPropertyOptional({ description: 'Lista de álbumes' })
-  albums: any[];
+  albums!: any[];
 
   @ApiPropertyOptional({ description: 'Página actual (si aplica)' })
   page?: number;
