@@ -120,13 +120,16 @@ export class AlbumsController {
   /**
    * GET /albums/alphabetical
    * Obtener álbumes ordenados alfabéticamente
+   * Requiere autenticación
    *
    * Query params:
    * - page: número de página (default: 1)
    * - limit: álbumes por página (default: 20, máximo: 100)
    */
   @Get('alphabetical')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Obtener álbumes ordenados alfabéticamente',
     description: 'Retorna álbumes ordenados por nombre (ignora artículos como "The", "A", etc. y acentos)'
@@ -148,6 +151,10 @@ export class AlbumsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de álbumes ordenados alfabéticamente obtenida exitosamente'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado o token inválido'
   })
   async getAlbumsAlphabetically(
     @Query() query: AlbumsPaginationQueryDto,
