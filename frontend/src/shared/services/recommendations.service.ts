@@ -36,6 +36,12 @@ export interface ScoredTrack {
     albumId?: string;
     artistId?: string;
   };
+  album?: {
+    id: string;
+    title?: string;
+    artist?: string;
+    cover?: string;
+  };
 }
 
 /**

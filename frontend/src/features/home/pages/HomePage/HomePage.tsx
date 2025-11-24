@@ -32,7 +32,7 @@ export default function HomePage() {
     Math.min(neededAlbums, 50) // Backend max is 50
   );
   const { data: topPlayedAlbums, isLoading: loadingTopPlayed } = useTopPlayedAlbums(10);
-  const { data: autoPlaylists, isLoading: loadingPlaylists } = useAutoPlaylists();
+  const { data: autoPlaylists } = useAutoPlaylists();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
