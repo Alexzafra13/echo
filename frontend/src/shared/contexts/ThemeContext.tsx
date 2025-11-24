@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
+import { safeLocalStorage } from '@shared/utils/safeLocalStorage';
 
 /**
  * Theme type - 'light' or 'dark'
@@ -43,7 +44,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
     // Try to get theme from localStorage on initial load
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
+    const savedTheme = safeLocalStorage.getItem('theme') as Theme | null;
 
     // If no saved theme, check system preference
     if (!savedTheme) {
@@ -70,7 +71,7 @@ export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProvider
     // For dark theme, we don't set attribute (default CSS)
 
     // Save to localStorage
-    localStorage.setItem('theme', theme);
+    safeLocalStorage.setItem('theme', theme);
   }, [theme]);
 
   /**

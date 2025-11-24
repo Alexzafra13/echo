@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeLocalStorage } from '@shared/utils/safeLocalStorage';
 
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
@@ -15,7 +16,7 @@ const PREFERENCE_CHANGE_EVENT = 'playerPreferenceChange';
  */
 export function usePlayerPreference() {
   const [preference, setPreferenceState] = useState<PlayerPreference>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
     return (stored as PlayerPreference) || 'dynamic';
   });
 
@@ -33,7 +34,7 @@ export function usePlayerPreference() {
 
   const setPreference = (value: PlayerPreference) => {
     setPreferenceState(value);
-    localStorage.setItem(STORAGE_KEY, value);
+    safeLocalStorage.setItem(STORAGE_KEY, value);
 
     // Notificar a otros componentes del cambio
     const event = new CustomEvent(PREFERENCE_CHANGE_EVENT, { detail: value });
