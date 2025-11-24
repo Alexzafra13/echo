@@ -55,9 +55,11 @@ export interface ProviderValidationResult {
 
 export interface StorageValidationResult {
   valid: boolean;
+  writable: boolean;
+  exists: boolean;
+  readOnly: boolean;
+  spaceAvailable: string;
   message: string;
-  path?: string;
-  writable?: boolean;
 }
 
 export interface DirectoryItem {
