@@ -62,7 +62,13 @@ export function AutoSearchTab() {
   const loadStats = async () => {
     try {
       const response = await apiClient.get('/admin/mbid-auto-search/stats');
-      setStats(response.data);
+      // Ensure all values are numbers (protect against undefined/null)
+      setStats({
+        totalAutoSearched: response.data?.totalAutoSearched || 0,
+        autoApplied: response.data?.autoApplied || 0,
+        conflictsCreated: response.data?.conflictsCreated || 0,
+        ignored: response.data?.ignored || 0,
+      });
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('Error loading auto-search stats:', error);
