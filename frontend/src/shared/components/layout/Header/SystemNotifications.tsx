@@ -7,28 +7,32 @@ interface SystemNotificationsProps {
   isAdmin: boolean;
 }
 
+interface MetadataApisHealth {
+  lastfm: 'healthy' | 'degraded' | 'down';
+  fanart: 'healthy' | 'degraded' | 'down';
+  musicbrainz: 'healthy' | 'degraded' | 'down';
+}
+
 interface SystemHealth {
   database: 'healthy' | 'degraded' | 'down';
   redis: 'healthy' | 'degraded' | 'down';
   scanner: 'idle' | 'running' | 'error';
-  externalApis: {
-    lastfm: 'healthy' | 'degraded' | 'down';
-    fanart: 'healthy' | 'degraded' | 'down';
-    musicbrainz: 'healthy' | 'degraded' | 'down';
-  };
-  storage: {
-    status: 'healthy' | 'warning' | 'critical';
-    used: number;
-    total: number;
-    percentage: number;
-  };
+  metadataApis: MetadataApisHealth;
+  storage: 'healthy' | 'warning' | 'critical';
+}
+
+interface StorageDetails {
+  currentMB: number;
+  limitMB: number;
+  percentUsed: number;
 }
 
 interface ActiveAlerts {
-  orphanedFiles?: number;
-  pendingConflicts?: number;
-  storageWarning?: boolean;
-  scanErrors?: number;
+  orphanedFiles: number;
+  pendingConflicts: number;
+  storageWarning: boolean;
+  storageDetails?: StorageDetails;
+  scanErrors: number;
 }
 
 interface SystemNotification {
@@ -89,20 +93,20 @@ export function SystemNotifications({ token, isAdmin }: SystemNotificationsProps
       const newNotifications: SystemNotification[] = [];
 
       // Storage warnings
-      if (data.systemHealth?.storage?.status === 'critical') {
+      if (data.systemHealth?.storage === 'critical' && data.activeAlerts?.storageDetails) {
         newNotifications.push({
           id: 'storage-critical',
           type: 'error',
           category: 'storage',
-          message: `Almacenamiento crítico: ${data.systemHealth.storage.percentage}% usado`,
+          message: `Almacenamiento crítico: ${data.activeAlerts.storageDetails.percentUsed}% usado`,
           timestamp: new Date().toISOString(),
         });
-      } else if (data.systemHealth?.storage?.status === 'warning') {
+      } else if (data.systemHealth?.storage === 'warning' && data.activeAlerts?.storageDetails) {
         newNotifications.push({
           id: 'storage-warning',
           type: 'warning',
           category: 'storage',
-          message: `Almacenamiento alto: ${data.systemHealth.storage.percentage}% usado`,
+          message: `Almacenamiento alto: ${data.activeAlerts.storageDetails.percentUsed}% usado`,
           timestamp: new Date().toISOString(),
         });
       }
@@ -181,9 +185,9 @@ export function SystemNotifications({ token, isAdmin }: SystemNotificationsProps
         });
       }
 
-      // External APIs
-      if (data.systemHealth?.externalApis) {
-        const apis = data.systemHealth.externalApis;
+      // Metadata APIs
+      if (data.systemHealth?.metadataApis) {
+        const apis = data.systemHealth.metadataApis;
         if (apis.lastfm === 'down' || apis.fanart === 'down' || apis.musicbrainz === 'down') {
           const downApis = [];
           if (apis.lastfm === 'down') downApis.push('Last.fm');
@@ -191,7 +195,7 @@ export function SystemNotifications({ token, isAdmin }: SystemNotificationsProps
           if (apis.musicbrainz === 'down') downApis.push('MusicBrainz');
 
           newNotifications.push({
-            id: 'external-apis-down',
+            id: 'metadata-apis-down',
             type: 'warning',
             category: 'external',
             message: `APIs externas no disponibles: ${downApis.join(', ')}`,
@@ -214,6 +218,7 @@ export function SystemNotifications({ token, isAdmin }: SystemNotificationsProps
     const interval = setInterval(fetchNotifications, 30000); // 30s
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, isAdmin]);
 
   /**
