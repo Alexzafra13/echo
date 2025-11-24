@@ -20,6 +20,7 @@ import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { StorageService } from '../infrastructure/services/storage.service';
+import { normalizeForSorting } from '@shared/utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -507,6 +508,112 @@ export class MaintenanceController {
       };
     } catch (error) {
       this.logger.error(`Error during image synchronization: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Popula orderAlbumName y orderArtistName para álbumes y artistas existentes
+   * POST /api/maintenance/populate-sort-names
+   */
+  @Post('populate-sort-names')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Populate sorting names for existing albums and artists',
+    description:
+      'Auto-generates orderAlbumName and orderArtistName for existing records. ' +
+      'This is needed once after migration to enable alphabetical sorting (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Population result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        albumsUpdated: { type: 'number' },
+        artistsUpdated: { type: 'number' },
+        duration: { type: 'number', description: 'Duration in ms' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async populateSortNames() {
+    const startTime = Date.now();
+
+    try {
+      this.logger.log('Starting population of sort names');
+
+      // Get all albums without orderAlbumName
+      const albums = await this.prisma.album.findMany({
+        where: {
+          OR: [
+            { orderAlbumName: null },
+            { orderAlbumName: '' },
+          ],
+        },
+        select: { id: true, name: true },
+      });
+
+      // Get all artists without orderArtistName
+      const artists = await this.prisma.artist.findMany({
+        where: {
+          OR: [
+            { orderArtistName: null },
+            { orderArtistName: '' },
+          ],
+        },
+        select: { id: true, name: true },
+      });
+
+      this.logger.log(`Found ${albums.length} albums and ${artists.length} artists to update`);
+
+      // Update albums in batches
+      let albumsUpdated = 0;
+      for (const album of albums) {
+        try {
+          await this.prisma.album.update({
+            where: { id: album.id },
+            data: {
+              orderAlbumName: normalizeForSorting(album.name),
+            },
+          });
+          albumsUpdated++;
+        } catch (error) {
+          this.logger.error(`Failed to update album ${album.id}: ${(error as Error).message}`);
+        }
+      }
+
+      // Update artists in batches
+      let artistsUpdated = 0;
+      for (const artist of artists) {
+        try {
+          await this.prisma.artist.update({
+            where: { id: artist.id },
+            data: {
+              orderArtistName: normalizeForSorting(artist.name),
+            },
+          });
+          artistsUpdated++;
+        } catch (error) {
+          this.logger.error(`Failed to update artist ${artist.id}: ${(error as Error).message}`);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+
+      this.logger.log(
+        `Sort names populated: ${albumsUpdated} albums, ${artistsUpdated} artists in ${duration}ms`
+      );
+
+      return {
+        success: true,
+        albumsUpdated,
+        artistsUpdated,
+        duration,
+      };
+    } catch (error) {
+      this.logger.error(`Error populating sort names: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }

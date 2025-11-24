@@ -9,7 +9,7 @@ import {
 import { FileScannerService } from './file-scanner.service';
 import { MetadataExtractorService } from './metadata-extractor.service';
 import { CoverArtService } from '@shared/services';
-import { generateUuid } from '@shared/utils';
+import { generateUuid, normalizeForSorting } from '@shared/utils';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
@@ -335,7 +335,7 @@ export class ScanProcessorService implements OnModuleInit {
   ): Promise<{ id: string; name: string; created: boolean }> {
     // Normalizar nombre (evitar duplicados por espacios, etc.)
     const normalizedName = (artistName || 'Unknown Artist').trim();
-    const orderName = this.normalizeForComparison(normalizedName);
+    const orderName = normalizeForSorting(normalizedName); // Use shared utility for sorting
 
     // 1. Buscar artista por nombre normalizado (sin acentos)
     let artist = await this.prisma.artist.findFirst({
@@ -422,6 +422,7 @@ export class ScanProcessorService implements OnModuleInit {
           mbzAlbumId: metadata.mbzAlbumId || undefined,
           mbzAlbumArtistId: metadata.mbzAlbumArtistId || undefined,
           coverArtPath: coverPath || undefined,
+          orderAlbumName: normalizeForSorting(normalizedName), // Auto-populate for sorting
           songCount: 0,    // Se actualizará con cada track
           duration: 0,     // Se actualizará con cada track
           size: BigInt(0), // Se actualizará con cada track

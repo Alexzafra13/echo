@@ -28,6 +28,7 @@ export function MaintenanceTab() {
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isCleaning, setIsCleaning] = useState(false);
+  const [isPopulating, setIsPopulating] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const [showCacheConfirm, setShowCacheConfirm] = useState(false);
@@ -110,6 +111,26 @@ export function MaintenanceTab() {
         console.error('Error clearing cache:', error);
       }
       addToast(error.response?.data?.message || 'Error al limpiar caché', 'error');
+    }
+  };
+
+  const handlePopulateSortNames = async () => {
+    try {
+      setIsPopulating(true);
+      const response = await apiClient.post('/maintenance/populate-sort-names');
+      addToast(
+        `Nombres generados: ${response.data.albumsUpdated} álbumes, ${response.data.artistsUpdated} artistas`,
+        'success'
+      );
+      // Refrescar estadísticas
+      await loadStats();
+    } catch (error: any) {
+      if (import.meta.env.DEV) {
+        console.error('Error populating sort names:', error);
+      }
+      addToast(error.response?.data?.message || 'Error al generar nombres', 'error');
+    } finally {
+      setIsPopulating(false);
     }
   };
 
@@ -248,6 +269,28 @@ export function MaintenanceTab() {
               leftIcon={<RefreshCw size={18} />}
             >
               Limpiar Caché
+            </Button>
+          </div>
+
+          <div className={styles.actionCard}>
+            <div className={styles.actionHeader}>
+              <CheckCircle size={20} className={styles.actionIcon} />
+              <div className={styles.actionInfo}>
+                <h4 className={styles.actionTitle}>Generar Nombres de Ordenamiento</h4>
+                <p className={styles.actionDescription}>
+                  Genera orderAlbumName y orderArtistName para álbumes existentes (necesario para orden alfabético)
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={handlePopulateSortNames}
+              loading={isPopulating}
+              disabled={isPopulating}
+              leftIcon={<CheckCircle size={18} />}
+            >
+              Generar Nombres
             </Button>
           </div>
         </div>

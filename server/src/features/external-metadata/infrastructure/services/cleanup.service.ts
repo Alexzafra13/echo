@@ -90,6 +90,24 @@ export class CleanupService {
       result.orphanedFiles.push(...albumCleanup.orphanedFiles);
       result.errors.push(...albumCleanup.errors);
 
+      // 3. Limpiar registros de BD con isActive=false (solo en modo real)
+      if (!dryRun) {
+        try {
+          const deletedArtistImages = await this.prisma.customArtistImage.deleteMany({
+            where: { isActive: false },
+          });
+          const deletedAlbumCovers = await this.prisma.customAlbumCover.deleteMany({
+            where: { isActive: false },
+          });
+          this.logger.log(
+            `Deleted inactive records: ${deletedArtistImages.count} artist images, ${deletedAlbumCovers.count} album covers`
+          );
+        } catch (error) {
+          this.logger.error(`Failed to delete inactive records: ${(error as Error).message}`);
+          result.errors.push(`Failed to delete inactive records: ${(error as Error).message}`);
+        }
+      }
+
       result.duration = Date.now() - startTime;
 
       this.logger.log(
