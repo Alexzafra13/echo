@@ -78,14 +78,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       },
       {
         onSuccess: (data) => {
-          if (import.meta.env.DEV) {
-            console.log('[FileUpload] ✅ Image uploaded successfully', data);
-          }
-
           // Aplicar automáticamente la imagen recién subida
-          if (import.meta.env.DEV) {
-            console.log('[FileUpload] Applying uploaded image automatically...');
-          }
           applyImage(
             {
               artistId,
@@ -93,9 +86,6 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
             },
             {
               onSuccess: () => {
-                if (import.meta.env.DEV) {
-                  console.log('[FileUpload] ✅ Image applied successfully');
-                }
                 setSelectedFile(null);
                 setPreviewUrl(null);
                 if (fileInputRef.current) {
@@ -145,9 +135,6 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       },
       {
         onSuccess: () => {
-          if (import.meta.env.DEV) {
-            console.log('[FileUpload] ✅ Custom image applied successfully');
-          }
           onSuccess?.();
         },
         onError: (error: any) => {
@@ -174,9 +161,6 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       },
       {
         onSuccess: () => {
-          if (import.meta.env.DEV) {
-            console.log('[FileUpload] ✅ Custom image deleted successfully');
-          }
           if (selectedCustomImage?.id === image.id) {
             setSelectedCustomImage(null);
           }

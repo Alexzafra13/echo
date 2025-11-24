@@ -58,15 +58,8 @@ export function AlbumCoverSelectorModal({
       },
       {
         onSuccess: async () => {
-          if (import.meta.env.DEV) {
-            console.log('[AlbumCoverSelector] ✅ Cover applied successfully');
-          }
-
           // FALLBACK: Force manual refetch in case WebSocket fails
           // This ensures the UI updates even if the WebSocket event doesn't arrive
-          if (import.meta.env.DEV) {
-            console.log('[AlbumCoverSelector] Forcing manual refetch as fallback...');
-          }
 
           // Immediate refetch of album
           await queryClient.refetchQueries({
@@ -90,18 +83,12 @@ export function AlbumCoverSelectorModal({
 
           // Delayed refetch to ensure backend has fully processed the image
           setTimeout(() => {
-            if (import.meta.env.DEV) {
-              console.log('[AlbumCoverSelector] Secondary refetch after 1s...');
-            }
             queryClient.refetchQueries({
               queryKey: ['albums', albumId],
               type: 'active'
             });
           }, 1000);
 
-          if (import.meta.env.DEV) {
-            console.log('[AlbumCoverSelector] Manual refetch completed');
-          }
           onSuccess?.();
           onClose();
         },

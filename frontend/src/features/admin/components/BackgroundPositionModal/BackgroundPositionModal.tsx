@@ -219,9 +219,6 @@ export function BackgroundPositionModal({
 
   const handleSave = () => {
     const cssPosition = calculateBackgroundPosition();
-    if (import.meta.env.DEV) {
-      console.log('[BackgroundPositionModal] Saving position:', cssPosition);
-    }
 
     updatePosition(
       {
@@ -230,9 +227,6 @@ export function BackgroundPositionModal({
       },
       {
         onSuccess: () => {
-          if (import.meta.env.DEV) {
-            console.log('[BackgroundPositionModal] ✅ Position saved successfully');
-          }
           onSuccess?.();
           onClose();
         },

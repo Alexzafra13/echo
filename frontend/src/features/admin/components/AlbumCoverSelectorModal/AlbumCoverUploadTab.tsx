@@ -69,22 +69,12 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
   const handleUpload = () => {
     if (!selectedFile) return;
 
-    if (import.meta.env.DEV) {
-      console.log('[AlbumCoverUpload] Uploading cover...');
-    }
     setUploadError(null);
 
     uploadCover(
       { albumId, file: selectedFile },
       {
         onSuccess: (data) => {
-          if (import.meta.env.DEV) {
-            console.log('[AlbumCoverUpload] ✅ Cover uploaded successfully', data);
-          }
-          if (import.meta.env.DEV) {
-            console.log('[AlbumCoverUpload] Applying uploaded cover automatically...');
-          }
-
           // Aplicar automáticamente la cover recién subida
           applyCover(
             {
@@ -93,9 +83,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
             },
             {
               onSuccess: () => {
-                if (import.meta.env.DEV) {
-                  console.log('[AlbumCoverUpload] ✅ Cover applied successfully');
-                }
                 setSelectedFile(null);
                 setPreviewUrl(null);
                 onSuccess?.();
@@ -130,9 +117,6 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
       { albumId, customCoverId: coverId },
       {
         onSuccess: () => {
-          if (import.meta.env.DEV) {
-            console.log('[AlbumCoverUpload] ✅ Cover applied successfully');
-          }
           onSuccess?.();
         },
         onError: (error: any) => {
