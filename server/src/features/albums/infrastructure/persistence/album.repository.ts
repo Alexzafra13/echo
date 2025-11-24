@@ -138,6 +138,101 @@ export class PrismaAlbumRepository
     return AlbumMapper.toDomainArray(orderedAlbums);
   }
 
+  async findAlphabetically(skip: number, take: number): Promise<Album[]> {
+    const albums = await this.prisma.album.findMany({
+      skip,
+      take,
+      orderBy: {
+        orderAlbumName: 'asc', // Usa orderAlbumName (sin acentos, ignora "The")
+      },
+      include: {
+        artist: true,
+      },
+    });
+
+    return AlbumMapper.toDomainArray(albums);
+  }
+
+  async findRecentlyPlayed(userId: string, take: number): Promise<Album[]> {
+    // Query SQL: Obtener álbumes más recientes del historial del usuario
+    const recentAlbumIds = await this.prisma.$queryRaw<
+      { albumId: string; lastPlayed: Date }[]
+    >`
+      SELECT DISTINCT
+        t.album_id as "albumId",
+        MAX(ph.played_at) as "lastPlayed"
+      FROM play_history ph
+      JOIN tracks t ON t.id = ph.track_id
+      WHERE ph.user_id = ${userId}
+        AND t.album_id IS NOT NULL
+      GROUP BY t.album_id
+      ORDER BY "lastPlayed" DESC
+      LIMIT ${take}
+    `;
+
+    if (recentAlbumIds.length === 0) {
+      return [];
+    }
+
+    // Obtener los álbumes completos
+    const albums = await this.prisma.album.findMany({
+      where: {
+        id: { in: recentAlbumIds.map((a) => a.albumId) },
+      },
+      include: {
+        artist: true,
+      },
+    });
+
+    // Mantener el orden por fecha de reproducción
+    const albumMap = new Map(albums.map((a) => [a.id, a]));
+    const orderedAlbums = recentAlbumIds
+      .map((item) => albumMap.get(item.albumId))
+      .filter((album): album is typeof albums[0] => album !== undefined);
+
+    return AlbumMapper.toDomainArray(orderedAlbums);
+  }
+
+  async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
+    // Query: Álbumes con 'like' en user_starred
+    const favoriteAlbumIds = await this.prisma.userStarred.findMany({
+      where: {
+        userId,
+        starredType: 'album',
+        sentiment: 'like', // Solo los que tienen like (no dislike)
+      },
+      orderBy: {
+        starredAt: 'desc', // Más recientes primero
+      },
+      skip,
+      take,
+      select: {
+        starredId: true,
+      },
+    });
+
+    if (favoriteAlbumIds.length === 0) {
+      return [];
+    }
+
+    const albums = await this.prisma.album.findMany({
+      where: {
+        id: { in: favoriteAlbumIds.map((f) => f.starredId) },
+      },
+      include: {
+        artist: true,
+      },
+    });
+
+    // Mantener orden por fecha de like
+    const albumMap = new Map(albums.map((a) => [a.id, a]));
+    const orderedAlbums = favoriteAlbumIds
+      .map((f) => albumMap.get(f.starredId))
+      .filter((album): album is typeof albums[0] => album !== undefined);
+
+    return AlbumMapper.toDomainArray(orderedAlbums);
+  }
+
   async count(): Promise<number> {
     return this.prisma.album.count();
   }
