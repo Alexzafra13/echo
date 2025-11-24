@@ -1,4 +1,3 @@
-// src/shared/utils/uuid.util.ts
 import { randomUUID } from 'crypto';
 
 /**

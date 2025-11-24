@@ -1,4 +1,3 @@
-// src/features/auth/domain/ports/user-repository.port.ts
 import { User } from '../entities/user.entity';
 
 export interface UserUpdateableFields {

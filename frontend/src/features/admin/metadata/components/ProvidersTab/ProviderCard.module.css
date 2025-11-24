@@ -1,0 +1,82 @@
+.providerCard {
+  background-color: #1e1e2e;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #2a2a3c;
+  transition: all 0.2s ease;
+}
+
+.providerCard:hover {
+  border-color: #3a3a4c;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.providerHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.providerIcon {
+  color: #8b5cf6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.providerInfo {
+  flex: 1;
+}
+
+.providerName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f8f9fa;
+  margin: 0 0 4px 0;
+}
+
+.providerDescription {
+  font-size: 14px;
+  color: #a0a0b0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.providerBody {
+  padding-left: 40px;
+}
+
+.providerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.providerLink {
+  color: #8b5cf6;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.providerLink:hover {
+  color: #a78bfa;
+  text-decoration: underline;
+}

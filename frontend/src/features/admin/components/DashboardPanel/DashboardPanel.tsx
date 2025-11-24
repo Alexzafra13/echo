@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, TrendingUp, TrendingDown } from 'lucide-react';
 import { apiClient } from '@shared/services/api';
+import { formatDuration } from '@shared/utils/format';
 import { StatCard } from './StatCard';
 import { HealthPanel } from './HealthPanel';
 import { ActivityTimelineChart } from './ActivityTimelineChart';
@@ -118,20 +119,13 @@ export function DashboardPanel() {
       const response = await apiClient.get('/admin/dashboard/stats');
       setStats(response.data);
     } catch (err: any) {
-      console.error('Error loading dashboard stats:', err);
+      if (import.meta.env.DEV) {
+        console.error('Error loading dashboard stats:', err);
+      }
       setError(err.response?.data?.message || 'Error al cargar las estadísticas');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const days = Math.floor(hours / 24);
-    if (days > 0) {
-      return `${days}d ${hours % 24}h`;
-    }
-    return `${hours}h ${Math.floor((seconds % 3600) / 60)}m`;
   };
 
   const formatBytes = (bytes: number): string => {

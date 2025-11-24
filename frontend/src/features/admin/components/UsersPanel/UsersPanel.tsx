@@ -63,7 +63,9 @@ export function UsersPanel() {
       setUserToDelete(null);
       addToast('Usuario desactivado correctamente', 'success');
     } catch (error) {
-      console.error('Error deleting user:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error deleting user:', error);
+      }
       addToast('Error al eliminar usuario. Por favor intenta de nuevo.', 'error');
     }
   };
@@ -80,7 +82,9 @@ export function UsersPanel() {
       setUserToPermanentlyDelete(null);
       addToast('Usuario eliminado permanentemente', 'success');
     } catch (error) {
-      console.error('Error permanently deleting user:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error permanently deleting user:', error);
+      }
       addToast('Error al eliminar usuario permanentemente. Por favor intenta de nuevo.', 'error');
     }
   };
@@ -100,7 +104,9 @@ export function UsersPanel() {
         password: result.temporaryPassword,
       });
     } catch (error) {
-      console.error('Error resetting password:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error resetting password:', error);
+      }
       addToast('Error al resetear contraseña. Por favor intenta de nuevo.', 'error');
     }
   };

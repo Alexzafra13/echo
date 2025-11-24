@@ -75,7 +75,9 @@ export function LogsPanel() {
       setLogs(response.data.logs);
       setTotal(response.data.total);
     } catch (error: any) {
-      console.error('Error loading logs:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading logs:', error);
+      }
       addToast('Error al cargar logs', 'error');
     } finally {
       setIsLoading(false);

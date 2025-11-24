@@ -4,6 +4,7 @@ import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
+import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist } from '../../hooks/usePlaylists';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
@@ -54,7 +55,9 @@ export default function PlaylistsPage() {
     try {
       await deletePlaylistMutation.mutateAsync(deletePlaylistId);
     } catch (error: any) {
-      console.error('Error deleting playlist:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error deleting playlist:', error);
+      }
       alert('Error al eliminar la playlist');
     }
   };
@@ -66,16 +69,6 @@ export default function PlaylistsPage() {
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
     await updatePlaylistMutation.mutateAsync({ id, dto: data });
-  };
-
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} min`;
   };
 
   return (

@@ -52,7 +52,9 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
 
       onSuccess(result.user.username, result.temporaryPassword);
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error creating user:', error);
+      }
       setErrors({
         submit: error.response?.data?.message || 'Error al crear usuario',
       });

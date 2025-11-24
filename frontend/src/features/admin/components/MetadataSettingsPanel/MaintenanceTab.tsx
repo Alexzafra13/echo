@@ -53,7 +53,9 @@ export function MaintenanceTab() {
 
       setStats(mappedStats);
     } catch (error) {
-      console.error('Error loading storage stats:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading storage stats:', error);
+      }
     } finally {
       setIsLoadingStats(false);
     }
@@ -85,7 +87,9 @@ export function MaintenanceTab() {
       // Refrescar estadísticas
       await loadStats();
     } catch (error: any) {
-      console.error('Error running cleanup:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error running cleanup:', error);
+      }
       addToast(error.response?.data?.message || 'Error al ejecutar limpieza', 'error');
     } finally {
       setIsCleaning(false);
@@ -102,7 +106,9 @@ export function MaintenanceTab() {
       await apiClient.post('/admin/settings/cache/clear');
       addToast('Caché limpiado correctamente', 'success');
     } catch (error: any) {
-      console.error('Error clearing cache:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error clearing cache:', error);
+      }
       addToast(error.response?.data?.message || 'Error al limpiar caché', 'error');
     }
   };

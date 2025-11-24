@@ -68,7 +68,9 @@ export function ProvidersTab() {
       setLastfmKey(parsedSettings.lastfmApiKey);
       setFanarttvKey(parsedSettings.fanarttvApiKey);
     } catch (error) {
-      console.error('Error loading settings:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading settings:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +174,9 @@ export function ProvidersTab() {
       // Clear message after 5 seconds
       setTimeout(() => setSaveMessage(null), 5000);
     } catch (error: any) {
-      console.error('Error saving settings:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving settings:', error);
+      }
       setSaveMessage({
         type: 'error',
         text: error.response?.data?.message || 'Error al guardar configuración'

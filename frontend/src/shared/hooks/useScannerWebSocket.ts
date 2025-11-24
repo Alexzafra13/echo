@@ -151,8 +151,8 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
     };
 
     // Event: Subscripción confirmada
-    const handleSubscribed = (data: { scanId: string; message: string }) => {
-      console.log('✅ Subscribed to scan:', data.scanId);
+    const handleSubscribed = () => {
+      // Subscribed to scan
     };
 
     // Registrar event listeners

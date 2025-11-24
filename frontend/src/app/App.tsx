@@ -19,6 +19,7 @@ import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlayl
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
+import { ErrorBoundary } from '@shared/components/ErrorBoundary';
 import { useAuthStore } from '@shared/store';
 import { AudioPlayer } from '@features/player';
 
@@ -26,7 +27,7 @@ function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return (
-    <>
+    <ErrorBoundary>
       <Switch>
         {/* Login Route */}
         <Route path="/login" component={LoginPage} />
@@ -163,7 +164,7 @@ function App() {
 
       {/* Audio Player - Only show when authenticated */}
       {isAuthenticated && <AudioPlayer />}
-    </>
+    </ErrorBoundary>
   );
 }
 

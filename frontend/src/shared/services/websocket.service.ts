@@ -67,21 +67,16 @@ export class WebSocketService {
       reconnectionAttempts: 5,
     });
 
-    // Event listeners para logging (solo errores)
-    socket.on('connect', () => {
-      // Connection successful - silent
-    });
-
-    socket.on('disconnect', (_reason: string) => {
-      // Disconnected - silent unless debugging
-    });
-
     socket.on('error', (error: Error) => {
-      console.error(`❌ WebSocket error on /${namespace}:`, error);
+      if (import.meta.env.DEV) {
+        console.error(`[WebSocket] Error on /${namespace}:`, error);
+      }
     });
 
     socket.on('connect_error', (error: Error) => {
-      console.error(`❌ WebSocket connection error on /${namespace}:`, error.message);
+      if (import.meta.env.DEV) {
+        console.error(`[WebSocket] Connection error on /${namespace}:`, error.message);
+      }
     });
 
     // Guardar socket
@@ -100,7 +95,6 @@ export class WebSocketService {
     if (socket) {
       socket.disconnect();
       this.sockets.delete(key);
-      console.log(`🔌 Disconnected from /${namespace}`);
     }
   }
 
@@ -108,9 +102,8 @@ export class WebSocketService {
    * Desconectar de todos los namespaces
    */
   disconnectAll(): void {
-    this.sockets.forEach((socket, key) => {
+    this.sockets.forEach((socket) => {
       socket.disconnect();
-      console.log(`🔌 Disconnected from ${key}`);
     });
     this.sockets.clear();
   }

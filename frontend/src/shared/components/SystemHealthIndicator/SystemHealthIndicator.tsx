@@ -89,7 +89,9 @@ export function SystemHealthIndicator() {
       setHealth(response.data.systemHealth);
       setAlerts(response.data.activeAlerts);
     } catch (err) {
-      console.error('Error loading system health:', err);
+      if (import.meta.env.DEV) {
+        console.error('Error loading system health:', err);
+      }
       // Si falla, asumir estado degradado
       setHealth(null);
     }
