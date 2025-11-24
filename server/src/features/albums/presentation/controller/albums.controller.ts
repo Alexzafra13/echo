@@ -1,12 +1,18 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetTopPlayedAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
+import { GetAlbumsAlphabeticallyUseCase } from '../../domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
+import { GetRecentlyPlayedAlbumsUseCase } from '../../domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
+import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
+import { AlbumsPaginationQueryDto, AlbumsLimitQueryDto } from '../dtos/albums-sort.query.dto';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import { parsePaginationParams } from '@shared/utils';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { CurrentUser } from '@shared/decorators';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -32,6 +38,9 @@ export class AlbumsController {
     private readonly getFeaturedAlbumUseCase: GetFeaturedAlbumUseCase,
     private readonly getAlbumTracksUseCase: GetAlbumTracksUseCase,
     private readonly getAlbumCoverUseCase: GetAlbumCoverUseCase,
+    private readonly getAlbumsAlphabeticallyUseCase: GetAlbumsAlphabeticallyUseCase,
+    private readonly getRecentlyPlayedAlbumsUseCase: GetRecentlyPlayedAlbumsUseCase,
+    private readonly getFavoriteAlbumsUseCase: GetFavoriteAlbumsUseCase,
   ) {}
 
   /**
@@ -106,6 +115,157 @@ export class AlbumsController {
     });
 
     return result.map((album) => AlbumResponseDto.fromDomain(album));
+  }
+
+  /**
+   * GET /albums/alphabetical
+   * Obtener álbumes ordenados alfabéticamente
+   *
+   * Query params:
+   * - page: número de página (default: 1)
+   * - limit: álbumes por página (default: 20, máximo: 100)
+   */
+  @Get('alphabetical')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener álbumes ordenados alfabéticamente',
+    description: 'Retorna álbumes ordenados por nombre (ignora artículos como "The", "A", etc. y acentos)'
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página (empieza en 1)',
+    example: 1
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Álbumes por página (1-100)',
+    example: 20
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes ordenados alfabéticamente obtenida exitosamente'
+  })
+  async getAlbumsAlphabetically(
+    @Query() query: AlbumsPaginationQueryDto,
+  ) {
+    const result = await this.getAlbumsAlphabeticallyUseCase.execute({
+      page: query.page || 1,
+      limit: query.limit || 20,
+    });
+
+    return {
+      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
+  }
+
+  /**
+   * GET /albums/recently-played
+   * Obtener álbumes reproducidos recientemente por el usuario autenticado
+   * Requiere autenticación
+   *
+   * Query params:
+   * - limit: número de álbumes (default: 20, máximo: 100)
+   */
+  @Get('recently-played')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Obtener álbumes reproducidos recientemente',
+    description: 'Retorna álbumes del historial de reproducción del usuario, ordenados por última reproducción'
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de álbumes a retornar (1-100)',
+    example: 20
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes reproducidos recientemente obtenida exitosamente'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado o token inválido'
+  })
+  async getRecentlyPlayedAlbums(
+    @CurrentUser() user: any,
+    @Query() query: AlbumsLimitQueryDto,
+  ) {
+    const result = await this.getRecentlyPlayedAlbumsUseCase.execute({
+      userId: user.id,
+      limit: query.limit || 20,
+    });
+
+    return {
+      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+    };
+  }
+
+  /**
+   * GET /albums/favorites
+   * Obtener álbumes favoritos del usuario autenticado
+   * Requiere autenticación
+   *
+   * Query params:
+   * - page: número de página (default: 1)
+   * - limit: álbumes por página (default: 20, máximo: 100)
+   */
+  @Get('favorites')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Obtener álbumes favoritos',
+    description: 'Retorna álbumes marcados como favoritos (like) por el usuario, ordenados por fecha de like'
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página (empieza en 1)',
+    example: 1
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Álbumes por página (1-100)',
+    example: 20
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes favoritos obtenida exitosamente'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado o token inválido'
+  })
+  async getFavoriteAlbums(
+    @CurrentUser() user: any,
+    @Query() query: AlbumsPaginationQueryDto,
+  ) {
+    const result = await this.getFavoriteAlbumsUseCase.execute({
+      userId: user.id,
+      page: query.page || 1,
+      limit: query.limit || 20,
+    });
+
+    return {
+      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
+    };
   }
 
   /**

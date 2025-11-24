@@ -237,6 +237,30 @@ export class CachedAlbumRepository implements IAlbumRepository {
   }
 
   /**
+   * Obtiene álbumes ordenados alfabéticamente
+   * No se cachea porque cambia poco y las queries son rápidas con índice
+   */
+  async findAlphabetically(skip: number, take: number): Promise<Album[]> {
+    return this.baseRepository.findAlphabetically(skip, take);
+  }
+
+  /**
+   * Obtiene álbumes reproducidos recientemente por un usuario
+   * No se cachea porque es específico por usuario y cambia frecuentemente
+   */
+  async findRecentlyPlayed(userId: string, take: number): Promise<Album[]> {
+    return this.baseRepository.findRecentlyPlayed(userId, take);
+  }
+
+  /**
+   * Obtiene álbumes favoritos del usuario
+   * No se cachea porque es específico por usuario y cambia cuando hace like/unlike
+   */
+  async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
+    return this.baseRepository.findFavorites(userId, skip, take);
+  }
+
+  /**
    * Invalida todas las listas en cache
    * Se llama cuando hay escrituras (create, update, delete)
    */
