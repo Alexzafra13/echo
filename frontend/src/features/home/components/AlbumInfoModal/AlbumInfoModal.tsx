@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { getCoverUrl } from '@shared/utils/cover.utils';
+import { formatDuration } from '@shared/utils/format';
 import styles from './AlbumInfoModal.module.css';
 
 interface AlbumInfoModalProps {
@@ -32,15 +33,6 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
       return `${kb.toFixed(2)} KB`;
     }
     return `${bytes} bytes`;
-  };
-
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} min`;
   };
 
   const formatDate = (date: Date | string): string => {
