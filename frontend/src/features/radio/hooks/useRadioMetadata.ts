@@ -41,7 +41,6 @@ export function useRadioMetadata({
     if (!stationUuid || !streamUrl || !isPlaying) {
       // Cleanup existing connection
       if (eventSourceRef.current) {
-        console.log('🎵 [ICY] Closing metadata connection:', stationUuid);
         eventSourceRef.current.close();
         eventSourceRef.current = null;
         setIsConnected(false);
@@ -49,20 +48,15 @@ export function useRadioMetadata({
       return;
     }
 
-    console.log('🎵 [ICY] Attempting to connect:', { stationUuid, streamUrl, isPlaying });
-
     // Create SSE connection
     const connectSSE = () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '/api';
         const url = `${apiUrl}/radio/metadata/stream?stationUuid=${encodeURIComponent(stationUuid)}&streamUrl=${encodeURIComponent(streamUrl)}`;
 
-        console.log('🎵 [ICY] Connecting to SSE:', url);
-
         const eventSource = new EventSource(url);
 
         eventSource.onopen = () => {
-          console.log('✅ [ICY] SSE Connected:', stationUuid);
           setIsConnected(true);
           setError(null);
           reconnectAttemptsRef.current = 0; // Reset reconnect counter
@@ -73,7 +67,6 @@ export function useRadioMetadata({
           try {
             const data = JSON.parse(event.data);
             setMetadata(data);
-            console.log('🎵 [ICY] Metadata received:', data);
           } catch (err) {
             console.error('[ICY] Failed to parse metadata:', err);
           }
@@ -83,7 +76,6 @@ export function useRadioMetadata({
         eventSource.addEventListener('error', (event: MessageEvent) => {
           try {
             const data = JSON.parse(event.data);
-            console.warn('⚠️ [ICY] Metadata error:', data.message);
             setError(data.message);
           } catch (err) {
             // Ignore parse errors for error events
@@ -92,7 +84,7 @@ export function useRadioMetadata({
 
         // Handle keepalive
         eventSource.addEventListener('keepalive', (_event: MessageEvent) => {
-          console.log('💓 [ICY] Keepalive received');
+          // Keepalive received
         });
 
         // Handle connection errors
@@ -109,8 +101,6 @@ export function useRadioMetadata({
             30000
           );
           reconnectAttemptsRef.current += 1;
-
-          console.log(`🔄 Reconnecting in ${backoffDelay}ms (attempt ${reconnectAttemptsRef.current})...`);
 
           reconnectTimeoutRef.current = setTimeout(() => {
             if (isPlaying) {
@@ -149,14 +139,12 @@ export function useRadioMetadata({
       if (document.hidden) {
         // User switched tabs, close connection
         if (eventSourceRef.current) {
-          console.log('👁️ Tab hidden, closing SSE connection');
           eventSourceRef.current.close();
           eventSourceRef.current = null;
           setIsConnected(false);
         }
       } else if (isPlaying && stationUuid && streamUrl) {
         // User came back, reconnect if still playing
-        console.log('👁️ Tab visible, reconnecting SSE');
         // The main useEffect will handle reconnection
       }
     };

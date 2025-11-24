@@ -48,8 +48,6 @@ export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
     if (!socket) return;
 
     const handleAlbumCoverUpdated = (data: AlbumCoverUpdatedEvent) => {
-      console.log('[useAlbumMetadataSync] Album cover updated:', data);
-
       // If we're listening for a specific album, ignore updates for other albums
       if (albumId && data.albumId !== albumId) {
         return;
@@ -92,8 +90,6 @@ export function useAlbumMetadataSync(albumId?: string, artistId?: string) {
           type: 'active'
         });
       }
-
-      console.log(`[useAlbumMetadataSync] ✅ Forced immediate refetch for album ${data.albumId}`);
     };
 
     // Subscribe to album cover updated events

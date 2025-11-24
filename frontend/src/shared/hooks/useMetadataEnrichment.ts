@@ -99,13 +99,11 @@ export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
     // Event: Conectado
     const handleConnect = () => {
       setIsConnected(true);
-      console.log('✅ Connected to metadata enrichment WebSocket');
     };
 
     // Event: Desconectado
     const handleDisconnect = () => {
       setIsConnected(false);
-      console.log('❌ Disconnected from metadata enrichment WebSocket');
     };
 
     // Event: Enriquecimiento iniciado
@@ -116,7 +114,6 @@ export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
       total: number;
       timestamp: string;
     }) => {
-      console.log('🚀 Enrichment started:', data.entityName);
       setProgress({
         ...data,
         current: 0,
@@ -127,7 +124,6 @@ export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
 
     // Event: Progreso del enriquecimiento
     const handleProgress = (data: EnrichmentProgress) => {
-      console.log(`📊 Enrichment progress: ${data.entityName} - ${data.percentage}%`);
       setProgress(data);
     };
 
@@ -142,8 +138,6 @@ export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
       duration: number;
       timestamp: string;
     }) => {
-      console.log(`✅ Enrichment completed: ${data.entityName} in ${data.duration}ms`);
-
       // Limpiar progreso
       setProgress(null);
 

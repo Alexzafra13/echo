@@ -37,10 +37,6 @@ export function useApplyCustomCover() {
     mutationFn: (request: ApplyCustomCoverRequest) =>
       albumCoversApi.applyCustomCover(request),
     onSuccess: async (_data, variables) => {
-      if (import.meta.env.DEV) {
-        console.log('[useApplyCustomCover] ✅ Cover applied, invalidating queries...');
-      }
-
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['albums', variables.albumId] });
       queryClient.invalidateQueries({ queryKey: ['albums'] });
@@ -51,10 +47,6 @@ export function useApplyCustomCover() {
         queryKey: ['albums', variables.albumId],
         type: 'active',
       });
-
-      if (import.meta.env.DEV) {
-        console.log('[useApplyCustomCover] ✅ Queries invalidated and refetched');
-      }
     },
   });
 }
@@ -69,10 +61,6 @@ export function useDeleteCustomCover() {
     mutationFn: (request: DeleteCustomCoverRequest) =>
       albumCoversApi.deleteCustomCover(request),
     onSuccess: (_data, variables) => {
-      if (import.meta.env.DEV) {
-        console.log('[useDeleteCustomCover] ✅ Cover deleted, invalidating queries...');
-      }
-
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['customAlbumCovers', variables.albumId] });
       queryClient.invalidateQueries({ queryKey: ['albums', variables.albumId] });
