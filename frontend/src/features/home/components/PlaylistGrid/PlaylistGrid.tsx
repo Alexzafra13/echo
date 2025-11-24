@@ -57,23 +57,20 @@ export function PlaylistGrid({
             className={styles.playlistCard}
             onClick={() => handlePlaylistClick(playlist)}
           >
-            <PlaylistCover
-              type={playlist.type}
-              name={playlist.name}
-              coverColor={playlist.coverColor}
-              coverImageUrl={playlist.coverImageUrl}
-              artistName={playlist.metadata.artistName}
-              size="medium"
-            />
-            <div className={styles.playlistCard__info}>
-              <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
-              <p className={styles.playlistCard__description}>
-                {playlist.description}
-              </p>
-              <div className={styles.playlistCard__meta}>
-                <span>{playlist.metadata.totalTracks} canciones</span>
-              </div>
+            <div className={styles.playlistCard__coverContainer}>
+              <PlaylistCover
+                type={playlist.type}
+                name={playlist.name}
+                coverColor={playlist.coverColor}
+                coverImageUrl={playlist.coverImageUrl}
+                artistName={playlist.metadata.artistName}
+                size="medium"
+              />
             </div>
+            <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
+            <p className={styles.playlistCard__description}>
+              {playlist.description}
+            </p>
           </div>
         ))}
       </div>
