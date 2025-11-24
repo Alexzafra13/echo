@@ -51,8 +51,16 @@ describe('CachedTrackRepository', () => {
       del: jest.fn(),
     };
 
+    // Mock logger
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     // Create instance directly without TestingModule to avoid Prisma imports
-    cachedRepository = new CachedTrackRepository(baseRepository as any, cacheService);
+    cachedRepository = new CachedTrackRepository(baseRepository as any, cacheService, mockLogger as any);
   });
 
   afterEach(() => {
