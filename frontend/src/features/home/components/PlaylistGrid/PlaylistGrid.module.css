@@ -1,5 +1,8 @@
 .playlistGrid {
   margin-bottom: 40px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .playlistGrid__header {
@@ -41,6 +44,9 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   padding: 0 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Playlist Card */
