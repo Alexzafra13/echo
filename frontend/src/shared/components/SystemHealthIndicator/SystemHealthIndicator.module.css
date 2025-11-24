@@ -192,3 +192,70 @@
 .iconCritical {
   color: #ef4444;
 }
+
+/* ===== Responsive Design ===== */
+
+/* Mobile */
+@media (max-width: 768px) {
+  .indicator {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Tooltip como modal full-width en móvil */
+  .tooltip {
+    position: fixed;
+    top: 48px; /* Pegado al bottom del header */
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-top: 0; /* Sin margen en móvil */
+    max-height: calc(100vh - 48px);
+    background: rgba(15, 18, 28, 0.95); /* Mismo color que desktop */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease;
+    z-index: 1001; /* Mayor que hero buttons */
+    min-width: auto; /* Ancho completo */
+  }
+
+  /* Light theme para tooltip móvil */
+  [data-theme='light'] .tooltip {
+    background: rgba(240, 242, 245, 0.95); /* Light theme */
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .tooltipHeader {
+    padding: 16px;
+  }
+
+  .tooltipTitle {
+    font-size: 16px;
+  }
+
+  .tooltipContent {
+    padding: 16px;
+  }
+
+  .tooltipSection {
+    padding: 12px 0;
+    font-size: 15px;
+  }
+
+  .tooltipFooter {
+    padding: 14px;
+    font-size: 14px;
+  }
+}
