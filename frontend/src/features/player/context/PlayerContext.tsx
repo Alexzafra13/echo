@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Track, PlayerState, PlayerContextValue } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { recordPlay, recordSkip, type PlayContext } from '@shared/services/play-tracking.service';
@@ -57,18 +57,18 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Determine play context based on player state
    */
-  const getPlayContext = (): PlayContext => {
+  const getPlayContext = useCallback((): PlayContext => {
     if (state.isShuffle) {
       return 'shuffle';
     }
     // Default to 'direct' - can be enhanced with sourceType tracking
     return 'direct';
-  };
+  }, [state.isShuffle]);
 
   /**
    * Start tracking a new play session
    */
-  const startPlaySession = (track: Track, context?: PlayContext) => {
+  const startPlaySession = useCallback((track: Track, context?: PlayContext) => {
     const playContext = context || getPlayContext();
 
     playSessionRef.current = {
@@ -83,12 +83,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (import.meta.env.DEV) {
       console.log('[PlayTracking] Started session:', playSessionRef.current);
     }
-  };
+  }, [getPlayContext]);
 
   /**
    * End current play session and record to backend
    */
-  const endPlaySession = async (skipped: boolean = false) => {
+  const endPlaySession = useCallback(async (skipped: boolean = false) => {
     if (!playSessionRef.current || !audioRef.current) return;
 
     const session = playSessionRef.current;
@@ -132,10 +132,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     // Clear session
     playSessionRef.current = null;
-  };
+  }, []); // No dependencies - only uses refs
 
   // Play next track in queue
-  const playNext = () => {
+  const playNext = useCallback(() => {
     if (state.queue.length === 0) return;
 
     // End current session as skipped ONLY if there's an active session
@@ -160,7 +160,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     setCurrentQueueIndex(nextIndex);
     play(state.queue[nextIndex]);
-  };
+  }, [state.queue, state.isShuffle, state.repeatMode, currentQueueIndex, endPlaySession, play]);
 
   // Handle track ended - needs to be updated when dependencies change
   useEffect(() => {
@@ -184,7 +184,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     return () => {
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [state.repeatMode, currentQueueIndex, state.queue.length]);
+  }, [state.repeatMode, currentQueueIndex, state.queue.length, endPlaySession, playNext]);
 
   // Initialize audio element
   useEffect(() => {
@@ -266,7 +266,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, []);
 
   // Play a track
-  const play = (track?: Track) => {
+  const play = useCallback((track?: Track) => {
     if (!audioRef.current) return;
 
     if (track) {
@@ -317,32 +317,32 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Resume radio station
       audioRef.current.play();
     }
-  };
+  }, [streamTokenData?.token, state.currentTrack, state.isRadioMode, state.currentRadioStation, startPlaySession]);
 
   // Pause
-  const pause = () => {
+  const pause = useCallback(() => {
     audioRef.current?.pause();
-  };
+  }, []); // No dependencies - only uses ref
 
   // Toggle play/pause
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     if (state.isPlaying) {
       pause();
     } else {
       play();
     }
-  };
+  }, [state.isPlaying, pause, play]);
 
   // Stop
-  const stop = () => {
+  const stop = useCallback(() => {
     if (!audioRef.current) return;
     audioRef.current.pause();
     audioRef.current.currentTime = 0;
     setState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
-  };
+  }, []); // No dependencies - uses ref and setState with prev
 
   // Play previous track in queue
-  const playPrevious = () => {
+  const playPrevious = useCallback(() => {
     if (state.queue.length === 0) return;
 
     // If more than 3 seconds played, restart current track
@@ -367,19 +367,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     setCurrentQueueIndex(prevIndex);
     play(state.queue[prevIndex]);
-  };
+  }, [state.queue, state.repeatMode, currentQueueIndex, endPlaySession, play]);
 
   // Add tracks to queue
-  const addToQueue = (track: Track | Track[]) => {
+  const addToQueue = useCallback((track: Track | Track[]) => {
     const tracks = Array.isArray(track) ? track : [track];
     setState(prev => ({
       ...prev,
       queue: [...prev.queue, ...tracks],
     }));
-  };
+  }, []); // No dependencies - uses setState with prev
 
   // Remove track from queue
-  const removeFromQueue = (index: number) => {
+  const removeFromQueue = useCallback((index: number) => {
     setState(prev => {
       const newQueue = [...prev.queue];
       newQueue.splice(index, 1);
@@ -392,54 +392,54 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // If removed current track, play next
       playNext();
     }
-  };
+  }, [currentQueueIndex, playNext]);
 
   // Clear queue
-  const clearQueue = () => {
+  const clearQueue = useCallback(() => {
     setState(prev => ({ ...prev, queue: [] }));
     setCurrentQueueIndex(-1);
-  };
+  }, []); // No dependencies - uses setState with prev
 
   // Play queue of tracks
-  const playQueue = (tracks: Track[], startIndex: number = 0) => {
+  const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
     setState(prev => ({ ...prev, queue: tracks }));
     setCurrentQueueIndex(startIndex);
     play(tracks[startIndex]);
-  };
+  }, [play]);
 
   // Seek to time
-  const seek = (time: number) => {
+  const seek = useCallback((time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time;
       setState(prev => ({ ...prev, currentTime: time }));
     }
-  };
+  }, []); // No dependencies - uses ref and setState with prev
 
   // Set volume
-  const setVolume = (volume: number) => {
+  const setVolume = useCallback((volume: number) => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
       setState(prev => ({ ...prev, volume }));
     }
-  };
+  }, []); // No dependencies - uses ref and setState with prev
 
   // Toggle shuffle
-  const toggleShuffle = () => {
+  const toggleShuffle = useCallback(() => {
     setState(prev => ({ ...prev, isShuffle: !prev.isShuffle }));
-  };
+  }, []); // No dependencies - uses setState with prev
 
   // Toggle repeat
-  const toggleRepeat = () => {
+  const toggleRepeat = useCallback(() => {
     setState(prev => {
       const modes: Array<'off' | 'all' | 'one'> = ['off', 'all', 'one'];
       const currentIndex = modes.indexOf(prev.repeatMode);
       const nextMode = modes[(currentIndex + 1) % modes.length];
       return { ...prev, repeatMode: nextMode };
     });
-  };
+  }, []); // No dependencies - uses setState with prev
 
   // Play radio station
-  const playRadio = (station: any) => {
+  const playRadio = useCallback((station: any) => {
     if (!audioRef.current) return;
 
     // Use url_resolved if available (better quality), fallback to url
@@ -493,10 +493,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }));
 
     setCurrentQueueIndex(-1);
-  };
+  }, []); // No dependencies - uses ref and setState with prev
 
   // Stop radio
-  const stopRadio = () => {
+  const stopRadio = useCallback(() => {
     if (!audioRef.current) return;
     audioRef.current.pause();
     audioRef.current.currentTime = 0;
@@ -509,27 +509,48 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       currentTime: 0,
       duration: 0,
     }));
-  };
+  }, []); // No dependencies - uses ref and setState with prev
 
-  const value: PlayerContextValue = {
-    ...state,
-    play,
-    pause,
-    togglePlayPause,
-    stop,
-    playNext,
-    playPrevious,
-    addToQueue,
-    removeFromQueue,
-    clearQueue,
-    playQueue,
-    playRadio,
-    stopRadio,
-    seek,
-    setVolume,
-    toggleShuffle,
-    toggleRepeat,
-  };
+  const value: PlayerContextValue = useMemo(
+    () => ({
+      ...state,
+      play,
+      pause,
+      togglePlayPause,
+      stop,
+      playNext,
+      playPrevious,
+      addToQueue,
+      removeFromQueue,
+      clearQueue,
+      playQueue,
+      playRadio,
+      stopRadio,
+      seek,
+      setVolume,
+      toggleShuffle,
+      toggleRepeat,
+    }),
+    [
+      state,
+      play,
+      pause,
+      togglePlayPause,
+      stop,
+      playNext,
+      playPrevious,
+      addToQueue,
+      removeFromQueue,
+      clearQueue,
+      playQueue,
+      playRadio,
+      stopRadio,
+      seek,
+      setVolume,
+      toggleShuffle,
+      toggleRepeat,
+    ]
+  );
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
 }
