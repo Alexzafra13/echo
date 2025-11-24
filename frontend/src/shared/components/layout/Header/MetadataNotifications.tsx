@@ -201,6 +201,18 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     return `Hace ${diffDays}d`;
   };
 
+  /**
+   * Cerrar notificaciones con animación y limpiar
+   */
+  const handleClearAll = () => {
+    clearAll();
+    setIsClosing(true);
+    closeTimeoutRef.current = setTimeout(() => {
+      setShowNotifications(false);
+      setIsClosing(false);
+    }, 200);
+  };
+
   // Solo mostrar para admin (después de todos los hooks)
   if (!isAdmin) {
     return null;
@@ -261,7 +273,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                 )}
                 <button
                   className={styles.notifications__action}
-                  onClick={clearAll}
+                  onClick={handleClearAll}
                   title="Limpiar todas"
                 >
                   <X size={16} />
@@ -295,7 +307,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                         ? styles['notifications__item--error']
                         : ''
                     }`}
-                    onClick={() => !isSystemAlert && !isUnread && markAsRead(item.id)}
+                    onClick={() => !isSystemAlert && isUnread && markAsRead(item.id)}
                   >
                     {/* Icon */}
                     <div className={styles.notifications__itemIcon}>

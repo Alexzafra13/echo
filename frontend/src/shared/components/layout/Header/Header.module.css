@@ -235,7 +235,7 @@
   min-width: 220px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.15); /* Mucho menos transparente */
+  background: rgba(255, 255, 255, 0.25); /* Menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
