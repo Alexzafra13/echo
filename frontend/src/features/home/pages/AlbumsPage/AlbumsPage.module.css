@@ -271,3 +271,78 @@
   background: rgba(255, 255, 255, 0.1);
   color: var(--color-text-primary);
 }
+
+/* ===== Filter/Sort Selector Styles ===== */
+.albumsPage__filterWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.albumsPage__filterLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+  white-space: nowrap;
+}
+
+.albumsPage__filterSelect {
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--color-text-primary, #ffffff);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  min-width: 220px;
+}
+
+.albumsPage__filterSelect:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.albumsPage__filterSelect:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-primary, #ff6b6b);
+}
+
+.albumsPage__filterSelect option {
+  background: var(--color-bg-secondary, #1a1e3a);
+  color: var(--color-text-primary, #ffffff);
+  padding: 10px;
+}
+
+/* Responsive adjustments for filter */
+@media (max-width: 768px) {
+  .albumsPage__filterWrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .albumsPage__filterSelect {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .albumsPage__filterWrapper {
+    margin-bottom: 20px;
+  }
+
+  .albumsPage__filterLabel {
+    font-size: 13px;
+  }
+
+  .albumsPage__filterSelect {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}

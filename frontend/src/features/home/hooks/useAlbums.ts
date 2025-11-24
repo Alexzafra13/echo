@@ -83,3 +83,36 @@ export function useAlbumTracks(albumId: string) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+/**
+ * Hook to fetch albums sorted alphabetically (A-Z)
+ */
+export function useAlbumsAlphabetically(params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['albums', 'alphabetical', params],
+    queryFn: () => albumsService.getAlphabetically(params),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+}
+
+/**
+ * Hook to fetch recently played albums for the authenticated user
+ */
+export function useAlbumsRecentlyPlayed(limit?: number) {
+  return useQuery({
+    queryKey: ['albums', 'recently-played', limit],
+    queryFn: () => albumsService.getRecentlyPlayed(limit),
+    staleTime: 2 * 60 * 1000, // 2 minutos (más dinámico)
+  });
+}
+
+/**
+ * Hook to fetch favorite albums for the authenticated user
+ */
+export function useAlbumsFavorites(params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['albums', 'favorites', params],
+    queryFn: () => albumsService.getFavorites(params),
+    staleTime: 2 * 60 * 1000, // 2 minutos (más dinámico)
+  });
+}
