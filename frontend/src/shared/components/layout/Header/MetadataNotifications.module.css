@@ -68,7 +68,7 @@
   margin-top: 24px; /* Un poco más abajo */
   width: 380px;
   max-height: 500px;
-  background: rgba(255, 255, 255, 0.25); /* Menos transparente */
+  background: rgba(15, 18, 28, 0.95); /* Color oscuro menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
@@ -78,7 +78,7 @@
     0 0 0 1px rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.18);
   overflow: hidden;
-  z-index: 100;
+  z-index: 1001; /* Mayor que hero buttons */
   display: flex;
   flex-direction: column;
 

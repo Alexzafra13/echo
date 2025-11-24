@@ -318,7 +318,6 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
                   <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
                 </div>
               </div>
-              <div className={styles.header__userDivider} />
               <button className={styles.header__userMenuItem} onClick={() => handleCloseUserMenu(() => setLocation('/profile'))}>
                 Profile
               </button>
