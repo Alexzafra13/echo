@@ -17,10 +17,11 @@ export interface AutoSearchStatsDisplayProps {
  */
 export function AutoSearchStatsDisplay({ stats }: AutoSearchStatsDisplayProps) {
   // Calculate stats from the API response structure
-  const autoApplied = stats.totalProcessed
-    ? Math.round((stats.successRate / 100) * stats.totalProcessed)
+  const totalProcessed = stats.totalProcessed || 0;
+  const autoApplied = totalProcessed
+    ? Math.round((stats.successRate / 100) * totalProcessed)
     : 0;
-  const conflictsCreated = stats.totalProcessed - autoApplied;
+  const conflictsCreated = totalProcessed - autoApplied;
   const ignored = 0; // This would come from backend if available
 
   return (
