@@ -8,9 +8,6 @@
 import type {
   MetadataSettings,
   SettingDTO,
-  ProvidersConfig,
-  StorageConfig,
-  AutoSearchConfig,
 } from '../types/metadata.types';
 
 export const metadataService = {

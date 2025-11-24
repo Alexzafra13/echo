@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@shared/components/ui';
-import { useToast } from '@shared/contexts/ToastContext';
+import { useToast } from '@shared/context/ToastContext';
 import {
   useMetadataSettings,
   useUpdateMetadataSettings,
