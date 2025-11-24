@@ -43,7 +43,7 @@
   top: 100%;
   right: 0;
   margin-top: 28px; /* Un poco más abajo para alinearse con el bottom del header */
-  background: rgba(255, 255, 255, 0.25); /* Menos transparente */
+  background: rgba(15, 18, 28, 0.95); /* Color oscuro menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -54,7 +54,7 @@
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 10px 25px -3px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.15);
-  z-index: 1000;
+  z-index: 1001; /* Mayor que hero buttons */
 
   /* Animación de entrada - Spring effect */
   transform-origin: top right;

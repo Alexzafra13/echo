@@ -235,7 +235,7 @@
   min-width: 220px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.25); /* Menos transparente */
+  background: rgba(15, 18, 28, 0.95); /* Color oscuro menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
@@ -245,7 +245,7 @@
     0 0 0 1px rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 8px;
-  z-index: 100;
+  z-index: 1001; /* Mayor que hero buttons */
 
   /* Animación de entrada */
   transform-origin: top right;
