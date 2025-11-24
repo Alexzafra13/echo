@@ -214,7 +214,9 @@ function loadImageAndExtractColor(
       resolve(colorString);
       onComplete?.();
     } catch (error) {
-      console.error('Error extracting color:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error extracting color:', error);
+      }
       resolve('64, 71, 114'); // Dark blue fallback
       onComplete?.();
     }

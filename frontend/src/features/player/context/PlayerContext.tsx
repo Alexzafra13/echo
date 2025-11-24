@@ -80,7 +80,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       sourceType: undefined,
     };
 
-    console.log('[PlayTracking] Started session:', playSessionRef.current);
+    if (import.meta.env.DEV) {
+      console.log('[PlayTracking] Started session:', playSessionRef.current);
+    }
   };
 
   /**
@@ -97,11 +99,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // Calculate completion rate
     const completionRate = duration > 0 ? currentTime / duration : 0;
 
-    console.log('[PlayTracking] Ending session:', {
-      trackId: session.trackId,
-      completionRate: (completionRate * 100).toFixed(1) + '%',
-      skipped,
-    });
+    if (import.meta.env.DEV) {
+      console.log('[PlayTracking] Ending session:', {
+        trackId: session.trackId,
+        completionRate: (completionRate * 100).toFixed(1) + '%',
+        skipped,
+      });
+    }
 
     if (skipped) {
       // Record skip event
@@ -268,7 +272,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (track) {
       // Play new track
       if (!streamTokenData?.token) {
-        console.error('[Player] Stream token not available');
+        if (import.meta.env.DEV) {
+          console.error('[Player] Stream token not available');
+        }
         return;
       }
 
@@ -281,11 +287,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       // Error handler for audio loading issues
       audioRef.current.onerror = () => {
-        console.error('[Player] Failed to load audio track:', track.title);
+        if (import.meta.env.DEV) {
+          console.error('[Player] Failed to load audio track:', track.title);
+        }
       };
 
       audioRef.current.play().catch((error) => {
-        console.error('[Player] Failed to play audio:', error.message);
+        if (import.meta.env.DEV) {
+          console.error('[Player] Failed to play audio:', error.message);
+        }
       });
 
       setState(prev => ({
@@ -436,7 +446,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const streamUrl = station.urlResolved || station.url_resolved || station.url;
 
     if (!streamUrl) {
-      console.error('[Player] Radio station has no valid stream URL');
+      if (import.meta.env.DEV) {
+        console.error('[Player] Radio station has no valid stream URL');
+      }
       return;
     }
 
@@ -452,14 +464,18 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // Wait for audio to be ready before playing
     audio.oncanplay = () => {
       audio.play().catch((error) => {
-        console.error('[Player] Failed to play radio:', error.message);
+        if (import.meta.env.DEV) {
+          console.error('[Player] Failed to play radio:', error.message);
+        }
       });
       audio.oncanplay = null; // Clean up after playing
     };
 
     // Error handler for radio loading issues
     audio.onerror = () => {
-      console.error('[Player] Failed to load radio station:', station.name);
+      if (import.meta.env.DEV) {
+        console.error('[Player] Failed to load radio station:', station.name);
+      }
       audio.onerror = null;
     };
 

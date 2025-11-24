@@ -82,22 +82,32 @@ export default function ArtistDetailPage() {
     ? getArtistImageUrl(id!, backgroundImageType!, backgroundTag)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
 
-  console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
+  if (import.meta.env.DEV) {
+    console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
+  }
 
   // CRITICAL: Force browser to reload background image when URL changes
   // This is needed because CSS background-image doesn't always respect cache headers
   useEffect(() => {
     if (backgroundUrl) {
-      console.log('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
+      if (import.meta.env.DEV) {
+        console.log('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
+      }
       const img = new window.Image();
       img.src = backgroundUrl;
       img.onload = () => {
-        console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
+        if (import.meta.env.DEV) {
+          console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
+        }
         // Force React to destroy and recreate the background div
         // This helps clear any browser memory cache of the old image
         setImageRenderKey(prev => prev + 1);
       };
-      img.onerror = (e) => console.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
+      img.onerror = (e) => {
+        if (import.meta.env.DEV) {
+          console.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
+        }
+      };
     }
   }, [backgroundUrl]);
 
@@ -115,11 +125,15 @@ export default function ArtistDetailPage() {
   // Force preload of logo to break browser cache
   useEffect(() => {
     if (logoUrl) {
-      console.log('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
+      if (import.meta.env.DEV) {
+        console.log('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
+      }
       const img = new window.Image();
       img.src = logoUrl;
       img.onload = () => {
-        console.log('[ArtistDetailPage] ✅ Logo preloaded successfully');
+        if (import.meta.env.DEV) {
+          console.log('[ArtistDetailPage] ✅ Logo preloaded successfully');
+        }
         setLogoRenderKey(prev => prev + 1);
       };
     }
@@ -128,11 +142,15 @@ export default function ArtistDetailPage() {
   // Force preload of profile image to break browser cache
   useEffect(() => {
     if (profileUrl) {
-      console.log('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
+      if (import.meta.env.DEV) {
+        console.log('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
+      }
       const img = new window.Image();
       img.src = profileUrl;
       img.onload = () => {
-        console.log('[ArtistDetailPage] ✅ Profile image preloaded successfully');
+        if (import.meta.env.DEV) {
+          console.log('[ArtistDetailPage] ✅ Profile image preloaded successfully');
+        }
         setProfileRenderKey(prev => prev + 1);
       };
     }
