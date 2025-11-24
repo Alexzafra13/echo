@@ -67,12 +67,16 @@ export class WebSocketService {
       reconnectionAttempts: 5,
     });
 
-    socket.on('error', (_error: Error) => {
-      // Silent - errors handled at application level
+    socket.on('error', (error: Error) => {
+      if (import.meta.env.DEV) {
+        console.error(`[WebSocket] Error on /${namespace}:`, error);
+      }
     });
 
-    socket.on('connect_error', (_error: Error) => {
-      // Silent - errors handled at application level
+    socket.on('connect_error', (error: Error) => {
+      if (import.meta.env.DEV) {
+        console.error(`[WebSocket] Connection error on /${namespace}:`, error.message);
+      }
     });
 
     // Guardar socket

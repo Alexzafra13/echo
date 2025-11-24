@@ -82,6 +82,9 @@ export function useMetadataWebSocket(): Socket | null {
         }
       };
     } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[useMetadataWebSocket] Connection error:', error);
+      }
       setSocket(null);
     }
   }, [token, isAuthenticated]);

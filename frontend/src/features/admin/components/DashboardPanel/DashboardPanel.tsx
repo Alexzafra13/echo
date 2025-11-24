@@ -118,7 +118,9 @@ export function DashboardPanel() {
       const response = await apiClient.get('/admin/dashboard/stats');
       setStats(response.data);
     } catch (err: any) {
-      console.error('Error loading dashboard stats:', err);
+      if (import.meta.env.DEV) {
+        console.error('Error loading dashboard stats:', err);
+      }
       setError(err.response?.data?.message || 'Error al cargar las estadísticas');
     } finally {
       setIsLoading(false);

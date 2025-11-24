@@ -132,8 +132,10 @@ export interface RecentlyPlayed {
 export async function recordPlay(data: RecordPlayData): Promise<void> {
   try {
     await apiClient.post('/play-tracking/play', data);
-  } catch {
-    // Silent fail - tracking failures shouldn't break the player
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[PlayTracking] Failed to record play:', error);
+    }
   }
 }
 
@@ -154,8 +156,10 @@ export async function recordSkip(data: RecordSkipData): Promise<void> {
       sourceId: data.sourceId,
       sourceType: data.sourceType,
     });
-  } catch {
-    // Silent fail - tracking failures shouldn't break the player
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[PlayTracking] Failed to record skip:', error);
+    }
   }
 }
 

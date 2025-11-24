@@ -54,7 +54,9 @@ export default function PlaylistsPage() {
     try {
       await deletePlaylistMutation.mutateAsync(deletePlaylistId);
     } catch (error: any) {
-      console.error('Error deleting playlist:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error deleting playlist:', error);
+      }
       alert('Error al eliminar la playlist');
     }
   };

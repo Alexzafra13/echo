@@ -345,7 +345,9 @@ export default function RadioPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to toggle favorite:', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to toggle favorite:', error);
+      }
     }
   }, [favoriteStations, saveFavoriteMutation, deleteFavoriteMutation]);
 
