@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Activity, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiClient } from '@shared/services/api';
@@ -42,7 +42,8 @@ export function SystemHealthIndicator() {
   const [alerts, setAlerts] = useState<ActiveAlerts | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [hideTimeout, setHideTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Solo mostrar para admins
   if (!user?.isAdmin) {
@@ -56,6 +57,31 @@ export function SystemHealthIndicator() {
     const interval = setInterval(loadHealth, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Cerrar tooltip al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        // Trigger closing animation
+        setIsClosing(true);
+        closeTimeoutRef.current = setTimeout(() => {
+          setShowTooltip(false);
+          setIsClosing(false);
+        }, 200);
+      }
+    };
+
+    if (showTooltip) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, [showTooltip]);
 
   const loadHealth = async () => {
     try {
@@ -130,24 +156,18 @@ export function SystemHealthIndicator() {
     }
   };
 
-  const handleMouseEnter = () => {
-    // Clear any pending hide timeout
-    if (hideTimeout) {
-      clearTimeout(hideTimeout);
-      setHideTimeout(null);
+  const handleToggleTooltip = () => {
+    if (showTooltip) {
+      // Si está abierto, cerrar con animación
+      setIsClosing(true);
+      closeTimeoutRef.current = setTimeout(() => {
+        setShowTooltip(false);
+        setIsClosing(false);
+      }, 200);
+    } else {
+      // Si está cerrado, abrir
+      setShowTooltip(true);
     }
-    setIsClosing(false);
-    setShowTooltip(true);
-  };
-
-  const handleMouseLeave = () => {
-    // Start closing animation, then hide
-    setIsClosing(true);
-    const timeout = setTimeout(() => {
-      setShowTooltip(false);
-      setIsClosing(false);
-    }, 200); // Match animation duration
-    setHideTimeout(timeout);
   };
 
   const handleNavigateToDashboard = () => {
@@ -160,12 +180,12 @@ export function SystemHealthIndicator() {
   };
 
   return (
-    <div
-      className={styles.container}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className={styles.indicator} style={{ backgroundColor: getStatusColor() }}>
+    <div className={styles.container} ref={containerRef}>
+      <div
+        className={styles.indicator}
+        style={{ backgroundColor: getStatusColor() }}
+        onClick={handleToggleTooltip}
+      >
         <Activity size={12} />
       </div>
 
