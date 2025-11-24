@@ -78,10 +78,14 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       },
       {
         onSuccess: (data) => {
-          console.log('[FileUpload] ✅ Image uploaded successfully', data);
+          if (import.meta.env.DEV) {
+            console.log('[FileUpload] ✅ Image uploaded successfully', data);
+          }
 
           // Aplicar automáticamente la imagen recién subida
-          console.log('[FileUpload] Applying uploaded image automatically...');
+          if (import.meta.env.DEV) {
+            console.log('[FileUpload] Applying uploaded image automatically...');
+          }
           applyImage(
             {
               artistId,
@@ -89,7 +93,9 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
             },
             {
               onSuccess: () => {
-                console.log('[FileUpload] ✅ Image applied successfully');
+                if (import.meta.env.DEV) {
+                  console.log('[FileUpload] ✅ Image applied successfully');
+                }
                 setSelectedFile(null);
                 setPreviewUrl(null);
                 if (fileInputRef.current) {
@@ -98,7 +104,9 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
                 onSuccess?.();
               },
               onError: (error: any) => {
-                console.error('[FileUpload] ❌ Apply error:', error);
+                if (import.meta.env.DEV) {
+                  console.error('[FileUpload] ❌ Apply error:', error);
+                }
                 setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
                 // Limpiar el formulario aunque falle la aplicación
                 setSelectedFile(null);
@@ -111,7 +119,9 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
           );
         },
         onError: (error: any) => {
-          console.error('[FileUpload] ❌ Upload error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[FileUpload] ❌ Upload error:', error);
+          }
           setUploadError(error?.response?.data?.message || 'Error al subir la imagen');
         },
       }
@@ -135,11 +145,15 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       },
       {
         onSuccess: () => {
-          console.log('[FileUpload] ✅ Custom image applied successfully');
+          if (import.meta.env.DEV) {
+            console.log('[FileUpload] ✅ Custom image applied successfully');
+          }
           onSuccess?.();
         },
         onError: (error: any) => {
-          console.error('[FileUpload] ❌ Apply error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[FileUpload] ❌ Apply error:', error);
+          }
           setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
         },
       }
@@ -160,13 +174,17 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       },
       {
         onSuccess: () => {
-          console.log('[FileUpload] ✅ Custom image deleted successfully');
+          if (import.meta.env.DEV) {
+            console.log('[FileUpload] ✅ Custom image deleted successfully');
+          }
           if (selectedCustomImage?.id === image.id) {
             setSelectedCustomImage(null);
           }
         },
         onError: (error: any) => {
-          console.error('[FileUpload] ❌ Delete error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[FileUpload] ❌ Delete error:', error);
+          }
           setUploadError(error?.response?.data?.message || 'Error al eliminar la imagen');
         },
       }

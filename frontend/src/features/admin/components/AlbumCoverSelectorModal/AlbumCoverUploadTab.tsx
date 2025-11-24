@@ -69,15 +69,21 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
   const handleUpload = () => {
     if (!selectedFile) return;
 
-    console.log('[AlbumCoverUpload] Uploading cover...');
+    if (import.meta.env.DEV) {
+      console.log('[AlbumCoverUpload] Uploading cover...');
+    }
     setUploadError(null);
 
     uploadCover(
       { albumId, file: selectedFile },
       {
         onSuccess: (data) => {
-          console.log('[AlbumCoverUpload] ✅ Cover uploaded successfully', data);
-          console.log('[AlbumCoverUpload] Applying uploaded cover automatically...');
+          if (import.meta.env.DEV) {
+            console.log('[AlbumCoverUpload] ✅ Cover uploaded successfully', data);
+          }
+          if (import.meta.env.DEV) {
+            console.log('[AlbumCoverUpload] Applying uploaded cover automatically...');
+          }
 
           // Aplicar automáticamente la cover recién subida
           applyCover(
@@ -87,20 +93,26 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
             },
             {
               onSuccess: () => {
-                console.log('[AlbumCoverUpload] ✅ Cover applied successfully');
+                if (import.meta.env.DEV) {
+                  console.log('[AlbumCoverUpload] ✅ Cover applied successfully');
+                }
                 setSelectedFile(null);
                 setPreviewUrl(null);
                 onSuccess?.();
               },
               onError: (error: any) => {
-                console.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+                if (import.meta.env.DEV) {
+                  console.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+                }
                 setUploadError(error?.response?.data?.message || 'Error al aplicar la portada');
               },
             }
           );
         },
         onError: (error: any) => {
-          console.error('[AlbumCoverUpload] ❌ Error uploading cover:', error);
+          if (import.meta.env.DEV) {
+            console.error('[AlbumCoverUpload] ❌ Error uploading cover:', error);
+          }
           setUploadError(error?.response?.data?.message || 'Error al subir la portada');
         },
       }
@@ -118,11 +130,15 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
       { albumId, customCoverId: coverId },
       {
         onSuccess: () => {
-          console.log('[AlbumCoverUpload] ✅ Cover applied successfully');
+          if (import.meta.env.DEV) {
+            console.log('[AlbumCoverUpload] ✅ Cover applied successfully');
+          }
           onSuccess?.();
         },
         onError: (error: any) => {
-          console.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+          if (import.meta.env.DEV) {
+            console.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+          }
           setUploadError(error?.response?.data?.message || 'Error al aplicar la portada');
         },
       }

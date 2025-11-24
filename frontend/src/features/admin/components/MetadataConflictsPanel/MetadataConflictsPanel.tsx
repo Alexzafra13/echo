@@ -146,21 +146,25 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   // Debug logging for metadata and missing covers
   if (isImage) {
     if (!conflict.metadata?.suggestedResolution) {
-      console.warn('⚠️ Conflict missing suggested resolution data:', {
-        id: conflict.id,
-        entity: conflict.entity?.name,
-        source: conflict.source,
-        hasMetadata: !!conflict.metadata,
-        metadata: conflict.metadata,
-      });
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Conflict missing suggested resolution data:', {
+          id: conflict.id,
+          entity: conflict.entity?.name,
+          source: conflict.source,
+          hasMetadata: !!conflict.metadata,
+          metadata: conflict.metadata,
+        });
+      }
     }
 
     if (!conflict.currentValue) {
-      console.info('ℹ️ Conflict has no current cover (file may have been deleted):', {
-        id: conflict.id,
-        entity: conflict.entity?.name,
-        source: conflict.source,
-      });
+      if (import.meta.env.DEV) {
+        console.info('ℹ️ Conflict has no current cover (file may have been deleted):', {
+          id: conflict.id,
+          entity: conflict.entity?.name,
+          source: conflict.source,
+        });
+      }
     }
   }
 
@@ -236,7 +240,9 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
                   src={currentImageUrl}
                   alt="Current"
                   onError={(e) => {
-                    console.warn('⚠️ Current cover failed to load (404 or network error):', currentImageUrl, 'for conflict:', conflict.id);
+                    if (import.meta.env.DEV) {
+                      console.warn('⚠️ Current cover failed to load (404 or network error):', currentImageUrl, 'for conflict:', conflict.id);
+                    }
                     // Hide the broken image
                     e.currentTarget.style.display = 'none';
                     // Show message in container
@@ -246,7 +252,9 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
                     }
                   }}
                   onLoad={() => {
-                    console.log('✓ Current cover loaded:', currentImageUrl);
+                    if (import.meta.env.DEV) {
+                      console.log('✓ Current cover loaded:', currentImageUrl);
+                    }
                   }}
                 />
               </div>
@@ -290,11 +298,15 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
                   src={suggestedImageUrl}
                   alt="Suggested"
                   onError={(e) => {
-                    console.error('Error loading suggested cover:', suggestedImageUrl, 'for conflict:', conflict.id);
+                    if (import.meta.env.DEV) {
+                      console.error('Error loading suggested cover:', suggestedImageUrl, 'for conflict:', conflict.id);
+                    }
                     e.currentTarget.style.display = 'none';
                   }}
                   onLoad={() => {
-                    console.log('✓ Suggested cover loaded:', suggestedImageUrl);
+                    if (import.meta.env.DEV) {
+                      console.log('✓ Suggested cover loaded:', suggestedImageUrl);
+                    }
                   }}
                 />
               </div>

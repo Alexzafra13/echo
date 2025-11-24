@@ -96,7 +96,9 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
 
       setSystemAlerts(alerts);
     } catch (error) {
-      console.error('Error fetching system alerts:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error fetching system alerts:', error);
+      }
     }
   };
 

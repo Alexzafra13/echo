@@ -47,7 +47,9 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
 
       onClose();
     } catch (error: any) {
-      console.error('Error updating user:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error updating user:', error);
+      }
       setErrors({
         submit: error.response?.data?.message || 'Error al actualizar usuario',
       });

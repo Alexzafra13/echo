@@ -93,7 +93,9 @@ export function useApplyCustomImage() {
     mutationFn: (request: ApplyCustomImageRequest) =>
       artistAvatarsApi.applyCustomImage(request),
     onSuccess: async (_data, variables) => {
-      console.log('[useApplyCustomImage] ✅ Image applied, invalidating queries...');
+      if (import.meta.env.DEV) {
+        console.log('[useApplyCustomImage] ✅ Image applied, invalidating queries...');
+      }
 
       // Invalidar queries relacionadas para refrescar las imágenes
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
@@ -112,7 +114,9 @@ export function useApplyCustomImage() {
         type: 'active'
       });
 
-      console.log('[useApplyCustomImage] ✅ Queries invalidated and refetched');
+      if (import.meta.env.DEV) {
+        console.log('[useApplyCustomImage] ✅ Queries invalidated and refetched');
+      }
     },
   });
 }

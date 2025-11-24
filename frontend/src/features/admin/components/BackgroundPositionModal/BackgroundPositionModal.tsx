@@ -219,7 +219,9 @@ export function BackgroundPositionModal({
 
   const handleSave = () => {
     const cssPosition = calculateBackgroundPosition();
-    console.log('[BackgroundPositionModal] Saving position:', cssPosition);
+    if (import.meta.env.DEV) {
+      console.log('[BackgroundPositionModal] Saving position:', cssPosition);
+    }
 
     updatePosition(
       {
@@ -228,12 +230,16 @@ export function BackgroundPositionModal({
       },
       {
         onSuccess: () => {
-          console.log('[BackgroundPositionModal] ✅ Position saved successfully');
+          if (import.meta.env.DEV) {
+            console.log('[BackgroundPositionModal] ✅ Position saved successfully');
+          }
           onSuccess?.();
           onClose();
         },
         onError: (error) => {
-          console.error('[BackgroundPositionModal] ❌ Failed to save position:', error);
+          if (import.meta.env.DEV) {
+            console.error('[BackgroundPositionModal] ❌ Failed to save position:', error);
+          }
         },
       },
     );

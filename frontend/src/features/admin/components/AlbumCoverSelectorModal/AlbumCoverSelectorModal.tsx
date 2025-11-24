@@ -58,11 +58,15 @@ export function AlbumCoverSelectorModal({
       },
       {
         onSuccess: async () => {
-          console.log('[AlbumCoverSelector] ✅ Cover applied successfully');
+          if (import.meta.env.DEV) {
+            console.log('[AlbumCoverSelector] ✅ Cover applied successfully');
+          }
 
           // FALLBACK: Force manual refetch in case WebSocket fails
           // This ensures the UI updates even if the WebSocket event doesn't arrive
-          console.log('[AlbumCoverSelector] Forcing manual refetch as fallback...');
+          if (import.meta.env.DEV) {
+            console.log('[AlbumCoverSelector] Forcing manual refetch as fallback...');
+          }
 
           // Immediate refetch of album
           await queryClient.refetchQueries({
@@ -86,19 +90,25 @@ export function AlbumCoverSelectorModal({
 
           // Delayed refetch to ensure backend has fully processed the image
           setTimeout(() => {
-            console.log('[AlbumCoverSelector] Secondary refetch after 1s...');
+            if (import.meta.env.DEV) {
+              console.log('[AlbumCoverSelector] Secondary refetch after 1s...');
+            }
             queryClient.refetchQueries({
               queryKey: ['albums', albumId],
               type: 'active'
             });
           }, 1000);
 
-          console.log('[AlbumCoverSelector] Manual refetch completed');
+          if (import.meta.env.DEV) {
+            console.log('[AlbumCoverSelector] Manual refetch completed');
+          }
           onSuccess?.();
           onClose();
         },
         onError: (error: any) => {
-          console.error('[AlbumCoverSelector] ❌ Error applying cover:', error);
+          if (import.meta.env.DEV) {
+            console.error('[AlbumCoverSelector] ❌ Error applying cover:', error);
+          }
           setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la carátula');
         },
       },
