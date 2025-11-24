@@ -267,6 +267,22 @@
   }
 }
 
+/* Estado al cerrarse con animación */
+.header__userDropdown--closing {
+  animation: userDropdownSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes userDropdownSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
 .header__userInfo {
   display: flex;
   align-items: center;
