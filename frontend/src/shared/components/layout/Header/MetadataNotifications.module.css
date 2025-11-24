@@ -67,7 +67,7 @@
   right: 0;
   width: 380px;
   max-height: 500px;
-  background: var(--color-bg-tertiary, #1e1f2e);
+  background: rgba(255, 255, 255, 0.03); /* Mismo color que cards del admin */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
@@ -75,7 +75,7 @@
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 10px 25px -3px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Mismo border que cards del admin */
   overflow: hidden;
   z-index: 100;
   display: flex;
