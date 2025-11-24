@@ -176,6 +176,21 @@
   background: rgba(255, 107, 107, 0.1);
 }
 
+/* Item de error (alertas críticas del sistema) */
+.notifications__item--error {
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 3px solid #ef4444;
+}
+
+.notifications__item--error:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.notifications__item--error .notifications__itemIcon {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
 /* Icon del item */
 .notifications__itemIcon {
   flex-shrink: 0;

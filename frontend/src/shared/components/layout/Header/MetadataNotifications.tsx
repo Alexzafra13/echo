@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, Music, Disc, Check, X } from 'lucide-react';
+import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive } from 'lucide-react';
 import { useMetadataEnrichment } from '@shared/hooks';
 import type { EnrichmentNotification } from '@shared/hooks';
 import styles from './MetadataNotifications.module.css';
@@ -9,13 +9,22 @@ interface MetadataNotificationsProps {
   isAdmin: boolean;
 }
 
+interface SystemAlert {
+  id: string;
+  type: 'error' | 'warning';
+  category: 'storage' | 'database' | 'scanner';
+  message: string;
+  timestamp: string;
+}
+
 /**
  * MetadataNotifications Component
- * Muestra notificaciones de enriquecimiento de metadatos en el header
+ * Muestra notificaciones de enriquecimiento de metadatos + alertas críticas del sistema
  * Solo visible para usuarios admin
  */
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -25,6 +34,80 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     markAllAsRead,
     clearAll,
   } = useMetadataEnrichment(token, isAdmin);
+
+  // Fetch alertas críticas del sistema
+  const fetchSystemAlerts = async () => {
+    if (!token || !isAdmin) return;
+
+    try {
+      const response = await fetch('/api/admin/dashboard/health', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const alerts: SystemAlert[] = [];
+
+      // Solo storage CRÍTICO (>90%)
+      if (data.systemHealth?.storage === 'critical' && data.activeAlerts?.storageDetails) {
+        alerts.push({
+          id: 'storage-critical',
+          type: 'error',
+          category: 'storage',
+          message: `Almacenamiento crítico: ${data.activeAlerts.storageDetails.percentUsed}% usado`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Database/Redis down (crítico)
+      if (data.systemHealth?.database === 'down') {
+        alerts.push({
+          id: 'db-down',
+          type: 'error',
+          category: 'database',
+          message: 'Base de datos no disponible',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      if (data.systemHealth?.redis === 'down') {
+        alerts.push({
+          id: 'redis-down',
+          type: 'error',
+          category: 'database',
+          message: 'Redis no disponible',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Muchos errores de escaneo (>20 errores)
+      if (data.activeAlerts?.scanErrors && data.activeAlerts.scanErrors > 20) {
+        alerts.push({
+          id: 'scan-errors',
+          type: 'warning',
+          category: 'scanner',
+          message: `${data.activeAlerts.scanErrors} errores de escaneo críticos`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      setSystemAlerts(alerts);
+    } catch (error) {
+      console.error('Error fetching system alerts:', error);
+    }
+  };
+
+  // Fetch inicial y polling cada 60 segundos (no tan frecuente)
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    fetchSystemAlerts();
+    const interval = setInterval(fetchSystemAlerts, 60000); // 60s
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, isAdmin]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -44,22 +127,49 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   }, [showNotifications]);
 
   /**
-   * Obtener ícono según el tipo de entidad
+   * Obtener ícono según el tipo
    */
-  const getEntityIcon = (type: 'artist' | 'album') => {
-    return type === 'artist' ? <Music size={16} /> : <Disc size={16} />;
+  const getIcon = (item: EnrichmentNotification | SystemAlert) => {
+    if ('entityType' in item) {
+      // Es EnrichmentNotification
+      return item.entityType === 'artist' ? <Music size={16} /> : <Disc size={16} />;
+    } else {
+      // Es SystemAlert
+      switch (item.category) {
+        case 'storage':
+          return <HardDrive size={16} />;
+        case 'database':
+          return <Database size={16} />;
+        case 'scanner':
+          return <AlertTriangle size={16} />;
+        default:
+          return <AlertTriangle size={16} />;
+      }
+    }
   };
 
   /**
-   * Formatear mensaje de actualizaciones
+   * Obtener título y mensaje según el tipo de notificación
    */
-  const getUpdateMessage = (notification: EnrichmentNotification): string => {
-    const updates: string[] = [];
-    if (notification.bioUpdated) updates.push('biografía');
-    if (notification.imagesUpdated) updates.push('imágenes');
-    if (notification.coverUpdated) updates.push('portada');
+  const getNotificationInfo = (item: EnrichmentNotification | SystemAlert) => {
+    if ('entityType' in item) {
+      // EnrichmentNotification
+      const updates: string[] = [];
+      if (item.bioUpdated) updates.push('biografía');
+      if (item.imagesUpdated) updates.push('imágenes');
+      if (item.coverUpdated) updates.push('portada');
 
-    return updates.length > 0 ? updates.join(', ') : 'metadata';
+      return {
+        title: item.entityName,
+        message: `${updates.length > 0 ? updates.join(', ') : 'metadata'} actualizado`,
+      };
+    } else {
+      // SystemAlert
+      return {
+        title: item.category.toUpperCase(),
+        message: item.message,
+      };
+    }
   };
 
   /**
@@ -86,18 +196,27 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     return null;
   }
 
+  // Combinar notificaciones: alertas del sistema primero, luego metadata
+  const allNotifications = [
+    ...systemAlerts,
+    ...notifications,
+  ];
+
+  // Contar total de notificaciones importantes
+  const totalCount = systemAlerts.length + unreadCount;
+
   return (
     <div className={styles.notifications} ref={dropdownRef}>
       {/* Bell Button */}
       <button
         className={styles.notifications__button}
         onClick={() => setShowNotifications(!showNotifications)}
-        aria-label={`Notifications (${unreadCount} unread)`}
-        title={`${unreadCount} notificaciones sin leer`}
+        aria-label={`Notificaciones (${totalCount})`}
+        title={`${totalCount} notificaciones`}
       >
         <Bell size={20} />
-        {unreadCount > 0 && (
-          <span className={styles.notifications__badge}>{unreadCount}</span>
+        {totalCount > 0 && (
+          <span className={styles.notifications__badge}>{totalCount}</span>
         )}
       </button>
 
@@ -106,8 +225,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         <div className={styles.notifications__dropdown}>
           {/* Header */}
           <div className={styles.notifications__header}>
-            <h3 className={styles.notifications__title}>Metadata Updates</h3>
-            {notifications.length > 0 && (
+            <h3 className={styles.notifications__title}>Notificaciones</h3>
+            {allNotifications.length > 0 && (
               <div className={styles.notifications__actions}>
                 {unreadCount > 0 && (
                   <button
@@ -131,46 +250,56 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
 
           {/* Lista de notificaciones */}
           <div className={styles.notifications__list}>
-            {notifications.length === 0 ? (
+            {allNotifications.length === 0 ? (
               <div className={styles.notifications__empty}>
                 <Bell size={32} className={styles.notifications__emptyIcon} />
                 <p className={styles.notifications__emptyText}>
-                  No hay notificaciones nuevas
+                  No hay notificaciones
                 </p>
               </div>
             ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`${styles.notifications__item} ${
-                    !notification.read ? styles['notifications__item--unread'] : ''
-                  }`}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
-                >
-                  {/* Entity icon */}
-                  <div className={styles.notifications__itemIcon}>
-                    {getEntityIcon(notification.entityType)}
-                  </div>
+              allNotifications.map((item) => {
+                const info = getNotificationInfo(item);
+                const isSystemAlert = 'category' in item;
+                const isUnread = 'read' in item ? !item.read : true;
 
-                  {/* Content */}
-                  <div className={styles.notifications__itemContent}>
-                    <p className={styles.notifications__itemTitle}>
-                      {notification.entityName}
-                    </p>
-                    <p className={styles.notifications__itemMessage}>
-                      {getUpdateMessage(notification)} actualizado
-                    </p>
-                    <p className={styles.notifications__itemTime}>
-                      {getRelativeTime(notification.timestamp)}
-                    </p>
-                  </div>
+                return (
+                  <div
+                    key={item.id}
+                    className={`${styles.notifications__item} ${
+                      isUnread ? styles['notifications__item--unread'] : ''
+                    } ${
+                      isSystemAlert && item.type === 'error'
+                        ? styles['notifications__item--error']
+                        : ''
+                    }`}
+                    onClick={() => !isSystemAlert && !isUnread && markAsRead(item.id)}
+                  >
+                    {/* Icon */}
+                    <div className={styles.notifications__itemIcon}>
+                      {getIcon(item)}
+                    </div>
 
-                  {/* Unread indicator */}
-                  {!notification.read && (
-                    <div className={styles.notifications__itemUnreadDot} />
-                  )}
-                </div>
-              ))
+                    {/* Content */}
+                    <div className={styles.notifications__itemContent}>
+                      <p className={styles.notifications__itemTitle}>
+                        {info.title}
+                      </p>
+                      <p className={styles.notifications__itemMessage}>
+                        {info.message}
+                      </p>
+                      <p className={styles.notifications__itemTime}>
+                        {getRelativeTime(item.timestamp)}
+                      </p>
+                    </div>
+
+                    {/* Unread indicator */}
+                    {isUnread && (
+                      <div className={styles.notifications__itemUnreadDot} />
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
