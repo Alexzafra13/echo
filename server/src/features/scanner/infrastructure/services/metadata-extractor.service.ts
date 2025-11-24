@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { parseFile } from 'music-metadata';
 
 /**
@@ -37,22 +38,13 @@ export interface TrackMetadata {
   coverArt?: boolean;
 }
 
-/**
- * MetadataExtractorService - Extrae metadatos de archivos de música
- *
- * Responsabilidades:
- * - Usar music-metadata para leer tags ID3, Vorbis, etc.
- * - Normalizar metadatos a un formato común
- * - Manejar errores de lectura
- */
 @Injectable()
 export class MetadataExtractorService {
-  /**
-   * Extrae metadatos de un archivo de música
-   *
-   * @param filePath - Ruta absoluta del archivo
-   * @returns Metadatos extraídos o null si hay error
-   */
+  constructor(
+    @InjectPinoLogger(MetadataExtractorService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   async extractMetadata(filePath: string): Promise<TrackMetadata | null> {
     try {
       const metadata = await parseFile(filePath, {
@@ -62,14 +54,11 @@ export class MetadataExtractorService {
 
       return this.normalizeMetadata(metadata);
     } catch (error) {
-      console.error(`Error extrayendo metadatos de ${filePath}:`, error);
+      this.logger.error({ err: error, filePath }, 'Error extracting metadata');
       return null;
     }
   }
 
-  /**
-   * Normaliza metadatos de music-metadata a nuestro formato
-   */
   private normalizeMetadata(metadata: any): TrackMetadata {
     const { common, format } = metadata;
 
