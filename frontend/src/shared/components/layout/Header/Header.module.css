@@ -229,17 +229,37 @@
 
 .header__userDropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 12px);
   right: 0;
   min-width: 220px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  background: var(--color-bg-tertiary, #1e1f2e);
+  background: rgba(255, 255, 255, 0.03); /* Mismo color que cards del admin */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 10px 25px -3px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Mismo border que cards del admin */
   padding: 8px;
   z-index: 100;
+
+  /* Animación de entrada */
+  transform-origin: top right;
+  animation: userDropdownSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes userDropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .header__userInfo {
@@ -291,12 +311,17 @@
   color: var(--color-text-secondary, #b8bcc8);
   cursor: pointer;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .header__userMenuItem:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--color-text-primary, #ffffff);
+  transform: translateX(4px);
+}
+
+.header__userMenuItem:active {
+  transform: translateX(2px);
 }
 
 .header__userMenuItem--danger {
