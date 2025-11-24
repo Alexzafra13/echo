@@ -7,12 +7,13 @@ export interface Album {
   title: string;
   artist: string;
   artistId: string;
-  coverImage: string;           // URL de la portada (200x200)
-  backgroundImage?: string;      // URL del background (para hero)
-  albumArt?: string;             // URL del arte lateral (opcional)
+  coverImage: string;
+  backgroundImage?: string;
+  albumArt?: string;
   year: number;
+  releaseDate?: string;
   totalTracks: number;
-  duration?: number;             // Duración total en segundos
+  duration?: number;
   genres?: string[];
   addedAt: Date;
 }

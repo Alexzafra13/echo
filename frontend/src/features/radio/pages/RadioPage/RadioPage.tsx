@@ -349,15 +349,6 @@ export default function RadioPage() {
     }
   }, [favoriteStations, saveFavoriteMutation, deleteFavoriteMutation]);
 
-  // Remove favorite handler (for favoritas section)
-  const handleRemoveFavorite = useCallback(async (stationId: string) => {
-    try {
-      await deleteFavoriteMutation.mutateAsync(stationId);
-    } catch (error) {
-      console.error('Failed to remove favorite:', error);
-    }
-  }, [deleteFavoriteMutation]);
-
   // Helper: Check if station is playing
   const isStationPlaying = useCallback((station: RadioBrowserStation | RadioStation) => {
     if (!isRadioMode || !currentRadioStation) return false;
