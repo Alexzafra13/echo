@@ -1,8 +1,8 @@
+/* PlaylistGrid Component Styles - BEM Naming Convention */
+
+/* Block: playlistGrid */
 .playlistGrid {
   margin-bottom: 40px;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
 }
 
 .playlistGrid__header {
@@ -44,9 +44,7 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   padding: 0 20px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  /* NO min-height aquí - el grid debe ocupar solo lo necesario */
 }
 
 /* Playlist Card */
@@ -113,6 +111,7 @@
 
   .playlistGrid__title {
     font-size: 22px;
+    margin-bottom: 16px;
   }
 }
 
@@ -122,18 +121,17 @@
     margin-bottom: 32px;
   }
 
-  .playlistGrid__header {
-    padding: 0 16px;
-  }
-
   .playlistGrid__title {
     font-size: 20px;
+    margin-bottom: 12px;
+    padding: 0 16px;
   }
 
   .playlistGrid__grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Auto-fit para mejor responsividad */
     gap: 12px;
     padding: 0 16px;
+    min-height: 0; /* Eliminar min-height en mobile para flujo natural */
   }
 
   .playlistCard {
@@ -141,32 +139,16 @@
   }
 }
 
-/* Small Mobile - Forzar 2 columnas */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .playlistGrid__header {
+  .playlistGrid__grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Ajuste automático */
+    gap: 10px;
     padding: 0 12px;
   }
 
   .playlistGrid__title {
     font-size: 18px;
-  }
-
-  .playlistGrid__grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
     padding: 0 12px;
-  }
-}
-
-/* Very Small Mobile - Samsung S8+ y similares */
-@media (max-width: 360px) {
-  .playlistGrid__grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    padding: 0 8px;
-  }
-
-  .playlistGrid__header {
-    padding: 0 8px;
   }
 }
