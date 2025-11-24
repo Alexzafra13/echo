@@ -66,10 +66,10 @@ function getImageEndpoint(imageType: ImageType): string {
 /**
  * Get placeholder image for type
  *
- * @param imageType - Type of image
+ * @param _imageType - Type of image (reserved for future use)
  * @returns Placeholder SVG or image path
  */
-export function getPlaceholderImage(imageType: ImageType): string {
+export function getPlaceholderImage(_imageType: ImageType): string {
   // Could return different placeholders per type
   // For now, return generic music placeholder
   return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="rgba(0,0,0,0.5)" font-family="sans-serif" font-size="30" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';

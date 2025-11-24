@@ -8,7 +8,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateSetting } from '../../api/metadata.api';
 import { metadataSettingsKeys } from '../queries/useMetadataSettings';
-import type { MetadataSettings } from '../../types';
 
 /**
  * Settings update payload
