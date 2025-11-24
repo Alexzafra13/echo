@@ -54,6 +54,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setState(prev => ({ ...prev, radioMetadata }));
   }, [radioMetadata]);
 
+  // ========== NIVEL 0: Sin dependencias de funciones ==========
+
   /**
    * Determine play context based on player state
    */
@@ -134,6 +136,196 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     playSessionRef.current = null;
   }, []); // No dependencies - only uses refs
 
+  // Pause
+  const pause = useCallback(() => {
+    audioRef.current?.pause();
+  }, []); // No dependencies - only uses ref
+
+  // Stop
+  const stop = useCallback(() => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    setState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
+  }, []); // No dependencies - uses ref and setState with prev
+
+  // Seek to time
+  const seek = useCallback((time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setState(prev => ({ ...prev, currentTime: time }));
+    }
+  }, []); // No dependencies - uses ref and setState with prev
+
+  // Set volume
+  const setVolume = useCallback((volume: number) => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      setState(prev => ({ ...prev, volume }));
+    }
+  }, []); // No dependencies - uses ref and setState with prev
+
+  // Toggle shuffle
+  const toggleShuffle = useCallback(() => {
+    setState(prev => ({ ...prev, isShuffle: !prev.isShuffle }));
+  }, []); // No dependencies - uses setState with prev
+
+  // Toggle repeat
+  const toggleRepeat = useCallback(() => {
+    setState(prev => {
+      const modes: Array<'off' | 'all' | 'one'> = ['off', 'all', 'one'];
+      const currentIndex = modes.indexOf(prev.repeatMode);
+      const nextMode = modes[(currentIndex + 1) % modes.length];
+      return { ...prev, repeatMode: nextMode };
+    });
+  }, []); // No dependencies - uses setState with prev
+
+  // Add tracks to queue
+  const addToQueue = useCallback((track: Track | Track[]) => {
+    const tracks = Array.isArray(track) ? track : [track];
+    setState(prev => ({
+      ...prev,
+      queue: [...prev.queue, ...tracks],
+    }));
+  }, []); // No dependencies - uses setState with prev
+
+  // Clear queue
+  const clearQueue = useCallback(() => {
+    setState(prev => ({ ...prev, queue: [] }));
+    setCurrentQueueIndex(-1);
+  }, []); // No dependencies - uses setState with prev
+
+  // Play radio station
+  const playRadio = useCallback((station: any) => {
+    if (!audioRef.current) return;
+
+    // Use url_resolved if available (better quality), fallback to url
+    const streamUrl = station.urlResolved || station.url_resolved || station.url;
+
+    if (!streamUrl) {
+      if (import.meta.env.DEV) {
+        console.error('[Player] Radio station has no valid stream URL');
+      }
+      return;
+    }
+
+    const audio = audioRef.current;
+
+    // Clear previous event listeners to avoid duplicates
+    audio.oncanplay = null;
+    audio.onerror = null;
+
+    audio.src = streamUrl;
+    audio.load();
+
+    // Wait for audio to be ready before playing
+    audio.oncanplay = () => {
+      audio.play().catch((error) => {
+        if (import.meta.env.DEV) {
+          console.error('[Player] Failed to play radio:', error.message);
+        }
+      });
+      audio.oncanplay = null; // Clean up after playing
+    };
+
+    // Error handler for radio loading issues
+    audio.onerror = () => {
+      if (import.meta.env.DEV) {
+        console.error('[Player] Failed to load radio station:', station.name);
+      }
+      audio.onerror = null;
+    };
+
+    setState(prev => ({
+      ...prev,
+      currentRadioStation: station,
+      isRadioMode: true,
+      isPlaying: true,
+      radioSignalStatus: 'good', // Initialize signal status (will update based on events)
+      // Clear track state when playing radio
+      currentTrack: null,
+      queue: [],
+      currentTime: 0,
+      duration: 0,
+    }));
+
+    setCurrentQueueIndex(-1);
+  }, []); // No dependencies - uses ref and setState with prev
+
+  // Stop radio
+  const stopRadio = useCallback(() => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+
+    setState(prev => ({
+      ...prev,
+      currentRadioStation: null,
+      isRadioMode: false,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+    }));
+  }, []); // No dependencies - uses ref and setState with prev
+
+  // ========== NIVEL 1: Depende solo de nivel 0 ==========
+
+  // Play a track
+  const play = useCallback((track?: Track) => {
+    if (!audioRef.current) return;
+
+    if (track) {
+      // Play new track
+      if (!streamTokenData?.token) {
+        if (import.meta.env.DEV) {
+          console.error('[Player] Stream token not available');
+        }
+        return;
+      }
+
+      // Use VITE_API_URL with fallback to /api (same as apiClient)
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      const streamUrl = `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
+
+      audioRef.current.src = streamUrl;
+      audioRef.current.load();
+
+      // Error handler for audio loading issues
+      audioRef.current.onerror = () => {
+        if (import.meta.env.DEV) {
+          console.error('[Player] Failed to load audio track:', track.title);
+        }
+      };
+
+      audioRef.current.play().catch((error) => {
+        if (import.meta.env.DEV) {
+          console.error('[Player] Failed to play audio:', error.message);
+        }
+      });
+
+      setState(prev => ({
+        ...prev,
+        currentTrack: track,
+        isPlaying: true,
+        // Clear radio state when playing a track
+        currentRadioStation: null,
+        isRadioMode: false,
+        radioSignalStatus: null, // Clear signal status when exiting radio mode
+      }));
+
+      // Start new play session for tracking
+      startPlaySession(track);
+    } else if (state.currentTrack && !state.isRadioMode) {
+      // Resume current track (only if not in radio mode)
+      audioRef.current.play();
+    } else if (state.isRadioMode && state.currentRadioStation) {
+      // Resume radio station
+      audioRef.current.play();
+    }
+  }, [streamTokenData?.token, state.currentTrack, state.isRadioMode, state.currentRadioStation, startPlaySession]);
+
+  // ========== NIVEL 2: Depende de nivel 0 y 1 ==========
+
   // Play next track in queue
   const playNext = useCallback(() => {
     if (state.queue.length === 0) return;
@@ -162,6 +354,50 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     play(state.queue[nextIndex]);
   }, [state.queue, state.isShuffle, state.repeatMode, currentQueueIndex, endPlaySession, play]);
 
+  // Play previous track in queue
+  const playPrevious = useCallback(() => {
+    if (state.queue.length === 0) return;
+
+    // If more than 3 seconds played, restart current track
+    if (audioRef.current && audioRef.current.currentTime > 3) {
+      audioRef.current.currentTime = 0;
+      return;
+    }
+
+    // End current session as skipped ONLY if there's an active session
+    if (playSessionRef.current) {
+      endPlaySession(true);
+    }
+
+    let prevIndex = currentQueueIndex - 1;
+    if (prevIndex < 0) {
+      if (state.repeatMode === 'all') {
+        prevIndex = state.queue.length - 1;
+      } else {
+        prevIndex = 0;
+      }
+    }
+
+    setCurrentQueueIndex(prevIndex);
+    play(state.queue[prevIndex]);
+  }, [state.queue, state.repeatMode, currentQueueIndex, endPlaySession, play]);
+
+  // Toggle play/pause
+  const togglePlayPause = useCallback(() => {
+    if (state.isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }, [state.isPlaying, pause, play]);
+
+  // Play queue of tracks
+  const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
+    setState(prev => ({ ...prev, queue: tracks }));
+    setCurrentQueueIndex(startIndex);
+    play(tracks[startIndex]);
+  }, [play]);
+
   // Handle track ended - needs to be updated when dependencies change
   useEffect(() => {
     const audio = audioRef.current;
@@ -185,6 +421,26 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audio.removeEventListener('ended', handleEnded);
     };
   }, [state.repeatMode, currentQueueIndex, state.queue.length, endPlaySession, playNext]);
+
+  // ========== NIVEL 3: Depende de nivel 2 ==========
+
+  // Remove track from queue
+  const removeFromQueue = useCallback((index: number) => {
+    setState(prev => {
+      const newQueue = [...prev.queue];
+      newQueue.splice(index, 1);
+      return { ...prev, queue: newQueue };
+    });
+
+    if (index < currentQueueIndex) {
+      setCurrentQueueIndex(currentQueueIndex - 1);
+    } else if (index === currentQueueIndex) {
+      // If removed current track, play next
+      playNext();
+    }
+  }, [currentQueueIndex, playNext]);
+
+  // ========== EFFECTS ==========
 
   // Initialize audio element
   useEffect(() => {
@@ -264,252 +520,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audio.pause();
     };
   }, []);
-
-  // Play a track
-  const play = useCallback((track?: Track) => {
-    if (!audioRef.current) return;
-
-    if (track) {
-      // Play new track
-      if (!streamTokenData?.token) {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Stream token not available');
-        }
-        return;
-      }
-
-      // Use VITE_API_URL with fallback to /api (same as apiClient)
-      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-      const streamUrl = `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
-
-      audioRef.current.src = streamUrl;
-      audioRef.current.load();
-
-      // Error handler for audio loading issues
-      audioRef.current.onerror = () => {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Failed to load audio track:', track.title);
-        }
-      };
-
-      audioRef.current.play().catch((error) => {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Failed to play audio:', error.message);
-        }
-      });
-
-      setState(prev => ({
-        ...prev,
-        currentTrack: track,
-        isPlaying: true,
-        // Clear radio state when playing a track
-        currentRadioStation: null,
-        isRadioMode: false,
-        radioSignalStatus: null, // Clear signal status when exiting radio mode
-      }));
-
-      // Start new play session for tracking
-      startPlaySession(track);
-    } else if (state.currentTrack && !state.isRadioMode) {
-      // Resume current track (only if not in radio mode)
-      audioRef.current.play();
-    } else if (state.isRadioMode && state.currentRadioStation) {
-      // Resume radio station
-      audioRef.current.play();
-    }
-  }, [streamTokenData?.token, state.currentTrack, state.isRadioMode, state.currentRadioStation, startPlaySession]);
-
-  // Pause
-  const pause = useCallback(() => {
-    audioRef.current?.pause();
-  }, []); // No dependencies - only uses ref
-
-  // Toggle play/pause
-  const togglePlayPause = useCallback(() => {
-    if (state.isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }, [state.isPlaying, pause, play]);
-
-  // Stop
-  const stop = useCallback(() => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-    setState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
-  }, []); // No dependencies - uses ref and setState with prev
-
-  // Play previous track in queue
-  const playPrevious = useCallback(() => {
-    if (state.queue.length === 0) return;
-
-    // If more than 3 seconds played, restart current track
-    if (audioRef.current && audioRef.current.currentTime > 3) {
-      audioRef.current.currentTime = 0;
-      return;
-    }
-
-    // End current session as skipped ONLY if there's an active session
-    if (playSessionRef.current) {
-      endPlaySession(true);
-    }
-
-    let prevIndex = currentQueueIndex - 1;
-    if (prevIndex < 0) {
-      if (state.repeatMode === 'all') {
-        prevIndex = state.queue.length - 1;
-      } else {
-        prevIndex = 0;
-      }
-    }
-
-    setCurrentQueueIndex(prevIndex);
-    play(state.queue[prevIndex]);
-  }, [state.queue, state.repeatMode, currentQueueIndex, endPlaySession, play]);
-
-  // Add tracks to queue
-  const addToQueue = useCallback((track: Track | Track[]) => {
-    const tracks = Array.isArray(track) ? track : [track];
-    setState(prev => ({
-      ...prev,
-      queue: [...prev.queue, ...tracks],
-    }));
-  }, []); // No dependencies - uses setState with prev
-
-  // Remove track from queue
-  const removeFromQueue = useCallback((index: number) => {
-    setState(prev => {
-      const newQueue = [...prev.queue];
-      newQueue.splice(index, 1);
-      return { ...prev, queue: newQueue };
-    });
-
-    if (index < currentQueueIndex) {
-      setCurrentQueueIndex(currentQueueIndex - 1);
-    } else if (index === currentQueueIndex) {
-      // If removed current track, play next
-      playNext();
-    }
-  }, [currentQueueIndex, playNext]);
-
-  // Clear queue
-  const clearQueue = useCallback(() => {
-    setState(prev => ({ ...prev, queue: [] }));
-    setCurrentQueueIndex(-1);
-  }, []); // No dependencies - uses setState with prev
-
-  // Play queue of tracks
-  const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
-    setState(prev => ({ ...prev, queue: tracks }));
-    setCurrentQueueIndex(startIndex);
-    play(tracks[startIndex]);
-  }, [play]);
-
-  // Seek to time
-  const seek = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setState(prev => ({ ...prev, currentTime: time }));
-    }
-  }, []); // No dependencies - uses ref and setState with prev
-
-  // Set volume
-  const setVolume = useCallback((volume: number) => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-      setState(prev => ({ ...prev, volume }));
-    }
-  }, []); // No dependencies - uses ref and setState with prev
-
-  // Toggle shuffle
-  const toggleShuffle = useCallback(() => {
-    setState(prev => ({ ...prev, isShuffle: !prev.isShuffle }));
-  }, []); // No dependencies - uses setState with prev
-
-  // Toggle repeat
-  const toggleRepeat = useCallback(() => {
-    setState(prev => {
-      const modes: Array<'off' | 'all' | 'one'> = ['off', 'all', 'one'];
-      const currentIndex = modes.indexOf(prev.repeatMode);
-      const nextMode = modes[(currentIndex + 1) % modes.length];
-      return { ...prev, repeatMode: nextMode };
-    });
-  }, []); // No dependencies - uses setState with prev
-
-  // Play radio station
-  const playRadio = useCallback((station: any) => {
-    if (!audioRef.current) return;
-
-    // Use url_resolved if available (better quality), fallback to url
-    const streamUrl = station.urlResolved || station.url_resolved || station.url;
-
-    if (!streamUrl) {
-      if (import.meta.env.DEV) {
-        console.error('[Player] Radio station has no valid stream URL');
-      }
-      return;
-    }
-
-    const audio = audioRef.current;
-
-    // Clear previous event listeners to avoid duplicates
-    audio.oncanplay = null;
-    audio.onerror = null;
-
-    audio.src = streamUrl;
-    audio.load();
-
-    // Wait for audio to be ready before playing
-    audio.oncanplay = () => {
-      audio.play().catch((error) => {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Failed to play radio:', error.message);
-        }
-      });
-      audio.oncanplay = null; // Clean up after playing
-    };
-
-    // Error handler for radio loading issues
-    audio.onerror = () => {
-      if (import.meta.env.DEV) {
-        console.error('[Player] Failed to load radio station:', station.name);
-      }
-      audio.onerror = null;
-    };
-
-    setState(prev => ({
-      ...prev,
-      currentRadioStation: station,
-      isRadioMode: true,
-      isPlaying: true,
-      radioSignalStatus: 'good', // Initialize signal status (will update based on events)
-      // Clear track state when playing radio
-      currentTrack: null,
-      queue: [],
-      currentTime: 0,
-      duration: 0,
-    }));
-
-    setCurrentQueueIndex(-1);
-  }, []); // No dependencies - uses ref and setState with prev
-
-  // Stop radio
-  const stopRadio = useCallback(() => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-
-    setState(prev => ({
-      ...prev,
-      currentRadioStation: null,
-      isRadioMode: false,
-      isPlaying: false,
-      currentTime: 0,
-      duration: 0,
-    }));
-  }, []); // No dependencies - uses ref and setState with prev
 
   const value: PlayerContextValue = useMemo(
     () => ({
