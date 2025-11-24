@@ -65,7 +65,7 @@
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 20px; /* Espacio para salir del bottom del header (padding del header) */
+  margin-top: 24px; /* Un poco más abajo */
   width: 380px;
   max-height: 500px;
   background: rgba(255, 255, 255, 0.15); /* Mucho menos transparente */
@@ -84,7 +84,16 @@
 
   /* Animación de entrada - crece desde el header */
   transform-origin: top right;
-  animation: dropdownSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: dropdownSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Animación de salida */
+  opacity: 1;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Estado al cerrarse (React lo remueve del DOM antes de completar, pero se ve el inicio) */
+.notifications__dropdown:not(:hover) {
+  animation-fill-mode: both;
 }
 
 @keyframes dropdownSlideIn {
