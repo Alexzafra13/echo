@@ -107,6 +107,22 @@
   }
 }
 
+/* Estado al cerrarse con animación */
+.notifications__dropdown--closing {
+  animation: dropdownSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes dropdownSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
 /* Header del dropdown */
 .notifications__header {
   display: flex;

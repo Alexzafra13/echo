@@ -42,10 +42,12 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isUserMenuClosing, setIsUserMenuClosing] = useState(false);
   const [isScrolled, setIsScrolled] = useState(alwaysGlass);
   const searchRef = useRef<HTMLFormElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
@@ -151,7 +153,12 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false);
+        // Trigger closing animation
+        setIsUserMenuClosing(true);
+        userMenuCloseTimeoutRef.current = setTimeout(() => {
+          setShowUserMenu(false);
+          setIsUserMenuClosing(false);
+        }, 200); // Match animation duration
       }
     };
 
@@ -161,6 +168,9 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      if (userMenuCloseTimeoutRef.current) {
+        clearTimeout(userMenuCloseTimeoutRef.current);
+      }
     };
   }, [showUserMenu]);
 
@@ -192,9 +202,17 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
     setSearchQuery('');
   };
 
+  const handleCloseUserMenu = (callback?: () => void) => {
+    setIsUserMenuClosing(true);
+    userMenuCloseTimeoutRef.current = setTimeout(() => {
+      setShowUserMenu(false);
+      setIsUserMenuClosing(false);
+      if (callback) callback();
+    }, 200);
+  };
+
   const handleLogout = () => {
-    logout();
-    setShowUserMenu(false);
+    handleCloseUserMenu(() => logout());
   };
 
   return (
@@ -262,7 +280,19 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
         <div className={styles.header__userMenu} ref={userMenuRef}>
           <button
             className={styles.header__userButton}
-            onClick={() => setShowUserMenu(!showUserMenu)}
+            onClick={() => {
+              if (showUserMenu) {
+                // Si está abierto, cerrar con animación
+                setIsUserMenuClosing(true);
+                userMenuCloseTimeoutRef.current = setTimeout(() => {
+                  setShowUserMenu(false);
+                  setIsUserMenuClosing(false);
+                }, 200);
+              } else {
+                // Si está cerrado, abrir
+                setShowUserMenu(true);
+              }
+            }}
             aria-label="User menu"
           >
             <img
@@ -275,7 +305,7 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
           {/* User dropdown - same approach as MetadataNotifications */}
           {showUserMenu && (
-            <div className={styles.header__userDropdown}>
+            <div className={`${styles.header__userDropdown} ${isUserMenuClosing ? styles['header__userDropdown--closing'] : ''}`}>
               <div className={styles.header__userInfo}>
                 <img
                   src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
@@ -289,10 +319,10 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
                 </div>
               </div>
               <div className={styles.header__userDivider} />
-              <button className={styles.header__userMenuItem} onClick={() => { setLocation('/profile'); setShowUserMenu(false); }}>
+              <button className={styles.header__userMenuItem} onClick={() => handleCloseUserMenu(() => setLocation('/profile'))}>
                 Profile
               </button>
-              <button className={styles.header__userMenuItem} onClick={() => { setLocation('/settings'); setShowUserMenu(false); }}>
+              <button className={styles.header__userMenuItem} onClick={() => handleCloseUserMenu(() => setLocation('/settings'))}>
                 Settings
               </button>
               <div className={styles.header__userDivider} />
