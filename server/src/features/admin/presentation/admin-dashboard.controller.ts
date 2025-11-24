@@ -69,4 +69,30 @@ export class AdminDashboardController {
       activeAlerts: result.activeAlerts,
     };
   }
+
+  @Get('notifications')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get system notifications (Admin)',
+    description: 'Returns important system notifications including critical errors and active alerts for the header. Only accessible by administrators.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'System notifications retrieved successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Not authenticated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No admin permissions',
+  })
+  async getSystemNotifications() {
+    const result = await this.getDashboardStatsUseCase.execute({});
+    return {
+      systemHealth: result.systemHealth,
+      activeAlerts: result.activeAlerts,
+    };
+  }
 }

@@ -6,6 +6,7 @@ import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
+import { SystemNotifications } from './SystemNotifications';
 import { SearchPanel } from './SearchPanel';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './Header.module.css';
@@ -254,6 +255,9 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
         {/* System health indicator (solo admin) */}
         <SystemHealthIndicator />
+
+        {/* System notifications (solo admin) */}
+        <SystemNotifications token={accessToken} isAdmin={user?.isAdmin || false} />
 
         {/* Metadata notifications (solo admin) */}
         <MetadataNotifications token={accessToken} isAdmin={user?.isAdmin || false} />
