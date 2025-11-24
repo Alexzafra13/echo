@@ -51,19 +51,28 @@
 .playlistCard {
   display: flex;
   flex-direction: column;
+  gap: 12px;
   cursor: pointer;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  transition: background-color 0.2s ease;
-  background-color: var(--surface-secondary);
+  border-radius: 4px;
+  padding: 8px;
+  transition: transform 0.3s ease;
 }
 
 .playlistCard:hover {
-  background-color: var(--surface-hover);
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Sobrescribir tamaño de PlaylistCover para que sea responsivo */
+.playlistCard :global(.cover) {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1;
 }
 
 .playlistCard__info {
-  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .playlistCard__name {
@@ -135,7 +144,8 @@
   }
 
   .playlistCard {
-    padding: 0.75rem;
+    gap: 8px;
+    padding: 0; /* Sin padding para que la cover ocupe todo el espacio del grid */
   }
 }
 
