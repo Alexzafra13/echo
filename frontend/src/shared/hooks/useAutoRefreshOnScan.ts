@@ -32,7 +32,7 @@ export function useAutoRefreshOnScan() {
     const wsService = WebSocketService;
     const socket = wsService.connect('scanner', accessToken);
 
-    const handleScanCompleted = (data: any) => {
+    const handleScanCompleted = () => {
       queryClient.refetchQueries({ queryKey: ['albums'] });
       queryClient.refetchQueries({ queryKey: ['artists'] });
       queryClient.refetchQueries({ queryKey: ['tracks'] });
