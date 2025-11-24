@@ -164,7 +164,7 @@ describe('GetPlaylistsUseCase', () => {
       expect(result.take).toBe(5);
     });
 
-    it('should throw error if skip is negative', async () => {
+    it('should normalize negative skip to 0', async () => {
       // Arrange
       const input = {
         ownerId: 'user-123',
@@ -173,13 +173,19 @@ describe('GetPlaylistsUseCase', () => {
         publicOnly: false,
       };
 
-      // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
-      await expect(useCase.execute(input)).rejects.toThrow('Skip must be non-negative');
-      expect(playlistRepository.findByOwnerId).not.toHaveBeenCalled();
+      playlistRepository.findByOwnerId.mockResolvedValue([]);
+      playlistRepository.countByOwnerId.mockResolvedValue(0);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.skip).toBe(0);
+      expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 20);
     });
 
-    it('should throw error if take is zero', async () => {
+    it('should normalize take of 0 to 1', async () => {
       // Arrange
       const input = {
         ownerId: 'user-123',
@@ -188,12 +194,19 @@ describe('GetPlaylistsUseCase', () => {
         publicOnly: false,
       };
 
-      // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
-      await expect(useCase.execute(input)).rejects.toThrow('Take must be between 1 and 100');
+      playlistRepository.findByOwnerId.mockResolvedValue([]);
+      playlistRepository.countByOwnerId.mockResolvedValue(0);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.take).toBe(1);
+      expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 1);
     });
 
-    it('should throw error if take exceeds 100', async () => {
+    it('should cap take at 100 if it exceeds maximum', async () => {
       // Arrange
       const input = {
         ownerId: 'user-123',
@@ -202,9 +215,16 @@ describe('GetPlaylistsUseCase', () => {
         publicOnly: false,
       };
 
-      // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
-      await expect(useCase.execute(input)).rejects.toThrow('Take must be between 1 and 100');
+      playlistRepository.findByOwnerId.mockResolvedValue([]);
+      playlistRepository.countByOwnerId.mockResolvedValue(0);
+      playlistRepository.getBatchPlaylistAlbumIds.mockResolvedValue(new Map());
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.take).toBe(100);
+      expect(playlistRepository.findByOwnerId).toHaveBeenCalledWith('user-123', 0, 100);
     });
 
     it('should throw error if no filter specified', async () => {
