@@ -5,6 +5,7 @@ import { Header } from '@shared/components/layout/Header';
 import { TrackList } from '@features/home/components/TrackList';
 import { Button } from '@shared/components/ui';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { formatDuration } from '@shared/utils/format';
 import { getDailyMix, type DailyMix, type ScoredTrack } from '@shared/services/recommendations.service';
 import type { Track } from '@features/home/types';
 import styles from './DailyMixPage.module.css';
@@ -84,16 +85,6 @@ export function DailyMixPage() {
       day: 'numeric',
       month: 'long',
     });
-  };
-
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} min`;
   };
 
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);

@@ -65,7 +65,9 @@ export function StorageTab() {
       // Auto-validate current path
       validatePath(path);
     } catch (error) {
-      console.error('Error loading settings:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading settings:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +87,9 @@ export function StorageTab() {
 
       setValidationResult(response.data);
     } catch (error) {
-      console.error('Error validating path:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error validating path:', error);
+      }
       setValidationResult({
         valid: false,
         writable: false,

@@ -50,7 +50,9 @@ export function AutoSearchTab() {
       const response = await apiClient.get('/admin/mbid-auto-search/config');
       setConfig(response.data);
     } catch (error) {
-      console.error('Error loading auto-search config:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading auto-search config:', error);
+      }
       addToast('Error al cargar configuración de auto-búsqueda', 'error');
     } finally {
       setIsLoading(false);
@@ -62,7 +64,9 @@ export function AutoSearchTab() {
       const response = await apiClient.get('/admin/mbid-auto-search/stats');
       setStats(response.data);
     } catch (error) {
-      console.error('Error loading auto-search stats:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading auto-search stats:', error);
+      }
     }
   };
 
@@ -80,7 +84,9 @@ export function AutoSearchTab() {
       // Reload config to get updated description
       await loadConfig();
     } catch (error: any) {
-      console.error('Error saving auto-search config:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving auto-search config:', error);
+      }
       addToast(
         error.response?.data?.message || 'Error al guardar configuración',
         'error'

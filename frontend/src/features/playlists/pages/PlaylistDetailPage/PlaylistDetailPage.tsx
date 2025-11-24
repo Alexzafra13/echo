@@ -10,6 +10,7 @@ import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic, EditPlaylistModal } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
+import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { useAuthStore } from '@shared/store';
 import styles from './PlaylistDetailPage.module.css';
@@ -81,18 +82,10 @@ export default function PlaylistDetailPage() {
     try {
       await removeTrackMutation.mutateAsync({ playlistId: id, trackId: track.id });
     } catch (error) {
-      console.error('Error removing track from playlist:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error removing track from playlist:', error);
+      }
     }
-  };
-
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} min`;
   };
 
   if (loadingPlaylist) {

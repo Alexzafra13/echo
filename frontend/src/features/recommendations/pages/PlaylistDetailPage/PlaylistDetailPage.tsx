@@ -6,6 +6,7 @@ import { Header } from '@shared/components/layout/Header';
 import { TrackList } from '@features/home/components/TrackList';
 import { Button } from '@shared/components/ui';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { formatDuration } from '@shared/utils/format';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import type { Track as HomeTrack } from '@features/home/types';
@@ -92,16 +93,6 @@ export function PlaylistDetailPage() {
 
   const tracks = convertToHomeTracks(playlist);
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
-
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} min`;
-  };
 
   return (
     <div className={styles.playlistDetailPage}>

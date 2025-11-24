@@ -24,7 +24,9 @@ export function CredentialsModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Error copying to clipboard:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error copying to clipboard:', error);
+      }
     }
   };
 

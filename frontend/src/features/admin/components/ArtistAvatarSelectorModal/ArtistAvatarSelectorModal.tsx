@@ -74,11 +74,8 @@ export function ArtistAvatarSelectorModal({
       },
       {
         onSuccess: async () => {
-          console.log('[ArtistAvatarSelector] ✅ Avatar applied successfully');
-
           // FALLBACK: Force manual refetch in case WebSocket fails
           // This ensures the UI updates even if the WebSocket event doesn't arrive
-          console.log('[ArtistAvatarSelector] Forcing manual refetch as fallback...');
 
           // Immediate refetch
           await queryClient.refetchQueries({
@@ -94,19 +91,19 @@ export function ArtistAvatarSelectorModal({
 
           // Delayed refetch to ensure backend has fully processed the image
           setTimeout(() => {
-            console.log('[ArtistAvatarSelector] Secondary refetch after 1s...');
             queryClient.refetchQueries({
               queryKey: ['artists', artistId],
               type: 'active'
             });
           }, 1000);
 
-          console.log('[ArtistAvatarSelector] Manual refetch completed');
           onSuccess?.();
           onClose();
         },
         onError: (error: any) => {
-          console.error('[ArtistAvatarSelector] ❌ Error applying avatar:', error);
+          if (import.meta.env.DEV) {
+            console.error('[ArtistAvatarSelector] ❌ Error applying avatar:', error);
+          }
           setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la imagen');
         },
       },

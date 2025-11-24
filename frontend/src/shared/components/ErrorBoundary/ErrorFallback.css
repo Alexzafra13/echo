@@ -1,0 +1,128 @@
+.error-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.error-fallback__container {
+  max-width: 600px;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.error-fallback__icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.error-fallback__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 16px 0;
+}
+
+.error-fallback__message {
+  font-size: 16px;
+  color: #4a5568;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+.error-fallback__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-fallback__button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.error-fallback__button--primary {
+  background: #667eea;
+  color: white;
+}
+
+.error-fallback__button--primary:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.error-fallback__button--secondary {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.error-fallback__button--secondary:hover {
+  background: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.error-fallback__details {
+  margin-top: 32px;
+  text-align: left;
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.error-fallback__details-summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #2d3748;
+  user-select: none;
+}
+
+.error-fallback__details-summary:hover {
+  color: #667eea;
+}
+
+.error-fallback__details-content {
+  margin-top: 16px;
+}
+
+.error-fallback__error,
+.error-fallback__stack {
+  margin-bottom: 16px;
+}
+
+.error-fallback__error strong,
+.error-fallback__stack strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #2d3748;
+}
+
+.error-fallback__error pre,
+.error-fallback__stack pre {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e53e3e;
+  margin: 0;
+}
+
+.error-fallback__stack pre {
+  color: #4a5568;
+  font-size: 12px;
+}

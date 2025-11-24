@@ -58,54 +58,33 @@ export function useMetadataWebSocket(): Socket | null {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    console.log('[useMetadataWebSocket] Auth state:', { isAuthenticated, hasToken: !!token });
-
     if (!isAuthenticated || !token) {
-      console.log('[useMetadataWebSocket] Not authenticated or no token, skipping WebSocket connection');
       setSocket(null);
       return;
     }
 
     try {
-      console.log('[useMetadataWebSocket] Connecting to metadata namespace...');
-      console.log('[useMetadataWebSocket] 🔍 CODE VERSION: v4.0 - FIXED getInstance...');
-
-      // Connect to metadata namespace
-      // WebSocketService is already the singleton instance (not the class)
       const metadataSocket = WebSocketService.connect('metadata', token);
-      console.log('[useMetadataWebSocket] 🔍 Socket returned from connect:', !!metadataSocket);
 
-      console.log('[useMetadataWebSocket] Socket instance created:', !!metadataSocket);
-      console.log('[useMetadataWebSocket] Socket connected status:', metadataSocket.connected);
-      console.log('[useMetadataWebSocket] Socket ID:', metadataSocket.id);
-
-      // Wait for actual connection before setting state
       const handleConnect = () => {
-        console.log('[useMetadataWebSocket] 🎯 Socket connected event fired, updating state');
         setSocket(metadataSocket);
       };
 
-      // If already connected, set immediately. Otherwise wait for connect event.
       if (metadataSocket.connected) {
-        console.log('[useMetadataWebSocket] ✅ Socket already connected, saving to state');
         setSocket(metadataSocket);
       } else {
-        console.log('[useMetadataWebSocket] ⏳ Socket not yet connected, waiting for connect event...');
         metadataSocket.on('connect', handleConnect);
       }
 
-      // Cleanup on unmount
       return () => {
         if (metadataSocket) {
           metadataSocket.off('connect', handleConnect);
         }
-        // Don't disconnect immediately - other components might be using it
-        // WebSocket service handles connection pooling
-        console.log('[useMetadataWebSocket] Component unmounting (connection kept alive for other components)');
       };
     } catch (error) {
-      console.error('[useMetadataWebSocket] ❌ ERROR connecting to WebSocket:', error);
-      console.error('[useMetadataWebSocket] Error stack:', error instanceof Error ? error.stack : 'No stack');
+      if (import.meta.env.DEV) {
+        console.error('[useMetadataWebSocket] Connection error:', error);
+      }
       setSocket(null);
     }
   }, [token, isAuthenticated]);
