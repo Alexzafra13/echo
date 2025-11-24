@@ -229,12 +229,13 @@
 
 .header__userDropdown {
   position: absolute;
-  top: calc(100% + 12px);
+  top: 100%; /* Pegado al botón */
   right: 0;
+  margin-top: 8px; /* Gap desde el header */
   min-width: 220px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.03); /* Mismo color que cards del admin */
+  background: rgba(255, 255, 255, 0.08); /* Menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
@@ -242,7 +243,7 @@
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 10px 25px -3px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.08); /* Mismo border que cards del admin */
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 8px;
   z-index: 100;
 
