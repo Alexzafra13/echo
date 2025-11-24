@@ -352,6 +352,11 @@
     background: rgba(240, 242, 245, 0.95); /* Light theme */
   }
 
+  /* Animación de cierre en móvil - sube hacia el header */
+  .notifications__dropdown--closing {
+    animation: slideUp 0.2s ease forwards;
+  }
+
   @keyframes slideDown {
     from {
       transform: translateY(-10px);
@@ -360,6 +365,17 @@
     to {
       transform: translateY(0);
       opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
     }
   }
 
