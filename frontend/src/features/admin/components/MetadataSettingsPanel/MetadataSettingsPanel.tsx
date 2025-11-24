@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Settings, History, Search, HardDrive } from 'lucide-react';
 import { ProvidersTab } from '../../metadata/components/ProvidersTab';
 import { StorageTab } from '../../metadata/components/StorageTab';
+import { AutoSearchTab } from '../../metadata/components/AutoSearchTab';
 import { HistoryTab } from './HistoryTab';
-import { AutoSearchTab } from './AutoSearchTab';
 import styles from './MetadataSettingsPanel.module.css';
 
 type Tab = 'providers' | 'autosearch' | 'storage' | 'history';
