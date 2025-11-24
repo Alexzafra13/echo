@@ -155,8 +155,10 @@ export default function HomePage() {
     const randomGenres = randomSelect(genrePlaylists, 5);
     playlists.push(...randomGenres);
 
-    // Limit to calculated playlists needed for 2 rows (adapts to screen size)
-    return playlists.slice(0, neededPlaylists);
+    // Limit only on mobile (≤768px), otherwise show all
+    // On mobile: limit to 1 row (~4 items), on desktop/tablet: show all
+    const isMobile = window.innerWidth <= 768;
+    return isMobile ? playlists.slice(0, neededPlaylists) : playlists;
   }, [autoPlaylists, neededPlaylists]);
 
   // Auto-rotate hero section every 20 seconds
