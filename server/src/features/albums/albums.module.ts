@@ -4,6 +4,9 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
 import { TracksModule } from '@features/tracks/tracks.module';
 import { AlbumsController } from './presentation/controller/albums.controller';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetTopPlayedAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from './domain/use-cases';
+import { GetAlbumsAlphabeticallyUseCase } from './domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
+import { GetRecentlyPlayedAlbumsUseCase } from './domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
+import { GetFavoriteAlbumsUseCase } from './domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import { PrismaAlbumRepository } from './infrastructure/persistence/album.repository';
 import { CachedAlbumRepository } from './infrastructure/persistence/cached-album.repository';
 import { ALBUM_REPOSITORY } from './domain/ports/album-repository.port';
@@ -47,6 +50,9 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
     GetFeaturedAlbumUseCase,
     GetAlbumTracksUseCase,
     GetAlbumCoverUseCase,
+    GetAlbumsAlphabeticallyUseCase,
+    GetRecentlyPlayedAlbumsUseCase,
+    GetFavoriteAlbumsUseCase,
 
     // Repositories
     PrismaAlbumRepository, // Base repository (sin cache)
