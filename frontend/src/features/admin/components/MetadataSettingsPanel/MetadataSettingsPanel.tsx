@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Settings, History, Search, HardDrive } from 'lucide-react';
-import { ProvidersTab } from './ProvidersTab';
+import { ProvidersTab } from '../../metadata/components/ProvidersTab';
 import { HistoryTab } from './HistoryTab';
 import { AutoSearchTab } from './AutoSearchTab';
 import { StorageTab } from './StorageTab';
