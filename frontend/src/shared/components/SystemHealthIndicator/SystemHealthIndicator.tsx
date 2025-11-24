@@ -96,7 +96,8 @@ export function SystemHealthIndicator() {
   };
 
   const getOverallStatus = (): OverallStatus => {
-    if (!health) return 'critical';
+    // Mientras se carga, asumir healthy (evita parpadeo rojo)
+    if (!health) return 'healthy';
 
     // Critical if anything is down, critical, or error
     if (
