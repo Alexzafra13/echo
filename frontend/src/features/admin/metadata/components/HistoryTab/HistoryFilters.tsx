@@ -7,11 +7,11 @@
 import styles from './HistoryTab.module.css';
 
 export interface HistoryFiltersProps {
-  entityType?: string;
-  status?: string;
+  entityType?: 'artist' | 'album';
+  status?: 'success' | 'partial' | 'error';
   provider?: string;
-  onEntityTypeChange: (entityType: string | undefined) => void;
-  onStatusChange: (status: string | undefined) => void;
+  onEntityTypeChange: (entityType: 'artist' | 'album' | undefined) => void;
+  onStatusChange: (status: 'success' | 'partial' | 'error' | undefined) => void;
   onProviderChange: (provider: string | undefined) => void;
 }
 
@@ -31,7 +31,10 @@ export function HistoryFilters({
       <select
         className={styles.filterSelect}
         value={entityType || ''}
-        onChange={(e) => onEntityTypeChange(e.target.value || undefined)}
+        onChange={(e) => {
+          const value = e.target.value;
+          onEntityTypeChange(value ? (value as 'artist' | 'album') : undefined);
+        }}
       >
         <option value="">Todos los tipos</option>
         <option value="artist">Artistas</option>
@@ -41,7 +44,10 @@ export function HistoryFilters({
       <select
         className={styles.filterSelect}
         value={status || ''}
-        onChange={(e) => onStatusChange(e.target.value || undefined)}
+        onChange={(e) => {
+          const value = e.target.value;
+          onStatusChange(value ? (value as 'success' | 'partial' | 'error') : undefined);
+        }}
       >
         <option value="">Todos los estados</option>
         <option value="success">Éxito</option>
