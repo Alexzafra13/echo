@@ -62,6 +62,32 @@ export interface IAlbumRepository {
   findMostPlayed(take: number): Promise<Album[]>;
 
   /**
+   * Obtiene álbumes ordenados alfabéticamente
+   * Ignora artículos ("The", "A", etc.) y acentos
+   * @param skip - Cuántos registros saltar
+   * @param take - Cuántos registros traer
+   * @returns Array de álbumes ordenados por nombre
+   */
+  findAlphabetically(skip: number, take: number): Promise<Album[]>;
+
+  /**
+   * Obtiene álbumes reproducidos recientemente por un usuario
+   * @param userId - ID del usuario
+   * @param take - Cuántos registros traer
+   * @returns Array de álbumes ordenados por última reproducción
+   */
+  findRecentlyPlayed(userId: string, take: number): Promise<Album[]>;
+
+  /**
+   * Obtiene álbumes marcados como favoritos por un usuario
+   * @param userId - ID del usuario
+   * @param skip - Cuántos registros saltar
+   * @param take - Cuántos registros traer
+   * @returns Array de álbumes favoritos ordenados por fecha de like
+   */
+  findFavorites(userId: string, skip: number, take: number): Promise<Album[]>;
+
+  /**
    * Obtiene el total de álbumes
    * @returns Número total de álbumes
    */

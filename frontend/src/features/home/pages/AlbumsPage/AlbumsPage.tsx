@@ -3,31 +3,81 @@ import { Search, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Pagination } from '@shared/components/ui';
 import { Sidebar, AlbumGrid } from '../../components';
-import { useAlbums } from '../../hooks/useAlbums';
+import {
+  useAlbums,
+  useRecentAlbums,
+  useTopPlayedAlbums,
+  useAlbumsAlphabetically,
+  useAlbumsRecentlyPlayed,
+  useAlbumsFavorites,
+} from '../../hooks/useAlbums';
 import { useGridDimensions } from '../../hooks/useGridDimensions';
+import type { AlbumSortOption } from '../../types';
 import styles from './AlbumsPage.module.css';
 
 /**
  * AlbumsPage Component
- * Shows all albums with pagination and inline search filtering
+ * Shows all albums with pagination, inline search filtering and sort options
  */
 export default function AlbumsPage() {
-  const [page, setPage] = useState(1); // Changed to 1-based
+  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<AlbumSortOption>('recent');
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
-    headerHeight: 180, // Header + page title height
+    headerHeight: 220, // Header + page title + filter selector height
   });
 
-  const { data: response, isLoading, error } = useAlbums({
-    skip: (page - 1) * itemsPerPage, // Adjust for 1-based
-    take: itemsPerPage,
-  });
+  // Fetch data based on selected sort option
+  const recentQuery = useRecentAlbums(itemsPerPage);
+  const alphabeticalQuery = useAlbumsAlphabetically({ page, limit: itemsPerPage });
+  const recentlyPlayedQuery = useAlbumsRecentlyPlayed(itemsPerPage);
+  const topPlayedQuery = useTopPlayedAlbums(itemsPerPage);
+  const favoritesQuery = useAlbumsFavorites({ page, limit: itemsPerPage });
 
-  const allAlbums = response?.data || [];
-  const total = response?.total || 0;
-  const totalPages = Math.ceil(total / itemsPerPage);
+  // Select the active query based on sortBy
+  let activeQuery;
+  let allAlbums;
+  let total = 0;
+  let totalPages = 1;
+
+  switch (sortBy) {
+    case 'alphabetical':
+      activeQuery = alphabeticalQuery;
+      allAlbums = alphabeticalQuery.data?.albums || [];
+      total = alphabeticalQuery.data?.total || 0;
+      totalPages = alphabeticalQuery.data?.totalPages || 1;
+      break;
+    case 'recently-played':
+      activeQuery = recentlyPlayedQuery;
+      allAlbums = recentlyPlayedQuery.data?.albums || [];
+      total = allAlbums.length;
+      totalPages = 1; // No pagination for recently played
+      break;
+    case 'top-played':
+      activeQuery = topPlayedQuery;
+      allAlbums = topPlayedQuery.data || [];
+      total = allAlbums.length;
+      totalPages = 1; // No pagination for top played
+      break;
+    case 'favorites':
+      activeQuery = favoritesQuery;
+      allAlbums = favoritesQuery.data?.albums || [];
+      total = allAlbums.length;
+      totalPages = favoritesQuery.data?.hasMore ? page + 1 : page; // Estimate based on hasMore
+      break;
+    case 'recent':
+    default:
+      activeQuery = recentQuery;
+      allAlbums = recentQuery.data || [];
+      total = allAlbums.length;
+      totalPages = 1; // No pagination for recent
+      break;
+  }
+
+  const isLoading = activeQuery.isLoading;
+  const error = activeQuery.error;
 
   // Filter albums by search query (client-side)
   const filteredAlbums = allAlbums.filter(album =>
@@ -35,10 +85,10 @@ export default function AlbumsPage() {
     album.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Reset to first page when itemsPerPage changes (window resize)
+  // Reset to first page when sort option or itemsPerPage changes
   useEffect(() => {
     setPage(1);
-  }, [itemsPerPage]);
+  }, [sortBy, itemsPerPage]);
 
   // Pagination handler
   const handlePageChange = (newPage: number) => {
@@ -86,6 +136,25 @@ export default function AlbumsPage() {
             <p className={styles.albumsPage__subtitle}>
               Explora tu colección completa de música
             </p>
+          </div>
+
+          {/* Sort Filter */}
+          <div className={styles.albumsPage__filterWrapper}>
+            <label htmlFor="album-sort" className={styles.albumsPage__filterLabel}>
+              Ordenar por:
+            </label>
+            <select
+              id="album-sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as AlbumSortOption)}
+              className={styles.albumsPage__filterSelect}
+            >
+              <option value="recent">Añadidos recientemente</option>
+              <option value="alphabetical">Por nombre (A-Z)</option>
+              <option value="recently-played">Reproducidos recientemente</option>
+              <option value="top-played">Los más reproducidos</option>
+              <option value="favorites">Mis favoritos</option>
+            </select>
           </div>
 
           {/* Top Pagination - Mobile Only */}

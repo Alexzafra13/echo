@@ -1,5 +1,11 @@
 import { apiClient } from '@shared/services/api';
-import type { Album, Track } from '../types';
+import type {
+  Album,
+  Track,
+  AlbumsAlphabeticalResponse,
+  AlbumsRecentlyPlayedResponse,
+  AlbumsFavoritesResponse
+} from '../types';
 
 /**
  * Albums API service
@@ -82,6 +88,36 @@ export const albumsService = {
    */
   getAlbumTracks: async (albumId: string): Promise<Track[]> => {
     const { data } = await apiClient.get<Track[]>(`/albums/${albumId}/tracks`);
+    return data;
+  },
+
+  /**
+   * Get albums sorted alphabetically (A-Z)
+   */
+  getAlphabetically: async (params?: { page?: number; limit?: number }): Promise<AlbumsAlphabeticalResponse> => {
+    const { data } = await apiClient.get<AlbumsAlphabeticalResponse>('/albums/alphabetical', {
+      params,
+    });
+    return data;
+  },
+
+  /**
+   * Get recently played albums for the authenticated user
+   */
+  getRecentlyPlayed: async (limit?: number): Promise<AlbumsRecentlyPlayedResponse> => {
+    const { data } = await apiClient.get<AlbumsRecentlyPlayedResponse>('/albums/recently-played', {
+      params: limit ? { limit } : undefined,
+    });
+    return data;
+  },
+
+  /**
+   * Get favorite albums for the authenticated user
+   */
+  getFavorites: async (params?: { page?: number; limit?: number }): Promise<AlbumsFavoritesResponse> => {
+    const { data } = await apiClient.get<AlbumsFavoritesResponse>('/albums/favorites', {
+      params,
+    });
     return data;
   },
 };
