@@ -116,7 +116,7 @@ export class ScanProcessorService implements OnModuleInit {
     const startTime = Date.now();
     const tracker = new ScanProgress();
 
-    this.logger.log(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
+    this.logger.info(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
 
     // 🔵 LOG: Inicio de scan
     await this.logService.info(LogCategory.SCANNER, `Scan iniciado: ${scanId}`, {
@@ -137,7 +137,7 @@ export class ScanProcessorService implements OnModuleInit {
       // 2. Escanear archivos
       const files = await this.fileScanner.scanDirectory(scanPath, recursive);
       tracker.totalFiles = files.length;
-      this.logger.log(`📁 Encontrados ${files.length} archivos de música`);
+      this.logger.info(`📁 Encontrados ${files.length} archivos de música`);
 
       // Emitir evento: archivos encontrados
       this.emitProgress(scanId, tracker, ScanStatus.SCANNING, `Encontrados ${files.length} archivos`);
@@ -188,7 +188,7 @@ export class ScanProcessorService implements OnModuleInit {
       // ⭐ NOTA: Con la nueva arquitectura atómica, los álbumes y artistas
       // ya fueron creados/actualizados durante processFile().
       // No necesitamos fase de agregación separada.
-      this.logger.log(`✅ Álbumes y artistas ya procesados durante el escaneo`);
+      this.logger.info(`✅ Álbumes y artistas ya procesados durante el escaneo`);
 
       // 5. Actualizar escaneo como completado
       await this.scannerRepository.update(scanId, {
@@ -243,7 +243,7 @@ export class ScanProcessorService implements OnModuleInit {
         timestamp: new Date().toISOString(),
       });
 
-      this.logger.log(
+      this.logger.info(
         `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted}`,
       );
     } catch (error) {
@@ -774,7 +774,7 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
-        this.logger.log(`🗑️  Eliminados ${tracksToDelete.length} tracks obsoletos`);
+        this.logger.info(`🗑️  Eliminados ${tracksToDelete.length} tracks obsoletos`);
       }
 
       // Eliminar álbumes huérfanos (sin tracks)
@@ -795,7 +795,7 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
-        this.logger.log(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
+        this.logger.info(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
       }
 
       // Eliminar artistas huérfanos (sin álbumes)
@@ -816,7 +816,7 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
-        this.logger.log(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
+        this.logger.info(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
       }
 
       return tracksToDelete.length;
@@ -835,8 +835,8 @@ export class ScanProcessorService implements OnModuleInit {
     const { files, source, timestamp } = data;
     const scanId = generateUuid(); // ID único para tracking
 
-    this.logger.log(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
-    this.logger.log(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
+    this.logger.info(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
+    this.logger.info(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
 
     // Emitir progreso inicial via WebSocket
     this.scannerGateway.emitProgress({
@@ -860,7 +860,7 @@ export class ScanProcessorService implements OnModuleInit {
       // Procesar cada archivo detectado usando el método existente
       for (const filePath of files) {
         try {
-          this.logger.log(`🎵 Procesando: ${path.basename(filePath)}`);
+          this.logger.info(`🎵 Procesando: ${path.basename(filePath)}`);
 
           const result = await this.processFile(filePath, tracker);
 
@@ -917,14 +917,14 @@ export class ScanProcessorService implements OnModuleInit {
         timestamp: new Date().toISOString(),
       });
 
-      this.logger.log(`✅ Auto-scan completado:`);
-      this.logger.log(`   📁 Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
-      this.logger.log(`   🎵 Tracks: ${tracker.tracksCreated}`);
-      this.logger.log(`   💿 Álbumes: ${tracker.albumsCreated}`);
-      this.logger.log(`   🎤 Artistas: ${tracker.artistsCreated}`);
-      this.logger.log(`   📸 Covers: ${tracker.coversExtracted}`);
+      this.logger.info(`✅ Auto-scan completado:`);
+      this.logger.info(`   📁 Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
+      this.logger.info(`   🎵 Tracks: ${tracker.tracksCreated}`);
+      this.logger.info(`   💿 Álbumes: ${tracker.albumsCreated}`);
+      this.logger.info(`   🎤 Artistas: ${tracker.artistsCreated}`);
+      this.logger.info(`   📸 Covers: ${tracker.coversExtracted}`);
       if (tracker.errors > 0) {
-        this.logger.log(`   ⚠️ Errores: ${tracker.errors}`);
+        this.logger.info(`   ⚠️ Errores: ${tracker.errors}`);
       }
     } catch (error) {
       this.logger.error(`❌ Error en scan incremental:`, error);
@@ -962,7 +962,7 @@ export class ScanProcessorService implements OnModuleInit {
         10,
       );
 
-      this.logger.log(
+      this.logger.info(
         `Iniciando auto-enriquecimiento (batch size: ${batchSize})`,
       );
 
@@ -1008,7 +1008,7 @@ export class ScanProcessorService implements OnModuleInit {
       if (artistsToEnrich.length > 0) {
         const withoutMbid = artistsToEnrich.filter(a => !a.mbzArtistId).length;
         const withoutBio = artistsToEnrich.filter(a => !a.biography).length;
-        this.logger.log(
+        this.logger.info(
           `Enriqueciendo ${artistsToEnrich.length} artistas en background (${withoutMbid} sin MBID, ${withoutBio} sin biografía)`,
         );
 
@@ -1070,7 +1070,7 @@ export class ScanProcessorService implements OnModuleInit {
         const withIncomplete = albumsToEnrich.filter(a => a.externalCoverPath && !a.externalInfoUpdatedAt).length;
         const recentWithCover = albumsToEnrich.filter(a => a.externalCoverPath && a.externalInfoUpdatedAt).length;
 
-        this.logger.log(
+        this.logger.info(
           `Enriqueciendo ${albumsToEnrich.length} álbumes en background: ` +
           `${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
         );
@@ -1084,7 +1084,7 @@ export class ScanProcessorService implements OnModuleInit {
         });
       }
 
-      this.logger.log('Auto-enriquecimiento iniciado en background');
+      this.logger.info('Auto-enriquecimiento iniciado en background');
     } catch (error) {
       this.logger.error(
         `Error al iniciar auto-enriquecimiento: ${(error as Error).message}`,
