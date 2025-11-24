@@ -21,6 +21,12 @@ export default function HomePage() {
     headerHeight: 450,
   });
 
+  // Calculate how many playlists we need for 2 rows dynamically
+  const { itemsPerPage: neededPlaylists } = useGridDimensions({
+    maxRows: 2,
+    headerHeight: 450,
+  });
+
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
     Math.min(neededAlbums, 50) // Backend max is 50
@@ -149,9 +155,9 @@ export default function HomePage() {
     const randomGenres = randomSelect(genrePlaylists, 5);
     playlists.push(...randomGenres);
 
-    // Limit to 11 total playlists to avoid overwhelming the homepage
-    return playlists.slice(0, 11);
-  }, [autoPlaylists]);
+    // Limit to calculated playlists needed for 2 rows (adapts to screen size)
+    return playlists.slice(0, neededPlaylists);
+  }, [autoPlaylists, neededPlaylists]);
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
