@@ -135,7 +135,7 @@
   }
 }
 
-/* Small Mobile */
+/* Small Mobile - Forzar 2 columnas */
 @media (max-width: 480px) {
   .playlistGrid__header {
     padding: 0 12px;
@@ -146,8 +146,21 @@
   }
 
   .playlistGrid__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     padding: 0 12px;
+  }
+}
+
+/* Very Small Mobile - Samsung S8+ y similares */
+@media (max-width: 360px) {
+  .playlistGrid__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  .playlistGrid__header {
+    padding: 0 8px;
   }
 }
