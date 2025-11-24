@@ -63,11 +63,12 @@
 /* Dropdown - Se despliega pegado al header como extensión */
 .notifications__dropdown {
   position: absolute;
-  top: calc(100% + 12px); /* Pequeño gap para no tocar el botón */
+  top: 100%; /* Pegado al botón del header */
   right: 0;
+  margin-top: 8px; /* Gap desde el header */
   width: 380px;
   max-height: 500px;
-  background: rgba(255, 255, 255, 0.03); /* Mismo color que cards del admin */
+  background: rgba(255, 255, 255, 0.08); /* Menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
@@ -75,7 +76,7 @@
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 10px 25px -3px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.08); /* Mismo border que cards del admin */
+  border: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
   z-index: 100;
   display: flex;
