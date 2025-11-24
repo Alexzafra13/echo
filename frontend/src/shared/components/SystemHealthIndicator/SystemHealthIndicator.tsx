@@ -41,6 +41,7 @@ export function SystemHealthIndicator() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [alerts, setAlerts] = useState<ActiveAlerts | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [hideTimeout, setHideTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Solo mostrar para admins
@@ -135,20 +136,27 @@ export function SystemHealthIndicator() {
       clearTimeout(hideTimeout);
       setHideTimeout(null);
     }
+    setIsClosing(false);
     setShowTooltip(true);
   };
 
   const handleMouseLeave = () => {
-    // Delay hiding to allow moving to tooltip
+    // Start closing animation, then hide
+    setIsClosing(true);
     const timeout = setTimeout(() => {
       setShowTooltip(false);
-    }, 200);
+      setIsClosing(false);
+    }, 200); // Match animation duration
     setHideTimeout(timeout);
   };
 
   const handleNavigateToDashboard = () => {
-    setShowTooltip(false);
-    setLocation('/admin');
+    setIsClosing(true);
+    setTimeout(() => {
+      setShowTooltip(false);
+      setIsClosing(false);
+      setLocation('/admin');
+    }, 200);
   };
 
   return (
@@ -162,7 +170,7 @@ export function SystemHealthIndicator() {
       </div>
 
       {showTooltip && health && (
-        <div className={styles.tooltip}>
+        <div className={`${styles.tooltip} ${isClosing ? styles['tooltip--closing'] : ''}`}>
           <div className={styles.tooltipHeader}>
             {getStatusIcon()}
             <span className={styles.tooltipTitle}>{getStatusLabel()}</span>

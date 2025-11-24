@@ -24,8 +24,10 @@ interface SystemAlert {
  */
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     notifications,
@@ -113,7 +115,12 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowNotifications(false);
+        // Trigger closing animation
+        setIsClosing(true);
+        closeTimeoutRef.current = setTimeout(() => {
+          setShowNotifications(false);
+          setIsClosing(false);
+        }, 200); // Match animation duration
       }
     };
 
@@ -123,6 +130,9 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
     };
   }, [showNotifications]);
 
@@ -210,7 +220,19 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       {/* Bell Button */}
       <button
         className={styles.notifications__button}
-        onClick={() => setShowNotifications(!showNotifications)}
+        onClick={() => {
+          if (showNotifications) {
+            // Si está abierto, cerrar con animación
+            setIsClosing(true);
+            closeTimeoutRef.current = setTimeout(() => {
+              setShowNotifications(false);
+              setIsClosing(false);
+            }, 200);
+          } else {
+            // Si está cerrado, abrir
+            setShowNotifications(true);
+          }
+        }}
         aria-label={`Notificaciones (${totalCount})`}
         title={`${totalCount} notificaciones`}
       >
@@ -222,7 +244,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
 
       {/* Dropdown */}
       {showNotifications && (
-        <div className={styles.notifications__dropdown}>
+        <div className={`${styles.notifications__dropdown} ${isClosing ? styles['notifications__dropdown--closing'] : ''}`}>
           {/* Header */}
           <div className={styles.notifications__header}>
             <h3 className={styles.notifications__title}>Notificaciones</h3>
