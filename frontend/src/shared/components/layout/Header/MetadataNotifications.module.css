@@ -68,7 +68,7 @@
   margin-top: 24px; /* Un poco más abajo */
   width: 380px;
   max-height: 500px;
-  background: rgba(255, 255, 255, 0.15); /* Mucho menos transparente */
+  background: rgba(255, 255, 255, 0.25); /* Menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;

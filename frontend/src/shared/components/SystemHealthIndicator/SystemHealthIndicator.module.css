@@ -42,8 +42,8 @@
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 24px; /* Mismo nivel que los otros dropdowns */
-  background: rgba(255, 255, 255, 0.15); /* Mucho menos transparente */
+  margin-top: 28px; /* Un poco más abajo para alinearse con el bottom del header */
+  background: rgba(255, 255, 255, 0.25); /* Menos transparente */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.18);
