@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { BaseRepository } from '@shared/base';
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 import { ArtistMapper } from './artist.mapper';
 
-/**
- * PrismaArtistRepository - Implementación de IArtistRepository con Prisma
- *
- * Implementa los métodos del port IArtistRepository
- * Usa PrismaService para acceder a la BD
- * Usa ArtistMapper para convertir Prisma ↔ Domain
- */
 @Injectable()
-export class PrismaArtistRepository implements IArtistRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class PrismaArtistRepository
+  extends BaseRepository<Artist>
+  implements IArtistRepository
+{
+  protected readonly mapper = ArtistMapper;
+  protected readonly modelDelegate: any;
 
-  /**
-   * Busca artista por ID
-   */
+  constructor(protected readonly prisma: PrismaService) {
+    super();
+    this.modelDelegate = prisma.artist;
+  }
+
   async findById(id: string): Promise<Artist | null> {
     const artist = await this.prisma.artist.findUnique({
       where: { id },
@@ -26,9 +26,6 @@ export class PrismaArtistRepository implements IArtistRepository {
     return artist ? ArtistMapper.toDomain(artist) : null;
   }
 
-  /**
-   * Obtiene todos los artistas con paginación
-   */
   async findAll(skip: number, take: number): Promise<Artist[]> {
     const artists = await this.prisma.artist.findMany({
       skip,
@@ -39,15 +36,7 @@ export class PrismaArtistRepository implements IArtistRepository {
     return ArtistMapper.toDomainArray(artists);
   }
 
-  /**
-   * Busca artistas por nombre usando trigram similarity para búsqueda rápida
-   * Requiere extensión pg_trgm y índice GIN (ver migración 20251117030000)
-   *
-   * La búsqueda por trigram similarity es 10-100x más rápida que ILIKE '%query%'
-   * porque utiliza el índice GIN en lugar de hacer full table scan
-   */
   async search(name: string, skip: number, take: number): Promise<Artist[]> {
-    // Usar búsqueda por similaridad de trigram para mejor rendimiento
     const artists = await this.prisma.$queryRaw<any[]>`
       SELECT *
       FROM artists
@@ -60,16 +49,10 @@ export class PrismaArtistRepository implements IArtistRepository {
     return ArtistMapper.toDomainArray(artists);
   }
 
-  /**
-   * Cuenta total de artistas
-   */
   async count(): Promise<number> {
     return this.prisma.artist.count();
   }
 
-  /**
-   * Crea nuevo artista
-   */
   async create(artist: Artist): Promise<Artist> {
     const persistenceData = ArtistMapper.toPersistence(artist);
 
@@ -80,22 +63,20 @@ export class PrismaArtistRepository implements IArtistRepository {
     return ArtistMapper.toDomain(created);
   }
 
-  /**
-   * Actualiza artista
-   */
   async update(id: string, artist: Partial<Artist>): Promise<Artist | null> {
-    const primitives = artist.toPrimitives ? artist.toPrimitives() : artist;
+    const primitives = this.toPrimitives(artist);
 
-    const updateData: any = {};
-    if (primitives.name) updateData.name = primitives.name;
-    if (primitives.albumCount !== undefined) updateData.albumCount = primitives.albumCount;
-    if (primitives.songCount !== undefined) updateData.songCount = primitives.songCount;
-    if (primitives.mbzArtistId !== undefined) updateData.mbzArtistId = primitives.mbzArtistId;
-    if (primitives.biography !== undefined) updateData.biography = primitives.biography;
-    if (primitives.externalUrl !== undefined) updateData.externalUrl = primitives.externalUrl;
-    if (primitives.externalInfoUpdatedAt !== undefined) updateData.externalInfoUpdatedAt = primitives.externalInfoUpdatedAt;
-    if (primitives.orderArtistName !== undefined) updateData.orderArtistName = primitives.orderArtistName;
-    if (primitives.size !== undefined) updateData.size = primitives.size;
+    const updateData = this.buildUpdateData(primitives, [
+      'name',
+      'albumCount',
+      'songCount',
+      'mbzArtistId',
+      'biography',
+      'externalUrl',
+      'externalInfoUpdatedAt',
+      'orderArtistName',
+      'size',
+    ]);
 
     const updated = await this.prisma.artist.update({
       where: { id },
@@ -103,16 +84,5 @@ export class PrismaArtistRepository implements IArtistRepository {
     });
 
     return ArtistMapper.toDomain(updated);
-  }
-
-  /**
-   * Elimina artista
-   */
-  async delete(id: string): Promise<boolean> {
-    const result = await this.prisma.artist.delete({
-      where: { id },
-    }).catch(() => null);
-
-    return result !== null;
   }
 }

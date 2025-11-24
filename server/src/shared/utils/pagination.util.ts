@@ -56,10 +56,7 @@ export function parsePaginationParams(
   const defaultTake = options?.defaultTake ?? 10;
   const maxTake = options?.maxTake ?? 100;
 
-  // Parse y validar skip
   const skipNum = Math.max(0, parseInt(skip || '0', 10) || 0);
-
-  // Parse y validar take
   const takeNum = Math.min(
     maxTake,
     Math.max(1, parseInt(take || defaultTake.toString(), 10) || defaultTake)
@@ -68,5 +65,16 @@ export function parsePaginationParams(
   return {
     skip: skipNum,
     take: takeNum,
+  };
+}
+
+export function validatePagination(
+  skip?: number,
+  take?: number,
+  maxTake: number = 100,
+): PaginationParams {
+  return {
+    skip: Math.max(0, skip ?? 0),
+    take: Math.min(maxTake, Math.max(1, take ?? 10)),
   };
 }
