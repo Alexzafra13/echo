@@ -4,7 +4,6 @@ import { Header } from '@shared/components/layout/Header';
 import { Pagination } from '@shared/components/ui';
 import { Sidebar, AlbumGrid } from '../../components';
 import {
-  useAlbums,
   useRecentAlbums,
   useTopPlayedAlbums,
   useAlbumsAlphabetically,
@@ -39,39 +38,33 @@ export default function AlbumsPage() {
   // Select the active query based on sortBy
   let activeQuery;
   let allAlbums;
-  let total = 0;
   let totalPages = 1;
 
   switch (sortBy) {
     case 'alphabetical':
       activeQuery = alphabeticalQuery;
       allAlbums = alphabeticalQuery.data?.albums || [];
-      total = alphabeticalQuery.data?.total || 0;
       totalPages = alphabeticalQuery.data?.totalPages || 1;
       break;
     case 'recently-played':
       activeQuery = recentlyPlayedQuery;
       allAlbums = recentlyPlayedQuery.data?.albums || [];
-      total = allAlbums.length;
       totalPages = 1; // No pagination for recently played
       break;
     case 'top-played':
       activeQuery = topPlayedQuery;
       allAlbums = topPlayedQuery.data || [];
-      total = allAlbums.length;
       totalPages = 1; // No pagination for top played
       break;
     case 'favorites':
       activeQuery = favoritesQuery;
       allAlbums = favoritesQuery.data?.albums || [];
-      total = allAlbums.length;
       totalPages = favoritesQuery.data?.hasMore ? page + 1 : page; // Estimate based on hasMore
       break;
     case 'recent':
     default:
       activeQuery = recentQuery;
       allAlbums = recentQuery.data || [];
-      total = allAlbums.length;
       totalPages = 1; // No pagination for recent
       break;
   }
