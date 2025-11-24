@@ -65,7 +65,7 @@ export default function PlaylistsPage() {
   };
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
-    await updatePlaylistMutation.mutateAsync({ id, data });
+    await updatePlaylistMutation.mutateAsync({ id, dto: data });
   };
 
   const formatDuration = (seconds: number): string => {

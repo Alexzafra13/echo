@@ -73,7 +73,7 @@ export default function PlaylistDetailPage() {
   };
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
-    await updatePlaylistMutation.mutateAsync({ id, data });
+    await updatePlaylistMutation.mutateAsync({ id, dto: data });
   };
 
   const handleRemoveTrack = async (track: any) => {
