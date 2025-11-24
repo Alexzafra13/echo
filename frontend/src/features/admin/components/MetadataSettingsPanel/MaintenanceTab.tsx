@@ -20,6 +20,12 @@ interface CleanupResult {
   missing: number;
 }
 
+interface PopulateResult {
+  albumsUpdated: number;
+  artistsUpdated: number;
+  duration: number;
+}
+
 /**
  * MaintenanceTab Component
  * Gestión de almacenamiento y limpieza de metadata
@@ -30,8 +36,10 @@ export function MaintenanceTab() {
   const [isCleaning, setIsCleaning] = useState(false);
   const [isPopulating, setIsPopulating] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+  const [populateResult, setPopulateResult] = useState<PopulateResult | null>(null);
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const [showCacheConfirm, setShowCacheConfirm] = useState(false);
+  const [populateError, setPopulateError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -117,18 +125,16 @@ export function MaintenanceTab() {
   const handlePopulateSortNames = async () => {
     try {
       setIsPopulating(true);
+      setPopulateError(null);
       const response = await apiClient.post('/maintenance/populate-sort-names');
-      addToast(
-        `Nombres generados: ${response.data.albumsUpdated} álbumes, ${response.data.artistsUpdated} artistas`,
-        'success'
-      );
+      setPopulateResult(response.data);
       // Refrescar estadísticas
       await loadStats();
     } catch (error: any) {
       if (import.meta.env.DEV) {
         console.error('Error populating sort names:', error);
       }
-      addToast(error.response?.data?.message || 'Error al generar nombres', 'error');
+      setPopulateError(error.response?.data?.message || 'Error al generar nombres de ordenamiento');
     } finally {
       setIsPopulating(false);
     }
@@ -318,6 +324,40 @@ export function MaintenanceTab() {
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Populate Result */}
+        {populateResult && (
+          <div className={styles.resultBox}>
+            <CheckCircle size={20} className={styles.resultIcon} />
+            <div className={styles.resultContent}>
+              <p className={styles.resultTitle}>Nombres generados correctamente</p>
+              <div className={styles.resultStats}>
+                <span>
+                  <strong>{populateResult.albumsUpdated}</strong> álbumes actualizados
+                </span>
+                <span className={styles.resultDivider}>•</span>
+                <span>
+                  <strong>{populateResult.artistsUpdated}</strong> artistas actualizados
+                </span>
+                <span className={styles.resultDivider}>•</span>
+                <span>
+                  {(populateResult.duration / 1000).toFixed(2)}s
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Populate Error */}
+        {populateError && (
+          <div className={styles.resultBox} style={{ borderColor: '#ef4444' }}>
+            <AlertCircle size={20} style={{ color: '#ef4444' }} />
+            <div className={styles.resultContent}>
+              <p className={styles.resultTitle} style={{ color: '#ef4444' }}>Error al generar nombres</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{populateError}</p>
             </div>
           </div>
         )}
