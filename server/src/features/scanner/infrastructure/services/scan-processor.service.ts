@@ -1,4 +1,5 @@
-import { Injectable, Inject, OnModuleInit, forwardRef, Logger } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import {
@@ -47,7 +48,6 @@ class ScanProgress {
 
 @Injectable()
 export class ScanProcessorService implements OnModuleInit {
-  private readonly logger = new Logger(ScanProcessorService.name);
   private readonly QUEUE_NAME = 'library-scan';
   private readonly musicLibraryPath = process.env.MUSIC_LIBRARY_PATH || '/music';
 
@@ -66,6 +66,8 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly settingsService: SettingsService,
     private readonly mbidAutoSearchService: MbidAutoSearchService,
     private readonly logService: LogService,
+    @InjectPinoLogger(ScanProcessorService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   onModuleInit() {
@@ -114,7 +116,7 @@ export class ScanProcessorService implements OnModuleInit {
     const startTime = Date.now();
     const tracker = new ScanProgress();
 
-    console.log(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
+    this.logger.log(`📁 Iniciando escaneo ${scanId} en ${scanPath}`);
 
     // 🔵 LOG: Inicio de scan
     await this.logService.info(LogCategory.SCANNER, `Scan iniciado: ${scanId}`, {
@@ -135,7 +137,7 @@ export class ScanProcessorService implements OnModuleInit {
       // 2. Escanear archivos
       const files = await this.fileScanner.scanDirectory(scanPath, recursive);
       tracker.totalFiles = files.length;
-      console.log(`📁 Encontrados ${files.length} archivos de música`);
+      this.logger.log(`📁 Encontrados ${files.length} archivos de música`);
 
       // Emitir evento: archivos encontrados
       this.emitProgress(scanId, tracker, ScanStatus.SCANNING, `Encontrados ${files.length} archivos`);
@@ -186,7 +188,7 @@ export class ScanProcessorService implements OnModuleInit {
       // ⭐ NOTA: Con la nueva arquitectura atómica, los álbumes y artistas
       // ya fueron creados/actualizados durante processFile().
       // No necesitamos fase de agregación separada.
-      console.log(`✅ Álbumes y artistas ya procesados durante el escaneo`);
+      this.logger.log(`✅ Álbumes y artistas ya procesados durante el escaneo`);
 
       // 5. Actualizar escaneo como completado
       await this.scannerRepository.update(scanId, {
@@ -241,11 +243,11 @@ export class ScanProcessorService implements OnModuleInit {
         timestamp: new Date().toISOString(),
       });
 
-      console.log(
+      this.logger.log(
         `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted}`,
       );
     } catch (error) {
-      console.error(`❌ Error en escaneo ${scanId}:`, error);
+      this.logger.error(`❌ Error en escaneo ${scanId}:`, error);
 
       // 🔴 LOG CRÍTICO: Scan falló completamente
       await this.logService.critical(
@@ -471,7 +473,7 @@ export class ScanProcessorService implements OnModuleInit {
       // ============================================================
       const metadata = await this.metadataExtractor.extractMetadata(filePath);
       if (!metadata) {
-        console.warn(`⚠️  No se pudieron extraer metadatos de ${filePath}`);
+        this.logger.warn(`⚠️  No se pudieron extraer metadatos de ${filePath}`);
 
         // 🔴 LOG CRÍTICO: No se pudieron extraer metadatos
         await this.logService.error(
@@ -672,7 +674,7 @@ export class ScanProcessorService implements OnModuleInit {
         return 'added';
       }
     } catch (error) {
-      console.error(`❌ Error procesando ${filePath}:`, error);
+      this.logger.error(`❌ Error procesando ${filePath}:`, error);
 
       // 🔴 LOG CRÍTICO: Error procesando archivo
       await this.logService.error(
@@ -772,7 +774,7 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
-        console.log(`🗑️  Eliminados ${tracksToDelete.length} tracks obsoletos`);
+        this.logger.log(`🗑️  Eliminados ${tracksToDelete.length} tracks obsoletos`);
       }
 
       // Eliminar álbumes huérfanos (sin tracks)
@@ -793,7 +795,7 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
-        console.log(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
+        this.logger.log(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
       }
 
       // Eliminar artistas huérfanos (sin álbumes)
@@ -814,12 +816,12 @@ export class ScanProcessorService implements OnModuleInit {
             },
           },
         });
-        console.log(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
+        this.logger.log(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
       }
 
       return tracksToDelete.length;
     } catch (error) {
-      console.error('Error eliminando registros obsoletos:', error);
+      this.logger.error('Error eliminando registros obsoletos:', error);
       return 0;
     }
   }
@@ -833,8 +835,8 @@ export class ScanProcessorService implements OnModuleInit {
     const { files, source, timestamp } = data;
     const scanId = generateUuid(); // ID único para tracking
 
-    console.log(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
-    console.log(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
+    this.logger.log(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
+    this.logger.log(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
 
     // Emitir progreso inicial via WebSocket
     this.scannerGateway.emitProgress({
@@ -858,7 +860,7 @@ export class ScanProcessorService implements OnModuleInit {
       // Procesar cada archivo detectado usando el método existente
       for (const filePath of files) {
         try {
-          console.log(`🎵 Procesando: ${path.basename(filePath)}`);
+          this.logger.log(`🎵 Procesando: ${path.basename(filePath)}`);
 
           const result = await this.processFile(filePath, tracker);
 
@@ -888,7 +890,7 @@ export class ScanProcessorService implements OnModuleInit {
             });
           }
         } catch (error) {
-          console.error(`❌ Error procesando ${filePath}:`, error);
+          this.logger.error(`❌ Error procesando ${filePath}:`, error);
           tracker.errors++;
         }
       }
@@ -915,17 +917,17 @@ export class ScanProcessorService implements OnModuleInit {
         timestamp: new Date().toISOString(),
       });
 
-      console.log(`✅ Auto-scan completado:`);
-      console.log(`   📁 Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
-      console.log(`   🎵 Tracks: ${tracker.tracksCreated}`);
-      console.log(`   💿 Álbumes: ${tracker.albumsCreated}`);
-      console.log(`   🎤 Artistas: ${tracker.artistsCreated}`);
-      console.log(`   📸 Covers: ${tracker.coversExtracted}`);
+      this.logger.log(`✅ Auto-scan completado:`);
+      this.logger.log(`   📁 Archivos: ${tracker.filesScanned}/${tracker.totalFiles}`);
+      this.logger.log(`   🎵 Tracks: ${tracker.tracksCreated}`);
+      this.logger.log(`   💿 Álbumes: ${tracker.albumsCreated}`);
+      this.logger.log(`   🎤 Artistas: ${tracker.artistsCreated}`);
+      this.logger.log(`   📸 Covers: ${tracker.coversExtracted}`);
       if (tracker.errors > 0) {
-        console.log(`   ⚠️ Errores: ${tracker.errors}`);
+        this.logger.log(`   ⚠️ Errores: ${tracker.errors}`);
       }
     } catch (error) {
-      console.error(`❌ Error en scan incremental:`, error);
+      this.logger.error(`❌ Error en scan incremental:`, error);
       this.scannerGateway.emitError({
         scanId,
         file: 'incremental-scan',
