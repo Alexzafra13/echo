@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -53,7 +53,7 @@ type AdminFormData = z.infer<typeof adminSchema>;
 type WizardStep = 'loading' | 'admin' | 'library' | 'complete' | 'done';
 
 export default function SetupWizard() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [step, setStep] = useState<WizardStep>('loading');
   const [status, setStatus] = useState<SetupStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export default function SetupWizard() {
       setStatus(setupStatus);
 
       if (setupStatus.setupCompleted) {
-        navigate('/login');
+        setLocation('/login');
         return;
       }
 
@@ -169,7 +169,7 @@ export default function SetupWizard() {
   };
 
   const handleGoToLogin = () => {
-    navigate('/login');
+    setLocation('/login');
   };
 
   // Render loading state
@@ -206,7 +206,7 @@ export default function SetupWizard() {
           {/* Progress indicator */}
           <div className={styles.progressBar}>
             <div
-              className={`${styles.progressStep} ${step !== 'loading' ? styles.active : ''}`}
+              className={`${styles.progressStep} ${styles.active}`}
             >
               <div className={styles.stepCircle}>
                 {step === 'admin' ? '1' : <Check size={16} />}
