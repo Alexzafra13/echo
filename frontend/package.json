@@ -2,15 +2,17 @@
   "name": "echo-frontend",
   "version": "1.0.0",
   "type": "module",
+  "description": "Echo Music Server - Frontend",
+  "license": "ISC",
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --fix",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:cov": "vitest --coverage"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

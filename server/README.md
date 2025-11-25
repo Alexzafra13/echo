@@ -1,48 +1,32 @@
-# Echo Server (Backend)
+# Echo Server
 
-API REST + WebSocket para Echo Music Server.
+Backend API para Echo Music Server.
 
-## Stack
+## Comandos
 
-- NestJS 10
-- Prisma (PostgreSQL)
-- Redis + BullMQ
-- Socket.io
+```bash
+pnpm dev          # Desarrollo
+pnpm build        # Build
+pnpm start        # Ejecutar
+pnpm db:reset     # Reset BD
+pnpm db:migrate   # Migraciones
+pnpm db:studio    # Prisma Studio
+pnpm test         # Tests
+```
 
 ## Estructura
 
 ```
 src/
-├── features/          # Módulos por funcionalidad
-│   ├── auth/         # Autenticación JWT
-│   ├── users/        # Gestión usuarios
-│   ├── albums/       # Álbumes
-│   ├── artists/      # Artistas
-│   ├── tracks/       # Canciones
-│   ├── playlists/    # Playlists
-│   ├── scanner/      # Escaneo biblioteca
-│   ├── streaming/    # Streaming audio
-│   ├── admin/        # Panel administración
-│   └── setup/        # Setup wizard
-├── shared/           # Utilidades compartidas
-└── infrastructure/   # DB, Cache, Queue
+├── features/       # Módulos (auth, albums, artists, tracks, scanner...)
+├── shared/         # Utilidades compartidas
+└── infrastructure/ # DB, Cache, Queue
 ```
 
-## Comandos
+## API
 
-```bash
-pnpm dev          # Desarrollo con hot-reload
-pnpm build        # Build producción
-pnpm start:prod   # Ejecutar build
-pnpm db:reset     # Reset base de datos
-pnpm db:migrate   # Aplicar migraciones
-pnpm db:generate  # Generar cliente Prisma
-```
+Swagger: http://localhost:3000/api/docs
 
-## API Docs
+## Configuración
 
-Swagger disponible en: http://localhost:3000/api/docs
-
-## Variables de entorno
-
-Ver `server/.env.example` para configuración completa.
+Ver `.env.example`

@@ -1,6 +1,6 @@
 # Echo Music Server
 
-Servidor de streaming de música autoalojado. Estilo Jellyfin: plug-and-play.
+Servidor de streaming de música autoalojado.
 
 ## Instalación
 
@@ -10,11 +10,11 @@ curl -O https://raw.githubusercontent.com/Alexzafra13/echo/main/docker-compose.y
 docker compose up -d
 ```
 
-Abre http://localhost:4567 y sigue el asistente de configuración.
+Abre http://localhost:4567 y sigue el asistente.
 
-## Configuración de música
+## Configurar música
 
-Por defecto se montan `/mnt` y `/media`. Para otra ubicación, edita `docker-compose.yml`:
+Edita `docker-compose.yml` para añadir tu carpeta de música:
 
 ```yaml
 volumes:
@@ -27,25 +27,29 @@ volumes:
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
-pnpm install
-pnpm docker:dev    # PostgreSQL + Redis
-pnpm dev:all       # Frontend + Backend
+pnpm setup      # Instala todo y configura BD
+pnpm dev:all    # Inicia frontend + backend
 ```
 
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3000
-- Swagger: http://localhost:3000/api/docs
+## Comandos
 
-## Documentación
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm setup` | Setup inicial |
+| `pnpm dev:all` | Desarrollo |
+| `pnpm db:reset` | Reset BD |
+| `pnpm docker:dev` | Levantar DB/Redis |
 
-- [Desarrollo](docs/development.md) - Setup completo para desarrollo
-- [Configuración](docs/configuration.md) - Variables de entorno
-- [Backups](docs/backup.md) - Guía de backups
+## Docs
+
+- [Desarrollo](docs/development.md)
+- [Configuración](docs/configuration.md)
+- [Backups](docs/backup.md)
 
 ## Stack
 
-**Backend:** NestJS, Prisma, PostgreSQL, Redis
-**Frontend:** React, Vite, Tanstack Query, Zustand
+- **Backend:** NestJS, Prisma, PostgreSQL, Redis
+- **Frontend:** React, Vite, Zustand
 
 ## Licencia
 
