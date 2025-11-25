@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IArtistBioRetriever, IArtistImageRetriever } from '../../domain/interfaces';
 import { ArtistBio, ArtistImages } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
 
 /**
@@ -12,26 +13,47 @@ import { fetchWithTimeout } from '@shared/utils';
  * API Documentation: https://www.last.fm/api
  * Rate Limit: 5 requests per second (we use 200ms delay to be safe)
  * Authentication: API Key required (free tier available)
+ *
+ * Settings priority: Database (UI) > Environment variable (.env)
  */
 @Injectable()
-export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever {
+export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, OnModuleInit {
   readonly name = 'lastfm';
   readonly priority = 20; // Secondary priority (after primary sources)
 
   private readonly logger = new Logger(LastfmAgent.name);
   private readonly baseUrl = 'https://ws.audioscrobbler.com/2.0/';
-  private readonly apiKey: string;
-  private readonly enabled: boolean;
+  private apiKey: string = '';
+  private enabled: boolean = false;
 
   constructor(
     private readonly rateLimiter: RateLimiterService,
-    private readonly config: ConfigService
-  ) {
-    this.apiKey = this.config.get<string>('LASTFM_API_KEY', '');
-    this.enabled = this.config.get<boolean>('LASTFM_ENABLED', true) && !!this.apiKey;
+    private readonly config: ConfigService,
+    private readonly settingsService: SettingsService,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.loadSettings();
+  }
+
+  /**
+   * Load settings from database first, then fallback to .env
+   */
+  async loadSettings(): Promise<void> {
+    // Priority: DB setting > ENV fallback
+    const dbApiKey = await this.settingsService.getString('api.lastfm.api_key', '');
+    const envApiKey = this.config.get<string>('LASTFM_API_KEY', '');
+    this.apiKey = dbApiKey || envApiKey;
+
+    const dbEnabled = await this.settingsService.getBoolean('api.lastfm.enabled', true);
+    const envEnabled = this.config.get<string>('LASTFM_ENABLED', 'true') === 'true';
+    this.enabled = (dbEnabled && envEnabled) && !!this.apiKey;
 
     if (!this.apiKey) {
-      this.logger.warn('Last.fm API key not configured. Agent will be disabled.');
+      this.logger.warn('Last.fm API key not configured (DB or .env). Agent will be disabled.');
+    } else {
+      const source = dbApiKey ? 'database' : '.env';
+      this.logger.log(`Last.fm agent initialized with API key from ${source}`);
     }
   }
 
