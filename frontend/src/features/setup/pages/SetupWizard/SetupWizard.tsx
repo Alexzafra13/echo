@@ -314,19 +314,143 @@ export default function SetupWizard() {
             <div className={styles.stepContent}>
               <h2 className={styles.stepTitle}>
                 <FolderOpen size={24} />
-                Seleccionar biblioteca de música
+                Biblioteca de música
               </h2>
-              <p className={styles.stepDescription}>
-                Navega y selecciona la carpeta donde tienes tu colección de música.
-              </p>
 
-              {/* Current path */}
-              <div className={styles.currentPath}>
-                <HardDrive size={18} />
-                <code>{selectedPath}</code>
-              </div>
+              {/* Case 1: Library mounted with content (Jellyfin-style) */}
+              {status?.mountedLibrary.isMounted && status?.mountedLibrary.hasContent ? (
+                <>
+                  <p className={styles.stepDescription}>
+                    Se ha detectado tu biblioteca de música montada en el servidor.
+                  </p>
 
-              {/* Validation result */}
+                  <div className={`${styles.validationResult} ${styles.valid}`}>
+                    <Music size={18} />
+                    <span>
+                      <strong>{status.mountedLibrary.fileCount.toLocaleString()}</strong> archivos de música encontrados en <code>{status.mountedLibrary.path}</code>
+                    </span>
+                  </div>
+
+                  <div className={styles.actions}>
+                    <Button
+                      onClick={() => handleSelectLibrary(status.mountedLibrary.path)}
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      loading={isSubmitting}
+                      rightIcon={<ChevronRight size={20} />}
+                    >
+                      Usar esta biblioteca
+                    </Button>
+                  </div>
+
+                  {/* Optional: Show browser for advanced users */}
+                  <details className={styles.advancedOptions}>
+                    <summary>Opciones avanzadas</summary>
+                    <p className={styles.advancedText}>
+                      Si quieres seleccionar una subcarpeta específica, puedes navegar aquí:
+                    </p>
+
+                    {/* Directory browser */}
+                    <div className={styles.browser}>
+                      {browseData ? (
+                        <>
+                          <div className={styles.currentPath}>
+                            <HardDrive size={18} />
+                            <code>{browseData.currentPath}</code>
+                          </div>
+
+                          {browseData.canGoUp && (
+                            <button
+                              className={styles.directoryItem}
+                              onClick={() => browseData.parentPath && loadDirectory(browseData.parentPath)}
+                              disabled={isBrowsing}
+                            >
+                              <ChevronLeft size={16} />
+                              <FolderOpen size={18} />
+                              <span>..</span>
+                            </button>
+                          )}
+
+                          <div className={styles.directoryList}>
+                            {browseData.directories.map((dir) => (
+                              <div key={dir.path} className={styles.directoryRow}>
+                                <button
+                                  className={`${styles.directoryItem} ${!dir.readable ? styles.disabled : ''}`}
+                                  onClick={() => dir.readable && loadDirectory(dir.path)}
+                                  disabled={!dir.readable || isBrowsing}
+                                >
+                                  <ChevronRight size={16} />
+                                  <FolderOpen size={18} />
+                                  <span>{dir.name}</span>
+                                  {dir.hasMusic && <Music size={14} className={styles.musicIcon} />}
+                                </button>
+                                <Button
+                                  onClick={() => handleSelectLibrary(dir.path)}
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={!dir.readable || isSubmitting}
+                                >
+                                  Seleccionar
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <Button onClick={() => loadDirectory(status.mountedLibrary.path)} variant="outline">
+                          Abrir navegador
+                        </Button>
+                      )}
+                    </div>
+                  </details>
+                </>
+              ) : (
+                /* Case 2: No library mounted or empty - Show instructions */
+                <>
+                  <p className={styles.stepDescription}>
+                    No se ha detectado ninguna biblioteca de música. Necesitas configurar la ruta a tu música.
+                  </p>
+
+                  <div className={styles.instructionsBox}>
+                    <h4>Cómo configurar tu biblioteca:</h4>
+                    <ol>
+                      <li>
+                        Edita el archivo <code>.env</code> en la carpeta de Echo:
+                        <pre>MUSIC_PATH=/ruta/a/tu/musica</pre>
+                      </li>
+                      <li>
+                        Reinicia el contenedor:
+                        <pre>docker compose restart echo-app</pre>
+                      </li>
+                      <li>
+                        Vuelve a esta página y tu música aparecerá automáticamente.
+                      </li>
+                    </ol>
+
+                    <div className={styles.examplesBox}>
+                      <strong>Ejemplos de rutas:</strong>
+                      <ul>
+                        <li><code>MUSIC_PATH=/mnt/nas/music</code> — NAS montado</li>
+                        <li><code>MUSIC_PATH=/home/usuario/Música</code> — Carpeta local</li>
+                        <li><code>MUSIC_PATH=/media/disco/music</code> — Disco externo</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className={styles.actions}>
+                    <Button
+                      onClick={() => checkStatus()}
+                      variant="primary"
+                      loading={isSubmitting}
+                    >
+                      Verificar de nuevo
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* Validation result (when manually selecting) */}
               {libraryValidation && (
                 <div
                   className={`${styles.validationResult} ${
@@ -338,77 +462,18 @@ export default function SetupWizard() {
                 </div>
               )}
 
-              {/* Directory browser */}
-              <div className={styles.browser}>
-                {/* Go up button */}
-                {browseData?.canGoUp && (
-                  <button
-                    className={styles.directoryItem}
-                    onClick={() => browseData.parentPath && loadDirectory(browseData.parentPath)}
-                    disabled={isBrowsing}
+              {/* Next button (only if library is configured) */}
+              {libraryValidation?.valid && (
+                <div className={styles.actions}>
+                  <Button
+                    onClick={() => setStep('complete')}
+                    variant="primary"
+                    rightIcon={<ChevronRight size={20} />}
                   >
-                    <ChevronLeft size={16} />
-                    <FolderOpen size={18} />
-                    <span>..</span>
-                  </button>
-                )}
-
-                {/* Directory list */}
-                <div className={styles.directoryList}>
-                  {isBrowsing ? (
-                    <div className={styles.browserLoading}>
-                      <Loader2 className={styles.spinner} size={24} />
-                      <span>Cargando...</span>
-                    </div>
-                  ) : browseData?.directories.length === 0 ? (
-                    <div className={styles.emptyDirectory}>
-                      No hay subdirectorios
-                    </div>
-                  ) : (
-                    browseData?.directories.map((dir) => (
-                      <div key={dir.path} className={styles.directoryRow}>
-                        <button
-                          className={`${styles.directoryItem} ${!dir.readable ? styles.disabled : ''}`}
-                          onClick={() => dir.readable && loadDirectory(dir.path)}
-                          disabled={!dir.readable || isBrowsing}
-                        >
-                          <ChevronRight size={16} />
-                          <FolderOpen size={18} />
-                          <span>{dir.name}</span>
-                          {dir.hasMusic && <Music size={14} className={styles.musicIcon} />}
-                        </button>
-                        <Button
-                          onClick={() => handleSelectLibrary(dir.path)}
-                          variant="outline"
-                          size="sm"
-                          disabled={!dir.readable || isSubmitting}
-                        >
-                          Seleccionar
-                        </Button>
-                      </div>
-                    ))
-                  )}
+                    Siguiente
+                  </Button>
                 </div>
-              </div>
-
-              {/* Actions */}
-              <div className={styles.actions}>
-                <Button
-                  onClick={() => handleSelectLibrary(selectedPath)}
-                  variant="outline"
-                  disabled={isSubmitting}
-                >
-                  Usar carpeta actual
-                </Button>
-                <Button
-                  onClick={() => setStep('complete')}
-                  variant="primary"
-                  disabled={!libraryValidation?.valid || isSubmitting}
-                  rightIcon={<ChevronRight size={20} />}
-                >
-                  Siguiente
-                </Button>
-              </div>
+              )}
             </div>
           )}
 

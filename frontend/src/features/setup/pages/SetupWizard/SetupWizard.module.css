@@ -337,6 +337,112 @@
   margin: 0 auto 20px;
 }
 
+/* Instructions Box (when no library mounted) */
+.instructionsBox {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.instructionsBox h4 {
+  margin: 0 0 16px 0;
+  color: #60a5fa;
+  font-size: 15px;
+}
+
+.instructionsBox ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.instructionsBox li {
+  margin-bottom: 12px;
+}
+
+.instructionsBox pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #fbbf24;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.instructionsBox code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #fbbf24;
+}
+
+.examplesBox {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.examplesBox strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+
+.examplesBox ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.examplesBox li {
+  margin-bottom: 6px;
+}
+
+/* Advanced Options (collapsible) */
+.advancedOptions {
+  margin-top: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.advancedOptions summary {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  user-select: none;
+}
+
+.advancedOptions summary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.advancedOptions[open] summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.advancedText {
+  padding: 12px 16px 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.advancedOptions .browser {
+  margin: 12px 16px 16px;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .container {

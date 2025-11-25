@@ -7,12 +7,20 @@ import axios from 'axios';
 
 const API_BASE = '/api/setup';
 
+export interface MountedLibraryInfo {
+  path: string;
+  isMounted: boolean;
+  hasContent: boolean;
+  fileCount: number;
+}
+
 export interface SetupStatus {
   needsSetup: boolean;
   hasAdmin: boolean;
   hasMusicLibrary: boolean;
   musicLibraryPath: string | null;
   setupCompleted: boolean;
+  mountedLibrary: MountedLibraryInfo;
 }
 
 export interface DirectoryInfo {
