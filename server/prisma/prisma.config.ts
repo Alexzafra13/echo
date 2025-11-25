@@ -26,20 +26,9 @@ export default defineConfig({
   earlyAccess: true,
   schema: path.join(__dirname, 'schema.prisma'),
 
-  migrate: {
-    async resolve({ datasourceUrl }) {
-      return {
-        url: datasourceUrl ?? process.env.DATABASE_URL,
-      }
-    },
-  },
-
-  studio: {
-    async resolve({ datasourceUrl }) {
-      return {
-        url: datasourceUrl ?? process.env.DATABASE_URL,
-      }
-    },
+  // Requerido para migrate deploy y otros comandos
+  datasource: {
+    url: process.env.DATABASE_URL!,
   },
 
   seed: {
