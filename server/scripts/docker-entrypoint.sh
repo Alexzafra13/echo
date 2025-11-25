@@ -83,7 +83,7 @@ echo ""
 # ============================================
 echo "🔄 Running database migrations..."
 
-if npx prisma@6.17.1 migrate deploy; then
+if npx prisma@7 migrate deploy; then
   echo "✅ Database migrations completed!"
 
   # Seed database with default settings (idempotent)
