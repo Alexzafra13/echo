@@ -27,15 +27,15 @@ volumes:
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
-pnpm setup      # Instala todo y configura BD
-pnpm dev:all    # Inicia frontend + backend
+pnpm quickstart   # Instala todo automáticamente
+pnpm dev:all      # Inicia frontend + backend
 ```
 
 ## Comandos
 
 | Comando | Descripción |
 |---------|-------------|
-| `pnpm setup` | Setup inicial |
+| `pnpm quickstart` | Setup inicial completo |
 | `pnpm dev:all` | Desarrollo |
 | `pnpm db:reset` | Reset BD |
 | `pnpm docker:dev` | Levantar DB/Redis |

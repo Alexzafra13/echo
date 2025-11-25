@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@10.18.3",
   "scripts": {
-    "setup:env": "node -e \"const fs=require('fs'); if(!fs.existsSync('.env')){fs.copyFileSync('.env.example','.env');console.log('✓ Created .env from .env.example')}else{console.log('→ .env already exists')}\"",
+    "setup:env": "node scripts/generate-env.js",
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/src/main",
