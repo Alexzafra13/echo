@@ -24,13 +24,20 @@
 | `REDIS_HOST` | `localhost` | Host Redis |
 | `CORS_ORIGINS` | `localhost:5173` | Orígenes permitidos |
 
+## Almacenamiento
+
+| Entorno | Ruta | Descripción |
+|---------|------|-------------|
+| Desarrollo | `server/uploads/` | Creado automáticamente por `pnpm quickstart` |
+| Producción | `/app/data` | Volumen Docker montado desde `./data` |
+
 ## Volúmenes Docker
 
 | Volumen | Contenido |
 |---------|-----------|
-| `./data` | Configuración, metadatos, covers |
-| `/mnt:/mnt:ro` | Punto montaje música (solo lectura) |
-| `/media:/media:ro` | Punto montaje música (solo lectura) |
+| `./data:/app/data` | Covers, metadatos, configuración |
+| `/mnt:/mnt:ro` | Música (solo lectura) |
+| `/media:/media:ro` | Música (solo lectura) |
 | `postgres_data` | Base de datos |
 
 ## Puertos
