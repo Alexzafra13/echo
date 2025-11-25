@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { IsString, MinLength, IsOptional, IsEmail } from 'class-validator';
 import { SetupService } from '../application/setup.service';
+import { Public } from '@shared/decorators/public.decorator';
 
 /**
  * DTO for creating admin account
@@ -65,6 +66,7 @@ class BrowseDirectoriesDto {
  */
 @ApiTags('setup')
 @Controller('setup')
+@Public()
 export class SetupController {
   private readonly logger = new Logger(SetupController.name);
 
