@@ -17,7 +17,7 @@ pnpm setup
 Esto ejecuta automáticamente:
 1. `pnpm install` - Instala dependencias
 2. `pnpm docker:dev` - Levanta PostgreSQL + Redis
-3. Crea `server/.env` desde `.env.example`
+3. Genera `server/.env` con JWT secrets seguros
 4. `pnpm db:reset` - Aplica migraciones y seed
 
 ## Desarrollo
