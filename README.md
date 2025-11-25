@@ -153,13 +153,6 @@ En producción, un solo contenedor sirve frontend + API en el puerto 4567.
 - **Backend:** NestJS, Prisma, PostgreSQL, Redis, BullMQ
 - **Frontend:** React 18, Vite, Tanstack Query, Zustand
 
-## 📚 Documentación
-
-- [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Despliegue LAN/Internet
-- [PRODUCTION.md](./PRODUCTION.md) - Configuración avanzada
-- [CGNAT_SOLUTIONS.md](./CGNAT_SOLUTIONS.md) - Soluciones CGNAT
-- [DOCKER.md](./DOCKER.md) - Docker avanzado
-
 ## 📄 Licencia
 
 ISC
