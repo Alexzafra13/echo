@@ -1,15 +1,15 @@
 import 'dotenv/config'
-import { defineConfig, env } from 'prisma/config'
+import { defineConfig } from 'prisma/config'
 
 export default defineConfig({
-  // Schema relativo al config file (que está en server/)
+  earlyAccess: true,
   schema: 'prisma/schema.prisma',
 
-  // Datasource requerido para migrate deploy
+  // Datasource - usa variable de entorno si existe
+  // prisma generate no necesita esto, pero migrate sí
   datasource: {
-    url: env('DATABASE_URL'),
+    url: process.env.DATABASE_URL ?? 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
   },
 
-  // Seed command
   seed: 'tsx prisma/seed.ts',
 })
