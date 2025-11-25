@@ -30,6 +30,7 @@ import { PlayTrackingModule } from './features/play-tracking/play-tracking.modul
 import { RecommendationsModule } from './features/recommendations/recommendations.module';
 import { LogsModule } from './features/logs/logs.module';
 import { HealthModule } from './features/health/health.module';
+import { SetupModule } from './features/setup/setup.module';
 import { validateEnvironment } from './config/env.validation';
 
 @Module({
@@ -87,6 +88,7 @@ import { validateEnvironment } from './config/env.validation';
     LogsModule,
 
     // Features
+    SetupModule, // Must be first - handles first-run wizard
     HealthModule,
     AuthModule,
     UsersModule,

@@ -4,12 +4,15 @@
 # 🎵 Self-hosted music streaming platform
 #
 # Quick Start:
-#   docker compose up -d
+#   1. Set MUSIC_PATH in .env (path to your music folder)
+#   2. docker compose up -d
+#   3. Open http://localhost:4567
+#   4. Complete the setup wizard (create admin, select library)
 #
-# That's it! No configuration needed.
-# - JWT secrets: Auto-generated
-# - Database: Auto-initialized
-# - Admin user: Created automatically (admin/admin123)
+# First run will show a setup wizard to:
+# - Create your admin account (no default password!)
+# - Select your music library folder
+# - Configure storage settings
 #
 # Access: http://localhost:4567
 # ============================================
@@ -122,8 +125,11 @@ services:
       # CORS - Configure for your domain
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4567}
 
-      # Music Library
+      # Music Library (configured via setup wizard or env)
       MUSIC_LIBRARY_PATH: /music
+
+      # Data path (unified storage for config, metadata, logs)
+      DATA_PATH: /app/data
 
       # Cache Configuration
       ENABLE_CACHE: ${ENABLE_CACHE:-true}
@@ -131,22 +137,18 @@ services:
       CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-3600}
       CACHE_ARTIST_TTL: ${CACHE_ARTIST_TTL:-7200}
 
-      # File Storage
-      UPLOAD_PATH: /app/uploads/music
-      COVERS_PATH: /app/uploads/covers
+      # File Storage (inside /app/data)
+      UPLOAD_PATH: /app/data/uploads
+      COVERS_PATH: /app/data/covers
 
     volumes:
-      # Configuration (Jellyfin-style - auto-generated secrets)
-      - echo-config:/app/config
+      # All application data in one volume (Navidrome-style)
+      # Contains: secrets, metadata, covers, logs, setup state
+      - echo-data:/app/data
 
-      # Music library (read-only recommended for safety)
-      - ${MUSIC_PATH:-./music}:/music:ro
-
-      # Persistent uploads (covers, metadata, etc.)
-      - echo-uploads:/app/uploads
-
-      # Optional: Application logs
-      - echo-logs:/app/logs
+      # Music library (read-only for safety)
+      # IMPORTANT: Set MUSIC_PATH in .env to your music folder
+      - ${MUSIC_PATH:?MUSIC_PATH is required - set it in .env}:/music:ro
 
     depends_on:
       postgres:
@@ -178,12 +180,15 @@ volumes:
     name: echo-postgres-data
   redis-data:
     name: echo-redis-data
-  echo-config:
-    name: echo-config  # Auto-generated secrets stored here (Jellyfin-style)
-  echo-uploads:
-    name: echo-uploads
-  echo-logs:
-    name: echo-logs
+  echo-data:
+    name: echo-data
+    # Contains all app data (Navidrome-style):
+    # - /app/data/secrets.env     (auto-generated JWT secrets)
+    # - /app/data/setup.json      (setup wizard state)
+    # - /app/data/metadata/       (artist/album images)
+    # - /app/data/covers/         (album covers)
+    # - /app/data/uploads/        (user uploads)
+    # - /app/data/logs/           (application logs)
 
 # ----------------------------------------
 # Network
