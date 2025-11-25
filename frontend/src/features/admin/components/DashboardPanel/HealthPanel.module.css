@@ -114,6 +114,56 @@
   flex-shrink: 0;
 }
 
+/* Clickeable Alert Button */
+.alertButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  font-size: 13px;
+  color: #f59e0b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.alertButton:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateX(2px);
+}
+
+.alertButton:active {
+  transform: translateX(4px);
+}
+
+.alertContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.alertContent svg {
+  flex-shrink: 0;
+}
+
+.alertChevron {
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.alertButton:hover .alertChevron {
+  opacity: 1;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .grid {

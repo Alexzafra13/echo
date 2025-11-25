@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, AlertCircle, Activity, Database, Zap, Radio, HardDrive, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Activity, Database, Zap, Radio, HardDrive, AlertTriangle, ChevronRight } from 'lucide-react';
 import styles from './HealthPanel.module.css';
 
 interface SystemHealth {
@@ -28,13 +28,14 @@ interface ActiveAlerts {
 interface HealthPanelProps {
   health: SystemHealth;
   alerts: ActiveAlerts;
+  onNavigateToTab?: (tab: string) => void; // ← Nueva prop para navegación
 }
 
 /**
  * HealthPanel Component
  * Panel que muestra el estado de salud del sistema y alertas activas
  */
-export function HealthPanel({ health, alerts }: HealthPanelProps) {
+export function HealthPanel({ health, alerts, onNavigateToTab }: HealthPanelProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
@@ -177,32 +178,60 @@ export function HealthPanel({ health, alerts }: HealthPanelProps) {
           </div>
           <div className={styles.alertsList}>
             {alerts.orphanedFiles > 0 && (
-              <div className={styles.alert}>
-                <AlertCircle size={14} />
-                <span>{alerts.orphanedFiles} archivos huérfanos</span>
-              </div>
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('maintenance')}
+                title="Click para ir a Mantenimiento y resolver"
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>{alerts.orphanedFiles} archivos huérfanos</span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
             )}
             {alerts.pendingConflicts > 0 && (
-              <div className={styles.alert}>
-                <AlertCircle size={14} />
-                <span>{alerts.pendingConflicts} conflictos pendientes</span>
-              </div>
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('metadata')}
+                title="Click para ir a Metadata y resolver conflictos"
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>{alerts.pendingConflicts} conflictos pendientes en Metadata</span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
             )}
             {alerts.storageWarning && (
-              <div className={styles.alert}>
-                <AlertCircle size={14} />
-                <span>
-                  {alerts.storageDetails
-                    ? `Almacenamiento de metadata al ${alerts.storageDetails.percentUsed}% (${alerts.storageDetails.currentMB}MB / ${alerts.storageDetails.limitMB}MB)`
-                    : 'Almacenamiento cerca del límite'}
-                </span>
-              </div>
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('maintenance')}
+                title="Click para ir a Mantenimiento"
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>
+                    {alerts.storageDetails
+                      ? `Almacenamiento de metadata al ${alerts.storageDetails.percentUsed}% (${alerts.storageDetails.currentMB}MB / ${alerts.storageDetails.limitMB}MB)`
+                      : 'Almacenamiento cerca del límite'}
+                  </span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
             )}
             {alerts.scanErrors > 0 && (
-              <div className={styles.alert}>
-                <AlertCircle size={14} />
-                <span>{alerts.scanErrors} errores en escaneos recientes</span>
-              </div>
+              <button
+                className={styles.alertButton}
+                onClick={() => onNavigateToTab?.('logs')}
+                title="Click para ver logs de errores"
+              >
+                <div className={styles.alertContent}>
+                  <AlertCircle size={14} />
+                  <span>{alerts.scanErrors} errores en escaneos recientes</span>
+                </div>
+                <ChevronRight size={14} className={styles.alertChevron} />
+              </button>
             )}
           </div>
         </div>

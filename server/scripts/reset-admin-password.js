@@ -7,19 +7,39 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🔄 Checking admin user...');
 
+  const DEFAULT_PASSWORD = 'admin123';
+
   // Check if admin user exists
   const existingAdmin = await prisma.user.findUnique({
     where: { username: 'admin' },
+    select: { passwordHash: true, mustChangePassword: true },
   });
 
   if (existingAdmin) {
-    // Admin exists - don't reset (user may have changed password already)
-    console.log('✅ Admin user already exists - skipping reset');
-    console.log('   (Use pnpm admin:reset to manually reset the password)');
+    // Admin exists - check if they're still using default password
+    const isUsingDefaultPassword = await bcrypt.compare(DEFAULT_PASSWORD, existingAdmin.passwordHash);
+
+    if (isUsingDefaultPassword && !existingAdmin.mustChangePassword) {
+      // Has default password but mustChangePassword is false → force password change
+      await prisma.user.update({
+        where: { username: 'admin' },
+        data: { mustChangePassword: true },
+      });
+      console.log('⚠️  Admin still using default password - forcing password change on next login');
+    } else if (!isUsingDefaultPassword && existingAdmin.mustChangePassword) {
+      // User changed password but mustChangePassword is still true → clear flag
+      await prisma.user.update({
+        where: { username: 'admin' },
+        data: { mustChangePassword: false },
+      });
+      console.log('✅ Admin password already changed - clearing first-login flag');
+    } else {
+      // Everything is consistent - no changes needed
+      console.log('✅ Admin user OK (no changes needed)');
+    }
   } else {
-    // Create new admin user
-    const newPassword = 'admin123';
-    const passwordHash = await bcrypt.hash(newPassword, 12);
+    // Create new admin user with default password
+    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
 
     await prisma.user.create({
       data: {

@@ -65,7 +65,7 @@ export default function AdminPage() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardPanel />;
+        return <DashboardPanel onNavigateToTab={setActiveTab} />;
       case 'library':
         return <ScannerPanel />;
       case 'metadata':
@@ -82,7 +82,7 @@ export default function AdminPage() {
       case 'logs':
         return <LogsPanel />;
       default:
-        return <DashboardPanel />;
+        return <DashboardPanel onNavigateToTab={setActiveTab} />;
     }
   };
 
