@@ -86,10 +86,9 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 # ============================================
 # FILE STORAGE
 # ============================================
-# UPLOAD_PATH: Where to look for music files
-# COVERS_PATH: Where to cache extracted album covers
-UPLOAD_PATH=./uploads/music
+UPLOAD_PATH=./uploads
 COVERS_PATH=./uploads/covers
+METADATA_PATH=./uploads/metadata
 
 # ============================================
 # CACHE CONFIGURATION

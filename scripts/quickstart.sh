@@ -80,10 +80,12 @@ done
 echo -e "  ${GREEN}✓${NC} PostgreSQL listo"
 echo ""
 
-# Generar .env
+# Generar .env y crear carpetas
 echo -e "${BLUE}[4/5]${NC} Configurando entorno..."
 cd server
 node scripts/generate-env.js
+mkdir -p uploads/covers uploads/metadata
+echo -e "  ${GREEN}✓${NC} Carpetas uploads creadas"
 cd ..
 echo ""
 
