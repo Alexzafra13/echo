@@ -8,7 +8,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     @InjectPinoLogger(PrismaService.name)
     private readonly logger: PinoLogger,
   ) {
-    super();
+    // Prisma 7: datasource URL ya no está en schema.prisma
+    super({
+      datasourceUrl: process.env.DATABASE_URL,
+    });
   }
 
   async onModuleInit() {
