@@ -1,4 +1,5 @@
 import { Route, Switch, Redirect } from 'wouter';
+import { SetupWizard } from '@features/setup';
 import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
 import FirstLoginPage from '@features/auth/pages/FirstLoginPage';
 import HomePage from '@features/home/pages/HomePage';
@@ -19,6 +20,7 @@ import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlayl
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
+import { SetupGuard } from '@shared/components/SetupGuard';
 import { ErrorBoundary } from '@shared/components/ErrorBoundary';
 import { useAuthStore } from '@shared/store';
 import { AudioPlayer } from '@features/player';
@@ -29,8 +31,15 @@ function App() {
   return (
     <ErrorBoundary>
       <Switch>
-        {/* Login Route */}
-        <Route path="/login" component={LoginPage} />
+        {/* Setup Wizard (First-run) */}
+        <Route path="/setup" component={SetupWizard} />
+
+        {/* Login Route - Checks setup status first */}
+        <Route path="/login">
+          <SetupGuard>
+            <LoginPage />
+          </SetupGuard>
+        </Route>
 
         {/* First Login - Change Password (Protected) */}
         <Route path="/first-login">

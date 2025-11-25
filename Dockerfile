@@ -104,14 +104,15 @@ COPY --chown=echoapp:nodejs server/scripts/reset-admin-password.js ./scripts/
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create directories with proper permissions
-RUN mkdir -p /app/uploads/music /app/uploads/covers /app/storage /app/config /app/logs && \
-    chown -R echoapp:nodejs /app/uploads /app/storage /app/config /app/logs
+# Create unified data directory (Navidrome-style)
+# All persistent data in /app/data: secrets, metadata, covers, uploads, logs
+RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
+    chown -R echoapp:nodejs /app/data
 
 # Create wrapper script (inline - no temp files needed)
 RUN printf '#!/bin/sh\n\
 set -e\n\
-chown -R echoapp:nodejs /app/config /app/uploads /app/logs 2>/dev/null || true\n\
+chown -R echoapp:nodejs /app/data 2>/dev/null || true\n\
 exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
 > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
