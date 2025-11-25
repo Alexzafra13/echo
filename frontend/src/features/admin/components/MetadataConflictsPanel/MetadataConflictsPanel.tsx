@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button, CollapsibleInfo } from '@shared/components/ui';
-import { useToast } from '@shared/context/ToastContext';
+import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
 import {
   useMetadataConflicts,
   useAcceptConflict,
@@ -61,7 +60,7 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const [isRemoved, setIsRemoved] = useState(false);
   const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
-  const { addToast } = useToast();
+  const [error, setError] = useState<string | null>(null);
   const { mutate: accept, isPending: isAccepting } = useAcceptConflict();
   const { mutate: reject, isPending: isRejecting } = useRejectConflict();
   const { mutate: ignore, isPending: isIgnoring } = useIgnoreConflict();
@@ -74,55 +73,51 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
   const suggestions = hasMultipleSuggestions ? conflict.metadata.suggestions : [];
 
   const handleAccept = () => {
+    setError(null);
     accept(conflict.id, {
       onSuccess: () => {
         setIsRemoved(true);
-        addToast('Sugerencia aceptada y cambios aplicados', 'success');
       },
-      onError: (error) => {
-        addToast('Error al aceptar: ' + (error as Error).message, 'error');
+      onError: (err) => {
+        setError('Error al aceptar: ' + (err as Error).message);
       },
     });
   };
 
   const handleReject = () => {
+    setError(null);
     reject(conflict.id, {
       onSuccess: () => {
         setIsRemoved(true);
-        addToast('Sugerencia rechazada, datos actuales conservados', 'info');
       },
-      onError: (error) => {
-        addToast('Error al rechazar: ' + (error as Error).message, 'error');
+      onError: (err) => {
+        setError('Error al rechazar: ' + (err as Error).message);
       },
     });
   };
 
   const handleIgnore = () => {
+    setError(null);
     ignore(conflict.id, {
       onSuccess: () => {
         setIsRemoved(true);
-        addToast('Sugerencia ignorada permanentemente', 'info');
       },
-      onError: (error) => {
-        addToast('Error al ignorar: ' + (error as Error).message, 'error');
+      onError: (err) => {
+        setError('Error al ignorar: ' + (err as Error).message);
       },
     });
   };
 
   const handleApplySuggestion = () => {
+    setError(null);
     applySuggestion(
       { conflictId: conflict.id, suggestionIndex: selectedSuggestionIndex },
       {
         onSuccess: () => {
           setIsRemoved(true);
-          const suggestion = suggestions[selectedSuggestionIndex];
-          addToast(
-            `MBID aplicado: "${suggestion.name}" (score: ${suggestion.score})`,
-            'success'
-          );
         },
-        onError: (error) => {
-          addToast('Error al aplicar sugerencia: ' + (error as Error).message, 'error');
+        onError: (err) => {
+          setError('Error al aplicar sugerencia: ' + (err as Error).message);
         },
       }
     );
@@ -376,6 +371,15 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Error notification */}
+      {error && (
+        <InlineNotification
+          type="error"
+          message={error}
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {/* Actions */}
