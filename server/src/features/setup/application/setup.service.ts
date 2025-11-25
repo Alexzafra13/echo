@@ -402,19 +402,8 @@ export class SetupService {
     state.version = 1;
     await this.saveSetupState(state);
 
-    // Create setting in database for music library path
-    await this.prisma.setting.upsert({
-      where: { key: 'library.music.path' },
-      update: { value: state.musicLibraryPath },
-      create: {
-        key: 'library.music.path',
-        value: state.musicLibraryPath,
-        category: 'library',
-        type: 'string',
-        description: 'Path to the music library',
-        isPublic: false,
-      },
-    });
+    // Initialize all default settings
+    await this.initializeDefaultSettings(state.musicLibraryPath);
 
     this.logger.log('Setup wizard completed successfully');
 
@@ -422,6 +411,110 @@ export class SetupService {
       success: true,
       message: 'Setup completed! You can now log in and start scanning your library.',
     };
+  }
+
+  /**
+   * Initialize default settings on first run
+   * These settings can be modified later via the admin panel
+   */
+  private async initializeDefaultSettings(musicLibraryPath: string): Promise<void> {
+    const defaultSettings = [
+      // Library settings
+      {
+        key: 'library.music.path',
+        value: musicLibraryPath,
+        category: 'library',
+        type: 'string',
+        description: 'Path to the music library',
+        isPublic: false,
+      },
+      // Scanner settings
+      {
+        key: 'scanner.auto_watch.enabled',
+        value: 'true',
+        category: 'scanner',
+        type: 'boolean',
+        description: 'Automatically watch for new files in the music library',
+        isPublic: false,
+      },
+      {
+        key: 'scanner.auto_scan.interval_minutes',
+        value: '60',
+        category: 'scanner',
+        type: 'number',
+        description: 'Interval between automatic scans (in minutes)',
+        isPublic: false,
+      },
+      // Metadata auto-enrichment settings
+      {
+        key: 'metadata.auto_enrich.enabled',
+        value: 'true',
+        category: 'metadata',
+        type: 'boolean',
+        description: 'Automatically enrich metadata for new tracks',
+        isPublic: false,
+      },
+      {
+        key: 'metadata.auto_search_mbid.enabled',
+        value: 'true',
+        category: 'metadata',
+        type: 'boolean',
+        description: 'Automatically search for MusicBrainz IDs',
+        isPublic: false,
+      },
+      // API settings - enabled flags (keys are added by user via admin panel)
+      {
+        key: 'api.lastfm.enabled',
+        value: 'true',
+        category: 'api',
+        type: 'boolean',
+        description: 'Enable Last.fm metadata agent (requires API key)',
+        isPublic: false,
+      },
+      {
+        key: 'api.lastfm.api_key',
+        value: '',
+        category: 'api',
+        type: 'string',
+        description: 'Last.fm API key for artist biographies and images',
+        isPublic: false,
+      },
+      {
+        key: 'api.fanart.enabled',
+        value: 'true',
+        category: 'api',
+        type: 'boolean',
+        description: 'Enable Fanart.tv metadata agent (requires API key)',
+        isPublic: false,
+      },
+      {
+        key: 'api.fanart.api_key',
+        value: '',
+        category: 'api',
+        type: 'string',
+        description: 'Fanart.tv API key for high-quality artist images',
+        isPublic: false,
+      },
+      // Storage settings
+      {
+        key: 'storage.metadata.path',
+        value: process.env.DATA_PATH ? `${process.env.DATA_PATH}/metadata` : '/app/data/metadata',
+        category: 'storage',
+        type: 'string',
+        description: 'Path for storing downloaded metadata (images, etc.)',
+        isPublic: false,
+      },
+    ];
+
+    for (const setting of defaultSettings) {
+      await this.prisma.setting.upsert({
+        where: { key: setting.key },
+        update: {}, // Don't overwrite existing values
+        create: setting,
+      });
+    }
+
+    this.logger.log(`Initialized ${defaultSettings.length} default settings`);
   }
 
   /**

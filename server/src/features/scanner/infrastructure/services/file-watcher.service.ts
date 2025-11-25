@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import chokidar, { FSWatcher } from 'chokidar';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { join } from 'path';
 import { stat } from 'fs/promises';
 
@@ -12,7 +13,7 @@ import { stat } from 'fs/promises';
  * - Automatically detects new/modified/deleted files
  * - Incrementally scans only changed files
  * - Debouncing to avoid scans while files are being copied
- * - Configurable (can be disabled with AUTO_SCAN=false)
+ * - Configurable from UI (scanner.auto_watch.enabled) or fallback to AUTO_SCAN env
  *
  * Similar to Navidrome: New albums appear automatically without manual intervention
  */
@@ -28,23 +29,31 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly bullmq: BullmqService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   /**
    * Starts file watcher when module initializes
    */
   async onModuleInit() {
-    const autoScanEnabled = this.configService.get<string>('AUTO_SCAN', 'true') === 'true';
+    // Priority: DB setting > ENV fallback (defaults to true)
+    const dbEnabled = await this.settingsService.getBoolean('scanner.auto_watch.enabled', true);
+    const envEnabled = this.configService.get<string>('AUTO_SCAN', 'true') === 'true';
+    const autoScanEnabled = dbEnabled && envEnabled;
 
     if (!autoScanEnabled) {
-      this.logger.log('Auto-scan disabled (AUTO_SCAN=false)');
+      this.logger.log('Auto-scan disabled via settings');
       return;
     }
 
-    const musicPath = this.configService.get<string>('UPLOAD_PATH');
+    // Get music path from DB setting first, then env fallback
+    const musicPath = await this.settingsService.getString(
+      'library.music.path',
+      this.configService.get<string>('UPLOAD_PATH', ''),
+    );
 
     if (!musicPath) {
-      this.logger.warn('UPLOAD_PATH not configured, auto-scan disabled');
+      this.logger.warn('Music library path not configured, auto-scan disabled');
       return;
     }
 
