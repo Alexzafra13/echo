@@ -11,14 +11,15 @@
 ```bash
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
-pnpm setup
+pnpm quickstart
 ```
 
-Esto ejecuta automáticamente:
-1. `pnpm install` - Instala dependencias
-2. `pnpm docker:dev` - Levanta PostgreSQL + Redis
-3. Genera `server/.env` con JWT secrets seguros
-4. `pnpm db:reset` - Aplica migraciones y seed
+El script verifica requisitos y ejecuta automáticamente:
+1. Verifica Node.js >= 22, pnpm, Docker
+2. Instala dependencias
+3. Levanta PostgreSQL + Redis
+4. Genera `server/.env` con JWT secrets seguros
+5. Aplica migraciones y seed
 
 ## Desarrollo
 
@@ -32,7 +33,7 @@ pnpm dev:all    # Frontend + Backend con hot-reload
 
 | Comando | Descripción |
 |---------|-------------|
-| `pnpm setup` | Setup inicial completo |
+| `pnpm quickstart` | Setup inicial completo |
 | `pnpm dev:all` | Frontend + Backend |
 | `pnpm dev` | Solo backend |
 | `pnpm build` | Build producción |
