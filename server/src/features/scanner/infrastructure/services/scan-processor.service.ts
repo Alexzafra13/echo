@@ -46,10 +46,12 @@ class ScanProgress {
   }
 }
 
+// Setting key for music library path (same as admin-library.controller)
+const LIBRARY_PATH_KEY = 'library.music.path';
+
 @Injectable()
 export class ScanProcessorService implements OnModuleInit {
   private readonly QUEUE_NAME = 'library-scan';
-  private readonly musicLibraryPath = process.env.MUSIC_LIBRARY_PATH || '/music';
 
   constructor(
     @Inject(SCANNER_REPOSITORY)
@@ -86,15 +88,26 @@ export class ScanProcessorService implements OnModuleInit {
   }
 
   /**
+   * Get music library path from settings, fallback to env, then default
+   */
+  private async getMusicLibraryPath(): Promise<string> {
+    return this.settingsService.getString(
+      LIBRARY_PATH_KEY,
+      process.env.MUSIC_LIBRARY_PATH || '/music',
+    );
+  }
+
+  /**
    * Encola un nuevo trabajo de escaneo
    */
   async enqueueScan(scanId: string, options?: any): Promise<void> {
+    const libraryPath = await this.getMusicLibraryPath();
     await this.bullmq.addJob(
       this.QUEUE_NAME,
       'scan',
       {
         scanId,
-        path: options?.path || this.musicLibraryPath,
+        path: options?.path || libraryPath,
         recursive: options?.recursive !== false,
         pruneDeleted: options?.pruneDeleted !== false,
       },

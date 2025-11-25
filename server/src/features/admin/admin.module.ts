@@ -5,6 +5,7 @@ import { ExternalMetadataModule } from '@features/external-metadata/external-met
 import { HealthModule } from '@features/health/health.module';
 import { AdminController } from './presentation/admin.controller';
 import { AdminDashboardController } from './presentation/admin-dashboard.controller';
+import { AdminLibraryController } from './presentation/admin-library.controller';
 import { EnrichmentHistoryController } from './presentation/enrichment-history.controller';
 import { AlbumCoversController } from './presentation/album-covers.controller';
 import { ArtistAvatarsController } from './presentation/artist-avatars.controller';
@@ -42,6 +43,7 @@ import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-al
   controllers: [
     AdminController,
     AdminDashboardController,
+    AdminLibraryController,
     EnrichmentHistoryController,
     AlbumCoversController,
     ArtistAvatarsController,

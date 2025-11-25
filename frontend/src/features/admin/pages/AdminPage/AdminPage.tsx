@@ -5,6 +5,7 @@ import { AdminSidebar } from '../../components/AdminSidebar';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
 import { DashboardPanel } from '../../components/DashboardPanel';
 import { ScannerPanel } from '../../components/ScannerPanel/ScannerPanel';
+import { LibraryPanel } from '../../components/LibraryPanel';
 import { MetadataSettingsPanel } from '../../components/MetadataSettingsPanel';
 import { MetadataConflictsPanel } from '../../components/MetadataConflictsPanel';
 import { MaintenanceTab } from '../../components/MetadataSettingsPanel/MaintenanceTab';
@@ -67,7 +68,12 @@ export default function AdminPage() {
       case 'dashboard':
         return <DashboardPanel onNavigateToTab={setActiveTab} />;
       case 'library':
-        return <ScannerPanel />;
+        return (
+          <>
+            <LibraryPanel />
+            <ScannerPanel />
+          </>
+        );
       case 'metadata':
         return (
           <>
