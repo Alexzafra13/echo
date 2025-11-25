@@ -90,9 +90,10 @@ RUN pnpm --filter=echo-server-backend deploy --prod --legacy /app
 WORKDIR /app
 
 # Copy Prisma schema and generated client from builder
+# With pnpm workspaces, .prisma is in the root node_modules
 # Both stages use node:22-alpine so the generated binaries are compatible
 COPY --chown=echoapp:nodejs server/prisma ./prisma
-COPY --from=builder --chown=echoapp:nodejs /build/server/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=echoapp:nodejs /build/node_modules/.prisma ./node_modules/.prisma
 
 # Copy built files from builder stage
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
