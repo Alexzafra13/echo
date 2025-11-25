@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IArtistBioRetriever } from '../../domain/interfaces';
 import { ArtistBio } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { fetchWithTimeout } from '@shared/utils';
 
 /**
  * Wikipedia Agent
@@ -109,7 +110,8 @@ export class WikipediaAgent implements IArtistBioRetriever {
     });
 
     const url = `${baseUrl}?${params.toString()}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
       headers: { 'User-Agent': this.userAgent },
     });
 
@@ -138,7 +140,8 @@ export class WikipediaAgent implements IArtistBioRetriever {
     const encodedTitle = encodeURIComponent(title);
     const url = `${baseUrl}/page/summary/${encodedTitle}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
       headers: {
         'User-Agent': this.userAgent,
         'Accept': 'application/json',
