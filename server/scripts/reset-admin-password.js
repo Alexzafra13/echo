@@ -7,27 +7,20 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🔄 Checking admin user...');
 
-  const newPassword = 'admin123';
-  const passwordHash = await bcrypt.hash(newPassword, 12);
-
   // Check if admin user exists
   const existingAdmin = await prisma.user.findUnique({
     where: { username: 'admin' },
   });
 
   if (existingAdmin) {
-    // Update existing admin user
-    await prisma.user.update({
-      where: { username: 'admin' },
-      data: {
-        passwordHash: passwordHash,
-        mustChangePassword: true,
-        isActive: true,
-      },
-    });
-    console.log('✅ Admin password reset successfully!');
+    // Admin exists - don't reset (user may have changed password already)
+    console.log('✅ Admin user already exists - skipping reset');
+    console.log('   (Use pnpm admin:reset to manually reset the password)');
   } else {
     // Create new admin user
+    const newPassword = 'admin123';
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
     await prisma.user.create({
       data: {
         username: 'admin',
@@ -42,14 +35,13 @@ async function main() {
       },
     });
     console.log('✅ Admin user created successfully!');
+    console.log('');
+    console.log('📝 Credentials:');
+    console.log('   Username: admin');
+    console.log('   Password: admin123');
+    console.log('');
+    console.log('⚠️  You MUST change this password on first login!');
   }
-
-  console.log('');
-  console.log('📝 Credentials:');
-  console.log('   Username: admin');
-  console.log('   Password: admin123');
-  console.log('');
-  console.log('⚠️  You MUST change this password on first login!');
 }
 
 main()
