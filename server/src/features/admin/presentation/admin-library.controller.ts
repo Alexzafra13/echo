@@ -8,6 +8,8 @@ import {
   HttpStatus,
   UseGuards,
   Logger,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,6 +27,9 @@ import * as path from 'path';
 
 // Setting key for music library path
 const LIBRARY_PATH_KEY = 'library.music.path';
+
+// Allowed root paths for security (prevent path traversal)
+const ALLOWED_ROOTS = ['/mnt', '/media', '/music', '/data', '/home'];
 
 class UpdateLibraryPathDto {
   @IsString()
@@ -117,22 +122,22 @@ export class AdminLibraryController {
   async updateLibrary(@Body() dto: UpdateLibraryPathDto) {
     const normalizedPath = path.normalize(dto.path).replace(/\\/g, '/');
 
+    // Security: validate path is within allowed roots
+    this.validatePathAccess(normalizedPath);
+
     // Validate path exists and is readable
     try {
       await fs.access(normalizedPath);
       const stats = await fs.stat(normalizedPath);
 
       if (!stats.isDirectory()) {
-        return {
-          success: false,
-          message: 'Path is not a directory',
-        };
+        throw new BadRequestException('Path is not a directory');
       }
-    } catch {
-      return {
-        success: false,
-        message: 'Path does not exist or is not accessible',
-      };
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof ForbiddenException) {
+        throw error;
+      }
+      throw new BadRequestException('Path does not exist or is not accessible');
     }
 
     // Save to settings
@@ -169,18 +174,33 @@ export class AdminLibraryController {
     const targetPath = dto.path || '/';
     const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
 
+    // Security: validate path is within allowed roots (or is root to list allowed paths)
+    if (normalizedPath !== '/') {
+      this.validatePathAccess(normalizedPath);
+    }
+
+    // If browsing root, return only allowed roots
+    if (normalizedPath === '/') {
+      const availableRoots = await this.getAvailableMountPoints();
+      return {
+        currentPath: '/',
+        parentPath: null,
+        canGoUp: false,
+        directories: availableRoots.map((p) => ({
+          name: p.replace('/', ''),
+          path: p,
+          readable: true,
+          hasMusic: false,
+        })),
+      };
+    }
+
     try {
       await fs.access(normalizedPath);
       const stats = await fs.stat(normalizedPath);
 
       if (!stats.isDirectory()) {
-        return {
-          currentPath: normalizedPath,
-          parentPath: path.dirname(normalizedPath),
-          canGoUp: normalizedPath !== '/',
-          directories: [],
-          error: 'Not a directory',
-        };
+        throw new BadRequestException('Not a directory');
       }
 
       const entries = await fs.readdir(normalizedPath, { withFileTypes: true });
@@ -223,22 +243,21 @@ export class AdminLibraryController {
       directories.sort((a, b) => a.name.localeCompare(b.name));
 
       const parentPath = path.dirname(normalizedPath).replace(/\\/g, '/');
+      // Check if parent is still within allowed roots
+      const canGoUp = this.isPathAllowed(parentPath) || parentPath === '/';
 
       return {
         currentPath: normalizedPath,
-        parentPath: parentPath !== normalizedPath ? parentPath : null,
-        canGoUp: normalizedPath !== '/',
+        parentPath: canGoUp ? (parentPath !== normalizedPath ? parentPath : '/') : '/',
+        canGoUp,
         directories,
       };
     } catch (error) {
+      if (error instanceof BadRequestException || error instanceof ForbiddenException) {
+        throw error;
+      }
       this.logger.error(`Error browsing ${normalizedPath}: ${(error as Error).message}`);
-      return {
-        currentPath: normalizedPath,
-        parentPath: path.dirname(normalizedPath),
-        canGoUp: true,
-        directories: [],
-        error: 'Cannot access directory',
-      };
+      throw new BadRequestException('Cannot access directory');
     }
   }
 
@@ -277,10 +296,9 @@ export class AdminLibraryController {
    * Get available mount points for browsing
    */
   private async getAvailableMountPoints(): Promise<string[]> {
-    const commonPaths = ['/mnt', '/media', '/music', '/data', '/home'];
     const available: string[] = [];
 
-    for (const p of commonPaths) {
+    for (const p of ALLOWED_ROOTS) {
       try {
         await fs.access(p);
         const stats = await fs.stat(p);
@@ -293,5 +311,26 @@ export class AdminLibraryController {
     }
 
     return available;
+  }
+
+  /**
+   * Check if a path is within allowed roots
+   */
+  private isPathAllowed(targetPath: string): boolean {
+    const normalized = path.normalize(targetPath).replace(/\\/g, '/');
+    return ALLOWED_ROOTS.some(
+      (root) => normalized === root || normalized.startsWith(root + '/'),
+    );
+  }
+
+  /**
+   * Validate path access - throws if not allowed
+   */
+  private validatePathAccess(targetPath: string): void {
+    if (!this.isPathAllowed(targetPath)) {
+      throw new ForbiddenException(
+        `Access denied: path must be within ${ALLOWED_ROOTS.join(', ')}`,
+      );
+    }
   }
 }
