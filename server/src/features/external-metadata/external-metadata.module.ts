@@ -57,11 +57,19 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
  * - WebSocket notifications for real-time progress
  * - Manual enrichment endpoints
  *
- * Configuration (via .env):
- * - LASTFM_API_KEY - Last.fm API key (required for Last.fm)
- * - LASTFM_ENABLED - Enable/disable Last.fm agent (default: true)
- * - FANART_API_KEY - Fanart.tv API key (required for Fanart.tv)
- * - FANART_ENABLED - Enable/disable Fanart.tv agent (default: true)
+ * Configuration priority: Database (UI settings) > Environment variables (.env)
+ *
+ * Database settings (via admin panel):
+ * - api.lastfm.api_key - Last.fm API key
+ * - api.lastfm.enabled - Enable/disable Last.fm agent (default: true)
+ * - api.fanart.api_key - Fanart.tv API key
+ * - api.fanart.enabled - Enable/disable Fanart.tv agent (default: true)
+ *
+ * Fallback environment variables (.env):
+ * - LASTFM_API_KEY - Last.fm API key
+ * - LASTFM_ENABLED - Enable/disable Last.fm agent
+ * - FANART_API_KEY - Fanart.tv API key
+ * - FANART_ENABLED - Enable/disable Fanart.tv agent
  * - COVERART_ENABLED - Enable/disable Cover Art Archive agent (default: true)
  */
 @Module({
