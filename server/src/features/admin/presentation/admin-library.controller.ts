@@ -278,12 +278,35 @@ export class AdminLibraryController {
       directories.sort((a, b) => a.name.localeCompare(b.name));
 
       const parentPath = path.dirname(normalizedPath).replace(/\\/g, '/');
-      // Check if parent is still within allowed roots
-      const canGoUp = this.isPathAllowed(parentPath) || parentPath === '/';
+      const isDev = process.env.NODE_ENV === 'development';
+      const isWindows = process.platform === 'win32';
+
+      // In development, allow going up anywhere. In production, check allowed roots
+      let canGoUp: boolean;
+      let effectiveParentPath: string | null;
+
+      if (isDev) {
+        // On Windows, if we're at a drive root (e.g., C:/), parent should be /
+        if (isWindows && /^[A-Za-z]:\/?$/.test(normalizedPath)) {
+          canGoUp = true;
+          effectiveParentPath = '/';
+        } else if (parentPath === normalizedPath) {
+          // We're at root
+          canGoUp = false;
+          effectiveParentPath = null;
+        } else {
+          canGoUp = true;
+          effectiveParentPath = parentPath;
+        }
+      } else {
+        // Production: check if parent is within allowed roots
+        canGoUp = this.isPathAllowed(parentPath) || parentPath === '/';
+        effectiveParentPath = canGoUp ? (parentPath !== normalizedPath ? parentPath : '/') : '/';
+      }
 
       return {
         currentPath: normalizedPath,
-        parentPath: canGoUp ? (parentPath !== normalizedPath ? parentPath : '/') : '/',
+        parentPath: effectiveParentPath,
         canGoUp,
         directories,
       };
