@@ -252,16 +252,52 @@ export class SetupService {
    * Browse directories for music library selection
    */
   async browseDirectories(targetPath: string): Promise<BrowseResult> {
-    const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
+    const isDev = process.env.NODE_ENV === 'development';
+    const isWindows = process.platform === 'win32';
 
-    // Security: prevent browsing outside allowed paths
-    const allowedRoots = ['/', '/mnt', '/media', '/home', '/music', '/data'];
-    const isAllowed = allowedRoots.some(root =>
-      normalizedPath === root || normalizedPath.startsWith(root + '/')
-    );
+    // Handle Windows root path in development
+    let normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
 
-    if (!isAllowed && normalizedPath !== '/') {
-      throw new BadRequestException(`Access denied to path: ${normalizedPath}`);
+    // In development on Windows, if requesting "/", show common locations
+    if (isDev && isWindows && (targetPath === '/' || targetPath === '')) {
+      const homeDir = process.env.USERPROFILE || process.env.HOME || 'C:/Users';
+      const musicDir = path.join(homeDir, 'Music').replace(/\\/g, '/');
+      const desktopDir = path.join(homeDir, 'Desktop').replace(/\\/g, '/');
+
+      const directories: DirectoryInfo[] = [];
+
+      for (const dir of [musicDir, desktopDir, 'C:/', 'D:/']) {
+        try {
+          await fs.access(dir);
+          directories.push({
+            name: dir.includes('/') ? path.basename(dir) || dir : dir,
+            path: dir,
+            readable: true,
+            hasMusic: dir.toLowerCase().includes('music'),
+          });
+        } catch {
+          // Skip non-existent paths
+        }
+      }
+
+      return {
+        currentPath: '/',
+        parentPath: null,
+        directories,
+        canGoUp: false,
+      };
+    }
+
+    // Security: prevent browsing outside allowed paths (only in production)
+    if (!isDev) {
+      const allowedRoots = ['/', '/mnt', '/media', '/home', '/music', '/data'];
+      const isAllowed = allowedRoots.some(root =>
+        normalizedPath === root || normalizedPath.startsWith(root + '/')
+      );
+
+      if (!isAllowed && normalizedPath !== '/') {
+        throw new BadRequestException(`Access denied to path: ${normalizedPath}`);
+      }
     }
 
     // Check if path exists
