@@ -6,6 +6,7 @@ import {
   MusicBrainzRecordingMatch,
 } from '../../domain/interfaces/musicbrainz-search.interface';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { fetchWithTimeout } from '@shared/utils';
 
 /**
  * MusicBrainz Agent
@@ -46,7 +47,8 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
       this.logger.debug(`Searching MusicBrainz for artist: ${artistName}`);
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
         headers: {
           'User-Agent': this.userAgent,
           Accept: 'application/json',
@@ -114,7 +116,8 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         `Searching MusicBrainz for album: ${albumTitle}${artistName ? ` by ${artistName}` : ''}`
       );
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
         headers: {
           'User-Agent': this.userAgent,
           Accept: 'application/json',
@@ -168,7 +171,8 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
       this.logger.debug(`Fetching artist details for MBID: ${mbid}`);
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
         headers: {
           'User-Agent': this.userAgent,
           Accept: 'application/json',
@@ -231,7 +235,8 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
 
       this.logger.debug(`Fetching album details for MBID: ${mbid}`);
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
         headers: {
           'User-Agent': this.userAgent,
           Accept: 'application/json',
@@ -350,7 +355,8 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
       );
       this.logger.debug(`Query: ${query}`);
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
         headers: {
           'User-Agent': this.userAgent,
           Accept: 'application/json',

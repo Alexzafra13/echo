@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { IArtistImageRetriever, IAlbumCoverRetriever } from '../../domain/interfaces';
 import { ArtistImages, AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { fetchWithTimeout } from '@shared/utils';
 
 /**
  * Fanart.tv Agent
@@ -61,11 +62,12 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
       const url = `${this.baseUrl}/${mbid}`;
       this.logger.debug(`Fetching Fanart.tv data for: ${name} (${mbid})`);
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         headers: {
           'api-key': this.apiKey,
           'User-Agent': 'Echo-Music-Server/1.0.0',
         },
+        timeout: 8000, // 8 second timeout for external APIs
       });
 
       if (!response.ok) {

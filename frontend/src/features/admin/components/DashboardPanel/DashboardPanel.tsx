@@ -99,11 +99,15 @@ interface DashboardStats {
   }>;
 }
 
+interface DashboardPanelProps {
+  onNavigateToTab?: (tab: string) => void;
+}
+
 /**
  * DashboardPanel Component
  * Vista general del sistema con estadísticas y estado de salud
  */
-export function DashboardPanel() {
+export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +225,11 @@ export function DashboardPanel() {
       </div>
 
       {/* System Health */}
-      <HealthPanel health={stats.systemHealth} alerts={stats.activeAlerts} />
+      <HealthPanel
+        health={stats.systemHealth}
+        alerts={stats.activeAlerts}
+        onNavigateToTab={onNavigateToTab}
+      />
 
       {/* Activity & Enrichment Stats */}
       <div className={styles.statsRow}>

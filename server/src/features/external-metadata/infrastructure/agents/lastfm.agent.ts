@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { IArtistBioRetriever, IArtistImageRetriever } from '../../domain/interfaces';
 import { ArtistBio, ArtistImages } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { fetchWithTimeout } from '@shared/utils';
 
 /**
  * Last.fm Agent
@@ -159,7 +160,8 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever {
     const url = `${this.baseUrl}?${params.toString()}`;
     this.logger.debug(`Fetching Last.fm artist info: ${mbid || name}`);
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
+        timeout: 8000, // 8 second timeout
       headers: {
         'User-Agent': 'Echo-Music-Server/1.0.0',
       },
