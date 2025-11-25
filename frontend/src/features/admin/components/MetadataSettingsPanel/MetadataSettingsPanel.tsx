@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Settings, History, Search, HardDrive } from 'lucide-react';
+import { Settings, History, Search } from 'lucide-react';
 import { ProvidersTab } from '../../metadata/components/ProvidersTab';
-import { StorageTab } from '../../metadata/components/StorageTab';
 import { AutoSearchTab } from '../../metadata/components/AutoSearchTab';
 import { HistoryTab } from '../../metadata/components/HistoryTab';
 import styles from './MetadataSettingsPanel.module.css';
 
-type Tab = 'providers' | 'autosearch' | 'storage' | 'history';
+type Tab = 'providers' | 'autosearch' | 'history';
 
 /**
  * MetadataSettingsPanel Component
@@ -31,12 +30,6 @@ export function MetadataSettingsPanel() {
       label: 'Auto-Search',
       icon: <Search size={18} />,
       description: 'Auto-búsqueda de MusicBrainz IDs',
-    },
-    {
-      id: 'storage' as Tab,
-      label: 'Almacenamiento',
-      icon: <HardDrive size={18} />,
-      description: 'Configurar ubicación de almacenamiento de metadata',
     },
     {
       id: 'history' as Tab,
@@ -77,7 +70,6 @@ export function MetadataSettingsPanel() {
       <div className={styles.tabContent}>
         {activeTab === 'providers' && <ProvidersTab />}
         {activeTab === 'autosearch' && <AutoSearchTab />}
-        {activeTab === 'storage' && <StorageTab />}
         {activeTab === 'history' && <HistoryTab />}
       </div>
     </div>
