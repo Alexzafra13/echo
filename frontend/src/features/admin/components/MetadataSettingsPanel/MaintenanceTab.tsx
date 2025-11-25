@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
-import { Button, CollapsibleInfo } from '@shared/components/ui';
+import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
+import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
-import { useToast } from '@shared/context/ToastContext';
 import styles from './MaintenanceTab.module.css';
 
 interface StorageStats {
@@ -40,7 +40,7 @@ export function MaintenanceTab() {
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const [showCacheConfirm, setShowCacheConfirm] = useState(false);
   const [populateError, setPopulateError] = useState<string | null>(null);
-  const { addToast } = useToast();
+  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
 
   useEffect(() => {
     loadStats();
@@ -88,6 +88,7 @@ export function MaintenanceTab() {
     try {
       setIsCleaning(true);
       setCleanupResult(null);
+      setNotification(null);
       setShowCleanupConfirm(false);
 
       const response = await apiClient.post('/maintenance/cleanup/orphaned?dryRun=false');
@@ -95,11 +96,11 @@ export function MaintenanceTab() {
 
       // Refrescar estadísticas
       await loadStats();
-    } catch (error: any) {
+    } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error running cleanup:', error);
+        console.error('Error running cleanup:', err);
       }
-      addToast(error.response?.data?.message || 'Error al ejecutar limpieza', 'error');
+      setNotification({ type: 'error', message: err.response?.data?.message || 'Error al ejecutar limpieza' });
     } finally {
       setIsCleaning(false);
     }
@@ -112,13 +113,14 @@ export function MaintenanceTab() {
   const clearCache = async () => {
     try {
       setShowCacheConfirm(false);
+      setNotification(null);
       await apiClient.post('/admin/settings/cache/clear');
-      addToast('Caché limpiado correctamente', 'success');
-    } catch (error: any) {
+      setNotification({ type: 'success', message: 'Caché limpiado correctamente' });
+    } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error clearing cache:', error);
+        console.error('Error clearing cache:', err);
       }
-      addToast(error.response?.data?.message || 'Error al limpiar caché', 'error');
+      setNotification({ type: 'error', message: err.response?.data?.message || 'Error al limpiar caché' });
     }
   };
 
@@ -360,6 +362,15 @@ export function MaintenanceTab() {
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{populateError}</p>
             </div>
           </div>
+        )}
+
+        {/* Notification */}
+        {notification && (
+          <InlineNotification
+            type={notification.type}
+            message={notification.message}
+            onDismiss={() => setNotification(null)}
+          />
         )}
       </div>
 

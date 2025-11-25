@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Check, AlertCircle, Info } from 'lucide-react';
-import { Button, CollapsibleInfo } from '@shared/components/ui';
+import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
+import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
-import { useToast } from '@shared/context/ToastContext';
 import styles from './ProvidersTab.module.css';
 
 interface AutoSearchConfig {
@@ -36,7 +36,7 @@ export function AutoSearchTab() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const { addToast } = useToast();
+  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
 
   // Load config and stats on mount
   useEffect(() => {
@@ -47,13 +47,14 @@ export function AutoSearchTab() {
   const loadConfig = async () => {
     try {
       setIsLoading(true);
+      setNotification(null);
       const response = await apiClient.get('/admin/mbid-auto-search/config');
       setConfig(response.data);
-    } catch (error) {
+    } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error loading auto-search config:', error);
+        console.error('Error loading auto-search config:', err);
       }
-      addToast('Error al cargar configuración de auto-búsqueda', 'error');
+      setNotification({ type: 'error', message: 'Error al cargar configuración de auto-búsqueda' });
     } finally {
       setIsLoading(false);
     }
@@ -79,24 +80,25 @@ export function AutoSearchTab() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
+      setNotification(null);
 
       await apiClient.put('/admin/mbid-auto-search/config', {
         enabled: config.enabled,
         confidenceThreshold: config.confidenceThreshold,
       });
 
-      addToast('Configuración guardada correctamente', 'success');
+      setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
 
       // Reload config to get updated description
       await loadConfig();
-    } catch (error: any) {
+    } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error saving auto-search config:', error);
+        console.error('Error saving auto-search config:', err);
       }
-      addToast(
-        error.response?.data?.message || 'Error al guardar configuración',
-        'error'
-      );
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.message || 'Error al guardar configuración',
+      });
     } finally {
       setIsSaving(false);
     }
@@ -286,6 +288,15 @@ export function AutoSearchTab() {
           <li>Los MBIDs correctos mejoran el enriquecimiento (Fanart.tv requiere MBIDs)</li>
         </ul>
       </CollapsibleInfo>
+
+      {/* Notification */}
+      {notification && (
+        <InlineNotification
+          type={notification.type}
+          message={notification.message}
+          onDismiss={() => setNotification(null)}
+        />
+      )}
 
       {/* Save Button */}
       <div className={styles.actions}>

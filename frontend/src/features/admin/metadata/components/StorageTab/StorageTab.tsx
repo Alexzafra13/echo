@@ -7,7 +7,6 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@shared/components/ui';
-import { useToast } from '@shared/context/ToastContext';
 import { useMetadataSettings } from '../../hooks/queries/useMetadataSettings';
 import { useUpdateMetadataSettings } from '../../hooks/mutations/useUpdateMetadataSettings';
 import { useValidateStoragePath } from '../../hooks/mutations/useValidateStoragePath';
@@ -22,8 +21,6 @@ import styles from './StorageTab.module.css';
  * Storage configuration tab
  */
 export function StorageTab() {
-  const { addToast } = useToast();
-
   // React Query hooks
   const { data: settings, isLoading } = useMetadataSettings();
   const updateSettings = useUpdateMetadataSettings();
@@ -97,25 +94,12 @@ export function StorageTab() {
   };
 
   const handleSave = () => {
-    updateSettings.mutate(
-      {
-        storage: {
-          mode: storageMode,
-          path: storagePath,
-        },
+    updateSettings.mutate({
+      storage: {
+        mode: storageMode,
+        path: storagePath,
       },
-      {
-        onSuccess: () => {
-          addToast('Configuración guardada correctamente', 'success');
-        },
-        onError: (error: any) => {
-          addToast(
-            error.response?.data?.message || 'Error al guardar la configuración',
-            'error'
-          );
-        },
-      }
-    );
+    });
   };
 
   if (isLoading) {
