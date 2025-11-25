@@ -350,14 +350,28 @@ export class SetupService {
       return a.name.localeCompare(b.name);
     });
 
-    // Parent path
-    const parentPath = normalizedPath === '/' ? null : path.dirname(normalizedPath);
+    // Parent path - handle Windows drive roots
+    let parentPath: string | null;
+    let canGoUp: boolean;
+
+    if (normalizedPath === '/') {
+      parentPath = null;
+      canGoUp = false;
+    } else if (isWindows && /^[A-Za-z]:\/?$/.test(normalizedPath)) {
+      // At Windows drive root (C:/), go back to virtual root
+      parentPath = '/';
+      canGoUp = true;
+    } else {
+      const parent = path.dirname(normalizedPath).replace(/\\/g, '/');
+      parentPath = parent !== normalizedPath ? parent : null;
+      canGoUp = parentPath !== null;
+    }
 
     return {
       currentPath: normalizedPath,
       parentPath,
       directories,
-      canGoUp: normalizedPath !== '/',
+      canGoUp,
     };
   }
 
