@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IArtistImageRetriever, IAlbumCoverRetriever } from '../../domain/interfaces';
 import { ArtistImages, AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
 
 /**
@@ -12,26 +13,47 @@ import { fetchWithTimeout } from '@shared/utils';
  * API Documentation: https://fanart.tv/api-docs/
  * Rate Limit: ~4 requests per second (conservative estimate)
  * Authentication: API Key required (free tier: 2 requests/sec, VIP: 10 requests/sec)
+ *
+ * Settings priority: Database (UI) > Environment variable (.env)
  */
 @Injectable()
-export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetriever {
+export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetriever, OnModuleInit {
   readonly name = 'fanart';
   readonly priority = 20; // Secondary source for covers (after Cover Art Archive)
 
   private readonly logger = new Logger(FanartTvAgent.name);
   private readonly baseUrl = 'https://webservice.fanart.tv/v3/music';
-  private readonly apiKey: string;
-  private readonly enabled: boolean;
+  private apiKey: string = '';
+  private enabled: boolean = false;
 
   constructor(
     private readonly rateLimiter: RateLimiterService,
-    private readonly config: ConfigService
-  ) {
-    this.apiKey = this.config.get<string>('FANART_API_KEY', '');
-    this.enabled = this.config.get<boolean>('FANART_ENABLED', true) && !!this.apiKey;
+    private readonly config: ConfigService,
+    private readonly settingsService: SettingsService,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.loadSettings();
+  }
+
+  /**
+   * Load settings from database first, then fallback to .env
+   */
+  async loadSettings(): Promise<void> {
+    // Priority: DB setting > ENV fallback
+    const dbApiKey = await this.settingsService.getString('api.fanart.api_key', '');
+    const envApiKey = this.config.get<string>('FANART_API_KEY', '');
+    this.apiKey = dbApiKey || envApiKey;
+
+    const dbEnabled = await this.settingsService.getBoolean('api.fanart.enabled', true);
+    const envEnabled = this.config.get<string>('FANART_ENABLED', 'true') === 'true';
+    this.enabled = (dbEnabled && envEnabled) && !!this.apiKey;
 
     if (!this.apiKey) {
-      this.logger.warn('Fanart.tv API key not configured. Agent will be disabled.');
+      this.logger.warn('Fanart.tv API key not configured (DB or .env). Agent will be disabled.');
+    } else {
+      const source = dbApiKey ? 'database' : '.env';
+      this.logger.log(`Fanart.tv agent initialized with API key from ${source}`);
     }
   }
 
