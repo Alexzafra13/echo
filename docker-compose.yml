@@ -20,9 +20,10 @@ services:
       # Añade más rutas si tu música está en otro sitio:
       # - /home/usuario/Musica:/music:ro
     environment:
-      - DATABASE_URL=postgresql://echo:echo@postgres:5432/echo
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://echo:echo_music_server@postgres:5432/echo
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=echo
+      - REDIS_PASSWORD=echo_music_server
       - DATA_PATH=/app/data
     depends_on:
       postgres:
@@ -38,7 +39,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=echo
-      - POSTGRES_PASSWORD=echo
+      - POSTGRES_PASSWORD=echo_music_server
       - POSTGRES_DB=echo
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U echo"]
@@ -50,9 +51,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: echo-redis
-    command: redis-server --requirepass echo
+    command: redis-server --requirepass echo_music_server
     healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "echo", "ping"]
+      test: ["CMD", "redis-cli", "--pass", "echo_music_server", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
