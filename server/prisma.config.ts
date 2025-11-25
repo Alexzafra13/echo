@@ -1,4 +1,10 @@
-import 'dotenv/config'
+// Load dotenv only in development (not available in Docker production stage)
+try {
+  require('dotenv/config')
+} catch {
+  // dotenv not available in production - env vars are set by Docker
+}
+
 import { defineConfig } from 'prisma/config'
 
 export default defineConfig({
