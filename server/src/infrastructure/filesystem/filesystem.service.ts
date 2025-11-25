@@ -1,22 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class FilesystemService {
-  private uploadPath = process.env.UPLOAD_PATH || './uploads/music';
-  private coversPath = process.env.COVERS_PATH || './uploads/covers';
+  private readonly logger = new Logger(FilesystemService.name);
+
+  // Use DATA_PATH for all persistent storage (Jellyfin-style)
+  private readonly dataPath = process.env.DATA_PATH || '/app/data';
+  private readonly uploadPath: string;
+  private readonly coversPath: string;
 
   constructor() {
+    // All paths relative to DATA_PATH
+    this.uploadPath = path.join(this.dataPath, 'uploads');
+    this.coversPath = path.join(this.dataPath, 'covers');
     this.ensureDirectories();
   }
 
   private ensureDirectories() {
-    if (!fs.existsSync(this.uploadPath)) {
-      fs.mkdirSync(this.uploadPath, { recursive: true });
-    }
-    if (!fs.existsSync(this.coversPath)) {
-      fs.mkdirSync(this.coversPath, { recursive: true });
+    const dirs = [this.uploadPath, this.coversPath];
+    for (const dir of dirs) {
+      try {
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+          this.logger.log(`Created directory: ${dir}`);
+        }
+      } catch (error) {
+        // In production, directories are created by entrypoint
+        // This is just a fallback for development
+        this.logger.warn(`Could not create ${dir}: ${(error as Error).message}`);
+      }
     }
   }
 
