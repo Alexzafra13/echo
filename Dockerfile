@@ -22,6 +22,7 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY frontend/package.json ./frontend/
 COPY server/package.json ./server/
 COPY server/prisma ./server/prisma/
+COPY server/prisma.config.ts ./server/prisma.config.ts
 
 # Install ALL dependencies (frontend + backend) in one go
 RUN pnpm install --frozen-lockfile
@@ -88,9 +89,10 @@ RUN pnpm --filter=echo-server-backend deploy --prod --legacy /app
 # Switch to final app directory
 WORKDIR /app
 
-# Copy Prisma schema and generate client for Alpine
+# Copy Prisma schema, config and generate client for Alpine
 COPY --chown=echoapp:nodejs server/prisma ./prisma
-RUN npx prisma@6.17.1 generate
+COPY --chown=echoapp:nodejs server/prisma.config.ts ./prisma.config.ts
+RUN npx prisma@7.0.0 generate
 
 # Copy built files from builder stage
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
