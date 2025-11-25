@@ -36,7 +36,7 @@ async function main() {
     { key: 'metadata.conflict.strategy', value: 'ask', category: 'external_metadata', type: 'string', description: 'Strategy when conflict: keep, replace, ask' },
 
     // Auto-enrich Settings
-    { key: 'metadata.auto_enrich.enabled', value: 'false', category: 'external_metadata', type: 'boolean', description: 'Auto-enrich during library scan' },
+    { key: 'metadata.auto_enrich.enabled', value: 'true', category: 'external_metadata', type: 'boolean', description: 'Auto-enrich during library scan' },
     { key: 'metadata.auto_enrich.batch_size', value: '10', category: 'external_metadata', type: 'number', description: 'Items to enrich per batch' },
   ];
 
