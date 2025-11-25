@@ -89,10 +89,10 @@ RUN pnpm --filter=echo-server-backend deploy --prod --legacy /app
 # Switch to final app directory
 WORKDIR /app
 
-# Copy Prisma schema, config and generate client for Alpine
+# Copy Prisma schema and generated client from builder
+# Both stages use node:22-alpine so the generated binaries are compatible
 COPY --chown=echoapp:nodejs server/prisma ./prisma
-COPY --chown=echoapp:nodejs server/prisma.config.ts ./prisma.config.ts
-RUN npx prisma@7.0.0 generate
+COPY --from=builder --chown=echoapp:nodejs /build/server/node_modules/.prisma ./node_modules/.prisma
 
 # Copy built files from builder stage
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
