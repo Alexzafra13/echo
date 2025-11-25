@@ -6,8 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Check } from 'lucide-react';
-import { Button, CollapsibleInfo } from '@shared/components/ui';
-import { useToast } from '@shared/context/ToastContext';
+import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
+import type { NotificationType } from '@shared/components/ui';
 import { useAutoSearchConfig } from '../../hooks/queries/useAutoSearchConfig';
 import { useUpdateAutoSearchConfig } from '../../hooks/mutations/useUpdateAutoSearchConfig';
 import { useAutoSearchStats } from '../../hooks/queries/useAutoSearchStats';
@@ -20,8 +20,6 @@ import styles from './AutoSearchTab.module.css';
  * Auto-search configuration tab
  */
 export function AutoSearchTab() {
-  const { addToast } = useToast();
-
   // React Query hooks
   const { data: config, isLoading } = useAutoSearchConfig();
   const { data: stats } = useAutoSearchStats();
@@ -30,6 +28,7 @@ export function AutoSearchTab() {
   // Local form state
   const [enabled, setEnabled] = useState(false);
   const [confidenceThreshold, setConfidenceThreshold] = useState(95);
+  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
 
   // Sync config to local state when loaded
   useEffect(() => {
@@ -40,6 +39,7 @@ export function AutoSearchTab() {
   }, [config]);
 
   const handleSave = () => {
+    setNotification(null);
     updateConfig.mutate(
       {
         enabled,
@@ -47,13 +47,13 @@ export function AutoSearchTab() {
       },
       {
         onSuccess: () => {
-          addToast('Configuración guardada correctamente', 'success');
+          setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
         },
-        onError: (error: any) => {
-          addToast(
-            error.response?.data?.message || 'Error al guardar configuración',
-            'error'
-          );
+        onError: (err: any) => {
+          setNotification({
+            type: 'error',
+            message: err.response?.data?.message || 'Error al guardar configuración',
+          });
         },
       }
     );
@@ -116,6 +116,15 @@ export function AutoSearchTab() {
           <li>Los MBIDs correctos mejoran el enriquecimiento (Fanart.tv requiere MBIDs)</li>
         </ul>
       </CollapsibleInfo>
+
+      {/* Notification */}
+      {notification && (
+        <InlineNotification
+          type={notification.type}
+          message={notification.message}
+          onDismiss={() => setNotification(null)}
+        />
+      )}
 
       {/* Save Button */}
       <div className={styles.actions}>

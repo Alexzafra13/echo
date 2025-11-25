@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX } from 'lucide-react';
-import { Button } from '@shared/components/ui';
-import { useToast } from '@shared/context/ToastContext';
+import { Button, InlineNotification } from '@shared/components/ui';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
@@ -10,6 +9,7 @@ import { CredentialsModal } from './CredentialsModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import styles from './UsersPanel.module.css';
+import type { NotificationType } from '@shared/components/ui';
 
 /**
  * UsersPanel Component
@@ -32,8 +32,8 @@ export function UsersPanel() {
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-  // Toast notifications
-  const { addToast } = useToast();
+  // Inline notifications
+  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
 
   // Queries - Load all users for client-side filtering
   const { data, isLoading, error } = useUsers(0, 1000);
@@ -61,12 +61,12 @@ export function UsersPanel() {
     try {
       await deleteUserMutation.mutateAsync(userToDelete.id);
       setUserToDelete(null);
-      addToast('Usuario desactivado correctamente', 'success');
-    } catch (error) {
+      setNotification({ type: 'success', message: 'Usuario desactivado correctamente' });
+    } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error deleting user:', error);
+        console.error('Error deleting user:', err);
       }
-      addToast('Error al eliminar usuario. Por favor intenta de nuevo.', 'error');
+      setNotification({ type: 'error', message: 'Error al eliminar usuario. Por favor intenta de nuevo.' });
     }
   };
 
@@ -80,12 +80,12 @@ export function UsersPanel() {
     try {
       await permanentlyDeleteUserMutation.mutateAsync(userToPermanentlyDelete.id);
       setUserToPermanentlyDelete(null);
-      addToast('Usuario eliminado permanentemente', 'success');
-    } catch (error) {
+      setNotification({ type: 'success', message: 'Usuario eliminado permanentemente' });
+    } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error permanently deleting user:', error);
+        console.error('Error permanently deleting user:', err);
       }
-      addToast('Error al eliminar usuario permanentemente. Por favor intenta de nuevo.', 'error');
+      setNotification({ type: 'error', message: 'Error al eliminar usuario permanentemente. Por favor intenta de nuevo.' });
     }
   };
 
@@ -103,11 +103,11 @@ export function UsersPanel() {
         username: userToResetPassword.username,
         password: result.temporaryPassword,
       });
-    } catch (error) {
+    } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error resetting password:', error);
+        console.error('Error resetting password:', err);
       }
-      addToast('Error al resetear contraseña. Por favor intenta de nuevo.', 'error');
+      setNotification({ type: 'error', message: 'Error al resetear contraseña. Por favor intenta de nuevo.' });
     }
   };
 
@@ -235,6 +235,15 @@ export function UsersPanel() {
           Crear Usuario
         </Button>
       </div>
+
+      {/* Notification */}
+      {notification && (
+        <InlineNotification
+          type={notification.type}
+          message={notification.message}
+          onDismiss={() => setNotification(null)}
+        />
+      )}
 
       {/* Search and Filters */}
       <div className={styles.searchFilters}>

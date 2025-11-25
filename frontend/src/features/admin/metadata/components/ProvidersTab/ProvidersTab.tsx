@@ -13,8 +13,8 @@
 
 import { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@shared/components/ui';
-import { useToast } from '@shared/context/ToastContext';
+import { Button, InlineNotification } from '@shared/components/ui';
+import type { NotificationType } from '@shared/components/ui';
 import {
   useMetadataSettings,
   useUpdateMetadataSettings,
@@ -31,8 +31,6 @@ import styles from './ProvidersTab.module.css';
  * user interactions, and rendering of presentational components.
  */
 export function ProvidersTab() {
-  const { addToast } = useToast();
-
   // React Query hooks (replaces all useState for server state)
   const { data: settings, isLoading, error } = useMetadataSettings();
   const updateSettings = useUpdateMetadataSettings();
@@ -47,6 +45,9 @@ export function ProvidersTab() {
     lastfm?: { valid: boolean; message: string };
     fanart?: { valid: boolean; message: string };
   }>({});
+
+  // Inline notifications
+  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
 
   // Sync form state with fetched settings
   useEffect(() => {
@@ -94,6 +95,7 @@ export function ProvidersTab() {
   };
 
   const handleSave = () => {
+    setNotification(null);
     updateSettings.mutate(
       {
         providers: {
@@ -103,33 +105,34 @@ export function ProvidersTab() {
       },
       {
         onSuccess: () => {
-          addToast('Configuración guardada correctamente', 'success');
+          setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
         },
-        onError: (error: any) => {
-          addToast(
-            error.response?.data?.message || 'Error al guardar configuración',
-            'error'
-          );
+        onError: (err: any) => {
+          setNotification({
+            type: 'error',
+            message: err.response?.data?.message || 'Error al guardar configuración',
+          });
         },
       }
     );
   };
 
   const handleToggleAutoEnrich = (enabled: boolean) => {
+    setNotification(null);
     updateSettings.mutate(
       { autoEnrichEnabled: enabled },
       {
         onSuccess: () => {
-          addToast(
-            `Auto-enrichment ${enabled ? 'activado' : 'desactivado'}`,
-            'success'
-          );
+          setNotification({
+            type: 'success',
+            message: `Auto-enrichment ${enabled ? 'activado' : 'desactivado'}`,
+          });
         },
-        onError: (error: any) => {
-          addToast(
-            error.response?.data?.message || 'Error al actualizar configuración',
-            'error'
-          );
+        onError: (err: any) => {
+          setNotification({
+            type: 'error',
+            message: err.response?.data?.message || 'Error al actualizar configuración',
+          });
         },
       }
     );
@@ -217,6 +220,15 @@ export function ProvidersTab() {
           obtener creando una cuenta.
         </p>
       </div>
+
+      {/* Notification */}
+      {notification && (
+        <InlineNotification
+          type={notification.type}
+          message={notification.message}
+          onDismiss={() => setNotification(null)}
+        />
+      )}
 
       {/* Save Button */}
       <div className={styles.actions}>

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
-import { useToast } from '@shared/context/ToastContext';
 import styles from './LogsPanel.module.css';
 
 interface SystemLog {
@@ -38,8 +37,6 @@ const LEVEL_CONFIG = {
  * Muestra los logs del sistema con filtros y paginación
  */
 export function LogsPanel() {
-  const { addToast } = useToast();
-
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -48,6 +45,7 @@ export function LogsPanel() {
   const [limit] = useState(50);
   const [offset, setOffset] = useState(0);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Cargar logs al montar
   useEffect(() => {
@@ -57,6 +55,7 @@ export function LogsPanel() {
   const loadLogs = async () => {
     try {
       setIsLoading(true);
+      setError(null);
 
       const params: any = {
         limit,
@@ -74,11 +73,11 @@ export function LogsPanel() {
       const response = await apiClient.get<LogsResponse>('/logs', { params });
       setLogs(response.data.logs);
       setTotal(response.data.total);
-    } catch (error: any) {
+    } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error loading logs:', error);
+        console.error('Error loading logs:', err);
       }
-      addToast('Error al cargar logs', 'error');
+      setError('Error al cargar logs');
     } finally {
       setIsLoading(false);
     }
@@ -123,12 +122,21 @@ export function LogsPanel() {
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <h2 className={styles.title}>📊 Logs del Sistema</h2>
+        <h2 className={styles.title}>Logs del Sistema</h2>
         <Button onClick={loadLogs} disabled={isLoading}>
           <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
           Actualizar
         </Button>
       </div>
+
+      {/* Error notification */}
+      {error && (
+        <InlineNotification
+          type="error"
+          message={error}
+          onDismiss={() => setError(null)}
+        />
+      )}
 
       {/* Filtros */}
       <div className={styles.filters}>

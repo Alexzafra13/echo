@@ -17,3 +17,6 @@ export { CollapsibleInfo } from './CollapsibleInfo';
 
 export { Pagination } from './Pagination';
 export type { PaginationProps } from './Pagination';
+
+export { InlineNotification } from './InlineNotification';
+export type { NotificationType } from './InlineNotification';
