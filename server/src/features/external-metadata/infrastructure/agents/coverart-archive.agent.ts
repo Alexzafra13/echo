@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { IAlbumCoverRetriever } from '../../domain/interfaces';
 import { AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { fetchWithTimeout } from '@shared/utils';
 
 /**
  * Cover Art Archive Agent
@@ -55,11 +56,12 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
       const url = `${this.baseUrl}/release/${mbid}`;
       this.logger.debug(`Fetching cover art: ${url}`);
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         headers: {
           'User-Agent': 'Echo-Music-Server/1.0.0 (https://github.com/yourusername/echo)',
           Accept: 'application/json',
         },
+        timeout: 8000, // 8 second timeout
       });
 
       if (!response.ok) {
