@@ -121,9 +121,12 @@ export class AdminLibraryController {
   })
   async updateLibrary(@Body() dto: UpdateLibraryPathDto) {
     const normalizedPath = path.normalize(dto.path).replace(/\\/g, '/');
+    const isDev = process.env.NODE_ENV === 'development';
 
-    // Security: validate path is within allowed roots
-    this.validatePathAccess(normalizedPath);
+    // Security: validate path is within allowed roots (only in production)
+    if (!isDev) {
+      this.validatePathAccess(normalizedPath);
+    }
 
     // Validate path exists and is readable
     try {
@@ -173,13 +176,45 @@ export class AdminLibraryController {
   async browseDirectories(@Body() dto: BrowseDirectoriesDto) {
     const targetPath = dto.path || '/';
     const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
+    const isDev = process.env.NODE_ENV === 'development';
+    const isWindows = process.platform === 'win32';
 
-    // Security: validate path is within allowed roots (or is root to list allowed paths)
-    if (normalizedPath !== '/') {
+    // In development on Windows, if requesting "/", show common locations
+    if (isDev && isWindows && (targetPath === '/' || targetPath === '')) {
+      const homeDir = process.env.USERPROFILE || process.env.HOME || 'C:/Users';
+      const musicDir = path.join(homeDir, 'Music').replace(/\\/g, '/');
+      const desktopDir = path.join(homeDir, 'Desktop').replace(/\\/g, '/');
+
+      const directories: Array<{ name: string; path: string; readable: boolean; hasMusic: boolean }> = [];
+
+      for (const dir of [musicDir, desktopDir, 'C:/', 'D:/']) {
+        try {
+          await fs.access(dir);
+          directories.push({
+            name: dir.includes('/') ? path.basename(dir) || dir : dir,
+            path: dir,
+            readable: true,
+            hasMusic: dir.toLowerCase().includes('music'),
+          });
+        } catch {
+          // Skip non-existent paths
+        }
+      }
+
+      return {
+        currentPath: '/',
+        parentPath: null,
+        canGoUp: false,
+        directories,
+      };
+    }
+
+    // Security: validate path is within allowed roots (only in production)
+    if (!isDev && normalizedPath !== '/') {
       this.validatePathAccess(normalizedPath);
     }
 
-    // If browsing root, return only allowed roots
+    // If browsing root (Linux/production), return only allowed roots
     if (normalizedPath === '/') {
       const availableRoots = await this.getAvailableMountPoints();
       return {
