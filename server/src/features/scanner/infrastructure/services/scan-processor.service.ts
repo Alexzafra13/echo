@@ -963,7 +963,7 @@ export class ScanProcessorService implements OnModuleInit {
       // Verificar si el auto-enriquecimiento está habilitado
       const autoEnrichEnabled = await this.settingsService.getBoolean(
         'metadata.auto_enrich.enabled',
-        false,
+        true, // Enabled by default
       );
 
       if (!autoEnrichEnabled) {
