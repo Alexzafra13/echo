@@ -23,6 +23,13 @@ export interface SetupStatus {
   hasMusicLibrary: boolean;
   musicLibraryPath: string | null;
   setupCompleted: boolean;
+  // New: Info about mounted music folder
+  mountedLibrary: {
+    path: string;
+    isMounted: boolean;
+    hasContent: boolean;
+    fileCount: number;
+  };
 }
 
 /**
@@ -65,9 +72,10 @@ export class SetupService {
    * Get current setup status
    */
   async getStatus(): Promise<SetupStatus> {
-    const [hasAdmin, setupState] = await Promise.all([
+    const [hasAdmin, setupState, mountedLibrary] = await Promise.all([
       this.hasAdminUser(),
       this.getSetupState(),
+      this.checkMountedLibrary(),
     ]);
 
     const hasMusicLibrary = !!setupState.musicLibraryPath;
@@ -78,7 +86,48 @@ export class SetupService {
       hasMusicLibrary,
       musicLibraryPath: setupState.musicLibraryPath || null,
       setupCompleted: setupState.completed,
+      mountedLibrary,
     };
+  }
+
+  /**
+   * Check if /music folder is mounted and has content
+   * This is the folder mounted via Docker from MUSIC_PATH
+   */
+  private async checkMountedLibrary(): Promise<SetupStatus['mountedLibrary']> {
+    const musicPath = process.env.MUSIC_LIBRARY_PATH || '/music';
+
+    try {
+      // Check if path exists and is readable
+      await fs.access(musicPath, fs.constants.R_OK);
+
+      // Check if it's a directory
+      const stats = await fs.stat(musicPath);
+      if (!stats.isDirectory()) {
+        return { path: musicPath, isMounted: false, hasContent: false, fileCount: 0 };
+      }
+
+      // Check if it has content (not empty)
+      const entries = await fs.readdir(musicPath);
+      const hasContent = entries.length > 0;
+
+      // Count music files (quick scan, max 3 levels)
+      let fileCount = 0;
+      if (hasContent) {
+        const musicExtensions = ['.mp3', '.flac', '.m4a', '.ogg', '.wav', '.aac', '.opus'];
+        fileCount = await this.countMusicFiles(musicPath, musicExtensions, 3);
+      }
+
+      return {
+        path: musicPath,
+        isMounted: true,
+        hasContent,
+        fileCount,
+      };
+    } catch {
+      // Path doesn't exist or not readable
+      return { path: musicPath, isMounted: false, hasContent: false, fileCount: 0 };
+    }
   }
 
   /**
