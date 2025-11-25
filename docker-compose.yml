@@ -3,18 +3,18 @@
 # ============================================
 # 🎵 Self-hosted music streaming platform
 #
-# Quick Start:
-#   1. Set MUSIC_PATH in .env (path to your music folder)
-#   2. docker compose up -d
-#   3. Open http://localhost:4567
-#   4. Complete the setup wizard (create admin, select library)
+# ZERO CONFIGURATION - Just run:
+#   docker compose up -d
 #
-# First run will show a setup wizard to:
-# - Create your admin account (no default password!)
-# - Select your music library folder
-# - Configure storage settings
+# Then open http://localhost:4567 and:
+# 1. Create your admin account
+# 2. Navigate and select your music folder
+# 3. Start enjoying your music!
 #
-# Access: http://localhost:4567
+# By default, /mnt and /media are accessible.
+# Add custom paths in .env if needed:
+#   MUSIC_PATH=/path/to/your/music
+#
 # ============================================
 
 services:
@@ -146,9 +146,17 @@ services:
       # Contains: secrets, metadata, covers, logs, setup state
       - echo-data:/app/data
 
-      # Music library (read-only for safety)
-      # IMPORTANT: Set MUSIC_PATH in .env to your music folder
-      - ${MUSIC_PATH:?MUSIC_PATH is required - set it in .env}:/music:ro
+      # ============================================
+      # Media folders (Jellyfin-style)
+      # ============================================
+      # Default: Mount common media locations (read-only)
+      # The setup wizard will let you browse and select your music folder
+      - /mnt:/mnt:ro
+      - /media:/media:ro
+
+      # Optional: Add your specific music folder
+      # Uncomment and set MUSIC_PATH in .env for additional paths
+      # - ${MUSIC_PATH:-/dev/null}:/music:ro
 
     depends_on:
       postgres:

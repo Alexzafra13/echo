@@ -91,43 +91,64 @@ export class SetupService {
   }
 
   /**
-   * Check if /music folder is mounted and has content
-   * This is the folder mounted via Docker from MUSIC_PATH
+   * Check available media folders (Jellyfin-style)
+   * Looks for mounted folders like /mnt, /media, /music
    */
   private async checkMountedLibrary(): Promise<SetupStatus['mountedLibrary']> {
-    const musicPath = process.env.MUSIC_LIBRARY_PATH || '/music';
+    // Check common media mount points (in order of preference)
+    const mountPoints = ['/music', '/mnt', '/media', '/data'];
+    const musicExtensions = ['.mp3', '.flac', '.m4a', '.ogg', '.wav', '.aac', '.opus'];
 
-    try {
-      // Check if path exists and is readable
-      await fs.access(musicPath, fs.constants.R_OK);
+    for (const mountPath of mountPoints) {
+      try {
+        await fs.access(mountPath, fs.constants.R_OK);
+        const stats = await fs.stat(mountPath);
 
-      // Check if it's a directory
-      const stats = await fs.stat(musicPath);
-      if (!stats.isDirectory()) {
-        return { path: musicPath, isMounted: false, hasContent: false, fileCount: 0 };
+        if (!stats.isDirectory()) continue;
+
+        const entries = await fs.readdir(mountPath);
+        if (entries.length === 0) continue;
+
+        // Count music files (quick scan)
+        const fileCount = await this.countMusicFiles(mountPath, musicExtensions, 3);
+
+        if (fileCount > 0) {
+          return {
+            path: mountPath,
+            isMounted: true,
+            hasContent: true,
+            fileCount,
+          };
+        }
+      } catch {
+        // Path doesn't exist or not readable, try next
+        continue;
       }
-
-      // Check if it has content (not empty)
-      const entries = await fs.readdir(musicPath);
-      const hasContent = entries.length > 0;
-
-      // Count music files (quick scan, max 3 levels)
-      let fileCount = 0;
-      if (hasContent) {
-        const musicExtensions = ['.mp3', '.flac', '.m4a', '.ogg', '.wav', '.aac', '.opus'];
-        fileCount = await this.countMusicFiles(musicPath, musicExtensions, 3);
-      }
-
-      return {
-        path: musicPath,
-        isMounted: true,
-        hasContent,
-        fileCount,
-      };
-    } catch {
-      // Path doesn't exist or not readable
-      return { path: musicPath, isMounted: false, hasContent: false, fileCount: 0 };
     }
+
+    // No music found, but check if any mount points are available for browsing
+    for (const mountPath of mountPoints) {
+      try {
+        await fs.access(mountPath, fs.constants.R_OK);
+        const stats = await fs.stat(mountPath);
+        if (stats.isDirectory()) {
+          const entries = await fs.readdir(mountPath);
+          if (entries.length > 0) {
+            return {
+              path: mountPath,
+              isMounted: true,
+              hasContent: true, // Has content, just no music at root
+              fileCount: 0,
+            };
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    // Nothing mounted
+    return { path: '/mnt', isMounted: false, hasContent: false, fileCount: 0 };
   }
 
   /**

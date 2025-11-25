@@ -183,8 +183,8 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-family: monospace;
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -195,6 +195,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.currentPath button {
+  flex-shrink: 0;
 }
 
 .validationResult {
@@ -210,6 +214,18 @@
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(34, 197, 94, 0.3);
   color: #22c55e;
+}
+
+.quickSelectContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quickSelectContent span {
+  flex: 1;
 }
 
 .validationResult.invalid {
