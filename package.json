@@ -10,7 +10,8 @@
   },
   "packageManager": "pnpm@10.18.3",
   "scripts": {
-    "setup": "pnpm install && pnpm docker:dev && node server/scripts/generate-env.js && sleep 3 && pnpm db:reset",
+    "quickstart": "bash scripts/quickstart.sh",
+    "setup": "bash scripts/quickstart.sh",
     "dev": "pnpm --filter echo-server-backend dev",
     "dev:all": "concurrently -n server,client -c blue,magenta \"pnpm --filter echo-server-backend dev\" \"pnpm --filter echo-frontend dev\"",
     "build": "pnpm --filter echo-frontend build && pnpm --filter echo-server-backend build",
