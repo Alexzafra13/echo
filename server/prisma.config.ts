@@ -5,9 +5,11 @@ try {
   // dotenv not available in production - env vars are set by Docker
 }
 
-import { defineConfig } from 'prisma/config'
-
-export default defineConfig({
+// Prisma 7 configuration
+// Note: We export a plain object instead of using defineConfig() because
+// the 'prisma' package is a devDependency and not available in Docker production stage.
+// defineConfig is just a TypeScript type helper with no runtime functionality.
+export default {
   earlyAccess: true,
   schema: 'prisma/schema.prisma',
 
@@ -18,4 +20,4 @@ export default defineConfig({
   },
 
   seed: 'tsx prisma/seed.ts',
-})
+}
