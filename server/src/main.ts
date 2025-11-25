@@ -1,5 +1,7 @@
-// Load .env before any other imports
-import 'dotenv/config';
+// Load .env only in development (in production, Docker sets env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv/config');
+}
 
 import { NestFactory, Reflector } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
