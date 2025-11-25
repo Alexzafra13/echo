@@ -1,207 +1,62 @@
-# ============================================
-# Echo Music Server - Production (Jellyfin-style)
-# ============================================
-# 🎵 Self-hosted music streaming platform
-#
-# ZERO CONFIGURATION - Just run:
-#   docker compose up -d
-#
-# Then open http://localhost:4567 and:
-# 1. Create your admin account
-# 2. Navigate and select your music folder
-# 3. Start enjoying your music!
-#
-# By default, /mnt and /media are accessible.
-# Add custom paths in .env if needed:
-#   MUSIC_PATH=/path/to/your/music
-#
-# ============================================
+version: "3.9"
+
+# =============================================
+# Echo Music Server
+# =============================================
+# docker compose up -d
+# Abre http://localhost:4567
+# =============================================
 
 services:
-  # ----------------------------------------
-  # PostgreSQL Database
-  # ----------------------------------------
-  postgres:
-    image: postgres:16-alpine
-    container_name: echo-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-music_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
-      POSTGRES_DB: ${POSTGRES_DB:-music_server}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
-    # DO NOT expose port in production (internal only)
-    # Uncomment for debugging: ports: ["5432:5432"]
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-music_admin} -d ${POSTGRES_DB:-music_server}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - echo-network
-
-  # ----------------------------------------
-  # Redis Cache
-  # ----------------------------------------
-  redis:
-    image: redis:7-alpine
-    container_name: echo-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me_in_production}
-    # DO NOT expose port in production (internal only)
-    # Uncomment for debugging: ports: ["6379:6379"]
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-change_me_in_production}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - echo-network
-
-  # ----------------------------------------
-  # Echo Music Server (Full-stack)
-  # ----------------------------------------
-  echo-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        BUILD_DATE: ${BUILD_DATE:-}
-        VCS_REF: ${VCS_REF:-}
-        VERSION: ${VERSION:-latest}
-    image: echo-music-server:${VERSION:-latest}
-    container_name: echo-app
-    restart: unless-stopped
+  echo:
+    image: ghcr.io/alexzafra13/echo:latest
+    container_name: echo
     ports:
-      - "${APP_PORT:-4567}:4567"
-    # Resource limits (recommended for production stability)
-    # Adjust based on your library size and concurrent users
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'      # Max 2 CPU cores
-          memory: 2G       # Max 2GB RAM
-        reservations:
-          cpus: '0.5'      # Reserve 0.5 CPU core
-          memory: 512M     # Reserve 512MB RAM
-    environment:
-      # Application
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: 4567
-      HOST: 0.0.0.0
-      API_PREFIX: api
-
-      # Database
-      DATABASE_URL: postgresql://${POSTGRES_USER:-music_admin}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-music_server}?schema=public
-
-      # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_me_in_production}
-
-      # Security (Auto-generated if not provided - Jellyfin-style!)
-      # JWT secrets are auto-generated in /app/config/secrets.env
-      # You can override them here if needed, but it's optional
-      JWT_SECRET: ${JWT_SECRET:-}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
-      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-30d}
-      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
-
-      # CORS - Configure for your domain
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4567}
-
-      # Music Library (configured via setup wizard or env)
-      MUSIC_LIBRARY_PATH: /music
-
-      # Data path (unified storage for config, metadata, logs)
-      DATA_PATH: /app/data
-
-      # Cache Configuration
-      ENABLE_CACHE: ${ENABLE_CACHE:-true}
-      CACHE_ALBUM_TTL: ${CACHE_ALBUM_TTL:-3600}
-      CACHE_TRACK_TTL: ${CACHE_TRACK_TTL:-3600}
-      CACHE_ARTIST_TTL: ${CACHE_ARTIST_TTL:-7200}
-
-      # File Storage (inside /app/data)
-      UPLOAD_PATH: /app/data/uploads
-      COVERS_PATH: /app/data/covers
-
+      - 4567:4567
     volumes:
-      # All application data in one volume (Navidrome-style)
-      # Contains: secrets, metadata, covers, logs, setup state
-      - echo-data:/app/data
-
-      # ============================================
-      # Media folders (Jellyfin-style)
-      # ============================================
-      # Default: Mount common media locations (read-only)
-      # The setup wizard will let you browse and select your music folder
-      - /mnt:/mnt:ro
-      - /media:/media:ro
-
-      # Optional: Add your specific music folder
-      # Uncomment and set MUSIC_PATH in .env for additional paths
-      # - ${MUSIC_PATH:-/dev/null}:/music:ro
-
+      - ./data:/app/data          # Config, metadatos, covers
+      - /mnt:/mnt:ro              # Montar /mnt del host
+      - /media:/media:ro          # Montar /media del host
+      # Añade más rutas si tu música está en otro sitio:
+      # - /home/usuario/Musica:/music:ro
+    environment:
+      - DATABASE_URL=postgresql://echo:echo@postgres:5432/echo
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=echo
+      - DATA_PATH=/app/data
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
-    networks:
-      - echo-network
-
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=echo
+      - POSTGRES_PASSWORD=echo
+      - POSTGRES_DB=echo
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4567/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      start_period: 60s  # Extended for migrations
-      retries: 3
+      test: ["CMD-SHELL", "pg_isready -U echo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis
+    command: redis-server --requirepass echo
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "echo", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-# ----------------------------------------
-# Volumes (Persistent Data)
-# ----------------------------------------
 volumes:
-  postgres-data:
-    name: echo-postgres-data
-  redis-data:
-    name: echo-redis-data
-  echo-data:
-    name: echo-data
-    # Contains all app data (Navidrome-style):
-    # - /app/data/secrets.env     (auto-generated JWT secrets)
-    # - /app/data/setup.json      (setup wizard state)
-    # - /app/data/metadata/       (artist/album images)
-    # - /app/data/covers/         (album covers)
-    # - /app/data/uploads/        (user uploads)
-    # - /app/data/logs/           (application logs)
-
-# ----------------------------------------
-# Network
-# ----------------------------------------
-networks:
-  echo-network:
-    name: echo-network
-    driver: bridge
+  postgres_data:
