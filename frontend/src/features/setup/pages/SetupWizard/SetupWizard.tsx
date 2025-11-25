@@ -83,6 +83,14 @@ export default function SetupWizard() {
     checkStatus();
   }, []);
 
+  // Auto-dismiss error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const checkStatus = async () => {
     try {
       const setupStatus = await getSetupStatus();
