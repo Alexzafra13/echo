@@ -14,8 +14,8 @@ music/
 .env.*.local
 !.env*.example
 
-# Database
-/generated/prisma
+# Generated Prisma client (Prisma 7)
+server/src/generated/
 
 # Uploads & temp files
 uploads/
