@@ -139,12 +139,15 @@ export default function RadioPage() {
     }
   }, [userCountry, selectedCountry]);
 
-  // Auto-select Favorites filter if user has favorites on initial load
+  // Auto-select Favorites filter on initial page load (only once)
+  const hasInitializedFilter = useRef(false);
   useEffect(() => {
-    if (favoriteStations.length > 0 && activeFilter === 'top') {
+    // Only run once when favorites data is first loaded
+    if (!hasInitializedFilter.current && favoriteStations.length > 0) {
+      hasInitializedFilter.current = true;
       setActiveFilter('favorites');
     }
-  }, [favoriteStations.length]); // Only run when favorites change
+  }, [favoriteStations.length]);
 
   // Block content scroll when search panel is open
   useEffect(() => {
@@ -340,8 +343,7 @@ export default function RadioPage() {
         if ('stationuuid' in station) {
           const dto = radioService.convertToSaveDto(station);
           await saveFavoriteMutation.mutateAsync(dto);
-          // Auto-switch to favorites filter after adding
-          setActiveFilter('favorites');
+          // Don't auto-switch to favorites - let user stay on current view
         }
       }
     } catch (error) {
