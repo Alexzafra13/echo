@@ -63,6 +63,13 @@ COPY server/package.json ./server/
 RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod && \
     rm -rf ~/.pnpm-store ~/.npm /tmp/*
 
+# Generate Prisma client in the deployed directory
+COPY server/prisma /prod/prisma
+COPY server/prisma.config.production.js /prod/prisma.config.js
+WORKDIR /prod
+RUN npx prisma@7 generate --schema=./prisma/schema.prisma && \
+    rm -rf ~/.npm /tmp/*
+
 # ----------------------------------------
 # Stage 3: Minimal Production Runtime
 # ----------------------------------------
@@ -97,16 +104,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy production node_modules from deps stage (already pruned)
+# Copy production node_modules from deps stage (includes generated Prisma client)
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
-# Copy Prisma schema and production config (JavaScript, not TypeScript)
-COPY --chown=echoapp:nodejs server/prisma ./prisma
-COPY --chown=echoapp:nodejs server/prisma.config.production.js ./prisma.config.js
-
-# Copy generated Prisma client from builder (no need to regenerate!)
-COPY --from=builder --chown=echoapp:nodejs /build/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=echoapp:nodejs /build/node_modules/@prisma ./node_modules/@prisma
+# Copy Prisma schema and production config (for migrations at runtime)
+COPY --from=deps --chown=echoapp:nodejs /prod/prisma ./prisma
+COPY --from=deps --chown=echoapp:nodejs /prod/prisma.config.js ./prisma.config.js
 
 # Copy built application files
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
