@@ -285,7 +285,7 @@ export class RecommendationsController {
 
   /**
    * Batch fetch track details by IDs
-   * Usa el repository en vez de Prisma directo para respetar la arquitectura
+   * Usa el repository para respetar la arquitectura hexagonal
    */
   private async fetchTracksById(trackIds: string[]) {
     if (trackIds.length === 0) {

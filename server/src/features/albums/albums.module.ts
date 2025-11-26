@@ -20,7 +20,7 @@ import { CoverArtService } from '@shared/services';
  * - Presentation Layer: Controller, DTOs
  *
  * Responsabilidades:
- * - Importar dependencias globales (Prisma, Cache)
+ * - Importar dependencias globales (Drizzle, Cache)
  * - Registrar providers (use cases, repositorio)
  * - Exportar controllers
  *

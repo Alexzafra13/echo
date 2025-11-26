@@ -63,7 +63,7 @@ export class Track {
 
   /**
    * Factory method para reconstruir un Track desde BD
-   * Se usa cuando traes datos de Prisma
+   * Se usa cuando traes datos de Drizzle
    */
   static reconstruct(props: TrackProps): Track {
     return new Track(props);
@@ -159,7 +159,7 @@ export class Track {
 
   /**
    * Retorna todas las propiedades del track como un objeto plano
-   * Útil para mapear a Prisma o DTOs
+   * Útil para mapear a Drizzle o DTOs
    * IMPORTANT: Converts BigInt to number for JSON serialization
    */
   toPrimitives(): Omit<TrackProps, 'size'> & { size?: number } {
