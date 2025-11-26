@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { PLAY_TRACKING_REPOSITORY } from './domain/ports';
-import { PrismaPlayTrackingRepository } from './infrastructure/persistence/play-tracking.repository';
+import { DrizzlePlayTrackingRepository } from './infrastructure/persistence/play-tracking.repository';
 import { CachedPlayTrackingRepository } from './infrastructure/persistence/cached-play-tracking.repository';
 import { PlayStatsCalculatorService } from './domain/services/play-stats-calculator.service';
 import {
@@ -22,7 +22,7 @@ import { PlayTrackingController } from './presentation/controller/play-tracking.
   controllers: [PlayTrackingController],
   providers: [
     RedisService,
-    PrismaPlayTrackingRepository, // Base repository (uses Drizzle internally)
+    DrizzlePlayTrackingRepository, // Base repository
     {
       provide: PLAY_TRACKING_REPOSITORY,
       useClass: CachedPlayTrackingRepository, // Use cached wrapper

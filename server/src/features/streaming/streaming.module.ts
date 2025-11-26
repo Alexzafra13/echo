@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TracksModule } from '@features/tracks/tracks.module';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { StreamingController } from './presentation/streaming.controller';
 import { StreamTokenController } from './presentation/stream-token.controller';
 import { StreamTrackUseCase } from './domain/use-cases';
@@ -22,10 +21,10 @@ import { StreamTokenGuard } from './domain/stream-token.guard';
  *
  * Dependencias:
  * - TracksModule: Para acceder al repositorio de tracks
- * - PrismaModule: Para gestión de tokens en base de datos
+ * - DrizzleService: Global via DrizzleModule
  */
 @Module({
-  imports: [TracksModule, PrismaModule],
+  imports: [TracksModule],
   controllers: [StreamingController, StreamTokenController],
   providers: [StreamTrackUseCase, StreamTokenService, StreamTokenGuard],
   exports: [StreamTokenService],

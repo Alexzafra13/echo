@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
-import { PrismaTrackRepository } from './track.repository';
+import { DrizzleTrackRepository } from './track.repository';
 
 @Injectable()
 export class CachedTrackRepository implements ITrackRepository {
@@ -11,7 +11,7 @@ export class CachedTrackRepository implements ITrackRepository {
   private readonly KEY_PREFIX = 'track:';
 
   constructor(
-    private readonly baseRepository: PrismaTrackRepository,
+    private readonly baseRepository: DrizzleTrackRepository,
     private readonly cache: RedisService,
     @InjectPinoLogger(CachedTrackRepository.name)
     private readonly logger: PinoLogger,

@@ -1,5 +1,4 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
 import { AlbumsModule } from '@features/albums/albums.module';
@@ -21,7 +20,7 @@ import {
 import { SCANNER_REPOSITORY } from './domain/ports/scanner-repository.port';
 
 // Infrastructure Layer (Persistence)
-import { PrismaScannerRepository } from './infrastructure/persistence/scanner.repository';
+import { DrizzleScannerRepository } from './infrastructure/persistence/scanner.repository';
 
 // Infrastructure Layer (Services)
 import { FileScannerService } from './infrastructure/services/file-scanner.service';
@@ -50,7 +49,6 @@ import { CoverArtService } from '@shared/services';
  */
 @Module({
   imports: [
-    PrismaModule, // Para acceso a BD
     QueueModule, // Para BullMQ
     WebSocketModule, // Para WebSocket
     forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
@@ -64,7 +62,7 @@ import { CoverArtService } from '@shared/services';
     GetScansHistoryUseCase,
 
     // Repository
-    PrismaScannerRepository,
+    DrizzleScannerRepository,
 
     // Services
     FileScannerService,
@@ -79,7 +77,7 @@ import { CoverArtService } from '@shared/services';
     // Port implementations
     {
       provide: SCANNER_REPOSITORY,
-      useClass: PrismaScannerRepository,
+      useClass: DrizzleScannerRepository,
     },
     {
       provide: SCAN_PROCESSOR,

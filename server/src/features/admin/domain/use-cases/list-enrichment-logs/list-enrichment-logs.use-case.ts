@@ -82,7 +82,7 @@ export class ListEnrichmentLogsUseCase {
       provider: log.provider,
       metadataType: log.metadataType,
       status: log.status,
-      fieldsUpdated: log.fieldsUpdated,
+      fieldsUpdated: log.fieldsUpdated || [],
       errorMessage: log.errorMessage || undefined,
       previewUrl: log.previewUrl || undefined,
       userId: log.userId || undefined,

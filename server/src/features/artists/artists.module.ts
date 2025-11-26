@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { CacheModule } from '@infrastructure/cache/cache.module';
 import { ArtistsController } from './presentation/controller/artists.controller';
 import { GetArtistUseCase, GetArtistsUseCase, SearchArtistsUseCase } from './domain/use-cases';
-import { PrismaArtistRepository } from './infrastructure/persistence/artist.repository';
+import { DrizzleArtistRepository } from './infrastructure/persistence/artist.repository';
 import { CachedArtistRepository } from './infrastructure/persistence/cached-artist.repository';
 import { ARTIST_REPOSITORY } from './domain/ports/artist-repository.port';
 
@@ -30,7 +29,6 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
 
 @Module({
   imports: [
-    PrismaModule,
     CacheModule,
   ],
   controllers: [ArtistsController],
@@ -41,13 +39,13 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     SearchArtistsUseCase,
 
     // Repositories
-    PrismaArtistRepository,
+    DrizzleArtistRepository,
     CachedArtistRepository,
 
     // Implementación del port - CONFIGURABLE
     {
       provide: ARTIST_REPOSITORY,
-      useClass: USE_CACHE ? CachedArtistRepository : PrismaArtistRepository,
+      useClass: USE_CACHE ? CachedArtistRepository : DrizzleArtistRepository,
     },
   ],
   exports: [ARTIST_REPOSITORY],

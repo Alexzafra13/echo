@@ -54,7 +54,7 @@ export class TrackMapper {
       duration: primitives.duration || null,
       path: primitives.path,
       bitRate: primitives.bitRate || null,
-      size: primitives.size || null,
+      size: primitives.size ? BigInt(primitives.size) : null,
       suffix: primitives.suffix || null,
       lyrics: primitives.lyrics || null,
       comment: primitives.comment || null,
