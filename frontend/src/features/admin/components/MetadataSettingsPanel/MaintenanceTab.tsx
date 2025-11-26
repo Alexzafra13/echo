@@ -15,9 +15,10 @@ interface StorageStats {
 }
 
 interface CleanupResult {
-  deleted: number;
-  reclaimed: number;
-  missing: number;
+  filesRemoved: number;
+  spaceFree: number;
+  orphanedFiles: string[];
+  errors: string[];
 }
 
 interface PopulateResult {
@@ -311,17 +312,17 @@ export function MaintenanceTab() {
               <p className={styles.resultTitle}>Limpieza completada</p>
               <div className={styles.resultStats}>
                 <span>
-                  <strong>{cleanupResult.deleted || 0}</strong> archivos eliminados
+                  <strong>{cleanupResult.filesRemoved || 0}</strong> archivos eliminados
                 </span>
                 <span className={styles.resultDivider}>•</span>
                 <span>
-                  <strong>{formatBytes(cleanupResult.reclaimed || 0)}</strong> recuperados
+                  <strong>{formatBytes(cleanupResult.spaceFree || 0)}</strong> recuperados
                 </span>
-                {(cleanupResult.missing || 0) > 0 && (
+                {cleanupResult.errors && cleanupResult.errors.length > 0 && (
                   <>
                     <span className={styles.resultDivider}>•</span>
                     <span className={styles.resultWarning}>
-                      <strong>{cleanupResult.missing}</strong> referencias faltantes
+                      <strong>{cleanupResult.errors.length}</strong> errores
                     </span>
                   </>
                 )}
