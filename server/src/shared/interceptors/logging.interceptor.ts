@@ -9,6 +9,7 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
+import { BaseError } from '@shared/errors/base.error';
 
 /**
  * LoggingInterceptor
@@ -17,6 +18,8 @@ import { LogService, LogCategory } from '@features/logs/application/log.service'
  * 1. Registra errores 500 en la base de datos
  * 2. Registra errores de autenticación (401, 403)
  * 3. Captura información del request para debugging
+ *
+ * Validation errors (400) are NOT logged as they are normal user input errors.
  */
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -31,10 +34,15 @@ export class LoggingInterceptor implements NestInterceptor {
         // Successful requests - no logging needed to avoid noise
       }),
       catchError((error) => {
-        // Determine if we should log this error
-        const statusCode = error instanceof HttpException
-          ? error.getStatus()
-          : HttpStatus.INTERNAL_SERVER_ERROR;
+        // Determine status code from different error types
+        let statusCode: number;
+        if (error instanceof HttpException) {
+          statusCode = error.getStatus();
+        } else if (error instanceof BaseError) {
+          statusCode = error.statusCode;
+        } else {
+          statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
 
         // Log 500 errors (server errors)
         if (statusCode >= 500) {
