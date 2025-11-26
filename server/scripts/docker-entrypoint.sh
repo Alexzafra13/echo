@@ -79,25 +79,16 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 3. Database Migrations & Seed
+# 3. Database Migrations (Drizzle)
 # ============================================
 echo "🔄 Running database migrations..."
 
-# Prisma 7 uses prisma.config.js for datasource configuration
-if npx prisma@7 migrate deploy; then
-  echo "✅ Database migrations completed!"
-
-  # Seed database with default settings (idempotent)
-  # Uses pre-compiled JavaScript (no tsx needed)
-  echo ""
-  echo "🌱 Seeding database with default settings..."
-  if node dist/seed/seed-settings-only.js 2>/dev/null; then
-    echo "✅ Default settings seeded!"
-  else
-    echo "ℹ️  Settings already exist or seed skipped"
-  fi
+# Use drizzle-kit push to sync schema with database
+# This is safe for production as it only applies schema changes
+if npx drizzle-kit push --config=drizzle.config.ts 2>/dev/null; then
+  echo "✅ Database schema synchronized!"
 else
-  echo "⚠️  Migrations failed, but continuing..."
+  echo "⚠️  Schema sync failed, but continuing..."
 fi
 
 # ============================================
