@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -21,6 +22,7 @@ import {
   RefreshTokenResponseDto,
   RefreshTokenRequestDto,
 } from './dtos';
+import { USER_REPOSITORY, IUserRepository } from '../domain/ports';
 
 /**
  * AuthController - Gestiona autenticación y autorización
@@ -37,6 +39,8 @@ export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository,
   ) {}
 
   /**
@@ -109,6 +113,7 @@ export class AuthController {
   /**
    * Get Me - Ver perfil del usuario autenticado
    * Permite acceso incluso si mustChangePassword=true
+   * Fetches fresh data from database to include latest avatar status
    */
   @Get('me')
   @AllowChangePassword() // ← Usuario puede ver su perfil aunque deba cambiar password
@@ -126,7 +131,29 @@ export class AuthController {
     status: 401,
     description: 'No autenticado o token inválido'
   })
-  async me(@CurrentUser() user: any) {
-    return { user };
+  async me(@CurrentUser() jwtUser: any) {
+    // Fetch fresh user data from database to get updated avatar status
+    const freshUser = await this.userRepository.findById(jwtUser.sub);
+
+    if (!freshUser) {
+      // Fallback to JWT data if user not found (shouldn't happen)
+      return { user: jwtUser };
+    }
+
+    // Return user with updated data including hasAvatar
+    return {
+      user: {
+        sub: freshUser.id,
+        id: freshUser.id,
+        username: freshUser.username,
+        email: freshUser.email,
+        name: freshUser.name,
+        isAdmin: freshUser.isAdmin,
+        isActive: freshUser.isActive,
+        mustChangePassword: freshUser.mustChangePassword,
+        hasAvatar: !!freshUser.avatarPath,
+        createdAt: freshUser.createdAt,
+      },
+    };
   }
 }
