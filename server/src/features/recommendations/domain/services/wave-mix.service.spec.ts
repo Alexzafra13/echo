@@ -3,24 +3,38 @@ import { PinoLogger } from 'nestjs-pino';
 import { WaveMixService } from './wave-mix.service';
 import { ScoringService } from './scoring.service';
 import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
+/**
+ * TODO: Update tests after Prisma to Drizzle migration
+ *
+ * These tests use DrizzleService mock with query builder pattern.
+ * Some tests may need adjustment based on actual Drizzle query patterns.
+ */
 describe('WaveMixService', () => {
   let service: WaveMixService;
   let mockLogger: any;
   let mockScoringService: any;
   let mockPlayTrackingRepo: any;
-  let mockPrisma: any;
+  let mockDrizzle: any;
   let mockExternalMetadata: any;
   let mockRedis: any;
   let mockStorage: any;
   let mockImageDownload: any;
 
+  // Mock data holders
+  let mockTracksData: any[] = [];
+  let mockArtistData: any = null;
+
   beforeEach(async () => {
+    // Reset mock data
+    mockTracksData = [];
+    mockArtistData = null;
+
     mockLogger = {
       info: jest.fn(),
       debug: jest.fn(),
@@ -39,15 +53,21 @@ describe('WaveMixService', () => {
       getUserPlayHistory: jest.fn(),
     };
 
-    mockPrisma = {
-      track: {
-        findMany: jest.fn(),
-      },
-      artist: {
-        findUnique: jest.fn(),
-      },
-      user: {
-        findMany: jest.fn(),
+    // Create chainable mock for Drizzle query builder
+    const createSelectMock = () => ({
+      from: jest.fn().mockImplementation(() => ({
+        where: jest.fn().mockImplementation(() => Promise.resolve(mockTracksData)),
+        leftJoin: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockImplementation(() =>
+          mockArtistData ? Promise.resolve([mockArtistData]) : Promise.resolve([])
+        ),
+      })),
+    });
+
+    mockDrizzle = {
+      db: {
+        select: jest.fn().mockImplementation(() => createSelectMock()),
+        selectDistinct: jest.fn().mockImplementation(() => createSelectMock()),
       },
     };
 
@@ -84,8 +104,8 @@ describe('WaveMixService', () => {
           useValue: mockPlayTrackingRepo,
         },
         {
-          provide: PrismaService,
-          useValue: mockPrisma,
+          provide: DrizzleService,
+          useValue: mockDrizzle,
         },
         {
           provide: ExternalMetadataService,
@@ -137,7 +157,7 @@ describe('WaveMixService', () => {
         { trackId: 'track-1', playCount: 100 },
         { trackId: 'track-2', playCount: 80 },
       ];
-      const mockTracks = [
+      mockTracksData = [
         { id: 'track-1', artistId: 'artist-1', albumId: 'album-1', title: 'Track 1' },
         { id: 'track-2', artistId: 'artist-1', albumId: 'album-1', title: 'Track 2' },
       ];
@@ -159,7 +179,6 @@ describe('WaveMixService', () => {
       ];
 
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
-      mockPrisma.track.findMany.mockResolvedValue(mockTracks);
       mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
       mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue(mockPlayHistory);
 
@@ -183,7 +202,7 @@ describe('WaveMixService', () => {
       // Arrange
       const userId = 'user-123';
       const mockTopTracks = [{ trackId: 'track-1', playCount: 5 }];
-      const mockTracks = [
+      mockTracksData = [
         { id: 'track-1', artistId: 'artist-1', albumId: 'album-1', title: 'Track 1' },
       ];
       const mockScoredTracks = [
@@ -196,7 +215,6 @@ describe('WaveMixService', () => {
 
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue(mockTopTracks);
       mockPlayTrackingRepo.getUserPlayHistory.mockResolvedValue([]);
-      mockPrisma.track.findMany.mockResolvedValue(mockTracks);
       mockScoringService.calculateAndRankTracks.mockResolvedValue(mockScoredTracks);
 
       // Act
