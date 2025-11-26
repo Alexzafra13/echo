@@ -82,8 +82,13 @@ export class SetupService {
 
     const hasMusicLibrary = !!setupState.musicLibraryPath;
 
+    // Setup is needed if:
+    // 1. Setup was never completed, OR
+    // 2. Setup was completed but database was reset (no admin user exists)
+    const needsSetup = !setupState.completed || !hasAdmin;
+
     return {
-      needsSetup: !setupState.completed,
+      needsSetup,
       hasAdmin,
       hasMusicLibrary,
       musicLibraryPath: setupState.musicLibraryPath || null,
