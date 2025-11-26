@@ -1,9 +1,17 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../infrastructure/services/storage.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createHash } from 'crypto';
+import { eq, and, desc } from 'drizzle-orm';
+import {
+  artists,
+  albums,
+  customArtistImages,
+  customAlbumCovers,
+  users,
+} from '@infrastructure/database/schema';
 
 /**
  * Tipos de imágenes de artista soportadas
@@ -52,7 +60,7 @@ export class ImageService {
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
   ) {}
 
@@ -73,16 +81,20 @@ export class ImageService {
     }
 
     // PRIORIDAD 0: Custom uploaded image (máxima prioridad)
-    const customImage = await this.prisma.customArtistImage.findFirst({
-      where: {
-        artistId,
-        imageType,
-        isActive: true,
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(customArtistImages)
+      .where(
+        and(
+          eq(customArtistImages.artistId, artistId),
+          eq(customArtistImages.imageType, imageType),
+          eq(customArtistImages.isActive, true),
+        ),
+      )
+      .orderBy(desc(customArtistImages.updatedAt))
+      .limit(1);
+
+    const customImage = result[0];
 
     if (customImage) {
       try {
@@ -110,38 +122,41 @@ export class ImageService {
       } catch (error) {
         // Archivo custom ya no existe, desactivar en BD
         this.logger.warn(`Custom ${imageType} image not found, deactivating: ${customImage.filePath}`);
-        await this.prisma.customArtistImage.update({
-          where: { id: customImage.id },
-          data: { isActive: false },
-        });
+        await this.drizzle.db
+          .update(customArtistImages)
+          .set({ isActive: false })
+          .where(eq(customArtistImages.id, customImage.id));
       }
     }
 
     // Obtener artista de la base de datos
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: artistId },
-      select: {
-        id: true,
+    const artistResult = await this.drizzle.db
+      .select({
+        id: artists.id,
         // Local images
-        profileImagePath: true,
-        profileImageUpdatedAt: true,
-        backgroundImagePath: true,
-        backgroundUpdatedAt: true,
-        bannerImagePath: true,
-        bannerUpdatedAt: true,
-        logoImagePath: true,
-        logoUpdatedAt: true,
+        profileImagePath: artists.profileImagePath,
+        profileImageUpdatedAt: artists.profileImageUpdatedAt,
+        backgroundImagePath: artists.backgroundImagePath,
+        backgroundUpdatedAt: artists.backgroundUpdatedAt,
+        bannerImagePath: artists.bannerImagePath,
+        bannerUpdatedAt: artists.bannerUpdatedAt,
+        logoImagePath: artists.logoImagePath,
+        logoUpdatedAt: artists.logoUpdatedAt,
         // External images
-        externalProfilePath: true,
-        externalProfileUpdatedAt: true,
-        externalBackgroundPath: true,
-        externalBackgroundUpdatedAt: true,
-        externalBannerPath: true,
-        externalBannerUpdatedAt: true,
-        externalLogoPath: true,
-        externalLogoUpdatedAt: true,
-      },
-    });
+        externalProfilePath: artists.externalProfilePath,
+        externalProfileUpdatedAt: artists.externalProfileUpdatedAt,
+        externalBackgroundPath: artists.externalBackgroundPath,
+        externalBackgroundUpdatedAt: artists.externalBackgroundUpdatedAt,
+        externalBannerPath: artists.externalBannerPath,
+        externalBannerUpdatedAt: artists.externalBannerUpdatedAt,
+        externalLogoPath: artists.externalLogoPath,
+        externalLogoUpdatedAt: artists.externalLogoUpdatedAt,
+      })
+      .from(artists)
+      .where(eq(artists.id, artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${artistId} not found`);
@@ -219,15 +234,19 @@ export class ImageService {
     }
 
     // PRIORIDAD 0: Custom uploaded cover (máxima prioridad)
-    const customCover = await this.prisma.customAlbumCover.findFirst({
-      where: {
-        albumId,
-        isActive: true,
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+    const coverResult = await this.drizzle.db
+      .select()
+      .from(customAlbumCovers)
+      .where(
+        and(
+          eq(customAlbumCovers.albumId, albumId),
+          eq(customAlbumCovers.isActive, true),
+        ),
+      )
+      .orderBy(desc(customAlbumCovers.updatedAt))
+      .limit(1);
+
+    const customCover = coverResult[0];
 
     if (customCover) {
       try {
@@ -260,22 +279,25 @@ export class ImageService {
       } catch (error) {
         // Archivo custom ya no existe, desactivar en BD
         this.logger.warn(`Custom album cover not found, deactivating: ${customCover.filePath}`);
-        await this.prisma.customAlbumCover.update({
-          where: { id: customCover.id },
-          data: { isActive: false },
-        });
+        await this.drizzle.db
+          .update(customAlbumCovers)
+          .set({ isActive: false })
+          .where(eq(customAlbumCovers.id, customCover.id));
       }
     }
 
     // Obtener álbum de la base de datos
-    const album = await this.prisma.album.findUnique({
-      where: { id: albumId },
-      select: {
-        id: true,
-        externalCoverPath: true,
-        coverArtPath: true,
-      },
-    });
+    const albumResult = await this.drizzle.db
+      .select({
+        id: albums.id,
+        externalCoverPath: albums.externalCoverPath,
+        coverArtPath: albums.coverArtPath,
+      })
+      .from(albums)
+      .where(eq(albums.id, albumId))
+      .limit(1);
+
+    const album = albumResult[0];
 
     if (!album) {
       throw new NotFoundException(`Album with ID ${albumId} not found`);
@@ -330,12 +352,18 @@ export class ImageService {
     }
 
     // Obtener portada personalizada de la base de datos
-    const customCover = await this.prisma.customAlbumCover.findFirst({
-      where: {
-        id: customCoverId,
-        albumId,
-      },
-    });
+    const coverResult = await this.drizzle.db
+      .select()
+      .from(customAlbumCovers)
+      .where(
+        and(
+          eq(customAlbumCovers.id, customCoverId),
+          eq(customAlbumCovers.albumId, albumId),
+        ),
+      )
+      .limit(1);
+
+    const customCover = coverResult[0];
 
     if (!customCover) {
       throw new NotFoundException(
@@ -395,12 +423,18 @@ export class ImageService {
     }
 
     // Obtener imagen personalizada de la base de datos
-    const customImage = await this.prisma.customArtistImage.findFirst({
-      where: {
-        id: customImageId,
-        artistId,
-      },
-    });
+    const imageResult = await this.drizzle.db
+      .select()
+      .from(customArtistImages)
+      .where(
+        and(
+          eq(customArtistImages.id, customImageId),
+          eq(customArtistImages.artistId, artistId),
+        ),
+      )
+      .limit(1);
+
+    const customImage = imageResult[0];
 
     if (!customImage) {
       throw new NotFoundException(
@@ -452,15 +486,18 @@ export class ImageService {
     }
 
     // Obtener usuario de la base de datos
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        avatarPath: true,
-        avatarMimeType: true,
-        avatarSize: true,
-      },
-    });
+    const userResult = await this.drizzle.db
+      .select({
+        id: users.id,
+        avatarPath: users.avatarPath,
+        avatarMimeType: users.avatarMimeType,
+        avatarSize: users.avatarSize,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const user = userResult[0];
 
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
@@ -694,13 +731,13 @@ export class ImageService {
       };
 
       const fields = fieldMappings[imageType];
-      await this.prisma.artist.update({
-        where: { id: artistId },
-        data: {
+      await this.drizzle.db
+        .update(artists)
+        .set({
           [fields.path]: null,
           [fields.updatedAt]: null,
-        },
-      });
+        })
+        .where(eq(artists.id, artistId));
       this.logger.debug(`Cleared local ${imageType} reference for artist ${artistId}`);
     } catch (error) {
       this.logger.error(`Failed to clear local ${imageType} for ${artistId}: ${(error as Error).message}`);
@@ -713,14 +750,14 @@ export class ImageService {
   private async clearExternalImage(artistId: string, imageType: ArtistImageType): Promise<void> {
     try {
       const capitalizedType = this.capitalize(imageType);
-      await this.prisma.artist.update({
-        where: { id: artistId },
-        data: {
+      await this.drizzle.db
+        .update(artists)
+        .set({
           [`external${capitalizedType}Path`]: null,
           [`external${capitalizedType}Source`]: null,
           [`external${capitalizedType}UpdatedAt`]: null,
-        },
-      });
+        })
+        .where(eq(artists.id, artistId));
       this.logger.debug(`Cleared external ${imageType} reference for artist ${artistId}`);
     } catch (error) {
       this.logger.error(`Failed to clear external ${imageType} for ${artistId}: ${(error as Error).message}`);
