@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Play } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Play, Disc } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
@@ -58,6 +58,29 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
   const [selectedTrackForInfo, setSelectedTrackForInfo] = useState<Track | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  // Detect if album has multiple discs
+  const discInfo = useMemo(() => {
+    const discNumbers = new Set(tracks.map(t => t.discNumber || 1));
+    const hasMultipleDiscs = discNumbers.size > 1;
+    const sortedDiscs = Array.from(discNumbers).sort((a, b) => a - b);
+    return { hasMultipleDiscs, discs: sortedDiscs };
+  }, [tracks]);
+
+  // Group tracks by disc number
+  const tracksByDisc = useMemo(() => {
+    if (!discInfo.hasMultipleDiscs) return null;
+
+    const grouped = new Map<number, Track[]>();
+    for (const track of tracks) {
+      const discNum = track.discNumber || 1;
+      if (!grouped.has(discNum)) {
+        grouped.set(discNum, []);
+      }
+      grouped.get(discNum)!.push(track);
+    }
+    return grouped;
+  }, [tracks, discInfo.hasMultipleDiscs]);
+
   // Detect mobile viewport to conditionally render rating components
   // This prevents unnecessary API calls on mobile devices
   useEffect(() => {
@@ -109,6 +132,104 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     setSelectedTrackForInfo(track);
   };
 
+  // Helper function to render a single track row
+  const renderTrackRow = (track: Track, index: number) => {
+    const isPlaying = currentTrackId === track.id;
+    const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
+    // Use playlistOrder if available (for playlists), otherwise use trackNumber
+    const displayNumber = track.playlistOrder !== undefined ? track.playlistOrder : (track.trackNumber || index + 1);
+
+    return (
+      <div
+        key={track.id}
+        className={`${styles.trackList__track} ${isPlaying ? styles.trackList__track__active : ''}`}
+        onClick={() => handlePlay(track)}
+      >
+        {/* Track number / Play button container */}
+        <div className={styles.trackList__numberCell}>
+          <span className={styles.trackList__trackNumber}>
+            {displayNumber}
+          </span>
+          <button
+            className={styles.trackList__playButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePlay(track);
+            }}
+            aria-label={`Play ${track.title}`}
+          >
+            <Play size={16} fill="currentColor" />
+          </button>
+        </div>
+
+        {/* Track info (cover + title + artist) */}
+        <div className={styles.trackList__trackInfo}>
+          {!hideAlbumCover && (
+            <img
+              src={coverUrl}
+              alt={track.albumName || track.title}
+              className={styles.trackList__trackCover}
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-album.png';
+              }}
+            />
+          )}
+          <div className={styles.trackList__trackText}>
+            <span className={styles.trackList__trackTitle}>{track.title}</span>
+            {track.artistName && (
+              <span className={styles.trackList__trackArtist}>{track.artistName}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Format info (format + bitrate) */}
+        <div className={styles.trackList__trackFormat}>
+          {formatFormat(track.suffix) && (
+            <span className={styles.trackList__format}>{formatFormat(track.suffix)}</span>
+          )}
+          {formatBitRate(track.bitRate) && (
+            <span className={styles.trackList__bitrate}>{formatBitRate(track.bitRate)}</span>
+          )}
+        </div>
+
+        {/* Duration */}
+        <span className={styles.trackList__trackDuration}>
+          {formatDuration(track.duration)}
+        </span>
+
+        {/* Rating (Like/Dislike + Stars) - Only render on desktop to avoid API rate limits */}
+        {!isMobile && (
+          <div className={styles.trackList__trackRating}>
+            <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
+            <RatingStars itemId={track.id} itemType="track" size={14} />
+          </div>
+        )}
+
+        {/* Options Menu */}
+        <TrackOptionsMenu
+          track={track}
+          onAddToPlaylist={handleAddToPlaylist}
+          onAddToQueue={handleAddToQueue}
+          onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
+          onGoToArtist={handleGoToArtist}
+          onShowInfo={handleShowInfo}
+          onRemoveFromPlaylist={onRemoveFromPlaylist}
+        />
+      </div>
+    );
+  };
+
+  // Helper function to render disc separator
+  const renderDiscSeparator = (discNumber: number) => (
+    <div key={`disc-${discNumber}`} className={styles.trackList__discSeparator}>
+      <div className={styles.trackList__discLabel}>
+        <Disc size={16} />
+        <span>CD {discNumber}</span>
+      </div>
+      <div className={styles.trackList__discLine} />
+    </div>
+  );
+
   if (!tracks || tracks.length === 0) {
     return (
       <div className={styles.trackList__emptyState}>
@@ -128,91 +249,19 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
       </div>
 
       <div className={styles.trackList__tracks}>
-        {tracks.map((track, index) => {
-          const isPlaying = currentTrackId === track.id;
-          const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
-          // Use playlistOrder if available (for playlists), otherwise use trackNumber
-          const displayNumber = track.playlistOrder !== undefined ? track.playlistOrder : (track.trackNumber || index + 1);
-
-          return (
-            <div
-              key={track.id}
-              className={`${styles.trackList__track} ${isPlaying ? styles.trackList__track__active : ''}`}
-              onClick={() => handlePlay(track)}
-            >
-              {/* Track number / Play button container */}
-              <div className={styles.trackList__numberCell}>
-                <span className={styles.trackList__trackNumber}>
-                  {displayNumber}
-                </span>
-                <button
-                  className={styles.trackList__playButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePlay(track);
-                  }}
-                  aria-label={`Play ${track.title}`}
-                >
-                  <Play size={16} fill="currentColor" />
-                </button>
-              </div>
-
-              {/* Track info (cover + title + artist) */}
-              <div className={styles.trackList__trackInfo}>
-                {!hideAlbumCover && (
-                  <img
-                    src={coverUrl}
-                    alt={track.albumName || track.title}
-                    className={styles.trackList__trackCover}
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder-album.png';
-                    }}
-                  />
-                )}
-                <div className={styles.trackList__trackText}>
-                  <span className={styles.trackList__trackTitle}>{track.title}</span>
-                  {track.artistName && (
-                    <span className={styles.trackList__trackArtist}>{track.artistName}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Format info (format + bitrate) */}
-              <div className={styles.trackList__trackFormat}>
-                {formatFormat(track.suffix) && (
-                  <span className={styles.trackList__format}>{formatFormat(track.suffix)}</span>
-                )}
-                {formatBitRate(track.bitRate) && (
-                  <span className={styles.trackList__bitrate}>{formatBitRate(track.bitRate)}</span>
-                )}
-              </div>
-
-              {/* Duration */}
-              <span className={styles.trackList__trackDuration}>
-                {formatDuration(track.duration)}
-              </span>
-
-              {/* Rating (Like/Dislike + Stars) - Only render on desktop to avoid API rate limits */}
-              {!isMobile && (
-                <div className={styles.trackList__trackRating}>
-                  <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
-                  <RatingStars itemId={track.id} itemType="track" size={14} />
-                </div>
-              )}
-
-              {/* Options Menu */}
-              <TrackOptionsMenu
-                track={track}
-                onAddToPlaylist={handleAddToPlaylist}
-                onAddToQueue={handleAddToQueue}
-                onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
-                onGoToArtist={handleGoToArtist}
-                onShowInfo={handleShowInfo}
-                onRemoveFromPlaylist={onRemoveFromPlaylist}
-              />
+        {/* Render with disc separators if multiple discs, otherwise render flat list */}
+        {discInfo.hasMultipleDiscs && tracksByDisc ? (
+          // Multiple discs: render with separators
+          discInfo.discs.map(discNumber => (
+            <div key={`disc-group-${discNumber}`}>
+              {renderDiscSeparator(discNumber)}
+              {tracksByDisc.get(discNumber)?.map((track, index) => renderTrackRow(track, index))}
             </div>
-          );
-        })}
+          ))
+        ) : (
+          // Single disc: render flat list
+          tracks.map((track, index) => renderTrackRow(track, index))
+        )}
       </div>
 
       {/* Add to Playlist Modal */}

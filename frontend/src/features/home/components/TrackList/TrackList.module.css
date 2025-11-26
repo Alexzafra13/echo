@@ -52,6 +52,42 @@
   margin-top: 8px;
 }
 
+/* Disc Separator */
+.trackList__discSeparator {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px 12px;
+  margin-top: 8px;
+}
+
+.trackList__discSeparator:first-child {
+  margin-top: 0;
+  padding-top: 12px;
+}
+
+.trackList__discLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #b8bcc8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.trackList__discLabel svg {
+  color: var(--color-primary-500);
+}
+
+.trackList__discLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
 /* Track Item */
 .trackList__track {
   display: grid;
@@ -223,6 +259,15 @@
 
   .trackList__header {
     display: none; /* Ocultar header en móvil - estilo iOS */
+  }
+
+  .trackList__discSeparator {
+    padding: 16px 12px 10px;
+    gap: 12px;
+  }
+
+  .trackList__discLabel {
+    font-size: 12px;
   }
 
   .trackList__track {
