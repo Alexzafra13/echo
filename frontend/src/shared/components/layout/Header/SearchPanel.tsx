@@ -93,7 +93,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
                         onClick={() => handleNavigate(`/artists/${artist.id}`)}
                       >
                         <img
-                          src={getArtistImageUrl(artist.id, 'profile')}
+                          src={getArtistImageUrl(artist.id, 'profile', artist.updatedAt)}
                           alt={artist.name}
                           className={styles.searchPanel__itemImage}
                           onError={handleAvatarError}

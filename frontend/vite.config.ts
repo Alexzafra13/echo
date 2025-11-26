@@ -27,13 +27,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      // WebSocket proxies for real-time updates
-      '/metadata': {
-        target: 'ws://localhost:3000',
-        ws: true,
-      },
-      '/scanner': {
-        target: 'ws://localhost:3000',
+      // Socket.IO proxy - handles all WebSocket connections
+      // Socket.IO uses /socket.io/ path for all namespaces (/scanner, /metadata)
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
         ws: true,
       },
     },
