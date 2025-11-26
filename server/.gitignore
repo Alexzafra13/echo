@@ -1,3 +1,5 @@
 /storage
 /coverage
 /uploads
+# Prisma 7 generated client
+/src/generated/
