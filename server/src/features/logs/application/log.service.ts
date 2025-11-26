@@ -56,12 +56,12 @@ export interface LogMetadata {
  */
 @Injectable()
 export class LogService {
-  // Persist CRITICAL, ERROR, WARNING, and INFO by default (excludes only DEBUG to reduce noise)
+  // Only persist important logs to DB (critical, error, warning)
+  // INFO and DEBUG go only to console to reduce database noise
   private readonly PERSIST_LEVELS = new Set([
     LogLevel.CRITICAL,
     LogLevel.ERROR,
     LogLevel.WARNING,
-    LogLevel.INFO,
   ]);
 
   constructor(
