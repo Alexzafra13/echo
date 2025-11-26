@@ -21,9 +21,9 @@ export const tracks = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 255 }).notNull(),
-    albumId: varchar('album_id', { length: 36 }),
-    albumArtistId: varchar('album_artist_id', { length: 36 }),
-    artistId: varchar('artist_id', { length: 36 }),
+    albumId: uuid('album_id'),
+    albumArtistId: uuid('album_artist_id'),
+    artistId: uuid('artist_id'),
     hasCoverArt: boolean('has_cover_art').default(false).notNull(),
     trackNumber: integer('track_number'),
     discNumber: integer('disc_number').default(1).notNull(),
@@ -86,8 +86,8 @@ export const tracks = pgTable(
 export const trackArtists = pgTable(
   'track_artists',
   {
-    trackId: varchar('track_id', { length: 36 }).notNull(),
-    artistId: varchar('artist_id', { length: 36 }).notNull(),
+    trackId: uuid('track_id').notNull(),
+    artistId: uuid('artist_id').notNull(),
     artistName: varchar('artist_name', { length: 255 }).notNull(),
   },
   (table) => [
