@@ -1,11 +1,10 @@
-// Production prisma config - no devDependency imports
+// Production Prisma config - Plain JavaScript (no TypeScript compilation needed)
 // This file is copied to Docker container for prisma migrate deploy
 
-// Prisma 7 config object (defineConfig is just a type helper)
-export default {
+module.exports = {
   earlyAccess: true,
   schema: 'prisma/schema.prisma',
   datasource: {
     url: process.env.DATABASE_URL,
   },
-}
+};
