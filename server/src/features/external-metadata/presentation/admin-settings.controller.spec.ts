@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { AdminSettingsController } from './admin-settings.controller';
 import { SettingsService } from '../infrastructure/services/settings.service';
+import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
+import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
 
 describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;
@@ -26,9 +28,21 @@ describe('AdminSettingsController', () => {
       findByCategory: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
+      set: jest.fn(),
       delete: jest.fn(),
       clearCache: jest.fn(),
       validateApiKey: jest.fn(),
+    };
+
+    // Create mock agents
+    const mockFanartAgent = {
+      loadSettings: jest.fn(),
+      isEnabled: jest.fn().mockReturnValue(false),
+    };
+
+    const mockLastfmAgent = {
+      loadSettings: jest.fn(),
+      isEnabled: jest.fn().mockReturnValue(false),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -37,6 +51,14 @@ describe('AdminSettingsController', () => {
         {
           provide: SettingsService,
           useValue: mockSettingsService,
+        },
+        {
+          provide: FanartTvAgent,
+          useValue: mockFanartAgent,
+        },
+        {
+          provide: LastfmAgent,
+          useValue: mockLastfmAgent,
         },
       ],
     }).compile();
@@ -122,15 +144,15 @@ describe('AdminSettingsController', () => {
       expect(settingsService.findOne).toHaveBeenCalledWith('test.key');
     });
 
-    it('debería lanzar BadRequestException si no existe', async () => {
+    it('debería retornar null si no existe', async () => {
       // Arrange
       settingsService.findOne.mockResolvedValue(null);
 
-      // Act & Assert
-      await expect(controller.getSetting('nonexistent')).rejects.toThrow(BadRequestException);
-      await expect(controller.getSetting('nonexistent')).rejects.toThrow(
-        'Setting with key nonexistent not found'
-      );
+      // Act
+      const result = await controller.getSetting('nonexistent');
+
+      // Assert
+      expect(result).toBeNull();
     });
 
     it('debería propagar errores del servicio', async () => {
@@ -143,13 +165,12 @@ describe('AdminSettingsController', () => {
   });
 
   describe('updateSetting', () => {
-    it('debería actualizar una configuración', async () => {
+    it('debería actualizar una configuración existente', async () => {
       // Arrange
       const oldSetting = { ...mockSetting, value: 'old-value' };
-      const updatedSetting = { ...mockSetting, value: 'new-value' };
 
       settingsService.findOne.mockResolvedValue(oldSetting);
-      settingsService.update.mockResolvedValue(updatedSetting);
+      settingsService.set.mockResolvedValue(undefined);
 
       // Act
       const result = await controller.updateSetting('test.key', { value: 'new-value' });
@@ -160,25 +181,35 @@ describe('AdminSettingsController', () => {
         key: 'test.key',
         oldValue: 'old-value',
         newValue: 'new-value',
+        created: false,
       });
-      expect(settingsService.update).toHaveBeenCalledWith('test.key', 'new-value');
+      expect(settingsService.set).toHaveBeenCalledWith('test.key', 'new-value');
       expect(settingsService.clearCache).toHaveBeenCalled();
     });
 
-    it('debería lanzar BadRequestException si setting no existe', async () => {
+    it('debería crear una nueva configuración si no existe', async () => {
       // Arrange
       settingsService.findOne.mockResolvedValue(null);
+      settingsService.set.mockResolvedValue(undefined);
 
-      // Act & Assert
-      await expect(
-        controller.updateSetting('nonexistent', { value: 'value' })
-      ).rejects.toThrow(BadRequestException);
+      // Act
+      const result = await controller.updateSetting('new.key', { value: 'new-value' });
+
+      // Assert
+      expect(result).toEqual({
+        success: true,
+        key: 'new.key',
+        oldValue: null,
+        newValue: 'new-value',
+        created: true,
+      });
+      expect(settingsService.set).toHaveBeenCalledWith('new.key', 'new-value');
     });
 
     it('debería propagar errores del servicio', async () => {
       // Arrange
       settingsService.findOne.mockResolvedValue(mockSetting);
-      settingsService.update.mockRejectedValue(new Error('Database error'));
+      settingsService.set.mockRejectedValue(new Error('Database error'));
 
       // Act & Assert
       await expect(
