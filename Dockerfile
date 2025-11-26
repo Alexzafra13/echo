@@ -2,17 +2,17 @@
 # ECHO MUSIC SERVER - OPTIMIZED BUILD
 # ============================================
 # Single container with Backend + Frontend
-# Optimized multi-stage build (~200-250MB)
+# Target size: ~250-350MB
 # ============================================
 
 # ----------------------------------------
-# Stage 1: Dependencies & Build (Combined)
+# Stage 1: Build Everything
 # ----------------------------------------
 FROM node:22-alpine AS builder
 
 WORKDIR /build
 
-# Install pnpm globally (only once!)
+# Install pnpm globally
 RUN npm install -g pnpm@10.18.3
 
 # Copy workspace configuration
@@ -27,7 +27,7 @@ COPY server/prisma.config.ts ./server/prisma.config.ts
 # Install ALL dependencies (frontend + backend) in one go
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma Client (only needed for build, not for final image)
+# Generate Prisma Client
 WORKDIR /build/server
 RUN pnpm db:generate
 
@@ -41,8 +41,30 @@ WORKDIR /build/server
 COPY server/ ./
 RUN pnpm build
 
+# Compile seed script to JavaScript (so we don't need tsx in production)
+RUN pnpm exec tsc prisma/seed-settings-only.ts --outDir dist/seed --esModuleInterop --module commonjs --skipLibCheck
+
 # ----------------------------------------
-# Stage 2: Production Runtime
+# Stage 2: Production Dependencies Only
+# ----------------------------------------
+FROM node:22-alpine AS deps
+
+WORKDIR /deps
+
+# Install pnpm
+RUN npm install -g pnpm@10.18.3
+
+# Copy workspace config for pnpm deploy
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY server/package.json ./server/
+
+# Install production dependencies only using pnpm deploy
+# This creates a clean node_modules with only prod deps
+RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod && \
+    rm -rf ~/.pnpm-store ~/.npm /tmp/*
+
+# ----------------------------------------
+# Stage 3: Minimal Production Runtime
 # ----------------------------------------
 FROM node:22-alpine AS production
 
@@ -62,14 +84,12 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 # Set production environment
 ENV NODE_ENV=production
 
-# Install runtime dependencies
+# Install only essential runtime dependencies (no npm, pnpm, tsx needed)
 RUN apk add --no-cache \
     netcat-openbsd \
     dumb-init \
-    su-exec
-
-# Install pnpm and tsx (for running TypeScript in seed)
-RUN npm install -g pnpm@10.18.3 tsx@4.19.2
+    su-exec && \
+    rm -rf /var/cache/apk/*
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -77,30 +97,25 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy workspace configuration to temporary location for pnpm deploy
-COPY --chown=echoapp:nodejs pnpm-workspace.yaml pnpm-lock.yaml package.json /tmp/build/
-COPY --chown=echoapp:nodejs server/package.json /tmp/build/server/
+# Copy production node_modules from deps stage (already pruned)
+COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
-# Install ONLY production dependencies using pnpm deploy to /app
-# pnpm deploy requires an empty directory, so we use /tmp/build for config
-WORKDIR /tmp/build
-RUN pnpm --filter=echo-server-backend deploy --prod --legacy /app
-
-# Switch to final app directory
-WORKDIR /app
-
-# Copy Prisma schema and production config
+# Copy Prisma schema and production config (JavaScript, not TypeScript)
 COPY --chown=echoapp:nodejs server/prisma ./prisma
-COPY --chown=echoapp:nodejs server/prisma.config.production.ts ./prisma.config.ts
+COPY --chown=echoapp:nodejs server/prisma.config.production.js ./prisma.config.js
 
-# Generate Prisma client for production
-RUN npx prisma@7 generate --schema=./prisma/schema.prisma
+# Copy generated Prisma client from builder (no need to regenerate!)
+COPY --from=builder --chown=echoapp:nodejs /build/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=echoapp:nodejs /build/node_modules/@prisma ./node_modules/@prisma
 
-# Copy built files from builder stage
+# Copy built application files
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
 
-# Copy scripts (entrypoint + admin reset)
+# Copy compiled seed script (JavaScript, no tsx needed)
+COPY --from=builder --chown=echoapp:nodejs /build/server/dist/seed ./dist/seed
+
+# Copy scripts
 COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /usr/local/bin/
 COPY --chown=echoapp:nodejs server/scripts/reset-admin-password.js ./scripts/
 
@@ -109,11 +124,10 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create unified data directory (Navidrome-style)
-# All persistent data in /app/data: secrets, metadata, covers, uploads, logs
 RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
     chown -R echoapp:nodejs /app/data
 
-# Create wrapper script (inline - no temp files needed)
+# Create wrapper script
 RUN printf '#!/bin/sh\n\
 set -e\n\
 chown -R echoapp:nodejs /app/data 2>/dev/null || true\n\
