@@ -76,21 +76,17 @@ jobs:
             psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;"
           done
 
-      - name: Generate Prisma Client
-        working-directory: server
-        run: pnpm db:generate
-
-      - name: Run migrations (deploy)
+      - name: Apply database schema
         working-directory: server
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
-        run: pnpm prisma migrate deploy
+        run: pnpm db:push
 
-      - name: Run migrations (test DBs)
+      - name: Apply schema to test DBs
         working-directory: server
         run: |
           for i in {1..4}; do
-            DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm prisma migrate deploy
+            DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm db:push
           done
 
       - name: Run tests
