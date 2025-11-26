@@ -1,4 +1,4 @@
-import { LibraryScan as PrismaLibraryScan } from '@prisma/client';
+import { LibraryScan as PrismaLibraryScan } from '../../../../generated/prisma';
 import { LibraryScan } from '../../domain/entities/library-scan.entity';
 
 /**

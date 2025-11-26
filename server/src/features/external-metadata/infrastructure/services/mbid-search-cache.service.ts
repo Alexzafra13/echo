@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../../../generated/prisma';
 
 /**
  * Search cache entry interface

@@ -1,4 +1,4 @@
-import { Playlist as PrismaPlaylist, PlaylistTrack as PrismaPlaylistTrack } from '@prisma/client';
+import { Playlist as PrismaPlaylist, PlaylistTrack as PrismaPlaylistTrack } from '../../../../generated/prisma';
 import { Playlist, PlaylistTrack } from '../../domain/entities';
 
 export class PlaylistMapper {

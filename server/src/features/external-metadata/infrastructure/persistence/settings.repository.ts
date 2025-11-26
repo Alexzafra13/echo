@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { Setting } from '@prisma/client';
+import { Setting } from '../../../../generated/prisma';
 
 /**
  * Settings Repository

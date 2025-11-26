@@ -1,4 +1,4 @@
-import { PlayHistory as PrismaPlayHistory } from '@prisma/client';
+import { PlayHistory as PrismaPlayHistory } from '../../../../generated/prisma';
 import { PlayEvent, PlayContext, SourceType } from '../../domain/entities/play-event.entity';
 
 export class PlayTrackingMapper {

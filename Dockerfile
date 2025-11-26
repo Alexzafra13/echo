@@ -41,6 +41,11 @@ WORKDIR /build/server
 COPY server/ ./
 RUN pnpm build
 
+# Copy generated Prisma client to dist (required for runtime imports)
+# Copy to both locations: dist/generated (for main app) and dist/src/generated (for seed script)
+RUN cp -r src/generated dist/ && \
+    mkdir -p dist/src && cp -r src/generated dist/src/
+
 # Compile seed script to JavaScript (so we don't need tsx in production)
 RUN pnpm exec tsc prisma/seed-settings-only.ts --outDir dist/seed --esModuleInterop --module commonjs --skipLibCheck
 
@@ -63,13 +68,8 @@ COPY server/package.json ./server/
 RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod && \
     rm -rf ~/.pnpm-store ~/.npm /tmp/*
 
-# Generate Prisma client (without config file to avoid parse errors)
+# Copy prisma schema and config for runtime migrations
 COPY server/prisma /prod/prisma
-WORKDIR /prod
-RUN npx prisma@7 generate --schema=./prisma/schema.prisma && \
-    rm -rf ~/.npm /tmp/*
-
-# Now copy the config file for runtime migrations (ESM format)
 COPY server/prisma.config.production.mjs /prod/prisma.config.mjs
 
 # ----------------------------------------
