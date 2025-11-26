@@ -6,7 +6,7 @@ import { LibraryScan } from '../entities/library-scan.entity';
  * Esta es una INTERFAZ (contrato)
  * Define QUÉ métodos necesita el dominio, pero NO CÓMO se implementan
  *
- * Ventaja: El dominio no conoce Prisma, MongoDB, etc
+ * Ventaja: El dominio no conoce Drizzle, MongoDB, etc
  * La implementación viene en Infrastructure Layer
  */
 export interface IScannerRepository {

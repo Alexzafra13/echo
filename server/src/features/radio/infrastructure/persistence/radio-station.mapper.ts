@@ -3,11 +3,11 @@ import { RadioStation } from '../../domain/entities/radio-station.entity';
 /**
  * RadioStationMapper - Convierte entre capas
  *
- * Prisma RadioStation ↔ Domain RadioStation
+ * Drizzle RadioStation ↔ Domain RadioStation
  */
 export class RadioStationMapper {
   /**
-   * Convierte Prisma RadioStation a Domain RadioStation
+   * Convierte Drizzle RadioStation a Domain RadioStation
    */
   static toDomain(raw: any): RadioStation {
     return RadioStation.reconstruct({
@@ -37,7 +37,7 @@ export class RadioStationMapper {
   }
 
   /**
-   * Convierte Domain RadioStation a formato Prisma
+   * Convierte Domain RadioStation a formato Drizzle
    */
   static toPersistence(station: RadioStation) {
     const primitives = station.toPrimitives();
@@ -68,7 +68,7 @@ export class RadioStationMapper {
   }
 
   /**
-   * Convierte Array de Prisma RadioStations a Domain RadioStations
+   * Convierte Array de Drizzle RadioStations a Domain RadioStations
    */
   static toDomainArray(raw: any[]): RadioStation[] {
     return raw.map((station) => this.toDomain(station));

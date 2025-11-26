@@ -3,11 +3,11 @@ import { Album } from '../../domain/entities/album.entity';
 /**
  * AlbumMapper - Convierte entre capas
  *
- * Prisma Album ↔ Domain Album
+ * Drizzle Album ↔ Domain Album
  */
 export class AlbumMapper {
   /**
-   * Convierte Prisma Album a Domain Album
+   * Convierte Drizzle Album a Domain Album
    * Se usa cuando traes datos de BD
    */
   static toDomain(raw: any): Album {
@@ -31,7 +31,7 @@ export class AlbumMapper {
   }
 
   /**
-   * Convierte Domain Album a formato Prisma
+   * Convierte Domain Album a formato Drizzle
    * Se usa cuando guardas en BD
    */
   static toPersistence(album: Album) {
@@ -61,7 +61,7 @@ export class AlbumMapper {
   }
 
   /**
-   * Convierte Array de Prisma Albums a Domain Albums
+   * Convierte Array de Drizzle Albums a Domain Albums
    */
   static toDomainArray(raw: any[]): Album[] {
     return raw.map((item) => this.toDomain(item));

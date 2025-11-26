@@ -178,7 +178,7 @@ Usa la librería `music-metadata` para extraer:
 - `music-metadata` - Extracción de metadatos
 - `bullmq` - Cola de trabajos
 - `ioredis` - Cliente Redis
-- `@prisma/client` - ORM
+- `drizzle-orm` - ORM
 
 ## Configuración
 
@@ -241,12 +241,11 @@ El módulo está **completamente implementado** con:
 
 Para probarlo:
 
-1. Resolver problema de generación de Prisma Client (problema de red con CDN)
-2. Levantar servicios: `docker-compose up -d` (PostgreSQL + Redis)
-3. Generar Prisma Client: `pnpm db:generate`
-4. Correr migraciones: `pnpm db:migrate`
-5. Iniciar servidor: `pnpm start:dev`
-6. Probar endpoints con curl o Postman
+1. Levantar servicios: `docker-compose up -d` (PostgreSQL + Redis)
+2. Generar migraciones de Drizzle: `pnpm db:generate`
+3. Aplicar migraciones: `pnpm db:push`
+4. Iniciar servidor: `pnpm dev`
+5. Probar endpoints con curl o Postman
 
 ## Notas
 

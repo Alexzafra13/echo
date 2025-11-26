@@ -3,11 +3,11 @@ import { Artist } from '../../domain/entities/artist.entity';
 /**
  * ArtistMapper - Convierte entre capas
  *
- * Prisma Artist ↔ Domain Artist
+ * Drizzle Artist ↔ Domain Artist
  */
 export class ArtistMapper {
   /**
-   * Convierte Prisma Artist a Domain Artist
+   * Convierte Drizzle Artist a Domain Artist
    * Se usa cuando traes datos de BD
    */
   static toDomain(raw: any): Artist {
@@ -28,7 +28,7 @@ export class ArtistMapper {
   }
 
   /**
-   * Convierte Domain Artist a formato Prisma
+   * Convierte Domain Artist a formato Drizzle
    * Se usa cuando guardas en BD
    */
   static toPersistence(artist: Artist) {
@@ -50,7 +50,7 @@ export class ArtistMapper {
   }
 
   /**
-   * Convierte Array de Prisma Artists a Domain Artists
+   * Convierte Array de Drizzle Artists a Domain Artists
    */
   static toDomainArray(raw: any[]): Artist[] {
     return raw.map((item) => this.toDomain(item));

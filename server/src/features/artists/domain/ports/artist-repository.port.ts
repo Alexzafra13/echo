@@ -4,7 +4,7 @@ import { Artist } from '../entities/artist.entity';
  * IArtistRepository - Port para acceso a datos de artistas
  *
  * Define el contrato que debe cumplir cualquier implementación
- * de repositorio de artistas (Prisma, TypeORM, etc.)
+ * de repositorio de artistas (Drizzle, TypeORM, etc.)
  */
 export interface IArtistRepository {
   /**
