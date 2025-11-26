@@ -258,7 +258,7 @@ export class SetupService {
     const isWindows = process.platform === 'win32';
 
     // Handle Windows root path in development
-    let normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
+    const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
 
     // In development on Windows, if requesting "/", show common locations
     if (isDev && isWindows && (targetPath === '/' || targetPath === '')) {

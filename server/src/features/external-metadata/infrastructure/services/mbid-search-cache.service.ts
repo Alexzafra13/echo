@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { Prisma } from '../../../../generated/prisma';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, and, lte, sql } from 'drizzle-orm';
+import { mbidSearchCache } from '@infrastructure/database/schema';
 
 /**
  * Search cache entry interface
@@ -38,7 +39,7 @@ export class MbidSearchCacheService {
   private readonly logger = new Logger(MbidSearchCacheService.name);
   private readonly DEFAULT_TTL_DAYS = 7;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   /**
    * Normaliza el texto de búsqueda para cache key
@@ -57,14 +58,14 @@ export class MbidSearchCacheService {
     queryText: string,
     queryType: string,
     queryParams?: Record<string, any>,
-  ): { queryText: string; queryType: string; queryParams: Prisma.JsonValue } {
+  ): { queryText: string; queryType: string; queryParams: Record<string, any> } {
     const normalizedText = this.normalizeQuery(queryText);
     const normalizedParams = queryParams || {};
 
     return {
       queryText: normalizedText,
       queryType,
-      queryParams: normalizedParams as Prisma.JsonValue,
+      queryParams: normalizedParams,
     };
   }
 
@@ -84,15 +85,19 @@ export class MbidSearchCacheService {
     try {
       const cacheKey = this.generateCacheKey(queryText, queryType, queryParams);
 
-      const cached = await this.prisma.mbidSearchCache.findFirst({
-        where: {
-          queryText: cacheKey.queryText,
-          queryType: cacheKey.queryType,
-          queryParams: {
-            equals: cacheKey.queryParams as any,
-          },
-        },
-      });
+      const results = await this.drizzle.db
+        .select()
+        .from(mbidSearchCache)
+        .where(
+          and(
+            eq(mbidSearchCache.queryText, cacheKey.queryText),
+            eq(mbidSearchCache.queryType, cacheKey.queryType),
+            sql`${mbidSearchCache.queryParams} = ${JSON.stringify(cacheKey.queryParams)}::jsonb`,
+          ),
+        )
+        .limit(1);
+
+      const cached = results[0] || null;
 
       if (!cached) {
         this.logger.debug(
@@ -109,13 +114,13 @@ export class MbidSearchCacheService {
       }
 
       // Update hit stats
-      await this.prisma.mbidSearchCache.update({
-        where: { id: cached.id },
-        data: {
-          hitCount: { increment: 1 },
+      await this.drizzle.db
+        .update(mbidSearchCache)
+        .set({
+          hitCount: sql`${mbidSearchCache.hitCount} + 1`,
           lastHitAt: new Date(),
-        },
-      });
+        })
+        .where(eq(mbidSearchCache.id, cached.id));
 
       this.logger.debug(
         `Cache HIT: ${queryType}:"${queryText}" (hits: ${cached.hitCount + 1})`,
@@ -149,31 +154,45 @@ export class MbidSearchCacheService {
         entry.queryParams,
       );
 
-      await this.prisma.mbidSearchCache.upsert({
-        where: {
-          queryText_queryType_queryParams: {
+      // Check if entry already exists
+      const existing = await this.drizzle.db
+        .select()
+        .from(mbidSearchCache)
+        .where(
+          and(
+            eq(mbidSearchCache.queryText, cacheKey.queryText),
+            eq(mbidSearchCache.queryType, cacheKey.queryType),
+            sql`${mbidSearchCache.queryParams} = ${JSON.stringify(cacheKey.queryParams)}::jsonb`,
+          ),
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Update existing entry
+        await this.drizzle.db
+          .update(mbidSearchCache)
+          .set({
+            results: entry.results,
+            resultCount: entry.resultCount,
+            expiresAt,
+            // Reset hit count on update
+            hitCount: 0,
+            lastHitAt: null,
+          })
+          .where(eq(mbidSearchCache.id, existing[0].id));
+      } else {
+        // Insert new entry
+        await this.drizzle.db
+          .insert(mbidSearchCache)
+          .values({
             queryText: cacheKey.queryText,
             queryType: cacheKey.queryType,
-            queryParams: cacheKey.queryParams as any,
-          },
-        },
-        create: {
-          queryText: cacheKey.queryText,
-          queryType: cacheKey.queryType,
-          queryParams: cacheKey.queryParams as any,
-          results: entry.results as any,
-          resultCount: entry.resultCount,
-          expiresAt,
-        },
-        update: {
-          results: entry.results as any,
-          resultCount: entry.resultCount,
-          expiresAt,
-          // Reset hit count on update
-          hitCount: 0,
-          lastHitAt: null,
-        },
-      });
+            queryParams: cacheKey.queryParams,
+            results: entry.results,
+            resultCount: entry.resultCount,
+            expiresAt,
+          });
+      }
 
       this.logger.debug(
         `Cached ${entry.queryType} search: "${entry.queryText}" (${entry.resultCount} results, TTL: ${ttl}d)`,
@@ -191,9 +210,9 @@ export class MbidSearchCacheService {
    */
   async delete(id: string): Promise<void> {
     try {
-      await this.prisma.mbidSearchCache.delete({
-        where: { id },
-      });
+      await this.drizzle.db
+        .delete(mbidSearchCache)
+        .where(eq(mbidSearchCache.id, id));
       this.logger.debug(`Deleted cache entry: ${id}`);
     } catch (error) {
       this.logger.warn(`Error deleting cache entry: ${(error as Error).message}`);
@@ -206,16 +225,14 @@ export class MbidSearchCacheService {
    */
   async cleanupExpired(): Promise<number> {
     try {
-      const result = await this.prisma.mbidSearchCache.deleteMany({
-        where: {
-          expiresAt: {
-            lt: new Date(),
-          },
-        },
-      });
+      const deleted = await this.drizzle.db
+        .delete(mbidSearchCache)
+        .where(lte(mbidSearchCache.expiresAt, new Date()))
+        .returning();
 
-      this.logger.log(`Cleaned up ${result.count} expired cache entries`);
-      return result.count;
+      const count = deleted.length;
+      this.logger.log(`Cleaned up ${count} expired cache entries`);
+      return count;
     } catch (error) {
       this.logger.error(
         `Error cleaning up expired cache: ${(error as Error).message}`,
@@ -234,13 +251,13 @@ export class MbidSearchCacheService {
     oldestEntry: Date | null;
   }> {
     try {
-      const entries = await this.prisma.mbidSearchCache.findMany({
-        select: {
-          queryType: true,
-          hitCount: true,
-          createdAt: true,
-        },
-      });
+      const entries = await this.drizzle.db
+        .select({
+          queryType: mbidSearchCache.queryType,
+          hitCount: mbidSearchCache.hitCount,
+          createdAt: mbidSearchCache.createdAt,
+        })
+        .from(mbidSearchCache);
 
       const stats = {
         totalEntries: entries.length,
@@ -293,9 +310,12 @@ export class MbidSearchCacheService {
    */
   async clear(): Promise<number> {
     try {
-      const result = await this.prisma.mbidSearchCache.deleteMany({});
-      this.logger.warn(`Cleared entire MBID search cache (${result.count} entries)`);
-      return result.count;
+      const deleted = await this.drizzle.db
+        .delete(mbidSearchCache)
+        .returning();
+      const count = deleted.length;
+      this.logger.warn(`Cleared entire MBID search cache (${count} entries)`);
+      return count;
     } catch (error) {
       this.logger.error(`Error clearing cache: ${(error as Error).message}`);
       return 0;
