@@ -33,10 +33,12 @@ export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
   };
 
   // Transform data for Recharts
+  // Note: "metadata" = artist/album images from external providers
+  // Note: "avatars" = user profile pictures (not artist images)
   const chartData = [
     { name: 'Música', value: data.music, percentage: ((data.music / data.total) * 100).toFixed(1) },
-    { name: 'Metadata', value: data.metadata, percentage: ((data.metadata / data.total) * 100).toFixed(1) },
-    { name: 'Avatares', value: data.avatars, percentage: ((data.avatars / data.total) * 100).toFixed(1) },
+    { name: 'Imágenes (Artistas/Álbumes)', value: data.metadata, percentage: ((data.metadata / data.total) * 100).toFixed(1) },
+    { name: 'Avatares de Usuario', value: data.avatars, percentage: ((data.avatars / data.total) * 100).toFixed(1) },
   ];
 
   const renderCustomLabel = (entry: any) => {
