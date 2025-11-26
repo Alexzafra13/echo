@@ -1,6 +1,8 @@
 import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, and, or, isNull, sql, count, sum, gte, notInArray } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { artists, albums, tracks, genres, trackGenres } from '@infrastructure/database/schema';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import {
   IScannerRepository,
@@ -56,7 +58,7 @@ export class ScanProcessorService implements OnModuleInit {
   constructor(
     @Inject(SCANNER_REPOSITORY)
     private readonly scannerRepository: IScannerRepository,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly metadataExtractor: MetadataExtractorService,
@@ -351,28 +353,30 @@ export class ScanProcessorService implements OnModuleInit {
     const orderName = normalizeForSorting(normalizedName); // Use shared utility for sorting
 
     // 1. Buscar artista por nombre normalizado (sin acentos)
-    let artist = await this.prisma.artist.findFirst({
-      where: { orderArtistName: orderName },
-      select: { id: true, name: true },
-    });
+    const existingArtist = await this.drizzle.db
+      .select({ id: artists.id, name: artists.name })
+      .from(artists)
+      .where(eq(artists.orderArtistName, orderName))
+      .limit(1);
 
-    if (artist) {
-      return { ...artist, created: false };
+    if (existingArtist[0]) {
+      return { ...existingArtist[0], created: false };
     }
 
     // 2. Si no existe, crearlo con el nombre original (con acentos si los tiene)
-    artist = await this.prisma.artist.create({
-      data: {
+    const newArtist = await this.drizzle.db
+      .insert(artists)
+      .values({
         name: normalizedName,
         orderArtistName: orderName, // Guardar versión normalizada para búsquedas
-        mbzArtistId: mbzArtistId || undefined,
+        mbzArtistId: mbzArtistId || null,
         albumCount: 0, // Se calculará después
         songCount: 0,  // Se calculará después
         size: BigInt(0), // Se calculará después
-      },
-      select: { id: true, name: true },
-    });
-    return { ...artist, created: true };
+      })
+      .returning({ id: artists.id, name: artists.name });
+
+    return { ...newArtist[0], created: true };
   }
 
   /**
@@ -407,15 +411,20 @@ export class ScanProcessorService implements OnModuleInit {
     // - Tracks have different artists due to collaborations (feat.)
     // - Tracks have slightly different years (e.g., 2006 vs 2007)
     // This ensures all tracks from the same album stay under one album entity
-    let album = await this.prisma.album.findFirst({
-      where: {
-        name: normalizedName,
-      },
-      select: { id: true, name: true, artistId: true, coverArtPath: true, year: true },
-    });
+    const existingAlbum = await this.drizzle.db
+      .select({
+        id: albums.id,
+        name: albums.name,
+        artistId: albums.artistId,
+        coverArtPath: albums.coverArtPath,
+        year: albums.year,
+      })
+      .from(albums)
+      .where(eq(albums.name, normalizedName))
+      .limit(1);
 
     // 2. Si no existe, crearlo
-    if (!album) {
+    if (!existingAlbum[0]) {
       const albumId = generateUuid();
 
       // Extraer cover art del primer track
@@ -424,40 +433,44 @@ export class ScanProcessorService implements OnModuleInit {
         trackPath,
       );
 
-      album = await this.prisma.album.create({
-        data: {
+      const newAlbum = await this.drizzle.db
+        .insert(albums)
+        .values({
           id: albumId,
           name: normalizedName,
           artistId: artistId,
           albumArtistId: artistId, // Por defecto, album artist = artist
-          year: metadata.year || undefined,
+          year: metadata.year || null,
           compilation: metadata.compilation || false,
-          mbzAlbumId: metadata.mbzAlbumId || undefined,
-          mbzAlbumArtistId: metadata.mbzAlbumArtistId || undefined,
-          coverArtPath: coverPath || undefined,
+          mbzAlbumId: metadata.mbzAlbumId || null,
+          mbzAlbumArtistId: metadata.mbzAlbumArtistId || null,
+          coverArtPath: coverPath || null,
           orderAlbumName: normalizeForSorting(normalizedName), // Auto-populate for sorting
           songCount: 0,    // Se actualizará con cada track
           duration: 0,     // Se actualizará con cada track
           size: BigInt(0), // Se actualizará con cada track
-        },
-        select: { id: true, name: true, artistId: true, coverArtPath: true, year: true },
-      });
+        })
+        .returning({
+          id: albums.id,
+          name: albums.name,
+          artistId: albums.artistId,
+        });
 
       return {
-        id: album.id,
-        name: album.name,
-        artistId: album.artistId!, // TypeScript: garantizamos que no es null porque acabamos de crearlo
+        id: newAlbum[0].id,
+        name: newAlbum[0].name,
+        artistId: newAlbum[0].artistId!, // TypeScript: garantizamos que no es null porque acabamos de crearlo
         created: true,
-        coverExtracted: !!coverPath
+        coverExtracted: !!coverPath,
       };
     }
 
     return {
-      id: album.id,
-      name: album.name,
-      artistId: album.artistId!, // TypeScript: garantizamos que no es null porque filtramos por artistId
+      id: existingAlbum[0].id,
+      name: existingAlbum[0].name,
+      artistId: existingAlbum[0].artistId!, // TypeScript: garantizamos que no es null porque filtramos por artistId
       created: false,
-      coverExtracted: false
+      coverExtracted: false,
     };
   }
 
@@ -579,9 +592,12 @@ export class ScanProcessorService implements OnModuleInit {
       // ============================================================
       // 4. CREAR O ACTUALIZAR TRACK (con IDs ya vinculados)
       // ============================================================
-      const existingTrack = await this.prisma.track.findUnique({
-        where: { path: filePath },
-      });
+      const existingTrackResult = await this.drizzle.db
+        .select()
+        .from(tracks)
+        .where(eq(tracks.path, filePath))
+        .limit(1);
+      const existingTrack = existingTrackResult[0];
 
       // 🔵 LOG: Datos del track antes de guardar
       if (!metadata.title && !metadata.artist && !metadata.album) {
@@ -637,10 +653,10 @@ export class ScanProcessorService implements OnModuleInit {
 
       if (existingTrack) {
         // Actualizar track existente
-        await this.prisma.track.update({
-          where: { id: existingTrack.id },
-          data: trackData,
-        });
+        await this.drizzle.db
+          .update(tracks)
+          .set({ ...trackData, updatedAt: new Date() })
+          .where(eq(tracks.id, existingTrack.id));
 
         // Guardar géneros desde tags de audio
         await this.saveTrackGenres(existingTrack.id, metadata.genre);
@@ -652,9 +668,11 @@ export class ScanProcessorService implements OnModuleInit {
         return 'updated';
       } else {
         // Crear nuevo track
-        const newTrack = await this.prisma.track.create({
-          data: trackData,
-        });
+        const newTrackResult = await this.drizzle.db
+          .insert(tracks)
+          .values(trackData)
+          .returning();
+        const newTrack = newTrackResult[0];
 
         // Guardar géneros desde tags de audio
         await this.saveTrackGenres(newTrack.id, metadata.genre);
@@ -713,23 +731,24 @@ export class ScanProcessorService implements OnModuleInit {
    * basándose en sus tracks vinculados
    */
   private async updateAlbumStats(albumId: string): Promise<void> {
-    const stats = await this.prisma.track.aggregate({
-      where: { albumId },
-      _count: { id: true },
-      _sum: {
-        duration: true,
-        size: true,
-      },
-    });
+    const stats = await this.drizzle.db
+      .select({
+        count: count(),
+        totalDuration: sum(tracks.duration),
+        totalSize: sum(tracks.size),
+      })
+      .from(tracks)
+      .where(eq(tracks.albumId, albumId));
 
-    await this.prisma.album.update({
-      where: { id: albumId },
-      data: {
-        songCount: stats._count.id,
-        duration: stats._sum.duration || 0,
-        size: stats._sum.size || BigInt(0),
-      },
-    });
+    await this.drizzle.db
+      .update(albums)
+      .set({
+        songCount: stats[0]?.count ?? 0,
+        duration: Number(stats[0]?.totalDuration) || 0,
+        size: BigInt(stats[0]?.totalSize ?? 0),
+        updatedAt: new Date(),
+      })
+      .where(eq(albums.id, albumId));
   }
 
   /**
@@ -737,23 +756,29 @@ export class ScanProcessorService implements OnModuleInit {
    * basándose en sus álbumes y tracks vinculados
    */
   private async updateArtistStats(artistId: string): Promise<void> {
-    const [albumCount, trackStats] = await Promise.all([
-      this.prisma.album.count({ where: { artistId } }),
-      this.prisma.track.aggregate({
-        where: { artistId },
-        _count: { id: true },
-        _sum: { size: true },
-      }),
+    const [albumCountResult, trackStats] = await Promise.all([
+      this.drizzle.db
+        .select({ count: count() })
+        .from(albums)
+        .where(eq(albums.artistId, artistId)),
+      this.drizzle.db
+        .select({
+          count: count(),
+          totalSize: sum(tracks.size),
+        })
+        .from(tracks)
+        .where(eq(tracks.artistId, artistId)),
     ]);
 
-    await this.prisma.artist.update({
-      where: { id: artistId },
-      data: {
-        albumCount,
-        songCount: trackStats._count.id,
-        size: trackStats._sum.size || BigInt(0),
-      },
-    });
+    await this.drizzle.db
+      .update(artists)
+      .set({
+        albumCount: albumCountResult[0]?.count ?? 0,
+        songCount: trackStats[0]?.count ?? 0,
+        size: BigInt(trackStats[0]?.totalSize ?? 0),
+        updatedAt: new Date(),
+      })
+      .where(eq(artists.id, artistId));
   }
 
   /**
@@ -762,9 +787,9 @@ export class ScanProcessorService implements OnModuleInit {
   private async pruneDeletedTracks(existingFiles: string[]): Promise<number> {
     try {
       // Obtener todos los tracks de la BD
-      const allTracks = await this.prisma.track.findMany({
-        select: { id: true, path: true },
-      });
+      const allTracks = await this.drizzle.db
+        .select({ id: tracks.id, path: tracks.path })
+        .from(tracks);
 
       const existingFilesSet = new Set(existingFiles);
       const tracksToDelete: string[] = [];
@@ -781,55 +806,43 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Eliminar tracks
       if (tracksToDelete.length > 0) {
-        await this.prisma.track.deleteMany({
-          where: {
-            id: {
-              in: tracksToDelete,
-            },
-          },
-        });
+        await this.drizzle.db
+          .delete(tracks)
+          .where(sql`${tracks.id} IN (${sql.join(tracksToDelete.map((id) => sql`${id}`), sql`, `)})`);
         this.logger.info(`🗑️  Eliminados ${tracksToDelete.length} tracks obsoletos`);
       }
 
-      // Eliminar álbumes huérfanos (sin tracks)
-      const orphanedAlbums = await this.prisma.album.findMany({
-        where: {
-          tracks: {
-            none: {},
-          },
-        },
-        select: { id: true },
-      });
+      // Eliminar álbumes huérfanos (sin tracks) usando NOT EXISTS
+      const orphanedAlbumsResult = await this.drizzle.db.execute(sql`
+        SELECT id FROM albums a
+        WHERE NOT EXISTS (
+          SELECT 1 FROM tracks t WHERE t.album_id = a.id
+        )
+      `);
+      const orphanedAlbums = (orphanedAlbumsResult.rows as { id: string }[]) || [];
 
       if (orphanedAlbums.length > 0) {
-        await this.prisma.album.deleteMany({
-          where: {
-            id: {
-              in: orphanedAlbums.map(a => a.id),
-            },
-          },
-        });
+        const albumIds = orphanedAlbums.map((a) => a.id);
+        await this.drizzle.db
+          .delete(albums)
+          .where(sql`${albums.id} IN (${sql.join(albumIds.map((id) => sql`${id}`), sql`, `)})`);
         this.logger.info(`🗑️  Eliminados ${orphanedAlbums.length} álbumes huérfanos`);
       }
 
-      // Eliminar artistas huérfanos (sin álbumes)
-      const orphanedArtists = await this.prisma.artist.findMany({
-        where: {
-          albums: {
-            none: {},
-          },
-        },
-        select: { id: true },
-      });
+      // Eliminar artistas huérfanos (sin álbumes) usando NOT EXISTS
+      const orphanedArtistsResult = await this.drizzle.db.execute(sql`
+        SELECT id FROM artists ar
+        WHERE NOT EXISTS (
+          SELECT 1 FROM albums al WHERE al.artist_id = ar.id
+        )
+      `);
+      const orphanedArtists = (orphanedArtistsResult.rows as { id: string }[]) || [];
 
       if (orphanedArtists.length > 0) {
-        await this.prisma.artist.deleteMany({
-          where: {
-            id: {
-              in: orphanedArtists.map(a => a.id),
-            },
-          },
-        });
+        const artistIds = orphanedArtists.map((a) => a.id);
+        await this.drizzle.db
+          .delete(artists)
+          .where(sql`${artists.id} IN (${sql.join(artistIds.map((id) => sql`${id}`), sql`, `)})`);
         this.logger.info(`🗑️  Eliminados ${orphanedArtists.length} artistas huérfanos`);
       }
 
@@ -982,41 +995,32 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Obtener artistas recientes sin metadatos externos (ordenar por fecha de creación desc, limit por batch size)
       // Enriquecer tanto artistas con MBID (para Fanart.tv) como sin MBID (para buscar en MusicBrainz)
-      const artistsToEnrich = await this.prisma.artist.findMany({
-        where: {
-          OR: [
+      const artistsToEnrich = await this.drizzle.db
+        .select({
+          id: artists.id,
+          name: artists.name,
+          mbzArtistId: artists.mbzArtistId,
+          mbidSearchedAt: artists.mbidSearchedAt,
+          biography: artists.biography,
+        })
+        .from(artists)
+        .where(
+          or(
             // Sin MBID y nunca buscado - intentar buscar UNA VEZ
-            {
-              AND: [
-                { mbzArtistId: null },
-                { mbidSearchedAt: null },
-              ],
-            },
+            and(isNull(artists.mbzArtistId), isNull(artists.mbidSearchedAt)),
             // Sin biografía - necesita enriquecimiento de bio
-            { biography: null },
+            isNull(artists.biography),
             // Sin ninguna imagen externa - necesita enriquecimiento completo
-            {
-              AND: [
-                { externalProfileUpdatedAt: null },
-                { externalBackgroundUpdatedAt: null },
-                { externalBannerUpdatedAt: null },
-                { externalLogoUpdatedAt: null },
-              ],
-            },
-          ],
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: batchSize,
-        select: {
-          id: true,
-          name: true,
-          mbzArtistId: true,
-          mbidSearchedAt: true,
-          biography: true,
-        },
-      });
+            and(
+              isNull(artists.externalProfileUpdatedAt),
+              isNull(artists.externalBackgroundUpdatedAt),
+              isNull(artists.externalBannerUpdatedAt),
+              isNull(artists.externalLogoUpdatedAt),
+            ),
+          ),
+        )
+        .orderBy(sql`${artists.createdAt} DESC`)
+        .limit(batchSize);
 
       // Enriquecer artistas en background (no esperar)
       if (artistsToEnrich.length > 0) {
@@ -1038,44 +1042,36 @@ export class ScanProcessorService implements OnModuleInit {
       // Obtener álbumes recientes sin portadas externas o con enriquecimiento incompleto
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      const albumsToEnrich = await this.prisma.album.findMany({
-        where: {
-          OR: [
-            { externalCoverPath: null }, // No tiene portada externa
+      const albumsToEnrich = await this.drizzle.db
+        .select({
+          id: albums.id,
+          name: albums.name,
+          mbzAlbumId: albums.mbzAlbumId,
+          mbidSearchedAt: albums.mbidSearchedAt,
+          externalCoverPath: albums.externalCoverPath,
+          externalInfoUpdatedAt: albums.externalInfoUpdatedAt,
+        })
+        .from(albums)
+        .where(
+          or(
+            // No tiene portada externa
+            isNull(albums.externalCoverPath),
             // Sin MBID y nunca buscado - intentar buscar UNA VEZ
-            {
-              AND: [
-                { mbzAlbumId: null },
-                { mbidSearchedAt: null },
-              ],
-            },
-            {
-              AND: [
-                { externalCoverPath: { not: null } }, // Tiene path
-                { externalInfoUpdatedAt: null }, // Pero nunca se completó el enriquecimiento
-              ]
-            },
-            {
-              AND: [
-                { externalCoverPath: { not: null } }, // Tiene path
-                { createdAt: { gte: oneDayAgo } }, // Creado recientemente (últimas 24h)
-              ]
-            },
-          ],
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: batchSize,
-        select: {
-          id: true,
-          name: true,
-          mbzAlbumId: true,
-          mbidSearchedAt: true,
-          externalCoverPath: true,
-          externalInfoUpdatedAt: true,
-        },
-      });
+            and(isNull(albums.mbzAlbumId), isNull(albums.mbidSearchedAt)),
+            // Tiene path pero nunca se completó el enriquecimiento
+            and(
+              sql`${albums.externalCoverPath} IS NOT NULL`,
+              isNull(albums.externalInfoUpdatedAt),
+            ),
+            // Tiene path y fue creado recientemente (últimas 24h)
+            and(
+              sql`${albums.externalCoverPath} IS NOT NULL`,
+              gte(albums.createdAt, oneDayAgo),
+            ),
+          ),
+        )
+        .orderBy(sql`${albums.createdAt} DESC`)
+        .limit(batchSize);
 
       // Enriquecer álbumes en background (no esperar)
       if (albumsToEnrich.length > 0) {
@@ -1186,9 +1182,9 @@ export class ScanProcessorService implements OnModuleInit {
       // Normalize genre names (trim, lowercase, remove duplicates)
       const normalizedGenres = [...new Set(
         genreTags
-          .map(g => g.trim())
-          .filter(g => g.length > 0 && g.length <= 100) // Max 100 chars per schema
-          .map(g => g.charAt(0).toUpperCase() + g.slice(1)) // Capitalize first letter
+          .map((g) => g.trim())
+          .filter((g) => g.length > 0 && g.length <= 100) // Max 100 chars per schema
+          .map((g) => g.charAt(0).toUpperCase() + g.slice(1)) // Capitalize first letter
       )];
 
       if (normalizedGenres.length === 0) {
@@ -1198,32 +1194,58 @@ export class ScanProcessorService implements OnModuleInit {
       // Upsert genres (create if not exist)
       const genreRecords = await Promise.all(
         normalizedGenres.map(async (genreName) => {
-          return await this.prisma.genre.upsert({
-            where: { name: genreName },
-            create: { name: genreName },
-            update: {}, // No updates needed, just ensure it exists
-            select: { id: true, name: true },
-          });
-        })
+          // Try to find existing genre
+          const existing = await this.drizzle.db
+            .select({ id: genres.id, name: genres.name })
+            .from(genres)
+            .where(eq(genres.name, genreName))
+            .limit(1);
+
+          if (existing[0]) {
+            return existing[0];
+          }
+
+          // Create new genre
+          const newGenre = await this.drizzle.db
+            .insert(genres)
+            .values({ name: genreName })
+            .onConflictDoNothing({ target: genres.name })
+            .returning({ id: genres.id, name: genres.name });
+
+          // If insert was ignored due to conflict, fetch existing
+          if (!newGenre[0]) {
+            const fetched = await this.drizzle.db
+              .select({ id: genres.id, name: genres.name })
+              .from(genres)
+              .where(eq(genres.name, genreName))
+              .limit(1);
+            return fetched[0];
+          }
+
+          return newGenre[0];
+        }),
       );
 
       // Associate genres with track (skip if already associated)
       await Promise.all(
-        genreRecords.map(async (genre) => {
-          try {
-            await this.prisma.trackGenre.create({
-              data: {
-                trackId,
-                genreId: genre.id,
-              },
-            });
-          } catch (error) {
-            // Ignore if already exists (unique constraint violation)
-            if (!(error as any).code || (error as any).code !== 'P2002') {
-              this.logger.warn(`Failed to associate genre ${genre.name} with track: ${(error as Error).message}`);
+        genreRecords
+          .filter((genre) => genre != null)
+          .map(async (genre) => {
+            try {
+              await this.drizzle.db
+                .insert(trackGenres)
+                .values({
+                  trackId,
+                  genreId: genre.id,
+                })
+                .onConflictDoNothing();
+            } catch (error) {
+              // Log warning for non-constraint errors
+              this.logger.warn(
+                `Failed to associate genre ${genre.name} with track: ${(error as Error).message}`,
+              );
             }
-          }
-        })
+          }),
       );
 
       this.logger.debug(`Saved ${genreRecords.length} genres for track ${trackId}`);
