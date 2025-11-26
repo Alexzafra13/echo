@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, and, lte, sql } from 'drizzle-orm';
+import { metadataCache } from '@infrastructure/database/schema';
 
 /**
  * Metadata Cache Service
@@ -17,7 +19,7 @@ export class MetadataCacheService {
   // Cache TTL in days (configurable via environment)
   private readonly DEFAULT_TTL_DAYS = 30;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   /**
    * Get cached metadata for a specific entity and provider
@@ -28,15 +30,19 @@ export class MetadataCacheService {
     provider: string
   ): Promise<any | null> {
     try {
-      const cached = await this.prisma.metadataCache.findUnique({
-        where: {
-          entityId_entityType_provider: {
-            entityId,
-            entityType,
-            provider,
-          },
-        },
-      });
+      const results = await this.drizzle.db
+        .select()
+        .from(metadataCache)
+        .where(
+          and(
+            eq(metadataCache.entityId, entityId),
+            eq(metadataCache.entityType, entityType),
+            eq(metadataCache.provider, provider)
+          )
+        )
+        .limit(1);
+
+      const cached = results[0] || null;
 
       if (!cached) {
         this.logger.debug(`Cache miss: ${entityType}:${entityId}:${provider}`);
@@ -73,27 +79,44 @@ export class MetadataCacheService {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + ttl);
 
-      await this.prisma.metadataCache.upsert({
-        where: {
-          entityId_entityType_provider: {
+      const existing = await this.drizzle.db
+        .select()
+        .from(metadataCache)
+        .where(
+          and(
+            eq(metadataCache.entityId, entityId),
+            eq(metadataCache.entityType, entityType),
+            eq(metadataCache.provider, provider)
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        await this.drizzle.db
+          .update(metadataCache)
+          .set({
+            data: JSON.stringify(metadata),
+            fetchedAt: new Date(),
+            expiresAt,
+          })
+          .where(
+            and(
+              eq(metadataCache.entityId, entityId),
+              eq(metadataCache.entityType, entityType),
+              eq(metadataCache.provider, provider)
+            )
+          );
+      } else {
+        await this.drizzle.db
+          .insert(metadataCache)
+          .values({
             entityId,
             entityType,
             provider,
-          },
-        },
-        create: {
-          entityId,
-          entityType,
-          provider,
-          data: JSON.stringify(metadata),
-          expiresAt,
-        },
-        update: {
-          data: JSON.stringify(metadata),
-          fetchedAt: new Date(),
-          expiresAt,
-        },
-      });
+            data: JSON.stringify(metadata),
+            expiresAt,
+          });
+      }
 
       this.logger.debug(`Cached metadata: ${entityType}:${entityId}:${provider}`);
     } catch (error) {
@@ -110,22 +133,19 @@ export class MetadataCacheService {
     provider: string
   ): Promise<void> {
     try {
-      await this.prisma.metadataCache.delete({
-        where: {
-          entityId_entityType_provider: {
-            entityId,
-            entityType,
-            provider,
-          },
-        },
-      });
+      await this.drizzle.db
+        .delete(metadataCache)
+        .where(
+          and(
+            eq(metadataCache.entityId, entityId),
+            eq(metadataCache.entityType, entityType),
+            eq(metadataCache.provider, provider)
+          )
+        );
 
       this.logger.debug(`Deleted cache: ${entityType}:${entityId}:${provider}`);
     } catch (error) {
-      // Ignore if not found
-      if ((error as any).code !== 'P2025') {
-        this.logger.error(`Error deleting cache: ${(error as Error).message}`, (error as Error).stack);
-      }
+      this.logger.error(`Error deleting cache: ${(error as Error).message}`, (error as Error).stack);
     }
   }
 
@@ -134,12 +154,14 @@ export class MetadataCacheService {
    */
   async clearEntity(entityType: string, entityId: string): Promise<void> {
     try {
-      await this.prisma.metadataCache.deleteMany({
-        where: {
-          entityType,
-          entityId,
-        },
-      });
+      await this.drizzle.db
+        .delete(metadataCache)
+        .where(
+          and(
+            eq(metadataCache.entityType, entityType),
+            eq(metadataCache.entityId, entityId)
+          )
+        );
 
       this.logger.debug(`Cleared all cache for ${entityType}:${entityId}`);
     } catch (error) {
@@ -153,16 +175,14 @@ export class MetadataCacheService {
    */
   async clearExpired(): Promise<number> {
     try {
-      const result = await this.prisma.metadataCache.deleteMany({
-        where: {
-          expiresAt: {
-            lte: new Date(),
-          },
-        },
-      });
+      const deleted = await this.drizzle.db
+        .delete(metadataCache)
+        .where(lte(metadataCache.expiresAt, new Date()))
+        .returning();
 
-      this.logger.log(`Cleared ${result.count} expired cache entries`);
-      return result.count;
+      const count = deleted.length;
+      this.logger.log(`Cleared ${count} expired cache entries`);
+      return count;
     } catch (error) {
       this.logger.error(`Error clearing expired cache: ${(error as Error).message}`, (error as Error).stack);
       return 0;
@@ -178,25 +198,35 @@ export class MetadataCacheService {
     byProvider: Record<string, number>;
   }> {
     try {
-      const [total, byEntityType, byProvider] = await Promise.all([
-        this.prisma.metadataCache.count(),
-        this.prisma.metadataCache.groupBy({
-          by: ['entityType'],
-          _count: true,
-        }),
-        this.prisma.metadataCache.groupBy({
-          by: ['provider'],
-          _count: true,
-        }),
+      const [totalResult, byEntityType, byProvider] = await Promise.all([
+        this.drizzle.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(metadataCache),
+        this.drizzle.db
+          .select({
+            entityType: metadataCache.entityType,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(metadataCache)
+          .groupBy(metadataCache.entityType),
+        this.drizzle.db
+          .select({
+            provider: metadataCache.provider,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(metadataCache)
+          .groupBy(metadataCache.provider),
       ]);
+
+      const total = totalResult[0]?.count || 0;
 
       return {
         total,
         byEntityType: Object.fromEntries(
-          byEntityType.map((item) => [item.entityType, item._count])
+          byEntityType.map((item) => [item.entityType, item.count])
         ),
         byProvider: Object.fromEntries(
-          byProvider.map((item) => [item.provider, item._count])
+          byProvider.map((item) => [item.provider, item.count])
         ),
       };
     } catch (error) {
