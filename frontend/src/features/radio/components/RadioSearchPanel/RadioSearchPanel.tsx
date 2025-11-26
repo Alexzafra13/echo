@@ -63,9 +63,9 @@ export function RadioSearchPanel({
             </div>
 
             <div className={styles.searchPanel__grid}>
-              {groupedResults.all.map((station) => (
+              {groupedResults.all.map((station, index) => (
                 <button
-                  key={station.stationUuid || station.id}
+                  key={station.stationUuid || station.id || `station-${index}`}
                   className={styles.searchPanel__item}
                   onClick={() => handleResultClick(station)}
                 >

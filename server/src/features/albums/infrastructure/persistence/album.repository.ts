@@ -59,21 +59,8 @@ export class DrizzleAlbumRepository
   }
 
   async search(name: string, skip: number, take: number): Promise<Album[]> {
-    // Use pg_trgm similarity search
-    const albumIds = await this.drizzle.db.execute<{ id: string }>(sql`
-      SELECT id
-      FROM albums
-      WHERE name % ${name}
-      ORDER BY similarity(name, ${name}) DESC, name ASC
-      LIMIT ${take}
-      OFFSET ${skip}
-    `);
-
-    if (albumIds.rows.length === 0) {
-      return [];
-    }
-
-    const ids = albumIds.rows.map((a) => a.id);
+    // Use ILIKE for case-insensitive search with wildcards
+    const searchPattern = `%${name}%`;
 
     const result = await this.drizzle.db
       .select({
@@ -82,15 +69,12 @@ export class DrizzleAlbumRepository
       })
       .from(albums)
       .leftJoin(artists, eq(albums.artistId, artists.id))
-      .where(inArray(albums.id, ids));
+      .where(sql`${albums.name} ILIKE ${searchPattern}`)
+      .orderBy(albums.name)
+      .offset(skip)
+      .limit(take);
 
-    // Maintain similarity order
-    const albumMap = new Map(result.map((r) => [r.album.id, r]));
-    const orderedAlbums = ids
-      .map((id) => albumMap.get(id))
-      .filter((r): r is typeof result[0] => r !== undefined);
-
-    return orderedAlbums.map((r) =>
+    return result.map((r) =>
       AlbumMapper.toDomain({
         ...r.album,
         artist: r.artistName ? { name: r.artistName } : undefined,
