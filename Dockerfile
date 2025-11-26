@@ -27,18 +27,16 @@ COPY server/prisma.config.ts ./server/prisma.config.ts
 # Install ALL dependencies (frontend + backend) in one go
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma Client
-WORKDIR /build/server
-RUN pnpm db:generate
-
 # Build Frontend
 WORKDIR /build/frontend
 COPY frontend/ ./
 RUN pnpm build
 
-# Build Backend
+# Build Backend - IMPORTANT: Copy source BEFORE generating Prisma client
+# Otherwise COPY overwrites the generated src/generated/prisma/ folder
 WORKDIR /build/server
 COPY server/ ./
+RUN pnpm db:generate
 RUN pnpm build
 
 # Copy generated Prisma client to dist (required for runtime imports)
