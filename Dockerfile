@@ -89,9 +89,11 @@ RUN pnpm --filter=echo-server-backend deploy --prod --legacy /app
 # Switch to final app directory
 WORKDIR /app
 
-# Copy Prisma schema and generate client for production
-# Using --schema flag avoids needing prisma.config.ts which requires devDependencies
+# Copy Prisma schema and production config
 COPY --chown=echoapp:nodejs server/prisma ./prisma
+COPY --chown=echoapp:nodejs server/prisma.config.production.ts ./prisma.config.ts
+
+# Generate Prisma client for production
 RUN npx prisma@7 generate --schema=./prisma/schema.prisma
 
 # Copy built files from builder stage
