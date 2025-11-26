@@ -28,6 +28,15 @@ export class IcyMetadataService {
   subscribe(stationUuid: string, streamUrl: string): EventEmitter {
     const emitter = new EventEmitter();
 
+    // CRITICAL: Add a default error handler to prevent Node.js from crashing
+    // when an error is emitted without a listener. The client can override this
+    // by adding their own error handler.
+    emitter.on('error', (error: Error) => {
+      this.logger.debug(
+        `Unhandled error for subscriber ${stationUuid}: ${error.message}`,
+      );
+    });
+
     // Add listener to tracking
     if (!this.streamListeners.has(stationUuid)) {
       this.streamListeners.set(stationUuid, new Set());
@@ -67,6 +76,13 @@ export class IcyMetadataService {
   }
 
   /**
+   * Check if URL is HTTPS
+   */
+  private isHttpsUrl(url: string): boolean {
+    return url.toLowerCase().startsWith('https://');
+  }
+
+  /**
    * Create ICY metadata parser for stream
    */
   private createStreamParser(stationUuid: string, streamUrl: string): void {
@@ -75,23 +91,52 @@ export class IcyMetadataService {
     try {
       this.logger.log(`Creating ICY parser for ${stationUuid}: ${streamUrl}`);
 
+      // For HTTPS streams, we need to handle SSL certificate issues gracefully
+      // Many radio streams use self-signed or invalid certificates
+      const isHttps = this.isHttpsUrl(streamUrl);
+      if (isHttps) {
+        this.logger.debug(
+          `Stream ${stationUuid} uses HTTPS - SSL certificate errors may occur`,
+        );
+      }
+
       radioStation = new IcecastParser({
         url: streamUrl,
         keepListen: false, // Don't keep listening after metadata
         autoUpdate: true, // Automatically update metadata
         notifyOnChangeOnly: true, // Only emit when metadata changes
+        errorInterval: 30, // Retry after 30 seconds on error (default is 600)
       });
 
       // CRITICAL: Register error handler IMMEDIATELY before any other operations
       // This prevents unhandled error events from crashing the server
       const errorHandler = (error: Error) => {
-        this.logger.error(
-          `ICY parser error for ${stationUuid}: ${error.message}`,
-        );
-        // Emit error to all listeners
+        // Provide better context for SSL-related errors
+        const isSslError =
+          error.message.includes('certificate') ||
+          error.message.includes('SSL') ||
+          error.message.includes('TLS') ||
+          error.message.includes('CERT_');
+
+        if (isSslError && isHttps) {
+          this.logger.warn(
+            `SSL certificate error for ${stationUuid} (${streamUrl}): ${error.message}. ` +
+              `This stream uses HTTPS with an untrusted certificate. Metadata will not be available.`,
+          );
+        } else {
+          this.logger.error(
+            `ICY parser error for ${stationUuid}: ${error.message}`,
+          );
+        }
+
+        // Emit error to all listeners (safely - listeners have default handlers)
         this.broadcastError(stationUuid, error);
+
         // Close stream on error to prevent resource leaks
-        this.closeStream(stationUuid);
+        // For SSL errors, don't retry as it will keep failing
+        if (isSslError) {
+          this.closeStream(stationUuid);
+        }
       };
 
       radioStation.on('error', errorHandler);
