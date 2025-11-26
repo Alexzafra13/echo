@@ -63,12 +63,14 @@ COPY server/package.json ./server/
 RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod && \
     rm -rf ~/.pnpm-store ~/.npm /tmp/*
 
-# Generate Prisma client in the deployed directory
+# Generate Prisma client (without config file to avoid parse errors)
 COPY server/prisma /prod/prisma
-COPY server/prisma.config.production.js /prod/prisma.config.js
 WORKDIR /prod
 RUN npx prisma@7 generate --schema=./prisma/schema.prisma && \
     rm -rf ~/.npm /tmp/*
+
+# Now copy the config file for runtime migrations (ESM format)
+COPY server/prisma.config.production.mjs /prod/prisma.config.mjs
 
 # ----------------------------------------
 # Stage 3: Minimal Production Runtime
@@ -109,7 +111,7 @@ COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
 # Copy Prisma schema and production config (for migrations at runtime)
 COPY --from=deps --chown=echoapp:nodejs /prod/prisma ./prisma
-COPY --from=deps --chown=echoapp:nodejs /prod/prisma.config.js ./prisma.config.js
+COPY --from=deps --chown=echoapp:nodejs /prod/prisma.config.mjs ./prisma.config.mjs
 
 # Copy built application files
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
