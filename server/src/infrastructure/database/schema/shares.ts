@@ -40,7 +40,7 @@ export const bookmarks = pgTable(
     userId: varchar('user_id', { length: 36 }).notNull(),
     itemId: varchar('item_id', { length: 36 }).notNull(),
     itemType: varchar('item_type', { length: 50 }).notNull(),
-    position: bigint('position', { mode: 'bigint' }).notNull(),
+    position: bigint('position', { mode: 'number' }).notNull(),
     comment: varchar('comment', { length: 512 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
