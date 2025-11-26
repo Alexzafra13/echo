@@ -102,10 +102,12 @@ export class CleanupService {
         try {
           const deletedArtistImages = await this.drizzle.db
             .delete(customArtistImages)
-            .where(eq(customArtistImages.isActive, false));
+            .where(eq(customArtistImages.isActive, false))
+            .returning();
           const deletedAlbumCovers = await this.drizzle.db
             .delete(customAlbumCovers)
-            .where(eq(customAlbumCovers.isActive, false));
+            .where(eq(customAlbumCovers.isActive, false))
+            .returning();
           this.logger.log(
             `Deleted inactive records: ${deletedArtistImages.length} artist images, ${deletedAlbumCovers.length} album covers`
           );

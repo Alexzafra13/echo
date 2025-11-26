@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { CacheModule } from '@infrastructure/cache/cache.module';
 import { TracksController } from './presentation/controller/tracks.controller';
 import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase } from './domain/use-cases';
-import { PrismaTrackRepository } from './infrastructure/persistence/track.repository';
+import { DrizzleTrackRepository } from './infrastructure/persistence/track.repository';
 import { CachedTrackRepository } from './infrastructure/persistence/cached-track.repository';
 import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
 
@@ -16,7 +15,6 @@ import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
  * - Presentation Layer: Controller, DTOs
  *
  * Responsabilidades:
- * - Importar dependencias globales (Prisma, Cache)
  * - Registrar providers (use cases, repositorio)
  * - Exportar controllers
  *
@@ -24,13 +22,14 @@ import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
  * - Usa CachedTrackRepository (Decorator Pattern)
  * - Transparente para el dominio
  * - Configurable con ENABLE_CACHE
+ *
+ * DrizzleService is provided globally via DrizzleModule
  */
 
 const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
 
 @Module({
   imports: [
-    PrismaModule,
     CacheModule,
   ],
   controllers: [TracksController],
@@ -41,13 +40,13 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     SearchTracksUseCase,
 
     // Repositories
-    PrismaTrackRepository,
+    DrizzleTrackRepository,
     CachedTrackRepository,
 
     // Implementación del port - CONFIGURABLE
     {
       provide: TRACK_REPOSITORY,
-      useClass: USE_CACHE ? CachedTrackRepository : PrismaTrackRepository,
+      useClass: USE_CACHE ? CachedTrackRepository : DrizzleTrackRepository,
     },
   ],
   exports: [TRACK_REPOSITORY],

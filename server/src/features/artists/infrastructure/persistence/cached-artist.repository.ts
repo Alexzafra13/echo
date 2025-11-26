@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
-import { PrismaArtistRepository } from './artist.repository';
+import { DrizzleArtistRepository } from './artist.repository';
 
 @Injectable()
 export class CachedArtistRepository implements IArtistRepository {
@@ -10,7 +10,7 @@ export class CachedArtistRepository implements IArtistRepository {
   private readonly KEY_PREFIX = 'artist:';
 
   constructor(
-    private readonly baseRepository: PrismaArtistRepository,
+    private readonly baseRepository: DrizzleArtistRepository,
     private readonly cache: RedisService,
   ) {}
 

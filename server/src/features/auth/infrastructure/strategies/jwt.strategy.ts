@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { TokenPayload } from '../../domain/ports/token-service.port';
-import { PrismaUserRepository } from '../persistence/user.repository';
+import { DrizzleUserRepository } from '../persistence/user.repository';
 
 /**
  * JwtStrategy - Estrategia de Passport para validar JWT
@@ -12,7 +12,7 @@ import { PrismaUserRepository } from '../persistence/user.repository';
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly userRepository: PrismaUserRepository) {
+  constructor(private readonly userRepository: DrizzleUserRepository) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,

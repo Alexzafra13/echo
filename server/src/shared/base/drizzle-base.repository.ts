@@ -1,12 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { PgTableWithColumns } from 'drizzle-orm/pg-core';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-
-export interface EntityMapper<TDomain, TPersistence = any> {
-  toDomain(raw: TPersistence): TDomain;
-  toDomainArray(raw: TPersistence[]): TDomain[];
-  toPersistence?(entity: TDomain): TPersistence;
-}
+import { EntityMapper } from './base.repository';
 
 export abstract class DrizzleBaseRepository<TDomain, TPersistence = any> {
   protected abstract readonly drizzle: DrizzleService;

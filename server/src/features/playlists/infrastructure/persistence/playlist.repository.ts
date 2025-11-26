@@ -82,7 +82,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
   }
 
   async create(playlist: Playlist): Promise<Playlist> {
-    const data = PlaylistMapper.toPrisma(playlist);
+    const data = PlaylistMapper.toPersistence(playlist);
 
     const result = await this.drizzle.db
       .insert(playlists)
@@ -138,7 +138,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
 
   // PlaylistTrack management
   async addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack> {
-    const data = PlaylistMapper.playlistTrackToPrisma(playlistTrack);
+    const data = PlaylistMapper.playlistTrackToPersistence(playlistTrack);
 
     const result = await this.drizzle.db
       .insert(playlistTracks)

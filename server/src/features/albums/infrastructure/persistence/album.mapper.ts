@@ -36,6 +36,12 @@ export class AlbumMapper {
    */
   static toPersistence(album: Album) {
     const primitives = album.toPrimitives();
+    // Convert Date to ISO string for Drizzle date column
+    const releaseDate = primitives.releaseDate
+      ? (primitives.releaseDate instanceof Date
+          ? primitives.releaseDate.toISOString().split('T')[0]
+          : primitives.releaseDate)
+      : null;
     return {
       id: primitives.id,
       name: primitives.name,
@@ -43,7 +49,7 @@ export class AlbumMapper {
       albumArtistId: primitives.albumArtistId || null,
       coverArtPath: primitives.coverArtPath || null,
       year: primitives.year || null,
-      releaseDate: primitives.releaseDate || null,
+      releaseDate,
       compilation: primitives.compilation,
       songCount: primitives.songCount,
       duration: primitives.duration,

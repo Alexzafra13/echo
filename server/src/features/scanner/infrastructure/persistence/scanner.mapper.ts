@@ -1,40 +1,39 @@
-import { LibraryScan as PrismaLibraryScan } from '../../../../generated/prisma';
 import { LibraryScan } from '../../domain/entities/library-scan.entity';
 
 /**
- * ScannerMapper - Convierte entre entidad del dominio y modelo de Prisma
+ * ScannerMapper - Convierte entre entidad del dominio y modelo de BD
  *
  * Responsabilidades:
- * - Convertir de Prisma → Domain
- * - Convertir de Domain → Prisma
+ * - Convertir de DB → Domain
+ * - Convertir de Domain → DB
  * - Mantener separación entre capas
  */
 export class ScannerMapper {
   /**
-   * Convierte de modelo Prisma a entidad del dominio
+   * Convierte de registro de BD a entidad del dominio
    */
-  static toDomain(prismaModel: PrismaLibraryScan): LibraryScan {
+  static toDomain(raw: any): LibraryScan {
     return LibraryScan.fromPrimitives({
-      id: prismaModel.id,
-      status: prismaModel.status as any,
-      startedAt: prismaModel.startedAt,
-      finishedAt: prismaModel.finishedAt || undefined,
-      tracksAdded: prismaModel.tracksAdded,
-      tracksUpdated: prismaModel.tracksUpdated,
-      tracksDeleted: prismaModel.tracksDeleted,
-      errorMessage: prismaModel.errorMessage || undefined,
+      id: raw.id,
+      status: raw.status as any,
+      startedAt: raw.startedAt,
+      finishedAt: raw.finishedAt || undefined,
+      tracksAdded: raw.tracksAdded,
+      tracksUpdated: raw.tracksUpdated,
+      tracksDeleted: raw.tracksDeleted,
+      errorMessage: raw.errorMessage || undefined,
     });
   }
 
   /**
-   * Convierte array de Prisma a array de dominio
+   * Convierte array de BD a array de dominio
    */
-  static toDomainArray(prismaModels: PrismaLibraryScan[]): LibraryScan[] {
-    return prismaModels.map((model) => this.toDomain(model));
+  static toDomainArray(raw: any[]): LibraryScan[] {
+    return raw.map((item) => this.toDomain(item));
   }
 
   /**
-   * Convierte de entidad del dominio a modelo de Prisma
+   * Convierte de entidad del dominio a modelo de BD
    */
   static toPersistence(domain: LibraryScan): any {
     const primitives = domain.toPrimitives();

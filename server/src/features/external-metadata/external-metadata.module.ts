@@ -41,8 +41,7 @@ import { MusicBrainzSearchController } from './presentation/musicbrainz-search.c
 import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
-// Shared
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
+// DrizzleService is provided globally via DrizzleModule
 
 /**
  * External Metadata Module
@@ -75,7 +74,6 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 @Module({
   imports: [
     ConfigModule,
-    PrismaModule,
   ],
   providers: [
     // Core services

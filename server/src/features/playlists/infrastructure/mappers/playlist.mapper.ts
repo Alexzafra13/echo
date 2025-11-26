@@ -1,8 +1,7 @@
-import { Playlist as PrismaPlaylist, PlaylistTrack as PrismaPlaylistTrack } from '../../../../generated/prisma';
 import { Playlist, PlaylistTrack } from '../../domain/entities';
 
 export class PlaylistMapper {
-  static toDomain(raw: PrismaPlaylist): Playlist {
+  static toDomain(raw: any): Playlist {
     return Playlist.fromPrimitives({
       id: raw.id,
       name: raw.name,
@@ -20,11 +19,11 @@ export class PlaylistMapper {
     });
   }
 
-  static toDomainArray(raws: PrismaPlaylist[]): Playlist[] {
+  static toDomainArray(raws: any[]): Playlist[] {
     return raws.map((raw) => this.toDomain(raw));
   }
 
-  static toPrisma(playlist: Playlist): PrismaPlaylist {
+  static toPersistence(playlist: Playlist): any {
     const props = playlist.toPrimitives();
     return {
       id: props.id,
@@ -32,7 +31,7 @@ export class PlaylistMapper {
       description: props.description ?? null,
       coverImageUrl: props.coverImageUrl ?? null,
       duration: props.duration,
-      size: props.size,
+      size: typeof props.size === 'bigint' ? props.size : BigInt(props.size),
       ownerId: props.ownerId,
       public: props.public,
       songCount: props.songCount,
@@ -43,7 +42,7 @@ export class PlaylistMapper {
     };
   }
 
-  static playlistTrackToDomain(raw: PrismaPlaylistTrack): PlaylistTrack {
+  static playlistTrackToDomain(raw: any): PlaylistTrack {
     return PlaylistTrack.fromPrimitives({
       id: raw.id,
       playlistId: raw.playlistId,
@@ -53,7 +52,7 @@ export class PlaylistMapper {
     });
   }
 
-  static playlistTrackToPrisma(playlistTrack: PlaylistTrack): PrismaPlaylistTrack {
+  static playlistTrackToPersistence(playlistTrack: PlaylistTrack): any {
     const props = playlistTrack.toPrimitives();
     return {
       id: props.id,

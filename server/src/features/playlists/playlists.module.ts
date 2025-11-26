@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TracksModule } from '@features/tracks/tracks.module';
 import { AuthModule } from '@features/auth/auth.module';
 import { PLAYLIST_REPOSITORY } from './domain/ports';
-import { PrismaPlaylistRepository } from './infrastructure/persistence/playlist.repository';
+import { DrizzlePlaylistRepository } from './infrastructure/persistence/playlist.repository';
 import {
   CreatePlaylistUseCase,
   GetPlaylistUseCase,
@@ -26,7 +26,7 @@ import { PlaylistsController } from './presentation/controller/playlists.control
   providers: [
     {
       provide: PLAYLIST_REPOSITORY,
-      useClass: PrismaPlaylistRepository, // Uses Drizzle internally
+      useClass: DrizzlePlaylistRepository,
     },
     CreatePlaylistUseCase,
     GetPlaylistUseCase,
