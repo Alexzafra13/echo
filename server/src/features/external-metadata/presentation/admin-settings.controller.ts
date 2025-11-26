@@ -582,4 +582,61 @@ export class AdminSettingsController {
       throw error;
     }
   }
+
+  /**
+   * Recarga todos los agentes de metadata externos
+   * POST /api/admin/settings/agents/reload
+   */
+  @Post('agents/reload')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reload all metadata agents',
+    description: 'Reloads settings for all external metadata agents (Fanart.tv, Last.fm). Use this after updating API keys.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Agents reloaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+        agents: {
+          type: 'object',
+          properties: {
+            fanart: { type: 'object', properties: { enabled: { type: 'boolean' } } },
+            lastfm: { type: 'object', properties: { enabled: { type: 'boolean' } } },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async reloadAgents() {
+    try {
+      // Clear settings cache first to pick up new values
+      this.settingsService.clearCache();
+
+      // Reload all agents
+      await this.fanartAgent.loadSettings();
+      await this.lastfmAgent.loadSettings();
+
+      const fanartEnabled = this.fanartAgent.isEnabled();
+      const lastfmEnabled = this.lastfmAgent.isEnabled();
+
+      this.logger.log(`Agents reloaded - Fanart.tv: ${fanartEnabled}, Last.fm: ${lastfmEnabled}`);
+
+      return {
+        success: true,
+        message: 'All metadata agents reloaded successfully',
+        agents: {
+          fanart: { enabled: fanartEnabled },
+          lastfm: { enabled: lastfmEnabled },
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error reloading agents: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
 }
