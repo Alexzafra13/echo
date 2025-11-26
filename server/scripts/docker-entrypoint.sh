@@ -83,7 +83,8 @@ echo ""
 # ============================================
 echo "🔄 Running database migrations..."
 
-if npx prisma@7 migrate deploy --schema=./prisma/schema.prisma; then
+# Prisma 7 requires explicit datasource URL for migrate deploy
+if npx prisma@7 migrate deploy --schema=./prisma/schema.prisma --datasource-url="$DATABASE_URL"; then
   echo "✅ Database migrations completed!"
 
   # Seed database with default settings (idempotent)
