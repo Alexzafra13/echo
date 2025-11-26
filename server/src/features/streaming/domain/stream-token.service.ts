@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, lt, gte, and } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { streamTokens, users } from '@infrastructure/database/schema';
 import { randomBytes } from 'crypto';
 
 @Injectable()
 export class StreamTokenService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   /**
    * Generate a new stream token for a user
@@ -19,18 +21,18 @@ export class StreamTokenService {
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     // Delete any existing tokens for this user (only one token per user)
-    await this.prisma.streamToken.deleteMany({
-      where: { userId },
-    });
+    await this.drizzle.db
+      .delete(streamTokens)
+      .where(eq(streamTokens.userId, userId));
 
     // Create new token
-    await this.prisma.streamToken.create({
-      data: {
+    await this.drizzle.db
+      .insert(streamTokens)
+      .values({
         userId,
         token,
         expiresAt,
-      },
-    });
+      });
 
     return { token, expiresAt };
   }
@@ -40,21 +42,29 @@ export class StreamTokenService {
    * Returns null if token is invalid or expired
    */
   async validateToken(token: string): Promise<string | null> {
-    const streamToken = await this.prisma.streamToken.findUnique({
-      where: { token },
-      include: { user: true },
-    });
+    // Get token with user info
+    const result = await this.drizzle.db
+      .select({
+        token: streamTokens,
+        user: users,
+      })
+      .from(streamTokens)
+      .leftJoin(users, eq(streamTokens.userId, users.id))
+      .where(eq(streamTokens.token, token))
+      .limit(1);
 
-    if (!streamToken) {
+    const streamToken = result[0];
+
+    if (!streamToken || !streamToken.user) {
       return null;
     }
 
     // Check if token is expired
-    if (streamToken.expiresAt < new Date()) {
+    if (streamToken.token.expiresAt < new Date()) {
       // Delete expired token
-      await this.prisma.streamToken.delete({
-        where: { id: streamToken.id },
-      });
+      await this.drizzle.db
+        .delete(streamTokens)
+        .where(eq(streamTokens.id, streamToken.token.id));
       return null;
     }
 
@@ -64,24 +74,30 @@ export class StreamTokenService {
     }
 
     // Update last used timestamp
-    await this.prisma.streamToken.update({
-      where: { id: streamToken.id },
-      data: { lastUsedAt: new Date() },
-    });
+    await this.drizzle.db
+      .update(streamTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(streamTokens.id, streamToken.token.id));
 
-    return streamToken.userId;
+    return streamToken.token.userId;
   }
 
   /**
    * Get current token for a user
    */
   async getUserToken(userId: string): Promise<{ token: string; expiresAt: Date } | null> {
-    const streamToken = await this.prisma.streamToken.findFirst({
-      where: {
-        userId,
-        expiresAt: { gte: new Date() },
-      },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(streamTokens)
+      .where(
+        and(
+          eq(streamTokens.userId, userId),
+          gte(streamTokens.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+
+    const streamToken = result[0];
 
     if (!streamToken) {
       return null;
@@ -97,21 +113,20 @@ export class StreamTokenService {
    * Revoke token for a user
    */
   async revokeToken(userId: string): Promise<void> {
-    await this.prisma.streamToken.deleteMany({
-      where: { userId },
-    });
+    await this.drizzle.db
+      .delete(streamTokens)
+      .where(eq(streamTokens.userId, userId));
   }
 
   /**
    * Clean up expired tokens (can be run as a cron job)
    */
   async cleanupExpiredTokens(): Promise<number> {
-    const result = await this.prisma.streamToken.deleteMany({
-      where: {
-        expiresAt: { lt: new Date() },
-      },
-    });
+    const result = await this.drizzle.db
+      .delete(streamTokens)
+      .where(lt(streamTokens.expiresAt, new Date()))
+      .returning();
 
-    return result.count;
+    return result.length;
   }
 }

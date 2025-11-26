@@ -1,36 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, and, gte, lte, desc, count } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { systemLogs } from '@infrastructure/database/schema';
 
 /**
- * Niveles de severidad de logs
+ * Log severity levels
  */
 export enum LogLevel {
-  CRITICAL = 'critical', // Errores críticos que requieren atención inmediata
-  ERROR = 'error',       // Errores que afectan funcionalidad
-  WARNING = 'warning',   // Advertencias que no bloquean operación
-  INFO = 'info',         // Información general
-  DEBUG = 'debug',       // Información de debugging
+  CRITICAL = 'critical', // Critical errors requiring immediate attention
+  ERROR = 'error',       // Errors affecting functionality
+  WARNING = 'warning',   // Warnings that don't block operation
+  INFO = 'info',         // General information
+  DEBUG = 'debug',       // Debugging information
 }
 
 /**
- * Categorías de logs para facilitar filtrado
+ * Log categories for filtering
  */
 export enum LogCategory {
-  SCANNER = 'scanner',         // Escaneo de biblioteca
-  METADATA = 'metadata',       // Enriquecimiento de metadata
-  AUTH = 'auth',              // Autenticación y autorización
-  API = 'api',                // Requests HTTP
-  STORAGE = 'storage',        // Operaciones de almacenamiento
-  CLEANUP = 'cleanup',        // Limpieza de archivos huérfanos
-  STREAM = 'stream',          // Streaming de audio
-  DATABASE = 'database',      // Operaciones de base de datos
-  CACHE = 'cache',            // Operaciones de caché
-  EXTERNAL_API = 'external',  // Llamadas a APIs externas
+  SCANNER = 'scanner',         // Library scanning
+  METADATA = 'metadata',       // Metadata enrichment
+  AUTH = 'auth',              // Authentication and authorization
+  API = 'api',                // HTTP requests
+  STORAGE = 'storage',        // Storage operations
+  CLEANUP = 'cleanup',        // Orphan file cleanup
+  STREAM = 'stream',          // Audio streaming
+  DATABASE = 'database',      // Database operations
+  CACHE = 'cache',            // Cache operations
+  EXTERNAL_API = 'external',  // External API calls
 }
 
 /**
- * Interface para metadata adicional de logs
+ * Interface for additional log metadata
  */
 export interface LogMetadata {
   userId?: string;
@@ -39,18 +41,18 @@ export interface LogMetadata {
   requestId?: string;
   ipAddress?: string;
   userAgent?: string;
-  [key: string]: any; // Permitir campos adicionales
+  [key: string]: any; // Allow additional fields
 }
 
 /**
  * LogService
  *
- * Servicio centralizado para logging de la aplicación con:
- * - Niveles de severidad
- * - Categorización
- * - Almacenamiento en BD (logs críticos/errores)
- * - Logging a consola
- * - Metadata enriquecida
+ * Centralized logging service with:
+ * - Severity levels
+ * - Categorization
+ * - DB storage (critical/error logs)
+ * - Console logging
+ * - Enriched metadata
  */
 @Injectable()
 export class LogService {
@@ -59,17 +61,17 @@ export class LogService {
     LogLevel.CRITICAL,
     LogLevel.ERROR,
     LogLevel.WARNING,
-    LogLevel.INFO, // Now persisting INFO logs too
+    LogLevel.INFO,
   ]);
 
   constructor(
     @InjectPinoLogger(LogService.name)
     private readonly logger: PinoLogger,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
   ) {}
 
   /**
-   * Log crítico - Requiere atención inmediata
+   * Critical log - Requires immediate attention
    */
   async critical(
     category: LogCategory,
@@ -81,7 +83,7 @@ export class LogService {
   }
 
   /**
-   * Log de error
+   * Error log
    */
   async error(
     category: LogCategory,
@@ -93,7 +95,7 @@ export class LogService {
   }
 
   /**
-   * Log de advertencia
+   * Warning log
    */
   async warning(
     category: LogCategory,
@@ -104,7 +106,7 @@ export class LogService {
   }
 
   /**
-   * Log informativo
+   * Info log
    */
   async info(
     category: LogCategory,
@@ -115,7 +117,7 @@ export class LogService {
   }
 
   /**
-   * Log de debug
+   * Debug log
    */
   async debug(
     category: LogCategory,
@@ -126,7 +128,7 @@ export class LogService {
   }
 
   /**
-   * Método principal de logging
+   * Main logging method
    */
   private async log(
     level: LogLevel,
@@ -136,21 +138,21 @@ export class LogService {
     error?: Error,
   ): Promise<void> {
     try {
-      // 1. Logging a consola (siempre)
+      // 1. Console logging (always)
       this.logToConsole(level, category, message, metadata, error);
 
-      // 2. Persistir en BD solo logs importantes (critical, error, warning)
+      // 2. Persist to DB only important logs (critical, error, warning)
       if (this.PERSIST_LEVELS.has(level)) {
         await this.persistLog(level, category, message, metadata, error);
       }
     } catch (logError) {
-      // No queremos que fallos en logging rompan la app
+      // Don't let logging failures break the app
       this.logger.error({ error: logError }, 'Failed to log message');
     }
   }
 
   /**
-   * Logging a consola usando Pino logger
+   * Console logging using Pino logger
    */
   private logToConsole(
     level: LogLevel,
@@ -183,7 +185,7 @@ export class LogService {
   }
 
   /**
-   * Persistir log en base de datos
+   * Persist log to database
    */
   private async persistLog(
     level: LogLevel,
@@ -193,11 +195,12 @@ export class LogService {
     error?: Error,
   ): Promise<void> {
     try {
-      // Preparar detalles como JSON
+      // Prepare details as JSON
       const details = metadata ? JSON.stringify(metadata, null, 2) : null;
 
-      await this.prisma.systemLog.create({
-        data: {
+      await this.drizzle.db
+        .insert(systemLogs)
+        .values({
           level,
           category,
           message,
@@ -209,16 +212,15 @@ export class LogService {
           ipAddress: metadata?.ipAddress,
           userAgent: metadata?.userAgent,
           stackTrace: error?.stack,
-        },
-      });
+        });
     } catch (dbError) {
-      // Fallback a consola si falla BD
+      // Fallback to console if DB fails
       this.logger.error({ error: dbError }, 'Failed to persist log to database');
     }
   }
 
   /**
-   * Obtener logs con filtros
+   * Get logs with filters
    */
   async getLogs(params: {
     level?: LogLevel;
@@ -241,38 +243,41 @@ export class LogService {
       offset = 0,
     } = params;
 
-    const where: any = {};
+    // Build conditions array
+    const conditions = [];
+    if (level) conditions.push(eq(systemLogs.level, level));
+    if (category) conditions.push(eq(systemLogs.category, category));
+    if (userId) conditions.push(eq(systemLogs.userId, userId));
+    if (entityId) conditions.push(eq(systemLogs.entityId, entityId));
+    if (startDate) conditions.push(gte(systemLogs.createdAt, startDate));
+    if (endDate) conditions.push(lte(systemLogs.createdAt, endDate));
 
-    if (level) where.level = level;
-    if (category) where.category = category;
-    if (userId) where.userId = userId;
-    if (entityId) where.entityId = entityId;
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = startDate;
-      if (endDate) where.createdAt.lte = endDate;
-    }
+    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [logs, total] = await Promise.all([
-      this.prisma.systemLog.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: Math.min(limit, 500), // Máximo 500
-        skip: offset,
-      }),
-      this.prisma.systemLog.count({ where }),
+    const [logs, totalResult] = await Promise.all([
+      this.drizzle.db
+        .select()
+        .from(systemLogs)
+        .where(whereCondition)
+        .orderBy(desc(systemLogs.createdAt))
+        .limit(Math.min(limit, 500)) // Max 500
+        .offset(offset),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(systemLogs)
+        .where(whereCondition),
     ]);
 
     return {
       logs,
-      total,
+      total: totalResult[0]?.count ?? 0,
       limit,
       offset,
     };
   }
 
   /**
-   * Obtener estadísticas de logs
+   * Get log statistics
    */
   async getLogStats(params?: {
     startDate?: Date;
@@ -282,55 +287,59 @@ export class LogService {
     byLevel: Record<string, number>;
     byCategory: Record<string, number>;
   }> {
-    const where: any = {};
+    const conditions = [];
+    if (params?.startDate) conditions.push(gte(systemLogs.createdAt, params.startDate));
+    if (params?.endDate) conditions.push(lte(systemLogs.createdAt, params.endDate));
 
-    if (params?.startDate || params?.endDate) {
-      where.createdAt = {};
-      if (params.startDate) where.createdAt.gte = params.startDate;
-      if (params.endDate) where.createdAt.lte = params.endDate;
-    }
+    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [totalLogs, byLevel, byCategory] = await Promise.all([
-      this.prisma.systemLog.count({ where }),
-      this.prisma.systemLog.groupBy({
-        by: ['level'],
-        where,
-        _count: true,
-      }),
-      this.prisma.systemLog.groupBy({
-        by: ['category'],
-        where,
-        _count: true,
-      }),
+    const [totalResult, byLevelResult, byCategoryResult] = await Promise.all([
+      this.drizzle.db
+        .select({ count: count() })
+        .from(systemLogs)
+        .where(whereCondition),
+      this.drizzle.db
+        .select({
+          level: systemLogs.level,
+          count: count(),
+        })
+        .from(systemLogs)
+        .where(whereCondition)
+        .groupBy(systemLogs.level),
+      this.drizzle.db
+        .select({
+          category: systemLogs.category,
+          count: count(),
+        })
+        .from(systemLogs)
+        .where(whereCondition)
+        .groupBy(systemLogs.category),
     ]);
 
     return {
-      totalLogs,
-      byLevel: Object.fromEntries(byLevel.map((g) => [g.level, g._count])),
-      byCategory: Object.fromEntries(byCategory.map((g) => [g.category, g._count])),
+      totalLogs: totalResult[0]?.count ?? 0,
+      byLevel: Object.fromEntries(byLevelResult.map((g) => [g.level, g.count])),
+      byCategory: Object.fromEntries(byCategoryResult.map((g) => [g.category, g.count])),
     };
   }
 
   /**
-   * Limpiar logs antiguos (mantener solo últimos N días)
+   * Clean up old logs (keep only last N days)
    */
   async cleanupOldLogs(daysToKeep: number = 30): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-    const result = await this.prisma.systemLog.deleteMany({
-      where: {
-        createdAt: {
-          lt: cutoffDate,
-        },
-      },
-    });
+    const result = await this.drizzle.db
+      .delete(systemLogs)
+      .where(lte(systemLogs.createdAt, cutoffDate))
+      .returning();
 
     this.logger.info(
-      { count: result.count, daysToKeep, cutoffDate },
+      { count: result.length, daysToKeep, cutoffDate },
       'Cleaned up old logs',
     );
 
-    return result.count;
+    return result.length;
   }
 }
