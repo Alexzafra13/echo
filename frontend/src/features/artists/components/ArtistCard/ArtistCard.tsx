@@ -13,12 +13,12 @@ import styles from './ArtistCard.module.css';
  * />
  *
  * Note: Avatar URL is generated dynamically from ImageService API.
- * Tag-based cache busting happens via WebSocket sync in ArtistsPage.
+ * Uses updatedAt timestamp for cache-busting to ensure images sync with detail view.
  */
 export function ArtistCard({ artist, onClick }: ArtistCardProps) {
-  // Use dynamic URL generation (V2 system)
+  // Use dynamic URL generation (V2 system) with cache-busting timestamp
   // ImageService will prioritize: custom > local > external
-  const avatarUrl = getArtistAvatarUrl(artist.id);
+  const avatarUrl = getArtistAvatarUrl(artist.id, artist.updatedAt);
   const initials = getArtistInitials(artist.name);
 
   return (
