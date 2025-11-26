@@ -52,16 +52,18 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
   }
 
   async search(name: string, skip: number, take: number): Promise<Playlist[]> {
-    const result = await this.drizzle.db.execute(sql`
-      SELECT *
-      FROM playlists
-      WHERE name % ${name}
-      ORDER BY similarity(name, ${name}) DESC, name ASC
-      LIMIT ${take}
-      OFFSET ${skip}
-    `);
+    // Use ILIKE for case-insensitive search with wildcards
+    const searchPattern = `%${name}%`;
 
-    return PlaylistMapper.toDomainArray(result.rows as any[]);
+    const result = await this.drizzle.db
+      .select()
+      .from(playlists)
+      .where(sql`${playlists.name} ILIKE ${searchPattern}`)
+      .orderBy(playlists.name)
+      .offset(skip)
+      .limit(take);
+
+    return PlaylistMapper.toDomainArray(result);
   }
 
   async count(): Promise<number> {
