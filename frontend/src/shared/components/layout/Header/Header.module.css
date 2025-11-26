@@ -1,5 +1,20 @@
 /* Header Component Styles - BEM Naming Convention */
 
+/* Header Wrapper - Contains header + search panel as one sticky unit */
+.headerWrapper {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky, 1020);
+  /* This wrapper makes header + search panel move together */
+}
+
+/* When inside wrapper, header is not sticky (wrapper handles it) */
+.headerWrapper .header {
+  position: relative;
+  top: auto;
+  z-index: auto;
+}
+
 /* Block: header */
 .header {
   position: sticky;
