@@ -162,16 +162,19 @@ export class SetupService {
    * Create admin account (step 1 of wizard)
    */
   async createAdmin(username: string, password: string, email?: string): Promise<void> {
-    // Verify setup is not completed
-    const state = await this.getSetupState();
-    if (state.completed) {
-      throw new BadRequestException('Setup already completed. Use admin panel to manage users.');
-    }
+    // Check if admin already exists
+    const [state, existingAdmin] = await Promise.all([
+      this.getSetupState(),
+      this.hasAdminUser(),
+    ]);
 
-    // Verify no admin exists
-    const existingAdmin = await this.hasAdminUser();
+    // Block if admin already exists
     if (existingAdmin) {
-      throw new BadRequestException('Admin user already exists.');
+      throw new BadRequestException(
+        state.completed
+          ? 'Setup already completed. Use admin panel to manage users.'
+          : 'Admin user already exists.'
+      );
     }
 
     // Validate password strength
@@ -205,9 +208,14 @@ export class SetupService {
    * Configure music library path (step 2 of wizard)
    */
   async configureMusicLibrary(libraryPath: string): Promise<{ valid: boolean; message: string; fileCount?: number }> {
-    // Verify setup is not completed
-    const state = await this.getSetupState();
-    if (state.completed) {
+    // Check if setup is truly complete (completed AND admin exists)
+    const [state, hasAdmin] = await Promise.all([
+      this.getSetupState(),
+      this.hasAdminUser(),
+    ]);
+
+    // Only block if setup is truly complete
+    if (state.completed && hasAdmin) {
       throw new BadRequestException('Setup already completed. Use admin panel to change settings.');
     }
 
@@ -386,14 +394,17 @@ export class SetupService {
    * Complete setup (step 3 of wizard)
    */
   async completeSetup(): Promise<{ success: boolean; message: string }> {
-    const state = await this.getSetupState();
+    const [state, hasAdmin] = await Promise.all([
+      this.getSetupState(),
+      this.hasAdminUser(),
+    ]);
 
-    if (state.completed) {
+    // If setup is truly complete (completed AND has admin), return success
+    if (state.completed && hasAdmin) {
       return { success: true, message: 'Setup was already completed.' };
     }
 
     // Verify admin exists
-    const hasAdmin = await this.hasAdminUser();
     if (!hasAdmin) {
       throw new BadRequestException('Cannot complete setup: No admin user created.');
     }
