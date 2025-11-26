@@ -1,5 +1,4 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { IArtistBioRetriever, IArtistImageRetriever } from '../../domain/interfaces';
 import { ArtistBio, ArtistImages } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
@@ -28,7 +27,6 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
 
   constructor(
     private readonly rateLimiter: RateLimiterService,
-    private readonly config: ConfigService,
     private readonly settingsService: SettingsService,
   ) {}
 
@@ -37,23 +35,22 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
   }
 
   /**
-   * Load settings from database first, then fallback to .env
+   * Load settings from database
+   * Note: Frontend uses 'metadata.lastfm.api_key' format
    */
   async loadSettings(): Promise<void> {
-    // Priority: DB setting > ENV fallback
-    const dbApiKey = await this.settingsService.getString('api.lastfm.api_key', '');
-    const envApiKey = this.config.get<string>('LASTFM_API_KEY', '');
-    this.apiKey = dbApiKey || envApiKey;
+    // Check both key formats (frontend uses metadata.X, legacy uses api.X)
+    this.apiKey = await this.settingsService.getString('metadata.lastfm.api_key', '') ||
+                  await this.settingsService.getString('api.lastfm.api_key', '');
 
-    const dbEnabled = await this.settingsService.getBoolean('api.lastfm.enabled', true);
-    const envEnabled = this.config.get<string>('LASTFM_ENABLED', 'true') === 'true';
-    this.enabled = (dbEnabled && envEnabled) && !!this.apiKey;
+    const dbEnabled = await this.settingsService.getBoolean('metadata.lastfm.enabled', true) &&
+                      await this.settingsService.getBoolean('api.lastfm.enabled', true);
+    this.enabled = dbEnabled && !!this.apiKey;
 
     if (!this.apiKey) {
-      this.logger.warn('Last.fm API key not configured (DB or .env). Agent will be disabled.');
+      this.logger.warn('Last.fm API key not configured. Agent will be disabled.');
     } else {
-      const source = dbApiKey ? 'database' : '.env';
-      this.logger.log(`Last.fm agent initialized with API key from ${source}`);
+      this.logger.log(`Last.fm agent initialized (enabled: ${this.enabled})`);
     }
   }
 
