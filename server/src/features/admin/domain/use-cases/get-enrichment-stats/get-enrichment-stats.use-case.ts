@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { enrichmentLogs } from '@infrastructure/database/schema';
+import { gte } from 'drizzle-orm';
 import {
   GetEnrichmentStatsInput,
   GetEnrichmentStatsOutput,
@@ -12,7 +14,7 @@ import {
  */
 @Injectable()
 export class GetEnrichmentStatsUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   async execute(
     input: GetEnrichmentStatsInput,
@@ -21,34 +23,22 @@ export class GetEnrichmentStatsUseCase {
 
     // Calcular fecha de inicio según el período
     const startDate = this.getStartDate(period);
-    const where = startDate ? { createdAt: { gte: startDate } } : {};
 
-    // Consultas en paralelo
-    const [logs, providerGroups, entityTypeGroups] = await Promise.all([
-      // Todos los logs del período
-      this.prisma.enrichmentLog.findMany({
-        where,
-        select: {
-          status: true,
-          provider: true,
-          entityType: true,
-          processingTime: true,
-          createdAt: true,
-        },
-      }),
-      // Agrupar por proveedor y estado
-      this.prisma.enrichmentLog.groupBy({
-        by: ['provider', 'status'],
-        where,
-        _count: { id: true },
-      }),
-      // Agrupar por tipo de entidad
-      this.prisma.enrichmentLog.groupBy({
-        by: ['entityType'],
-        where,
-        _count: { id: true },
-      }),
-    ]);
+    // Fetch all logs for the period
+    const logsQuery = this.drizzle.db
+      .select({
+        status: enrichmentLogs.status,
+        provider: enrichmentLogs.provider,
+        entityType: enrichmentLogs.entityType,
+        processingTime: enrichmentLogs.processingTime,
+        createdAt: enrichmentLogs.createdAt,
+      })
+      .from(enrichmentLogs);
+
+    // Apply date filter if needed
+    const logs = startDate
+      ? await logsQuery.where(gte(enrichmentLogs.createdAt, startDate))
+      : await logsQuery;
 
     // Calcular estadísticas generales
     const totalEnrichments = logs.length;
@@ -70,12 +60,12 @@ export class GetEnrichmentStatsUseCase {
           )
         : 0;
 
-    // Estadísticas por proveedor
+    // Estadísticas por proveedor (agrupar en memoria)
     const providerMap = new Map<string, ProviderStats>();
-    providerGroups.forEach((group) => {
-      if (!providerMap.has(group.provider)) {
-        providerMap.set(group.provider, {
-          provider: group.provider,
+    logs.forEach((log) => {
+      if (!providerMap.has(log.provider)) {
+        providerMap.set(log.provider, {
+          provider: log.provider,
           total: 0,
           success: 0,
           partial: 0,
@@ -83,11 +73,11 @@ export class GetEnrichmentStatsUseCase {
           successRate: 0,
         });
       }
-      const stats = providerMap.get(group.provider)!;
-      stats.total += group._count.id;
-      if (group.status === 'success') stats.success += group._count.id;
-      if (group.status === 'partial') stats.partial += group._count.id;
-      if (group.status === 'error') stats.error += group._count.id;
+      const stats = providerMap.get(log.provider)!;
+      stats.total += 1;
+      if (log.status === 'success') stats.success += 1;
+      if (log.status === 'partial') stats.partial += 1;
+      if (log.status === 'error') stats.error += 1;
     });
 
     // Calcular success rate por proveedor
@@ -101,13 +91,10 @@ export class GetEnrichmentStatsUseCase {
       }),
     );
 
-    // Estadísticas por tipo de entidad
+    // Estadísticas por tipo de entidad (agrupar en memoria)
     const byEntityType = {
-      artist:
-        entityTypeGroups.find((g) => g.entityType === 'artist')?._count.id ||
-        0,
-      album:
-        entityTypeGroups.find((g) => g.entityType === 'album')?._count.id || 0,
+      artist: logs.filter((l) => l.entityType === 'artist').length,
+      album: logs.filter((l) => l.entityType === 'album').length,
     };
 
     // Actividad reciente (últimos 7 días)

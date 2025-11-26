@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { artists, albums, genres, artistGenres, albumGenres, tracks, enrichmentLogs } from '@infrastructure/database/schema';
 import {
   IArtistBioRetriever,
   IArtistImageRetriever,
@@ -29,7 +31,7 @@ export class ExternalMetadataService {
   private readonly logger = new Logger(ExternalMetadataService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly cache: MetadataCacheService,
     private readonly storage: StorageService,
@@ -62,9 +64,12 @@ export class ExternalMetadataService {
 
     try {
       // Get artist from database
-      const artist = await this.prisma.artist.findUnique({
-        where: { id: artistId },
-      });
+      const artistResult = await this.drizzle.db
+        .select()
+        .from(artists)
+        .where(eq(artists.id, artistId))
+        .limit(1);
+      const artist = artistResult[0];
 
       if (!artist) {
         throw new Error(`Artist not found: ${artistId}`);
@@ -83,13 +88,14 @@ export class ExternalMetadataService {
 
             // Auto-apply if score is very high (>90) - high confidence match
             if (topMatch.score >= 90) {
-              await this.prisma.artist.update({
-                where: { id: artistId },
-                data: {
+              await this.drizzle.db
+                .update(artists)
+                .set({
                   mbzArtistId: topMatch.mbid,
                   mbidSearchedAt: new Date(),
-                },
-              });
+                  updatedAt: new Date(),
+                })
+                .where(eq(artists.id, artistId));
               this.logger.log(
                 `Auto-applied MBID for "${artist.name}": ${topMatch.mbid} (score: ${topMatch.score})`
               );
@@ -121,36 +127,36 @@ export class ExternalMetadataService {
                 `Created MBID conflict for "${artist.name}": score ${topMatch.score}, needs manual review`
               );
               // Mark MBID as searched even if we created a conflict
-              await this.prisma.artist.update({
-                where: { id: artistId },
-                data: { mbidSearchedAt: new Date() },
-              });
+              await this.drizzle.db
+                .update(artists)
+                .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+                .where(eq(artists.id, artistId));
             } else {
               this.logger.log(
                 `Low confidence matches for "${artist.name}" (best: ${topMatch.score}), skipping MBID assignment`
               );
               // Mark MBID as searched even if confidence was too low
-              await this.prisma.artist.update({
-                where: { id: artistId },
-                data: { mbidSearchedAt: new Date() },
-              });
+              await this.drizzle.db
+                .update(artists)
+                .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+                .where(eq(artists.id, artistId));
             }
           } else {
             this.logger.log(`No MusicBrainz matches found for "${artist.name}"`);
             // Mark MBID as searched even if no matches found
-            await this.prisma.artist.update({
-              where: { id: artistId },
-              data: { mbidSearchedAt: new Date() },
-            });
+            await this.drizzle.db
+              .update(artists)
+              .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+              .where(eq(artists.id, artistId));
           }
         } catch (error) {
           this.logger.warn(`Error searching MBID for "${artist.name}": ${(error as Error).message}`);
           errors.push(`MBID search failed: ${(error as Error).message}`);
           // Mark MBID as searched even if there was an error (avoid infinite retries)
-          await this.prisma.artist.update({
-            where: { id: artistId },
-            data: { mbidSearchedAt: new Date() },
-          });
+          await this.drizzle.db
+            .update(artists)
+            .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+            .where(eq(artists.id, artistId));
         }
       }
 
@@ -180,13 +186,14 @@ export class ExternalMetadataService {
 
         if (!hasExistingBio || forceRefresh) {
           // Apply the biography directly - only for empty fields or explicit refresh
-          await this.prisma.artist.update({
-            where: { id: artistId },
-            data: {
+          await this.drizzle.db
+            .update(artists)
+            .set({
               biography: bio.content,
               biographySource: bio.source,
-            },
-          });
+              updatedAt: new Date(),
+            })
+            .where(eq(artists.id, artistId));
           bioUpdated = true;
           this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
 
@@ -290,10 +297,10 @@ export class ExternalMetadataService {
           updateData.metadataStorageSize = localPaths.totalSize;
 
           if (Object.keys(updateData).length > 0) {
-            await this.prisma.artist.update({
-              where: { id: artistId },
-              data: updateData,
-            });
+            await this.drizzle.db
+              .update(artists)
+              .set({ ...updateData, updatedAt: new Date() })
+              .where(eq(artists.id, artistId));
             imagesUpdated = true;
             this.logger.log(`Updated images for: ${artist.name} (${localPaths.totalSize} bytes)`);
 
@@ -335,14 +342,15 @@ export class ExternalMetadataService {
 
       // Log the error
       try {
-        const artist = await this.prisma.artist.findUnique({
-          where: { id: artistId },
-          select: { name: true },
-        });
+        const artistResult = await this.drizzle.db
+          .select({ name: artists.name })
+          .from(artists)
+          .where(eq(artists.id, artistId))
+          .limit(1);
         await this.createEnrichmentLog({
           entityId: artistId,
           entityType: 'artist',
-          entityName: artist?.name || 'Unknown',
+          entityName: artistResult[0]?.name || 'Unknown',
           provider: 'multiple',
           metadataType: 'mixed',
           status: 'error',
@@ -379,16 +387,24 @@ export class ExternalMetadataService {
 
     try {
       // Get album from database
-      const album = await this.prisma.album.findUnique({
-        where: { id: albumId },
-        include: { artist: true },
-      });
+      const albumResult = await this.drizzle.db
+        .select({
+          album: albums,
+          artistName: artists.name,
+          artistMbzId: artists.mbzArtistId,
+        })
+        .from(albums)
+        .leftJoin(artists, eq(albums.artistId, artists.id))
+        .where(eq(albums.id, albumId))
+        .limit(1);
+      const album = albumResult[0]?.album;
+      const artistData = albumResult[0] ? { name: albumResult[0].artistName, mbzArtistId: albumResult[0].artistMbzId } : null;
 
       if (!album) {
         throw new Error(`Album not found: ${albumId}`);
       }
 
-      const artistName = album.artist?.name || 'Unknown Artist';
+      const artistName = artistData?.name || 'Unknown Artist';
       this.logger.log(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
       // Step 1: Try to find MBID if missing
@@ -402,18 +418,19 @@ export class ExternalMetadataService {
 
             // Auto-apply if score is very high (>90) - high confidence match
             if (topMatch.score >= 90) {
-              await this.prisma.album.update({
-                where: { id: albumId },
-                data: {
+              await this.drizzle.db
+                .update(albums)
+                .set({
                   mbzAlbumId: topMatch.mbid,
                   mbidSearchedAt: new Date(),
-                },
-              });
+                  updatedAt: new Date(),
+                })
+                .where(eq(albums.id, albumId));
               this.logger.log(
                 `Auto-applied MBID for "${album.name}": ${topMatch.mbid} (score: ${topMatch.score})`
               );
               // Update local reference
-              album.mbzAlbumId = topMatch.mbid;
+              (album as any).mbzAlbumId = topMatch.mbid;
             }
             // Create conflict for manual review if score is medium (70-89)
             else if (topMatch.score >= 70) {
@@ -441,36 +458,36 @@ export class ExternalMetadataService {
                 `Created MBID conflict for "${album.name}": score ${topMatch.score}, needs manual review`
               );
               // Mark MBID as searched even if we created a conflict
-              await this.prisma.album.update({
-                where: { id: albumId },
-                data: { mbidSearchedAt: new Date() },
-              });
+              await this.drizzle.db
+                .update(albums)
+                .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+                .where(eq(albums.id, albumId));
             } else {
               this.logger.log(
                 `Low confidence matches for "${album.name}" (best: ${topMatch.score}), skipping MBID assignment`
               );
               // Mark MBID as searched even if confidence was too low
-              await this.prisma.album.update({
-                where: { id: albumId },
-                data: { mbidSearchedAt: new Date() },
-              });
+              await this.drizzle.db
+                .update(albums)
+                .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+                .where(eq(albums.id, albumId));
             }
           } else {
             this.logger.log(`No MusicBrainz matches found for "${album.name}"`);
             // Mark MBID as searched even if no matches found
-            await this.prisma.album.update({
-              where: { id: albumId },
-              data: { mbidSearchedAt: new Date() },
-            });
+            await this.drizzle.db
+              .update(albums)
+              .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+              .where(eq(albums.id, albumId));
           }
         } catch (error) {
           this.logger.warn(`Error searching MBID for "${album.name}": ${(error as Error).message}`);
           errors.push(`MBID search failed: ${(error as Error).message}`);
           // Mark MBID as searched even if there was an error (avoid infinite retries)
-          await this.prisma.album.update({
-            where: { id: albumId },
-            data: { mbidSearchedAt: new Date() },
-          });
+          await this.drizzle.db
+            .update(albums)
+            .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
+            .where(eq(albums.id, albumId));
         }
       }
 
@@ -491,7 +508,7 @@ export class ExternalMetadataService {
       if (album.mbzAlbumId) {
         const cover = await this.getAlbumCover(
           album.mbzAlbumId,
-          album.artist?.mbzArtistId || null, // Pass artist MBID for Fanart.tv
+          artistData?.mbzArtistId || null, // Pass artist MBID for Fanart.tv
           artistName,
           album.name,
           forceRefresh
@@ -510,14 +527,15 @@ export class ExternalMetadataService {
             // Apply the cover directly - only for empty fields or explicit refresh
             const localPath = await this.downloadAlbumCover(albumId, cover);
 
-            await this.prisma.album.update({
-              where: { id: albumId },
-              data: {
+            await this.drizzle.db
+              .update(albums)
+              .set({
                 externalCoverPath: localPath,
                 externalCoverSource: cover.source,
                 externalInfoUpdatedAt: new Date(),
-              },
-            });
+                updatedAt: new Date(),
+              })
+              .where(eq(albums.id, albumId));
             coverUpdated = true;
             this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
 
@@ -680,14 +698,15 @@ export class ExternalMetadataService {
 
       // Log the error
       try {
-        const album = await this.prisma.album.findUnique({
-          where: { id: albumId },
-          select: { name: true },
-        });
+        const albumResult = await this.drizzle.db
+          .select({ name: albums.name })
+          .from(albums)
+          .where(eq(albums.id, albumId))
+          .limit(1);
         await this.createEnrichmentLog({
           entityId: albumId,
           entityType: 'album',
-          entityName: album?.name || 'Unknown',
+          entityName: albumResult[0]?.name || 'Unknown',
           provider: 'multiple',
           metadataType: 'cover',
           status: 'error',
@@ -803,19 +822,15 @@ export class ExternalMetadataService {
 
     if (saveInFolder) {
       // Get album to find its folder path
-      const album = await this.prisma.album.findUnique({
-        where: { id: albumId },
-        include: {
-          tracks: {
-            take: 1,
-            select: { path: true }
-          }
-        }
-      });
+      const trackResult = await this.drizzle.db
+        .select({ path: tracks.path })
+        .from(tracks)
+        .where(eq(tracks.albumId, albumId))
+        .limit(1);
 
-      if (album && album.tracks.length > 0) {
+      if (trackResult[0]) {
         // Get album folder from first track path
-        const albumFolder = path.dirname(album.tracks[0].path);
+        const albumFolder = path.dirname(trackResult[0].path);
         coverPath = path.join(albumFolder, 'cover.jpg');
       } else {
         // Fallback to metadata storage
@@ -1114,23 +1129,42 @@ export class ExternalMetadataService {
           // Normalize genre name
           const genreName = tag.name.charAt(0).toUpperCase() + tag.name.slice(1);
 
-          // Upsert genre
-          const genre = await this.prisma.genre.upsert({
-            where: { name: genreName },
-            create: { name: genreName },
-            update: {},
-            select: { id: true },
-          });
+          // Upsert genre - find or create
+          let genreResult = await this.drizzle.db
+            .select({ id: genres.id })
+            .from(genres)
+            .where(eq(genres.name, genreName))
+            .limit(1);
 
-          // Associate with artist (skip if already exists)
-          await this.prisma.artistGenre.create({
-            data: {
-              artistId,
-              genreId: genre.id,
-            },
-          }).catch(() => {}); // Ignore if already exists
+          if (!genreResult[0]) {
+            const newGenre = await this.drizzle.db
+              .insert(genres)
+              .values({ name: genreName })
+              .onConflictDoNothing({ target: genres.name })
+              .returning({ id: genres.id });
 
-          savedCount++;
+            if (!newGenre[0]) {
+              // Race condition - fetch again
+              genreResult = await this.drizzle.db
+                .select({ id: genres.id })
+                .from(genres)
+                .where(eq(genres.name, genreName))
+                .limit(1);
+            } else {
+              genreResult = newGenre;
+            }
+          }
+
+          const genre = genreResult[0];
+          if (genre) {
+            // Associate with artist (skip if already exists)
+            await this.drizzle.db
+              .insert(artistGenres)
+              .values({ artistId, genreId: genre.id })
+              .onConflictDoNothing();
+
+            savedCount++;
+          }
         } catch (error) {
           this.logger.warn(`Failed to save genre "${tag.name}" for artist: ${(error as Error).message}`);
         }
@@ -1182,23 +1216,42 @@ export class ExternalMetadataService {
           // Normalize genre name
           const genreName = tag.name.charAt(0).toUpperCase() + tag.name.slice(1);
 
-          // Upsert genre
-          const genre = await this.prisma.genre.upsert({
-            where: { name: genreName },
-            create: { name: genreName },
-            update: {},
-            select: { id: true },
-          });
+          // Upsert genre - find or create
+          let genreResult = await this.drizzle.db
+            .select({ id: genres.id })
+            .from(genres)
+            .where(eq(genres.name, genreName))
+            .limit(1);
 
-          // Associate with album (skip if already exists)
-          await this.prisma.albumGenre.create({
-            data: {
-              albumId,
-              genreId: genre.id,
-            },
-          }).catch(() => {}); // Ignore if already exists
+          if (!genreResult[0]) {
+            const newGenre = await this.drizzle.db
+              .insert(genres)
+              .values({ name: genreName })
+              .onConflictDoNothing({ target: genres.name })
+              .returning({ id: genres.id });
 
-          savedCount++;
+            if (!newGenre[0]) {
+              // Race condition - fetch again
+              genreResult = await this.drizzle.db
+                .select({ id: genres.id })
+                .from(genres)
+                .where(eq(genres.name, genreName))
+                .limit(1);
+            } else {
+              genreResult = newGenre;
+            }
+          }
+
+          const genre = genreResult[0];
+          if (genre) {
+            // Associate with album (skip if already exists)
+            await this.drizzle.db
+              .insert(albumGenres)
+              .values({ albumId, genreId: genre.id })
+              .onConflictDoNothing();
+
+            savedCount++;
+          }
         } catch (error) {
           this.logger.warn(`Failed to save genre "${tag.name}" for album: ${(error as Error).message}`);
         }
@@ -1229,8 +1282,9 @@ export class ExternalMetadataService {
     processingTime?: number;
   }): Promise<void> {
     try {
-      await this.prisma.enrichmentLog.create({
-        data: {
+      await this.drizzle.db
+        .insert(enrichmentLogs)
+        .values({
           entityId: data.entityId,
           entityType: data.entityType,
           entityName: data.entityName,
@@ -1241,8 +1295,7 @@ export class ExternalMetadataService {
           errorMessage: data.errorMessage,
           previewUrl: data.previewUrl,
           processingTime: data.processingTime,
-        },
-      });
+        });
     } catch (error) {
       // Don't throw - logging failure shouldn't break the enrichment process
       this.logger.error(`Failed to create enrichment log: ${(error as Error).message}`);

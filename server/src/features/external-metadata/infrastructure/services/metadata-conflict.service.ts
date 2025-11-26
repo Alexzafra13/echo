@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 import { ImageDownloadService } from './image-download.service';
 import { StorageService } from './storage.service';
 import * as path from 'path';
@@ -87,7 +89,7 @@ export class MetadataConflictService {
   private readonly logger = new Logger(MetadataConflictService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
   ) {}
@@ -102,13 +104,19 @@ export class MetadataConflictService {
   async createConflict(data: CreateConflictDto): Promise<ConflictWithEntity> {
     // For cover images: check if there's already a pending conflict for this entity/field (any source)
     if (data.field === 'externalCover' || data.field === 'cover') {
-      const existingConflict = await this.prisma.metadataConflict.findFirst({
-        where: {
-          entityId: data.entityId,
-          field: data.field,
-          status: 'pending',
-        },
-      });
+      const results = await this.drizzle.db
+        .select()
+        .from(metadataConflicts)
+        .where(
+          and(
+            eq(metadataConflicts.entityId, data.entityId),
+            eq(metadataConflicts.field, data.field),
+            eq(metadataConflicts.status, 'pending'),
+          )
+        )
+        .limit(1);
+
+      const existingConflict = results[0] || null;
 
       if (existingConflict) {
         // Get existing metadata (already parsed as JSONB)
@@ -128,15 +136,23 @@ export class MetadataConflictService {
               ? ConflictPriority.HIGH
               : ConflictPriority.MEDIUM);
 
-          const updated = await this.prisma.metadataConflict.update({
-            where: { id: existingConflict.id },
-            data: {
-              suggestedValue: data.suggestedValue,
-              source: data.source,
-              priority,
-              metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
-            },
-          });
+          const updateData: any = {
+            suggestedValue: data.suggestedValue,
+            source: data.source,
+            priority,
+          };
+
+          if (data.metadata) {
+            updateData.metadata = data.metadata;
+          }
+
+          const updatedResults = await this.drizzle.db
+            .update(metadataConflicts)
+            .set(updateData)
+            .where(eq(metadataConflicts.id, existingConflict.id))
+            .returning();
+
+          const updated = updatedResults[0];
 
           this.logger.log(
             `Updated conflict ${existingConflict.id} with better resolution: ${newMeta.suggestedResolution} from ${data.source}`,
@@ -152,14 +168,20 @@ export class MetadataConflictService {
       }
     } else {
       // For non-cover fields: don't create duplicate pending conflicts for same entity/field/source
-      const existing = await this.prisma.metadataConflict.findFirst({
-        where: {
-          entityId: data.entityId,
-          field: data.field,
-          source: data.source,
-          status: 'pending',
-        },
-      });
+      const existingResults = await this.drizzle.db
+        .select()
+        .from(metadataConflicts)
+        .where(
+          and(
+            eq(metadataConflicts.entityId, data.entityId),
+            eq(metadataConflicts.field, data.field),
+            eq(metadataConflicts.source, data.source),
+            eq(metadataConflicts.status, 'pending'),
+          )
+        )
+        .limit(1);
+
+      const existing = existingResults[0] || null;
 
       if (existing) {
         this.logger.debug(
@@ -176,18 +198,29 @@ export class MetadataConflictService {
         ? ConflictPriority.HIGH
         : ConflictPriority.MEDIUM);
 
-    const conflict = await this.prisma.metadataConflict.create({
-      data: {
-        entityId: data.entityId,
-        entityType: data.entityType,
-        field: data.field,
-        currentValue: data.currentValue,
-        suggestedValue: data.suggestedValue,
-        source: data.source,
-        priority,
-        metadata: data.metadata ? JSON.stringify(data.metadata) : undefined,
-      },
-    });
+    const insertData: any = {
+      entityId: data.entityId,
+      entityType: data.entityType,
+      field: data.field,
+      suggestedValue: data.suggestedValue,
+      source: data.source,
+      priority,
+    };
+
+    if (data.currentValue !== undefined) {
+      insertData.currentValue = data.currentValue;
+    }
+
+    if (data.metadata) {
+      insertData.metadata = data.metadata;
+    }
+
+    const conflictResults = await this.drizzle.db
+      .insert(metadataConflicts)
+      .values(insertData)
+      .returning();
+
+    const conflict = conflictResults[0];
 
     this.logger.log(
       `Created ${priority === ConflictPriority.HIGH ? 'HIGH' : 'MEDIUM'} priority conflict for ${data.entityType} ${data.entityId}: ${data.field} (source: ${data.source})`,
@@ -246,24 +279,35 @@ export class MetadataConflictService {
       priority?: ConflictPriority;
     },
   ): Promise<{ conflicts: ConflictWithEntity[]; total: number }> {
-    const where: any = { status: 'pending' };
+    const conditions = [eq(metadataConflicts.status, 'pending')];
 
-    if (filters?.entityType) where.entityType = filters.entityType;
-    if (filters?.source) where.source = filters.source;
-    if (filters?.priority) where.priority = filters.priority;
+    if (filters?.entityType) {
+      conditions.push(eq(metadataConflicts.entityType, filters.entityType));
+    }
+    if (filters?.source) {
+      conditions.push(eq(metadataConflicts.source, filters.source));
+    }
+    if (filters?.priority) {
+      conditions.push(eq(metadataConflicts.priority, filters.priority));
+    }
 
-    const [conflicts, total] = await Promise.all([
-      this.prisma.metadataConflict.findMany({
-        where,
-        skip,
-        take,
-        orderBy: [
-          { priority: 'desc' }, // High priority first
-          { createdAt: 'desc' }, // Newest first
-        ],
-      }),
-      this.prisma.metadataConflict.count({ where }),
+    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+    const [conflicts, totalResult] = await Promise.all([
+      this.drizzle.db
+        .select()
+        .from(metadataConflicts)
+        .where(whereClause)
+        .orderBy(desc(metadataConflicts.priority), desc(metadataConflicts.createdAt))
+        .limit(take)
+        .offset(skip),
+      this.drizzle.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(metadataConflicts)
+        .where(whereClause),
     ]);
+
+    const total = totalResult[0]?.count || 0;
 
     const conflictsWithEntities = await Promise.all(
       conflicts.map((c) => this.enrichConflictWithEntity(c)),
@@ -286,14 +330,17 @@ export class MetadataConflictService {
     entityId: string,
     entityType: EntityType,
   ): Promise<ConflictWithEntity[]> {
-    const conflicts = await this.prisma.metadataConflict.findMany({
-      where: {
-        entityId,
-        entityType,
-        status: 'pending',
-      },
-      orderBy: { priority: 'desc' },
-    });
+    const conflicts = await this.drizzle.db
+      .select()
+      .from(metadataConflicts)
+      .where(
+        and(
+          eq(metadataConflicts.entityId, entityId),
+          eq(metadataConflicts.entityType, entityType),
+          eq(metadataConflicts.status, 'pending'),
+        )
+      )
+      .orderBy(desc(metadataConflicts.priority));
 
     return Promise.all(conflicts.map((c) => this.enrichConflictWithEntity(c)));
   }
@@ -306,9 +353,13 @@ export class MetadataConflictService {
    * @returns Updated entity
    */
   async acceptConflict(conflictId: string, userId?: string): Promise<any> {
-    const conflict = await this.prisma.metadataConflict.findUnique({
-      where: { id: conflictId },
-    });
+    const conflictResults = await this.drizzle.db
+      .select()
+      .from(metadataConflicts)
+      .where(eq(metadataConflicts.id, conflictId))
+      .limit(1);
+
+    const conflict = conflictResults[0] || null;
 
     if (!conflict) {
       throw new Error(`Conflict ${conflictId} not found`);
@@ -323,14 +374,14 @@ export class MetadataConflictService {
 
     if (!entityExists) {
       // Entity was deleted - mark conflict as rejected automatically
-      await this.prisma.metadataConflict.update({
-        where: { id: conflictId },
-        data: {
+      await this.drizzle.db
+        .update(metadataConflicts)
+        .set({
           status: 'rejected',
           resolvedAt: new Date(),
           resolvedBy: 'system',
-        },
-      });
+        })
+        .where(eq(metadataConflicts.id, conflictId));
 
       this.logger.warn(
         `Conflict ${conflictId} rejected automatically: ${conflict.entityType} ${conflict.entityId} no longer exists (orphaned conflict)`,
@@ -364,14 +415,14 @@ export class MetadataConflictService {
     }
 
     // Mark conflict as accepted
-    await this.prisma.metadataConflict.update({
-      where: { id: conflictId },
-      data: {
+    await this.drizzle.db
+      .update(metadataConflicts)
+      .set({
         status: 'accepted',
         resolvedAt: new Date(),
         resolvedBy: userId,
-      },
-    });
+      })
+      .where(eq(metadataConflicts.id, conflictId));
 
     this.logger.log(
       `Accepted conflict ${conflictId}: ${conflict.field} for ${conflict.entityType} ${conflict.entityId}`,
@@ -387,14 +438,14 @@ export class MetadataConflictService {
    * @param userId - User who resolved the conflict
    */
   async rejectConflict(conflictId: string, userId?: string): Promise<void> {
-    await this.prisma.metadataConflict.update({
-      where: { id: conflictId },
-      data: {
+    await this.drizzle.db
+      .update(metadataConflicts)
+      .set({
         status: 'rejected',
         resolvedAt: new Date(),
         resolvedBy: userId,
-      },
-    });
+      })
+      .where(eq(metadataConflicts.id, conflictId));
 
     this.logger.log(`Rejected conflict ${conflictId}`);
   }
@@ -406,14 +457,14 @@ export class MetadataConflictService {
    * @param userId - User who resolved the conflict
    */
   async ignoreConflict(conflictId: string, userId?: string): Promise<void> {
-    await this.prisma.metadataConflict.update({
-      where: { id: conflictId },
-      data: {
+    await this.drizzle.db
+      .update(metadataConflicts)
+      .set({
         status: 'ignored',
         resolvedAt: new Date(),
         resolvedBy: userId,
-      },
-    });
+      })
+      .where(eq(metadataConflicts.id, conflictId));
 
     this.logger.log(`Ignored conflict ${conflictId}`);
   }
@@ -451,7 +502,9 @@ export class MetadataConflictService {
         break;
       case 'images':
         // Parse images from metadata
-        const images = JSON.parse(conflict.metadata || '{}');
+        const images = typeof conflict.metadata === 'string'
+          ? JSON.parse(conflict.metadata)
+          : conflict.metadata || {};
         if (images.smallImageUrl) updateData.smallImageUrl = images.smallImageUrl;
         if (images.mediumImageUrl) updateData.mediumImageUrl = images.mediumImageUrl;
         if (images.largeImageUrl) updateData.largeImageUrl = images.largeImageUrl;
@@ -461,10 +514,13 @@ export class MetadataConflictService {
         break;
     }
 
-    return this.prisma.artist.update({
-      where: { id: conflict.entityId },
-      data: updateData,
-    });
+    const updatedResults = await this.drizzle.db
+      .update(artists)
+      .set(updateData)
+      .where(eq(artists.id, conflict.entityId))
+      .returning();
+
+    return updatedResults[0];
   }
 
   /**
@@ -508,10 +564,13 @@ export class MetadataConflictService {
         break;
     }
 
-    return this.prisma.album.update({
-      where: { id: conflict.entityId },
-      data: updateData,
-    });
+    const updatedResults = await this.drizzle.db
+      .update(albums)
+      .set(updateData)
+      .where(eq(albums.id, conflict.entityId))
+      .returning();
+
+    return updatedResults[0];
   }
 
   /**
@@ -526,10 +585,13 @@ export class MetadataConflictService {
         break;
     }
 
-    return this.prisma.track.update({
-      where: { id: conflict.entityId },
-      data: updateData,
-    });
+    const updatedResults = await this.drizzle.db
+      .update(tracks)
+      .set(updateData)
+      .where(eq(tracks.id, conflict.entityId))
+      .returning();
+
+    return updatedResults[0];
   }
 
   /**
@@ -542,23 +604,26 @@ export class MetadataConflictService {
     try {
       switch (entityType) {
         case 'artist':
-          const artist = await this.prisma.artist.findUnique({
-            where: { id: entityId },
-            select: { id: true },
-          });
-          return !!artist;
+          const artistResults = await this.drizzle.db
+            .select({ id: artists.id })
+            .from(artists)
+            .where(eq(artists.id, entityId))
+            .limit(1);
+          return artistResults.length > 0;
         case 'album':
-          const album = await this.prisma.album.findUnique({
-            where: { id: entityId },
-            select: { id: true },
-          });
-          return !!album;
+          const albumResults = await this.drizzle.db
+            .select({ id: albums.id })
+            .from(albums)
+            .where(eq(albums.id, entityId))
+            .limit(1);
+          return albumResults.length > 0;
         case 'track':
-          const track = await this.prisma.track.findUnique({
-            where: { id: entityId },
-            select: { id: true },
-          });
-          return !!track;
+          const trackResults = await this.drizzle.db
+            .select({ id: tracks.id })
+            .from(tracks)
+            .where(eq(tracks.id, entityId))
+            .limit(1);
+          return trackResults.length > 0;
         default:
           return false;
       }
@@ -575,10 +640,14 @@ export class MetadataConflictService {
    * @returns Number of orphaned conflicts rejected
    */
   async cleanupOrphanedConflicts(): Promise<number> {
-    const pendingConflicts = await this.prisma.metadataConflict.findMany({
-      where: { status: 'pending' },
-      select: { id: true, entityType: true, entityId: true },
-    });
+    const pendingConflicts = await this.drizzle.db
+      .select({
+        id: metadataConflicts.id,
+        entityType: metadataConflicts.entityType,
+        entityId: metadataConflicts.entityId,
+      })
+      .from(metadataConflicts)
+      .where(eq(metadataConflicts.status, 'pending'));
 
     let orphanedCount = 0;
 
@@ -590,14 +659,14 @@ export class MetadataConflictService {
 
       if (!exists) {
         // Mark as rejected
-        await this.prisma.metadataConflict.update({
-          where: { id: conflict.id },
-          data: {
+        await this.drizzle.db
+          .update(metadataConflicts)
+          .set({
             status: 'rejected',
             resolvedAt: new Date(),
             resolvedBy: 'system-cleanup',
-          },
-        });
+          })
+          .where(eq(metadataConflicts.id, conflict.id));
 
         orphanedCount++;
         this.logger.debug(
@@ -622,7 +691,11 @@ export class MetadataConflictService {
 
     try {
       // First, try to get name from metadata (faster, no DB query needed)
-      const metadata = conflict.metadata ? JSON.parse(conflict.metadata) : null;
+      const metadata = conflict.metadata
+        ? typeof conflict.metadata === 'string'
+          ? JSON.parse(conflict.metadata)
+          : conflict.metadata
+        : null;
 
       if (metadata) {
         if (conflict.entityType === 'artist' && metadata.artistName) {
@@ -638,25 +711,28 @@ export class MetadataConflictService {
       if (entityName === 'Unknown') {
         switch (conflict.entityType) {
           case 'artist':
-            const artist = await this.prisma.artist.findUnique({
-              where: { id: conflict.entityId },
-              select: { name: true },
-            });
-            entityName = artist?.name || 'Unknown Artist';
+            const artistResults = await this.drizzle.db
+              .select({ name: artists.name })
+              .from(artists)
+              .where(eq(artists.id, conflict.entityId))
+              .limit(1);
+            entityName = artistResults[0]?.name || 'Unknown Artist';
             break;
           case 'album':
-            const album = await this.prisma.album.findUnique({
-              where: { id: conflict.entityId },
-              select: { name: true },
-            });
-            entityName = album?.name || 'Unknown Album';
+            const albumResults = await this.drizzle.db
+              .select({ name: albums.name })
+              .from(albums)
+              .where(eq(albums.id, conflict.entityId))
+              .limit(1);
+            entityName = albumResults[0]?.name || 'Unknown Album';
             break;
           case 'track':
-            const track = await this.prisma.track.findUnique({
-              where: { id: conflict.entityId },
-              select: { title: true },
-            });
-            entityName = track?.title || 'Unknown Track';
+            const trackResults = await this.drizzle.db
+              .select({ title: tracks.title })
+              .from(tracks)
+              .where(eq(tracks.id, conflict.entityId))
+              .limit(1);
+            entityName = trackResults[0]?.title || 'Unknown Track';
             break;
         }
       }
@@ -681,7 +757,11 @@ export class MetadataConflictService {
       source: conflict.source as ConflictSource,
       status: conflict.status as ConflictStatus,
       priority: conflict.priority,
-      metadata: conflict.metadata ? JSON.parse(conflict.metadata) : undefined,
+      metadata: conflict.metadata
+        ? typeof conflict.metadata === 'string'
+          ? JSON.parse(conflict.metadata)
+          : conflict.metadata
+        : undefined,
       createdAt: conflict.createdAt,
       resolvedAt: conflict.resolvedAt,
       resolvedBy: conflict.resolvedBy,

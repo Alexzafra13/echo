@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
@@ -19,7 +21,7 @@ export class DeleteCustomArtistImageUseCase {
   private readonly logger = new Logger(DeleteCustomArtistImageUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
     private readonly redis: RedisService,
@@ -27,14 +29,24 @@ export class DeleteCustomArtistImageUseCase {
 
   async execute(input: DeleteCustomArtistImageInput): Promise<DeleteCustomArtistImageOutput> {
     // Find the custom image
-    const customImage = await this.prisma.customArtistImage.findUnique({
-      where: { id: input.customImageId },
-      include: {
+    const customImageResult = await this.drizzle.db
+      .select({
+        id: customArtistImages.id,
+        artistId: customArtistImages.artistId,
+        imageType: customArtistImages.imageType,
+        filePath: customArtistImages.filePath,
+        isActive: customArtistImages.isActive,
         artist: {
-          select: { id: true, name: true },
+          id: artists.id,
+          name: artists.name,
         },
-      },
-    });
+      })
+      .from(customArtistImages)
+      .innerJoin(artists, eq(customArtistImages.artistId, artists.id))
+      .where(eq(customArtistImages.id, input.customImageId))
+      .limit(1);
+
+    const customImage = customImageResult[0];
 
     if (!customImage) {
       throw new NotFoundException(`Custom image not found: ${input.customImageId}`);
@@ -66,13 +78,13 @@ export class DeleteCustomArtistImageUseCase {
     if (customImage.isActive) {
       const typeConfig = this.getTypeConfig(customImage.imageType);
 
-      await this.prisma.artist.update({
-        where: { id: input.artistId },
-        data: {
+      await this.drizzle.db
+        .update(artists)
+        .set({
           [typeConfig.localPathField]: null,
           [typeConfig.localUpdatedField]: null,
-        },
-      });
+        })
+        .where(eq(artists.id, input.artistId));
 
       this.logger.debug(`Cleared active ${customImage.imageType} reference from artist`);
 
@@ -82,9 +94,9 @@ export class DeleteCustomArtistImageUseCase {
     }
 
     // Delete from database
-    await this.prisma.customArtistImage.delete({
-      where: { id: input.customImageId },
-    });
+    await this.drizzle.db
+      .delete(customArtistImages)
+      .where(eq(customArtistImages.id, input.customImageId));
 
     this.logger.log(
       `✅ Successfully deleted custom ${customImage.imageType} image for ${customImage.artist.name}`,

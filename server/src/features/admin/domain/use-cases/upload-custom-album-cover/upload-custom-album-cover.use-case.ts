@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { albums, customAlbumCovers } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
@@ -22,7 +24,7 @@ export class UploadCustomAlbumCoverUseCase {
   private readonly logger = new Logger(UploadCustomAlbumCoverUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
@@ -31,10 +33,16 @@ export class UploadCustomAlbumCoverUseCase {
 
   async execute(input: UploadCustomAlbumCoverInput): Promise<UploadCustomAlbumCoverOutput> {
     // Validate album exists
-    const album = await this.prisma.album.findUnique({
-      where: { id: input.albumId },
-      select: { id: true, name: true },
-    });
+    const albumResult = await this.drizzle.db
+      .select({
+        id: albums.id,
+        name: albums.name,
+      })
+      .from(albums)
+      .where(eq(albums.id, input.albumId))
+      .limit(1);
+
+    const album = albumResult[0];
 
     if (!album) {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
@@ -93,8 +101,9 @@ export class UploadCustomAlbumCoverUseCase {
     // Windows path.relative() returns backslashes (\) which don't work on Unix systems
     const relativePath = path.relative(basePath, filePath).replace(/\\/g, '/');
 
-    const customCover = await this.prisma.customAlbumCover.create({
-      data: {
+    const customCoverResult = await this.drizzle.db
+      .insert(customAlbumCovers)
+      .values({
         albumId: input.albumId,
         filePath: relativePath,
         fileName,
@@ -102,8 +111,10 @@ export class UploadCustomAlbumCoverUseCase {
         mimeType: input.file.mimetype,
         isActive: false, // Not active by default, user must apply it
         uploadedBy: input.uploadedBy,
-      },
-    });
+      })
+      .returning();
+
+    const customCover = customCoverResult[0];
 
     this.logger.log(
       `✅ Successfully uploaded custom cover for ${album.name} (ID: ${customCover.id})`,

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SetupController } from './presentation/setup.controller';
 import { SetupService } from './application/setup.service';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 
 /**
  * Setup Module
@@ -14,9 +13,10 @@ import { PrismaModule } from '@infrastructure/persistence/prisma.module';
  *
  * All endpoints are PUBLIC (no auth required) but only work
  * when setup is not completed.
+ *
+ * DrizzleService is provided globally via DrizzleModule
  */
 @Module({
-  imports: [PrismaModule],
   controllers: [SetupController],
   providers: [SetupService],
   exports: [SetupService],

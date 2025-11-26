@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, desc, and, count, sql, inArray, asc, max } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { playlists, playlistTracks, tracks, albums, artists } from '@infrastructure/database/schema';
 import { IPlaylistRepository } from '../../domain/ports';
 import { Playlist, PlaylistTrack } from '../../domain/entities';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -7,75 +9,84 @@ import { PlaylistMapper } from '../mappers/playlist.mapper';
 import { TrackMapper } from '@features/tracks/infrastructure/persistence/track.mapper';
 
 @Injectable()
-export class PrismaPlaylistRepository implements IPlaylistRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class DrizzlePlaylistRepository implements IPlaylistRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
 
   // Playlist CRUD
   async findById(id: string): Promise<Playlist | null> {
-    const playlist = await this.prisma.playlist.findUnique({
-      where: { id },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(playlists)
+      .where(eq(playlists.id, id))
+      .limit(1);
 
-    if (!playlist) {
+    if (!result[0]) {
       return null;
     }
 
-    return PlaylistMapper.toDomain(playlist);
+    return PlaylistMapper.toDomain(result[0]);
   }
 
   async findByOwnerId(ownerId: string, skip: number, take: number): Promise<Playlist[]> {
-    const playlists = await this.prisma.playlist.findMany({
-      where: { ownerId },
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(playlists)
+      .where(eq(playlists.ownerId, ownerId))
+      .orderBy(desc(playlists.createdAt))
+      .offset(skip)
+      .limit(take);
 
-    return PlaylistMapper.toDomainArray(playlists);
+    return PlaylistMapper.toDomainArray(result);
   }
 
   async findPublic(skip: number, take: number): Promise<Playlist[]> {
-    const playlists = await this.prisma.playlist.findMany({
-      where: { public: true },
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(playlists)
+      .where(eq(playlists.public, true))
+      .orderBy(desc(playlists.createdAt))
+      .offset(skip)
+      .limit(take);
 
-    return PlaylistMapper.toDomainArray(playlists);
+    return PlaylistMapper.toDomainArray(result);
   }
 
   async search(name: string, skip: number, take: number): Promise<Playlist[]> {
-    // Usar búsqueda por similaridad de trigram para mejor rendimiento
-    // El operador % usa el índice GIN creado en la migración 20251117030000
-    // Esto es 10-100x más rápido que ILIKE '%query%'
-    const playlists = await this.prisma.$queryRaw<any[]>`
+    const result = await this.drizzle.db.execute(sql`
       SELECT *
       FROM playlists
       WHERE name % ${name}
       ORDER BY similarity(name, ${name}) DESC, name ASC
       LIMIT ${take}
       OFFSET ${skip}
-    `;
+    `);
 
-    return PlaylistMapper.toDomainArray(playlists);
+    return PlaylistMapper.toDomainArray(result.rows as any[]);
   }
 
   async count(): Promise<number> {
-    return this.prisma.playlist.count();
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(playlists);
+
+    return result[0]?.count ?? 0;
   }
 
   async countByOwnerId(ownerId: string): Promise<number> {
-    return this.prisma.playlist.count({
-      where: { ownerId },
-    });
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(playlists)
+      .where(eq(playlists.ownerId, ownerId));
+
+    return result[0]?.count ?? 0;
   }
 
   async create(playlist: Playlist): Promise<Playlist> {
-    const data = PlaylistMapper.toPrisma(playlist);
+    const data = PlaylistMapper.toPersistence(playlist);
 
-    const created = await this.prisma.playlist.create({
-      data: {
+    const result = await this.drizzle.db
+      .insert(playlists)
+      .values({
         id: data.id,
         name: data.name,
         description: data.description,
@@ -89,18 +100,18 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
         sync: data.sync,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
-      },
-    });
+      })
+      .returning();
 
-    return PlaylistMapper.toDomain(created);
+    return PlaylistMapper.toDomain(result[0]);
   }
 
   async update(id: string, playlist: Partial<Playlist>): Promise<Playlist | null> {
     const props = playlist.toPrimitives ? playlist.toPrimitives() : (playlist as any);
 
-    const updated = await this.prisma.playlist.update({
-      where: { id },
-      data: {
+    const result = await this.drizzle.db
+      .update(playlists)
+      .set({
         name: props.name,
         description: props.description,
         coverImageUrl: props.coverImageUrl,
@@ -109,94 +120,101 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
         public: props.public,
         songCount: props.songCount,
         updatedAt: new Date(),
-      },
-    });
+      })
+      .where(eq(playlists.id, id))
+      .returning();
 
-    return PlaylistMapper.toDomain(updated);
+    return result[0] ? PlaylistMapper.toDomain(result[0]) : null;
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.prisma.playlist.delete({
-      where: { id },
-    });
+    const result = await this.drizzle.db
+      .delete(playlists)
+      .where(eq(playlists.id, id))
+      .returning();
 
-    return !!result;
+    return result.length > 0;
   }
 
   // PlaylistTrack management
   async addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack> {
-    const data = PlaylistMapper.playlistTrackToPrisma(playlistTrack);
+    const data = PlaylistMapper.playlistTrackToPersistence(playlistTrack);
 
-    const created = await this.prisma.playlistTrack.create({
-      data: {
+    const result = await this.drizzle.db
+      .insert(playlistTracks)
+      .values({
         id: data.id,
         playlistId: data.playlistId,
         trackId: data.trackId,
         trackOrder: data.trackOrder,
         createdAt: data.createdAt,
-      },
-    });
+      })
+      .returning();
 
-    return PlaylistMapper.playlistTrackToDomain(created);
+    return PlaylistMapper.playlistTrackToDomain(result[0]);
   }
 
   /**
-   * RACE CONDITION FIX: Agrega track con auto-asignación de orden dentro de transacción
-   * Previene duplicación de trackOrder cuando múltiples requests concurrentes agregan tracks
+   * RACE CONDITION FIX: Add track with auto-assigned order within a transaction
    */
   async addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack> {
-    return await this.prisma.$transaction(async (tx) => {
-      // 1. Obtener el máximo trackOrder actual dentro de la transacción
-      const maxOrder = await tx.playlistTrack.aggregate({
-        where: { playlistId },
-        _max: { trackOrder: true },
-      });
+    // Use a transaction for atomicity
+    return await this.drizzle.db.transaction(async (tx) => {
+      // 1. Get maximum trackOrder
+      const maxOrderResult = await tx
+        .select({ maxOrder: max(playlistTracks.trackOrder) })
+        .from(playlistTracks)
+        .where(eq(playlistTracks.playlistId, playlistId));
 
-      // 2. Calcular siguiente orden (empezando desde 1)
-      const nextOrder = (maxOrder._max.trackOrder ?? 0) + 1;
+      // 2. Calculate next order
+      const nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1;
 
-      // 3. Crear el nuevo track con el orden calculado
-      const created = await tx.playlistTrack.create({
-        data: {
+      // 3. Insert new track
+      const result = await tx
+        .insert(playlistTracks)
+        .values({
           playlistId,
           trackId,
           trackOrder: nextOrder,
-        },
-      });
+        })
+        .returning();
 
-      return PlaylistMapper.playlistTrackToDomain(created);
+      return PlaylistMapper.playlistTrackToDomain(result[0]);
     });
   }
 
   async removeTrack(playlistId: string, trackId: string): Promise<boolean> {
-    const result = await this.prisma.playlistTrack.deleteMany({
-      where: {
-        playlistId,
-        trackId,
-      },
-    });
+    const result = await this.drizzle.db
+      .delete(playlistTracks)
+      .where(
+        and(
+          eq(playlistTracks.playlistId, playlistId),
+          eq(playlistTracks.trackId, trackId),
+        ),
+      )
+      .returning();
 
-    return result.count > 0;
+    return result.length > 0;
   }
 
   async getPlaylistTracks(playlistId: string): Promise<Track[]> {
-    const playlistTracks = await this.prisma.playlistTrack.findMany({
-      where: { playlistId },
-      include: {
-        track: {
-          include: {
-            album: true,
-            artist: true
-          }
-        }
-      },
-      orderBy: { trackOrder: 'asc' },
-    });
+    const result = await this.drizzle.db
+      .select({
+        playlistTrack: playlistTracks,
+        track: tracks,
+        album: albums,
+        artist: artists,
+      })
+      .from(playlistTracks)
+      .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
+      .leftJoin(albums, eq(tracks.albumId, albums.id))
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .where(eq(playlistTracks.playlistId, playlistId))
+      .orderBy(asc(playlistTracks.trackOrder));
 
     // Map tracks and attach trackOrder to each track
-    // Use index + 1 to ensure display always starts from 1
-    return playlistTracks.map((pt, index) => {
-      const track = TrackMapper.toDomain(pt.track);
+    return result.map((r, index) => {
+      const track = TrackMapper.toDomain(r.track);
       // Attach trackOrder as a custom property (1-indexed for display)
       (track as any).playlistOrder = index + 1;
       return track;
@@ -204,107 +222,101 @@ export class PrismaPlaylistRepository implements IPlaylistRepository {
   }
 
   async getPlaylistAlbumIds(playlistId: string): Promise<string[]> {
-    const playlistTracks = await this.prisma.playlistTrack.findMany({
-      where: { playlistId },
-      include: {
-        track: {
-          select: {
-            albumId: true,
-          }
-        }
-      },
-      orderBy: { trackOrder: 'asc' },
-    });
+    const result = await this.drizzle.db
+      .select({ albumId: tracks.albumId })
+      .from(playlistTracks)
+      .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
+      .where(eq(playlistTracks.playlistId, playlistId))
+      .orderBy(asc(playlistTracks.trackOrder));
 
     // Get unique album IDs, filter out nulls
-    const albumIds = playlistTracks
-      .map((pt) => pt.track.albumId)
+    const albumIds = result
+      .map((r) => r.albumId)
       .filter((id): id is string => id !== null && id !== undefined);
 
-    // Return unique album IDs
     return Array.from(new Set(albumIds));
   }
 
   /**
    * OPTIMIZATION: Batch fetch album IDs for multiple playlists
-   * Avoids N+1 query pattern when fetching multiple playlists
    */
   async getBatchPlaylistAlbumIds(playlistIds: string[]): Promise<Map<string, string[]>> {
     if (playlistIds.length === 0) {
       return new Map();
     }
 
-    const playlistTracks = await this.prisma.playlistTrack.findMany({
-      where: { playlistId: { in: playlistIds } },
-      include: {
-        track: {
-          select: {
-            albumId: true,
-          },
-        },
-      },
-      orderBy: { trackOrder: 'asc' },
-    });
+    const result = await this.drizzle.db
+      .select({
+        playlistId: playlistTracks.playlistId,
+        albumId: tracks.albumId,
+      })
+      .from(playlistTracks)
+      .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
+      .where(inArray(playlistTracks.playlistId, playlistIds))
+      .orderBy(asc(playlistTracks.trackOrder));
 
     // Group tracks by playlist
     const tracksByPlaylist = new Map<string, string[]>();
 
-    for (const pt of playlistTracks) {
-      if (!pt.track.albumId) continue;
+    for (const r of result) {
+      if (!r.albumId) continue;
 
-      if (!tracksByPlaylist.has(pt.playlistId)) {
-        tracksByPlaylist.set(pt.playlistId, []);
+      if (!tracksByPlaylist.has(r.playlistId)) {
+        tracksByPlaylist.set(r.playlistId, []);
       }
 
-      tracksByPlaylist.get(pt.playlistId)!.push(pt.track.albumId);
+      tracksByPlaylist.get(r.playlistId)!.push(r.albumId);
     }
 
     // Get unique album IDs per playlist
-    const result = new Map<string, string[]>();
+    const resultMap = new Map<string, string[]>();
     for (const [playlistId, albumIds] of tracksByPlaylist.entries()) {
-      result.set(playlistId, Array.from(new Set(albumIds)));
+      resultMap.set(playlistId, Array.from(new Set(albumIds)));
     }
 
     // Ensure all requested playlists have an entry (even if empty)
     for (const playlistId of playlistIds) {
-      if (!result.has(playlistId)) {
-        result.set(playlistId, []);
+      if (!resultMap.has(playlistId)) {
+        resultMap.set(playlistId, []);
       }
     }
 
-    return result;
+    return resultMap;
   }
 
   async reorderTracks(
     playlistId: string,
     trackOrders: Array<{ trackId: string; order: number }>,
   ): Promise<boolean> {
-    // Usar transacción para actualizar todos los órdenes
-    await this.prisma.$transaction(
-      trackOrders.map((item) =>
-        this.prisma.playlistTrack.updateMany({
-          where: {
-            playlistId,
-            trackId: item.trackId,
-          },
-          data: {
-            trackOrder: item.order,
-          },
-        }),
-      ),
-    );
+    // Use a transaction to update all orders
+    await this.drizzle.db.transaction(async (tx) => {
+      for (const item of trackOrders) {
+        await tx
+          .update(playlistTracks)
+          .set({ trackOrder: item.order })
+          .where(
+            and(
+              eq(playlistTracks.playlistId, playlistId),
+              eq(playlistTracks.trackId, item.trackId),
+            ),
+          );
+      }
+    });
 
     return true;
   }
 
   async isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean> {
-    const count = await this.prisma.playlistTrack.count({
-      where: {
-        playlistId,
-        trackId,
-      },
-    });
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(playlistTracks)
+      .where(
+        and(
+          eq(playlistTracks.playlistId, playlistId),
+          eq(playlistTracks.trackId, trackId),
+        ),
+      );
 
-    return count > 0;
+    return (result[0]?.count ?? 0) > 0;
   }
 }

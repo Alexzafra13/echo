@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, and } from 'drizzle-orm';
+import { albums, customAlbumCovers } from '@infrastructure/database/schema';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import {
@@ -16,29 +18,42 @@ export class ApplyCustomAlbumCoverUseCase {
   private readonly logger = new Logger(ApplyCustomAlbumCoverUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly imageService: ImageService,
     private readonly metadataGateway: MetadataEnrichmentGateway,
   ) {}
 
   async execute(input: ApplyCustomAlbumCoverInput): Promise<ApplyCustomAlbumCoverOutput> {
     // Validate album exists
-    const album = await this.prisma.album.findUnique({
-      where: { id: input.albumId },
-      select: { id: true, name: true, artistId: true },
-    });
+    const albumResult = await this.drizzle.db
+      .select({
+        id: albums.id,
+        name: albums.name,
+        artistId: albums.artistId,
+      })
+      .from(albums)
+      .where(eq(albums.id, input.albumId))
+      .limit(1);
+
+    const album = albumResult[0];
 
     if (!album) {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
     }
 
     // Validate custom cover exists
-    const customCover = await this.prisma.customAlbumCover.findFirst({
-      where: {
-        id: input.customCoverId,
-        albumId: input.albumId,
-      },
-    });
+    const customCoverResult = await this.drizzle.db
+      .select()
+      .from(customAlbumCovers)
+      .where(
+        and(
+          eq(customAlbumCovers.id, input.customCoverId),
+          eq(customAlbumCovers.albumId, input.albumId),
+        ),
+      )
+      .limit(1);
+
+    const customCover = customCoverResult[0];
 
     if (!customCover) {
       throw new NotFoundException(
@@ -49,21 +64,21 @@ export class ApplyCustomAlbumCoverUseCase {
     this.logger.log(`Applying custom cover for album: ${album.name}`);
 
     // Deactivate all other custom covers for this album
-    await this.prisma.customAlbumCover.updateMany({
-      where: {
-        albumId: input.albumId,
-        isActive: true,
-      },
-      data: {
-        isActive: false,
-      },
-    });
+    await this.drizzle.db
+      .update(customAlbumCovers)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(customAlbumCovers.albumId, input.albumId),
+          eq(customAlbumCovers.isActive, true),
+        ),
+      );
 
     // Activate the selected custom cover
-    await this.prisma.customAlbumCover.update({
-      where: { id: input.customCoverId },
-      data: { isActive: true },
-    });
+    await this.drizzle.db
+      .update(customAlbumCovers)
+      .set({ isActive: true })
+      .where(eq(customAlbumCovers.id, input.customCoverId));
 
     // Invalidate image cache
     this.imageService.invalidateAlbumCache(input.albumId);

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { enrichmentLogs } from '@infrastructure/database/schema';
+import { eq, gte, lte, desc, and, count, SQL } from 'drizzle-orm';
 import {
   ListEnrichmentLogsInput,
   ListEnrichmentLogsOutput,
@@ -11,7 +13,7 @@ import {
  */
 @Injectable()
 export class ListEnrichmentLogsUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   async execute(
     input: ListEnrichmentLogsInput,
@@ -20,49 +22,56 @@ export class ListEnrichmentLogsUseCase {
     const take = input.take || 50;
 
     // Construir filtros dinámicos
-    const where: any = {};
+    const whereConditions: SQL[] = [];
 
     if (input.entityType) {
-      where.entityType = input.entityType;
+      whereConditions.push(eq(enrichmentLogs.entityType, input.entityType));
     }
 
     if (input.provider) {
-      where.provider = input.provider;
+      whereConditions.push(eq(enrichmentLogs.provider, input.provider));
     }
 
     if (input.status) {
-      where.status = input.status;
+      whereConditions.push(eq(enrichmentLogs.status, input.status));
     }
 
     if (input.entityId) {
-      where.entityId = input.entityId;
+      whereConditions.push(eq(enrichmentLogs.entityId, input.entityId));
     }
 
     if (input.userId) {
-      where.userId = input.userId;
+      whereConditions.push(eq(enrichmentLogs.userId, input.userId));
     }
 
     // Filtro por rango de fechas
-    if (input.startDate || input.endDate) {
-      where.createdAt = {};
-      if (input.startDate) {
-        where.createdAt.gte = input.startDate;
-      }
-      if (input.endDate) {
-        where.createdAt.lte = input.endDate;
-      }
+    if (input.startDate) {
+      whereConditions.push(gte(enrichmentLogs.createdAt, input.startDate));
     }
 
+    if (input.endDate) {
+      whereConditions.push(lte(enrichmentLogs.createdAt, input.endDate));
+    }
+
+    // Combine conditions with AND, or undefined if no conditions
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
     // Ejecutar consultas en paralelo
-    const [logs, total] = await Promise.all([
-      this.prisma.enrichmentLog.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.enrichmentLog.count({ where }),
+    const [logs, totalResult] = await Promise.all([
+      this.drizzle.db
+        .select()
+        .from(enrichmentLogs)
+        .where(whereClause)
+        .orderBy(desc(enrichmentLogs.createdAt))
+        .limit(take)
+        .offset(skip),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(enrichmentLogs)
+        .where(whereClause),
     ]);
+
+    const total = totalResult[0]?.count ?? 0;
 
     // Mapear a DTOs
     const logItems = logs.map((log) => ({
@@ -73,7 +82,7 @@ export class ListEnrichmentLogsUseCase {
       provider: log.provider,
       metadataType: log.metadataType,
       status: log.status,
-      fieldsUpdated: log.fieldsUpdated,
+      fieldsUpdated: log.fieldsUpdated || [],
       errorMessage: log.errorMessage || undefined,
       previewUrl: log.previewUrl || undefined,
       userId: log.userId || undefined,

@@ -1,5 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, count, sum, sql, gte, lt, inArray, and, desc, isNotNull } from 'drizzle-orm';
+import {
+  tracks,
+  albums,
+  artists,
+  genres,
+  users,
+  libraryScans,
+  enrichmentLogs,
+  customArtistImages,
+  customAlbumCovers,
+  metadataConflicts,
+} from '@infrastructure/database/schema';
 import { ConfigService } from '@nestjs/config';
 import { HealthCheckService } from '@features/health/health-check.service';
 import {
@@ -21,7 +34,7 @@ export class GetDashboardStatsUseCase {
   private readonly logger = new Logger(GetDashboardStatsUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly config: ConfigService,
     private readonly healthCheck: HealthCheckService,
   ) {}
@@ -73,69 +86,53 @@ export class GetDashboardStatsUseCase {
     today.setHours(0, 0, 0, 0);
 
     const [
-      totalTracks,
-      totalAlbums,
-      totalArtists,
-      totalGenres,
-      durationSum,
-      storageSum,
-      tracksAddedToday,
-      albumsAddedToday,
-      artistsAddedToday,
+      totalTracksResult,
+      totalAlbumsResult,
+      totalArtistsResult,
+      totalGenresResult,
+      durationSumResult,
+      storageSumResult,
+      tracksAddedTodayResult,
+      albumsAddedTodayResult,
+      artistsAddedTodayResult,
     ] = await Promise.all([
-      this.prisma.track.count(),
-      this.prisma.album.count(),
-      this.prisma.artist.count(),
-      this.prisma.genre.count(),
-      this.prisma.track.aggregate({
-        _sum: { duration: true },
-      }),
-      this.prisma.track.aggregate({
-        _sum: { size: true },
-      }),
-      this.prisma.track.count({
-        where: { createdAt: { gte: today } },
-      }),
-      this.prisma.album.count({
-        where: { createdAt: { gte: today } },
-      }),
-      this.prisma.artist.count({
-        where: { createdAt: { gte: today } },
-      }),
+      this.drizzle.db.select({ count: count() }).from(tracks),
+      this.drizzle.db.select({ count: count() }).from(albums),
+      this.drizzle.db.select({ count: count() }).from(artists),
+      this.drizzle.db.select({ count: count() }).from(genres),
+      this.drizzle.db.select({ sum: sum(tracks.duration) }).from(tracks),
+      this.drizzle.db.select({ sum: sum(tracks.size) }).from(tracks),
+      this.drizzle.db.select({ count: count() }).from(tracks).where(gte(tracks.createdAt, today)),
+      this.drizzle.db.select({ count: count() }).from(albums).where(gte(albums.createdAt, today)),
+      this.drizzle.db.select({ count: count() }).from(artists).where(gte(artists.createdAt, today)),
     ]);
 
     return {
-      totalTracks,
-      totalAlbums,
-      totalArtists,
-      totalGenres,
-      totalDuration: durationSum._sum.duration || 0,
-      totalStorage: Number(storageSum._sum.size || 0),
-      tracksAddedToday,
-      albumsAddedToday,
-      artistsAddedToday,
+      totalTracks: totalTracksResult[0]?.count ?? 0,
+      totalAlbums: totalAlbumsResult[0]?.count ?? 0,
+      totalArtists: totalArtistsResult[0]?.count ?? 0,
+      totalGenres: totalGenresResult[0]?.count ?? 0,
+      totalDuration: Number(durationSumResult[0]?.sum || 0),
+      totalStorage: Number(storageSumResult[0]?.sum || 0),
+      tracksAddedToday: tracksAddedTodayResult[0]?.count ?? 0,
+      albumsAddedToday: albumsAddedTodayResult[0]?.count ?? 0,
+      artistsAddedToday: artistsAddedTodayResult[0]?.count ?? 0,
     };
   }
 
   private async getStorageBreakdown(): Promise<StorageBreakdown> {
-    const [musicSize, metadataSize, avatarSize] = await Promise.all([
+    const [musicSizeResult, metadataSizeResult, avatarSizeResult] = await Promise.all([
       // Music files size
-      this.prisma.track.aggregate({
-        _sum: { size: true },
-      }),
+      this.drizzle.db.select({ sum: sum(tracks.size) }).from(tracks),
       // Metadata storage (artist images)
-      this.prisma.artist.aggregate({
-        _sum: { metadataStorageSize: true },
-      }),
+      this.drizzle.db.select({ sum: sum(artists.metadataStorageSize) }).from(artists),
       // User avatars size
-      this.prisma.user.aggregate({
-        _sum: { avatarSize: true },
-      }),
+      this.drizzle.db.select({ sum: sum(users.avatarSize) }).from(users),
     ]);
 
-    const music = Number(musicSize._sum.size || 0);
-    const metadata = Number(metadataSize._sum.metadataStorageSize || 0);
-    const avatars = Number(avatarSize._sum.avatarSize || 0);
+    const music = Number(musicSizeResult[0]?.sum || 0);
+    const metadata = Number(metadataSizeResult[0]?.sum || 0);
+    const avatars = Number(avatarSizeResult[0]?.sum || 0);
 
     return {
       music,
@@ -149,7 +146,7 @@ export class GetDashboardStatsUseCase {
     // Database health - try a simple query
     let databaseHealth: 'healthy' | 'degraded' | 'down' = 'healthy';
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.drizzle.db.execute(sql`SELECT 1`);
     } catch {
       databaseHealth = 'down';
     }
@@ -167,9 +164,12 @@ export class GetDashboardStatsUseCase {
     }
 
     // Scanner status - check latest scan
-    const latestScan = await this.prisma.libraryScan.findFirst({
-      orderBy: { startedAt: 'desc' },
-    });
+    const latestScanResult = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .orderBy(desc(libraryScans.startedAt))
+      .limit(1);
+    const latestScan = latestScanResult[0] ?? null;
 
     let scannerStatus: 'idle' | 'running' | 'error' = 'idle';
     if (latestScan) {
@@ -223,21 +223,21 @@ export class GetDashboardStatsUseCase {
     monthAgo.setMonth(monthAgo.getMonth() - 1);
 
     const [todayLogs, weekLogs, monthLogs, allTimeLogs] = await Promise.all([
-      this.prisma.enrichmentLog.findMany({
-        where: { createdAt: { gte: today } },
-        select: { status: true, provider: true },
-      }),
-      this.prisma.enrichmentLog.findMany({
-        where: { createdAt: { gte: weekAgo } },
-        select: { status: true, provider: true },
-      }),
-      this.prisma.enrichmentLog.findMany({
-        where: { createdAt: { gte: monthAgo } },
-        select: { status: true, provider: true },
-      }),
-      this.prisma.enrichmentLog.findMany({
-        select: { status: true, provider: true },
-      }),
+      this.drizzle.db
+        .select({ status: enrichmentLogs.status, provider: enrichmentLogs.provider })
+        .from(enrichmentLogs)
+        .where(gte(enrichmentLogs.createdAt, today)),
+      this.drizzle.db
+        .select({ status: enrichmentLogs.status, provider: enrichmentLogs.provider })
+        .from(enrichmentLogs)
+        .where(gte(enrichmentLogs.createdAt, weekAgo)),
+      this.drizzle.db
+        .select({ status: enrichmentLogs.status, provider: enrichmentLogs.provider })
+        .from(enrichmentLogs)
+        .where(gte(enrichmentLogs.createdAt, monthAgo)),
+      this.drizzle.db
+        .select({ status: enrichmentLogs.status, provider: enrichmentLogs.provider })
+        .from(enrichmentLogs),
     ]);
 
     const calculateStats = (logs: Array<{ status: string; provider: string }>) => {
@@ -269,40 +269,43 @@ export class GetDashboardStatsUseCase {
     const last7d = new Date(now);
     last7d.setDate(last7d.getDate() - 7);
 
-    const [totalUsers, activeUsersLast24h, activeUsersLast7d] = await Promise.all([
-      this.prisma.user.count({ where: { isActive: true } }),
-      this.prisma.user.count({
-        where: {
-          isActive: true,
-          lastAccessAt: { gte: last24h },
-        },
-      }),
-      this.prisma.user.count({
-        where: {
-          isActive: true,
-          lastAccessAt: { gte: last7d },
-        },
-      }),
+    const [totalUsersResult, activeUsersLast24hResult, activeUsersLast7dResult] = await Promise.all([
+      this.drizzle.db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.isActive, true)),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(users)
+        .where(and(eq(users.isActive, true), gte(users.lastAccessAt, last24h))),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(users)
+        .where(and(eq(users.isActive, true), gte(users.lastAccessAt, last7d))),
     ]);
 
     return {
-      totalUsers,
-      activeUsersLast24h,
-      activeUsersLast7d,
+      totalUsers: totalUsersResult[0]?.count ?? 0,
+      activeUsersLast24h: activeUsersLast24hResult[0]?.count ?? 0,
+      activeUsersLast7d: activeUsersLast7dResult[0]?.count ?? 0,
     };
   }
 
   private async getScanStats(): Promise<ScanStats> {
-    const latestScan = await this.prisma.libraryScan.findFirst({
-      orderBy: { startedAt: 'desc' },
-    });
+    const latestScanResult = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .orderBy(desc(libraryScans.startedAt))
+      .limit(1);
+    const latestScan = latestScanResult[0] ?? null;
 
-    const currentScan = await this.prisma.libraryScan.findFirst({
-      where: {
-        status: { in: ['running', 'in_progress'] },
-      },
-      orderBy: { startedAt: 'desc' },
-    });
+    const currentScanResult = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .where(inArray(libraryScans.status, ['running', 'in_progress']))
+      .orderBy(desc(libraryScans.startedAt))
+      .limit(1);
+    const currentScan = currentScanResult[0] ?? null;
 
     return {
       lastScan: {
@@ -323,25 +326,39 @@ export class GetDashboardStatsUseCase {
 
   private async getActiveAlerts(): Promise<ActiveAlerts> {
     // Get orphaned files count (custom images/covers without active flag)
-    const [orphanedArtistImages, orphanedAlbumCovers, pendingConflicts, recentScanErrors] = await Promise.all([
-      this.prisma.customArtistImage.count({
-        where: { isActive: false },
-      }),
-      this.prisma.customAlbumCover.count({
-        where: { isActive: false },
-      }),
-      this.prisma.metadataConflict.count({
-        where: { status: 'pending' },
-      }),
-      this.prisma.libraryScan.count({
-        where: {
-          status: { in: ['failed', 'error'] },
-          startedAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-          },
-        },
-      }),
+    const [
+      orphanedArtistImagesResult,
+      orphanedAlbumCoversResult,
+      pendingConflictsResult,
+      recentScanErrorsResult,
+    ] = await Promise.all([
+      this.drizzle.db
+        .select({ count: count() })
+        .from(customArtistImages)
+        .where(eq(customArtistImages.isActive, false)),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(customAlbumCovers)
+        .where(eq(customAlbumCovers.isActive, false)),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(metadataConflicts)
+        .where(eq(metadataConflicts.status, 'pending')),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(libraryScans)
+        .where(
+          and(
+            inArray(libraryScans.status, ['failed', 'error']),
+            gte(libraryScans.startedAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+          ),
+        ),
     ]);
+
+    const orphanedArtistImages = orphanedArtistImagesResult[0]?.count ?? 0;
+    const orphanedAlbumCovers = orphanedAlbumCoversResult[0]?.count ?? 0;
+    const pendingConflicts = pendingConflictsResult[0]?.count ?? 0;
+    const recentScanErrors = recentScanErrorsResult[0]?.count ?? 0;
 
     const storageBreakdown = await this.getStorageBreakdown();
     const maxStorageMB = 5120; // 5GB default limit
@@ -379,36 +396,37 @@ export class GetDashboardStatsUseCase {
       nextDate.setDate(nextDate.getDate() + 1);
 
       // Get scans for this day
-      const scans = await this.prisma.libraryScan.count({
-        where: {
-          startedAt: {
-            gte: date,
-            lt: nextDate,
-          },
-        },
-      });
+      const scansResult = await this.drizzle.db
+        .select({ count: count() })
+        .from(libraryScans)
+        .where(and(gte(libraryScans.startedAt, date), lt(libraryScans.startedAt, nextDate)));
+      const scans = scansResult[0]?.count ?? 0;
 
       // Get enrichments for this day
-      const enrichments = await this.prisma.enrichmentLog.count({
-        where: {
-          createdAt: {
-            gte: date,
-            lt: nextDate,
-          },
-          status: { in: ['success', 'completed'] },
-        },
-      });
+      const enrichmentsResult = await this.drizzle.db
+        .select({ count: count() })
+        .from(enrichmentLogs)
+        .where(
+          and(
+            gte(enrichmentLogs.createdAt, date),
+            lt(enrichmentLogs.createdAt, nextDate),
+            inArray(enrichmentLogs.status, ['success', 'completed']),
+          ),
+        );
+      const enrichments = enrichmentsResult[0]?.count ?? 0;
 
       // Get errors for this day
-      const errors = await this.prisma.enrichmentLog.count({
-        where: {
-          createdAt: {
-            gte: date,
-            lt: nextDate,
-          },
-          status: { in: ['failed', 'error'] },
-        },
-      });
+      const errorsResult = await this.drizzle.db
+        .select({ count: count() })
+        .from(enrichmentLogs)
+        .where(
+          and(
+            gte(enrichmentLogs.createdAt, date),
+            lt(enrichmentLogs.createdAt, nextDate),
+            inArray(enrichmentLogs.status, ['failed', 'error']),
+          ),
+        );
+      const errors = errorsResult[0]?.count ?? 0;
 
       timeline.push({
         date: date.toISOString().split('T')[0], // YYYY-MM-DD
@@ -425,10 +443,11 @@ export class GetDashboardStatsUseCase {
     const activities: RecentActivity[] = [];
 
     // Get recent scans (last 3)
-    const recentScans = await this.prisma.libraryScan.findMany({
-      orderBy: { startedAt: 'desc' },
-      take: 3,
-    });
+    const recentScans = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .orderBy(desc(libraryScans.startedAt))
+      .limit(3);
 
     recentScans.forEach((scan) => {
       activities.push({
@@ -442,13 +461,12 @@ export class GetDashboardStatsUseCase {
     });
 
     // Get recent enrichments (last 5)
-    const recentEnrichments = await this.prisma.enrichmentLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      where: {
-        status: { in: ['success', 'completed', 'failed', 'error'] },
-      },
-    });
+    const recentEnrichments = await this.drizzle.db
+      .select()
+      .from(enrichmentLogs)
+      .where(inArray(enrichmentLogs.status, ['success', 'completed', 'failed', 'error']))
+      .orderBy(desc(enrichmentLogs.createdAt))
+      .limit(5);
 
     recentEnrichments.forEach((enrichment) => {
       const entityTypeLabel = enrichment.entityType === 'album' ? 'Álbum' : 'Artista';
@@ -472,13 +490,12 @@ export class GetDashboardStatsUseCase {
     });
 
     // Get recent user logins (last 2)
-    const recentLogins = await this.prisma.user.findMany({
-      where: {
-        lastLoginAt: { not: null },
-      },
-      orderBy: { lastLoginAt: 'desc' },
-      take: 2,
-    });
+    const recentLogins = await this.drizzle.db
+      .select()
+      .from(users)
+      .where(isNotNull(users.lastLoginAt))
+      .orderBy(desc(users.lastLoginAt))
+      .limit(2);
 
     recentLogins.forEach((user) => {
       if (user.lastLoginAt) {

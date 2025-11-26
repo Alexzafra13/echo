@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { artists } from '@infrastructure/database/schema';
 import { AgentRegistryService } from '@features/external-metadata/infrastructure/services/agent-registry.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { IArtistImageRetriever } from '@features/external-metadata/domain/interfaces';
@@ -18,16 +20,20 @@ export class SearchArtistAvatarsUseCase {
   private readonly logger = new Logger(SearchArtistAvatarsUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly imageDownload: ImageDownloadService,
   ) {}
 
   async execute(input: SearchArtistAvatarsInput): Promise<SearchArtistAvatarsOutput> {
     // Get artist from database
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-    });
+    const artistResult = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);

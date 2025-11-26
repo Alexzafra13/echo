@@ -1,29 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { BaseRepository } from '@shared/base';
+import { eq, desc, or, inArray, count, sql, asc } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { DrizzleBaseRepository } from '@shared/base';
+import { tracks } from '@infrastructure/database/schema';
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
 import { TrackMapper } from './track.mapper';
 
 @Injectable()
-export class PrismaTrackRepository
-  extends BaseRepository<Track>
+export class DrizzleTrackRepository
+  extends DrizzleBaseRepository<Track>
   implements ITrackRepository
 {
   protected readonly mapper = TrackMapper;
-  protected readonly modelDelegate: any;
+  protected readonly table = tracks;
 
-  constructor(protected readonly prisma: PrismaService) {
+  constructor(protected readonly drizzle: DrizzleService) {
     super();
-    this.modelDelegate = prisma.track;
   }
 
   async findById(id: string): Promise<Track | null> {
-    const track = await this.prisma.track.findUnique({
-      where: { id },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(eq(tracks.id, id))
+      .limit(1);
 
-    return track ? TrackMapper.toDomain(track) : null;
+    return result[0] ? TrackMapper.toDomain(result[0]) : null;
   }
 
   async findByIds(ids: string[]): Promise<Track[]> {
@@ -31,76 +34,78 @@ export class PrismaTrackRepository
       return [];
     }
 
-    const tracks = await this.prisma.track.findMany({
-      where: { id: { in: ids } },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(inArray(tracks.id, ids));
 
-    return TrackMapper.toDomainArray(tracks);
+    return TrackMapper.toDomainArray(result);
   }
 
   async findAll(skip: number, take: number): Promise<Track[]> {
-    const tracks = await this.prisma.track.findMany({
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .orderBy(desc(tracks.createdAt))
+      .offset(skip)
+      .limit(take);
 
-    return TrackMapper.toDomainArray(tracks);
+    return TrackMapper.toDomainArray(result);
   }
 
   async search(title: string, skip: number, take: number): Promise<Track[]> {
-    const tracks = await this.prisma.$queryRaw<any[]>`
+    // Use pg_trgm similarity search
+    const result = await this.drizzle.db.execute(sql`
       SELECT *
       FROM tracks
       WHERE title % ${title}
       ORDER BY similarity(title, ${title}) DESC, title ASC
       LIMIT ${take}
       OFFSET ${skip}
-    `;
+    `);
 
-    return TrackMapper.toDomainArray(tracks);
+    return TrackMapper.toDomainArray(result.rows as any[]);
   }
 
   async findByAlbumId(albumId: string): Promise<Track[]> {
-    const tracks = await this.prisma.track.findMany({
-      where: { albumId },
-      orderBy: [
-        { discNumber: 'asc' },
-        { trackNumber: 'asc' },
-      ],
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(eq(tracks.albumId, albumId))
+      .orderBy(asc(tracks.discNumber), asc(tracks.trackNumber));
 
-    return TrackMapper.toDomainArray(tracks);
+    return TrackMapper.toDomainArray(result);
   }
 
   async findByArtistId(artistId: string, skip: number, take: number): Promise<Track[]> {
-    const tracks = await this.prisma.track.findMany({
-      where: {
-        OR: [
-          { artistId },
-          { albumArtistId: artistId },
-        ],
-      },
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(or(eq(tracks.artistId, artistId), eq(tracks.albumArtistId, artistId)))
+      .orderBy(desc(tracks.createdAt))
+      .offset(skip)
+      .limit(take);
 
-    return TrackMapper.toDomainArray(tracks);
+    return TrackMapper.toDomainArray(result);
   }
 
   async count(): Promise<number> {
-    return this.prisma.track.count();
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(tracks);
+
+    return result[0]?.count ?? 0;
   }
 
   async create(track: Track): Promise<Track> {
     const persistenceData = TrackMapper.toPersistence(track);
 
-    const created = await this.prisma.track.create({
-      data: persistenceData,
-    });
+    const result = await this.drizzle.db
+      .insert(tracks)
+      .values(persistenceData)
+      .returning();
 
-    return TrackMapper.toDomain(created);
+    return TrackMapper.toDomain(result[0]);
   }
 
   async update(id: string, track: Partial<Track>): Promise<Track | null> {
@@ -127,11 +132,15 @@ export class PrismaTrackRepository
       'compilation',
     ]);
 
-    const updated = await this.prisma.track.update({
-      where: { id },
-      data: updateData,
-    });
+    const result = await this.drizzle.db
+      .update(tracks)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(tracks.id, id))
+      .returning();
 
-    return TrackMapper.toDomain(updated);
+    return result[0] ? TrackMapper.toDomain(result[0]) : null;
   }
 }

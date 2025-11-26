@@ -3,7 +3,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nes
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MetadataConflictService } from '../infrastructure/services/metadata-conflict.service';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
+import { eq } from 'drizzle-orm';
 import {
   GetConflictsQueryDto,
   ResolveConflictDto,
@@ -32,7 +34,7 @@ import {
 export class MetadataConflictsController {
   constructor(
     private readonly conflictService: MetadataConflictService,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
   ) {}
 
   /**
@@ -264,9 +266,12 @@ export class MetadataConflictsController {
     @Body() body: { suggestionIndex: number; userId?: string },
   ): Promise<ConflictResolvedResponseDto> {
     // Get the conflict
-    const conflict = await this.prisma.metadataConflict.findUnique({
-      where: { id: conflictId },
-    });
+    const conflictResult = await this.drizzle.db
+      .select()
+      .from(metadataConflicts)
+      .where(eq(metadataConflicts.id, conflictId))
+      .limit(1);
+    const conflict = conflictResult[0];
 
     if (!conflict) {
       throw new BadRequestException(`Conflict ${conflictId} not found`);
@@ -304,32 +309,36 @@ export class MetadataConflictsController {
     let updatedEntity;
     switch (conflict.entityType) {
       case 'artist':
-        updatedEntity = await this.prisma.artist.update({
-          where: { id: conflict.entityId },
-          data: {
-            mbzArtistId: selectedSuggestion.mbid,
-          },
-        });
+        const artistResult = await this.drizzle.db
+          .update(artists)
+          .set({ mbzArtistId: selectedSuggestion.mbid })
+          .where(eq(artists.id, conflict.entityId))
+          .returning();
+        updatedEntity = artistResult[0];
         break;
 
       case 'album':
-        updatedEntity = await this.prisma.album.update({
-          where: { id: conflict.entityId },
-          data: {
+        const albumResult = await this.drizzle.db
+          .update(albums)
+          .set({
             mbzAlbumId: selectedSuggestion.mbid,
             mbzAlbumArtistId: selectedSuggestion.details?.artistMbid || undefined,
-          },
-        });
+          })
+          .where(eq(albums.id, conflict.entityId))
+          .returning();
+        updatedEntity = albumResult[0];
         break;
 
       case 'track':
-        updatedEntity = await this.prisma.track.update({
-          where: { id: conflict.entityId },
-          data: {
+        const trackResult = await this.drizzle.db
+          .update(tracks)
+          .set({
             mbzTrackId: selectedSuggestion.mbid,
             mbzArtistId: selectedSuggestion.details?.artistMbid || undefined,
-          },
-        });
+          })
+          .where(eq(tracks.id, conflict.entityId))
+          .returning();
+        updatedEntity = trackResult[0];
         break;
 
       default:
@@ -337,21 +346,21 @@ export class MetadataConflictsController {
     }
 
     // Mark conflict as accepted
-    await this.prisma.metadataConflict.update({
-      where: { id: conflictId },
-      data: {
+    await this.drizzle.db
+      .update(metadataConflicts)
+      .set({
         status: 'accepted',
         resolvedAt: new Date(),
         resolvedBy: body.userId || 'admin',
         // Update suggested value to show which one was selected
         suggestedValue: selectedSuggestion.name,
-        metadata: JSON.stringify({
+        metadata: {
           ...metadata,
           selectedSuggestionIndex: suggestionIndex,
           selectedSuggestion,
-        }),
-      },
-    });
+        },
+      })
+      .where(eq(metadataConflicts.id, conflictId));
 
     return {
       id: conflictId,

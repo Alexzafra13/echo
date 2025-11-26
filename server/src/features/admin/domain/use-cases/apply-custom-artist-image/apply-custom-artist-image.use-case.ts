@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, and } from 'drizzle-orm';
+import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
@@ -17,7 +19,7 @@ export class ApplyCustomArtistImageUseCase {
   private readonly logger = new Logger(ApplyCustomArtistImageUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageService: ImageService,
     private readonly metadataGateway: MetadataEnrichmentGateway,
@@ -25,14 +27,24 @@ export class ApplyCustomArtistImageUseCase {
 
   async execute(input: ApplyCustomArtistImageInput): Promise<ApplyCustomArtistImageOutput> {
     // Find the custom image
-    const customImage = await this.prisma.customArtistImage.findUnique({
-      where: { id: input.customImageId },
-      include: {
+    const customImageResult = await this.drizzle.db
+      .select({
+        id: customArtistImages.id,
+        artistId: customArtistImages.artistId,
+        imageType: customArtistImages.imageType,
+        filePath: customArtistImages.filePath,
+        isActive: customArtistImages.isActive,
         artist: {
-          select: { id: true, name: true },
+          id: artists.id,
+          name: artists.name,
         },
-      },
-    });
+      })
+      .from(customArtistImages)
+      .innerJoin(artists, eq(customArtistImages.artistId, artists.id))
+      .where(eq(customArtistImages.id, input.customImageId))
+      .limit(1);
+
+    const customImage = customImageResult[0];
 
     if (!customImage) {
       throw new NotFoundException(`Custom image not found: ${input.customImageId}`);
@@ -50,26 +62,24 @@ export class ApplyCustomArtistImageUseCase {
     const typeConfig = this.getTypeConfig(customImage.imageType);
 
     // Start a transaction to update both the artist and custom images
-    await this.prisma.$transaction(async (tx) => {
+    await this.drizzle.db.transaction(async (tx) => {
       // Deactivate all other custom images of this type for this artist
-      await tx.customArtistImage.updateMany({
-        where: {
-          artistId: input.artistId,
-          imageType: customImage.imageType,
-          isActive: true,
-        },
-        data: {
-          isActive: false,
-        },
-      });
+      await tx
+        .update(customArtistImages)
+        .set({ isActive: false })
+        .where(
+          and(
+            eq(customArtistImages.artistId, input.artistId),
+            eq(customArtistImages.imageType, customImage.imageType),
+            eq(customArtistImages.isActive, true),
+          ),
+        );
 
       // Activate this custom image
-      await tx.customArtistImage.update({
-        where: { id: input.customImageId },
-        data: {
-          isActive: true,
-        },
-      });
+      await tx
+        .update(customArtistImages)
+        .set({ isActive: true })
+        .where(eq(customArtistImages.id, input.customImageId));
 
       // Update artist record to use this custom image (local path)
       const updateData: any = {
@@ -81,10 +91,10 @@ export class ApplyCustomArtistImageUseCase {
         [typeConfig.externalUpdatedField]: null,
       };
 
-      await tx.artist.update({
-        where: { id: input.artistId },
-        data: updateData,
-      });
+      await tx
+        .update(artists)
+        .set(updateData)
+        .where(eq(artists.id, input.artistId));
     });
 
     // Invalidate caches
