@@ -18,7 +18,7 @@ export const playQueues = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: varchar('user_id', { length: 36 }).notNull().unique(),
     currentTrackId: varchar('current_track_id', { length: 36 }),
-    position: bigint('position', { mode: 'bigint' }).default(BigInt(0)).notNull(),
+    position: bigint('position', { mode: 'number' }).default(0).notNull(),
     changedBy: varchar('changed_by', { length: 255 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -89,11 +89,11 @@ export const userPlayStats = pgTable(
     userId: varchar('user_id', { length: 36 }).notNull(),
     itemId: varchar('item_id', { length: 36 }).notNull(),
     itemType: varchar('item_type', { length: 50 }).notNull(),
-    playCount: bigint('play_count', { mode: 'bigint' }).default(BigInt(0)).notNull(),
+    playCount: bigint('play_count', { mode: 'number' }).default(0).notNull(),
     weightedPlayCount: real('weighted_play_count').default(0).notNull(),
     lastPlayedAt: timestamp('last_played_at'),
     avgCompletionRate: real('avg_completion_rate'),
-    skipCount: bigint('skip_count', { mode: 'bigint' }).default(BigInt(0)).notNull(),
+    skipCount: bigint('skip_count', { mode: 'number' }).default(0).notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.userId, table.itemId, table.itemType] }),

@@ -29,7 +29,7 @@ export const users = pgTable(
     lastAccessAt: timestamp('last_access_at'),
     avatarPath: varchar('avatar_path', { length: 512 }),
     avatarMimeType: varchar('avatar_mime_type', { length: 50 }),
-    avatarSize: bigint('avatar_size', { mode: 'bigint' }),
+    avatarSize: bigint('avatar_size', { mode: 'number' }),
     avatarUpdatedAt: timestamp('avatar_updated_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
