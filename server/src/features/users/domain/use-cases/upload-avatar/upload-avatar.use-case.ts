@@ -2,6 +2,7 @@ import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { NotFoundError } from '@shared/errors';
 import { UploadAvatarInput, UploadAvatarOutput } from './upload-avatar.dto';
 
@@ -24,6 +25,7 @@ export class UploadAvatarUseCase {
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
     private readonly storageService: StorageService,
+    private readonly imageService: ImageService,
   ) {}
 
   async execute(input: UploadAvatarInput): Promise<UploadAvatarOutput> {
@@ -79,6 +81,9 @@ export class UploadAvatarUseCase {
       avatarSize: Number(input.file.size),
       avatarUpdatedAt: new Date(),
     });
+
+    // 9. Invalidate image cache so the new avatar is served immediately
+    this.imageService.invalidateUserAvatarCache(input.userId);
 
     return {
       avatarPath,
