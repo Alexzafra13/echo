@@ -1,4 +1,4 @@
-import { UserStarred as PrismaUserStarred, UserRating as PrismaUserRating } from '@prisma/client';
+import { UserStarred as PrismaUserStarred, UserRating as PrismaUserRating } from '../../../../generated/prisma';
 import { UserStarred, UserRating, Sentiment, ItemType } from '../../domain/entities/user-interaction.entity';
 
 export class UserInteractionsMapper {
