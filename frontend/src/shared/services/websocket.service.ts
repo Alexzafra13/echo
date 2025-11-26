@@ -22,12 +22,25 @@ export class WebSocketService {
 
   private constructor() {
     // Base URL del servidor WebSocket
-    // Remover /api si existe, ya que WebSocket no usa el prefix /api
-    // En producción (mismo origin): usar window.location.origin
-    // En desarrollo: usar VITE_API_URL o fallback localhost:3000
-    const apiUrl = import.meta.env.VITE_API_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    this.baseUrl = apiUrl.replace(/\/api$/, '');
+    // WebSocket connections go directly to the backend (not through Vite proxy)
+    // because Socket.IO handles reconnection and transport fallback better
+    //
+    // Priority:
+    // 1. VITE_WS_URL - explicit WebSocket URL
+    // 2. VITE_API_URL - API URL (remove /api suffix)
+    // 3. Development: http://localhost:3000 (direct to backend)
+    // 4. Production: window.location.origin (same server serves both)
+    if (import.meta.env.VITE_WS_URL) {
+      this.baseUrl = import.meta.env.VITE_WS_URL;
+    } else if (import.meta.env.VITE_API_URL) {
+      this.baseUrl = import.meta.env.VITE_API_URL.replace(/\/api$/, '');
+    } else if (import.meta.env.DEV) {
+      // Development: connect directly to backend, bypass Vite proxy
+      this.baseUrl = 'http://localhost:3000';
+    } else {
+      // Production: frontend and backend on same origin
+      this.baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    }
   }
 
   /**
