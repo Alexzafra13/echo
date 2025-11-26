@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { PLAY_TRACKING_REPOSITORY } from './domain/ports';
 import { PrismaPlayTrackingRepository } from './infrastructure/persistence/play-tracking.repository';
@@ -15,12 +14,15 @@ import {
 } from './domain/use-cases';
 import { PlayTrackingController } from './presentation/controller/play-tracking.controller';
 
+/**
+ * PlayTrackingModule
+ * DrizzleService is provided globally via DrizzleModule
+ */
 @Module({
   controllers: [PlayTrackingController],
   providers: [
-    PrismaService,
     RedisService,
-    PrismaPlayTrackingRepository, // Base repository
+    PrismaPlayTrackingRepository, // Base repository (uses Drizzle internally)
     {
       provide: PLAY_TRACKING_REPOSITORY,
       useClass: CachedPlayTrackingRepository, // Use cached wrapper
