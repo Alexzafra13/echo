@@ -1,7 +1,7 @@
 /* Search Panel - Expands below header, pushing content down */
 .searchPanel {
   width: 100%;
-  background: rgba(var(--color-bg-secondary-rgb, 20, 24, 45), 0.85);
+  background: rgba(30, 41, 59, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
