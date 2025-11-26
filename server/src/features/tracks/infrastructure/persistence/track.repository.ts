@@ -54,17 +54,18 @@ export class DrizzleTrackRepository
   }
 
   async search(title: string, skip: number, take: number): Promise<Track[]> {
-    // Use pg_trgm similarity search
-    const result = await this.drizzle.db.execute(sql`
-      SELECT *
-      FROM tracks
-      WHERE title % ${title}
-      ORDER BY similarity(title, ${title}) DESC, title ASC
-      LIMIT ${take}
-      OFFSET ${skip}
-    `);
+    // Use ILIKE for case-insensitive search with wildcards
+    const searchPattern = `%${title}%`;
 
-    return TrackMapper.toDomainArray(result.rows as any[]);
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(sql`${tracks.title} ILIKE ${searchPattern}`)
+      .orderBy(tracks.title)
+      .offset(skip)
+      .limit(take);
+
+    return TrackMapper.toDomainArray(result);
   }
 
   async findByAlbumId(albumId: string): Promise<Track[]> {
