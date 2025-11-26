@@ -27,6 +27,15 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      // WebSocket proxies for real-time updates
+      '/metadata': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
+      '/scanner': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
     },
   },
 });
