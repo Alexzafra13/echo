@@ -17,7 +17,7 @@ export const shares = pgTable(
   'shares',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: varchar('user_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
     description: varchar('description', { length: 512 }),
     expiresAt: timestamp('expires_at'),
     lastVisitedAt: timestamp('last_visited_at'),
@@ -37,8 +37,8 @@ export const bookmarks = pgTable(
   'bookmarks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: varchar('user_id', { length: 36 }).notNull(),
-    itemId: varchar('item_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
+    itemId: uuid('item_id').notNull(),
     itemType: varchar('item_type', { length: 50 }).notNull(),
     position: bigint('position', { mode: 'number' }).notNull(),
     comment: varchar('comment', { length: 512 }),

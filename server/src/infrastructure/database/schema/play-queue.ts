@@ -16,8 +16,8 @@ export const playQueues = pgTable(
   'play_queue',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: varchar('user_id', { length: 36 }).notNull().unique(),
-    currentTrackId: varchar('current_track_id', { length: 36 }),
+    userId: uuid('user_id').notNull().unique(),
+    currentTrackId: uuid('current_track_id'),
     position: bigint('position', { mode: 'number' }).default(0).notNull(),
     changedBy: varchar('changed_by', { length: 255 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -32,8 +32,8 @@ export const playQueueTracks = pgTable(
   'play_queue_tracks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    queueId: varchar('queue_id', { length: 36 }).notNull(),
-    trackId: varchar('track_id', { length: 36 }).notNull(),
+    queueId: uuid('queue_id').notNull(),
+    trackId: uuid('track_id').notNull(),
     queueOrder: integer('queue_order').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

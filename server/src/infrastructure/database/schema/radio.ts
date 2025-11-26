@@ -15,7 +15,7 @@ export const radioStations = pgTable(
   'radio_stations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: varchar('user_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
     stationUuid: varchar('station_uuid', { length: 255 }),
     name: varchar('name', { length: 255 }).notNull(),
     url: varchar('url', { length: 512 }).notNull(),

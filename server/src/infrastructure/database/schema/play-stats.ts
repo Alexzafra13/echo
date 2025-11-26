@@ -17,8 +17,8 @@ import {
 export const userStarred = pgTable(
   'user_starred',
   {
-    userId: varchar('user_id', { length: 36 }).notNull(),
-    starredId: varchar('starred_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
+    starredId: uuid('starred_id').notNull(),
     starredType: varchar('starred_type', { length: 50 }).notNull(),
     sentiment: varchar('sentiment', { length: 20 }).notNull(),
     starredAt: timestamp('starred_at').defaultNow().notNull(),
@@ -39,8 +39,8 @@ export const userStarred = pgTable(
 export const userRatings = pgTable(
   'user_ratings',
   {
-    userId: varchar('user_id', { length: 36 }).notNull(),
-    itemId: varchar('item_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
+    itemId: uuid('item_id').notNull(),
     itemType: varchar('item_type', { length: 50 }).notNull(),
     rating: integer('rating').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -60,14 +60,14 @@ export const playHistory = pgTable(
   'play_history',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: varchar('user_id', { length: 36 }).notNull(),
-    trackId: varchar('track_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
+    trackId: uuid('track_id').notNull(),
     playedAt: timestamp('played_at').notNull(),
     client: varchar('client', { length: 255 }),
     playContext: varchar('play_context', { length: 50 }).default('direct').notNull(),
     completionRate: real('completion_rate'),
     skipped: boolean('skipped').default(false).notNull(),
-    sourceId: varchar('source_id', { length: 36 }),
+    sourceId: uuid('source_id'),
     sourceType: varchar('source_type', { length: 50 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -86,8 +86,8 @@ export const playHistory = pgTable(
 export const userPlayStats = pgTable(
   'user_play_stats',
   {
-    userId: varchar('user_id', { length: 36 }).notNull(),
-    itemId: varchar('item_id', { length: 36 }).notNull(),
+    userId: uuid('user_id').notNull(),
+    itemId: uuid('item_id').notNull(),
     itemType: varchar('item_type', { length: 50 }).notNull(),
     playCount: bigint('play_count', { mode: 'number' }).default(0).notNull(),
     weightedPlayCount: real('weighted_play_count').default(0).notNull(),

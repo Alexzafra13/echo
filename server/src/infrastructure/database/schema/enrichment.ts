@@ -15,7 +15,7 @@ export const enrichmentLogs = pgTable(
   'enrichment_logs',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    entityId: varchar('entity_id', { length: 36 }).notNull(),
+    entityId: uuid('entity_id').notNull(),
     entityType: varchar('entity_type', { length: 20 }).notNull(),
     entityName: varchar('entity_name', { length: 255 }).notNull(),
     provider: varchar('provider', { length: 50 }).notNull(),
@@ -24,7 +24,7 @@ export const enrichmentLogs = pgTable(
     fieldsUpdated: text('fields_updated').array(),
     errorMessage: text('error_message'),
     previewUrl: varchar('preview_url', { length: 512 }),
-    userId: varchar('user_id', { length: 36 }),
+    userId: uuid('user_id'),
     processingTime: integer('processing_time'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
