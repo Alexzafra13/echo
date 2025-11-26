@@ -21,8 +21,6 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 # Copy package.json files for all workspace packages
 COPY frontend/package.json ./frontend/
 COPY server/package.json ./server/
-COPY server/prisma ./server/prisma/
-COPY server/prisma.config.ts ./server/prisma.config.ts
 
 # Install ALL dependencies (frontend + backend) in one go
 RUN pnpm install --frozen-lockfile
@@ -32,20 +30,10 @@ WORKDIR /build/frontend
 COPY frontend/ ./
 RUN pnpm build
 
-# Build Backend - IMPORTANT: Copy source BEFORE generating Prisma client
-# Otherwise COPY overwrites the generated src/generated/prisma/ folder
+# Build Backend
 WORKDIR /build/server
 COPY server/ ./
-RUN pnpm db:generate
 RUN pnpm build
-
-# Copy generated Prisma client to dist (required for runtime imports)
-# Copy to both locations: dist/generated (for main app) and dist/src/generated (for seed script)
-RUN cp -r src/generated dist/ && \
-    mkdir -p dist/src && cp -r src/generated dist/src/
-
-# Compile seed script to JavaScript (so we don't need tsx in production)
-RUN pnpm exec tsc prisma/seed-settings-only.ts --outDir dist/seed --esModuleInterop --module commonjs --skipLibCheck
 
 # ----------------------------------------
 # Stage 2: Production Dependencies Only
@@ -66,9 +54,8 @@ COPY server/package.json ./server/
 RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod && \
     rm -rf ~/.pnpm-store ~/.npm /tmp/*
 
-# Copy prisma schema and config for runtime migrations
-COPY server/prisma /prod/prisma
-COPY server/prisma.config.production.mjs /prod/prisma.config.mjs
+# Copy drizzle config for runtime migrations
+COPY server/drizzle.config.ts /prod/drizzle.config.ts
 
 # ----------------------------------------
 # Stage 3: Minimal Production Runtime
@@ -104,19 +91,16 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy production node_modules from deps stage (includes generated Prisma client)
+# Copy production node_modules from deps stage
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
-# Copy Prisma schema and production config (for migrations at runtime)
-COPY --from=deps --chown=echoapp:nodejs /prod/prisma ./prisma
-COPY --from=deps --chown=echoapp:nodejs /prod/prisma.config.mjs ./prisma.config.mjs
+# Copy Drizzle config and schema for runtime migrations
+COPY --from=deps --chown=echoapp:nodejs /prod/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder --chown=echoapp:nodejs /build/server/src/infrastructure/database/schema ./src/infrastructure/database/schema
 
 # Copy built application files
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
 COPY --from=builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
-
-# Copy compiled seed script (JavaScript, no tsx needed)
-COPY --from=builder --chown=echoapp:nodejs /build/server/dist/seed ./dist/seed
 
 # Copy scripts
 COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /usr/local/bin/
