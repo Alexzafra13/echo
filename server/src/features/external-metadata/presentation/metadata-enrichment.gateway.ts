@@ -24,7 +24,7 @@ import { Server, Socket } from 'socket.io';
 @WebSocketGateway({
   namespace: 'metadata',
   cors: {
-    origin: '*', // Configure based on your frontend URL in production
+    origin: '*', // Configured in WebSocketAdapter based on CORS_ORIGINS env var
     credentials: true,
   },
   transports: ['websocket', 'polling'],

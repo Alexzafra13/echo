@@ -223,7 +223,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
 
                 <div className={styles.coverImageWrapper}>
                   <img
-                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/images/albums/${albumId}/custom/${cover.id}`}
+                    src={`/api/images/albums/${albumId}/custom/${cover.id}`}
                     alt="Custom cover"
                     className={styles.coverImage}
                     onError={(e) => {
