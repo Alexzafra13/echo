@@ -16,7 +16,7 @@ describe('SearchAlbumsUseCase', () => {
       compilation: false,
       songCount: 17,
       duration: 2820,
-      size: BigInt(125000000),
+      size: Number(125000000),
       year: 1969,
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-01'),
@@ -28,7 +28,7 @@ describe('SearchAlbumsUseCase', () => {
       compilation: false,
       songCount: 12,
       duration: 2400,
-      size: BigInt(110000000),
+      size: Number(110000000),
       year: 1970,
       createdAt: new Date('2025-01-02'),
       updatedAt: new Date('2025-01-02'),
@@ -230,7 +230,7 @@ describe('SearchAlbumsUseCase', () => {
         compilation: true,
         songCount: 15,
         duration: 3600,
-        size: BigInt(150000000),
+        size: Number(150000000),
         description: 'A searchable album',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
@@ -259,7 +259,7 @@ describe('SearchAlbumsUseCase', () => {
       expect(mappedAlbum.compilation).toBe(true);
       expect(mappedAlbum.songCount).toBe(15);
       expect(mappedAlbum.duration).toBe(3600);
-      expect(mappedAlbum.size).toEqual(BigInt(150000000));
+      expect(mappedAlbum.size).toEqual(Number(150000000));
       expect(mappedAlbum.description).toBe('A searchable album');
     });
 

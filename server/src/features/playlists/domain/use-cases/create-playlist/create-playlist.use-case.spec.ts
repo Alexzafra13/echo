@@ -15,7 +15,7 @@ describe('CreatePlaylistUseCase', () => {
       description: null,
       coverImageUrl: null,
       duration: 0,
-      size: BigInt(0),
+      size: Number(0),
       ownerId: 'user-123',
       public: false,
       songCount: 0,
@@ -244,7 +244,7 @@ describe('CreatePlaylistUseCase', () => {
       // Assert
       expect(result.songCount).toBe(0);
       expect(result.duration).toBe(0);
-      expect(result.size).toBe(BigInt(0));
+      expect(result.size).toBe(Number(0));
     });
   });
 });

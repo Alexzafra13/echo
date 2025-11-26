@@ -21,7 +21,7 @@ describe('GetArtistUseCase', () => {
     externalUrl: 'https://musicbrainz.org/artist/b10bbbfc',
     externalInfoUpdatedAt: new Date('2025-01-01'),
     orderArtistName: 'Beatles, The',
-    size: BigInt(1073741824), // 1 GB
+    size: Number(1073741824), // 1 GB
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
   });
@@ -74,7 +74,7 @@ describe('GetArtistUseCase', () => {
         externalUrl: 'https://musicbrainz.org/artist/b10bbbfc',
         externalInfoUpdatedAt: new Date('2025-01-01'),
         orderArtistName: 'Beatles, The',
-        size: BigInt(1073741824),
+        size: Number(1073741824),
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
       });
@@ -120,7 +120,7 @@ describe('GetArtistUseCase', () => {
         externalUrl: undefined,
         externalInfoUpdatedAt: undefined,
         orderArtistName: undefined,
-        size: BigInt(0),
+        size: Number(0),
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
       });

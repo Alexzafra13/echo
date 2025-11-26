@@ -33,7 +33,7 @@ export class GetPlaylistTracksUseCase {
       year: track.year,
       duration: track.duration ?? 0,
       // Ensure size is always a valid BigInt to prevent JSON serialization errors
-      size: track.size !== null && track.size !== undefined ? track.size : BigInt(0),
+      size: track.size !== null && track.size !== undefined ? track.size : Number(0),
       path: track.path,
       albumId: track.albumId,
       artistId: track.artistId,

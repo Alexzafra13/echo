@@ -6,7 +6,7 @@ export interface PlaylistProps {
   description?: string;
   coverImageUrl?: string;
   duration: number;
-  size: bigint;
+  size: number;
   ownerId: string;
   public: boolean;
   songCount: number;
@@ -53,7 +53,7 @@ export class Playlist {
     return this.props.duration;
   }
 
-  get size(): bigint {
+  get size(): number {
     return this.props.size;
   }
 
@@ -105,7 +105,7 @@ export class Playlist {
     this.props.updatedAt = new Date();
   }
 
-  updateSize(size: bigint): void {
+  updateSize(size: number): void {
     this.props.size = size;
     this.props.updatedAt = new Date();
   }

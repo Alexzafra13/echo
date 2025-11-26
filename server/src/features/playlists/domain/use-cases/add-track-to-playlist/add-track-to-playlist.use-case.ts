@@ -54,11 +54,11 @@ export class AddTrackToPlaylistUseCase {
     playlist.updateDuration(playlist.duration + (track.duration ?? 0));
     // Safe BigInt addition - ensure BOTH operands are valid BigInt
     const playlistSize = playlist.size !== null && playlist.size !== undefined
-      ? (typeof playlist.size === 'bigint' ? playlist.size : BigInt(playlist.size))
-      : BigInt(0);
+      ? Number(playlist.size || 0)
+      : Number(0);
     const trackSize = track.size !== null && track.size !== undefined
-      ? (typeof track.size === 'bigint' ? track.size : BigInt(track.size))
-      : BigInt(0);
+      ? Number(track.size || 0)
+      : Number(0);
     playlist.updateSize(playlistSize + trackSize);
     playlist.updateSongCount(playlist.songCount + 1);
     await this.playlistRepository.update(playlist.id, playlist);

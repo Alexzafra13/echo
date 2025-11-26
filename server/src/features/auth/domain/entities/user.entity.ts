@@ -14,7 +14,7 @@ export interface UserProps {
   mustChangePassword: boolean;
   avatarPath?: string;
   avatarMimeType?: string;
-  avatarSize?: bigint;
+  avatarSize?: number;
   avatarUpdatedAt?: Date;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
@@ -101,7 +101,7 @@ export class User {
     return this.props.avatarMimeType;
   }
 
-  get avatarSize(): bigint | undefined {
+  get avatarSize(): number | undefined {
     return this.props.avatarSize;
   }
 

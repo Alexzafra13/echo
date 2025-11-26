@@ -16,7 +16,7 @@ export interface ArtistProps {
   externalUrl?: string;
   externalInfoUpdatedAt?: Date;
   orderArtistName?: string;
-  size: bigint;
+  size: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -106,7 +106,7 @@ export class Artist {
     return this.props.orderArtistName;
   }
 
-  get size(): bigint {
+  get size(): number {
     return this.props.size;
   }
 

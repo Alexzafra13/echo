@@ -31,7 +31,7 @@ export class PlaylistMapper {
       description: props.description ?? null,
       coverImageUrl: props.coverImageUrl ?? null,
       duration: props.duration,
-      size: typeof props.size === 'bigint' ? props.size : BigInt(props.size),
+      size: Number(props.size || 0),
       ownerId: props.ownerId,
       public: props.public,
       songCount: props.songCount,

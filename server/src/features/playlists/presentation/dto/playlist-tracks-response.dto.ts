@@ -62,7 +62,7 @@ export class PlaylistTrackResponseDto {
       year: item.year,
       duration: item.duration,
       // Safe BigInt to string conversion - handles null/undefined/BigInt
-      size: typeof item.size === 'bigint' ? item.size.toString() : String(item.size || '0'),
+      size: String(item.size || 0),
       path: item.path,
       albumId: item.albumId,
       artistId: item.artistId,
