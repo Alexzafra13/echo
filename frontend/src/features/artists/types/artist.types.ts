@@ -10,6 +10,7 @@ export interface Artist {
   albumCount: number;
   songCount: number;
   orderArtistName?: string;
+  updatedAt?: string; // Used for cache-busting image URLs
 }
 
 /**
