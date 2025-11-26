@@ -1,76 +1,101 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { BaseRepository } from '@shared/base';
+import { eq, desc, or, inArray, count, sql, and } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { DrizzleBaseRepository } from '@shared/base';
+import { albums, artists, userStarred } from '@infrastructure/database/schema';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { AlbumMapper } from './album.mapper';
 
 @Injectable()
-export class PrismaAlbumRepository
-  extends BaseRepository<Album>
+export class DrizzleAlbumRepository
+  extends DrizzleBaseRepository<Album>
   implements IAlbumRepository
 {
   protected readonly mapper = AlbumMapper;
-  protected readonly modelDelegate: any;
+  protected readonly table = albums;
 
-  constructor(protected readonly prisma: PrismaService) {
+  constructor(protected readonly drizzle: DrizzleService) {
     super();
-    this.modelDelegate = prisma.album;
   }
 
   async findById(id: string): Promise<Album | null> {
-    const album = await this.prisma.album.findUnique({
-      where: { id },
-      include: {
-        artist: true, // Include artist relation to get artist name
-      },
-    });
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(eq(albums.id, id))
+      .limit(1);
 
-    return album ? AlbumMapper.toDomain(album) : null;
+    if (!result[0]) return null;
+
+    return AlbumMapper.toDomain({
+      ...result[0].album,
+      artist: result[0].artistName ? { name: result[0].artistName } : undefined,
+    });
   }
 
   async findAll(skip: number, take: number): Promise<Album[]> {
-    const albums = await this.prisma.album.findMany({
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        artist: true, // Include artist relation to get artist name
-      },
-    });
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(desc(albums.createdAt))
+      .offset(skip)
+      .limit(take);
 
-    return AlbumMapper.toDomainArray(albums);
+    return result.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async search(name: string, skip: number, take: number): Promise<Album[]> {
-    const albumIds = await this.prisma.$queryRaw<{ id: string }[]>`
+    // Use pg_trgm similarity search
+    const albumIds = await this.drizzle.db.execute<{ id: string }>(sql`
       SELECT id
       FROM albums
-      WHERE title % ${name}
-      ORDER BY similarity(title, ${name}) DESC, title ASC
+      WHERE name % ${name}
+      ORDER BY similarity(name, ${name}) DESC, name ASC
       LIMIT ${take}
       OFFSET ${skip}
-    `;
+    `);
 
-    if (albumIds.length === 0) {
+    if (albumIds.rows.length === 0) {
       return [];
     }
 
-    const albums = await this.prisma.album.findMany({
-      where: {
-        id: { in: albumIds.map((a) => a.id) },
-      },
-      include: {
-        artist: true,
-      },
-    });
+    const ids = albumIds.rows.map((a) => a.id);
 
-    const albumMap = new Map(albums.map((a) => [a.id, a]));
-    const orderedAlbums = albumIds
-      .map((id) => albumMap.get(id.id))
-      .filter((album): album is typeof albums[0] => album !== undefined);
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(inArray(albums.id, ids));
 
-    return AlbumMapper.toDomainArray(orderedAlbums);
+    // Maintain similarity order
+    const albumMap = new Map(result.map((r) => [r.album.id, r]));
+    const orderedAlbums = ids
+      .map((id) => albumMap.get(id))
+      .filter((r): r is typeof result[0] => r !== undefined);
+
+    return orderedAlbums.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async findByArtistId(
@@ -78,86 +103,112 @@ export class PrismaAlbumRepository
     skip: number,
     take: number,
   ): Promise<Album[]> {
-    const albums = await this.prisma.album.findMany({
-      where: {
-        OR: [{ artistId }, { albumArtistId: artistId }],
-      },
-      skip,
-      take,
-      orderBy: { year: 'desc' },
-      include: {
-        artist: true, // Include artist relation to get artist name
-      },
-    });
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(or(eq(albums.artistId, artistId), eq(albums.albumArtistId, artistId)))
+      .orderBy(desc(albums.year))
+      .offset(skip)
+      .limit(take);
 
-    return AlbumMapper.toDomainArray(albums);
+    return result.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async findRecent(take: number): Promise<Album[]> {
-    const albums = await this.prisma.album.findMany({
-      take,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        artist: true, // Include artist relation to get artist name
-      },
-    });
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(desc(albums.createdAt))
+      .limit(take);
 
-    return AlbumMapper.toDomainArray(albums);
+    return result.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async findMostPlayed(take: number): Promise<Album[]> {
-    const topAlbumIds = await this.prisma.$queryRaw<
-      { albumId: string; totalPlayCount: bigint }[]
-    >`
+    const topAlbumIds = await this.drizzle.db.execute<{
+      albumId: string;
+      totalPlayCount: bigint;
+    }>(sql`
       SELECT item_id as "albumId", SUM(play_count) as "totalPlayCount"
       FROM user_play_stats
       WHERE item_type = 'album'
       GROUP BY item_id
       ORDER BY "totalPlayCount" DESC
       LIMIT ${take}
-    `;
+    `);
 
-    if (topAlbumIds.length === 0) {
+    if (topAlbumIds.rows.length === 0) {
       return this.findRecent(take);
     }
 
-    const albums = await this.prisma.album.findMany({
-      where: {
-        id: { in: topAlbumIds.map((a) => a.albumId) },
-      },
-      include: {
-        artist: true,
-      },
-    });
+    const ids = topAlbumIds.rows.map((a) => a.albumId);
 
-    const albumMap = new Map(albums.map((a) => [a.id, a]));
-    const orderedAlbums = topAlbumIds
-      .map((item) => albumMap.get(item.albumId))
-      .filter((album): album is typeof albums[0] => album !== undefined);
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(inArray(albums.id, ids));
 
-    return AlbumMapper.toDomainArray(orderedAlbums);
+    // Maintain play count order
+    const albumMap = new Map(result.map((r) => [r.album.id, r]));
+    const orderedAlbums = ids
+      .map((id) => albumMap.get(id))
+      .filter((r): r is typeof result[0] => r !== undefined);
+
+    return orderedAlbums.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async findAlphabetically(skip: number, take: number): Promise<Album[]> {
-    const albums = await this.prisma.album.findMany({
-      skip,
-      take,
-      orderBy: {
-        orderAlbumName: 'asc', // Usa orderAlbumName (sin acentos, ignora "The")
-      },
-      include: {
-        artist: true,
-      },
-    });
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(albums.orderAlbumName)
+      .offset(skip)
+      .limit(take);
 
-    return AlbumMapper.toDomainArray(albums);
+    return result.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async findRecentlyPlayed(userId: string, take: number): Promise<Album[]> {
-    // Query SQL: Obtener álbumes más recientes del historial del usuario
-    const recentAlbumIds = await this.prisma.$queryRaw<
-      { albumId: string; lastPlayed: Date }[]
-    >`
+    const recentAlbumIds = await this.drizzle.db.execute<{
+      albumId: string;
+      lastPlayed: Date;
+    }>(sql`
       SELECT DISTINCT
         t.album_id as "albumId",
         MAX(ph.played_at) as "lastPlayed"
@@ -168,83 +219,98 @@ export class PrismaAlbumRepository
       GROUP BY t.album_id
       ORDER BY "lastPlayed" DESC
       LIMIT ${take}
-    `;
+    `);
 
-    if (recentAlbumIds.length === 0) {
+    if (recentAlbumIds.rows.length === 0) {
       return [];
     }
 
-    // Obtener los álbumes completos
-    const albums = await this.prisma.album.findMany({
-      where: {
-        id: { in: recentAlbumIds.map((a) => a.albumId) },
-      },
-      include: {
-        artist: true,
-      },
-    });
+    const ids = recentAlbumIds.rows.map((a) => a.albumId);
 
-    // Mantener el orden por fecha de reproducción
-    const albumMap = new Map(albums.map((a) => [a.id, a]));
-    const orderedAlbums = recentAlbumIds
-      .map((item) => albumMap.get(item.albumId))
-      .filter((album): album is typeof albums[0] => album !== undefined);
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(inArray(albums.id, ids));
 
-    return AlbumMapper.toDomainArray(orderedAlbums);
+    // Maintain play order
+    const albumMap = new Map(result.map((r) => [r.album.id, r]));
+    const orderedAlbums = ids
+      .map((id) => albumMap.get(id))
+      .filter((r): r is typeof result[0] => r !== undefined);
+
+    return orderedAlbums.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
-    // Query: Álbumes con 'like' en user_starred
-    const favoriteAlbumIds = await this.prisma.userStarred.findMany({
-      where: {
-        userId,
-        starredType: 'album',
-        sentiment: 'like', // Solo los que tienen like (no dislike)
-      },
-      orderBy: {
-        starredAt: 'desc', // Más recientes primero
-      },
-      skip,
-      take,
-      select: {
-        starredId: true,
-      },
-    });
+    const favoriteIds = await this.drizzle.db
+      .select({ starredId: userStarred.starredId })
+      .from(userStarred)
+      .where(
+        and(
+          eq(userStarred.userId, userId),
+          eq(userStarred.starredType, 'album'),
+          eq(userStarred.sentiment, 'like'),
+        ),
+      )
+      .orderBy(desc(userStarred.starredAt))
+      .offset(skip)
+      .limit(take);
 
-    if (favoriteAlbumIds.length === 0) {
+    if (favoriteIds.length === 0) {
       return [];
     }
 
-    const albums = await this.prisma.album.findMany({
-      where: {
-        id: { in: favoriteAlbumIds.map((f) => f.starredId) },
-      },
-      include: {
-        artist: true,
-      },
-    });
+    const ids = favoriteIds.map((f) => f.starredId);
 
-    // Mantener orden por fecha de like
-    const albumMap = new Map(albums.map((a) => [a.id, a]));
-    const orderedAlbums = favoriteAlbumIds
-      .map((f) => albumMap.get(f.starredId))
-      .filter((album): album is typeof albums[0] => album !== undefined);
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(inArray(albums.id, ids));
 
-    return AlbumMapper.toDomainArray(orderedAlbums);
+    // Maintain starred order
+    const albumMap = new Map(result.map((r) => [r.album.id, r]));
+    const orderedAlbums = ids
+      .map((id) => albumMap.get(id))
+      .filter((r): r is typeof result[0] => r !== undefined);
+
+    return orderedAlbums.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
   }
 
   async count(): Promise<number> {
-    return this.prisma.album.count();
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(albums);
+
+    return result[0]?.count ?? 0;
   }
 
   async create(album: Album): Promise<Album> {
     const persistenceData = AlbumMapper.toPersistence(album);
 
-    const created = await this.prisma.album.create({
-      data: persistenceData,
-    });
+    const result = await this.drizzle.db
+      .insert(albums)
+      .values(persistenceData)
+      .returning();
 
-    return AlbumMapper.toDomain(created);
+    return AlbumMapper.toDomain(result[0]);
   }
 
   async update(id: string, album: Partial<Album>): Promise<Album | null> {
@@ -264,11 +330,15 @@ export class PrismaAlbumRepository
       'description',
     ]);
 
-    const updated = await this.prisma.album.update({
-      where: { id },
-      data: updateData,
-    });
+    const result = await this.drizzle.db
+      .update(albums)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(albums.id, id))
+      .returning();
 
-    return AlbumMapper.toDomain(updated);
+    return result[0] ? AlbumMapper.toDomain(result[0]) : null;
   }
 }

@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, desc, and, gte, count, avg, sql } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { playHistory, userPlayStats, tracks } from '@infrastructure/database/schema';
 import { IPlayTrackingRepository } from '../../domain/ports';
 import {
   PlayEvent,
   PlayStats,
   PlayContext,
-  SourceType,
   UserPlaySummary,
   TrackPlaySummary,
   CONTEXT_WEIGHTS,
@@ -13,16 +14,17 @@ import {
 import { PlayTrackingMapper } from '../mappers/play-tracking.mapper';
 
 @Injectable()
-export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
 
   // ===================================
   // WRITE OPERATIONS
   // ===================================
 
   async recordPlay(event: Omit<PlayEvent, 'id' | 'createdAt'>): Promise<PlayEvent> {
-    const playHistory = await this.prisma.playHistory.create({
-      data: {
+    const result = await this.drizzle.db
+      .insert(playHistory)
+      .values({
         userId: event.userId,
         trackId: event.trackId,
         playedAt: event.playedAt,
@@ -32,10 +34,10 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
         skipped: event.skipped,
         sourceId: event.sourceId,
         sourceType: event.sourceType,
-      },
-    });
+      })
+      .returning();
 
-    return PlayTrackingMapper.toPlayEventDomain(playHistory);
+    return PlayTrackingMapper.toPlayEventDomain(result[0]);
   }
 
   async recordSkip(
@@ -44,18 +46,19 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     completionRate: number,
     playContext: PlayContext,
   ): Promise<PlayEvent> {
-    const playHistory = await this.prisma.playHistory.create({
-      data: {
+    const result = await this.drizzle.db
+      .insert(playHistory)
+      .values({
         userId,
         trackId,
         playedAt: new Date(),
         playContext,
         completionRate,
         skipped: true,
-      },
-    });
+      })
+      .returning();
 
-    return PlayTrackingMapper.toPlayEventDomain(playHistory);
+    return PlayTrackingMapper.toPlayEventDomain(result[0]);
   }
 
   async updatePlayStats(
@@ -71,21 +74,22 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     await this.updateItemStats(userId, trackId, 'track', weightedPlay, completionRate);
 
     // Get album and artist IDs
-    const track = await this.prisma.track.findUnique({
-      where: { id: trackId },
-      select: { albumId: true, artistId: true },
-    });
+    const track = await this.drizzle.db
+      .select({ albumId: tracks.albumId, artistId: tracks.artistId })
+      .from(tracks)
+      .where(eq(tracks.id, trackId))
+      .limit(1);
 
-    if (!track) return;
+    if (!track[0]) return;
 
     // Update album stats if exists
-    if (track.albumId) {
-      await this.updateItemStats(userId, track.albumId, 'album', weightedPlay, completionRate);
+    if (track[0].albumId) {
+      await this.updateItemStats(userId, track[0].albumId, 'album', weightedPlay, completionRate);
     }
 
     // Update artist stats if exists
-    if (track.artistId) {
-      await this.updateItemStats(userId, track.artistId, 'artist', weightedPlay, completionRate);
+    if (track[0].artistId) {
+      await this.updateItemStats(userId, track[0].artistId, 'artist', weightedPlay, completionRate);
     }
   }
 
@@ -96,57 +100,59 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     weightedPlay: number,
     completionRate: number,
   ): Promise<void> {
-    const existing = await this.prisma.userPlayStats.findUnique({
-      where: {
-        userId_itemId_itemType: {
-          userId,
-          itemId,
-          itemType,
-        },
-      },
-    });
+    const existing = await this.drizzle.db
+      .select()
+      .from(userPlayStats)
+      .where(
+        and(
+          eq(userPlayStats.userId, userId),
+          eq(userPlayStats.itemId, itemId),
+          eq(userPlayStats.itemType, itemType),
+        ),
+      )
+      .limit(1);
 
-    if (existing) {
+    if (existing[0]) {
       // Calculate new average completion rate
-      const totalCompletions = existing.avgCompletionRate
-        ? existing.avgCompletionRate * Number(existing.playCount)
+      const totalCompletions = existing[0].avgCompletionRate
+        ? existing[0].avgCompletionRate * Number(existing[0].playCount)
         : 0;
-      const newPlayCount = Number(existing.playCount) + 1;
+      const newPlayCount = Number(existing[0].playCount) + 1;
       const newAvgCompletionRate = (totalCompletions + completionRate) / newPlayCount;
 
-      const skipIncrement = completionRate < 0.5 ? 1 : 0;
+      const skipIncrement = completionRate < 0.5 ? BigInt(1) : BigInt(0);
 
-      await this.prisma.userPlayStats.update({
-        where: {
-          userId_itemId_itemType: {
-            userId,
-            itemId,
-            itemType,
-          },
-        },
-        data: {
-          playCount: { increment: 1 },
-          weightedPlayCount: { increment: weightedPlay },
+      await this.drizzle.db
+        .update(userPlayStats)
+        .set({
+          playCount: BigInt(Number(existing[0].playCount) + 1),
+          weightedPlayCount: existing[0].weightedPlayCount + weightedPlay,
           lastPlayedAt: new Date(),
           avgCompletionRate: newAvgCompletionRate,
-          skipCount: { increment: skipIncrement },
-        },
-      });
+          skipCount: BigInt(Number(existing[0].skipCount) + Number(skipIncrement)),
+        })
+        .where(
+          and(
+            eq(userPlayStats.userId, userId),
+            eq(userPlayStats.itemId, itemId),
+            eq(userPlayStats.itemType, itemType),
+          ),
+        );
     } else {
-      const skipCount = completionRate < 0.5 ? 1 : 0;
+      const skipCount = completionRate < 0.5 ? BigInt(1) : BigInt(0);
 
-      await this.prisma.userPlayStats.create({
-        data: {
+      await this.drizzle.db
+        .insert(userPlayStats)
+        .values({
           userId,
           itemId,
           itemType,
-          playCount: 1,
+          playCount: BigInt(1),
           weightedPlayCount: weightedPlay,
           lastPlayedAt: new Date(),
           avgCompletionRate: completionRate,
           skipCount,
-        },
-      });
+        });
     }
   }
 
@@ -155,22 +161,24 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
   // ===================================
 
   async getUserPlayHistory(userId: string, limit: number = 50, offset: number = 0): Promise<PlayEvent[]> {
-    const history = await this.prisma.playHistory.findMany({
-      where: { userId },
-      orderBy: { playedAt: 'desc' },
-      take: limit,
-      skip: offset,
-    });
+    const history = await this.drizzle.db
+      .select()
+      .from(playHistory)
+      .where(eq(playHistory.userId, userId))
+      .orderBy(desc(playHistory.playedAt))
+      .limit(limit)
+      .offset(offset);
 
     return PlayTrackingMapper.toPlayEventDomainArray(history);
   }
 
   async getTrackPlayHistory(trackId: string, limit: number = 50): Promise<PlayEvent[]> {
-    const history = await this.prisma.playHistory.findMany({
-      where: { trackId },
-      orderBy: { playedAt: 'desc' },
-      take: limit,
-    });
+    const history = await this.drizzle.db
+      .select()
+      .from(playHistory)
+      .where(eq(playHistory.trackId, trackId))
+      .orderBy(desc(playHistory.playedAt))
+      .limit(limit);
 
     return PlayTrackingMapper.toPlayEventDomainArray(history);
   }
@@ -180,13 +188,21 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
   // ===================================
 
   async getUserPlayStats(userId: string, itemType?: string): Promise<PlayStats[]> {
-    const stats = await this.prisma.userPlayStats.findMany({
-      where: {
-        userId,
-        ...(itemType && { itemType }),
-      },
-      orderBy: { weightedPlayCount: 'desc' },
-    });
+    let query = this.drizzle.db
+      .select()
+      .from(userPlayStats)
+      .where(eq(userPlayStats.userId, userId))
+      .orderBy(desc(userPlayStats.weightedPlayCount));
+
+    if (itemType) {
+      query = this.drizzle.db
+        .select()
+        .from(userPlayStats)
+        .where(and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, itemType)))
+        .orderBy(desc(userPlayStats.weightedPlayCount));
+    }
+
+    const stats = await query;
 
     return stats.map((stat) => ({
       userId: stat.userId,
@@ -201,13 +217,11 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
   }
 
   async getTrackPlayStats(trackId: string): Promise<PlayStats[]> {
-    const stats = await this.prisma.userPlayStats.findMany({
-      where: {
-        itemId: trackId,
-        itemType: 'track',
-      },
-      orderBy: { playCount: 'desc' },
-    });
+    const stats = await this.drizzle.db
+      .select()
+      .from(userPlayStats)
+      .where(and(eq(userPlayStats.itemId, trackId), eq(userPlayStats.itemType, 'track')))
+      .orderBy(desc(userPlayStats.playCount));
 
     return stats.map((stat) => ({
       userId: stat.userId,
@@ -229,23 +243,20 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     const since = new Date();
     since.setDate(since.getDate() - days);
 
-    const [plays, stats] = await Promise.all([
-      this.prisma.playHistory.findMany({
-        where: {
-          userId,
-          playedAt: { gte: since },
-        },
-        orderBy: { playedAt: 'desc' },
-        take: 50,
-      }),
-      this.prisma.playHistory.aggregate({
-        where: {
-          userId,
-          playedAt: { gte: since },
-        },
-        _count: { id: true },
-        _avg: { completionRate: true },
-      }),
+    const [plays, statsResult] = await Promise.all([
+      this.drizzle.db
+        .select()
+        .from(playHistory)
+        .where(and(eq(playHistory.userId, userId), gte(playHistory.playedAt, since)))
+        .orderBy(desc(playHistory.playedAt))
+        .limit(50),
+      this.drizzle.db
+        .select({
+          count: count(),
+          avgCompletionRate: avg(playHistory.completionRate),
+        })
+        .from(playHistory)
+        .where(and(eq(playHistory.userId, userId), gte(playHistory.playedAt, since))),
     ]);
 
     const skipsCount = plays.filter((p) => p.skipped).length;
@@ -260,17 +271,17 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     // Find most common context
     let topContext: PlayContext = 'direct';
     let maxCount = 0;
-    for (const [context, count] of Object.entries(playsByContext)) {
-      if (count > maxCount) {
-        maxCount = count;
+    for (const [context, ctxCount] of Object.entries(playsByContext)) {
+      if (ctxCount > maxCount) {
+        maxCount = ctxCount;
         topContext = context as PlayContext;
       }
     }
 
     return {
-      totalPlays: stats._count.id,
+      totalPlays: statsResult[0]?.count ?? 0,
       totalSkips: skipsCount,
-      avgCompletionRate: stats._avg.completionRate || 0,
+      avgCompletionRate: Number(statsResult[0]?.avgCompletionRate) || 0,
       topContext,
       playsByContext,
       recentPlays: PlayTrackingMapper.toPlayEventDomainArray(plays),
@@ -278,27 +289,30 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
   }
 
   async getTrackPlaySummary(trackId: string): Promise<TrackPlaySummary> {
-    const [stats, uniqueUsers] = await Promise.all([
-      this.prisma.playHistory.aggregate({
-        where: { trackId },
-        _count: { id: true },
-        _avg: { completionRate: true },
-      }),
-      this.prisma.playHistory.findMany({
-        where: { trackId },
-        select: { userId: true },
-        distinct: ['userId'],
-      }),
+    const [statsResult, uniqueUsersResult, skipsResult] = await Promise.all([
+      this.drizzle.db
+        .select({
+          count: count(),
+          avgCompletionRate: avg(playHistory.completionRate),
+        })
+        .from(playHistory)
+        .where(eq(playHistory.trackId, trackId)),
+      this.drizzle.db.execute<{ userId: string }>(sql`
+        SELECT DISTINCT user_id as "userId"
+        FROM play_history
+        WHERE track_id = ${trackId}
+      `),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(playHistory)
+        .where(and(eq(playHistory.trackId, trackId), eq(playHistory.skipped, true))),
     ]);
 
-    const skips = await this.prisma.playHistory.count({
-      where: { trackId, skipped: true },
-    });
-
-    const totalPlays = stats._count.id;
-    const avgCompletionRate = stats._avg.completionRate || 0;
+    const totalPlays = statsResult[0]?.count ?? 0;
+    const avgCompletionRate = Number(statsResult[0]?.avgCompletionRate) || 0;
+    const skips = skipsResult[0]?.count ?? 0;
     const skipRate = totalPlays > 0 ? skips / totalPlays : 0;
-    const uniqueListeners = uniqueUsers.length;
+    const uniqueListeners = uniqueUsersResult.rows.length;
 
     // Simple popularity score
     const popularityScore =
@@ -325,27 +339,24 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     limit: number = 50,
     days?: number,
   ): Promise<{ trackId: string; playCount: number; weightedPlayCount: number }[]> {
-    const where: any = {
-      userId,
-      itemType: 'track',
-    };
+    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, 'track'));
 
     if (days) {
       const since = new Date();
       since.setDate(since.getDate() - days);
-      where.lastPlayedAt = { gte: since };
+      whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
     }
 
-    const stats = await this.prisma.userPlayStats.findMany({
-      where,
-      orderBy: { weightedPlayCount: 'desc' },
-      take: limit,
-      select: {
-        itemId: true,
-        playCount: true,
-        weightedPlayCount: true,
-      },
-    });
+    const stats = await this.drizzle.db
+      .select({
+        itemId: userPlayStats.itemId,
+        playCount: userPlayStats.playCount,
+        weightedPlayCount: userPlayStats.weightedPlayCount,
+      })
+      .from(userPlayStats)
+      .where(whereCondition)
+      .orderBy(desc(userPlayStats.weightedPlayCount))
+      .limit(limit);
 
     return stats.map((stat) => ({
       trackId: stat.itemId,
@@ -359,26 +370,23 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     limit: number = 50,
     days?: number,
   ): Promise<{ albumId: string; playCount: number }[]> {
-    const where: any = {
-      userId,
-      itemType: 'album',
-    };
+    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, 'album'));
 
     if (days) {
       const since = new Date();
       since.setDate(since.getDate() - days);
-      where.lastPlayedAt = { gte: since };
+      whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
     }
 
-    const stats = await this.prisma.userPlayStats.findMany({
-      where,
-      orderBy: { weightedPlayCount: 'desc' },
-      take: limit,
-      select: {
-        itemId: true,
-        playCount: true,
-      },
-    });
+    const stats = await this.drizzle.db
+      .select({
+        itemId: userPlayStats.itemId,
+        playCount: userPlayStats.playCount,
+      })
+      .from(userPlayStats)
+      .where(whereCondition)
+      .orderBy(desc(userPlayStats.weightedPlayCount))
+      .limit(limit);
 
     return stats.map((stat) => ({
       albumId: stat.itemId,
@@ -391,26 +399,23 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     limit: number = 50,
     days?: number,
   ): Promise<{ artistId: string; playCount: number }[]> {
-    const where: any = {
-      userId,
-      itemType: 'artist',
-    };
+    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, 'artist'));
 
     if (days) {
       const since = new Date();
       since.setDate(since.getDate() - days);
-      where.lastPlayedAt = { gte: since };
+      whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
     }
 
-    const stats = await this.prisma.userPlayStats.findMany({
-      where,
-      orderBy: { weightedPlayCount: 'desc' },
-      take: limit,
-      select: {
-        itemId: true,
-        playCount: true,
-      },
-    });
+    const stats = await this.drizzle.db
+      .select({
+        itemId: userPlayStats.itemId,
+        playCount: userPlayStats.playCount,
+      })
+      .from(userPlayStats)
+      .where(whereCondition)
+      .orderBy(desc(userPlayStats.weightedPlayCount))
+      .limit(limit);
 
     return stats.map((stat) => ({
       artistId: stat.itemId,
@@ -419,15 +424,15 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
   }
 
   async getRecentlyPlayed(userId: string, limit: number = 20): Promise<string[]> {
-    const history = await this.prisma.playHistory.findMany({
-      where: { userId },
-      orderBy: { playedAt: 'desc' },
-      take: limit,
-      distinct: ['trackId'],
-      select: { trackId: true },
-    });
+    const history = await this.drizzle.db.execute<{ trackId: string }>(sql`
+      SELECT DISTINCT ON (track_id) track_id as "trackId"
+      FROM play_history
+      WHERE user_id = ${userId}
+      ORDER BY track_id, played_at DESC
+      LIMIT ${limit}
+    `);
 
-    return history.map((h) => h.trackId);
+    return history.rows.map((h) => h.trackId);
   }
 
   // ===================================
@@ -441,15 +446,11 @@ export class PrismaPlayTrackingRepository implements IPlayTrackingRepository {
     const since = new Date();
     since.setDate(since.getDate() - days);
 
-    // This is a simplified version - in production you'd join with tracks table
-    // to get actual durations and calculate precise listening time
-    const history = await this.prisma.playHistory.findMany({
-      where: {
-        userId,
-        playedAt: { gte: since },
-      },
-      orderBy: { playedAt: 'asc' },
-    });
+    const history = await this.drizzle.db
+      .select()
+      .from(playHistory)
+      .where(and(eq(playHistory.userId, userId), gte(playHistory.playedAt, since)))
+      .orderBy(playHistory.playedAt);
 
     // Group by date and calculate approximate listening time
     // Assuming average song duration of 3.5 minutes
