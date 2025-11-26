@@ -37,7 +37,7 @@ describe('CachedArtistRepository', () => {
       del: jest.fn(),
     };
 
-    // Create instance directly without TestingModule to avoid Prisma imports
+    // Create instance directly without TestingModule for simplicity
     cachedRepository = new CachedArtistRepository(baseRepository as any, cacheService);
   });
 

@@ -50,7 +50,7 @@ describe('CachedAlbumRepository', () => {
       error: jest.fn(),
     } as any;
 
-    // Create instance directly without TestingModule to avoid Prisma imports
+    // Create instance directly without TestingModule for simplicity
     // Constructor expects: (logger, baseRepository, cache)
     cachedRepository = new CachedAlbumRepository(mockLogger, baseRepository as any, cacheService);
   });

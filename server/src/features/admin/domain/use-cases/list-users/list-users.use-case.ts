@@ -5,7 +5,7 @@ import { ListUsersInput, ListUsersOutput } from './list-users.dto';
 /**
  * ListUsersUseCase - Lista todos los usuarios con paginación
  *
- * Ahora usa IUserRepository (port) en lugar de PrismaService directamente
+ * Usa IUserRepository (port) para acceso a datos
  * ✅ Arquitectura hexagonal correcta
  * ✅ Domain no depende de Infrastructure
  */

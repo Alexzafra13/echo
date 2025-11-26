@@ -18,7 +18,7 @@ import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repositor
  * - Presentation Layer: Controller, DTOs
  *
  * Responsabilidades:
- * - Importar dependencias globales (Prisma)
+ * - Importar dependencias globales (Drizzle)
  * - Registrar providers (use cases, repositorio, servicios)
  * - Exportar controllers
  *
