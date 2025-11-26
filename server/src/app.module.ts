@@ -7,7 +7,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig } from './config/app.config';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
-import { PrismaModule } from './infrastructure/persistence/prisma.module';
+import { DrizzleModule } from './infrastructure/database/drizzle.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
@@ -80,7 +80,7 @@ import { validateEnvironment } from './config/env.validation';
     }]),
 
     // Global Infrastructure
-    PrismaModule,
+    DrizzleModule,
     CacheModule,
     QueueModule,
     FilesystemModule,
