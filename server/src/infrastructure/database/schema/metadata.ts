@@ -48,7 +48,7 @@ export const mbidSearchCache = pgTable(
     lastHitAt: timestamp('last_hit_at'),
   },
   (table) => [
-    unique('unique_mbid_search').on(table.queryText, table.queryType, table.queryParams),
+    unique('unique_mbid_search').on(table.queryText, table.queryType),
     index('idx_mbid_search_lookup').on(table.queryText, table.queryType),
     index('idx_mbid_search_expires').on(table.expiresAt),
   ],
