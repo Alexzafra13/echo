@@ -41,17 +41,18 @@ export class DrizzleArtistRepository
   }
 
   async search(name: string, skip: number, take: number): Promise<Artist[]> {
-    // Use pg_trgm similarity search
-    const result = await this.drizzle.db.execute(sql`
-      SELECT *
-      FROM artists
-      WHERE name % ${name}
-      ORDER BY similarity(name, ${name}) DESC, name ASC
-      LIMIT ${take}
-      OFFSET ${skip}
-    `);
+    // Use ILIKE for case-insensitive search with wildcards
+    const searchPattern = `%${name}%`;
 
-    return ArtistMapper.toDomainArray(result.rows as any[]);
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(sql`${artists.name} ILIKE ${searchPattern}`)
+      .orderBy(artists.name)
+      .offset(skip)
+      .limit(take);
+
+    return ArtistMapper.toDomainArray(result);
   }
 
   async count(): Promise<number> {
