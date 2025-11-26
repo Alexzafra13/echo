@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { sql } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import Redis from 'ioredis';
 import { cacheConfig } from '@config/cache.config';
 
@@ -20,7 +21,7 @@ export class HealthCheckService {
   private redis: Redis;
   private startTime: number = Date.now();
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(private readonly drizzle: DrizzleService) {
     // Initialize Redis client for health checks
     this.redis = new Redis({
       host: cacheConfig.redis_host,
@@ -79,7 +80,7 @@ export class HealthCheckService {
 
   private async checkDatabase(): Promise<void> {
     // Simple query to check if database is responsive
-    await this.prisma.$queryRaw`SELECT 1`;
+    await this.drizzle.db.execute(sql`SELECT 1`);
   }
 
   private async checkRedis(): Promise<void> {
