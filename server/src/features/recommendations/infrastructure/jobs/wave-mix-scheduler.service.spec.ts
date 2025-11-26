@@ -3,16 +3,22 @@ import { PinoLogger } from 'nestjs-pino';
 import { WaveMixSchedulerService } from './wave-mix-scheduler.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { WaveMixService } from '../../domain/services/wave-mix.service';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 describe('WaveMixSchedulerService', () => {
   let service: WaveMixSchedulerService;
   let mockLogger: any;
   let mockBullmqService: any;
   let mockWaveMixService: any;
-  let mockPrisma: any;
+  let mockDrizzle: any;
+
+  // Mock data holder
+  let mockUsersData: any[] = [];
 
   beforeEach(async () => {
+    // Reset mock data
+    mockUsersData = [];
+
     mockLogger = {
       info: jest.fn(),
       debug: jest.fn(),
@@ -33,9 +39,12 @@ describe('WaveMixSchedulerService', () => {
       refreshAutoPlaylists: jest.fn(),
     };
 
-    mockPrisma = {
-      user: {
-        findMany: jest.fn(),
+    // Create chainable mock for Drizzle query builder
+    mockDrizzle = {
+      db: {
+        select: jest.fn().mockImplementation(() => ({
+          from: jest.fn().mockImplementation(() => Promise.resolve(mockUsersData)),
+        })),
       },
     };
 
@@ -55,8 +64,8 @@ describe('WaveMixSchedulerService', () => {
           useValue: mockWaveMixService,
         },
         {
-          provide: PrismaService,
-          useValue: mockPrisma,
+          provide: DrizzleService,
+          useValue: mockDrizzle,
         },
       ],
     }).compile();
@@ -97,19 +106,18 @@ describe('WaveMixSchedulerService', () => {
   describe('regenerateAllWaveMixes', () => {
     it('debería regenerar Wave Mix para todos los usuarios', async () => {
       // Arrange
-      const mockUsers = [
+      mockUsersData = [
         { id: 'user-1', username: 'user1' },
         { id: 'user-2', username: 'user2' },
         { id: 'user-3', username: 'user3' },
       ];
-      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
       mockWaveMixService.refreshAutoPlaylists.mockResolvedValue([]);
 
       // Act
       await service.regenerateAllWaveMixes();
 
       // Assert
-      expect(mockPrisma.user.findMany).toHaveBeenCalled();
+      expect(mockDrizzle.db.select).toHaveBeenCalled();
       expect(mockWaveMixService.refreshAutoPlaylists).toHaveBeenCalledTimes(3);
       expect(mockWaveMixService.refreshAutoPlaylists).toHaveBeenCalledWith('user-1');
       expect(mockWaveMixService.refreshAutoPlaylists).toHaveBeenCalledWith('user-2');
@@ -122,11 +130,10 @@ describe('WaveMixSchedulerService', () => {
 
     it('debería manejar errores individuales sin fallar todo el proceso', async () => {
       // Arrange
-      const mockUsers = [
+      mockUsersData = [
         { id: 'user-1', username: 'user1' },
         { id: 'user-2', username: 'user2' },
       ];
-      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
       mockWaveMixService.refreshAutoPlaylists
         .mockResolvedValueOnce([]) // user-1 succeeds
         .mockRejectedValueOnce(new Error('Redis error')); // user-2 fails
