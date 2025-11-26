@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { NotFoundError } from '@shared/errors';
 import { DeleteAvatarInput } from './delete-avatar.dto';
 
@@ -13,6 +14,7 @@ export class DeleteAvatarUseCase {
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
     private readonly storageService: StorageService,
+    private readonly imageService: ImageService,
   ) {}
 
   async execute(input: DeleteAvatarInput): Promise<void> {
@@ -46,5 +48,8 @@ export class DeleteAvatarUseCase {
       avatarSize: null,
       avatarUpdatedAt: null,
     });
+
+    // 5. Invalidate image cache
+    this.imageService.invalidateUserAvatarCache(input.userId);
   }
 }
