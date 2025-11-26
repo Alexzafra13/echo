@@ -17,7 +17,7 @@ import {
 export const metadataCache = pgTable(
   'metadata_cache',
   {
-    entityId: varchar('entity_id', { length: 36 }).notNull(),
+    entityId: uuid('entity_id').notNull(),
     entityType: varchar('entity_type', { length: 50 }).notNull(),
     provider: varchar('provider', { length: 50 }).notNull(),
     data: text('data').notNull(),
@@ -61,7 +61,7 @@ export const metadataConflicts = pgTable(
   'metadata_conflicts',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    entityId: varchar('entity_id', { length: 36 }).notNull(),
+    entityId: uuid('entity_id').notNull(),
     entityType: varchar('entity_type', { length: 20 }).notNull(),
     field: varchar('field', { length: 50 }).notNull(),
     currentValue: text('current_value'),
@@ -72,7 +72,7 @@ export const metadataConflicts = pgTable(
     metadata: json('metadata'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     resolvedAt: timestamp('resolved_at'),
-    resolvedBy: varchar('resolved_by', { length: 36 }),
+    resolvedBy: uuid('resolved_by'),
   },
   (table) => [
     index('metadata_conflicts_entity_idx').on(table.entityId, table.entityType),
