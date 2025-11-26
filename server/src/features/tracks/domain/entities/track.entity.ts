@@ -15,7 +15,7 @@ export interface TrackProps {
   duration?: number;
   path: string;
   bitRate?: number;
-  size?: bigint;
+  size?: number;
   suffix?: string;
   lyrics?: string;
   comment?: string;
@@ -115,7 +115,7 @@ export class Track {
     return this.props.bitRate;
   }
 
-  get size(): bigint | undefined {
+  get size(): number | undefined {
     return this.props.size;
   }
 

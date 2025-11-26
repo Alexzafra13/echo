@@ -120,16 +120,16 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
       const newPlayCount = Number(existing[0].playCount) + 1;
       const newAvgCompletionRate = (totalCompletions + completionRate) / newPlayCount;
 
-      const skipIncrement = completionRate < 0.5 ? BigInt(1) : BigInt(0);
+      const skipIncrement = completionRate < 0.5 ? Number(1) : Number(0);
 
       await this.drizzle.db
         .update(userPlayStats)
         .set({
-          playCount: BigInt(Number(existing[0].playCount) + 1),
+          playCount: Number(Number(existing[0].playCount) + 1),
           weightedPlayCount: existing[0].weightedPlayCount + weightedPlay,
           lastPlayedAt: new Date(),
           avgCompletionRate: newAvgCompletionRate,
-          skipCount: BigInt(Number(existing[0].skipCount) + Number(skipIncrement)),
+          skipCount: Number(Number(existing[0].skipCount) + Number(skipIncrement)),
         })
         .where(
           and(
@@ -139,7 +139,7 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
           ),
         );
     } else {
-      const skipCount = completionRate < 0.5 ? BigInt(1) : BigInt(0);
+      const skipCount = completionRate < 0.5 ? Number(1) : Number(0);
 
       await this.drizzle.db
         .insert(userPlayStats)
@@ -147,7 +147,7 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
           userId,
           itemId,
           itemType,
-          playCount: BigInt(1),
+          playCount: Number(1),
           weightedPlayCount: weightedPlay,
           lastPlayedAt: new Date(),
           avgCompletionRate: completionRate,

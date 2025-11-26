@@ -19,7 +19,7 @@ describe('GetAlbumUseCase', () => {
     compilation: false,
     songCount: 17,
     duration: 2820, // 47 minutos
-    size: BigInt(125000000), // ~125 MB
+    size: Number(125000000), // ~125 MB
     description: 'The eleventh studio album by The Beatles',
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
@@ -74,7 +74,7 @@ describe('GetAlbumUseCase', () => {
         compilation: false,
         songCount: 17,
         duration: 2820,
-        size: BigInt(125000000),
+        size: Number(125000000),
         description: 'The eleventh studio album by The Beatles',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
@@ -119,7 +119,7 @@ describe('GetAlbumUseCase', () => {
         compilation: false,
         songCount: 10,
         duration: 1800,
-        size: BigInt(50000000),
+        size: Number(50000000),
         description: undefined,
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
@@ -145,7 +145,7 @@ describe('GetAlbumUseCase', () => {
         compilation: true,
         songCount: 25,
         duration: 4500,
-        size: BigInt(200000000),
+        size: Number(200000000),
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
       });

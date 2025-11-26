@@ -17,7 +17,7 @@ export interface SearchTracksOutput {
     duration?: number;
     path: string;
     bitRate?: number;
-    size?: bigint;
+    size?: number;
     suffix?: string;
     lyrics?: string;
     comment?: string;

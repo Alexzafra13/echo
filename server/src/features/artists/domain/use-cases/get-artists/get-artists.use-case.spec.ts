@@ -13,7 +13,7 @@ describe('GetArtistsUseCase', () => {
       name: 'The Beatles',
       albumCount: 13,
       songCount: 213,
-      size: BigInt(1073741824),
+      size: Number(1073741824),
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-01'),
     }),
@@ -22,7 +22,7 @@ describe('GetArtistsUseCase', () => {
       name: 'Pink Floyd',
       albumCount: 15,
       songCount: 165,
-      size: BigInt(858993459),
+      size: Number(858993459),
       createdAt: new Date('2025-01-02'),
       updatedAt: new Date('2025-01-02'),
     }),
@@ -31,7 +31,7 @@ describe('GetArtistsUseCase', () => {
       name: 'Led Zeppelin',
       albumCount: 9,
       songCount: 94,
-      size: BigInt(644245094),
+      size: Number(644245094),
       createdAt: new Date('2025-01-03'),
       updatedAt: new Date('2025-01-03'),
     }),
@@ -176,7 +176,7 @@ describe('GetArtistsUseCase', () => {
         externalUrl: 'https://example.com/artist',
         externalInfoUpdatedAt: new Date('2025-01-15'),
         orderArtistName: 'Artist, Complete',
-        size: BigInt(2147483648),
+        size: Number(2147483648),
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
       });
@@ -199,7 +199,7 @@ describe('GetArtistsUseCase', () => {
       expect(mappedArtist.biography).toBe('A complete artist biography');
       expect(mappedArtist.smallImageUrl).toBe('https://example.com/small.jpg');
       expect(mappedArtist.orderArtistName).toBe('Artist, Complete');
-      expect(mappedArtist.size).toEqual(BigInt(2147483648));
+      expect(mappedArtist.size).toEqual(Number(2147483648));
     });
 
     it('debería usar valores por defecto si no se provee skip/take', async () => {

@@ -9,7 +9,7 @@ export interface TrackItem {
   discNumber: number;
   year?: number;
   duration: number;
-  size: bigint;
+  size: number;
   path: string;
   albumId?: string;
   artistId?: string;

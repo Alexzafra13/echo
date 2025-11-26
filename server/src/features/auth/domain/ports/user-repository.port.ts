@@ -11,7 +11,7 @@ export interface UserUpdateableFields {
   mustChangePassword?: boolean;
   avatarPath?: string | null;
   avatarMimeType?: string | null;
-  avatarSize?: bigint | null;
+  avatarSize?: number | null;
   avatarUpdatedAt?: Date | null;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
