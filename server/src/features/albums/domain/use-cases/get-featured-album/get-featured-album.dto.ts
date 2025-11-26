@@ -13,7 +13,7 @@ export interface AlbumOutput {
   compilation: boolean;
   songCount: number;
   duration: number;
-  size: bigint;
+  size: number;
   description?: string;
   createdAt: Date;
   updatedAt: Date;

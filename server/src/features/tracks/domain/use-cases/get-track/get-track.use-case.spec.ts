@@ -20,7 +20,7 @@ describe('GetTrackUseCase', () => {
     duration: 259, // 4:19
     path: '/music/beatles/abbey-road/01-come-together.mp3',
     bitRate: 320000,
-    size: BigInt(10485760), // ~10 MB
+    size: Number(10485760), // ~10 MB
     suffix: 'mp3',
     lyrics: 'Come together, right now...',
     comment: 'Opening track',
@@ -81,7 +81,7 @@ describe('GetTrackUseCase', () => {
         duration: 259,
         path: '/music/beatles/abbey-road/01-come-together.mp3',
         bitRate: 320000,
-        size: BigInt(10485760),
+        size: Number(10485760),
         suffix: 'mp3',
         lyrics: 'Come together, right now...',
         comment: 'Opening track',

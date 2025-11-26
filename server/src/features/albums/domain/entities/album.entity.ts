@@ -15,7 +15,7 @@ export interface AlbumProps {
   compilation: boolean;
   songCount: number;
   duration: number;
-  size: bigint;
+  size: number;
   description?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -110,7 +110,7 @@ export class Album {
     return this.props.duration;
   }
 
-  get size(): bigint {
+  get size(): number {
     return this.props.size;
   }
 

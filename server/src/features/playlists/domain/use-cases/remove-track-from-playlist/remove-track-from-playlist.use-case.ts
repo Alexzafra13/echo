@@ -57,13 +57,13 @@ export class RemoveTrackFromPlaylistUseCase {
     const trackDuration = track.duration ?? 0;
     // Safe BigInt subtraction - ensure BOTH operands are valid BigInt
     const playlistSize = playlist.size !== null && playlist.size !== undefined
-      ? (typeof playlist.size === 'bigint' ? playlist.size : BigInt(playlist.size))
-      : BigInt(0);
+      ? Number(playlist.size || 0)
+      : Number(0);
     const trackSize = track.size !== null && track.size !== undefined
-      ? (typeof track.size === 'bigint' ? track.size : BigInt(track.size))
-      : BigInt(0);
+      ? Number(track.size || 0)
+      : Number(0);
     playlist.updateDuration(Math.max(0, playlist.duration - trackDuration));
-    playlist.updateSize(playlistSize > trackSize ? playlistSize - trackSize : BigInt(0));
+    playlist.updateSize(playlistSize > trackSize ? playlistSize - trackSize : Number(0));
     playlist.updateSongCount(Math.max(0, playlist.songCount - 1));
     await this.playlistRepository.update(playlist.id, playlist);
 

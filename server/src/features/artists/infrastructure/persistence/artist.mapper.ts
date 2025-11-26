@@ -21,7 +21,7 @@ export class ArtistMapper {
       externalUrl: raw.externalUrl || undefined,
       externalInfoUpdatedAt: raw.externalInfoUpdatedAt || undefined,
       orderArtistName: raw.orderArtistName || undefined,
-      size: BigInt(raw.size || 0),
+      size: Number(raw.size || 0),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });

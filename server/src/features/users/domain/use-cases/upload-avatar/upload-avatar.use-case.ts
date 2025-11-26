@@ -76,7 +76,7 @@ export class UploadAvatarUseCase {
     await this.userRepository.updatePartial(input.userId, {
       avatarPath,
       avatarMimeType: input.file.mimetype,
-      avatarSize: BigInt(input.file.size),
+      avatarSize: Number(input.file.size),
       avatarUpdatedAt: new Date(),
     });
 

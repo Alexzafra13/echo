@@ -19,7 +19,7 @@ describe('GetTracksUseCase', () => {
       duration: 259,
       path: '/music/beatles/01-come-together.mp3',
       bitRate: 320000,
-      size: BigInt(10485760),
+      size: Number(10485760),
       suffix: 'mp3',
       compilation: false,
       createdAt: new Date('2025-01-01'),
@@ -36,7 +36,7 @@ describe('GetTracksUseCase', () => {
       duration: 182,
       path: '/music/beatles/02-something.mp3',
       bitRate: 320000,
-      size: BigInt(7340032),
+      size: Number(7340032),
       suffix: 'mp3',
       compilation: false,
       createdAt: new Date('2025-01-02'),
@@ -53,7 +53,7 @@ describe('GetTracksUseCase', () => {
       duration: 185,
       path: '/music/beatles/03-here-comes-the-sun.mp3',
       bitRate: 320000,
-      size: BigInt(7464960),
+      size: Number(7464960),
       suffix: 'mp3',
       compilation: false,
       createdAt: new Date('2025-01-03'),
@@ -201,7 +201,7 @@ describe('GetTracksUseCase', () => {
         duration: 300,
         path: '/music/complete.mp3',
         bitRate: 320000,
-        size: BigInt(12000000),
+        size: Number(12000000),
         suffix: 'mp3',
         lyrics: 'These are the lyrics...',
         comment: 'A complete track with all fields',
@@ -234,7 +234,7 @@ describe('GetTracksUseCase', () => {
       expect(mappedTrack.duration).toBe(300);
       expect(mappedTrack.path).toBe('/music/complete.mp3');
       expect(mappedTrack.bitRate).toBe(320000);
-      expect(mappedTrack.size).toEqual(BigInt(12000000));
+      expect(mappedTrack.size).toEqual(Number(12000000));
       expect(mappedTrack.suffix).toBe('mp3');
       expect(mappedTrack.lyrics).toBe('These are the lyrics...');
       expect(mappedTrack.comment).toBe('A complete track with all fields');

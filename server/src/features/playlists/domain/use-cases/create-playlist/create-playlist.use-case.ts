@@ -26,7 +26,7 @@ export class CreatePlaylistUseCase {
       description: input.description?.trim(),
       coverImageUrl: input.coverImageUrl?.trim(),
       duration: 0,
-      size: BigInt(0),
+      size: Number(0),
       ownerId: input.ownerId,
       public: input.public ?? false,
       songCount: 0,

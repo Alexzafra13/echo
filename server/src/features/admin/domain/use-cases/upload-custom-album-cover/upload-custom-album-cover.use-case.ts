@@ -107,7 +107,7 @@ export class UploadCustomAlbumCoverUseCase {
         albumId: input.albumId,
         filePath: relativePath,
         fileName,
-        fileSize: BigInt(input.file.size),
+        fileSize: Number(input.file.size),
         mimeType: input.file.mimetype,
         isActive: false, // Not active by default, user must apply it
         uploadedBy: input.uploadedBy,

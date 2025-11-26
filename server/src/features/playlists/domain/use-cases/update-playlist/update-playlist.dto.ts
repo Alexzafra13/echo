@@ -13,7 +13,7 @@ export interface UpdatePlaylistOutput {
   description?: string;
   coverImageUrl?: string;
   duration: number;
-  size: bigint;
+  size: number;
   ownerId: string;
   public: boolean;
   songCount: number;

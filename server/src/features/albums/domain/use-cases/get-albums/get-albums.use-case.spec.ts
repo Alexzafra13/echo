@@ -15,7 +15,7 @@ describe('GetAlbumsUseCase', () => {
       compilation: false,
       songCount: 17,
       duration: 2820,
-      size: BigInt(125000000),
+      size: Number(125000000),
       year: 1969,
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-01'),
@@ -27,7 +27,7 @@ describe('GetAlbumsUseCase', () => {
       compilation: false,
       songCount: 9,
       duration: 2580,
-      size: BigInt(115000000),
+      size: Number(115000000),
       year: 1982,
       createdAt: new Date('2025-01-02'),
       updatedAt: new Date('2025-01-02'),
@@ -39,7 +39,7 @@ describe('GetAlbumsUseCase', () => {
       compilation: false,
       songCount: 10,
       duration: 2580,
-      size: BigInt(120000000),
+      size: Number(120000000),
       year: 1973,
       createdAt: new Date('2025-01-03'),
       updatedAt: new Date('2025-01-03'),
@@ -186,7 +186,7 @@ describe('GetAlbumsUseCase', () => {
         compilation: true,
         songCount: 15,
         duration: 3600,
-        size: BigInt(150000000),
+        size: Number(150000000),
         description: 'A complete album with all fields',
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
@@ -212,7 +212,7 @@ describe('GetAlbumsUseCase', () => {
       expect(mappedAlbum.compilation).toBe(true);
       expect(mappedAlbum.songCount).toBe(15);
       expect(mappedAlbum.duration).toBe(3600);
-      expect(mappedAlbum.size).toEqual(BigInt(150000000));
+      expect(mappedAlbum.size).toEqual(Number(150000000));
       expect(mappedAlbum.description).toBe('A complete album with all fields');
     });
 
