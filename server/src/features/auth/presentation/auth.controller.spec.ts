@@ -6,6 +6,7 @@ describe('AuthController', () => {
   let controller: AuthController;
   let mockLoginUseCase: any;
   let mockRefreshTokenUseCase: any;
+  let mockUserRepository: any;
 
   beforeEach(() => {
     mockLoginUseCase = {
@@ -16,9 +17,15 @@ describe('AuthController', () => {
       execute: jest.fn(),
     };
 
+    mockUserRepository = {
+      findById: jest.fn(),
+      findByUsername: jest.fn(),
+    };
+
     controller = new AuthController(
       mockLoginUseCase,
       mockRefreshTokenUseCase,
+      mockUserRepository,
     );
   });
 
@@ -184,18 +191,81 @@ describe('AuthController', () => {
   describe('GET /auth/me', () => {
     it('debería retornar el usuario autenticado', async () => {
       // Arrange
-      const mockUser = {
-        userId: 'user-123',
+      const jwtUser = {
+        sub: 'user-123',
         username: 'testuser',
         isAdmin: false,
       };
 
+      // Mock repository to return fresh user data
+      const freshUser = {
+        id: 'user-123',
+        username: 'testuser',
+        email: 'test@test.com',
+        name: 'Test User',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
+        avatarPath: null,
+        createdAt: new Date(),
+      };
+      mockUserRepository.findById.mockResolvedValue(freshUser);
+
       // Act
-      const result = await controller.me(mockUser);
+      const result = await controller.me(jwtUser);
 
       // Assert
       expect(result).toHaveProperty('user');
-      expect(result.user).toEqual(mockUser);
+      expect(result.user.id).toBe('user-123');
+      expect(result.user.username).toBe('testuser');
+      expect(result.user.hasAvatar).toBe(false);
+      expect(mockUserRepository.findById).toHaveBeenCalledWith('user-123');
+    });
+
+    it('debería retornar hasAvatar true si el usuario tiene avatar', async () => {
+      // Arrange
+      const jwtUser = {
+        sub: 'user-123',
+        username: 'testuser',
+        isAdmin: false,
+      };
+
+      const freshUser = {
+        id: 'user-123',
+        username: 'testuser',
+        email: 'test@test.com',
+        name: 'Test User',
+        isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
+        avatarPath: '/uploads/avatars/user-123.jpg',
+        createdAt: new Date(),
+      };
+      mockUserRepository.findById.mockResolvedValue(freshUser);
+
+      // Act
+      const result = await controller.me(jwtUser);
+
+      // Assert
+      expect(result.user.hasAvatar).toBe(true);
+    });
+
+    it('debería retornar datos del JWT si el usuario no existe en la BD', async () => {
+      // Arrange
+      const jwtUser = {
+        sub: 'user-123',
+        username: 'testuser',
+        isAdmin: false,
+      };
+
+      mockUserRepository.findById.mockResolvedValue(null);
+
+      // Act
+      const result = await controller.me(jwtUser);
+
+      // Assert
+      expect(result).toHaveProperty('user');
+      expect(result.user).toEqual(jwtUser);
     });
   });
 });
