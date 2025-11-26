@@ -354,13 +354,21 @@ export class ScanProcessorService implements OnModuleInit {
 
     // 1. Buscar artista por nombre normalizado (sin acentos)
     const existingArtist = await this.drizzle.db
-      .select({ id: artists.id, name: artists.name })
+      .select({ id: artists.id, name: artists.name, mbzArtistId: artists.mbzArtistId })
       .from(artists)
       .where(eq(artists.orderArtistName, orderName))
       .limit(1);
 
     if (existingArtist[0]) {
-      return { ...existingArtist[0], created: false };
+      // Update MBID if provided and the artist doesn't have one yet
+      if (mbzArtistId && !existingArtist[0].mbzArtistId) {
+        await this.drizzle.db
+          .update(artists)
+          .set({ mbzArtistId, updatedAt: new Date() })
+          .where(eq(artists.id, existingArtist[0].id));
+        this.logger.debug(`Updated MBID for artist "${existingArtist[0].name}": ${mbzArtistId}`);
+      }
+      return { id: existingArtist[0].id, name: existingArtist[0].name, created: false };
     }
 
     // 2. Si no existe, crearlo con el nombre original (con acentos si los tiene)
@@ -418,13 +426,38 @@ export class ScanProcessorService implements OnModuleInit {
         artistId: albums.artistId,
         coverArtPath: albums.coverArtPath,
         year: albums.year,
+        mbzAlbumId: albums.mbzAlbumId,
       })
       .from(albums)
       .where(eq(albums.name, normalizedName))
       .limit(1);
 
-    // 2. Si no existe, crearlo
-    if (!existingAlbum[0]) {
+    // 2. Si existe, actualizar MBID si es necesario
+    if (existingAlbum[0]) {
+      // Update MBID if provided and the album doesn't have one yet
+      if (metadata.mbzAlbumId && !existingAlbum[0].mbzAlbumId) {
+        await this.drizzle.db
+          .update(albums)
+          .set({
+            mbzAlbumId: metadata.mbzAlbumId,
+            mbzAlbumArtistId: metadata.mbzAlbumArtistId || null,
+            updatedAt: new Date(),
+          })
+          .where(eq(albums.id, existingAlbum[0].id));
+        this.logger.debug(`Updated MBID for album "${existingAlbum[0].name}": ${metadata.mbzAlbumId}`);
+      }
+
+      return {
+        id: existingAlbum[0].id,
+        name: existingAlbum[0].name,
+        artistId: existingAlbum[0].artistId!,
+        created: false,
+        coverExtracted: false,
+      };
+    }
+
+    // 3. Si no existe, crearlo
+    {
       const albumId = generateUuid();
 
       // Extraer cover art del primer track
@@ -464,14 +497,6 @@ export class ScanProcessorService implements OnModuleInit {
         coverExtracted: !!coverPath,
       };
     }
-
-    return {
-      id: existingAlbum[0].id,
-      name: existingAlbum[0].name,
-      artistId: existingAlbum[0].artistId!, // TypeScript: garantizamos que no es null porque filtramos por artistId
-      created: false,
-      coverExtracted: false,
-    };
   }
 
   /**
