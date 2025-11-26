@@ -1,7 +1,7 @@
 // prisma/seed-settings-only.ts
 // Seeds ONLY default settings, NOT admin user (admin is created via setup wizard)
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/prisma';
 
 const prisma = new PrismaClient();
 
