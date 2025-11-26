@@ -25,6 +25,8 @@ import { IsString, IsIn } from 'class-validator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { SettingsService } from '../infrastructure/services/settings.service';
+import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
+import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
 
 /**
  * DTO para actualizar una configuración
@@ -82,7 +84,11 @@ class ValidateStoragePathDto {
 export class AdminSettingsController {
   private readonly logger = new Logger(AdminSettingsController.name);
 
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(
+    private readonly settingsService: SettingsService,
+    private readonly fanartAgent: FanartTvAgent,
+    private readonly lastfmAgent: LastfmAgent,
+  ) {}
 
   /**
    * Obtiene todas las configuraciones
@@ -268,6 +274,9 @@ export class AdminSettingsController {
       // Invalidar caché
       this.settingsService.clearCache();
 
+      // Reload agents if API key was updated
+      await this.reloadAgentsIfNeeded(key);
+
       return {
         success: true,
         key,
@@ -278,6 +287,23 @@ export class AdminSettingsController {
     } catch (error) {
       this.logger.error(`Error updating setting ${key}: ${(error as Error).message}`, (error as Error).stack);
       throw error;
+    }
+  }
+
+  /**
+   * Reload external metadata agents when their API keys are updated
+   */
+  private async reloadAgentsIfNeeded(key: string): Promise<void> {
+    if (key.includes('fanart')) {
+      this.logger.log('Reloading Fanart.tv agent settings...');
+      await this.fanartAgent.loadSettings();
+      this.logger.log(`Fanart.tv agent reloaded (enabled: ${this.fanartAgent.isEnabled()})`);
+    }
+
+    if (key.includes('lastfm')) {
+      this.logger.log('Reloading Last.fm agent settings...');
+      await this.lastfmAgent.loadSettings();
+      this.logger.log(`Last.fm agent reloaded (enabled: ${this.lastfmAgent.isEnabled()})`);
     }
   }
 
