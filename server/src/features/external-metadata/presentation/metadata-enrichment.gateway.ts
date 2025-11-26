@@ -3,6 +3,7 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
@@ -16,6 +17,9 @@ import { Server, Socket } from 'socket.io';
  * - enrichment:progress - Progress update during enrichment
  * - enrichment:completed - Enrichment completed successfully
  * - enrichment:error - Error occurred during enrichment
+ *
+ * Note: This gateway does NOT require authentication to allow
+ * receiving metadata updates without JWT token overhead.
  */
 @WebSocketGateway({
   namespace: 'metadata',
@@ -23,19 +27,24 @@ import { Server, Socket } from 'socket.io';
     origin: '*', // Configure based on your frontend URL in production
     credentials: true,
   },
+  transports: ['websocket', 'polling'],
 })
-export class MetadataEnrichmentGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
   private readonly logger = new Logger(MetadataEnrichmentGateway.name);
 
+  afterInit(server: Server) {
+    this.logger.log('🔌 MetadataEnrichmentGateway initialized');
+  }
+
   handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log(`Client connected to metadata namespace: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected from metadata namespace: ${client.id}`);
   }
 
   /**
