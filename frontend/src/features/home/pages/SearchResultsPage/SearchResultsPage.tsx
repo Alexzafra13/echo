@@ -97,7 +97,7 @@ export function SearchResultsPage() {
                   onClick={() => setLocation(`/artists/${artist.id}`)}
                 >
                   <img
-                    src={getArtistImageUrl(artist.id, 'profile')}
+                    src={getArtistImageUrl(artist.id, 'profile', artist.updatedAt)}
                     alt={artist.name}
                     className={styles.searchResultsPage__cardImage_round}
                     onError={handleAvatarError}
