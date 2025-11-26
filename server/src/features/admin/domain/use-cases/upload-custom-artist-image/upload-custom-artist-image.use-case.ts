@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
@@ -22,7 +24,7 @@ export class UploadCustomArtistImageUseCase {
   private readonly logger = new Logger(UploadCustomArtistImageUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
@@ -31,10 +33,16 @@ export class UploadCustomArtistImageUseCase {
 
   async execute(input: UploadCustomArtistImageInput): Promise<UploadCustomArtistImageOutput> {
     // Validate artist exists
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-      select: { id: true, name: true },
-    });
+    const artistResult = await this.drizzle.db
+      .select({
+        id: artists.id,
+        name: artists.name,
+      })
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
@@ -94,8 +102,9 @@ export class UploadCustomArtistImageUseCase {
     // Windows path.relative() returns backslashes (\) which don't work on Unix systems
     const relativePath = path.relative(basePath, filePath).replace(/\\/g, '/');
 
-    const customImage = await this.prisma.customArtistImage.create({
-      data: {
+    const customImageResult = await this.drizzle.db
+      .insert(customArtistImages)
+      .values({
         artistId: input.artistId,
         imageType: input.imageType,
         filePath: relativePath,
@@ -104,8 +113,10 @@ export class UploadCustomArtistImageUseCase {
         mimeType: input.file.mimetype,
         isActive: false, // Not active by default, user must apply it
         uploadedBy: input.uploadedBy,
-      },
-    });
+      })
+      .returning();
+
+    const customImage = customImageResult[0];
 
     this.logger.log(
       `✅ Successfully uploaded custom ${input.imageType} image for ${artist.name} (ID: ${customImage.id})`,

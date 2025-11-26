@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { artists } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import {
@@ -16,7 +18,7 @@ export class UpdateArtistBackgroundPositionUseCase {
   private readonly logger = new Logger(UpdateArtistBackgroundPositionUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly metadataGateway: MetadataEnrichmentGateway,
   ) {}
@@ -25,13 +27,16 @@ export class UpdateArtistBackgroundPositionUseCase {
     input: UpdateArtistBackgroundPositionInput,
   ): Promise<UpdateArtistBackgroundPositionOutput> {
     // Get artist from database
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    const artistResult = await this.drizzle.db
+      .select({
+        id: artists.id,
+        name: artists.name,
+      })
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
@@ -42,12 +47,12 @@ export class UpdateArtistBackgroundPositionUseCase {
     );
 
     // Update the background position
-    await this.prisma.artist.update({
-      where: { id: input.artistId },
-      data: {
+    await this.drizzle.db
+      .update(artists)
+      .set({
         backgroundPosition: input.backgroundPosition,
-      },
-    });
+      })
+      .where(eq(artists.id, input.artistId));
 
     // Invalidate Redis cache
     const redisCacheKey = `artist:${input.artistId}`;

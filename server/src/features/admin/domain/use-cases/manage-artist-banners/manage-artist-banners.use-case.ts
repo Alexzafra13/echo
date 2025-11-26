@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { artists, artistBanners } from '@infrastructure/database/schema';
+import { eq, asc, desc } from 'drizzle-orm';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import * as path from 'path';
@@ -18,16 +20,17 @@ export class ManageArtistBannersUseCase {
   private readonly logger = new Logger(ManageArtistBannersUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
   ) {}
 
   async list(input: ListArtistBannersInput): Promise<ListArtistBannersOutput> {
-    const banners = await this.prisma.artistBanner.findMany({
-      where: { artistId: input.artistId },
-      orderBy: { order: 'asc' },
-    });
+    const banners = await this.drizzle.db
+      .select()
+      .from(artistBanners)
+      .where(eq(artistBanners.artistId, input.artistId))
+      .orderBy(asc(artistBanners.order));
 
     return {
       banners: banners.map((b) => ({
@@ -42,21 +45,27 @@ export class ManageArtistBannersUseCase {
   }
 
   async add(input: AddArtistBannerInput): Promise<AddArtistBannerOutput> {
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-    });
+    const artistResult = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
     }
 
     // Get current max order
-    const maxOrder = await this.prisma.artistBanner.findFirst({
-      where: { artistId: input.artistId },
-      orderBy: { order: 'desc' },
-      select: { order: true },
-    });
+    const maxOrderResult = await this.drizzle.db
+      .select({ order: artistBanners.order })
+      .from(artistBanners)
+      .where(eq(artistBanners.artistId, input.artistId))
+      .orderBy(desc(artistBanners.order))
+      .limit(1);
 
+    const maxOrder = maxOrderResult[0];
     const newOrder = (maxOrder?.order ?? -1) + 1;
 
     // Download banner
@@ -67,14 +76,17 @@ export class ManageArtistBannersUseCase {
     await this.imageDownload.downloadAndSave(input.bannerUrl, imagePath);
 
     // Create banner record
-    const banner = await this.prisma.artistBanner.create({
-      data: {
+    const bannerResult = await this.drizzle.db
+      .insert(artistBanners)
+      .values({
         artistId: input.artistId,
         imageUrl: imagePath,
         provider: input.provider,
         order: newOrder,
-      },
-    });
+      })
+      .returning();
+
+    const banner = bannerResult[0];
 
     this.logger.log(`Added banner for artist ${artist.name} from ${input.provider}`);
 
@@ -86,9 +98,13 @@ export class ManageArtistBannersUseCase {
   }
 
   async delete(input: DeleteArtistBannerInput): Promise<DeleteArtistBannerOutput> {
-    const banner = await this.prisma.artistBanner.findUnique({
-      where: { id: input.bannerId },
-    });
+    const bannerResult = await this.drizzle.db
+      .select()
+      .from(artistBanners)
+      .where(eq(artistBanners.id, input.bannerId))
+      .limit(1);
+
+    const banner = bannerResult[0];
 
     if (!banner) {
       throw new NotFoundException(`Banner not found: ${input.bannerId}`);
@@ -102,9 +118,9 @@ export class ManageArtistBannersUseCase {
     }
 
     // Delete database record
-    await this.prisma.artistBanner.delete({
-      where: { id: input.bannerId },
-    });
+    await this.drizzle.db
+      .delete(artistBanners)
+      .where(eq(artistBanners.id, input.bannerId));
 
     this.logger.log(`Deleted banner ${input.bannerId}`);
 

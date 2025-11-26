@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { albums, artists } from '@infrastructure/database/schema';
 import { AgentRegistryService } from '@features/external-metadata/infrastructure/services/agent-registry.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { IAlbumCoverRetriever } from '@features/external-metadata/domain/interfaces';
@@ -18,25 +20,33 @@ export class SearchAlbumCoversUseCase {
   private readonly logger = new Logger(SearchAlbumCoversUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly imageDownload: ImageDownloadService,
   ) {}
 
   async execute(input: SearchAlbumCoversInput): Promise<SearchAlbumCoversOutput> {
     // Get album from database
-    const album = await this.prisma.album.findUnique({
-      where: { id: input.albumId },
-      include: { artist: true },
-    });
+    const albumResult = await this.drizzle.db
+      .select({
+        album: albums,
+        artist: artists,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(eq(albums.id, input.albumId))
+      .limit(1);
 
-    if (!album) {
+    const result = albumResult[0];
+
+    if (!result) {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
     }
 
-    const artistName = album.artist?.name || 'Unknown Artist';
+    const album = result.album;
+    const artistName = result.artist?.name || 'Unknown Artist';
     const mbzAlbumId = album.mbzAlbumId || null;
-    const mbzArtistId = album.artist?.mbzArtistId || null;
+    const mbzArtistId = result.artist?.mbzArtistId || null;
 
     this.logger.log(
       `Searching covers for album: ${album.name} by ${artistName}`,
