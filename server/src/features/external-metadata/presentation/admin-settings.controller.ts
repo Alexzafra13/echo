@@ -167,7 +167,7 @@ export class AdminSettingsController {
   @Get(':key')
   @ApiOperation({
     summary: 'Get specific setting',
-    description: 'Returns a specific configuration setting by key (admin only)',
+    description: 'Returns a specific configuration setting by key (admin only). Returns null if not found.',
   })
   @ApiParam({
     name: 'key',
@@ -176,9 +176,10 @@ export class AdminSettingsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Setting retrieved successfully',
+    description: 'Setting retrieved successfully (or null if not found)',
     schema: {
       type: 'object',
+      nullable: true,
       properties: {
         key: { type: 'string' },
         value: { type: 'string' },
@@ -189,14 +190,14 @@ export class AdminSettingsController {
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'Setting not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getSetting(@Param('key') key: string) {
     try {
       const setting = await this.settingsService.findOne(key);
 
       if (!setting) {
-        throw new BadRequestException(`Setting with key ${key} not found`);
+        this.logger.debug(`Setting ${key} not found, returning null`);
+        return null;
       }
 
       this.logger.debug(`Retrieved setting: ${key}`);
@@ -215,8 +216,8 @@ export class AdminSettingsController {
   @Put(':key')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Update setting',
-    description: 'Updates a configuration setting (admin only)',
+    summary: 'Update or create setting',
+    description: 'Updates or creates a configuration setting (admin only)',
   })
   @ApiParam({
     name: 'key',
@@ -235,34 +236,34 @@ export class AdminSettingsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Setting updated successfully',
+    description: 'Setting updated/created successfully',
     schema: {
       type: 'object',
       properties: {
         success: { type: 'boolean' },
         key: { type: 'string' },
-        oldValue: { type: 'string' },
+        oldValue: { type: 'string', nullable: true },
         newValue: { type: 'string' },
+        created: { type: 'boolean' },
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'Setting not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async updateSetting(@Param('key') key: string, @Body() dto: UpdateSettingDto) {
     try {
-      // Obtener valor actual
+      // Obtener valor actual (puede no existir)
       const currentSetting = await this.settingsService.findOne(key);
+      const oldValue = currentSetting?.value ?? null;
+      const isCreating = !currentSetting;
 
-      if (!currentSetting) {
-        throw new BadRequestException(`Setting with key ${key} not found`);
+      // Usar set() que hace upsert (crea si no existe)
+      await this.settingsService.set(key, dto.value);
+
+      if (isCreating) {
+        this.logger.log(`Setting ${key} created with value "${dto.value}"`);
+      } else {
+        this.logger.log(`Setting ${key} updated from "${oldValue}" to "${dto.value}"`);
       }
-
-      const oldValue = currentSetting.value;
-
-      // Actualizar
-      await this.settingsService.update(key, dto.value);
-
-      this.logger.log(`Setting ${key} updated from "${oldValue}" to "${dto.value}"`);
 
       // Invalidar caché
       this.settingsService.clearCache();
@@ -272,6 +273,7 @@ export class AdminSettingsController {
         key,
         oldValue,
         newValue: dto.value,
+        created: isCreating,
       };
     } catch (error) {
       this.logger.error(`Error updating setting ${key}: ${(error as Error).message}`, (error as Error).stack);
