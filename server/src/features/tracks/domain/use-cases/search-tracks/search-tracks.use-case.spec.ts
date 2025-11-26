@@ -20,7 +20,7 @@ describe('SearchTracksUseCase', () => {
       duration: 259,
       path: '/music/beatles/01-come-together.mp3',
       bitRate: 320000,
-      size: BigInt(10485760),
+      size: Number(10485760),
       suffix: 'mp3',
       compilation: false,
       createdAt: new Date('2025-01-01'),
@@ -37,7 +37,7 @@ describe('SearchTracksUseCase', () => {
       duration: 219,
       path: '/music/nirvana/come-as-you-are.mp3',
       bitRate: 320000,
-      size: BigInt(8800000),
+      size: Number(8800000),
       suffix: 'mp3',
       compilation: false,
       createdAt: new Date('2025-01-02'),
@@ -241,7 +241,7 @@ describe('SearchTracksUseCase', () => {
         duration: 300,
         path: '/music/search.mp3',
         bitRate: 320000,
-        size: BigInt(12000000),
+        size: Number(12000000),
         suffix: 'mp3',
         lyrics: 'These are the lyrics...',
         comment: 'A searchable track',
@@ -277,7 +277,7 @@ describe('SearchTracksUseCase', () => {
       expect(mappedTrack.duration).toBe(300);
       expect(mappedTrack.path).toBe('/music/search.mp3');
       expect(mappedTrack.bitRate).toBe(320000);
-      expect(mappedTrack.size).toEqual(BigInt(12000000));
+      expect(mappedTrack.size).toEqual(Number(12000000));
       expect(mappedTrack.suffix).toBe('mp3');
       expect(mappedTrack.lyrics).toBe('These are the lyrics...');
       expect(mappedTrack.comment).toBe('A searchable track');

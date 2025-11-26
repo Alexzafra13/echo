@@ -372,7 +372,7 @@ export class ScanProcessorService implements OnModuleInit {
         mbzArtistId: mbzArtistId || null,
         albumCount: 0, // Se calculará después
         songCount: 0,  // Se calculará después
-        size: BigInt(0), // Se calculará después
+        size: Number(0), // Se calculará después
       })
       .returning({ id: artists.id, name: artists.name });
 
@@ -448,7 +448,7 @@ export class ScanProcessorService implements OnModuleInit {
           orderAlbumName: normalizeForSorting(normalizedName), // Auto-populate for sorting
           songCount: 0,    // Se actualizará con cada track
           duration: 0,     // Se actualizará con cada track
-          size: BigInt(0), // Se actualizará con cada track
+          size: Number(0), // Se actualizará con cada track
         })
         .returning({
           id: albums.id,
@@ -634,7 +634,7 @@ export class ScanProcessorService implements OnModuleInit {
         duration: metadata.duration,
         bitRate: metadata.bitRate,
         channels: metadata.channels,
-        size: BigInt(size),
+        size: Number(size),
         suffix: this.fileScanner.getFileExtension(filePath),
         path: filePath,
         hasCoverArt: metadata.coverArt || false,
@@ -745,7 +745,7 @@ export class ScanProcessorService implements OnModuleInit {
       .set({
         songCount: stats[0]?.count ?? 0,
         duration: Number(stats[0]?.totalDuration) || 0,
-        size: BigInt(stats[0]?.totalSize ?? 0),
+        size: Number(stats[0]?.totalSize ?? 0),
         updatedAt: new Date(),
       })
       .where(eq(albums.id, albumId));
@@ -775,7 +775,7 @@ export class ScanProcessorService implements OnModuleInit {
       .set({
         albumCount: albumCountResult[0]?.count ?? 0,
         songCount: trackStats[0]?.count ?? 0,
-        size: BigInt(trackStats[0]?.totalSize ?? 0),
+        size: Number(trackStats[0]?.totalSize ?? 0),
         updatedAt: new Date(),
       })
       .where(eq(artists.id, artistId));

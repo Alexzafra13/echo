@@ -23,7 +23,7 @@ export class AlbumMapper {
       compilation: raw.compilation || false,
       songCount: raw.songCount || 0,
       duration: raw.duration || 0,
-      size: BigInt(raw.size || 0),
+      size: Number(raw.size || 0),
       description: raw.description || undefined,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,

@@ -171,7 +171,7 @@ export class CleanupService {
 
           await this.drizzle.db
             .update(artists)
-            .set({ metadataStorageSize: BigInt(size) })
+            .set({ metadataStorageSize: Number(size) })
             .where(eq(artists.id, artist.id));
 
           result.updated++;

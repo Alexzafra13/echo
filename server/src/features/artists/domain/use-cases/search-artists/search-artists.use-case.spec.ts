@@ -14,7 +14,7 @@ describe('SearchArtistsUseCase', () => {
       name: 'The Beatles',
       albumCount: 13,
       songCount: 213,
-      size: BigInt(1073741824),
+      size: Number(1073741824),
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-01'),
     }),
@@ -23,7 +23,7 @@ describe('SearchArtistsUseCase', () => {
       name: 'The Beach Boys',
       albumCount: 29,
       songCount: 301,
-      size: BigInt(1610612736),
+      size: Number(1610612736),
       createdAt: new Date('2025-01-02'),
       updatedAt: new Date('2025-01-02'),
     }),
@@ -224,7 +224,7 @@ describe('SearchArtistsUseCase', () => {
         externalUrl: 'https://example.com/artist',
         externalInfoUpdatedAt: new Date('2025-01-15'),
         orderArtistName: 'Artist, Search Result',
-        size: BigInt(2147483648),
+        size: Number(2147483648),
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
       });
@@ -250,7 +250,7 @@ describe('SearchArtistsUseCase', () => {
       expect(mappedArtist.biography).toBe('A searchable artist');
       expect(mappedArtist.smallImageUrl).toBe('https://example.com/small.jpg');
       expect(mappedArtist.orderArtistName).toBe('Artist, Search Result');
-      expect(mappedArtist.size).toEqual(BigInt(2147483648));
+      expect(mappedArtist.size).toEqual(Number(2147483648));
     });
 
     it('debería aceptar query con exactamente 2 caracteres', async () => {

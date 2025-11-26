@@ -8,7 +8,7 @@ export interface GetPlaylistOutput {
   description?: string;
   coverImageUrl?: string;
   duration: number;
-  size: bigint;
+  size: number;
   ownerId: string;
   ownerName?: string;
   ownerHasAvatar?: boolean; // Si el owner tiene avatar

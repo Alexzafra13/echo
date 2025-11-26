@@ -15,7 +15,7 @@ export interface GetArtistOutput {
   externalUrl?: string;
   externalInfoUpdatedAt?: Date;
   orderArtistName?: string;
-  size: bigint;
+  size: number;
   createdAt: Date;
   updatedAt: Date;
 }
