@@ -89,11 +89,10 @@ echo -e "  ${GREEN}✓${NC} Carpetas uploads creadas"
 cd ..
 echo ""
 
-# Migraciones
-echo -e "${BLUE}[5/5]${NC} Aplicando migraciones..."
+# Migraciones (Drizzle)
+echo -e "${BLUE}[5/5]${NC} Aplicando schema a la base de datos..."
 cd server
-npx prisma migrate deploy --schema=prisma/schema.prisma 2>/dev/null || npx prisma migrate dev --name init --schema=prisma/schema.prisma
-npx prisma db seed 2>/dev/null || true
+pnpm db:push
 cd ..
 echo -e "  ${GREEN}✓${NC} Base de datos lista"
 echo ""
