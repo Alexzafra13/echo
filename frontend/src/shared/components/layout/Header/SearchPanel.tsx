@@ -4,6 +4,7 @@ import { Disc, User as UserIcon, Music, ListMusic } from 'lucide-react';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
 import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
+import { usePlayer } from '@features/player';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
@@ -22,6 +23,7 @@ interface SearchPanelProps {
  */
 export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   const [, setLocation] = useLocation();
+  const { play, playQueue } = usePlayer();
 
   // Fetch results from all sources
   const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 5 });
@@ -47,6 +49,26 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
 
   const handleNavigate = (path: string) => {
     setLocation(path);
+    onClose();
+  };
+
+  // Handle track click - play the track and queue remaining search results
+  const handlePlayTrack = (track: any, index: number) => {
+    // Convert search results to player Track format and play
+    const playerTracks = tracks.map((t: any) => ({
+      id: t.id,
+      title: t.title,
+      artist: t.artistName || t.artist,
+      artistId: t.artistId,
+      album: t.albumTitle || t.albumName,
+      albumId: t.albumId,
+      duration: t.duration,
+      trackNumber: t.trackNumber,
+      path: t.path,
+    }));
+
+    // Play all tracks starting from the clicked one
+    playQueue(playerTracks, index);
     onClose();
   };
 
@@ -178,11 +200,11 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
                     Canciones
                   </h4>
                   <div className={styles.searchPanel__grid}>
-                    {tracks.map((track: any) => (
+                    {tracks.map((track: any, index: number) => (
                       <button
                         key={track.id}
                         className={styles.searchPanel__item}
-                        onClick={() => handleNavigate(`/album/${track.albumId}`)}
+                        onClick={() => handlePlayTrack(track, index)}
                       >
                         <img
                           src={getCoverUrl(track.albumId ? `/api/albums/${track.albumId}/cover` : undefined)}
