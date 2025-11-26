@@ -96,12 +96,13 @@ export default function SetupWizard() {
       const setupStatus = await getSetupStatus();
       setStatus(setupStatus);
 
-      if (setupStatus.setupCompleted) {
+      // If setup is not needed (completed AND has admin), redirect to login
+      if (!setupStatus.needsSetup) {
         setLocation('/login');
         return;
       }
 
-      // Determine starting step
+      // Determine starting step based on what's missing
       if (!setupStatus.hasAdmin) {
         setStep('admin');
       } else if (!setupStatus.hasMusicLibrary) {
