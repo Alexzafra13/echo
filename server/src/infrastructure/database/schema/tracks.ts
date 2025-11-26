@@ -32,7 +32,7 @@ export const tracks = pgTable(
     date: date('date'),
     originalDate: date('original_date'),
     releaseDate: date('release_date'),
-    size: bigint('size', { mode: 'bigint' }),
+    size: bigint('size', { mode: 'number' }),
     suffix: varchar('suffix', { length: 10 }),
     duration: integer('duration'),
     bitRate: integer('bit_rate'),
