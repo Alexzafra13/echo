@@ -27,13 +27,8 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      // Socket.IO proxy - handles all WebSocket connections
-      // Socket.IO uses /socket.io/ path for all namespaces (/scanner, /metadata)
-      '/socket.io': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        ws: true,
-      },
+      // Note: WebSocket connections go directly to backend (http://localhost:3000)
+      // via websocket.service.ts to avoid Vite proxy issues with Socket.IO
     },
   },
 });
