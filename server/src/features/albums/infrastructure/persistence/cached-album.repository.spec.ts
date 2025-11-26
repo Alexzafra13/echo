@@ -1,8 +1,3 @@
-// Mock Prisma Client before any imports
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({})),
-}));
-
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { CachedAlbumRepository } from './cached-album.repository';

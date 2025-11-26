@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq, and, count, sql } from 'drizzle-orm';
+import { artists, albums, tracks, metadataConflicts } from '@infrastructure/database/schema';
 import { MusicBrainzAgent } from '../agents/musicbrainz.agent';
 import { MetadataConflictService, ConflictPriority } from './metadata-conflict.service';
 import { SettingsService } from './settings.service';
@@ -50,7 +52,7 @@ export class MbidAutoSearchService {
   private readonly logger = new Logger(MbidAutoSearchService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly musicBrainzAgent: MusicBrainzAgent,
     private readonly conflictService: MetadataConflictService,
     private readonly settingsService: SettingsService,
@@ -150,10 +152,10 @@ export class MbidAutoSearchService {
         );
 
         // Aplicar MBID automáticamente
-        await this.prisma.artist.update({
-          where: { id: artistId },
-          data: { mbzArtistId: topMatch.mbid },
-        });
+        await this.drizzle.db
+          .update(artists)
+          .set({ mbzArtistId: topMatch.mbid })
+          .where(eq(artists.id, artistId));
 
         return {
           topMatch,
@@ -317,13 +319,13 @@ export class MbidAutoSearchService {
         );
 
         // Aplicar MBID y artist MBID automáticamente
-        await this.prisma.album.update({
-          where: { id: albumId },
-          data: {
+        await this.drizzle.db
+          .update(albums)
+          .set({
             mbzAlbumId: topMatch.mbid,
             mbzAlbumArtistId: topMatch.details.artistMbid || undefined,
-          },
-        });
+          })
+          .where(eq(albums.id, albumId));
 
         return {
           topMatch,
@@ -508,13 +510,13 @@ export class MbidAutoSearchService {
         );
 
         // Aplicar MBID automáticamente
-        await this.prisma.track.update({
-          where: { id: trackId },
-          data: {
+        await this.drizzle.db
+          .update(tracks)
+          .set({
             mbzTrackId: topMatch.mbid,
             mbzArtistId: topMatch.details.artistMbid || undefined,
-          },
-        });
+          })
+          .where(eq(tracks.id, trackId));
 
         return {
           topMatch,
@@ -592,15 +594,17 @@ export class MbidAutoSearchService {
     ignored: number;
   }> {
     // Contar conflictos creados por auto-búsqueda
-    const conflictsCreated = await this.prisma.metadataConflict.count({
-      where: {
-        metadata: {
-          path: ['autoSearched'],
-          equals: true,
-        },
-        status: 'pending',
-      },
-    });
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(metadataConflicts)
+      .where(
+        and(
+          sql`${metadataConflicts.metadata}->>'autoSearched' = 'true'`,
+          eq(metadataConflicts.status, 'pending')
+        )
+      );
+
+    const conflictsCreated = result[0]?.count ?? 0;
 
     // Para auto-applied e ignored, necesitaríamos un log separado
     // Por ahora, solo retornamos los conflictos

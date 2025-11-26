@@ -1,66 +1,76 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
-import { BaseRepository } from '@shared/base';
+import { eq, desc, count, sql } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { DrizzleBaseRepository } from '@shared/base';
+import { artists } from '@infrastructure/database/schema';
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 import { ArtistMapper } from './artist.mapper';
 
 @Injectable()
-export class PrismaArtistRepository
-  extends BaseRepository<Artist>
+export class DrizzleArtistRepository
+  extends DrizzleBaseRepository<Artist>
   implements IArtistRepository
 {
   protected readonly mapper = ArtistMapper;
-  protected readonly modelDelegate: any;
+  protected readonly table = artists;
 
-  constructor(protected readonly prisma: PrismaService) {
+  constructor(protected readonly drizzle: DrizzleService) {
     super();
-    this.modelDelegate = prisma.artist;
   }
 
   async findById(id: string): Promise<Artist | null> {
-    const artist = await this.prisma.artist.findUnique({
-      where: { id },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(eq(artists.id, id))
+      .limit(1);
 
-    return artist ? ArtistMapper.toDomain(artist) : null;
+    return result[0] ? ArtistMapper.toDomain(result[0]) : null;
   }
 
   async findAll(skip: number, take: number): Promise<Artist[]> {
-    const artists = await this.prisma.artist.findMany({
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .orderBy(desc(artists.createdAt))
+      .offset(skip)
+      .limit(take);
 
-    return ArtistMapper.toDomainArray(artists);
+    return ArtistMapper.toDomainArray(result);
   }
 
   async search(name: string, skip: number, take: number): Promise<Artist[]> {
-    const artists = await this.prisma.$queryRaw<any[]>`
+    // Use pg_trgm similarity search
+    const result = await this.drizzle.db.execute(sql`
       SELECT *
       FROM artists
       WHERE name % ${name}
       ORDER BY similarity(name, ${name}) DESC, name ASC
       LIMIT ${take}
       OFFSET ${skip}
-    `;
+    `);
 
-    return ArtistMapper.toDomainArray(artists);
+    return ArtistMapper.toDomainArray(result.rows as any[]);
   }
 
   async count(): Promise<number> {
-    return this.prisma.artist.count();
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(artists);
+
+    return result[0]?.count ?? 0;
   }
 
   async create(artist: Artist): Promise<Artist> {
     const persistenceData = ArtistMapper.toPersistence(artist);
 
-    const created = await this.prisma.artist.create({
-      data: persistenceData,
-    });
+    const result = await this.drizzle.db
+      .insert(artists)
+      .values(persistenceData)
+      .returning();
 
-    return ArtistMapper.toDomain(created);
+    return ArtistMapper.toDomain(result[0]);
   }
 
   async update(id: string, artist: Partial<Artist>): Promise<Artist | null> {
@@ -78,11 +88,15 @@ export class PrismaArtistRepository
       'size',
     ]);
 
-    const updated = await this.prisma.artist.update({
-      where: { id },
-      data: updateData,
-    });
+    const result = await this.drizzle.db
+      .update(artists)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(artists.id, id))
+      .returning();
 
-    return ArtistMapper.toDomain(updated);
+    return result[0] ? ArtistMapper.toDomain(result[0]) : null;
   }
 }

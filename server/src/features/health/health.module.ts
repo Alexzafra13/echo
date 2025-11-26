@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { HealthController } from './health.controller';
 import { HealthCheckService } from './health-check.service';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 
+/**
+ * HealthModule
+ * DrizzleService is provided globally via DrizzleModule
+ */
 @Module({
-  imports: [PrismaModule],
   controllers: [HealthController],
   providers: [HealthCheckService],
   exports: [HealthCheckService],

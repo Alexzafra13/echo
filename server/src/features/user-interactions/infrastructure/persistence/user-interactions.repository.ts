@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, and, desc, count, avg } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { userStarred, userRatings } from '@infrastructure/database/schema';
 import { IUserInteractionsRepository } from '../../domain/ports/user-interactions.repository.port';
 import {
   UserStarred,
@@ -13,147 +15,232 @@ import {
 import { UserInteractionsMapper } from '../mappers/user-interactions.mapper';
 
 @Injectable()
-export class PrismaUserInteractionsRepository implements IUserInteractionsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class DrizzleUserInteractionsRepository implements IUserInteractionsRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
 
   // Like/Dislike operations
   async setLike(userId: string, itemId: string, itemType: ItemType): Promise<UserStarred> {
-    const starred = await this.prisma.userStarred.upsert({
-      where: {
-        userId_starredId_starredType: {
+    // Check if exists
+    const existing = await this.drizzle.db
+      .select()
+      .from(userStarred)
+      .where(
+        and(
+          eq(userStarred.userId, userId),
+          eq(userStarred.starredId, itemId),
+          eq(userStarred.starredType, itemType),
+        ),
+      )
+      .limit(1);
+
+    if (existing[0]) {
+      // Update
+      const result = await this.drizzle.db
+        .update(userStarred)
+        .set({
+          sentiment: 'like',
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userStarred.userId, userId),
+            eq(userStarred.starredId, itemId),
+            eq(userStarred.starredType, itemType),
+          ),
+        )
+        .returning();
+
+      return UserInteractionsMapper.toUserStarredDomain(result[0]);
+    } else {
+      // Create
+      const result = await this.drizzle.db
+        .insert(userStarred)
+        .values({
           userId,
           starredId: itemId,
           starredType: itemType,
-        },
-      },
-      update: {
-        sentiment: 'like',
-        updatedAt: new Date(),
-      },
-      create: {
-        userId,
-        starredId: itemId,
-        starredType: itemType,
-        sentiment: 'like',
-      },
-    });
+          sentiment: 'like',
+        })
+        .returning();
 
-    return UserInteractionsMapper.toUserStarredDomain(starred);
+      return UserInteractionsMapper.toUserStarredDomain(result[0]);
+    }
   }
 
   async setDislike(userId: string, itemId: string, itemType: ItemType): Promise<UserStarred> {
-    const starred = await this.prisma.userStarred.upsert({
-      where: {
-        userId_starredId_starredType: {
+    // Check if exists
+    const existing = await this.drizzle.db
+      .select()
+      .from(userStarred)
+      .where(
+        and(
+          eq(userStarred.userId, userId),
+          eq(userStarred.starredId, itemId),
+          eq(userStarred.starredType, itemType),
+        ),
+      )
+      .limit(1);
+
+    if (existing[0]) {
+      // Update
+      const result = await this.drizzle.db
+        .update(userStarred)
+        .set({
+          sentiment: 'dislike',
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userStarred.userId, userId),
+            eq(userStarred.starredId, itemId),
+            eq(userStarred.starredType, itemType),
+          ),
+        )
+        .returning();
+
+      return UserInteractionsMapper.toUserStarredDomain(result[0]);
+    } else {
+      // Create
+      const result = await this.drizzle.db
+        .insert(userStarred)
+        .values({
           userId,
           starredId: itemId,
           starredType: itemType,
-        },
-      },
-      update: {
-        sentiment: 'dislike',
-        updatedAt: new Date(),
-      },
-      create: {
-        userId,
-        starredId: itemId,
-        starredType: itemType,
-        sentiment: 'dislike',
-      },
-    });
+          sentiment: 'dislike',
+        })
+        .returning();
 
-    return UserInteractionsMapper.toUserStarredDomain(starred);
+      return UserInteractionsMapper.toUserStarredDomain(result[0]);
+    }
   }
 
   async removeSentiment(userId: string, itemId: string, itemType: ItemType): Promise<void> {
-    await this.prisma.userStarred.deleteMany({
-      where: {
-        userId,
-        starredId: itemId,
-        starredType: itemType,
-      },
-    });
+    await this.drizzle.db
+      .delete(userStarred)
+      .where(
+        and(
+          eq(userStarred.userId, userId),
+          eq(userStarred.starredId, itemId),
+          eq(userStarred.starredType, itemType),
+        ),
+      );
   }
 
   async getSentiment(userId: string, itemId: string, itemType: ItemType): Promise<Sentiment | null> {
-    const starred = await this.prisma.userStarred.findUnique({
-      where: {
-        userId_starredId_starredType: {
-          userId,
-          starredId: itemId,
-          starredType: itemType,
-        },
-      },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(userStarred)
+      .where(
+        and(
+          eq(userStarred.userId, userId),
+          eq(userStarred.starredId, itemId),
+          eq(userStarred.starredType, itemType),
+        ),
+      )
+      .limit(1);
 
-    return starred ? (starred.sentiment as Sentiment) : null;
+    return result[0] ? (result[0].sentiment as Sentiment) : null;
   }
 
   // Rating operations
   async setRating(userId: string, itemId: string, itemType: ItemType, rating: number): Promise<UserRating> {
-    const userRating = await this.prisma.userRating.upsert({
-      where: {
-        userId_itemId_itemType: {
+    // Check if exists
+    const existing = await this.drizzle.db
+      .select()
+      .from(userRatings)
+      .where(
+        and(
+          eq(userRatings.userId, userId),
+          eq(userRatings.itemId, itemId),
+          eq(userRatings.itemType, itemType),
+        ),
+      )
+      .limit(1);
+
+    if (existing[0]) {
+      // Update
+      const result = await this.drizzle.db
+        .update(userRatings)
+        .set({
+          rating,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(userRatings.userId, userId),
+            eq(userRatings.itemId, itemId),
+            eq(userRatings.itemType, itemType),
+          ),
+        )
+        .returning();
+
+      return UserInteractionsMapper.toUserRatingDomain(result[0]);
+    } else {
+      // Create
+      const result = await this.drizzle.db
+        .insert(userRatings)
+        .values({
           userId,
           itemId,
           itemType,
-        },
-      },
-      update: {
-        rating,
-        updatedAt: new Date(),
-      },
-      create: {
-        userId,
-        itemId,
-        itemType,
-        rating,
-      },
-    });
+          rating,
+        })
+        .returning();
 
-    return UserInteractionsMapper.toUserRatingDomain(userRating);
+      return UserInteractionsMapper.toUserRatingDomain(result[0]);
+    }
   }
 
   async removeRating(userId: string, itemId: string, itemType: ItemType): Promise<void> {
-    await this.prisma.userRating.deleteMany({
-      where: {
-        userId,
-        itemId,
-        itemType,
-      },
-    });
+    await this.drizzle.db
+      .delete(userRatings)
+      .where(
+        and(
+          eq(userRatings.userId, userId),
+          eq(userRatings.itemId, itemId),
+          eq(userRatings.itemType, itemType),
+        ),
+      );
   }
 
   async getRating(userId: string, itemId: string, itemType: ItemType): Promise<number | null> {
-    const rating = await this.prisma.userRating.findUnique({
-      where: {
-        userId_itemId_itemType: {
-          userId,
-          itemId,
-          itemType,
-        },
-      },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(userRatings)
+      .where(
+        and(
+          eq(userRatings.userId, userId),
+          eq(userRatings.itemId, itemId),
+          eq(userRatings.itemType, itemType),
+        ),
+      )
+      .limit(1);
 
-    return rating ? rating.rating : null;
+    return result[0] ? result[0].rating : null;
   }
 
   // Bulk operations
   async getUserInteractions(userId: string, itemType?: ItemType): Promise<UserInteraction[]> {
-    const whereClause: any = { userId };
-    if (itemType) {
-      whereClause.starredType = itemType;
-    }
+    const starredCondition = itemType
+      ? and(eq(userStarred.userId, userId), eq(userStarred.starredType, itemType))
+      : eq(userStarred.userId, userId);
+
+    const ratingsCondition = itemType
+      ? and(eq(userRatings.userId, userId), eq(userRatings.itemType, itemType))
+      : eq(userRatings.userId, userId);
 
     const [starred, ratings] = await Promise.all([
-      this.prisma.userStarred.findMany({
-        where: whereClause,
-        orderBy: { starredAt: 'desc' },
-      }),
-      this.prisma.userRating.findMany({
-        where: itemType ? { userId, itemType } : { userId },
-        orderBy: { updatedAt: 'desc' },
-      }),
+      this.drizzle.db
+        .select()
+        .from(userStarred)
+        .where(starredCondition)
+        .orderBy(desc(userStarred.starredAt)),
+      this.drizzle.db
+        .select()
+        .from(userRatings)
+        .where(ratingsCondition)
+        .orderBy(desc(userRatings.updatedAt)),
     ]);
 
     // Combine starred and ratings into UserInteraction
@@ -196,156 +283,155 @@ export class PrismaUserInteractionsRepository implements IUserInteractionsReposi
   }
 
   async getUserLikes(userId: string, itemType?: ItemType): Promise<UserStarred[]> {
-    const starred = await this.prisma.userStarred.findMany({
-      where: {
-        userId,
-        sentiment: 'like',
-        ...(itemType && { starredType: itemType }),
-      },
-      orderBy: { starredAt: 'desc' },
-    });
+    const condition = itemType
+      ? and(eq(userStarred.userId, userId), eq(userStarred.sentiment, 'like'), eq(userStarred.starredType, itemType))
+      : and(eq(userStarred.userId, userId), eq(userStarred.sentiment, 'like'));
+
+    const starred = await this.drizzle.db
+      .select()
+      .from(userStarred)
+      .where(condition)
+      .orderBy(desc(userStarred.starredAt));
 
     return starred.map(UserInteractionsMapper.toUserStarredDomain);
   }
 
   async getUserDislikes(userId: string, itemType?: ItemType): Promise<UserStarred[]> {
-    const starred = await this.prisma.userStarred.findMany({
-      where: {
-        userId,
-        sentiment: 'dislike',
-        ...(itemType && { starredType: itemType }),
-      },
-      orderBy: { starredAt: 'desc' },
-    });
+    const condition = itemType
+      ? and(eq(userStarred.userId, userId), eq(userStarred.sentiment, 'dislike'), eq(userStarred.starredType, itemType))
+      : and(eq(userStarred.userId, userId), eq(userStarred.sentiment, 'dislike'));
+
+    const starred = await this.drizzle.db
+      .select()
+      .from(userStarred)
+      .where(condition)
+      .orderBy(desc(userStarred.starredAt));
 
     return starred.map(UserInteractionsMapper.toUserStarredDomain);
   }
 
   async getUserRatings(userId: string, itemType?: ItemType): Promise<UserRating[]> {
-    const ratings = await this.prisma.userRating.findMany({
-      where: {
-        userId,
-        ...(itemType && { itemType }),
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const condition = itemType
+      ? and(eq(userRatings.userId, userId), eq(userRatings.itemType, itemType))
+      : eq(userRatings.userId, userId);
+
+    const ratings = await this.drizzle.db
+      .select()
+      .from(userRatings)
+      .where(condition)
+      .orderBy(desc(userRatings.updatedAt));
 
     return ratings.map(UserInteractionsMapper.toUserRatingDomain);
   }
 
   // Item statistics
   async getItemInteractionSummary(itemId: string, itemType: ItemType, userId?: string): Promise<ItemInteractionSummary> {
-    const [likes, dislikes, ratingsData, userSentiment, userRating] = await Promise.all([
-      this.prisma.userStarred.count({
-        where: {
-          starredId: itemId,
-          starredType: itemType,
-          sentiment: 'like',
-        },
-      }),
-      this.prisma.userStarred.count({
-        where: {
-          starredId: itemId,
-          starredType: itemType,
-          sentiment: 'dislike',
-        },
-      }),
-      this.prisma.userRating.aggregate({
-        where: {
-          itemId,
-          itemType,
-        },
-        _avg: {
-          rating: true,
-        },
-        _count: {
-          rating: true,
-        },
-      }),
+    const [likesResult, dislikesResult, ratingsData, userSentimentResult, userRatingResult] = await Promise.all([
+      this.drizzle.db
+        .select({ count: count() })
+        .from(userStarred)
+        .where(
+          and(
+            eq(userStarred.starredId, itemId),
+            eq(userStarred.starredType, itemType),
+            eq(userStarred.sentiment, 'like'),
+          ),
+        ),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(userStarred)
+        .where(
+          and(
+            eq(userStarred.starredId, itemId),
+            eq(userStarred.starredType, itemType),
+            eq(userStarred.sentiment, 'dislike'),
+          ),
+        ),
+      this.drizzle.db
+        .select({
+          avgRating: avg(userRatings.rating),
+          count: count(),
+        })
+        .from(userRatings)
+        .where(and(eq(userRatings.itemId, itemId), eq(userRatings.itemType, itemType))),
       userId
-        ? this.prisma.userStarred.findUnique({
-            where: {
-              userId_starredId_starredType: {
-                userId,
-                starredId: itemId,
-                starredType: itemType,
-              },
-            },
-          })
-        : null,
+        ? this.drizzle.db
+            .select()
+            .from(userStarred)
+            .where(
+              and(
+                eq(userStarred.userId, userId),
+                eq(userStarred.starredId, itemId),
+                eq(userStarred.starredType, itemType),
+              ),
+            )
+            .limit(1)
+        : Promise.resolve([]),
       userId
-        ? this.prisma.userRating.findUnique({
-            where: {
-              userId_itemId_itemType: {
-                userId,
-                itemId,
-                itemType,
-              },
-            },
-          })
-        : null,
+        ? this.drizzle.db
+            .select()
+            .from(userRatings)
+            .where(
+              and(
+                eq(userRatings.userId, userId),
+                eq(userRatings.itemId, itemId),
+                eq(userRatings.itemType, itemType),
+              ),
+            )
+            .limit(1)
+        : Promise.resolve([]),
     ]);
 
     return {
       itemId,
       itemType,
-      userSentiment: userSentiment ? (userSentiment.sentiment as Sentiment) : undefined,
-      userRating: userRating ? userRating.rating : undefined,
-      totalLikes: likes,
-      totalDislikes: dislikes,
-      averageRating: ratingsData._avg.rating || 0,
-      totalRatings: ratingsData._count.rating,
+      userSentiment: userSentimentResult[0] ? (userSentimentResult[0].sentiment as Sentiment) : undefined,
+      userRating: userRatingResult[0] ? userRatingResult[0].rating : undefined,
+      totalLikes: likesResult[0]?.count ?? 0,
+      totalDislikes: dislikesResult[0]?.count ?? 0,
+      averageRating: Number(ratingsData[0]?.avgRating) || 0,
+      totalRatings: ratingsData[0]?.count ?? 0,
     };
   }
 
   async getItemsByUserSentiment(userId: string, sentiment: Sentiment, itemType?: ItemType): Promise<string[]> {
-    const starred = await this.prisma.userStarred.findMany({
-      where: {
-        userId,
-        sentiment,
-        ...(itemType && { starredType: itemType }),
-      },
-      select: {
-        starredId: true,
-      },
-    });
+    const condition = itemType
+      ? and(eq(userStarred.userId, userId), eq(userStarred.sentiment, sentiment), eq(userStarred.starredType, itemType))
+      : and(eq(userStarred.userId, userId), eq(userStarred.sentiment, sentiment));
+
+    const starred = await this.drizzle.db
+      .select({ starredId: userStarred.starredId })
+      .from(userStarred)
+      .where(condition);
 
     return starred.map((s) => s.starredId);
   }
 
   // User statistics
   async getUserInteractionStats(userId: string): Promise<InteractionStats> {
-    const [likes, dislikes, ratingsData] = await Promise.all([
-      this.prisma.userStarred.count({
-        where: {
-          userId,
-          sentiment: 'like',
-        },
-      }),
-      this.prisma.userStarred.count({
-        where: {
-          userId,
-          sentiment: 'dislike',
-        },
-      }),
-      this.prisma.userRating.aggregate({
-        where: {
-          userId,
-        },
-        _avg: {
-          rating: true,
-        },
-        _count: {
-          rating: true,
-        },
-      }),
+    const [likesResult, dislikesResult, ratingsData] = await Promise.all([
+      this.drizzle.db
+        .select({ count: count() })
+        .from(userStarred)
+        .where(and(eq(userStarred.userId, userId), eq(userStarred.sentiment, 'like'))),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(userStarred)
+        .where(and(eq(userStarred.userId, userId), eq(userStarred.sentiment, 'dislike'))),
+      this.drizzle.db
+        .select({
+          avgRating: avg(userRatings.rating),
+          count: count(),
+        })
+        .from(userRatings)
+        .where(eq(userRatings.userId, userId)),
     ]);
 
     return {
-      totalLikes: likes,
-      totalDislikes: dislikes,
-      totalRatings: ratingsData._count.rating,
-      averageRating: ratingsData._avg.rating || 0,
+      totalLikes: likesResult[0]?.count ?? 0,
+      totalDislikes: dislikesResult[0]?.count ?? 0,
+      totalRatings: ratingsData[0]?.count ?? 0,
+      averageRating: Number(ratingsData[0]?.avgRating) || 0,
     };
   }
 }

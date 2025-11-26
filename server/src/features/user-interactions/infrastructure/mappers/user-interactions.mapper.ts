@@ -1,35 +1,34 @@
-import { UserStarred as PrismaUserStarred, UserRating as PrismaUserRating } from '../../../../generated/prisma';
 import { UserStarred, UserRating, Sentiment, ItemType } from '../../domain/entities/user-interaction.entity';
 
 export class UserInteractionsMapper {
-  static toUserStarredDomain(prisma: PrismaUserStarred): UserStarred {
+  static toUserStarredDomain(raw: any): UserStarred {
     return {
-      userId: prisma.userId,
-      starredId: prisma.starredId,
-      starredType: prisma.starredType as ItemType,
-      sentiment: prisma.sentiment as Sentiment,
-      starredAt: prisma.starredAt,
-      createdAt: prisma.createdAt,
-      updatedAt: prisma.updatedAt,
+      userId: raw.userId,
+      starredId: raw.starredId,
+      starredType: raw.starredType as ItemType,
+      sentiment: raw.sentiment as Sentiment,
+      starredAt: raw.starredAt,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
     };
   }
 
-  static toUserRatingDomain(prisma: PrismaUserRating): UserRating {
+  static toUserRatingDomain(raw: any): UserRating {
     return {
-      userId: prisma.userId,
-      itemId: prisma.itemId,
-      itemType: prisma.itemType as ItemType,
-      rating: prisma.rating,
-      createdAt: prisma.createdAt,
-      updatedAt: prisma.updatedAt,
+      userId: raw.userId,
+      itemId: raw.itemId,
+      itemType: raw.itemType as ItemType,
+      rating: raw.rating,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
     };
   }
 
-  static toUserStarredDomainArray(prisma: PrismaUserStarred[]): UserStarred[] {
-    return prisma.map(this.toUserStarredDomain);
+  static toUserStarredDomainArray(raw: any[]): UserStarred[] {
+    return raw.map(this.toUserStarredDomain);
   }
 
-  static toUserRatingDomainArray(prisma: PrismaUserRating[]): UserRating[] {
-    return prisma.map(this.toUserRatingDomain);
+  static toUserRatingDomainArray(raw: any[]): UserRating[] {
+    return raw.map(this.toUserRatingDomain);
   }
 }

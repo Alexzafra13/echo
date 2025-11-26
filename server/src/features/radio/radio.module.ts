@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '@infrastructure/persistence/prisma.module';
 import { RadioController } from './presentation/radio.controller';
 import { SaveFavoriteStationUseCase } from './domain/use-cases/save-favorite-station/save-favorite-station.use-case';
 import { GetUserFavoritesUseCase } from './domain/use-cases/get-user-favorites/get-user-favorites.use-case';
 import { DeleteFavoriteStationUseCase } from './domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from './domain/use-cases/search-stations/search-stations.use-case';
-import { PrismaRadioStationRepository } from './infrastructure/persistence/radio-station.repository';
+import { DrizzleRadioStationRepository } from './infrastructure/persistence/radio-station.repository';
 import { RadioBrowserApiService } from './domain/services/radio-browser-api.service';
 import { IcyMetadataService } from './domain/services/icy-metadata.service';
 import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repository.port';
@@ -31,9 +30,7 @@ import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repositor
  */
 
 @Module({
-  imports: [
-    PrismaModule, // Para acceso a la base de datos
-  ],
+  imports: [],
   controllers: [RadioController],
   providers: [
     // Use Cases
@@ -47,12 +44,12 @@ import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repositor
     IcyMetadataService,
 
     // Repositories
-    PrismaRadioStationRepository,
+    DrizzleRadioStationRepository,
 
     // Implementación del port
     {
       provide: RADIO_STATION_REPOSITORY,
-      useClass: PrismaRadioStationRepository,
+      useClass: DrizzleRadioStationRepository,
     },
   ],
   exports: [RADIO_STATION_REPOSITORY],

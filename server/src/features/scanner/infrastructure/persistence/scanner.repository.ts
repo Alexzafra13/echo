@@ -1,82 +1,87 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, desc, count } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { libraryScans } from '@infrastructure/database/schema';
 import { LibraryScan } from '../../domain/entities/library-scan.entity';
 import { IScannerRepository } from '../../domain/ports/scanner-repository.port';
 import { ScannerMapper } from './scanner.mapper';
 
 /**
- * PrismaScannerRepository - Implementación de IScannerRepository con Prisma
- *
- * Implementa los métodos del port IScannerRepository
- * Usa PrismaService para acceder a la BD
- * Usa ScannerMapper para convertir Prisma ↔ Domain
+ * DrizzleScannerRepository - Implementation of IScannerRepository with Drizzle
  */
 @Injectable()
-export class PrismaScannerRepository implements IScannerRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class DrizzleScannerRepository implements IScannerRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
 
   /**
-   * Busca escaneo por ID
+   * Find scan by ID
    */
   async findById(id: string): Promise<LibraryScan | null> {
-    const scan = await this.prisma.libraryScan.findUnique({
-      where: { id },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .where(eq(libraryScans.id, id))
+      .limit(1);
 
-    return scan ? ScannerMapper.toDomain(scan) : null;
+    return result[0] ? ScannerMapper.toDomain(result[0]) : null;
   }
 
   /**
-   * Obtiene todos los escaneos con paginación
+   * Get all scans with pagination
    */
   async findAll(skip: number, take: number): Promise<LibraryScan[]> {
-    const scans = await this.prisma.libraryScan.findMany({
-      skip,
-      take,
-      orderBy: { startedAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .orderBy(desc(libraryScans.startedAt))
+      .offset(skip)
+      .limit(take);
 
-    return ScannerMapper.toDomainArray(scans);
+    return ScannerMapper.toDomainArray(result);
   }
 
   /**
-   * Obtiene el escaneo más reciente
+   * Get the most recent scan
    */
   async findLatest(): Promise<LibraryScan | null> {
-    const scan = await this.prisma.libraryScan.findFirst({
-      orderBy: { startedAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .orderBy(desc(libraryScans.startedAt))
+      .limit(1);
 
-    return scan ? ScannerMapper.toDomain(scan) : null;
+    return result[0] ? ScannerMapper.toDomain(result[0]) : null;
   }
 
   /**
-   * Obtiene escaneos por estado
+   * Get scans by status
    */
   async findByStatus(status: string): Promise<LibraryScan[]> {
-    const scans = await this.prisma.libraryScan.findMany({
-      where: { status },
-      orderBy: { startedAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(libraryScans)
+      .where(eq(libraryScans.status, status))
+      .orderBy(desc(libraryScans.startedAt));
 
-    return ScannerMapper.toDomainArray(scans);
+    return ScannerMapper.toDomainArray(result);
   }
 
   /**
-   * Crea nuevo escaneo
+   * Create new scan
    */
   async create(scan: LibraryScan): Promise<LibraryScan> {
     const persistenceData = ScannerMapper.toPersistence(scan);
 
-    const created = await this.prisma.libraryScan.create({
-      data: persistenceData,
-    });
+    const result = await this.drizzle.db
+      .insert(libraryScans)
+      .values(persistenceData)
+      .returning();
 
-    return ScannerMapper.toDomain(created);
+    return ScannerMapper.toDomain(result[0]);
   }
 
   /**
-   * Actualiza escaneo
+   * Update scan
    */
   async update(
     id: string,
@@ -97,20 +102,27 @@ export class PrismaScannerRepository implements IScannerRepository {
     if (primitives.errorMessage !== undefined)
       updateData.errorMessage = primitives.errorMessage;
 
-    const updated = await this.prisma.libraryScan
-      .update({
-        where: { id },
-        data: updateData,
-      })
-      .catch(() => null);
+    try {
+      const result = await this.drizzle.db
+        .update(libraryScans)
+        .set(updateData)
+        .where(eq(libraryScans.id, id))
+        .returning();
 
-    return updated ? ScannerMapper.toDomain(updated) : null;
+      return result[0] ? ScannerMapper.toDomain(result[0]) : null;
+    } catch {
+      return null;
+    }
   }
 
   /**
-   * Cuenta total de escaneos
+   * Count total scans
    */
   async count(): Promise<number> {
-    return this.prisma.libraryScan.count();
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(libraryScans);
+
+    return result[0]?.count ?? 0;
   }
 }

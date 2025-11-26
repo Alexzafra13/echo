@@ -1,4 +1,6 @@
-import { PrismaService } from '../../infrastructure/persistence/prisma.service';
+import { DrizzleService } from '../../infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { PgTable } from 'drizzle-orm/pg-core';
 
 export interface EntityMapper<TDomain, TPersistence = any> {
   toDomain(raw: TPersistence): TDomain;
@@ -7,16 +9,26 @@ export interface EntityMapper<TDomain, TPersistence = any> {
 }
 
 export abstract class BaseRepository<TDomain, TPersistence = any> {
-  protected abstract readonly prisma: PrismaService;
+  protected abstract readonly drizzle: DrizzleService;
   protected abstract readonly mapper: EntityMapper<TDomain, TPersistence>;
-  protected abstract readonly modelDelegate: any;
+  protected abstract readonly table: PgTable;
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.modelDelegate
-      .delete({ where: { id } })
-      .catch(() => null);
+    try {
+      const idColumn = (this.table as any).id;
+      if (!idColumn) {
+        throw new Error('Table does not have an id column');
+      }
 
-    return result !== null;
+      const result = await this.drizzle.db
+        .delete(this.table)
+        .where(eq(idColumn, id))
+        .returning();
+
+      return result.length > 0;
+    } catch {
+      return false;
+    }
   }
 
   protected toPrimitives(entity: Partial<TDomain>): any {

@@ -1,8 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from './storage.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { eq, or, isNotNull, count, sum } from 'drizzle-orm';
+import {
+  artists,
+  albums,
+  customArtistImages,
+  customAlbumCovers,
+} from '@infrastructure/database/schema';
 
 /**
  * Resultado de operación de limpieza
@@ -55,7 +62,7 @@ export class CleanupService {
   private readonly logger = new Logger(CleanupService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
   ) {}
 
@@ -93,14 +100,16 @@ export class CleanupService {
       // 3. Limpiar registros de BD con isActive=false (solo en modo real)
       if (!dryRun) {
         try {
-          const deletedArtistImages = await this.prisma.customArtistImage.deleteMany({
-            where: { isActive: false },
-          });
-          const deletedAlbumCovers = await this.prisma.customAlbumCover.deleteMany({
-            where: { isActive: false },
-          });
+          const deletedArtistImages = await this.drizzle.db
+            .delete(customArtistImages)
+            .where(eq(customArtistImages.isActive, false))
+            .returning();
+          const deletedAlbumCovers = await this.drizzle.db
+            .delete(customAlbumCovers)
+            .where(eq(customAlbumCovers.isActive, false))
+            .returning();
           this.logger.log(
-            `Deleted inactive records: ${deletedArtistImages.count} artist images, ${deletedAlbumCovers.count} album covers`
+            `Deleted inactive records: ${deletedArtistImages.length} artist images, ${deletedAlbumCovers.length} album covers`
           );
         } catch (error) {
           this.logger.error(`Failed to delete inactive records: ${(error as Error).message}`);
@@ -140,30 +149,30 @@ export class CleanupService {
       this.logger.log('Recalculating storage sizes...');
 
       // Obtener todos los artistas con metadatos externos
-      const artists = await this.prisma.artist.findMany({
-        where: {
-          OR: [
-            { externalProfilePath: { not: null } },
-            { externalBackgroundPath: { not: null } },
-            { externalBannerPath: { not: null } },
-            { externalLogoPath: { not: null } },
-          ],
-        },
-        select: {
-          id: true,
-          name: true,
-        },
-      });
+      const artistsWithMetadata = await this.drizzle.db
+        .select({
+          id: artists.id,
+          name: artists.name,
+        })
+        .from(artists)
+        .where(
+          or(
+            isNotNull(artists.externalProfilePath),
+            isNotNull(artists.externalBackgroundPath),
+            isNotNull(artists.externalBannerPath),
+            isNotNull(artists.externalLogoPath),
+          ),
+        );
 
-      for (const artist of artists) {
+      for (const artist of artistsWithMetadata) {
         try {
           const metadataPath = await this.storage.getArtistMetadataPath(artist.id);
           const size = await this.storage.getStorageSize(metadataPath);
 
-          await this.prisma.artist.update({
-            where: { id: artist.id },
-            data: { metadataStorageSize: BigInt(size) },
-          });
+          await this.drizzle.db
+            .update(artists)
+            .set({ metadataStorageSize: BigInt(size) })
+            .where(eq(artists.id, artist.id));
 
           result.updated++;
         } catch (error) {
@@ -189,35 +198,33 @@ export class CleanupService {
   async getStorageStats(): Promise<StorageStats> {
     try {
       // Contar artistas con metadatos
-      const artistsWithMetadata = await this.prisma.artist.count({
-        where: {
-          OR: [
-            { externalProfilePath: { not: null } },
-            { externalBackgroundPath: { not: null } },
-            { externalBannerPath: { not: null } },
-            { externalLogoPath: { not: null } },
-          ],
-        },
-      });
+      const artistsCountResult = await this.drizzle.db
+        .select({ count: count() })
+        .from(artists)
+        .where(
+          or(
+            isNotNull(artists.externalProfilePath),
+            isNotNull(artists.externalBackgroundPath),
+            isNotNull(artists.externalBannerPath),
+            isNotNull(artists.externalLogoPath),
+          ),
+        );
+      const artistsWithMetadata = artistsCountResult[0]?.count || 0;
 
       // Contar álbumes con covers externos
-      const albumsWithCovers = await this.prisma.album.count({
-        where: {
-          externalCoverPath: { not: null },
-        },
-      });
+      const albumsCountResult = await this.drizzle.db
+        .select({ count: count() })
+        .from(albums)
+        .where(isNotNull(albums.externalCoverPath));
+      const albumsWithCovers = albumsCountResult[0]?.count || 0;
 
       // Calcular tamaño total
-      const sizeAgg = await this.prisma.artist.aggregate({
-        _sum: {
-          metadataStorageSize: true,
-        },
-        where: {
-          metadataStorageSize: { not: null },
-        },
-      });
+      const sizeSumResult = await this.drizzle.db
+        .select({ sum: sum(artists.metadataStorageSize) })
+        .from(artists)
+        .where(isNotNull(artists.metadataStorageSize));
 
-      const totalSize = Number(sizeAgg._sum.metadataStorageSize || 0);
+      const totalSize = Number(sizeSumResult[0]?.sum || 0);
 
       // Contar archivos en disco
       const basePath = await this.storage.getStoragePath();
@@ -259,26 +266,26 @@ export class CleanupService {
       this.logger.log('Verifying file integrity...');
 
       // Verificar imágenes de artistas
-      const artists = await this.prisma.artist.findMany({
-        where: {
-          OR: [
-            { externalProfilePath: { not: null } },
-            { externalBackgroundPath: { not: null } },
-            { externalBannerPath: { not: null } },
-            { externalLogoPath: { not: null } },
-          ],
-        },
-        select: {
-          id: true,
-          name: true,
-          externalProfilePath: true,
-          externalBackgroundPath: true,
-          externalBannerPath: true,
-          externalLogoPath: true,
-        },
-      });
+      const artistsWithPaths = await this.drizzle.db
+        .select({
+          id: artists.id,
+          name: artists.name,
+          externalProfilePath: artists.externalProfilePath,
+          externalBackgroundPath: artists.externalBackgroundPath,
+          externalBannerPath: artists.externalBannerPath,
+          externalLogoPath: artists.externalLogoPath,
+        })
+        .from(artists)
+        .where(
+          or(
+            isNotNull(artists.externalProfilePath),
+            isNotNull(artists.externalBackgroundPath),
+            isNotNull(artists.externalBannerPath),
+            isNotNull(artists.externalLogoPath),
+          ),
+        );
 
-      for (const artist of artists) {
+      for (const artist of artistsWithPaths) {
         const paths = [
           artist.externalProfilePath,
           artist.externalBackgroundPath,
@@ -297,18 +304,16 @@ export class CleanupService {
       }
 
       // Verificar covers de álbumes
-      const albums = await this.prisma.album.findMany({
-        where: {
-          externalCoverPath: { not: null },
-        },
-        select: {
-          id: true,
-          name: true,
-          externalCoverPath: true,
-        },
-      });
+      const albumsWithCovers = await this.drizzle.db
+        .select({
+          id: albums.id,
+          name: albums.name,
+          externalCoverPath: albums.externalCoverPath,
+        })
+        .from(albums)
+        .where(isNotNull(albums.externalCoverPath));
 
-      for (const album of albums) {
+      for (const album of albumsWithCovers) {
         if (!album.externalCoverPath) continue;
 
         result.totalChecked++;
@@ -360,9 +365,9 @@ export class CleanupService {
       }
 
       // Obtener todos los IDs de artistas en la base de datos
-      const dbArtists = await this.prisma.artist.findMany({
-        select: { id: true },
-      });
+      const dbArtists = await this.drizzle.db
+        .select({ id: artists.id })
+        .from(artists);
       const dbArtistIds = new Set(dbArtists.map((a) => a.id));
 
       // Listar directorios en /storage/metadata/artists/
@@ -431,9 +436,9 @@ export class CleanupService {
       }
 
       // Obtener todos los IDs de álbumes en la base de datos
-      const dbAlbums = await this.prisma.album.findMany({
-        select: { id: true },
-      });
+      const dbAlbums = await this.drizzle.db
+        .select({ id: albums.id })
+        .from(albums);
       const dbAlbumIds = new Set(dbAlbums.map((a) => a.id));
 
       // Listar directorios en /storage/metadata/albums/

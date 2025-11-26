@@ -1,0 +1,114 @@
+import {
+  pgTable,
+  uuid,
+  varchar,
+  integer,
+  boolean,
+  timestamp,
+  bigint,
+  real,
+  index,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
+
+// ============================================
+// UserStarred
+// ============================================
+export const userStarred = pgTable(
+  'user_starred',
+  {
+    userId: varchar('user_id', { length: 36 }).notNull(),
+    starredId: varchar('starred_id', { length: 36 }).notNull(),
+    starredType: varchar('starred_type', { length: 50 }).notNull(),
+    sentiment: varchar('sentiment', { length: 20 }).notNull(),
+    starredAt: timestamp('starred_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.starredId, table.starredType] }),
+    index('idx_user_starred_user').on(table.userId, table.starredAt),
+    index('idx_user_starred_item').on(table.starredId, table.starredType),
+    index('idx_user_starred_sentiment').on(table.userId, table.sentiment),
+  ],
+);
+
+// ============================================
+// UserRating
+// ============================================
+export const userRatings = pgTable(
+  'user_ratings',
+  {
+    userId: varchar('user_id', { length: 36 }).notNull(),
+    itemId: varchar('item_id', { length: 36 }).notNull(),
+    itemType: varchar('item_type', { length: 50 }).notNull(),
+    rating: integer('rating').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.itemId, table.itemType] }),
+    index('idx_user_ratings_user').on(table.userId),
+    index('idx_ratings_item').on(table.itemId, table.itemType),
+  ],
+);
+
+// ============================================
+// PlayHistory
+// ============================================
+export const playHistory = pgTable(
+  'play_history',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: varchar('user_id', { length: 36 }).notNull(),
+    trackId: varchar('track_id', { length: 36 }).notNull(),
+    playedAt: timestamp('played_at').notNull(),
+    client: varchar('client', { length: 255 }),
+    playContext: varchar('play_context', { length: 50 }).default('direct').notNull(),
+    completionRate: real('completion_rate'),
+    skipped: boolean('skipped').default(false).notNull(),
+    sourceId: varchar('source_id', { length: 36 }),
+    sourceType: varchar('source_type', { length: 50 }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_play_history_user_date').on(table.userId, table.playedAt),
+    index('idx_play_history_track').on(table.trackId),
+    index('idx_play_history_played_at').on(table.playedAt),
+    index('idx_play_history_context').on(table.userId, table.playContext),
+    index('idx_play_history_source').on(table.sourceId, table.sourceType),
+  ],
+);
+
+// ============================================
+// UserPlayStats
+// ============================================
+export const userPlayStats = pgTable(
+  'user_play_stats',
+  {
+    userId: varchar('user_id', { length: 36 }).notNull(),
+    itemId: varchar('item_id', { length: 36 }).notNull(),
+    itemType: varchar('item_type', { length: 50 }).notNull(),
+    playCount: bigint('play_count', { mode: 'bigint' }).default(BigInt(0)).notNull(),
+    weightedPlayCount: real('weighted_play_count').default(0).notNull(),
+    lastPlayedAt: timestamp('last_played_at'),
+    avgCompletionRate: real('avg_completion_rate'),
+    skipCount: bigint('skip_count', { mode: 'bigint' }).default(BigInt(0)).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.itemId, table.itemType] }),
+    index('idx_user_play_stats_user').on(table.userId, table.playCount),
+    index('idx_user_play_stats_weighted').on(table.userId, table.weightedPlayCount),
+    index('idx_user_play_stats_item').on(table.itemId, table.itemType),
+  ],
+);
+
+// Type exports
+export type UserStarred = typeof userStarred.$inferSelect;
+export type NewUserStarred = typeof userStarred.$inferInsert;
+export type UserRating = typeof userRatings.$inferSelect;
+export type NewUserRating = typeof userRatings.$inferInsert;
+export type PlayHistory = typeof playHistory.$inferSelect;
+export type NewPlayHistory = typeof playHistory.$inferInsert;
+export type UserPlayStats = typeof userPlayStats.$inferSelect;
+export type NewUserPlayStats = typeof userPlayStats.$inferInsert;

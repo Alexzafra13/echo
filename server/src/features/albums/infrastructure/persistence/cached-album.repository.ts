@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
-import { PrismaAlbumRepository } from './album.repository';
+import { DrizzleAlbumRepository } from './album.repository';
 
 /**
  * CachedAlbumRepository - Decorator Pattern con Redis Cache
@@ -32,7 +32,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
   constructor(
     @InjectPinoLogger(CachedAlbumRepository.name)
     private readonly logger: PinoLogger,
-    private readonly baseRepository: PrismaAlbumRepository,
+    private readonly baseRepository: DrizzleAlbumRepository,
     private readonly cache: RedisService,
   ) {}
 
@@ -111,7 +111,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
 
     // Store in cache
     if (albums.length > 0) {
-      const primitives = albums.map((a) =>
+      const primitives = albums.map((a: Album) =>
         a.toPrimitives ? a.toPrimitives() : a,
       );
       await this.cache.set(cacheKey, primitives, this.CACHE_TTL);
@@ -138,7 +138,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
     const albums = await this.baseRepository.findRecent(take);
 
     if (albums.length > 0) {
-      const primitives = albums.map((a) =>
+      const primitives = albums.map((a: Album) =>
         a.toPrimitives ? a.toPrimitives() : a,
       );
       // TTL más corto para listas "recent"
@@ -165,7 +165,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
     const albums = await this.baseRepository.findMostPlayed(take);
 
     if (albums.length > 0) {
-      const primitives = albums.map((a) =>
+      const primitives = albums.map((a: Album) =>
         a.toPrimitives ? a.toPrimitives() : a,
       );
       await this.cache.set(cacheKey, primitives, 600); // 10 minutos

@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { artists } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
@@ -27,7 +29,7 @@ export class ApplyArtistAvatarUseCase {
   private readonly logger = new Logger(ApplyArtistAvatarUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
@@ -37,18 +39,21 @@ export class ApplyArtistAvatarUseCase {
 
   async execute(input: ApplyArtistAvatarInput): Promise<ApplyArtistAvatarOutput> {
     // Get artist from database
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-      select: {
-        id: true,
-        name: true,
+    const artistResult = await this.drizzle.db
+      .select({
+        id: artists.id,
+        name: artists.name,
         // Old external paths (for deletion)
-        externalProfilePath: true,
-        externalBackgroundPath: true,
-        externalBannerPath: true,
-        externalLogoPath: true,
-      },
-    });
+        externalProfilePath: artists.externalProfilePath,
+        externalBackgroundPath: artists.externalBackgroundPath,
+        externalBannerPath: artists.externalBannerPath,
+        externalLogoPath: artists.externalLogoPath,
+      })
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
@@ -106,13 +111,13 @@ export class ApplyArtistAvatarUseCase {
       JSON.stringify(updateData, null, 2)
     );
 
-    const updatedArtist = await this.prisma.artist.update({
-      where: { id: input.artistId },
-      data: updateData,
-    });
+    await this.drizzle.db
+      .update(artists)
+      .set(updateData)
+      .where(eq(artists.id, input.artistId));
 
     this.logger.debug(
-      `Artist updated. ${typeConfig.externalUpdatedField} is now: ${updatedArtist[typeConfig.externalUpdatedField as keyof typeof updatedArtist]}`
+      `Artist updated. ${typeConfig.externalUpdatedField} is now set`
     );
 
     // Invalidate server-side image cache
@@ -125,15 +130,18 @@ export class ApplyArtistAvatarUseCase {
     this.logger.debug(`Invalidated Redis cache for key: ${redisCacheKey}`);
 
     // Get updated artist for WebSocket notification
-    const finalArtist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-      select: {
-        externalProfileUpdatedAt: true,
-        externalBackgroundUpdatedAt: true,
-        externalBannerUpdatedAt: true,
-        externalLogoUpdatedAt: true,
-      },
-    });
+    const finalArtistResult = await this.drizzle.db
+      .select({
+        externalProfileUpdatedAt: artists.externalProfileUpdatedAt,
+        externalBackgroundUpdatedAt: artists.externalBackgroundUpdatedAt,
+        externalBannerUpdatedAt: artists.externalBannerUpdatedAt,
+        externalLogoUpdatedAt: artists.externalLogoUpdatedAt,
+      })
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const finalArtist = finalArtistResult[0];
 
     // Emit WebSocket event
     const updatedAt = (finalArtist?.[typeConfig.externalUpdatedField as keyof typeof finalArtist] as Date) || new Date();

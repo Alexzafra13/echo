@@ -1,24 +1,23 @@
-import { PlayHistory as PrismaPlayHistory } from '../../../../generated/prisma';
 import { PlayEvent, PlayContext, SourceType } from '../../domain/entities/play-event.entity';
 
 export class PlayTrackingMapper {
-  static toPlayEventDomain(prisma: PrismaPlayHistory): PlayEvent {
+  static toPlayEventDomain(raw: any): PlayEvent {
     return {
-      id: prisma.id,
-      userId: prisma.userId,
-      trackId: prisma.trackId,
-      playedAt: prisma.playedAt,
-      client: prisma.client || undefined,
-      playContext: prisma.playContext as PlayContext,
-      completionRate: prisma.completionRate || undefined,
-      skipped: prisma.skipped,
-      sourceId: prisma.sourceId || undefined,
-      sourceType: prisma.sourceType as SourceType | undefined,
-      createdAt: prisma.createdAt,
+      id: raw.id,
+      userId: raw.userId,
+      trackId: raw.trackId,
+      playedAt: raw.playedAt,
+      client: raw.client || undefined,
+      playContext: raw.playContext as PlayContext,
+      completionRate: raw.completionRate || undefined,
+      skipped: raw.skipped,
+      sourceId: raw.sourceId || undefined,
+      sourceType: raw.sourceType as SourceType | undefined,
+      createdAt: raw.createdAt,
     };
   }
 
-  static toPlayEventDomainArray(prisma: PrismaPlayHistory[]): PlayEvent[] {
-    return prisma.map(this.toPlayEventDomain);
+  static toPlayEventDomainArray(raw: any[]): PlayEvent[] {
+    return raw.map(this.toPlayEventDomain);
   }
 }

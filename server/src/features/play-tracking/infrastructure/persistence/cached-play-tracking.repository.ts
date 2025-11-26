@@ -10,7 +10,7 @@ import {
   UserPlaySummary,
   TrackPlaySummary,
 } from '../../domain/entities/play-event.entity';
-import { PrismaPlayTrackingRepository } from './play-tracking.repository';
+import { DrizzlePlayTrackingRepository } from './play-tracking.repository';
 
 /**
  * CachedPlayTrackingRepository - Decorator Pattern with Redis Cache
@@ -37,7 +37,7 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   constructor(
     @InjectPinoLogger(CachedPlayTrackingRepository.name)
     private readonly logger: PinoLogger,
-    private readonly baseRepository: PrismaPlayTrackingRepository,
+    private readonly baseRepository: DrizzlePlayTrackingRepository,
     private readonly cache: RedisService,
   ) {}
 

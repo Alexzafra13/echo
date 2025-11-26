@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { eq, inArray } from 'drizzle-orm';
 import { ScoringService } from './scoring.service';
 import { SmartPlaylistConfig, TrackScore } from '../entities/track-score.entity';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { tracks, trackGenres, playHistory } from '@infrastructure/database/schema';
 
 @Injectable()
 export class SmartPlaylistService {
   constructor(
     private readonly scoringService: ScoringService,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
   ) {}
 
   /**
@@ -43,15 +45,15 @@ export class SmartPlaylistService {
     }
 
     // Get track details with artist IDs
-    const tracks = await this.prisma.track.findMany({
-      where: { id: { in: trackIds } },
-      select: {
-        id: true,
-        artistId: true,
-      },
-    });
+    const tracksResult = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        artistId: tracks.artistId,
+      })
+      .from(tracks)
+      .where(inArray(tracks.id, trackIds));
 
-    const trackArtistMap = new Map(tracks.map((t) => [t.id, t.artistId || '']));
+    const trackArtistMap = new Map(tracksResult.map((t) => [t.id, t.artistId || '']));
 
     // Calculate scores
     const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
@@ -84,37 +86,36 @@ export class SmartPlaylistService {
    * Get all tracks by an artist
    */
   private async getTracksByArtist(artistId: string): Promise<string[]> {
-    const tracks = await this.prisma.track.findMany({
-      where: { artistId },
-      select: { id: true },
-    });
+    const tracksResult = await this.drizzle.db
+      .select({ id: tracks.id })
+      .from(tracks)
+      .where(eq(tracks.artistId, artistId));
 
-    return tracks.map((t) => t.id);
+    return tracksResult.map((t) => t.id);
   }
 
   /**
    * Get all tracks in a genre
    */
   private async getTracksByGenre(genreId: string): Promise<string[]> {
-    const trackGenres = await this.prisma.trackGenre.findMany({
-      where: { genreId },
-      select: { trackId: true },
-    });
+    const trackGenresResult = await this.drizzle.db
+      .select({ trackId: trackGenres.trackId })
+      .from(trackGenres)
+      .where(eq(trackGenres.genreId, genreId));
 
-    return trackGenres.map((tg) => tg.trackId);
+    return trackGenresResult.map((tg) => tg.trackId);
   }
 
   /**
    * Get all tracks user has listened to
    */
   private async getUserListenedTracks(userId: string): Promise<string[]> {
-    const history = await this.prisma.playHistory.findMany({
-      where: { userId },
-      select: { trackId: true },
-      distinct: ['trackId'],
-    });
+    const historyResult = await this.drizzle.db
+      .selectDistinct({ trackId: playHistory.trackId })
+      .from(playHistory)
+      .where(eq(playHistory.userId, userId));
 
-    return history.map((h) => h.trackId);
+    return historyResult.map((h) => h.trackId);
   }
 
   /**

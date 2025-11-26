@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { eq } from 'drizzle-orm';
+import { albums, tracks } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
@@ -22,7 +24,7 @@ export class ApplyAlbumCoverUseCase {
   private readonly logger = new Logger(ApplyAlbumCoverUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
@@ -33,19 +35,26 @@ export class ApplyAlbumCoverUseCase {
 
   async execute(input: ApplyAlbumCoverInput): Promise<ApplyAlbumCoverOutput> {
     // Get album from database
-    const album = await this.prisma.album.findUnique({
-      where: { id: input.albumId },
-      include: {
-        tracks: {
-          take: 1,
-          select: { path: true },
-        },
-      },
-    });
+    const albumResult = await this.drizzle.db
+      .select()
+      .from(albums)
+      .where(eq(albums.id, input.albumId))
+      .limit(1);
+
+    const album = albumResult[0];
 
     if (!album) {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
     }
+
+    // Get first track for album folder path
+    const albumTracksResult = await this.drizzle.db
+      .select({ path: tracks.path })
+      .from(tracks)
+      .where(eq(tracks.albumId, input.albumId))
+      .limit(1);
+
+    const albumTracks = albumTracksResult;
 
     this.logger.log(
       `Applying cover for album: ${album.name} from ${input.provider}`,
@@ -71,9 +80,9 @@ export class ApplyAlbumCoverUseCase {
 
     let targetFolder: string;
 
-    if (saveInFolder && album.tracks.length > 0) {
+    if (saveInFolder && albumTracks.length > 0) {
       // Save in album folder
-      targetFolder = path.dirname(album.tracks[0].path);
+      targetFolder = path.dirname(albumTracks[0].path);
     } else {
       // Save to metadata storage
       targetFolder = await this.storage.getAlbumMetadataPath(input.albumId);
@@ -134,15 +143,15 @@ export class ApplyAlbumCoverUseCase {
       throw error;
     }
 
-    // Update database (updatedAt will be automatically updated by Prisma)
-    await this.prisma.album.update({
-      where: { id: input.albumId },
-      data: {
+    // Update database
+    await this.drizzle.db
+      .update(albums)
+      .set({
         externalCoverPath: finalCoverPath,
         externalCoverSource: input.provider,
         externalInfoUpdatedAt: new Date(),
-      },
-    });
+      })
+      .where(eq(albums.id, input.albumId));
 
     // Invalidate server-side image cache to force reload of new cover
     this.imageService.invalidateAlbumCache(input.albumId);
@@ -161,15 +170,18 @@ export class ApplyAlbumCoverUseCase {
     }
 
     // Get updated album data for WebSocket notification
-    const finalAlbum = await this.prisma.album.findUnique({
-      where: { id: input.albumId },
-      select: {
-        id: true,
-        name: true,
-        artistId: true,
-        externalInfoUpdatedAt: true,
-      },
-    });
+    const finalAlbumResult = await this.drizzle.db
+      .select({
+        id: albums.id,
+        name: albums.name,
+        artistId: albums.artistId,
+        externalInfoUpdatedAt: albums.externalInfoUpdatedAt,
+      })
+      .from(albums)
+      .where(eq(albums.id, input.albumId))
+      .limit(1);
+
+    const finalAlbum = finalAlbumResult[0];
 
     // Emit WebSocket event to notify all connected clients about the update
     if (finalAlbum && finalAlbum.artistId) {

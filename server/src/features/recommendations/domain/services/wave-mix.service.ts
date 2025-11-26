@@ -6,8 +6,10 @@ import {
   IPlayTrackingRepository,
   PLAY_TRACKING_REPOSITORY,
 } from '@features/play-tracking/domain/ports';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
+import { eq, inArray, and, count, desc } from 'drizzle-orm';
+import { tracks, artists, genres, trackGenres } from '@infrastructure/database/schema';
 
 // Wave Mix Configuration
 // Optimized for faster first mix generation and better user experience
@@ -52,7 +54,7 @@ export class WaveMixService {
     private readonly scoringService: ScoringService,
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepo: IPlayTrackingRepository,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
   ) {}
 
@@ -84,17 +86,17 @@ export class WaveMixService {
 
     // Get track details with artist IDs
     const trackIds = topTracks.map((t) => t.trackId);
-    const tracks = await this.prisma.track.findMany({
-      where: { id: { in: trackIds } },
-      select: {
-        id: true,
-        artistId: true,
-        albumId: true,
-        title: true,
-      },
-    });
+    const tracksResult = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        artistId: tracks.artistId,
+        albumId: tracks.albumId,
+        title: tracks.title,
+      })
+      .from(tracks)
+      .where(inArray(tracks.id, trackIds));
 
-    const trackArtistMap = new Map(tracks.map((t) => [t.id, t.artistId || '']));
+    const trackArtistMap = new Map(tracksResult.map((t) => [t.id, t.artistId || '']));
 
     // Step 2: Calculate scores for all tracks
     const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIds, trackArtistMap);
@@ -155,10 +157,10 @@ export class WaveMixService {
     }, 'Selected tracks for Wave Mix');
 
     // Step 5: Intelligent shuffle (avoid consecutive same artist/album)
-    const shuffledTracks = this.intelligentShuffle(finalTracks, tracks);
+    const shuffledTracks = this.intelligentShuffle(finalTracks, tracksResult);
 
     // Calculate metadata
-    const metadata = await this.calculateMetadata(userId, shuffledTracks, tracks);
+    const metadata = await this.calculateMetadata(userId, shuffledTracks, tracksResult);
 
     // Create Wave Mix object
     const now = new Date();
@@ -196,33 +198,33 @@ export class WaveMixService {
 
     // OPTIMIZATION: Batch load all artists at once (1 query instead of N)
     const artistIds = topArtists.map(a => a.artistId);
-    const artists = await this.prisma.artist.findMany({
-      where: { id: { in: artistIds } },
-      select: {
-        id: true,
-        name: true,
-        mbzArtistId: true,
-      },
-    });
-    const artistMap = new Map(artists.map(a => [a.id, a]));
+    const artistsResult = await this.drizzle.db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        mbzArtistId: artists.mbzArtistId,
+      })
+      .from(artists)
+      .where(inArray(artists.id, artistIds));
+    const artistMap = new Map(artistsResult.map(a => [a.id, a]));
 
     // OPTIMIZATION: Fetch all user play stats once (1 query instead of N)
     const allPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
     const trackIds = allPlayStats.map(t => t.itemId);
 
     // OPTIMIZATION: Batch load all tracks for these artists (1 query instead of N)
-    const allTracks = await this.prisma.track.findMany({
-      where: {
-        id: { in: trackIds },
-        artistId: { in: artistIds },
-      },
-      select: {
-        id: true,
-        artistId: true,
-        albumId: true,
-        title: true,
-      },
-    });
+    const allTracks = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        artistId: tracks.artistId,
+        albumId: tracks.albumId,
+        title: tracks.title,
+      })
+      .from(tracks)
+      .where(and(
+        inArray(tracks.id, trackIds),
+        inArray(tracks.artistId, artistIds)
+      ));
 
     // Group tracks by artist
     const tracksByArtist = new Map<string, typeof allTracks>();
@@ -319,25 +321,42 @@ export class WaveMixService {
     }
 
     // Batch load all tracks with genres
-    const allTracks = await this.prisma.track.findMany({
-      where: { id: { in: trackIds } },
-      select: {
-        id: true,
-        artistId: true,
-        albumId: true,
-        title: true,
-        genres: {
-          select: {
-            genre: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+    const tracksWithGenresResult = await this.drizzle.db
+      .select({
+        trackId: tracks.id,
+        trackArtistId: tracks.artistId,
+        trackAlbumId: tracks.albumId,
+        trackTitle: tracks.title,
+        genreId: genres.id,
+        genreName: genres.name,
+      })
+      .from(tracks)
+      .leftJoin(trackGenres, eq(tracks.id, trackGenres.trackId))
+      .leftJoin(genres, eq(trackGenres.genreId, genres.id))
+      .where(inArray(tracks.id, trackIds));
+
+    // Group results by track to reconstruct nested structure
+    const tracksMap = new Map();
+    for (const row of tracksWithGenresResult) {
+      if (!tracksMap.has(row.trackId)) {
+        tracksMap.set(row.trackId, {
+          id: row.trackId,
+          artistId: row.trackArtistId,
+          albumId: row.trackAlbumId,
+          title: row.trackTitle,
+          genres: [],
+        });
+      }
+      if (row.genreId) {
+        tracksMap.get(row.trackId).genres.push({
+          genre: {
+            id: row.genreId,
+            name: row.genreName,
           },
-        },
-      },
-    });
+        });
+      }
+    }
+    const allTracks = Array.from(tracksMap.values());
 
     // Group tracks by genre
     const tracksByGenre = new Map<string, typeof allTracks>();
@@ -416,21 +435,16 @@ export class WaveMixService {
     }
 
     // Get genres for these tracks with play counts
-    const genreStats = await this.prisma.trackGenre.groupBy({
-      by: ['genreId'],
-      where: {
-        trackId: { in: trackIds },
-      },
-      _count: {
-        trackId: true,
-      },
-      orderBy: {
-        _count: {
-          trackId: 'desc',
-        },
-      },
-      take: limit,
-    });
+    const genreStats = await this.drizzle.db
+      .select({
+        genreId: trackGenres.genreId,
+        count: count(trackGenres.trackId),
+      })
+      .from(trackGenres)
+      .where(inArray(trackGenres.trackId, trackIds))
+      .groupBy(trackGenres.genreId)
+      .orderBy(desc(count(trackGenres.trackId)))
+      .limit(limit);
 
     this.logger.debug({ userId, genreStatsCount: genreStats.length }, 'Genre stats from DB');
 
@@ -441,16 +455,19 @@ export class WaveMixService {
 
     // Batch load genre names
     const genreIds = genreStats.map(g => g.genreId);
-    const genres = await this.prisma.genre.findMany({
-      where: { id: { in: genreIds } },
-      select: { id: true, name: true },
-    });
-    const genreMap = new Map(genres.map(g => [g.id, g.name]));
+    const genresResult = await this.drizzle.db
+      .select({
+        id: genres.id,
+        name: genres.name,
+      })
+      .from(genres)
+      .where(inArray(genres.id, genreIds));
+    const genreMap = new Map(genresResult.map(g => [g.id, g.name]));
 
     return genreStats.map(stat => ({
       genreId: stat.genreId,
       genreName: genreMap.get(stat.genreId) || 'Unknown',
-      playCount: stat._count.trackId,
+      playCount: Number(stat.count),
     }));
   }
 
@@ -583,33 +600,33 @@ export class WaveMixService {
 
     // OPTIMIZATION: Batch load only the paginated artists
     const artistIds = paginatedArtists.map(a => a.artistId);
-    const artists = await this.prisma.artist.findMany({
-      where: { id: { in: artistIds } },
-      select: {
-        id: true,
-        name: true,
-        mbzArtistId: true,
-      },
-    });
-    const artistMap = new Map(artists.map(a => [a.id, a]));
+    const artistsResult = await this.drizzle.db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        mbzArtistId: artists.mbzArtistId,
+      })
+      .from(artists)
+      .where(inArray(artists.id, artistIds));
+    const artistMap = new Map(artistsResult.map(a => [a.id, a]));
 
     // OPTIMIZATION: Fetch all user play stats once
     const allPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
     const trackIds = allPlayStats.map(t => t.itemId);
 
     // OPTIMIZATION: Batch load all tracks for paginated artists
-    const allTracks = await this.prisma.track.findMany({
-      where: {
-        id: { in: trackIds },
-        artistId: { in: artistIds },
-      },
-      select: {
-        id: true,
-        artistId: true,
-        albumId: true,
-        title: true,
-      },
-    });
+    const allTracks = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        artistId: tracks.artistId,
+        albumId: tracks.albumId,
+        title: tracks.title,
+      })
+      .from(tracks)
+      .where(and(
+        inArray(tracks.id, trackIds),
+        inArray(tracks.artistId, artistIds)
+      ));
 
     // Group tracks by artist
     const tracksByArtist = new Map<string, typeof allTracks>();
@@ -712,25 +729,42 @@ export class WaveMixService {
     }
 
     // OPTIMIZATION: Batch load all tracks with genres relation
-    const allTracks = await this.prisma.track.findMany({
-      where: { id: { in: trackIds } },
-      select: {
-        id: true,
-        artistId: true,
-        albumId: true,
-        title: true,
-        genres: {
-          select: {
-            genre: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+    const tracksWithGenresResult = await this.drizzle.db
+      .select({
+        trackId: tracks.id,
+        trackArtistId: tracks.artistId,
+        trackAlbumId: tracks.albumId,
+        trackTitle: tracks.title,
+        genreId: genres.id,
+        genreName: genres.name,
+      })
+      .from(tracks)
+      .leftJoin(trackGenres, eq(tracks.id, trackGenres.trackId))
+      .leftJoin(genres, eq(trackGenres.genreId, genres.id))
+      .where(inArray(tracks.id, trackIds));
+
+    // Group results by track to reconstruct nested structure
+    const tracksMap = new Map();
+    for (const row of tracksWithGenresResult) {
+      if (!tracksMap.has(row.trackId)) {
+        tracksMap.set(row.trackId, {
+          id: row.trackId,
+          artistId: row.trackArtistId,
+          albumId: row.trackAlbumId,
+          title: row.trackTitle,
+          genres: [],
+        });
+      }
+      if (row.genreId) {
+        tracksMap.get(row.trackId).genres.push({
+          genre: {
+            id: row.genreId,
+            name: row.genreName,
           },
-        },
-      },
-    });
+        });
+      }
+    }
+    const allTracks = Array.from(tracksMap.values());
 
     // Group tracks by genre ID (only for paginated genres)
     const paginatedGenreIds = new Set(paginatedGenres.map(g => g.genreId));
@@ -908,13 +942,16 @@ export class WaveMixService {
   private async getArtistCoverImage(artist: { id: string; name: string; mbzArtistId: string | null }): Promise<string> {
     // Check if artist already has an external profile image downloaded
     // (This would have been downloaded when visiting the artist page)
-    const artistWithImages = await this.prisma.artist.findUnique({
-      where: { id: artist.id },
-      select: {
-        externalProfilePath: true,
-        profileImagePath: true,
-      },
-    });
+    const artistWithImagesResult = await this.drizzle.db
+      .select({
+        externalProfilePath: artists.externalProfilePath,
+        profileImagePath: artists.profileImagePath,
+      })
+      .from(artists)
+      .where(eq(artists.id, artist.id))
+      .limit(1);
+
+    const artistWithImages = artistWithImagesResult[0] || null;
 
     // If artist has either external or local profile image, use it
     // The ImageService will handle the priority: Custom > Local > External

@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { artists, customArtistImages } from '@infrastructure/database/schema';
+import { eq, desc, and } from 'drizzle-orm';
 import {
   ListCustomArtistImagesInput,
   ListCustomArtistImagesOutput,
@@ -14,36 +16,35 @@ import {
 export class ListCustomArtistImagesUseCase {
   private readonly logger = new Logger(ListCustomArtistImagesUseCase.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly drizzle: DrizzleService) {}
 
   async execute(input: ListCustomArtistImagesInput): Promise<ListCustomArtistImagesOutput> {
     // Validate artist exists
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: input.artistId },
-      select: { id: true, name: true },
-    });
+    const artistResult = await this.drizzle.db
+      .select({ id: artists.id, name: artists.name })
+      .from(artists)
+      .where(eq(artists.id, input.artistId))
+      .limit(1);
+
+    const artist = artistResult[0];
 
     if (!artist) {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
     }
 
     // Build where clause
-    const where: any = {
-      artistId: input.artistId,
-    };
+    const whereConditions = [eq(customArtistImages.artistId, input.artistId)];
 
     if (input.imageType) {
-      where.imageType = input.imageType;
+      whereConditions.push(eq(customArtistImages.imageType, input.imageType));
     }
 
     // Fetch custom images
-    const images = await this.prisma.customArtistImage.findMany({
-      where,
-      orderBy: [
-        { isActive: 'desc' }, // Active images first
-        { createdAt: 'desc' }, // Then most recent
-      ],
-    });
+    const images = await this.drizzle.db
+      .select()
+      .from(customArtistImages)
+      .where(whereConditions.length > 1 ? and(...whereConditions) : whereConditions[0])
+      .orderBy(desc(customArtistImages.isActive), desc(customArtistImages.createdAt));
 
     // Map to output format
     const imageItems: CustomArtistImageItem[] = images.map((img) => ({

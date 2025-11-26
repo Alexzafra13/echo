@@ -1,5 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, count as dbCount } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { users, settings } from '@infrastructure/database/schema';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -64,7 +66,7 @@ export class SetupService {
   private readonly dataPath = process.env.DATA_PATH || '/app/data';
   private readonly setupFilePath: string;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(private readonly drizzle: DrizzleService) {
     this.setupFilePath = path.join(this.dataPath, 'setup.json');
   }
 
@@ -177,8 +179,9 @@ export class SetupService {
     const passwordHash = await bcrypt.hash(password, rounds);
 
     // Create admin user
-    await this.prisma.user.create({
-      data: {
+    await this.drizzle.db
+      .insert(users)
+      .values({
         username,
         email: email || `${username}@localhost`,
         passwordHash,
@@ -188,8 +191,7 @@ export class SetupService {
         theme: 'dark',
         language: 'es',
         mustChangePassword: false, // User just set it
-      },
-    });
+      });
 
     this.logger.log(`Admin user "${username}" created during setup wizard`);
   }
@@ -256,7 +258,7 @@ export class SetupService {
     const isWindows = process.platform === 'win32';
 
     // Handle Windows root path in development
-    let normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
+    const normalizedPath = path.normalize(targetPath).replace(/\\/g, '/');
 
     // In development on Windows, if requesting "/", show common locations
     if (isDev && isWindows && (targetPath === '/' || targetPath === '')) {
@@ -507,11 +509,18 @@ export class SetupService {
     ];
 
     for (const setting of defaultSettings) {
-      await this.prisma.setting.upsert({
-        where: { key: setting.key },
-        update: {}, // Don't overwrite existing values
-        create: setting,
-      });
+      // Check if setting exists
+      const existing = await this.drizzle.db
+        .select()
+        .from(settings)
+        .where(eq(settings.key, setting.key))
+        .limit(1);
+
+      if (existing.length === 0) {
+        // Create new setting
+        await this.drizzle.db.insert(settings).values(setting);
+      }
+      // Don't overwrite existing values
     }
 
     this.logger.log(`Initialized ${defaultSettings.length} default settings`);
@@ -521,10 +530,12 @@ export class SetupService {
    * Check if admin user exists
    */
   private async hasAdminUser(): Promise<boolean> {
-    const count = await this.prisma.user.count({
-      where: { isAdmin: true },
-    });
-    return count > 0;
+    const result = await this.drizzle.db
+      .select({ count: dbCount() })
+      .from(users)
+      .where(eq(users.isAdmin, true));
+
+    return (result[0]?.count ?? 0) > 0;
   }
 
   /**

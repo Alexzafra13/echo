@@ -1,100 +1,127 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { eq, and, desc, count } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { radioStations } from '@infrastructure/database/schema';
 import { RadioStation } from '../../domain/entities/radio-station.entity';
 import { IRadioStationRepository } from '../../domain/ports/radio-station-repository.port';
 import { RadioStationMapper } from './radio-station.mapper';
 
 /**
- * PrismaRadioStationRepository - Implementación de IRadioStationRepository con Prisma
+ * DrizzleRadioStationRepository - Implementation of IRadioStationRepository with Drizzle
  */
 @Injectable()
-export class PrismaRadioStationRepository implements IRadioStationRepository {
-  constructor(private readonly prisma: PrismaService) {}
+export class DrizzleRadioStationRepository implements IRadioStationRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
 
   /**
-   * Guardar o actualizar una emisora favorita
+   * Save or update a favorite station
    */
   async save(station: RadioStation): Promise<RadioStation> {
     const data = RadioStationMapper.toPersistence(station);
 
-    // Separate userId from data for proper Prisma relation handling
-    const { userId, ...stationData } = data;
+    // Use upsert pattern: try to update, if not found then insert
+    const existing = await this.drizzle.db
+      .select()
+      .from(radioStations)
+      .where(eq(radioStations.id, data.id))
+      .limit(1);
 
-    const savedStation = await this.prisma.radioStation.upsert({
-      where: { id: data.id },
-      create: {
-        ...stationData,
-        user: {
-          connect: { id: userId },
-        },
-      },
-      update: stationData,
-    });
+    if (existing.length > 0) {
+      // Update existing record (exclude userId from update)
+      const { userId, ...updateData } = data;
+      const result = await this.drizzle.db
+        .update(radioStations)
+        .set(updateData)
+        .where(eq(radioStations.id, data.id))
+        .returning();
 
-    return RadioStationMapper.toDomain(savedStation);
+      return RadioStationMapper.toDomain(result[0]);
+    } else {
+      // Insert new record
+      const result = await this.drizzle.db
+        .insert(radioStations)
+        .values(data)
+        .returning();
+
+      return RadioStationMapper.toDomain(result[0]);
+    }
   }
 
   /**
-   * Buscar emisora por ID
+   * Find station by ID
    */
   async findById(id: string): Promise<RadioStation | null> {
-    const station = await this.prisma.radioStation.findUnique({
-      where: { id },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(radioStations)
+      .where(eq(radioStations.id, id))
+      .limit(1);
 
-    return station ? RadioStationMapper.toDomain(station) : null;
+    return result[0] ? RadioStationMapper.toDomain(result[0]) : null;
   }
 
   /**
-   * Buscar emisora por UUID de Radio Browser
+   * Find station by Radio Browser UUID
    */
   async findByStationUuid(
     userId: string,
     stationUuid: string,
   ): Promise<RadioStation | null> {
-    const station = await this.prisma.radioStation.findFirst({
-      where: {
-        userId,
-        stationUuid,
-      },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(radioStations)
+      .where(
+        and(
+          eq(radioStations.userId, userId),
+          eq(radioStations.stationUuid, stationUuid),
+        ),
+      )
+      .limit(1);
 
-    return station ? RadioStationMapper.toDomain(station) : null;
+    return result[0] ? RadioStationMapper.toDomain(result[0]) : null;
   }
 
   /**
-   * Obtener todas las emisoras favoritas de un usuario
+   * Get all favorite stations for a user
    */
   async findByUserId(userId: string): Promise<RadioStation[]> {
-    const stations = await this.prisma.radioStation.findMany({
-      where: {
-        userId,
-        isFavorite: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const result = await this.drizzle.db
+      .select()
+      .from(radioStations)
+      .where(
+        and(
+          eq(radioStations.userId, userId),
+          eq(radioStations.isFavorite, true),
+        ),
+      )
+      .orderBy(desc(radioStations.createdAt));
 
-    return RadioStationMapper.toDomainArray(stations);
+    return RadioStationMapper.toDomainArray(result);
   }
 
   /**
-   * Eliminar una emisora favorita
+   * Delete a favorite station
    */
   async delete(id: string): Promise<void> {
-    await this.prisma.radioStation.delete({
-      where: { id },
-    });
+    await this.drizzle.db
+      .delete(radioStations)
+      .where(eq(radioStations.id, id));
   }
 
   /**
-   * Contar emisoras favoritas de un usuario
+   * Count favorite stations for a user
    */
   async countByUserId(userId: string): Promise<number> {
-    return this.prisma.radioStation.count({
-      where: {
-        userId,
-        isFavorite: true,
-      },
-    });
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(radioStations)
+      .where(
+        and(
+          eq(radioStations.userId, userId),
+          eq(radioStations.isFavorite, true),
+        ),
+      );
+
+    return result[0]?.count ?? 0;
   }
 }

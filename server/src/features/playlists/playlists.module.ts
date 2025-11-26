@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
 import { TracksModule } from '@features/tracks/tracks.module';
 import { AuthModule } from '@features/auth/auth.module';
 import { PLAYLIST_REPOSITORY } from './domain/ports';
-import { PrismaPlaylistRepository } from './infrastructure/persistence/playlist.repository';
+import { DrizzlePlaylistRepository } from './infrastructure/persistence/playlist.repository';
 import {
   CreatePlaylistUseCase,
   GetPlaylistUseCase,
@@ -17,14 +16,17 @@ import {
 } from './domain/use-cases';
 import { PlaylistsController } from './presentation/controller/playlists.controller';
 
+/**
+ * PlaylistsModule
+ * DrizzleService is provided globally via DrizzleModule
+ */
 @Module({
   imports: [TracksModule, AuthModule],
   controllers: [PlaylistsController],
   providers: [
-    PrismaService,
     {
       provide: PLAYLIST_REPOSITORY,
-      useClass: PrismaPlaylistRepository,
+      useClass: DrizzlePlaylistRepository,
     },
     CreatePlaylistUseCase,
     GetPlaylistUseCase,
