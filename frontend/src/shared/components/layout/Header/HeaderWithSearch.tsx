@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
 import { Header } from './Header';
 import { SearchPanel } from './SearchPanel';
@@ -16,6 +16,7 @@ interface HeaderWithSearchProps {
 /**
  * HeaderWithSearch Component
  * Header with integrated search panel that expands below
+ * Wrapped in a sticky container so SearchPanel pushes content down smoothly
  * Similar to YouTube/Spotify - pushes content down instead of dropdown
  */
 export function HeaderWithSearch({ adminMode = false, showBackButton = false, alwaysGlass = false }: HeaderWithSearchProps) {
@@ -83,7 +84,7 @@ export function HeaderWithSearch({ adminMode = false, showBackButton = false, al
   ) : undefined;
 
   return (
-    <Fragment>
+    <div className={styles.headerWrapper}>
       <Header
         adminMode={adminMode}
         showBackButton={showBackButton}
@@ -91,7 +92,7 @@ export function HeaderWithSearch({ adminMode = false, showBackButton = false, al
         customSearch={searchBar}
       />
 
-      {/* Search Panel - Expands below header */}
+      {/* Search Panel - Expands below header, pushing content down */}
       {!adminMode && (
         <SearchPanel
           isOpen={isSearchPanelOpen}
@@ -99,6 +100,6 @@ export function HeaderWithSearch({ adminMode = false, showBackButton = false, al
           onClose={handleClosePanel}
         />
       )}
-    </Fragment>
+    </div>
   );
 }
