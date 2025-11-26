@@ -22,7 +22,7 @@ export const playlists = pgTable(
     description: text('description'),
     coverImageUrl: varchar('cover_image_url', { length: 512 }),
     duration: integer('duration').default(0).notNull(),
-    size: bigint('size', { mode: 'bigint' }).default(BigInt(0)).notNull(),
+    size: bigint('size', { mode: 'number' }).default(0).notNull(),
     ownerId: varchar('owner_id', { length: 36 }).notNull(),
     public: boolean('public').default(false).notNull(),
     songCount: integer('song_count').default(0).notNull(),
