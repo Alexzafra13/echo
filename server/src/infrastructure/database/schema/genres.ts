@@ -25,8 +25,8 @@ export const genres = pgTable(
 export const artistGenres = pgTable(
   'artist_genres',
   {
-    artistId: varchar('artist_id', { length: 36 }).notNull(),
-    genreId: varchar('genre_id', { length: 36 }).notNull(),
+    artistId: uuid('artist_id').notNull(),
+    genreId: uuid('genre_id').notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.artistId, table.genreId] }),
@@ -39,8 +39,8 @@ export const artistGenres = pgTable(
 export const albumGenres = pgTable(
   'album_genres',
   {
-    albumId: varchar('album_id', { length: 36 }).notNull(),
-    genreId: varchar('genre_id', { length: 36 }).notNull(),
+    albumId: uuid('album_id').notNull(),
+    genreId: uuid('genre_id').notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.albumId, table.genreId] }),
@@ -53,8 +53,8 @@ export const albumGenres = pgTable(
 export const trackGenres = pgTable(
   'track_genres',
   {
-    trackId: varchar('track_id', { length: 36 }).notNull(),
-    genreId: varchar('genre_id', { length: 36 }).notNull(),
+    trackId: uuid('track_id').notNull(),
+    genreId: uuid('genre_id').notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.trackId, table.genreId] }),
