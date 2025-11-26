@@ -177,6 +177,16 @@ export class SetupService {
       );
     }
 
+    // If setup was previously completed but database was reset, reset the setup state
+    // to allow the user to go through the full setup flow again
+    if (state.completed) {
+      this.logger.log('Database was reset - resetting setup state to allow re-setup');
+      state.completed = false;
+      state.completedAt = undefined;
+      // Keep musicLibraryPath if it exists, so user doesn't have to reselect
+      await this.saveSetupState(state);
+    }
+
     // Validate password strength
     if (password.length < 8) {
       throw new BadRequestException('Password must be at least 8 characters long.');
