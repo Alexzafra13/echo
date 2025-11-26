@@ -8,7 +8,7 @@ import { DrizzleAlbumRepository } from './album.repository';
 /**
  * CachedAlbumRepository - Decorator Pattern con Redis Cache
  *
- * Implementa IAlbumRepository (mismo contrato que PrismaAlbumRepository)
+ * Implementa IAlbumRepository (mismo contrato que DrizzleAlbumRepository)
  * Agrega caching transparente sin que el dominio lo sepa
  *
  * Patrón Cache-Aside:

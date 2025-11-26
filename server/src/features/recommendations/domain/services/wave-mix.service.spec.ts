@@ -10,10 +10,10 @@ import { StorageService } from '@features/external-metadata/infrastructure/servi
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 
 /**
- * TODO: Update tests after Prisma to Drizzle migration
+ * WaveMixService Unit Tests
  *
  * These tests use DrizzleService mock with query builder pattern.
- * Some tests may need adjustment based on actual Drizzle query patterns.
+ * Tests cover Wave Mix generation, caching, and playlist generation.
  */
 describe('WaveMixService', () => {
   let service: WaveMixService;

@@ -3,11 +3,11 @@ import { Track } from '../../domain/entities/track.entity';
 /**
  * TrackMapper - Convierte entre capas
  *
- * Prisma Track ↔ Domain Track
+ * Drizzle Track ↔ Domain Track
  */
 export class TrackMapper {
   /**
-   * Convierte Prisma Track a Domain Track
+   * Convierte Drizzle Track a Domain Track
    * Se usa cuando traes datos de BD
    */
   static toDomain(raw: any): Track {
@@ -37,7 +37,7 @@ export class TrackMapper {
   }
 
   /**
-   * Convierte Domain Track a formato Prisma
+   * Convierte Domain Track a formato Drizzle
    * Se usa cuando guardas en BD
    */
   static toPersistence(track: Track) {
@@ -68,7 +68,7 @@ export class TrackMapper {
   }
 
   /**
-   * Convierte Array de Prisma Tracks a Domain Tracks
+   * Convierte Array de Drizzle Tracks a Domain Tracks
    */
   static toDomainArray(raw: any[]): Track[] {
     return raw.map((item) => this.toDomain(item));

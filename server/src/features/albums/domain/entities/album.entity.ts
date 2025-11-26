@@ -58,7 +58,7 @@ export class Album {
 
   /**
    * Factory method para reconstruir un Album desde BD
-   * Se usa cuando traes datos de Prisma
+   * Se usa cuando traes datos de Drizzle
    */
   static reconstruct(props: AlbumProps): Album {
     return new Album(props);
@@ -130,7 +130,7 @@ export class Album {
 
   /**
    * Retorna todas las propiedades del álbum como un objeto plano
-   * Útil para mapear a Prisma o DTOs
+   * Útil para mapear a Drizzle o DTOs
    */
   toPrimitives(): AlbumProps {
     return { ...this.props };

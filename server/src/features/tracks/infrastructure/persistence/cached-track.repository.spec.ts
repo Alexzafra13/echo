@@ -54,7 +54,7 @@ describe('CachedTrackRepository', () => {
       error: jest.fn(),
     };
 
-    // Create instance directly without TestingModule to avoid Prisma imports
+    // Create instance directly without TestingModule for simplicity
     cachedRepository = new CachedTrackRepository(baseRepository as any, cacheService, mockLogger as any);
   });
 
