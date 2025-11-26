@@ -1,48 +1,79 @@
-// scripts/reset-admin-password.js (CommonJS version for production)
-const { PrismaClient } = require('@prisma/client');
+// scripts/reset-admin-password.js
+// Resets admin password to default - for development/recovery only
+// Usage: node scripts/reset-admin-password.js
+
+const { drizzle } = require('drizzle-orm/node-postgres');
+const { eq } = require('drizzle-orm');
+const { pgTable, uuid, varchar, boolean, timestamp } = require('drizzle-orm/pg-core');
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
-const prisma = new PrismaClient();
+// Define users table inline (to avoid TypeScript import issues)
+const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  username: varchar('username', { length: 50 }).notNull().unique(),
+  email: varchar('email', { length: 255 }).notNull(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  name: varchar('name', { length: 100 }),
+  isAdmin: boolean('is_admin').default(false).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  theme: varchar('theme', { length: 20 }).default('dark'),
+  language: varchar('language', { length: 10 }).default('en'),
+  mustChangePassword: boolean('must_change_password').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 async function main() {
+  const DATABASE_URL = process.env.DATABASE_URL;
+
+  if (!DATABASE_URL) {
+    console.error('❌ DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
+
+  const pool = new Pool({ connectionString: DATABASE_URL });
+  const db = drizzle(pool);
+
   console.log('🔄 Checking admin user...');
 
   const DEFAULT_PASSWORD = 'admin123';
 
-  // Check if admin user exists
-  const existingAdmin = await prisma.user.findUnique({
-    where: { username: 'admin' },
-    select: { passwordHash: true, mustChangePassword: true },
-  });
+  try {
+    // Check if admin user exists
+    const existingAdmin = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, 'admin'))
+      .limit(1);
 
-  if (existingAdmin) {
-    // Admin exists - check if they're still using default password
-    const isUsingDefaultPassword = await bcrypt.compare(DEFAULT_PASSWORD, existingAdmin.passwordHash);
+    if (existingAdmin.length > 0) {
+      const admin = existingAdmin[0];
 
-    if (isUsingDefaultPassword && !existingAdmin.mustChangePassword) {
-      // Has default password but mustChangePassword is false → force password change
-      await prisma.user.update({
-        where: { username: 'admin' },
-        data: { mustChangePassword: true },
-      });
-      console.log('⚠️  Admin still using default password - forcing password change on next login');
-    } else if (!isUsingDefaultPassword && existingAdmin.mustChangePassword) {
-      // User changed password but mustChangePassword is still true → clear flag
-      await prisma.user.update({
-        where: { username: 'admin' },
-        data: { mustChangePassword: false },
-      });
-      console.log('✅ Admin password already changed - clearing first-login flag');
+      // Reset password to default
+      const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
+
+      await db
+        .update(users)
+        .set({
+          passwordHash: passwordHash,
+          mustChangePassword: true,
+          updatedAt: new Date()
+        })
+        .where(eq(users.username, 'admin'));
+
+      console.log('✅ Admin password reset successfully!');
+      console.log('');
+      console.log('📝 Credentials:');
+      console.log('   Username: admin');
+      console.log('   Password: admin123');
+      console.log('');
+      console.log('⚠️  You MUST change this password on first login!');
     } else {
-      // Everything is consistent - no changes needed
-      console.log('✅ Admin user OK (no changes needed)');
-    }
-  } else {
-    // Create new admin user with default password
-    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
+      // Create new admin user
+      const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
 
-    await prisma.user.create({
-      data: {
+      await db.insert(users).values({
         username: 'admin',
         email: 'admin@musicserver.local',
         passwordHash: passwordHash,
@@ -52,23 +83,22 @@ async function main() {
         theme: 'dark',
         language: 'es',
         mustChangePassword: true,
-      },
-    });
-    console.log('✅ Admin user created successfully!');
-    console.log('');
-    console.log('📝 Credentials:');
-    console.log('   Username: admin');
-    console.log('   Password: admin123');
-    console.log('');
-    console.log('⚠️  You MUST change this password on first login!');
+      });
+
+      console.log('✅ Admin user created successfully!');
+      console.log('');
+      console.log('📝 Credentials:');
+      console.log('   Username: admin');
+      console.log('   Password: admin123');
+      console.log('');
+      console.log('⚠️  You MUST change this password on first login!');
+    }
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    process.exit(1);
+  } finally {
+    await pool.end();
   }
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error resetting password:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main();
