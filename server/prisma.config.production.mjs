@@ -1,7 +1,7 @@
-// Production Prisma config - Plain JavaScript (no TypeScript compilation needed)
+// Production Prisma config - ES Module format for Prisma 7
 // This file is copied to Docker container for prisma migrate deploy
 
-module.exports = {
+export default {
   earlyAccess: true,
   schema: 'prisma/schema.prisma',
   datasource: {
