@@ -13,8 +13,8 @@ import {
   customAlbumCovers,
   metadataConflicts,
 } from '@infrastructure/database/schema';
-import { ConfigService } from '@nestjs/config';
 import { HealthCheckService } from '@features/health/health-check.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import {
   GetDashboardStatsInput,
   GetDashboardStatsOutput,
@@ -35,8 +35,8 @@ export class GetDashboardStatsUseCase {
 
   constructor(
     private readonly drizzle: DrizzleService,
-    private readonly config: ConfigService,
     private readonly healthCheck: HealthCheckService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   async execute(input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {
@@ -180,9 +180,12 @@ export class GetDashboardStatsUseCase {
       }
     }
 
-    // Metadata APIs - check if API keys are configured
-    const lastfmKey = this.config.get<string>('LASTFM_API_KEY');
-    const fanartKey = this.config.get<string>('FANART_API_KEY');
+    // Metadata APIs - check if API keys are configured in database
+    // Check both possible key formats (frontend saves as metadata.*, legacy as api.*)
+    const lastfmKey = await this.settingsService.getString('metadata.lastfm.api_key', '') ||
+                      await this.settingsService.getString('api.lastfm.api_key', '');
+    const fanartKey = await this.settingsService.getString('metadata.fanart.api_key', '') ||
+                      await this.settingsService.getString('api.fanart.api_key', '');
 
     // Storage health - check if storage is approaching limits
     // Only count metadata + avatars (not music files)
