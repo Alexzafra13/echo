@@ -2,7 +2,8 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { WaveMixService } from '../../domain/services/wave-mix.service';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { users } from '@infrastructure/database/schema';
 
 /**
  * Wave Mix Scheduler Service
@@ -26,7 +27,7 @@ export class WaveMixSchedulerService implements OnModuleInit {
     private readonly logger: PinoLogger,
     private readonly bullmqService: BullmqService,
     private readonly waveMixService: WaveMixService,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
   ) {}
 
   async onModuleInit() {
@@ -95,19 +96,19 @@ export class WaveMixSchedulerService implements OnModuleInit {
     this.logger.info('Starting daily Wave Mix regeneration for all users');
 
     // Get all users (you may want to filter by activity, e.g., users who logged in last 30 days)
-    const users = await this.prisma.user.findMany({
-      select: { id: true, username: true },
-    });
+    const allUsers = await this.drizzle.db
+      .select({ id: users.id, username: users.username })
+      .from(users);
 
-    this.logger.info({ userCount: users.length }, 'Found users for Wave Mix regeneration');
+    this.logger.info({ userCount: allUsers.length }, 'Found users for Wave Mix regeneration');
 
     let successCount = 0;
     let errorCount = 0;
 
     // Process users in batches to avoid overwhelming the system
     const batchSize = 10;
-    for (let i = 0; i < users.length; i += batchSize) {
-      const batch = users.slice(i, i + batchSize);
+    for (let i = 0; i < allUsers.length; i += batchSize) {
+      const batch = allUsers.slice(i, i + batchSize);
 
       await Promise.allSettled(
         batch.map(async (user) => {
@@ -124,7 +125,7 @@ export class WaveMixSchedulerService implements OnModuleInit {
     }
 
     this.logger.info(
-      { successCount, errorCount, totalUsers: users.length },
+      { successCount, errorCount, totalUsers: allUsers.length },
       'Daily Wave Mix regeneration completed'
     );
   }

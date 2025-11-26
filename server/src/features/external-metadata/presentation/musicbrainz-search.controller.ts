@@ -10,7 +10,9 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { MusicBrainzAgent } from '../infrastructure/agents/musicbrainz.agent';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { artists, albums } from '@infrastructure/database/schema';
+import { eq } from 'drizzle-orm';
 import { ExternalMetadataService } from '../application/external-metadata.service';
 
 /**
@@ -32,7 +34,7 @@ export class MusicBrainzSearchController {
 
   constructor(
     private readonly musicbrainzAgent: MusicBrainzAgent,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly metadataService: ExternalMetadataService
   ) {}
 
@@ -115,10 +117,10 @@ export class MusicBrainzSearchController {
   ) {
     try {
       // Update artist MBID
-      await this.prisma.artist.update({
-        where: { id: artistId },
-        data: { mbzArtistId: dto.mbid },
-      });
+      await this.drizzle.db
+        .update(artists)
+        .set({ mbzArtistId: dto.mbid })
+        .where(eq(artists.id, artistId));
 
       this.logger.log(
         `Updated artist ${artistId} with MBID: ${dto.mbid} (${dto.name})`
@@ -161,10 +163,10 @@ export class MusicBrainzSearchController {
   ) {
     try {
       // Update album MBID
-      await this.prisma.album.update({
-        where: { id: albumId },
-        data: { mbzAlbumId: dto.mbid },
-      });
+      await this.drizzle.db
+        .update(albums)
+        .set({ mbzAlbumId: dto.mbid })
+        .where(eq(albums.id, albumId));
 
       this.logger.log(
         `Updated album ${albumId} with MBID: ${dto.mbid} (${dto.name})`
@@ -200,9 +202,12 @@ export class MusicBrainzSearchController {
   @Get('artists/:artistId/suggest')
   async suggestArtistMatches(@Param('artistId') artistId: string) {
     try {
-      const artist = await this.prisma.artist.findUnique({
-        where: { id: artistId },
-      });
+      const artistResult = await this.drizzle.db
+        .select()
+        .from(artists)
+        .where(eq(artists.id, artistId))
+        .limit(1);
+      const artist = artistResult[0];
 
       if (!artist) {
         return { error: 'Artist not found' };
@@ -241,12 +246,18 @@ export class MusicBrainzSearchController {
   @Get('albums/:albumId/suggest')
   async suggestAlbumMatches(@Param('albumId') albumId: string) {
     try {
-      const album = await this.prisma.album.findUnique({
-        where: { id: albumId },
-        include: {
-          albumArtist: true,
-        },
-      });
+      const albumResult = await this.drizzle.db
+        .select({
+          id: albums.id,
+          name: albums.name,
+          mbzAlbumId: albums.mbzAlbumId,
+          artistName: artists.name,
+        })
+        .from(albums)
+        .leftJoin(artists, eq(albums.artistId, artists.id))
+        .where(eq(albums.id, albumId))
+        .limit(1);
+      const album = albumResult[0];
 
       if (!album) {
         return { error: 'Album not found' };
@@ -262,14 +273,14 @@ export class MusicBrainzSearchController {
       // Search MusicBrainz for matches
       const matches = await this.musicbrainzAgent.searchAlbum(
         album.name,
-        album.albumArtist?.name,
+        album.artistName ?? undefined,
         5
       );
 
       return {
         albumId: album.id,
         albumName: album.name,
-        artistName: album.albumArtist?.name,
+        artistName: album.artistName,
         matches,
       };
     } catch (error) {

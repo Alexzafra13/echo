@@ -18,7 +18,9 @@ import {
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
-import { PrismaService } from '@infrastructure/persistence/prisma.service';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { artists, albums } from '@infrastructure/database/schema';
+import { eq, or, isNotNull, isNull } from 'drizzle-orm';
 import { StorageService } from '../infrastructure/services/storage.service';
 import { normalizeForSorting } from '@shared/utils';
 import * as fs from 'fs/promises';
@@ -45,7 +47,7 @@ export class MaintenanceController {
 
   constructor(
     private readonly cleanupService: CleanupService,
-    private readonly prisma: PrismaService,
+    private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
   ) {}
 
@@ -283,31 +285,31 @@ export class MaintenanceController {
       this.logger.log('Starting artist image URL cleanup');
 
       // Get all artists with incorrect image URLs
-      const artists = await this.prisma.artist.findMany({
-        where: {
-          OR: [
-            { externalProfilePath: { not: null } },
-            { externalBackgroundPath: { not: null } },
-            { externalBannerPath: { not: null } },
-            { externalLogoPath: { not: null } },
-          ],
-        },
-        select: {
-          id: true,
-          name: true,
-          externalProfilePath: true,
-          externalBackgroundPath: true,
-          externalBannerPath: true,
-          externalLogoPath: true,
-        },
-      });
+      const artistsWithPaths = await this.drizzle.db
+        .select({
+          id: artists.id,
+          name: artists.name,
+          externalProfilePath: artists.externalProfilePath,
+          externalBackgroundPath: artists.externalBackgroundPath,
+          externalBannerPath: artists.externalBannerPath,
+          externalLogoPath: artists.externalLogoPath,
+        })
+        .from(artists)
+        .where(
+          or(
+            isNotNull(artists.externalProfilePath),
+            isNotNull(artists.externalBackgroundPath),
+            isNotNull(artists.externalBannerPath),
+            isNotNull(artists.externalLogoPath),
+          ),
+        );
 
-      this.logger.log(`Found ${artists.length} artists with image URLs`);
+      this.logger.log(`Found ${artistsWithPaths.length} artists with image URLs`);
 
       // Clean each artist that has incorrect URLs
-      for (const artist of artists) {
+      for (const artist of artistsWithPaths) {
         try {
-          const updates: any = {};
+          const updates: Partial<typeof artists.$inferInsert> = {};
           let needsCleaning = false;
 
           // Clean URLs that start with file:// or /api/ (these are incorrect - should be file system paths)
@@ -332,10 +334,10 @@ export class MaintenanceController {
           }
 
           if (needsCleaning) {
-            await this.prisma.artist.update({
-              where: { id: artist.id },
-              data: updates,
-            });
+            await this.drizzle.db
+              .update(artists)
+              .set(updates)
+              .where(eq(artists.id, artist.id));
             cleaned++;
             this.logger.debug(`Cleaned: ${artist.name}`);
           }
@@ -423,20 +425,21 @@ export class MaintenanceController {
         .filter(dir => dir.isDirectory())
         .map(dir => dir.name);
 
-      const artists = await this.prisma.artist.findMany({
-        where: { id: { in: artistIds } },
-        select: {
-          id: true,
-          name: true,
-          externalProfilePath: true,
-          externalBackgroundPath: true,
-          externalBannerPath: true,
-          externalLogoPath: true,
-        },
-      });
+      const { inArray } = await import('drizzle-orm');
+      const artistsData = await this.drizzle.db
+        .select({
+          id: artists.id,
+          name: artists.name,
+          externalProfilePath: artists.externalProfilePath,
+          externalBackgroundPath: artists.externalBackgroundPath,
+          externalBannerPath: artists.externalBannerPath,
+          externalLogoPath: artists.externalLogoPath,
+        })
+        .from(artists)
+        .where(inArray(artists.id, artistIds));
 
       // Create map for O(1) lookups
-      const artistMap = new Map(artists.map(a => [a.id, a]));
+      const artistMap = new Map(artistsData.map(a => [a.id, a]));
 
       for (const dir of artistDirs) {
         if (!dir.isDirectory()) continue;
@@ -479,10 +482,10 @@ export class MaintenanceController {
           }
 
           if (hasUpdates) {
-            await this.prisma.artist.update({
-              where: { id: artistId },
-              data: updates,
-            });
+            await this.drizzle.db
+              .update(artists)
+              .set(updates)
+              .where(eq(artists.id, artistId));
             synced++;
             this.logger.debug(`Synced: ${artist.name} (${Object.keys(updates).length} images)`);
           }
@@ -545,39 +548,37 @@ export class MaintenanceController {
       this.logger.log('Starting population of sort names');
 
       // Get all albums without orderAlbumName
-      const albums = await this.prisma.album.findMany({
-        where: {
-          OR: [
-            { orderAlbumName: null },
-            { orderAlbumName: '' },
-          ],
-        },
-        select: { id: true, name: true },
-      });
+      const albumsToUpdate = await this.drizzle.db
+        .select({ id: albums.id, name: albums.name })
+        .from(albums)
+        .where(
+          or(
+            isNull(albums.orderAlbumName),
+            eq(albums.orderAlbumName, ''),
+          ),
+        );
 
       // Get all artists without orderArtistName
-      const artists = await this.prisma.artist.findMany({
-        where: {
-          OR: [
-            { orderArtistName: null },
-            { orderArtistName: '' },
-          ],
-        },
-        select: { id: true, name: true },
-      });
+      const artistsToUpdate = await this.drizzle.db
+        .select({ id: artists.id, name: artists.name })
+        .from(artists)
+        .where(
+          or(
+            isNull(artists.orderArtistName),
+            eq(artists.orderArtistName, ''),
+          ),
+        );
 
-      this.logger.log(`Found ${albums.length} albums and ${artists.length} artists to update`);
+      this.logger.log(`Found ${albumsToUpdate.length} albums and ${artistsToUpdate.length} artists to update`);
 
       // Update albums in batches
       let albumsUpdated = 0;
-      for (const album of albums) {
+      for (const album of albumsToUpdate) {
         try {
-          await this.prisma.album.update({
-            where: { id: album.id },
-            data: {
-              orderAlbumName: normalizeForSorting(album.name),
-            },
-          });
+          await this.drizzle.db
+            .update(albums)
+            .set({ orderAlbumName: normalizeForSorting(album.name) })
+            .where(eq(albums.id, album.id));
           albumsUpdated++;
         } catch (error) {
           this.logger.error(`Failed to update album ${album.id}: ${(error as Error).message}`);
@@ -586,14 +587,12 @@ export class MaintenanceController {
 
       // Update artists in batches
       let artistsUpdated = 0;
-      for (const artist of artists) {
+      for (const artist of artistsToUpdate) {
         try {
-          await this.prisma.artist.update({
-            where: { id: artist.id },
-            data: {
-              orderArtistName: normalizeForSorting(artist.name),
-            },
-          });
+          await this.drizzle.db
+            .update(artists)
+            .set({ orderArtistName: normalizeForSorting(artist.name) })
+            .where(eq(artists.id, artist.id));
           artistsUpdated++;
         } catch (error) {
           this.logger.error(`Failed to update artist ${artist.id}: ${(error as Error).message}`);
