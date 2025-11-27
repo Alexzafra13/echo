@@ -24,13 +24,13 @@
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 3px solid var(--primary-color, #ff6b6b);
+  border: 3px solid var(--color-primary, #c6401d);
   transition: all 0.3s ease;
 }
 
 .avatarUpload__avatarWrapper:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 8px 24px rgba(198, 64, 29, 0.4);
 }
 
 .avatarUpload__avatar {
@@ -50,8 +50,8 @@
   font-weight: 600;
   color: var(--text-primary, #ffffff);
   background: linear-gradient(135deg,
-    rgba(255, 107, 107, 0.2) 0%,
-    rgba(255, 107, 107, 0.1) 100%);
+    rgba(198, 64, 29, 0.25) 0%,
+    rgba(198, 64, 29, 0.1) 100%);
   text-transform: uppercase;
 }
 
@@ -90,7 +90,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--success-color, #10b981);
+  background: linear-gradient(135deg, #c6401d 0%, #a33518 100%);
   border: none;
   color: white;
   display: flex;
@@ -98,13 +98,13 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(198, 64, 29, 0.3);
 }
 
 .avatarUpload__actionButton:hover:not(:disabled) {
-  background: #059669;
+  background: linear-gradient(135deg, #d4481f 0%, #b83a1a 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 16px rgba(198, 64, 29, 0.4);
 }
 
 .avatarUpload__actionButton:disabled {

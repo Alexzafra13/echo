@@ -50,7 +50,7 @@
   border-radius: 50%;
   overflow: hidden;
   border: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(255, 107, 107, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(198, 64, 29, 0.25);
   flex-shrink: 0;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -58,7 +58,7 @@
 
 .profilePage__avatarContainer:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4), 0 0 0 3px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 8px 24px rgba(198, 64, 29, 0.4), 0 0 0 3px rgba(198, 64, 29, 0.5);
 }
 
 .profilePage__avatar {
@@ -78,8 +78,8 @@
   font-weight: 600;
   color: var(--text-primary, #ffffff);
   background: linear-gradient(135deg,
-    rgba(255, 107, 107, 0.2) 0%,
-    rgba(255, 107, 107, 0.1) 100%);
+    rgba(198, 64, 29, 0.25) 0%,
+    rgba(198, 64, 29, 0.1) 100%);
   text-transform: uppercase;
 }
 
