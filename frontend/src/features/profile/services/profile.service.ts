@@ -37,11 +37,9 @@ export const profileService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post('/users/avatar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // Note: Don't set Content-Type header manually for multipart/form-data
+    // Axios/browser will set it automatically with the correct boundary
+    const response = await apiClient.post('/users/avatar', formData);
     return response.data;
   },
 
