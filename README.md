@@ -2,7 +2,17 @@
 
 Servidor de streaming de música autoalojado.
 
-## Instalación
+## Instalación con Docker
+
+### Opción 1: Usar desde este repositorio
+
+```bash
+git clone https://github.com/Alexzafra13/echo.git
+cd echo
+docker compose up -d
+```
+
+### Opción 2: Instalación limpia
 
 ```bash
 mkdir echo && cd echo
@@ -12,14 +22,29 @@ docker compose up -d
 
 Abre http://localhost:4567 y sigue el asistente.
 
-## Configurar música
+### Configurar rutas de música
 
-Edita `docker-compose.yml` para añadir tu carpeta de música:
+El `docker-compose.yml` incluye PostgreSQL, Redis y monta `/mnt` y `/media` por defecto.
+
+Edita las rutas según tu servidor:
 
 ```yaml
-volumes:
-  - ./data:/app/data
-  - /tu/ruta/musica:/music:ro
+services:
+  echo:
+    volumes:
+      - ./data:/app/data          # Datos de la aplicación
+      - /mnt:/mnt:ro              # Si tienes música en /mnt
+      - /media:/media:ro          # Si tienes música en /media
+      - /tu/ruta/musica:/music:ro # Añade tus rutas personalizadas
+```
+
+### Comandos útiles
+
+```bash
+docker compose up -d          # Levantar servidor
+docker compose logs -f echo   # Ver logs en tiempo real
+docker compose down           # Parar servidor
+docker compose restart echo   # Reiniciar solo Echo
 ```
 
 ## Desarrollo
