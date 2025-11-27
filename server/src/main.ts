@@ -47,7 +47,7 @@ async function bootstrap() {
         connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'], // WebSocket + geolocation API
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], // Allow Google Fonts
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'", 'blob:', 'https:'], // Allow blob URLs + external radio streams
+        mediaSrc: ["'self'", 'blob:', 'http:', 'https:'], // Allow blob URLs + external radio streams (HTTP and HTTPS)
         frameSrc: ["'none'"],
         upgradeInsecureRequests: null, // Disable HTTPS redirect - allow HTTP for local networks
       },
