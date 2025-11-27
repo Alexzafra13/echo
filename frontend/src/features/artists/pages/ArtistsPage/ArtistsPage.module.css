@@ -13,13 +13,6 @@
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
-  overflow-y: auto; /* Enable scroll for entire page */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.artistsPage__main::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
 }
 
 .artistsPage__content {
@@ -29,6 +22,13 @@
   padding: 114px 30px calc(40px + var(--player-bottom-spacer, 0px)); /* Top for header + base padding + player spacer */
   max-width: 1400px;
   width: 100%;
+  overflow-y: auto; /* Enable scroll */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.artistsPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .artistsPage__header {
