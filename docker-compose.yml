@@ -5,12 +5,14 @@
 # Abre http://localhost:4567
 # =============================================
 
+version: "3.8"
+
 services:
   echo:
     image: ghcr.io/alexzafra13/echo:latest
     container_name: echo
     ports:
-      - 4567:4567
+      - "4567:4567"
     volumes:
       - ./data:/app/data          # Config, metadatos, covers
       - /mnt:/mnt:ro              # Montar /mnt del host
@@ -18,11 +20,11 @@ services:
       # Añade más rutas si tu música está en otro sitio:
       # - /home/usuario/Musica:/music:ro
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://echo:echo_music_server@postgres:5432/echo
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD=echo_music_server
-      - DATA_PATH=/app/data
+      NODE_ENV: production
+      DATABASE_URL: postgresql://echo:echo_music_server@postgres:5432/echo
+      REDIS_HOST: redis
+      REDIS_PASSWORD: echo_music_server
+      DATA_PATH: /app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,9 +38,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=echo
-      - POSTGRES_PASSWORD=echo_music_server
-      - POSTGRES_DB=echo
+      POSTGRES_USER: echo
+      POSTGRES_PASSWORD: echo_music_server
+      POSTGRES_DB: echo
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U echo"]
       interval: 5s
