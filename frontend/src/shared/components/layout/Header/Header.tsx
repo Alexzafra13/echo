@@ -49,9 +49,6 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const userMenuCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Debug: log header state
-  console.log('[Header] Props/State:', { alwaysGlass, isScrolled, className: isScrolled ? 'header--scrolled' : 'none' });
-
   // Detect scroll to apply glassmorphism effect
   // The scroll happens in the content container (sibling element), not in window
   useEffect(() => {

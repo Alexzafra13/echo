@@ -23,6 +23,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   padding: 0 30px 30px 30px;
+  margin-top: -84px; /* Pull up to allow hero to extend behind header */
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
@@ -183,7 +184,7 @@
   }
 
   .homePage__content {
-    margin-top: 0; /* Eliminar margin negativo */
+    margin-top: -52px; /* Pull up to allow hero to extend behind mobile header */
     padding: 0 16px 140px; /* Sin padding-top para que hero llegue arriba + bottom para player y nav */
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
   }

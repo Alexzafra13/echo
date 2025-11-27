@@ -6,7 +6,7 @@
   height: 520px;
   width: calc(100% + 60px);
   margin-left: -30px;
-  margin-top: -84px; /* Extends behind header for glassmorphism effect */
+  margin-top: 0; /* Content container already extends behind header */
   overflow: hidden;
   border-radius: 0;
   margin-bottom: 40px;
@@ -316,7 +316,7 @@
     height: 240px; /* Reducido para evitar repetición de imagen */
     width: calc(100% + 32px);
     margin-left: -16px;
-    margin-top: -52px; /* Solo el alto del header */
+    margin-top: 0; /* Content container already extends behind header */
     margin-bottom: 24px;
   }
 
@@ -427,7 +427,7 @@
     height: 220px; /* Más compacto aún */
     width: calc(100% + 24px);
     margin-left: -12px;
-    margin-top: -52px; /* Solo el alto del header */
+    margin-top: 0; /* Content container already extends behind header */
     margin-bottom: 20px;
   }
 
