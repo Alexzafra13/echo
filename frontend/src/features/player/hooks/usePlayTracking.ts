@@ -15,7 +15,7 @@ interface PlaySession {
   startTime: number;
   playContext: PlayContext;
   sourceId?: string;
-  sourceType?: string;
+  sourceType?: import('@shared/services/play-tracking.service').SourceType;
 }
 
 interface UsePlayTrackingParams {
