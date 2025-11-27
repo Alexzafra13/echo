@@ -27,14 +27,6 @@ export function AvatarUpload() {
   const avatarUrl = getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp);
   const initials = getUserInitials(user?.name, user?.username);
 
-  // Debug: log avatar state
-  console.log('[AvatarUpload] State:', {
-    userId: user?.id,
-    hasAvatar: user?.hasAvatar,
-    avatarTimestamp,
-    avatarUrl
-  });
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -68,7 +60,6 @@ export function AvatarUpload() {
 
     uploadAvatar(selectedFile, {
       onSuccess: () => {
-        console.log('[AvatarUpload] Upload success, updating state...');
         setSelectedFile(null);
         setPreviewUrl(null);
         if (fileInputRef.current) {
@@ -78,7 +69,6 @@ export function AvatarUpload() {
         updateUser({ hasAvatar: true });
         // Update timestamp to force image reload (cache bust)
         updateAvatarTimestamp();
-        console.log('[AvatarUpload] State updated');
       },
       onError: (error: any) => {
         setError(error.message || 'Error al subir la imagen');
