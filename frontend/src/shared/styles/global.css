@@ -67,7 +67,7 @@ body.has-footer-player {
 /* Mobile: Reproductor más compacto requiere menos espacio */
 @media (max-width: 768px) {
   body.has-footer-player {
-    --player-bottom-spacer: 90px; /* Altura del reproductor compacto en mobile */
+    --player-bottom-spacer: 60px; /* Mobile: 60px base + 60px spacer = 120px total (50px nav + 70px player) */
   }
 }
 
