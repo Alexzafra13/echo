@@ -11,6 +11,7 @@
 
 .adminPage__main {
   flex: 1;
+  margin-left: 200px; /* Compensate for fixed sidebar width */
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
@@ -22,11 +23,7 @@
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
   padding: 124px 48px calc(40px + var(--player-bottom-spacer, 0px)); /* Top for header + base padding + player spacer */
-  max-width: 1400px;
   width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box; /* Include padding in width */
   overflow-y: auto; /* Enable scroll */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -117,6 +114,7 @@
   }
 
   .adminPage__main {
+    margin-left: 0; /* No sidebar en mobile */
     padding-top: 0;
   }
 
