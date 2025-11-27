@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Camera, X, Trash2, Check } from 'lucide-react';
 import { useAuth } from '@shared/hooks';
+import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';
 import styles from './AvatarUpload.module.css';
@@ -11,6 +12,7 @@ import styles from './AvatarUpload.module.css';
  */
 export function AvatarUpload() {
   const { user } = useAuth();
+  const { updateUser, updateAvatarTimestamp, avatarTimestamp } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -19,7 +21,7 @@ export function AvatarUpload() {
   const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
   const { mutate: deleteAvatar, isPending: isDeleting } = useDeleteAvatar();
 
-  const avatarUrl = user?.id ? getUserAvatarUrl(user.id) : null;
+  const avatarUrl = getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp);
   const initials = getUserInitials(user?.name, user?.username);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,8 +62,10 @@ export function AvatarUpload() {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        // Force image reload by adding timestamp
-        window.location.reload();
+        // Update user state to reflect avatar exists
+        updateUser({ hasAvatar: true });
+        // Update timestamp to force image reload (cache bust)
+        updateAvatarTimestamp();
       },
       onError: (error: any) => {
         setError(error.message || 'Error al subir la imagen');
@@ -83,7 +87,10 @@ export function AvatarUpload() {
 
     deleteAvatar(undefined, {
       onSuccess: () => {
-        window.location.reload();
+        // Update user state to reflect avatar is removed
+        updateUser({ hasAvatar: false });
+        // Update timestamp to ensure UI refreshes
+        updateAvatarTimestamp();
       },
       onError: (error: any) => {
         setError(error.message || 'Error al eliminar el avatar');
@@ -125,7 +132,7 @@ export function AvatarUpload() {
               alt={user?.name || user?.username}
               className={styles.avatarUpload__avatar}
               onError={handleAvatarError}
-              key={Date.now()}
+              key={avatarTimestamp}
             />
           ) : (
             <div className={styles.avatarUpload__avatarPlaceholder}>
@@ -165,7 +172,7 @@ export function AvatarUpload() {
         )}
 
         {/* Delete button - only show if user has avatar and no file selected */}
-        {avatarUrl && !selectedFile && (
+        {user?.hasAvatar && !selectedFile && (
           <button
             onClick={handleDelete}
             className={styles.avatarUpload__deleteButton}
