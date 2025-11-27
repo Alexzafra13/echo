@@ -161,18 +161,20 @@
 
 /* Browser */
 .browser {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 20px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
   margin-top: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .browserHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .browserTitle {
@@ -180,45 +182,53 @@
   font-weight: 600;
   color: var(--color-text-primary, #ffffff);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .browserClose {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text-secondary, #b8bcc8);
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .browserClose:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
   color: var(--color-text-primary, #ffffff);
 }
 
 .browserPath {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 
 .browserPathLabel {
   font-size: 13px;
   color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 500;
 }
 
 .browserPathValue {
   font-size: 13px;
-  color: var(--color-primary, #6366f1);
-  background: rgba(99, 102, 241, 0.1);
-  padding: 4px 8px;
-  border-radius: 4px;
+  color: var(--color-secondary-400, #22d3ee);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
 }
 
 .browserNav {
@@ -231,12 +241,12 @@
 .navButton {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 8px 14px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--color-text-secondary, #b8bcc8);
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -244,6 +254,7 @@
 
 .navButton:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -253,28 +264,51 @@
 }
 
 .navButtonActive {
-  background: var(--color-primary, #6366f1);
-  border-color: var(--color-primary, #6366f1);
+  background: var(--color-primary, #ed6842);
+  border-color: var(--color-primary, #ed6842);
   color: white;
 }
 
 /* Directory List */
 .directoryList {
-  max-height: 300px;
+  max-height: 320px;
   overflow-y: auto;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.directoryList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.directoryList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.directoryList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.directoryList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .browserLoading,
 .browserEmpty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 40px;
+  gap: 12px;
+  padding: 48px;
   color: var(--color-text-secondary, #b8bcc8);
   font-size: 14px;
+}
+
+.browserLoading svg {
+  color: var(--color-secondary-400, #22d3ee);
 }
 
 .spinner {
@@ -293,11 +327,13 @@
 .directoryItem {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 4px 8px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
 
-.directoryItem:last-child {
-  border-bottom: none;
+.directoryItem:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .directoryItemDisabled {
@@ -309,22 +345,30 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .directoryButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
 }
 
 .directoryButton:disabled {
   cursor: not-allowed;
+}
+
+.directoryButton svg {
+  color: var(--color-secondary-400, #22d3ee);
+  flex-shrink: 0;
 }
 
 .directoryName {
@@ -332,27 +376,38 @@
 }
 
 .musicIcon {
-  color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #ed6842);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .chevron {
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--color-text-tertiary, #64748b);
 }
 
 .selectButton {
-  padding: 6px 12px;
+  padding: 8px 14px;
   margin-right: 12px;
   background: transparent;
-  border: 1px solid var(--color-primary, #6366f1);
-  color: var(--color-primary, #6366f1);
-  border-radius: 6px;
+  border: 1px solid var(--color-primary, #ed6842);
+  color: var(--color-primary, #ed6842);
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .selectButton:hover:not(:disabled) {
-  background: var(--color-primary, #6366f1);
+  background: var(--color-primary, #ed6842);
   color: white;
 }
 
@@ -363,8 +418,8 @@
 
 /* Browser Actions */
 .browserActions {
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -374,19 +429,20 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 12px 20px;
-  background: var(--color-primary, #6366f1);
+  padding: 14px 24px;
+  background: var(--color-primary, #ed6842);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .selectCurrentButton:hover:not(:disabled) {
-  background: var(--color-primary-dark, #4f46e5);
+  background: var(--color-primary-dark, #c6401d);
+  transform: translateY(-1px);
 }
 
 .selectCurrentButton:disabled {
