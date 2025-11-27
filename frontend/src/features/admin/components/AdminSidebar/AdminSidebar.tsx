@@ -1,4 +1,6 @@
 import { Shield } from 'lucide-react';
+import { MiniPlayer } from '@features/player/components/MiniPlayer';
+import { useScrollDetection } from '@features/player/hooks/useScrollDetection';
 import styles from './AdminSidebar.module.css';
 
 interface Tab {
@@ -18,6 +20,9 @@ interface AdminSidebarProps {
  * Sidebar navigation for admin panel (bottom nav on mobile like Home sidebar)
  */
 export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps) {
+  // Detectar scroll para mostrar mini-player
+  const isMiniMode = useScrollDetection(120);
+
   const handleNavClick = (itemId: string) => {
     onTabChange(itemId);
   };
@@ -48,6 +53,9 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
           </button>
         ))}
       </nav>
+
+      {/* Mini Player - se muestra al final de la página */}
+      <MiniPlayer isVisible={isMiniMode} />
     </aside>
   );
 }
