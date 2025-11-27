@@ -242,7 +242,7 @@ export class UsersController {
         buffer,
         mimetype: data.mimetype,
         size: buffer.length,
-        originalname: data.filename,
+        originalname: data.filename || 'avatar',
       },
     });
   }
