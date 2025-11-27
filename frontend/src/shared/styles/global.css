@@ -61,7 +61,14 @@ body {
 }
 
 body.has-footer-player {
-  --player-bottom-spacer: 120px; /* Altura del reproductor en footer */
+  --player-bottom-spacer: 120px; /* Altura del reproductor en footer (desktop) */
+}
+
+/* Mobile: Reproductor más compacto requiere menos espacio */
+@media (max-width: 768px) {
+  body.has-footer-player {
+    --player-bottom-spacer: 90px; /* Altura del reproductor compacto en mobile */
+  }
 }
 
 /*
