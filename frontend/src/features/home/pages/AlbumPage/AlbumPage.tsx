@@ -213,7 +213,7 @@ export default function AlbumPage() {
       <Sidebar />
 
       <main className={styles.albumPage__main}>
-        <Header showBackButton />
+        <Header showBackButton disableSearch />
 
         <div
           className={styles.albumPage__content}
