@@ -20,7 +20,7 @@ interface PlaySession {
   startTime: number; // Unix timestamp
   playContext: PlayContext;
   sourceId?: string;
-  sourceType?: string;
+  sourceType?: import('@shared/services/play-tracking.service').SourceType;
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {

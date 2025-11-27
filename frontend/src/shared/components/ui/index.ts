@@ -20,3 +20,6 @@ export type { PaginationProps } from './Pagination';
 
 export { InlineNotification } from './InlineNotification';
 export type { NotificationType } from './InlineNotification';
+
+export { Modal } from './Modal';
+export type { ModalProps } from './Modal';
