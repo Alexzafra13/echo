@@ -27,6 +27,15 @@
   overflow-y: auto; /* Enable scroll */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center children horizontally */
+}
+
+/* Center content while allowing full-width scroll */
+.adminPage__content > * {
+  width: 100%;
+  max-width: 1400px; /* Limit content width */
 }
 
 .adminPage__content::-webkit-scrollbar {
