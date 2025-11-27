@@ -62,7 +62,8 @@ export class StorageService {
       await this.ensureDirectoryExists(path.join(this.basePath, 'defaults'));
 
       // User storage (separate from metadata)
-      const userStoragePath = path.resolve(process.cwd(), 'storage', 'users');
+      const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+      const userStoragePath = path.join(dataPath, 'uploads', 'users');
       await this.ensureDirectoryExists(userStoragePath);
 
       // Copy default images if they don't exist
