@@ -20,7 +20,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 116px 40px 120px; /* 84px + 32px for header + 120px bottom for player */
+  padding: 116px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px for header + dynamic player spacer */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -147,7 +147,7 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 180px; /* Top para header + bottom para player + nav */
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
 
   /* Remove grid layout on mobile for natural content flow */
@@ -188,7 +188,7 @@
   }
 
   .albumsPage__content {
-    padding: 90px 16px 180px; /* Ajustado para header más pequeño + player + nav */
+    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
   .albumsPage__pageHeader {

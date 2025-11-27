@@ -22,7 +22,7 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding: 116px 48px 48px; /* 84px + 32px for header glassmorphism effect */
+  padding: 116px 48px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px for header + dynamic player spacer */
 }
 
 .dailyMixPage__content::-webkit-scrollbar {
@@ -272,7 +272,7 @@
   .dailyMixPage__content {
     overflow: visible; /* Permitir que bottom nav sea visible */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
 
   .dailyMixPage__hero {
@@ -331,7 +331,7 @@
   }
 
   .dailyMixPage__content {
-    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
   .dailyMixPage__heroTitle {
