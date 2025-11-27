@@ -7,6 +7,7 @@ import { Button, Pagination } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getGenrePlaylistsPaginated, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
+import { logger } from '@shared/utils/logger';
 import styles from './GenrePlaylistsPage.module.css';
 
 /**
@@ -40,7 +41,7 @@ export function GenrePlaylistsPage() {
       setTotal(data.total);
       setCurrentPage(page);
     } catch (err: any) {
-      console.error('[GenrePlaylists] Failed to load:', err);
+      logger.error('[GenrePlaylists] Failed to load:', err);
       setError(err.response?.data?.message || 'Error al cargar las playlists de géneros');
     } finally {
       setIsLoading(false);
