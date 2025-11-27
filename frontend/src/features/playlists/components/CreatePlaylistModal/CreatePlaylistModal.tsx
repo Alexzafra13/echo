@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Modal } from '@shared/components/ui';
+import { Button, Input, Modal } from '@shared/components/ui';
 import styles from './CreatePlaylistModal.module.css';
 
 interface CreatePlaylistModalProps {
@@ -38,25 +38,20 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
   return (
     <Modal isOpen={true} onClose={onClose} title="Nueva Playlist">
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.field}>
-          <label htmlFor="playlist-name" className={styles.label}>
-            Nombre de la playlist
-          </label>
-          <input
-            id="playlist-name"
-            type="text"
-            className={styles.input}
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setError('');
-            }}
-            placeholder="Mi Playlist..."
-            autoFocus
-            disabled={isLoading}
-          />
-          {error && <p className={styles.error}>{error}</p>}
-        </div>
+        <Input
+          id="playlist-name"
+          label="Nombre de la playlist"
+          type="text"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setError('');
+          }}
+          placeholder="Mi Playlist..."
+          autoFocus
+          disabled={isLoading}
+          error={error}
+        />
 
         {/* Actions */}
         <div className={styles.actions}>

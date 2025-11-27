@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { useState } from 'react';
+import { Button, Input, Modal } from '@shared/components/ui';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import styles from './EditPlaylistModal.module.css';
 
@@ -21,18 +20,6 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
   const [isPublic, setIsPublic] = useState(playlist.public);
   const [error, setError] = useState('');
 
-  // Handle ESC key to close
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -50,97 +37,79 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
 
       await onSubmit(playlist.id, updateData);
       onClose();
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Error al actualizar la playlist');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error && 'response' in error
+        ? (error as any).response?.data?.message
+        : 'Error al actualizar la playlist';
+      setError(errorMessage || 'Error al actualizar la playlist');
     }
   };
 
   return (
-    <div className={styles.editPlaylistModal} onClick={onClose}>
-      <div className={styles.editPlaylistModal__content} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className={styles.editPlaylistModal__header}>
-          <h2 className={styles.editPlaylistModal__title}>Editar Playlist</h2>
-          <button
-            className={styles.editPlaylistModal__closeButton}
-            onClick={onClose}
-            aria-label="Cerrar"
-            type="button"
-          >
-            <X size={24} />
-          </button>
+    <Modal isOpen={true} onClose={onClose} title="Editar Playlist">
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <Input
+          id="playlist-name"
+          label="Nombre de la playlist"
+          type="text"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setError('');
+          }}
+          placeholder="Mi Playlist..."
+          autoFocus
+          disabled={isLoading}
+          error={error}
+        />
+
+        <div className={styles.field}>
+          <label htmlFor="playlist-description" className={styles.label}>
+            Descripción (opcional)
+          </label>
+          <textarea
+            id="playlist-description"
+            className={styles.textarea}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Descripción de tu playlist..."
+            rows={3}
+            disabled={isLoading}
+          />
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className={styles.editPlaylistModal__form}>
-          <div className={styles.editPlaylistModal__field}>
-            <label htmlFor="playlist-name" className={styles.editPlaylistModal__label}>
-              Nombre de la playlist
-            </label>
+        <div className={styles.checkboxField}>
+          <label className={styles.checkboxLabel}>
             <input
-              id="playlist-name"
-              type="text"
-              className={styles.editPlaylistModal__input}
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError('');
-              }}
-              placeholder="Mi Playlist..."
-              autoFocus
+              type="checkbox"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
               disabled={isLoading}
+              className={styles.checkbox}
             />
-            {error && <p className={styles.editPlaylistModal__error}>{error}</p>}
-          </div>
+            <span>Playlist pública</span>
+          </label>
+        </div>
 
-          <div className={styles.editPlaylistModal__field}>
-            <label htmlFor="playlist-description" className={styles.editPlaylistModal__label}>
-              Descripción (opcional)
-            </label>
-            <textarea
-              id="playlist-description"
-              className={styles.editPlaylistModal__textarea}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción de tu playlist..."
-              rows={3}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className={styles.editPlaylistModal__checkboxField}>
-            <label className={styles.editPlaylistModal__checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                disabled={isLoading}
-                className={styles.editPlaylistModal__checkbox}
-              />
-              <span>Playlist pública</span>
-            </label>
-          </div>
-
-          {/* Actions */}
-          <div className={styles.editPlaylistModal__actions}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isLoading || !name.trim()}
-            >
-              {isLoading ? 'Guardando...' : 'Guardar Cambios'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Actions */}
+        <div className={styles.actions}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isLoading || !name.trim()}
+          >
+            {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
