@@ -420,15 +420,15 @@
     padding: 8px 16px;
     gap: 8px;
     height: 52px; /* iOS standard header height */
-    /* Glass effect siempre activo en móvil - !important para sobrescribir cualquier estado */
+    /* Glass effect siempre activo en móvil */
     background: linear-gradient(
       to bottom,
       rgba(10, 14, 39, 0.60),
       rgba(15, 23, 42, 0.70)
-    ) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   /* Light theme en móvil */
@@ -437,7 +437,7 @@
       to bottom,
       rgba(250, 250, 249, 0.60),
       rgba(255, 255, 255, 0.70)
-    ) !important;
+    );
   }
 
   .header--scrolled {
