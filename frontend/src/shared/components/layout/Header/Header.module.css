@@ -5,6 +5,7 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky, 1020);
+  background: transparent;
   /* This wrapper makes header + search panel move together */
 }
 
