@@ -116,22 +116,23 @@
 }
 
 .changeButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: var(--color-primary, #6366f1);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 12px 20px;
+  background: rgba(198, 64, 29, 0.12);
+  border: 1px solid rgba(198, 64, 29, 0.35);
+  border-radius: 10px;
+  color: #e05a30;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .changeButton:hover {
-  background: var(--color-primary-dark, #4f46e5);
+  background: rgba(198, 64, 29, 0.2);
+  border-color: rgba(198, 64, 29, 0.5);
   transform: translateY(-1px);
 }
 
@@ -394,21 +395,21 @@
 }
 
 .selectButton {
-  padding: 8px 14px;
-  margin-right: 12px;
-  background: transparent;
-  border: 1px solid var(--color-primary, #ed6842);
-  color: var(--color-primary, #ed6842);
+  padding: 8px 16px;
+  margin-right: 8px;
+  background: rgba(198, 64, 29, 0.1);
+  border: 1px solid rgba(198, 64, 29, 0.3);
+  color: #e05a30;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .selectButton:hover:not(:disabled) {
-  background: var(--color-primary, #ed6842);
-  color: white;
+  background: rgba(198, 64, 29, 0.2);
+  border-color: rgba(198, 64, 29, 0.5);
 }
 
 .selectButton:disabled {
@@ -427,27 +428,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 14px 24px;
-  background: var(--color-primary, #ed6842);
+  padding: 16px 28px;
+  background: linear-gradient(135deg, #c6401d 0%, #a33518 100%);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(198, 64, 29, 0.3);
 }
 
 .selectCurrentButton:hover:not(:disabled) {
-  background: var(--color-primary-dark, #c6401d);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #d4481f 0%, #b83a1a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(198, 64, 29, 0.4);
+}
+
+.selectCurrentButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(198, 64, 29, 0.3);
 }
 
 .selectCurrentButton:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Mobile */
