@@ -1,4 +1,4 @@
-/* EditPlaylistModal Styles - Simplified (Modal handles most styling) */
+/* EditPlaylistModal Styles - Simplified (Modal and Input handle styling) */
 
 .form {
   display: flex;
@@ -18,7 +18,6 @@
   color: var(--color-text-secondary);
 }
 
-.input,
 .textarea {
   padding: 14px 16px;
   background: var(--color-bg-base);
@@ -28,35 +27,23 @@
   color: var(--color-text-primary);
   font-family: inherit;
   transition: all var(--transition-fast);
+  resize: vertical;
+  min-height: 80px;
 }
 
-.input:focus,
 .textarea:focus {
   outline: none;
   border-color: var(--color-primary);
   background: rgba(255, 255, 255, 0.05);
 }
 
-.input::placeholder,
 .textarea::placeholder {
   color: var(--color-text-tertiary);
 }
 
-.input:disabled,
 .textarea:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.error {
-  color: var(--color-error);
-  font-size: var(--font-size-sm);
-  margin: 4px 0 0 0;
 }
 
 /* Checkbox Field */
