@@ -12,6 +12,7 @@ import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl, useArtistImages } from '../../hooks';
+import { logger } from '@shared/utils/logger';
 import styles from './AlbumPage.module.css';
 
 /**
@@ -50,7 +51,7 @@ export default function AlbumPage() {
   // Debug: Log cover metadata changes
   useEffect(() => {
     if (coverMeta) {
-      console.log('[AlbumPage] 📊 Cover metadata updated:', {
+      logger.debug('[AlbumPage] 📊 Cover metadata updated:', {
         albumId: id,
         exists: coverMeta.cover.exists,
         tag: coverMeta.cover.tag,
@@ -79,19 +80,19 @@ export default function AlbumPage() {
         ? `${coverUrl}&_cb=${Date.now()}`
         : `${coverUrl}?_cb=${Date.now()}`;
 
-      console.log('[AlbumPage] 🔄 Preloading cover with cache bust:', cacheBustUrl);
-      console.log('[AlbumPage] 📌 Current tag:', coverMeta.cover.tag);
-      console.log('[AlbumPage] 📌 Current renderKey:', coverRenderKey);
+      logger.debug('[AlbumPage] 🔄 Preloading cover with cache bust:', cacheBustUrl);
+      logger.debug('[AlbumPage] 📌 Current tag:', coverMeta.cover.tag);
+      logger.debug('[AlbumPage] 📌 Current renderKey:', coverRenderKey);
 
       const img = new window.Image();
       img.src = cacheBustUrl;
       img.onload = () => {
-        console.log('[AlbumPage] ✅ Cover image preloaded successfully');
-        console.log('[AlbumPage] 📐 Image dimensions:', img.width, 'x', img.height);
+        logger.debug('[AlbumPage] ✅ Cover image preloaded successfully');
+        logger.debug('[AlbumPage] 📐 Image dimensions:', img.width, 'x', img.height);
         setCoverRenderKey(prev => prev + 1); // Force component re-render
       };
       img.onerror = () => {
-        console.error('[AlbumPage] ❌ Failed to preload cover');
+        logger.error('[AlbumPage] ❌ Failed to preload cover');
       };
     }
   }, [coverUrl, coverMeta]);
@@ -146,12 +147,12 @@ export default function AlbumPage() {
 
   const handleAddAlbumToPlaylist = () => {
     // TODO: Implement add album to playlist
-    console.log('Add album to playlist - to be implemented');
+    logger.debug('Add album to playlist - to be implemented');
   };
 
   const handleDownloadAlbum = () => {
     // TODO: Implement download album
-    console.log('Download album - to be implemented');
+    logger.debug('Download album - to be implemented');
   };
 
   const handleChangeCover = () => {

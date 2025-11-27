@@ -11,6 +11,7 @@ import { useAlbums } from '@features/home/hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
+import { logger } from '@shared/utils/logger';
 import styles from './ArtistDetailPage.module.css';
 
 /**
@@ -82,31 +83,23 @@ export default function ArtistDetailPage() {
     ? getArtistImageUrl(id!, backgroundImageType!, backgroundTag)
     : artistAlbums[0]?.coverImage; // Fallback to first album cover
 
-  if (import.meta.env.DEV) {
-    console.log('[ArtistDetailPage] Background URL:', backgroundUrl);
-  }
+  logger.debug('[ArtistDetailPage] Background URL:', backgroundUrl);
 
   // CRITICAL: Force browser to reload background image when URL changes
   // This is needed because CSS background-image doesn't always respect cache headers
   useEffect(() => {
     if (backgroundUrl) {
-      if (import.meta.env.DEV) {
-        console.log('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
-      }
+      logger.debug('[ArtistDetailPage] 🔄 Forcing background image preload:', backgroundUrl);
       const img = new window.Image();
       img.src = backgroundUrl;
       img.onload = () => {
-        if (import.meta.env.DEV) {
-          console.log('[ArtistDetailPage] ✅ Background image preloaded successfully');
-        }
+        logger.debug('[ArtistDetailPage] ✅ Background image preloaded successfully');
         // Force React to destroy and recreate the background div
         // This helps clear any browser memory cache of the old image
         setImageRenderKey(prev => prev + 1);
       };
       img.onerror = (e) => {
-        if (import.meta.env.DEV) {
-          console.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
-        }
+        logger.error('[ArtistDetailPage] ❌ Failed to preload background:', e);
       };
     }
   }, [backgroundUrl]);
@@ -125,15 +118,11 @@ export default function ArtistDetailPage() {
   // Force preload of logo to break browser cache
   useEffect(() => {
     if (logoUrl) {
-      if (import.meta.env.DEV) {
-        console.log('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
-      }
+      logger.debug('[ArtistDetailPage] 🔄 Preloading logo:', logoUrl);
       const img = new window.Image();
       img.src = logoUrl;
       img.onload = () => {
-        if (import.meta.env.DEV) {
-          console.log('[ArtistDetailPage] ✅ Logo preloaded successfully');
-        }
+        logger.debug('[ArtistDetailPage] ✅ Logo preloaded successfully');
         setLogoRenderKey(prev => prev + 1);
       };
     }
@@ -142,15 +131,11 @@ export default function ArtistDetailPage() {
   // Force preload of profile image to break browser cache
   useEffect(() => {
     if (profileUrl) {
-      if (import.meta.env.DEV) {
-        console.log('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
-      }
+      logger.debug('[ArtistDetailPage] 🔄 Preloading profile:', profileUrl);
       const img = new window.Image();
       img.src = profileUrl;
       img.onload = () => {
-        if (import.meta.env.DEV) {
-          console.log('[ArtistDetailPage] ✅ Profile image preloaded successfully');
-        }
+        logger.debug('[ArtistDetailPage] ✅ Profile image preloaded successfully');
         setProfileRenderKey(prev => prev + 1);
       };
     }

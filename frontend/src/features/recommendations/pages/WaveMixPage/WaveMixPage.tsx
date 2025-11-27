@@ -7,6 +7,7 @@ import { Button } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getAutoPlaylists, refreshWaveMix, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
+import { logger } from '@shared/utils/logger';
 import styles from './WaveMixPage.module.css';
 
 /**
@@ -26,10 +27,10 @@ export function WaveMixPage() {
     setError(null);
     try {
       const data = await getAutoPlaylists();
-      console.log('[WaveMix] Received playlists:', data);
+      logger.debug('[WaveMix] Received playlists:', data);
       setPlaylists(data);
     } catch (err: any) {
-      console.error('[WaveMix] Failed to load:', err);
+      logger.error('[WaveMix] Failed to load:', err);
       setError(err.response?.data?.message || 'Error al cargar las playlists');
     } finally {
       setIsLoading(false);
@@ -53,10 +54,10 @@ export function WaveMixPage() {
     setError(null);
     try {
       const data = await refreshWaveMix();
-      console.log('[WaveMix] Playlists refreshed:', data);
+      logger.debug('[WaveMix] Playlists refreshed:', data);
       setPlaylists(data);
     } catch (err: any) {
-      console.error('[WaveMix] Failed to refresh:', err);
+      logger.error('[WaveMix] Failed to refresh:', err);
       setError(err.response?.data?.message || 'Error al actualizar las playlists');
     } finally {
       setIsLoading(false);

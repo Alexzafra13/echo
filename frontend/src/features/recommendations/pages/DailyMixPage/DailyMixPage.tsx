@@ -8,6 +8,7 @@ import { usePlayer } from '@features/player/context/PlayerContext';
 import { formatDuration } from '@shared/utils/format';
 import { getDailyMix, type DailyMix, type ScoredTrack } from '@shared/services/recommendations.service';
 import type { Track } from '@features/home/types';
+import { logger } from '@shared/utils/logger';
 import styles from './DailyMixPage.module.css';
 
 /**
@@ -26,12 +27,12 @@ export function DailyMixPage() {
     setError(null);
     try {
       const mix = await getDailyMix();
-      console.log('[DailyMix] Received:', mix);
-      console.log('[DailyMix] Tracks count:', mix.tracks?.length || 0);
+      logger.debug('[DailyMix] Received:', mix);
+      logger.debug('[DailyMix] Tracks count:', mix.tracks?.length || 0);
       setDailyMix(mix);
     } catch (err: any) {
-      console.error('[DailyMix] Failed to load:', err);
-      console.error('[DailyMix] Error response:', err.response?.data);
+      logger.error('[DailyMix] Failed to load:', err);
+      logger.error('[DailyMix] Error response:', err.response?.data);
       setError(err.response?.data?.message || 'Error al cargar el Daily Mix');
     } finally {
       setIsLoading(false);

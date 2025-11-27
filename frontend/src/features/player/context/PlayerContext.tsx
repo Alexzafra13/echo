@@ -1,8 +1,10 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { Track, PlayerState, PlayerContextValue } from '../types';
+import { Track, PlayerState, PlayerContextValue, RadioStation } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { recordPlay, recordSkip, type PlayContext } from '@shared/services/play-tracking.service';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
+import { logger } from '@shared/utils/logger';
+import type { RadioBrowserStation } from '@shared/types/radio.types';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
@@ -18,7 +20,7 @@ interface PlaySession {
   startTime: number; // Unix timestamp
   playContext: PlayContext;
   sourceId?: string;
-  sourceType?: string;
+  sourceType?: import('@shared/services/play-tracking.service').SourceType;
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
@@ -44,7 +46,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ICY Metadata streaming for radio stations
   const { metadata: radioMetadata } = useRadioMetadata({
-    stationUuid: (state.currentRadioStation as any)?.stationuuid || state.currentRadioStation?.stationUuid || null,
+    stationUuid: state.currentRadioStation?.stationUuid || null,
     streamUrl: state.currentRadioStation?.url || null,
     isPlaying: state.isPlaying && state.isRadioMode,
   });
@@ -82,9 +84,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       sourceType: undefined,
     };
 
-    if (import.meta.env.DEV) {
-      console.log('[PlayTracking] Started session:', playSessionRef.current);
-    }
+    logger.debug('[PlayTracking] Started session:', playSessionRef.current);
   }, [getPlayContext]);
 
   /**
@@ -101,13 +101,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // Calculate completion rate
     const completionRate = duration > 0 ? currentTime / duration : 0;
 
-    if (import.meta.env.DEV) {
-      console.log('[PlayTracking] Ending session:', {
-        trackId: session.trackId,
-        completionRate: (completionRate * 100).toFixed(1) + '%',
-        skipped,
-      });
-    }
+    logger.debug('[PlayTracking] Ending session:', {
+      trackId: session.trackId,
+      completionRate: (completionRate * 100).toFixed(1) + '%',
+      skipped,
+    });
 
     if (skipped) {
       // Record skip event
@@ -117,7 +115,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         totalDuration: duration,
         playContext: session.playContext,
         sourceId: session.sourceId,
-        sourceType: session.sourceType as any,
+        sourceType: session.sourceType,
       });
     } else {
       // Record play event (only if completion > 30% or track ended naturally)
@@ -127,7 +125,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           playContext: session.playContext,
           completionRate,
           sourceId: session.sourceId,
-          sourceType: session.sourceType as any,
+          sourceType: session.sourceType,
         });
       }
     }
@@ -196,16 +194,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, []); // No dependencies - uses setState with prev
 
   // Play radio station
-  const playRadio = useCallback((station: any) => {
+  const playRadio = useCallback((station: RadioStation | RadioBrowserStation) => {
     if (!audioRef.current) return;
 
     // Use url_resolved if available (better quality), fallback to url
-    const streamUrl = station.urlResolved || station.url_resolved || station.url;
+    const streamUrl = 'urlResolved' in station ? station.urlResolved : 'url_resolved' in station ? station.url_resolved : station.url;
 
     if (!streamUrl) {
-      if (import.meta.env.DEV) {
-        console.error('[Player] Radio station has no valid stream URL');
-      }
+      logger.error('[Player] Radio station has no valid stream URL');
       return;
     }
 
@@ -221,18 +217,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // Wait for audio to be ready before playing
     audio.oncanplay = () => {
       audio.play().catch((error) => {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Failed to play radio:', error.message);
-        }
+        logger.error('[Player] Failed to play radio:', error.message);
       });
       audio.oncanplay = null; // Clean up after playing
     };
 
     // Error handler for radio loading issues
     audio.onerror = () => {
-      if (import.meta.env.DEV) {
-        console.error('[Player] Failed to load radio station:', station.name);
-      }
+      logger.error('[Player] Failed to load radio station:', station.name);
       audio.onerror = null;
     };
 
@@ -277,9 +269,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (track) {
       // Play new track
       if (!streamTokenData?.token) {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Stream token not available');
-        }
+        logger.error('[Player] Stream token not available');
         return;
       }
 
@@ -292,15 +282,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       // Error handler for audio loading issues
       audioRef.current.onerror = () => {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Failed to load audio track:', track.title);
-        }
+        logger.error('[Player] Failed to load audio track:', track.title);
       };
 
       audioRef.current.play().catch((error) => {
-        if (import.meta.env.DEV) {
-          console.error('[Player] Failed to play audio:', error.message);
-        }
+        logger.error('[Player] Failed to play audio:', error.message);
       });
 
       setState(prev => ({

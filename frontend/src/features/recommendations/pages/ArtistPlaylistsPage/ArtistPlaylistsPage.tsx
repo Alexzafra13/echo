@@ -7,6 +7,7 @@ import { Button, Pagination } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getArtistPlaylistsPaginated, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
+import { logger } from '@shared/utils/logger';
 import styles from './ArtistPlaylistsPage.module.css';
 
 /**
@@ -40,7 +41,7 @@ export function ArtistPlaylistsPage() {
       setTotal(data.total);
       setCurrentPage(page);
     } catch (err: any) {
-      console.error('[ArtistPlaylists] Failed to load:', err);
+      logger.error('[ArtistPlaylists] Failed to load:', err);
       setError(err.response?.data?.message || 'Error al cargar las playlists de artistas');
     } finally {
       setIsLoading(false);
