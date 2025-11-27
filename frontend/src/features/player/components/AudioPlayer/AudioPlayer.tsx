@@ -76,10 +76,14 @@ export function AudioPlayer() {
   // Controlar espaciador del footer según contenido, preferencia y scroll
   useEffect(() => {
     const hasContent = !!(currentTrack || currentRadioStation);
-    const needsFooterSpacer =
-      hasContent &&
-      preference !== 'sidebar' &&
-      !(preference === 'dynamic' && isMiniMode);
+
+    // En mobile: SIEMPRE agregar spacer si hay contenido (no hay sidebar en mobile)
+    // En desktop: depende de la preferencia y scroll
+    const needsFooterSpacer = isMobile
+      ? hasContent  // Mobile: siempre footer si hay contenido
+      : hasContent &&  // Desktop: depende de preferencia
+        preference !== 'sidebar' &&
+        !(preference === 'dynamic' && isMiniMode);
 
     if (needsFooterSpacer) {
       document.body.classList.add('has-footer-player');
@@ -90,7 +94,7 @@ export function AudioPlayer() {
     return () => {
       document.body.classList.remove('has-footer-player');
     };
-  }, [currentTrack, currentRadioStation, isMiniMode, preference]);
+  }, [currentTrack, currentRadioStation, isMiniMode, preference, isMobile]);
 
   // Extraer color dominante del cover para gradient móvil
   useEffect(() => {
