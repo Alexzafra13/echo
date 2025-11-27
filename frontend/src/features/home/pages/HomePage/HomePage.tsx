@@ -36,6 +36,9 @@ export default function HomePage() {
   // Hero section rotation state
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
+  // Responsive state for mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   // Helper: Check if album was released recently (within N days)
   const isRecentRelease = (album: Album, days: number = 90): boolean => {
     if (!album.releaseDate) return false;
@@ -151,9 +154,8 @@ export default function HomePage() {
 
     // Limit only on mobile (≤768px), otherwise show all
     // On mobile: limit to 1 row (~4 items), on desktop/tablet: show all
-    const isMobile = window.innerWidth <= 768;
     return isMobile ? playlists.slice(0, neededPlaylists) : playlists;
-  }, [autoPlaylists, neededPlaylists]);
+  }, [autoPlaylists, neededPlaylists, isMobile]);
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
@@ -165,6 +167,16 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, [featuredAlbumsPool.length]);
+
+  // Update isMobile state on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Navigation handlers
   const handleNextHero = () => {

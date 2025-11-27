@@ -11,6 +11,7 @@ import { PlaylistCover } from '../../components/PlaylistCover';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import type { Track as HomeTrack } from '@features/home/types';
 import type { Track as PlayerTrack } from '@features/player/types';
+import { logger } from '@shared/utils/logger';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -31,7 +32,7 @@ export function PlaylistDetailPage() {
         const parsedPlaylist = JSON.parse(storedPlaylist) as AutoPlaylist;
         setPlaylist(parsedPlaylist);
       } catch (error) {
-        console.error('Failed to parse playlist from sessionStorage', error);
+        logger.error('Failed to parse playlist from sessionStorage', error);
         setLocation('/wave-mix');
       }
     } else {

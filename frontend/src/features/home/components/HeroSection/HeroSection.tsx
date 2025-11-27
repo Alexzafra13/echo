@@ -6,6 +6,7 @@ import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAlbumTracks
 import { useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { useArtist } from '@features/artists/hooks';
 import type { HeroSectionProps } from '../../types';
+import { logger } from '@shared/utils/logger';
 import styles from './HeroSection.module.css';
 
 /**
@@ -65,9 +66,9 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
     if (tracks && tracks.length > 0) {
       const playerTracks = convertToPlayerTracks(tracks);
       playQueue(playerTracks, 0);
-      console.log('Playing album:', album.title, 'with', tracks.length, 'tracks');
+      logger.debug('Playing album:', album.title, 'with', tracks.length, 'tracks');
     } else {
-      console.warn('No tracks available for album:', album.id);
+      logger.warn('No tracks available for album:', album.id);
     }
   };
 
