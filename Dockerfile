@@ -2,28 +2,28 @@
 # ECHO MUSIC SERVER - OPTIMIZED BUILD
 # ============================================
 # Single container with Backend + Frontend
-# Target size: ~250-350MB
+# Using BuildKit cache for faster rebuilds
 # ============================================
+# syntax=docker/dockerfile:1
 
 # ----------------------------------------
 # Stage 1: Build Everything
 # ----------------------------------------
 FROM node:22-alpine AS builder
 
+# Enable corepack for pnpm (built into Node 22)
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
+
 WORKDIR /build
 
-# Install pnpm globally
-RUN npm install -g pnpm@10.18.3
-
-# Copy workspace configuration
+# Copy workspace configuration first (better cache)
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-
-# Copy package.json files for all workspace packages
 COPY frontend/package.json ./frontend/
 COPY server/package.json ./server/
 
-# Install ALL dependencies (frontend + backend) in one go
-RUN pnpm install --frozen-lockfile
+# Install ALL dependencies with cache mount (much faster rebuilds)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Build Frontend
 WORKDIR /build/frontend
@@ -40,19 +40,18 @@ RUN pnpm build
 # ----------------------------------------
 FROM node:22-alpine AS deps
 
+# Enable corepack
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
+
 WORKDIR /deps
 
-# Install pnpm
-RUN npm install -g pnpm@10.18.3
-
-# Copy workspace config for pnpm deploy
+# Copy workspace config
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY server/package.json ./server/
 
-# Install production dependencies only using pnpm deploy
-# This creates a clean node_modules with only prod deps
-RUN pnpm --filter=echo-server-backend deploy --prod --legacy /prod && \
-    rm -rf ~/.pnpm-store ~/.npm /tmp/*
+# Install production dependencies with cache + deploy
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm --filter=echo-server-backend deploy --prod --legacy /prod
 
 # Copy drizzle config for runtime migrations
 COPY server/drizzle.config.ts /prod/drizzle.config.ts
@@ -78,12 +77,8 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 # Set production environment
 ENV NODE_ENV=production
 
-# Install only essential runtime dependencies (no npm, pnpm, tsx needed)
-RUN apk add --no-cache \
-    netcat-openbsd \
-    dumb-init \
-    su-exec && \
-    rm -rf /var/cache/apk/*
+# Install runtime dependencies in single layer
+RUN apk add --no-cache netcat-openbsd dumb-init su-exec
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -110,16 +105,13 @@ COPY --chown=echoapp:nodejs server/scripts/reset-admin-password.js ./scripts/
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create unified data directory (Navidrome-style)
+# Create unified data directory
 RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
     chown -R echoapp:nodejs /app/data
 
-# Create wrapper script
-RUN printf '#!/bin/sh\n\
-set -e\n\
-chown -R echoapp:nodejs /app/data 2>/dev/null || true\n\
-exec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
-> /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
+# Create wrapper script for proper permissions
+RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+    > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port
 ENV PORT=4567
