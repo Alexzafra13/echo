@@ -85,7 +85,8 @@ echo "🔄 Running database migrations..."
 
 # Use drizzle-kit push to sync schema with database
 # This is safe for production as it only applies schema changes
-if npx drizzle-kit push --config=drizzle.config.ts 2>/dev/null; then
+# --force flag skips confirmation prompts in non-interactive environments
+if npx drizzle-kit push --config=drizzle.config.ts --force; then
   echo "✅ Database schema synchronized!"
 else
   echo "⚠️  Schema sync failed, but continuing..."
