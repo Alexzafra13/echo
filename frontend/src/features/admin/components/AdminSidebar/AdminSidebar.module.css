@@ -13,11 +13,12 @@
   display: flex;
   flex-direction: column;
   padding: 24px 0;
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 100;
-  overflow-y: auto;
+  /* Necesario para posicionar el mini-player absolutamente dentro */
+  overflow: hidden;
   flex-shrink: 0;
 }
 
@@ -134,7 +135,7 @@
     right: 0;
     top: auto;
     bottom: 0;
-    position: fixed; /* Fijo en el bottom */
+    position: fixed; /* Asegurar que siempre esté fijo */
     flex-direction: row;
     padding: 0;
     background: rgba(30, 41, 59, 0.85);
@@ -158,8 +159,7 @@
     align-items: center;
     gap: 0;
     padding: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: visible;
   }
 
   .sidebar__navItem {
