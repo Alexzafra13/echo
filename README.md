@@ -79,3 +79,4 @@ pnpm dev:all      # Inicia frontend + backend
 ## Licencia
 
 ISC
+
