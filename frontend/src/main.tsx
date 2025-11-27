@@ -1,3 +1,6 @@
+// Import polyfills first to ensure they're loaded before any other code
+import './polyfills/crypto.polyfill';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
