@@ -12,7 +12,8 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #16213e 100%);
+  background: var(--color-bg-primary, #0a0e27);
+  background-image: var(--gradient-textured);
 }
 
 .content {
@@ -181,13 +182,15 @@
 .currentPath {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: monospace;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 13px;
   color: var(--color-text-secondary);
+  border-radius: 10px 10px 0 0;
 }
 
 .currentPath code {
@@ -195,6 +198,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--color-secondary-400, #22d3ee);
 }
 
 .currentPath button {
@@ -235,47 +242,73 @@
 }
 
 .browser {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  max-height: 280px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-height: 320px;
   overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.browser::-webkit-scrollbar {
+  width: 6px;
+}
+
+.browser::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.browser::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.browser::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .directoryList {
   display: flex;
   flex-direction: column;
+  padding: 8px;
+  gap: 4px;
 }
 
 .directoryRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 8px;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
 }
 
-.directoryRow:last-child {
-  border-bottom: none;
+.directoryRow:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .directoryItem {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: transparent;
-  border: none;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   color: var(--color-text-primary);
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
   text-align: left;
 }
 
 .directoryItem:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
 }
 
 .directoryItem.disabled {
@@ -283,25 +316,48 @@
   cursor: not-allowed;
 }
 
+.directoryItem svg {
+  color: var(--color-secondary-400, #22d3ee);
+  flex-shrink: 0;
+}
+
 .musicIcon {
-  color: var(--color-primary);
+  color: var(--color-primary, #ed6842);
   margin-left: auto;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .browserLoading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 30px;
+  gap: 12px;
+  padding: 40px;
   color: var(--color-text-secondary);
 }
 
+.browserLoading svg {
+  color: var(--color-secondary-400, #22d3ee);
+}
+
 .emptyDirectory {
-  padding: 30px;
+  padding: 40px;
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  margin: 8px;
 }
 
 /* Actions */
