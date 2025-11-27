@@ -4,7 +4,7 @@ export interface UploadAvatarInput {
     buffer: Buffer;
     mimetype: string;
     size: number;
-    originalname: string;
+    originalname?: string;
   };
 }
 
