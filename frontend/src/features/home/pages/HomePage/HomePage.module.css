@@ -22,7 +22,7 @@
 .homePage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
-  padding: 0 30px 30px 30px;
+  padding: 0 30px calc(40px + var(--player-bottom-spacer, 0px)) 30px;
   margin-top: -84px; /* Pull up to allow hero to extend behind header */
   overflow-y: auto;
   overflow-x: hidden;
@@ -185,7 +185,7 @@
 
   .homePage__content {
     margin-top: -52px; /* Pull up to allow hero to extend behind mobile header */
-    padding: 0 16px 140px; /* Sin padding-top para que hero llegue arriba + bottom para player y nav */
+    padding: 0 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Sin padding-top para que hero llegue arriba + bottom nav + player dinámico */
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
   }
 
@@ -222,7 +222,7 @@
   }
 
   .homePage__content {
-    padding: 0 12px 140px; /* Sin padding-top para que hero llegue arriba */
+    padding: 0 12px calc(60px + var(--player-bottom-spacer, 0px)); /* Sin padding-top para que hero llegue arriba + bottom nav + player dinámico */
   }
 
   .hero--loading {

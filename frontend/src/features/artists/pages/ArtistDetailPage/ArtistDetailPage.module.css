@@ -20,7 +20,7 @@
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   margin-top: -84px; /* Content starts behind header */
-  padding: 114px 40px 30px; /* 84px + 30px for header glassmorphism effect */
+  padding: 114px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 30px for header glassmorphism + dynamic bottom for player */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -341,7 +341,7 @@
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px 140px; /* Top para header + bottom para player y nav */
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
 
   .artistDetailPage__hero {
@@ -407,7 +407,7 @@
   }
 
   .artistDetailPage__content {
-    padding: 90px 16px 140px; /* Ajustado para header más pequeño */
+    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
   .artistDetailPage__name {
