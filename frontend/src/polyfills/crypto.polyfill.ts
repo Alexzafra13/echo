@@ -7,7 +7,7 @@
 
 if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID) {
   // Polyfill randomUUID for non-secure contexts (HTTP)
-  window.crypto.randomUUID = function randomUUID(): string {
+  window.crypto.randomUUID = function randomUUID() {
     // Generate a RFC4122 version 4 UUID
     // Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
     // where x is any hexadecimal digit and y is one of 8, 9, A, or B
@@ -32,7 +32,7 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
         hex.slice(12, 16),
         hex.slice(16, 20),
         hex.slice(20, 32)
-      ].join('-');
+      ].join('-') as `${string}-${string}-${string}-${string}-${string}`;
     }
 
     // Fallback to Math.random() if crypto.getRandomValues is not available
@@ -41,7 +41,7 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
-    });
+    }) as `${string}-${string}-${string}-${string}-${string}`;
   };
 }
 
