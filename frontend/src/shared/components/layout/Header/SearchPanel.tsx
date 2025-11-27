@@ -23,7 +23,7 @@ interface SearchPanelProps {
  */
 export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   const [, setLocation] = useLocation();
-  const { play, playQueue } = usePlayer();
+  const { playQueue } = usePlayer();
 
   // Fetch results from all sources
   const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 5 });
@@ -53,7 +53,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   };
 
   // Handle track click - play the track and queue remaining search results
-  const handlePlayTrack = (track: any, index: number) => {
+  const handlePlayTrack = (_track: any, index: number) => {
     // Convert search results to player Track format and play
     const playerTracks = tracks.map((t: any) => ({
       id: t.id,
