@@ -155,11 +155,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 8px;
-  color: var(--color-primary, #ff6b6b);
+  padding: 12px 22px;
+  background: rgba(198, 64, 29, 0.12);
+  border: 1px solid rgba(198, 64, 29, 0.35);
+  border-radius: 10px;
+  color: #e05a30;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -167,8 +167,9 @@
 }
 
 .scanButton:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(198, 64, 29, 0.2);
+  border-color: rgba(198, 64, 29, 0.5);
+  transform: translateY(-1px);
 }
 
 .scanButton:disabled {
