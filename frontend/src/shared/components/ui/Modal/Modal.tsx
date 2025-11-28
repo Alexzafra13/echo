@@ -6,11 +6,13 @@
  * - Click outside to close
  * - Accessible close button
  * - Portal rendering
+ * - Support for custom headers with icons and subtitles
  */
 
 import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import styles from './Modal.module.css';
 
 export interface ModalProps {
@@ -18,10 +20,14 @@ export interface ModalProps {
   isOpen: boolean;
   /** Callback when modal should close */
   onClose: () => void;
-  /** Modal title */
-  title: string;
+  /** Modal title - can be string or custom ReactNode */
+  title: React.ReactNode;
   /** Modal content */
   children: React.ReactNode;
+  /** Optional icon to display next to title */
+  icon?: LucideIcon;
+  /** Optional subtitle below title */
+  subtitle?: React.ReactNode;
   /** Optional custom width */
   width?: string;
   /** Optional class name for content */
@@ -33,6 +39,8 @@ export function Modal({
   onClose,
   title,
   children,
+  icon: Icon,
+  subtitle,
   width,
   className,
 }: ModalProps) {
@@ -86,7 +94,17 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.modalHeader}>
-          <h2 id="modal-title" className={styles.modalTitle}>{title}</h2>
+          <div className={styles.modalHeaderContent}>
+            {Icon && (
+              <div className={styles.modalIcon}>
+                <Icon size={24} />
+              </div>
+            )}
+            <div className={styles.modalTitleWrapper}>
+              <h2 id="modal-title" className={styles.modalTitle}>{title}</h2>
+              {subtitle && <p className={styles.modalSubtitle}>{subtitle}</p>}
+            </div>
+          </div>
           <button
             className={styles.closeButton}
             onClick={onClose}
