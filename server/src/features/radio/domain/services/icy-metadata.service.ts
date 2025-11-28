@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { EventEmitter } from 'events';
 import { Parser as IcecastParser } from 'icecast-parser';
 
@@ -16,10 +16,40 @@ export interface RadioMetadata {
  * Only connects to streams when clients are actively listening
  */
 @Injectable()
-export class IcyMetadataService {
+export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(IcyMetadataService.name);
   private activeStreams = new Map<string, IcecastParser>();
   private streamListeners = new Map<string, Set<EventEmitter>>();
+
+  // Handler for uncaught errors from icecast-parser
+  private readonly uncaughtErrorHandler = (error: Error) => {
+    // Only handle icecast-parser related errors to prevent server crash
+    const isIcecastError =
+      error.stack?.includes('icecast-parser') ||
+      error.stack?.includes('Parser.onRequestError') ||
+      error.stack?.includes('Parser.js');
+
+    if (isIcecastError) {
+      this.logger.error(
+        `[SAFETY NET] Caught unhandled icecast-parser error: ${error.message}. ` +
+          `Server crash prevented. This indicates a race condition in error handling.`,
+      );
+      // Don't re-throw - we've handled it
+      return;
+    }
+
+    // Re-throw non-icecast errors so they're handled by other handlers
+    throw error;
+  };
+
+  /**
+   * Initialize global error handling for icecast-parser as safety net
+   */
+  onModuleInit() {
+    // Register as the first handler to catch icecast-parser errors before they crash the app
+    process.prependListener('uncaughtException', this.uncaughtErrorHandler);
+    this.logger.log('IcyMetadataService initialized with global error safety net');
+  }
 
   /**
    * Subscribe to metadata updates for a radio station
@@ -100,17 +130,26 @@ export class IcyMetadataService {
         );
       }
 
-      radioStation = new IcecastParser({
-        url: streamUrl,
-        keepListen: false, // Don't keep listening after metadata
-        autoUpdate: true, // Automatically update metadata
-        notifyOnChangeOnly: true, // Only emit when metadata changes
-        errorInterval: 30, // Retry after 30 seconds on error (default is 600)
-      });
-
-      // CRITICAL: Register error handler IMMEDIATELY before any other operations
-      // This prevents unhandled error events from crashing the server
+      // Define error handler BEFORE creating parser to avoid race condition
+      // The parser starts connecting immediately upon creation, so we need
+      // to be ready to handle errors from the very first moment
       const errorHandler = (error: Error) => {
+        // Handle DNS resolution errors specifically
+        const isDnsError =
+          error.message.includes('EAI_AGAIN') ||
+          error.message.includes('EAI_NODATA') ||
+          error.message.includes('EAI_NONAME') ||
+          error.message.includes('ENOTFOUND') ||
+          error.message.includes('getaddrinfo');
+
+        // Handle network errors
+        const isNetworkError =
+          isDnsError ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ECONNRESET') ||
+          error.message.includes('ETIMEDOUT') ||
+          error.message.includes('EHOSTUNREACH');
+
         // Provide better context for SSL-related errors
         const isSslError =
           error.message.includes('certificate') ||
@@ -118,10 +157,20 @@ export class IcyMetadataService {
           error.message.includes('TLS') ||
           error.message.includes('CERT_');
 
-        if (isSslError && isHttps) {
+        if (isDnsError) {
+          this.logger.warn(
+            `DNS resolution failed for ${stationUuid} (${streamUrl}): ${error.message}. ` +
+              `The stream host could not be resolved. Will retry later.`,
+          );
+        } else if (isSslError && isHttps) {
           this.logger.warn(
             `SSL certificate error for ${stationUuid} (${streamUrl}): ${error.message}. ` +
               `This stream uses HTTPS with an untrusted certificate. Metadata will not be available.`,
+          );
+        } else if (isNetworkError) {
+          this.logger.warn(
+            `Network error for ${stationUuid} (${streamUrl}): ${error.message}. ` +
+              `The stream is unreachable. Will retry later.`,
           );
         } else {
           this.logger.error(
@@ -132,13 +181,25 @@ export class IcyMetadataService {
         // Emit error to all listeners (safely - listeners have default handlers)
         this.broadcastError(stationUuid, error);
 
-        // Close stream on error to prevent resource leaks
-        // For SSL errors, don't retry as it will keep failing
-        if (isSslError) {
+        // Close stream on persistent errors to prevent resource leaks
+        // For SSL and DNS errors, close immediately as retrying won't help
+        if (isSslError || isDnsError) {
           this.closeStream(stationUuid);
         }
       };
 
+      // Create parser with options
+      radioStation = new IcecastParser({
+        url: streamUrl,
+        keepListen: false, // Don't keep listening after metadata
+        autoUpdate: true, // Automatically update metadata
+        notifyOnChangeOnly: true, // Only emit when metadata changes
+        errorInterval: 30, // Retry after 30 seconds on error (default is 600)
+      });
+
+      // CRITICAL: Register error handler IMMEDIATELY after creation
+      // This prevents unhandled error events from crashing the server
+      // The parser may emit errors synchronously during connection setup
       radioStation.on('error', errorHandler);
 
       // Increase max listeners to prevent warnings (parser can have many listeners)
@@ -274,13 +335,20 @@ export class IcyMetadataService {
   }
 
   /**
-   * Cleanup all active streams on service shutdown
+   * Cleanup all active streams and global handlers on service shutdown
    */
   onModuleDestroy(): void {
-    this.logger.log('Cleaning up all active ICY streams...');
-    this.activeStreams.forEach((stream, stationUuid) => {
+    this.logger.log('Cleaning up IcyMetadataService...');
+
+    // Remove global error handler
+    process.removeListener('uncaughtException', this.uncaughtErrorHandler);
+
+    // Close all active streams
+    this.activeStreams.forEach((_, stationUuid) => {
       this.closeStream(stationUuid);
     });
+
+    this.logger.log('IcyMetadataService cleanup complete');
   }
 
   /**
