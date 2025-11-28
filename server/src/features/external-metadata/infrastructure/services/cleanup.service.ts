@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from './storage.service';
+import { MetadataCacheService } from './metadata-cache.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { eq, or, isNotNull, count, sum } from 'drizzle-orm';
@@ -64,6 +65,7 @@ export class CleanupService {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
+    private readonly metadataCache: MetadataCacheService,
   ) {}
 
   /**
@@ -334,6 +336,64 @@ export class CleanupService {
       result.errors.push((error as Error).message);
       return result;
     }
+  }
+
+  /**
+   * Limpia entradas expiradas del caché de metadata
+   * Debería ejecutarse periódicamente (ej: diariamente) para evitar acumulación
+   */
+  async cleanupExpiredCache(): Promise<{
+    entriesRemoved: number;
+    errors: string[];
+  }> {
+    const result = {
+      entriesRemoved: 0,
+      errors: [] as string[],
+    };
+
+    try {
+      this.logger.log('🧹 Starting metadata cache cleanup...');
+
+      const removed = await this.metadataCache.clearExpired();
+      result.entriesRemoved = removed;
+
+      if (removed > 0) {
+        this.logger.log(`✅ Metadata cache cleanup: removed ${removed} expired entries`);
+      } else {
+        this.logger.log('✅ Metadata cache cleanup: no expired entries found');
+      }
+
+      return result;
+    } catch (error) {
+      const errorMsg = `Failed to cleanup metadata cache: ${(error as Error).message}`;
+      this.logger.error(errorMsg, (error as Error).stack);
+      result.errors.push(errorMsg);
+      return result;
+    }
+  }
+
+  /**
+   * Ejecuta limpieza completa: archivos huérfanos + caché expirado
+   */
+  async runFullCleanup(dryRun = true): Promise<{
+    files: CleanupResult;
+    cache: { entriesRemoved: number; errors: string[] };
+  }> {
+    this.logger.log(`🧹 Starting full cleanup (dry run: ${dryRun})`);
+
+    const [filesResult, cacheResult] = await Promise.all([
+      this.cleanupOrphanedFiles(dryRun),
+      this.cleanupExpiredCache(),
+    ]);
+
+    this.logger.log(
+      `✅ Full cleanup completed: ${filesResult.filesRemoved} files, ${cacheResult.entriesRemoved} cache entries`
+    );
+
+    return {
+      files: filesResult,
+      cache: cacheResult,
+    };
   }
 
   // ============================================

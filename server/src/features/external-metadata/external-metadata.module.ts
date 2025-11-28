@@ -15,6 +15,7 @@ import { ImageDownloadService } from './infrastructure/services/image-download.s
 import { CleanupService } from './infrastructure/services/cleanup.service';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
 import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
+import { MaintenanceSchedulerService } from './infrastructure/services/maintenance-scheduler.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -87,6 +88,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     CleanupService,
     MetadataConflictService,
     MbidAutoSearchService,
+    MaintenanceSchedulerService,
 
     // Persistence
     SettingsRepository,

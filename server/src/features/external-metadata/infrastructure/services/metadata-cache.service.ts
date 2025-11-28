@@ -45,18 +45,23 @@ export class MetadataCacheService {
       const cached = results[0] || null;
 
       if (!cached) {
-        this.logger.debug(`Cache miss: ${entityType}:${entityId}:${provider}`);
+        // Use log (info) for visibility in production
+        this.logger.log(`📭 Cache MISS: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...)`);
         return null;
       }
 
       // Check if cache is expired
       if (cached.expiresAt && new Date() > cached.expiresAt) {
-        this.logger.debug(`Cache expired: ${entityType}:${entityId}:${provider}`);
+        this.logger.log(`⏰ Cache EXPIRED: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - expired ${cached.expiresAt.toISOString()}`);
         await this.delete(entityType, entityId, provider);
         return null;
       }
 
-      this.logger.debug(`Cache hit: ${entityType}:${entityId}:${provider}`);
+      // Calculate cache age for visibility
+      const cacheAge = cached.fetchedAt
+        ? Math.round((Date.now() - new Date(cached.fetchedAt).getTime()) / (1000 * 60 * 60))
+        : 'unknown';
+      this.logger.log(`✅ Cache HIT: ${entityType}/${provider} (entity: ${entityId.substring(0, 8)}...) - cached ${cacheAge}h ago`);
       return JSON.parse(cached.data);
     } catch (error) {
       this.logger.error(`Error reading from cache: ${(error as Error).message}`, (error as Error).stack);
