@@ -1026,8 +1026,9 @@ export class ExternalMetadataService {
             const cover = await fanartAgent.getAlbumCoverByArtist(mbzArtistId, mbzAlbumId, artist, album);
             if (cover) {
               // Cache the result (use internal albumId for consistent caching)
+              // Always use 'cover' as provider for consistent cache keys
               if (albumId) {
-                await this.cache.set('album', albumId, cover.source, {
+                await this.cache.set('album', albumId, 'cover', {
                   smallUrl: cover.smallUrl,
                   mediumUrl: cover.mediumUrl,
                   largeUrl: cover.largeUrl,
@@ -1045,8 +1046,9 @@ export class ExternalMetadataService {
 
         if (cover) {
           // Cache the result (use internal albumId for consistent caching)
+          // Always use 'cover' as provider for consistent cache keys
           if (albumId) {
-            await this.cache.set('album', albumId, cover.source, {
+            await this.cache.set('album', albumId, 'cover', {
               smallUrl: cover.smallUrl,
               mediumUrl: cover.mediumUrl,
               largeUrl: cover.largeUrl,
