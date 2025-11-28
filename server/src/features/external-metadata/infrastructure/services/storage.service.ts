@@ -134,11 +134,12 @@ export class StorageService {
 
   /**
    * Get storage path for a user
-   * Returns: /storage/users/{user-id}/
+   * Returns: {DATA_PATH}/uploads/users/{user-id}/
    * This is separate from metadata storage
    */
   async getUserStoragePath(userId: string): Promise<string> {
-    const userStorageBase = path.resolve(process.cwd(), 'storage', 'users');
+    const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+    const userStorageBase = path.join(dataPath, 'uploads', 'users');
     const userPath = path.join(userStorageBase, userId);
     await this.ensureDirectoryExists(userPath);
     return userPath;
@@ -146,7 +147,7 @@ export class StorageService {
 
   /**
    * Get avatar path for a user
-   * Returns: /storage/users/{user-id}/avatar.{ext}
+   * Returns: {DATA_PATH}/uploads/users/{user-id}/avatar.{ext}
    */
   async getUserAvatarPath(userId: string, extension: string): Promise<string> {
     const userPath = await this.getUserStoragePath(userId);

@@ -1,11 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
-import { albums, tracks } from '@infrastructure/database/schema';
+import { albums } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
-import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import * as path from 'path';
@@ -28,7 +27,6 @@ export class ApplyAlbumCoverUseCase {
     private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
-    private readonly settings: SettingsService,
     private readonly imageService: ImageService,
     private readonly metadataGateway: MetadataEnrichmentGateway,
   ) {}
@@ -47,15 +45,6 @@ export class ApplyAlbumCoverUseCase {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
     }
 
-    // Get first track for album folder path
-    const albumTracksResult = await this.drizzle.db
-      .select({ path: tracks.path })
-      .from(tracks)
-      .where(eq(tracks.albumId, input.albumId))
-      .limit(1);
-
-    const albumTracks = albumTracksResult;
-
     this.logger.log(
       `Applying cover for album: ${album.name} from ${input.provider}`,
     );
@@ -72,21 +61,9 @@ export class ApplyAlbumCoverUseCase {
       }
     }
 
-    // Determine where to save the cover
-    const saveInFolder = await this.settings.getBoolean(
-      'metadata.download.save_in_album_folder',
-      true,
-    );
-
-    let targetFolder: string;
-
-    if (saveInFolder && albumTracks.length > 0) {
-      // Save in album folder
-      targetFolder = path.dirname(albumTracks[0].path);
-    } else {
-      // Save to metadata storage
-      targetFolder = await this.storage.getAlbumMetadataPath(input.albumId);
-    }
+    // Always save to metadata storage (not music folder) for security
+    // Music folder should remain read-only to prevent accidental modifications
+    const targetFolder = await this.storage.getAlbumMetadataPath(input.albumId);
 
     // Download to temporary path first
     const tempPath = path.join(targetFolder, `cover-temp-${Date.now()}.jpg`);
