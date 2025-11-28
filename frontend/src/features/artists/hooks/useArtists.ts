@@ -40,3 +40,15 @@ export function useArtistSearch(query: string, params?: { skip?: number; take?: 
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
+
+/**
+ * Hook to fetch albums by artist ID
+ */
+export function useArtistAlbums(artistId: string | undefined, params?: { skip?: number; take?: number }) {
+  return useQuery({
+    queryKey: ['artists', artistId, 'albums', params],
+    queryFn: () => artistsService.getAlbums(artistId!, params),
+    enabled: !!artistId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}

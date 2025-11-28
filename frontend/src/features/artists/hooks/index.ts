@@ -1,1 +1,1 @@
-export { useArtists, useArtist, useArtistSearch } from './useArtists';
+export { useArtists, useArtist, useArtistSearch, useArtistAlbums } from './useArtists';
