@@ -14,19 +14,56 @@ import { fetchWithTimeout } from '@shared/utils';
  *
  * Features:
  * - Multi-language support (Spanish → English fallback)
+ * - Music-specific disambiguation (searches with "(band)", "(musician)", etc.)
+ * - Content validation to ensure result is about a musician
  * - Free, no API key required
- * - Rich biographical content
  */
 @Injectable()
 export class WikipediaAgent implements IArtistBioRetriever {
   readonly name = 'wikipedia';
-  readonly priority = 10; // Primary source for biographies
+  readonly priority = 10; // Secondary source (Last.fm is 5 when enabled)
 
   private readonly logger = new Logger(WikipediaAgent.name);
   private readonly userAgent = 'Echo-Music-Server/1.0.0 (Wikipedia Biography Retrieval)';
 
   // Language priority order
   private readonly languages = ['es', 'en'];
+
+  // Search suffixes to try for disambiguation (in order of preference)
+  private readonly musicDisambiguationSuffixes = [
+    '(banda)',           // Spanish: band
+    '(band)',            // English: band
+    '(grupo musical)',   // Spanish: musical group
+    '(musical group)',   // English: musical group
+    '(músico)',          // Spanish: musician
+    '(musician)',        // English: musician
+    '(cantante)',        // Spanish: singer
+    '(singer)',          // English: singer
+    '(rapero)',          // Spanish: rapper
+    '(rapper)',          // English: rapper
+    '',                  // No suffix (fallback)
+  ];
+
+  // Keywords that indicate the article is about a musician/band
+  private readonly musicKeywords = [
+    // General music terms
+    'album', 'álbum', 'disco', 'discografía', 'discography',
+    'canción', 'canciones', 'song', 'songs', 'track', 'tracks',
+    'sencillo', 'single', 'singles', 'ep', 'lp',
+    'gira', 'tour', 'concierto', 'concert', 'live',
+    // Genres
+    'rock', 'pop', 'metal', 'jazz', 'hip hop', 'hip-hop', 'rap',
+    'electrónica', 'electronic', 'indie', 'punk', 'folk', 'blues',
+    'reggae', 'soul', 'r&b', 'country', 'clásica', 'classical',
+    // Roles
+    'banda', 'band', 'grupo', 'group', 'músico', 'musician',
+    'cantante', 'singer', 'vocalista', 'vocalist', 'guitarrista', 'guitarist',
+    'baterista', 'drummer', 'bajista', 'bassist', 'tecladista', 'keyboardist',
+    'compositor', 'songwriter', 'producer', 'productor', 'dj',
+    // Record labels and industry
+    'sello discográfico', 'record label', 'disquera', 'grammy', 'billboard',
+    'mtv', 'spotify', 'música', 'music', 'musical',
+  ];
 
   constructor(private readonly rateLimiter: RateLimiterService) {}
 
@@ -37,6 +74,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
   /**
    * Get artist biography from Wikipedia
    * Tries Spanish first, then English as fallback
+   * Uses smart disambiguation to find music-related articles
    *
    * @param mbid MusicBrainz Artist ID (not used for Wikipedia)
    * @param name Artist name
@@ -46,7 +84,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
     // Try each language in priority order
     for (const lang of this.languages) {
       try {
-        this.logger.debug(`Searching Wikipedia (${lang}) for: ${name}`);
+        this.logger.debug(`Searching Wikipedia (${lang}) for musician: ${name}`);
         const bio = await this.getBioInLanguage(name, lang);
 
         if (bio) {
@@ -67,6 +105,8 @@ export class WikipediaAgent implements IArtistBioRetriever {
 
   /**
    * Get biography in specific language
+   * Tries multiple disambiguation suffixes to find the music article
+   *
    * @param artistName Artist name to search
    * @param lang Language code (es, en, etc.)
    * @returns ArtistBio or null
@@ -75,22 +115,58 @@ export class WikipediaAgent implements IArtistBioRetriever {
     artistName: string,
     lang: string
   ): Promise<ArtistBio | null> {
-    await this.rateLimiter.waitForRateLimit(this.name);
+    // Try each disambiguation suffix
+    for (const suffix of this.musicDisambiguationSuffixes) {
+      const searchQuery = suffix ? `${artistName} ${suffix}` : artistName;
 
-    // Step 1: Search for the article
-    const pageTitle = await this.searchArticle(artistName, lang);
-    if (!pageTitle) {
-      return null;
+      await this.rateLimiter.waitForRateLimit(this.name);
+
+      // Step 1: Search for the article
+      const pageTitle = await this.searchArticle(searchQuery, lang);
+      if (!pageTitle) {
+        continue;
+      }
+
+      // Step 2: Get article summary
+      await this.rateLimiter.waitForRateLimit(this.name);
+      const summary = await this.getArticleSummary(pageTitle, lang);
+      if (!summary) {
+        continue;
+      }
+
+      // Step 3: Verify it's about a musician
+      if (this.isMusicRelatedContent(summary.content)) {
+        this.logger.debug(`Found music article for "${artistName}" with suffix "${suffix || 'none'}"`);
+        return summary;
+      } else {
+        this.logger.debug(`Article "${pageTitle}" doesn't appear to be about a musician, trying next suffix`);
+      }
     }
 
-    // Step 2: Get article summary
-    await this.rateLimiter.waitForRateLimit(this.name);
-    const summary = await this.getArticleSummary(pageTitle, lang);
-    if (!summary) {
-      return null;
+    return null;
+  }
+
+  /**
+   * Check if content appears to be about a musician or band
+   * @param content Article content
+   * @returns true if content contains music-related keywords
+   */
+  private isMusicRelatedContent(content: string): boolean {
+    const loweredContent = content.toLowerCase();
+
+    // Count how many music keywords are present
+    const matchCount = this.musicKeywords.filter(keyword =>
+      loweredContent.includes(keyword.toLowerCase())
+    ).length;
+
+    // Require at least 2 music keywords for confidence
+    const isMusic = matchCount >= 2;
+
+    if (!isMusic) {
+      this.logger.debug(`Content has only ${matchCount} music keywords (need 2+)`);
     }
 
-    return summary;
+    return isMusic;
   }
 
   /**
@@ -104,7 +180,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
     const params = new URLSearchParams({
       action: 'opensearch',
       search: query,
-      limit: '1',
+      limit: '5', // Get more results to find the right one
       namespace: '0', // Main namespace only
       format: 'json',
     });
@@ -123,10 +199,40 @@ export class WikipediaAgent implements IArtistBioRetriever {
 
     // OpenSearch returns: [query, [titles], [descriptions], [urls]]
     if (Array.isArray(data) && data[1] && data[1].length > 0) {
-      return data[1][0]; // First result title
+      // Return first result that seems music-related based on title/description
+      const titles = data[1] as string[];
+      const descriptions = data[2] as string[];
+
+      for (let i = 0; i < titles.length; i++) {
+        const title = titles[i];
+        const desc = (descriptions[i] || '').toLowerCase();
+
+        // Check if description mentions music
+        if (this.titleOrDescSuggestsMusic(title, desc)) {
+          return title;
+        }
+      }
+
+      // Fallback to first result if no music-specific one found
+      return titles[0];
     }
 
     return null;
+  }
+
+  /**
+   * Check if title or description suggests music content
+   */
+  private titleOrDescSuggestsMusic(title: string, desc: string): boolean {
+    const combined = `${title} ${desc}`.toLowerCase();
+
+    const musicIndicators = [
+      'band', 'banda', 'grupo', 'group', 'musician', 'músico',
+      'singer', 'cantante', 'album', 'álbum', 'song', 'canción',
+      'rock', 'pop', 'metal', 'hip hop', 'rapper', 'dj',
+    ];
+
+    return musicIndicators.some(indicator => combined.includes(indicator));
   }
 
   /**
@@ -189,6 +295,8 @@ export class WikipediaAgent implements IArtistBioRetriever {
     return text
       // Remove pronunciation guides like "(pronunciación: ...)"
       .replace(/\s*\([^)]*pronunciación[^)]*\)/gi, '')
+      // Remove IPA pronunciations
+      .replace(/\s*\([^)]*[\/\[].*?[\/\]][^)]*\)/g, '')
       // Remove parenthetical dates at start (common in Spanish)
       .replace(/^\s*\([^)]+\)\s*/, '')
       // Clean up multiple spaces
