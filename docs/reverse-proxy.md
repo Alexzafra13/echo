@@ -89,9 +89,8 @@ server {
 
 # HTTPS Server
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name music.tudominio.com;
 
     # SSL (Let's Encrypt)
@@ -117,6 +116,10 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_buffering off;
+    }
+
+    location ~ /\. {
+        deny all;
     }
 }
 ```
