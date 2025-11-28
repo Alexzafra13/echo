@@ -335,6 +335,26 @@ export class ExternalMetadataService {
         });
       }
 
+      // IMPORTANT: Always mark artist as processed (mbidSearchedAt)
+      // This prevents infinite re-selection in auto-enrichment queries
+      // Note: If artist had MBID, the search block wasn't executed, so we need to ensure it's marked
+      const artistAfter = await this.drizzle.db
+        .select({ mbidSearchedAt: artists.mbidSearchedAt })
+        .from(artists)
+        .where(eq(artists.id, artistId))
+        .limit(1);
+
+      if (!artistAfter[0]?.mbidSearchedAt) {
+        await this.drizzle.db
+          .update(artists)
+          .set({
+            mbidSearchedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(artists.id, artistId));
+        this.logger.debug(`Marked artist "${artist.name}" as processed (mbidSearchedAt)`);
+      }
+
       return { bioUpdated, imagesUpdated, errors };
     } catch (error) {
       this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
@@ -690,6 +710,19 @@ export class ExternalMetadataService {
           errorMessage: errors.join('; '),
           processingTime: Date.now() - startTime,
         });
+      }
+
+      // IMPORTANT: Always mark album as processed (even if cover wasn't updated)
+      // This prevents infinite re-selection in auto-enrichment queries
+      if (!coverUpdated) {
+        await this.drizzle.db
+          .update(albums)
+          .set({
+            externalInfoUpdatedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(albums.id, albumId));
+        this.logger.debug(`Marked album "${album.name}" as processed (no cover update needed)`);
       }
 
       return { coverUpdated, errors };
