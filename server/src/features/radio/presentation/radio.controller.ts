@@ -10,9 +10,11 @@ import {
   HttpStatus,
   Sse,
   Req,
+  Res,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
-import { FastifyRequest } from 'fastify';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
@@ -27,6 +29,8 @@ import { RadioStationResponseDto } from './dto/radio-station-response.dto';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
 import { SaveApiStationDto } from './dto/save-api-station.dto';
+import * as http from 'http';
+import * as https from 'https';
 
 /**
  * RadioController - Controlador de estaciones de radio
@@ -311,6 +315,115 @@ export class RadioController {
         this.icyMetadataService.unsubscribe(stationUuid, emitter);
         clearInterval(keepaliveInterval);
         subscriber.complete();
+      });
+    });
+  }
+
+  /**
+   * GET /radio/stream/proxy
+   * Proxy for HTTP radio streams to avoid Mixed Content blocking on HTTPS pages
+   * PUBLIC: Radio streams are public data, no auth needed
+   */
+  @Get('stream/proxy')
+  @Public()
+  @ApiOperation({
+    summary: 'Proxy de stream de radio',
+    description: 'Proxy HTTP streams through HTTPS to avoid Mixed Content blocking',
+  })
+  async proxyStream(
+    @Query('url') streamUrl: string,
+    @Req() request: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if (!streamUrl) {
+      throw new BadRequestException('URL parameter is required');
+    }
+
+    // Validate URL format
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(streamUrl);
+    } catch {
+      throw new BadRequestException('Invalid URL format');
+    }
+
+    // Only allow http and https protocols
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new BadRequestException('Only HTTP and HTTPS URLs are allowed');
+    }
+
+    // Block private/internal networks (SSRF protection)
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const blockedPatterns = [
+      /^localhost$/,
+      /^127\./,
+      /^0\.0\.0\.0$/,
+      /^10\./,
+      /^192\.168\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^169\.254\./,
+      /^\[?::1\]?$/,
+      /^postgres$/,
+      /^redis$/,
+      /^echo$/,
+    ];
+
+    if (blockedPatterns.some(pattern => pattern.test(hostname))) {
+      throw new BadRequestException('Access to internal networks is not allowed');
+    }
+
+    // Proxy the stream
+    const httpModule = parsedUrl.protocol === 'https:' ? https : http;
+
+    return new Promise<void>((resolve, reject) => {
+      const proxyRequest = httpModule.get(
+        streamUrl,
+        {
+          headers: {
+            'User-Agent': 'Echo/1.0 (Radio Stream Proxy)',
+            'Accept': '*/*',
+            'Icy-MetaData': '0',
+          },
+          timeout: 10000,
+        },
+        (proxyResponse) => {
+          // Set CORS headers
+          reply.header('Access-Control-Allow-Origin', '*');
+          reply.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+          reply.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
+
+          // Forward content type and other relevant headers
+          if (proxyResponse.headers['content-type']) {
+            reply.header('Content-Type', proxyResponse.headers['content-type']);
+          }
+          if (proxyResponse.headers['icy-name']) {
+            reply.header('icy-name', proxyResponse.headers['icy-name']);
+          }
+          if (proxyResponse.headers['icy-br']) {
+            reply.header('icy-br', proxyResponse.headers['icy-br']);
+          }
+
+          // Set status and stream the response
+          reply.status(proxyResponse.statusCode || 200);
+          reply.send(proxyResponse);
+          resolve();
+        },
+      );
+
+      proxyRequest.on('error', (error) => {
+        reply.status(502).send({ error: 'Failed to connect to radio stream', message: error.message });
+        resolve();
+      });
+
+      proxyRequest.on('timeout', () => {
+        proxyRequest.destroy();
+        reply.status(504).send({ error: 'Radio stream connection timeout' });
+        resolve();
+      });
+
+      // Handle client disconnect
+      request.raw.on('close', () => {
+        proxyRequest.destroy();
       });
     });
   }
