@@ -28,7 +28,9 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 # Build Frontend
 WORKDIR /build/frontend
 COPY frontend/ ./
-RUN pnpm build
+# ARG invalidates cache when frontend files change
+ARG FRONTEND_HASH=default
+RUN echo "Frontend hash: ${FRONTEND_HASH}" && pnpm build
 
 # Build Backend
 WORKDIR /build/server
