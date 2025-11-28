@@ -432,19 +432,39 @@ export class ScanProcessorService implements OnModuleInit {
       .where(eq(albums.name, normalizedName))
       .limit(1);
 
-    // 2. Si existe, actualizar MBID si es necesario
+    // 2. Si existe, actualizar MBID y cover si es necesario
     if (existingAlbum[0]) {
+      let coverExtracted = false;
+      const updates: any = {};
+
       // Update MBID if provided and the album doesn't have one yet
       if (metadata.mbzAlbumId && !existingAlbum[0].mbzAlbumId) {
+        updates.mbzAlbumId = metadata.mbzAlbumId;
+        updates.mbzAlbumArtistId = metadata.mbzAlbumArtistId || null;
+        this.logger.debug(`Updated MBID for album "${existingAlbum[0].name}": ${metadata.mbzAlbumId}`);
+      }
+
+      // Extract cover if missing (Navidrome-style: always check and fill gaps)
+      if (!existingAlbum[0].coverArtPath) {
+        const coverPath = await this.coverArtService.extractAndCacheCover(
+          existingAlbum[0].id,
+          trackPath,
+        );
+
+        if (coverPath) {
+          updates.coverArtPath = coverPath;
+          coverExtracted = true;
+          this.logger.debug(`Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`);
+        }
+      }
+
+      // Apply updates if any
+      if (Object.keys(updates).length > 0) {
+        updates.updatedAt = new Date();
         await this.drizzle.db
           .update(albums)
-          .set({
-            mbzAlbumId: metadata.mbzAlbumId,
-            mbzAlbumArtistId: metadata.mbzAlbumArtistId || null,
-            updatedAt: new Date(),
-          })
+          .set(updates)
           .where(eq(albums.id, existingAlbum[0].id));
-        this.logger.debug(`Updated MBID for album "${existingAlbum[0].name}": ${metadata.mbzAlbumId}`);
       }
 
       return {
@@ -452,7 +472,7 @@ export class ScanProcessorService implements OnModuleInit {
         name: existingAlbum[0].name,
         artistId: existingAlbum[0].artistId!,
         created: false,
-        coverExtracted: false,
+        coverExtracted,
       };
     }
 
