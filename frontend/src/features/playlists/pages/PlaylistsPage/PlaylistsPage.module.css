@@ -349,7 +349,7 @@
   }
 
   .playlistsPage__content {
-    overflow: visible; /* Permitir que bottom nav sea visible */
+    overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + base padding + player spacer */
   }
