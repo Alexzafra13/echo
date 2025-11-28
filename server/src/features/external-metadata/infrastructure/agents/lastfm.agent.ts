@@ -6,24 +6,44 @@ import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
 
 /**
+ * Artist genre tag from Last.fm
+ */
+export interface LastfmTag {
+  name: string;
+  count: number;
+}
+
+/**
  * Last.fm Agent
- * Retrieves artist biographies and images from Last.fm API
+ * Retrieves artist biographies, images, and genre tags from Last.fm API
  *
  * API Documentation: https://www.last.fm/api
  * Rate Limit: 5 requests per second (we use 200ms delay to be safe)
  * Authentication: API Key required (free tier available)
+ *
+ * Features:
+ * - Multi-language biography support (Spanish preferred, English fallback)
+ * - Genre/tag extraction for artists
+ * - Higher priority than Wikipedia when configured
  *
  * Settings priority: Database (UI) > Environment variable (.env)
  */
 @Injectable()
 export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, OnModuleInit {
   readonly name = 'lastfm';
-  readonly priority = 20; // Secondary priority (after primary sources)
+
+  // Dynamic priority: 5 when enabled (higher than Wikipedia's 10), 100 when disabled
+  get priority(): number {
+    return this.enabled ? 5 : 100;
+  }
 
   private readonly logger = new Logger(LastfmAgent.name);
   private readonly baseUrl = 'https://ws.audioscrobbler.com/2.0/';
   private apiKey: string = '';
   private enabled: boolean = false;
+
+  // Language priority for biographies (Spanish first, then English)
+  private readonly bioLanguages = ['es', 'en'];
 
   constructor(
     private readonly rateLimiter: RateLimiterService,
@@ -50,7 +70,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     if (!this.apiKey) {
       this.logger.warn('Last.fm API key not configured. Agent will be disabled.');
     } else {
-      this.logger.log(`Last.fm agent initialized (enabled: ${this.enabled})`);
+      this.logger.log(`Last.fm agent initialized (enabled: ${this.enabled}, priority: ${this.priority})`);
     }
   }
 
@@ -60,37 +80,92 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
 
   /**
    * Get artist biography from Last.fm
+   * Tries Spanish first, then English as fallback
+   *
    * @param mbid MusicBrainz Artist ID
    * @param name Artist name
    * @returns ArtistBio or null if not found
    */
   async getArtistBio(mbid: string | null, name: string): Promise<ArtistBio | null> {
+    // Try each language in priority order
+    for (const lang of this.bioLanguages) {
+      try {
+        const artistInfo = await this.getArtistInfo(mbid, name, lang);
+        if (!artistInfo?.bio) {
+          continue;
+        }
+
+        const bio = artistInfo.bio;
+        const content = this.cleanHtml(bio.content || '');
+        const summary = this.cleanHtml(bio.summary || '');
+
+        // Skip if no content or content is too short (likely just a stub)
+        if (!content || content.length < 50) {
+          this.logger.debug(`Biography too short for ${name} in ${lang}, trying next language`);
+          continue;
+        }
+
+        this.logger.log(`Retrieved ${lang.toUpperCase()} biography for artist: ${name}`);
+
+        return new ArtistBio(
+          content,
+          summary || null,
+          artistInfo.url || null,
+          this.name
+        );
+      } catch (error) {
+        this.logger.debug(`Error fetching ${lang} biography for ${name}: ${(error as Error).message}`);
+        // Continue to next language
+      }
+    }
+
+    this.logger.debug(`No biography found for: ${name} in any language`);
+    return null;
+  }
+
+  /**
+   * Get artist genre tags from Last.fm
+   * Last.fm tags are user-generated and often more accurate/realistic than MusicBrainz
+   *
+   * @param mbid MusicBrainz Artist ID
+   * @param name Artist name
+   * @returns Array of genre tags sorted by popularity, or null if not found
+   */
+  async getArtistTags(mbid: string | null, name: string): Promise<LastfmTag[] | null> {
     try {
       const artistInfo = await this.getArtistInfo(mbid, name);
-      if (!artistInfo?.bio) {
+      if (!artistInfo?.tags?.tag) {
         return null;
       }
 
-      const bio = artistInfo.bio;
-      const content = this.cleanHtml(bio.content || '');
-      const summary = this.cleanHtml(bio.summary || '');
+      const tags = artistInfo.tags.tag;
 
-      if (!content || content.length === 0) {
-        this.logger.debug(`No biography content found for: ${name}`);
+      // Handle both array and single tag object
+      const tagArray = Array.isArray(tags) ? tags : [tags];
+
+      // Parse and filter tags
+      const parsedTags: LastfmTag[] = tagArray
+        .filter((t: any) => t.name && typeof t.name === 'string')
+        .map((t: any) => ({
+          name: t.name.trim(),
+          count: parseInt(t.count || '0', 10),
+        }))
+        // Filter out non-genre tags (years, locations, etc.)
+        .filter((t: LastfmTag) => !this.isNonGenreTag(t.name))
+        // Sort by count (popularity)
+        .sort((a: LastfmTag, b: LastfmTag) => b.count - a.count)
+        // Limit to top 10
+        .slice(0, 10);
+
+      if (parsedTags.length === 0) {
         return null;
       }
 
-      this.logger.log(`Retrieved biography for artist: ${name}`);
-
-      return new ArtistBio(
-        content,
-        summary || null,
-        artistInfo.url || null,
-        this.name
-      );
+      this.logger.log(`Retrieved ${parsedTags.length} tags for artist: ${name}`);
+      return parsedTags;
     } catch (error) {
       this.logger.error(
-        `Error fetching biography for ${name}: ${(error as Error).message}`,
+        `Error fetching tags for ${name}: ${(error as Error).message}`,
         (error as Error).stack
       );
       return null;
@@ -98,7 +173,34 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
   }
 
   /**
+   * Check if a tag is likely NOT a genre (years, locations, etc.)
+   */
+  private isNonGenreTag(tag: string): boolean {
+    const lowered = tag.toLowerCase();
+
+    // Filter out years (e.g., "2000s", "80s", "1990")
+    if (/^\d{2,4}s?$/.test(tag)) return true;
+
+    // Filter out common non-genre tags
+    const nonGenreTags = [
+      'seen live', 'favorites', 'favourite', 'favorite', 'my music',
+      'all time favorite', 'amazing', 'awesome', 'best', 'love',
+      'loved', 'great', 'good', 'cool', 'nice', 'beautiful',
+      'spotify', 'itunes', 'last.fm', 'soundcloud',
+      'usa', 'uk', 'british', 'american', 'swedish', 'german', 'french',
+      'canadian', 'australian', 'japanese', 'korean',
+      'male vocalists', 'female vocalists', 'singer-songwriter',
+      'under 2000 listeners', 'check out',
+    ];
+
+    return nonGenreTags.some(nt => lowered.includes(nt));
+  }
+
+  /**
    * Get artist images from Last.fm
+   * NOTE: Last.fm deprecated artist images in 2020, this usually returns empty
+   * Use Fanart.tv for images instead
+   *
    * @param mbid MusicBrainz Artist ID
    * @param name Artist name
    * @returns ArtistImages or null if not found
@@ -117,7 +219,12 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
       const images = artistInfo.image;
       const getImageUrl = (size: string): string | null => {
         const img = images.find((i: any) => i.size === size);
-        return img && img['#text'] ? img['#text'] : null;
+        const url = img && img['#text'] ? img['#text'] : null;
+        // Filter out placeholder images (empty or default star image)
+        if (!url || url.includes('2a96cbd8b46e442fc41c2b86b821562f')) {
+          return null;
+        }
+        return url;
       };
 
       const smallUrl = getImageUrl('medium'); // 64x64
@@ -125,8 +232,9 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
       const largeUrl = getImageUrl('extralarge') || getImageUrl('mega'); // 300x300 or larger
 
       // Last.fm doesn't provide background/banner/logo - only profile images
+      // Also, Last.fm deprecated images in 2020, so most will be null
       if (!smallUrl && !mediumUrl && !largeUrl) {
-        this.logger.debug(`No valid images found for: ${name}`);
+        this.logger.debug(`No valid images found for: ${name} (Last.fm deprecated images)`);
         return null;
       }
 
@@ -154,11 +262,13 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
    * Get artist info from Last.fm API
    * @param mbid MusicBrainz Artist ID
    * @param name Artist name
+   * @param lang Language code for biography (es, en, de, fr, it, ja, pl, pt, ru, sv, tr, zh)
    * @returns Artist info object or null
    */
   private async getArtistInfo(
     mbid: string | null,
-    name: string
+    name: string,
+    lang?: string
   ): Promise<any | null> {
     await this.rateLimiter.waitForRateLimit(this.name);
 
@@ -169,6 +279,11 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
       autocorrect: '1',
     });
 
+    // Add language parameter for localized biography
+    if (lang) {
+      params.append('lang', lang);
+    }
+
     // Prefer MBID lookup, fallback to name
     if (mbid) {
       params.append('mbid', mbid);
@@ -177,7 +292,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     }
 
     const url = `${this.baseUrl}?${params.toString()}`;
-    this.logger.debug(`Fetching Last.fm artist info: ${mbid || name}`);
+    this.logger.debug(`Fetching Last.fm artist info: ${mbid || name}${lang ? ` (lang: ${lang})` : ''}`);
 
     const response = await fetchWithTimeout(url, {
         timeout: 8000, // 8 second timeout
@@ -221,8 +336,10 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
       .replace(/&quot;/g, '"')
       .replace(/&#039;/g, "'")
       .replace(/&nbsp;/g, ' ')
-      // Remove "Read more on Last.fm" footer
+      // Remove "Read more on Last.fm" footer (multiple languages)
       .replace(/\s*Read more on Last\.fm\.?\s*$/i, '')
+      .replace(/\s*Leer más en Last\.fm\.?\s*$/i, '')
+      .replace(/\s*Lee más en Last\.fm\.?\s*$/i, '')
       // Clean up extra whitespace
       .replace(/\s+/g, ' ')
       .trim();

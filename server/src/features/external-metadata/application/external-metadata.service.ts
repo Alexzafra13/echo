@@ -11,6 +11,7 @@ import {
   MusicBrainzAlbumMatch,
 } from '../domain/interfaces';
 import { ArtistBio, ArtistImages, AlbumCover } from '../domain/entities';
+import { LastfmAgent, LastfmTag } from '../infrastructure/agents/lastfm.agent';
 import { AgentRegistryService } from '../infrastructure/services/agent-registry.service';
 import { MetadataCacheService } from '../infrastructure/services/metadata-cache.service';
 import { StorageService } from '../infrastructure/services/storage.service';
@@ -160,17 +161,20 @@ export class ExternalMetadataService {
         }
       }
 
-      // Enrich genres from MusicBrainz tags (if MBID is available)
-      if (artist.mbzArtistId) {
-        try {
-          const genresAdded = await this.enrichArtistGenres(artistId, artist.mbzArtistId);
-          if (genresAdded > 0) {
-            this.logger.log(`Added ${genresAdded} genres for artist: ${artist.name}`);
-          }
-        } catch (error) {
-          this.logger.warn(`Error enriching genres for "${artist.name}": ${(error as Error).message}`);
-          errors.push(`Genre enrichment failed: ${(error as Error).message}`);
+      // Enrich genres from Last.fm (primary) or MusicBrainz (fallback)
+      // Last.fm can work with artist name alone, MusicBrainz needs MBID
+      try {
+        const genresAdded = await this.enrichArtistGenres(
+          artistId,
+          artist.mbzArtistId || '',
+          artist.name
+        );
+        if (genresAdded > 0) {
+          this.logger.log(`Added ${genresAdded} genres for artist: ${artist.name}`);
         }
+      } catch (error) {
+        this.logger.warn(`Error enriching genres for "${artist.name}": ${(error as Error).message}`);
+        errors.push(`Genre enrichment failed: ${(error as Error).message}`);
       }
 
       // Enrich biography - Strategy based on source priority
@@ -1111,41 +1115,58 @@ export class ExternalMetadataService {
   }
 
   /**
-   * Enrich artist with genre tags from MusicBrainz
-   * Fetches tags using the artist's MBID and saves them to the database
+   * Enrich artist with genre tags
+   * Priority: Last.fm (if configured) → MusicBrainz (fallback)
+   * Last.fm tags are often more accurate and user-curated
    *
    * @param artistId Internal artist ID
    * @param mbzArtistId MusicBrainz Artist ID
+   * @param artistName Artist name (for Last.fm lookup)
    * @returns Number of genres saved
    */
-  private async enrichArtistGenres(artistId: string, mbzArtistId: string): Promise<number> {
+  private async enrichArtistGenres(
+    artistId: string,
+    mbzArtistId: string,
+    artistName?: string
+  ): Promise<number> {
     try {
-      // Get MB agent
-      const mbAgent = this.agentRegistry.getAgentsFor('IMusicBrainzSearch')[0];
-      if (!mbAgent || !mbAgent.isEnabled()) {
-        return 0;
+      let tagsToSave: Array<{ name: string; count: number }> = [];
+      let source = '';
+
+      // Priority 1: Try Last.fm (if enabled and artist name available)
+      const lastfmAgent = this.agentRegistry.getAgent('lastfm') as LastfmAgent | undefined;
+      if (lastfmAgent?.isEnabled() && artistName) {
+        const lastfmTags = await lastfmAgent.getArtistTags(mbzArtistId, artistName);
+        if (lastfmTags && lastfmTags.length > 0) {
+          tagsToSave = lastfmTags;
+          source = 'Last.fm';
+        }
       }
 
-      // Fetch artist details with tags
-      const artistData = await (mbAgent as any).getArtistByMbid(mbzArtistId);
-      if (!artistData || !artistData.tags || artistData.tags.length === 0) {
-        return 0;
+      // Priority 2: Fallback to MusicBrainz
+      if (tagsToSave.length === 0 && mbzArtistId) {
+        const mbAgent = this.agentRegistry.getAgentsFor('IMusicBrainzSearch')[0];
+        if (mbAgent?.isEnabled()) {
+          const artistData = await (mbAgent as any).getArtistByMbid(mbzArtistId);
+          if (artistData?.tags && artistData.tags.length > 0) {
+            // Only take tags with count >= 3 for quality
+            tagsToSave = artistData.tags
+              .filter((tag: any) => tag.count >= 3)
+              .slice(0, 10);
+            source = 'MusicBrainz';
+          }
+        }
       }
 
-      // Only take top genres (with count >= 3 for quality)
-      const topTags = artistData.tags
-        .filter((tag: any) => tag.count >= 3)
-        .slice(0, 10); // Max 10 genres per artist
-
-      if (topTags.length === 0) {
+      if (tagsToSave.length === 0) {
         return 0;
       }
 
       // Upsert genres and associate with artist
       let savedCount = 0;
-      for (const tag of topTags) {
+      for (const tag of tagsToSave) {
         try {
-          // Normalize genre name
+          // Normalize genre name (capitalize first letter)
           const genreName = tag.name.charAt(0).toUpperCase() + tag.name.slice(1);
 
           // Upsert genre - find or create
@@ -1189,7 +1210,7 @@ export class ExternalMetadataService {
         }
       }
 
-      this.logger.debug(`Saved ${savedCount} genres for artist ${artistId}`);
+      this.logger.debug(`Saved ${savedCount} genres for artist ${artistId} from ${source}`);
       return savedCount;
     } catch (error) {
       this.logger.error(`Error enriching artist genres: ${(error as Error).message}`);
