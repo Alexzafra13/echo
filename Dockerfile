@@ -21,14 +21,17 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY frontend/package.json ./frontend/
 COPY server/package.json ./server/
 
-# Install ALL dependencies with cache mount (much faster rebuilds)
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+# Install ALL dependencies (no cache to ensure fresh builds)
+RUN pnpm install --frozen-lockfile
 
 # Build Frontend
 WORKDIR /build/frontend
 COPY frontend/ ./
+# Verify source file has proxy code before building
+RUN grep -q "getProxiedStreamUrl" src/features/player/hooks/useRadioPlayer.ts && echo "✓ Proxy code found in source" || (echo "✗ Proxy code NOT found!" && exit 1)
 RUN pnpm build
+# Verify built JS has proxy code
+RUN grep -q "radio/stream/proxy" dist/assets/*.js && echo "✓ Proxy code found in build" || echo "⚠ Proxy code not in build (might be minified differently)"
 
 # Build Backend
 WORKDIR /build/server
