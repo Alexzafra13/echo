@@ -14,22 +14,22 @@ cd echo
 pnpm quickstart
 ```
 
-El script verifica requisitos y ejecuta automáticamente:
+El script:
 1. Verifica Node.js >= 22, pnpm, Docker
 2. Instala dependencias
 3. Levanta PostgreSQL + Redis
-4. Genera `server/.env` con JWT secrets seguros
-5. Aplica migraciones y seed
+4. Genera `server/.env` con JWT secrets
+5. Aplica migraciones
 
 ## Desarrollo
 
 ```bash
-pnpm dev:all    # Frontend + Backend con hot-reload
+pnpm dev:all    # Frontend (5173) + Backend (3000)
 ```
 
 ## Comandos
 
-### Root (monorepo)
+### Monorepo (raíz)
 
 | Comando | Descripción |
 |---------|-------------|
@@ -50,7 +50,8 @@ pnpm dev:all    # Frontend + Backend con hot-reload
 | `pnpm dev` | Desarrollo con hot-reload |
 | `pnpm build` | Build producción |
 | `pnpm start` | Ejecutar build |
-| `pnpm db:studio` | Abrir Prisma Studio |
+| `pnpm db:studio` | Abrir Drizzle Studio |
+| `pnpm db:push` | Sincronizar schema |
 | `pnpm test` | Ejecutar tests |
 | `pnpm lint` | Linter |
 
@@ -71,19 +72,46 @@ pnpm dev:all    # Frontend + Backend con hot-reload
 | Frontend | http://localhost:5173 |
 | Backend | http://localhost:3000 |
 | Swagger | http://localhost:3000/api/docs |
-| Prisma Studio | http://localhost:5555 |
+| Drizzle Studio | `pnpm db:studio` |
 
 ## Estructura
 
 ```
 echo/
-├── frontend/           # React + Vite
-│   └── src/features/   # Módulos por funcionalidad
-├── server/             # NestJS
-│   └── src/features/   # Módulos por funcionalidad
-├── docker-compose.yml      # Producción
-└── docker-compose.dev.yml  # Solo DB/Redis para desarrollo
+├── frontend/                 # React + Vite
+│   └── src/
+│       ├── app/              # Rutas y providers
+│       ├── features/         # Módulos por funcionalidad
+│       └── shared/           # Componentes y utils compartidos
+├── server/                   # NestJS + Fastify
+│   └── src/
+│       ├── features/         # Módulos por funcionalidad
+│       ├── infrastructure/   # DB, cache, websocket
+│       └── shared/           # Guards, decorators, utils
+├── nginx/                    # Config de ejemplo para producción
+├── docs/                     # Documentación
+├── docker-compose.yml        # Producción
+└── docker-compose.dev.yml    # Solo DB/Redis para desarrollo
 ```
+
+## Stack técnico
+
+### Backend
+- **Framework:** NestJS + Fastify
+- **ORM:** Drizzle ORM
+- **Base de datos:** PostgreSQL 16
+- **Caché:** Redis 7
+- **Auth:** JWT (access + refresh tokens)
+- **Validación:** class-validator
+- **Docs:** Swagger/OpenAPI
+
+### Frontend
+- **Framework:** React 18
+- **Build:** Vite
+- **Estado:** Zustand
+- **Data fetching:** TanStack Query
+- **Rutas:** Wouter
+- **WebSocket:** Socket.io
 
 ## Producción local
 
@@ -95,3 +123,29 @@ pnpm docker:down    # Parar
 ```
 
 Disponible en http://localhost:4567
+
+## Tests
+
+```bash
+# Backend
+cd server && pnpm test
+pnpm test:cov       # Con cobertura
+
+# Frontend
+cd frontend && pnpm test
+pnpm test:ui        # Con UI
+```
+
+## Migraciones de BD
+
+```bash
+# Crear migración después de cambiar schema
+cd server
+pnpm db:generate
+
+# Aplicar migraciones
+pnpm db:migrate
+
+# Push directo (desarrollo)
+pnpm db:push
+```
