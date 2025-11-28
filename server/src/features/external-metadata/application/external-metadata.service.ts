@@ -835,47 +835,17 @@ export class ExternalMetadataService {
   }
 
   /**
-   * Download album cover and save it
-   * Saves to album folder as cover.jpg (if configured) or to metadata storage
-   * Priority: ENV vars > Database settings > Defaults
+   * Download album cover to metadata storage
+   * Always saves to {DATA_PATH}/metadata/albums/{albumId}/ for security
+   * Music folder should remain read-only to prevent accidental modifications
    */
   private async downloadAlbumCover(
     albumId: string,
     cover: AlbumCover
   ): Promise<string> {
-    // Priority: ENV > DB > default
-    const envSaveInFolder = this.config.get<string>('METADATA_SAVE_COVERS_IN_ALBUM_FOLDER');
-    const saveInFolder = envSaveInFolder !== undefined
-      ? envSaveInFolder === 'true'
-      : await this.settings.getBoolean(
-          'metadata.download.save_in_album_folder',
-          false  // Default: save to metadata storage (music folder is read-only)
-        );
-
-    let coverPath: string;
-
-    if (saveInFolder) {
-      // Get album to find its folder path
-      const trackResult = await this.drizzle.db
-        .select({ path: tracks.path })
-        .from(tracks)
-        .where(eq(tracks.albumId, albumId))
-        .limit(1);
-
-      if (trackResult[0]) {
-        // Get album folder from first track path
-        const albumFolder = path.dirname(trackResult[0].path);
-        coverPath = path.join(albumFolder, 'cover.jpg');
-      } else {
-        // Fallback to metadata storage
-        const metadataPath = await this.storage.getAlbumMetadataPath(albumId);
-        coverPath = path.join(metadataPath, 'cover.jpg');
-      }
-    } else {
-      // Save to metadata storage
-      const metadataPath = await this.storage.getAlbumMetadataPath(albumId);
-      coverPath = path.join(metadataPath, 'cover.jpg');
-    }
+    // Always save to metadata storage (not music folder) for security
+    const metadataPath = await this.storage.getAlbumMetadataPath(albumId);
+    const coverPath = path.join(metadataPath, 'cover.jpg');
 
     // Download the best quality cover (large)
     await this.imageDownload.downloadAndSave(cover.largeUrl, coverPath);
