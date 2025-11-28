@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { AlertTriangle, UserPlus } from 'lucide-react';
 import { Modal } from './Modal';
 
 describe('Modal', () => {
@@ -133,6 +134,55 @@ describe('Modal', () => {
       unmount();
 
       expect(document.body.style.overflow).toBe('');
+    });
+  });
+
+  describe('custom headers', () => {
+    it('should render icon when provided', () => {
+      render(<Modal {...defaultProps} icon={AlertTriangle} />);
+
+      // Icon should be rendered (lucide-react renders as SVG)
+      const modalContent = document.querySelector('[class*="modalIcon"]');
+      expect(modalContent).toBeTruthy();
+    });
+
+    it('should render subtitle when provided', () => {
+      render(<Modal {...defaultProps} subtitle="This is a subtitle" />);
+
+      expect(screen.getByText('This is a subtitle')).toBeInTheDocument();
+    });
+
+    it('should render both icon and subtitle together', () => {
+      render(
+        <Modal
+          {...defaultProps}
+          icon={UserPlus}
+          subtitle="Create a new user account"
+        />
+      );
+
+      expect(screen.getByText('Create a new user account')).toBeInTheDocument();
+      const modalIcon = document.querySelector('[class*="modalIcon"]');
+      expect(modalIcon).toBeTruthy();
+    });
+
+    it('should work with ReactNode as title', () => {
+      render(
+        <Modal
+          {...defaultProps}
+          title={<span data-testid="custom-title">Custom Title</span>}
+        />
+      );
+
+      expect(screen.getByTestId('custom-title')).toBeInTheDocument();
+    });
+
+    it('should work without icon and subtitle (backwards compatible)', () => {
+      render(<Modal {...defaultProps} />);
+
+      expect(screen.getByText('Test Modal')).toBeInTheDocument();
+      const modalIcon = document.querySelector('[class*="modalIcon"]');
+      expect(modalIcon).toBeFalsy();
     });
   });
 });

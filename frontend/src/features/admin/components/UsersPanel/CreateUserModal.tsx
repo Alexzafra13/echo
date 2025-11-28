@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { UserPlus, X } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { UserPlus } from 'lucide-react';
+import { Button, Modal } from '@shared/components/ui';
 import { useCreateUser } from '../../hooks/useUsers';
+import { logger } from '@shared/utils/logger';
 import styles from './UserFormModal.module.css';
 
 interface CreateUserModalProps {
@@ -51,35 +52,25 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
       });
 
       onSuccess(result.user.username, result.temporaryPassword);
-    } catch (error: any) {
-      if (import.meta.env.DEV) {
-        console.error('Error creating user:', error);
-      }
+    } catch (error: unknown) {
+      logger.error('Error creating user:', error);
+      const errorMessage = error instanceof Error && 'response' in error
+        ? (error as any).response?.data?.message
+        : 'Error al crear usuario';
       setErrors({
-        submit: error.response?.data?.message || 'Error al crear usuario',
+        submit: errorMessage || 'Error al crear usuario',
       });
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <div className={styles.iconContainer}>
-              <UserPlus size={24} />
-            </div>
-            <div>
-              <h2 className={styles.title}>Crear Usuario</h2>
-              <p className={styles.subtitle}>
-                Se generará una contraseña temporal automáticamente
-              </p>
-            </div>
-          </div>
-          <button className={styles.closeButton} onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Crear Usuario"
+      icon={UserPlus}
+      subtitle="Se generará una contraseña temporal automáticamente"
+    >
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
@@ -173,7 +164,6 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
