@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { albums, artists } from '@infrastructure/database/schema';
-import { isNull, eq, sql, and, or } from 'drizzle-orm';
+import { isNull, sql } from 'drizzle-orm';
 import { ExternalMetadataService } from '../../application/external-metadata.service';
 import { MetadataEnrichmentGateway } from '../../presentation/metadata-enrichment.gateway';
 import { SettingsService } from './settings.service';
@@ -168,15 +168,7 @@ export class EnrichmentQueueService implements OnModuleInit {
       this.drizzle.db
         .select({ count: sql<number>`count(*)::int` })
         .from(albums)
-        .where(
-          or(
-            isNull(albums.externalCoverPath),
-            and(
-              sql`${albums.externalCoverPath} IS NOT NULL`,
-              isNull(albums.externalInfoUpdatedAt),
-            ),
-          ),
-        ),
+        .where(isNull(albums.externalInfoUpdatedAt)),
     ]);
 
     const pendingArtists = pendingArtistsResult[0]?.count ?? 0;
@@ -360,15 +352,7 @@ export class EnrichmentQueueService implements OnModuleInit {
         name: albums.name,
       })
       .from(albums)
-      .where(
-        or(
-          isNull(albums.externalCoverPath),
-          and(
-            sql`${albums.externalCoverPath} IS NOT NULL`,
-            isNull(albums.externalInfoUpdatedAt),
-          ),
-        ),
-      )
+      .where(isNull(albums.externalInfoUpdatedAt))
       .orderBy(sql`${albums.createdAt} DESC`)
       .limit(1);
 
