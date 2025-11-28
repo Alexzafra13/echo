@@ -10,6 +10,74 @@ Servidor de streaming de música autoalojado.
 git clone https://github.com/Alexzafra13/echo.git
 cd echo
 docker compose up -d
+
+# =============================================
+# Echo Music Server
+# =============================================
+# docker compose up -d
+# Abre http://localhost:4567
+# =============================================
+
+version: "3.8"
+
+services:
+  echo:
+    image: ghcr.io/alexzafra13/echo:latest
+    container_name: echo
+    ports:
+      - "4567:4567"
+    volumes:
+      - ./data:/app/data          # Config, metadatos, covers
+      - /mnt:/mnt:ro              # Montar /mnt del host
+      - /media:/media:ro          # Montar /media del host
+      # Añade más rutas si tu música está en otro sitio:
+      # - /home/usuario/Musica:/music:ro
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://echo:echo_music_server@postgres:5432/echo
+      REDIS_HOST: redis
+      REDIS_PASSWORD: echo_music_server
+      DATA_PATH: /app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: echo-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: echo
+      POSTGRES_PASSWORD: echo_music_server
+      POSTGRES_DB: echo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U echo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis
+    command: redis-server --requirepass echo_music_server
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "echo_music_server", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
 ```
 
 ### Opción 2: Instalación limpia
