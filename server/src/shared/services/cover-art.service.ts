@@ -36,14 +36,20 @@ export class CoverArtService {
 
   constructor(private readonly configService: ConfigService) {
     // Directory where covers will be cached
-    // Priority: COVERS_PATH > UPLOAD_PATH/covers > ./uploads/covers
+    // Priority: COVERS_PATH > DATA_PATH/uploads/covers > UPLOAD_PATH/covers > ./uploads/covers
     const coversPath = this.configService.get<string>('COVERS_PATH');
     if (coversPath) {
       this.coversPath = coversPath;
     } else {
-      const uploadPath = this.configService.get<string>('UPLOAD_PATH', './uploads');
-      this.coversPath = path.join(uploadPath, 'covers');
+      const dataPath = this.configService.get<string>('DATA_PATH');
+      if (dataPath) {
+        this.coversPath = path.join(dataPath, 'uploads', 'covers');
+      } else {
+        const uploadPath = this.configService.get<string>('UPLOAD_PATH', './uploads');
+        this.coversPath = path.join(uploadPath, 'covers');
+      }
     }
+    this.logger.log(`Covers cache directory: ${this.coversPath}`);
     this.ensureCoversDirectory();
   }
 
