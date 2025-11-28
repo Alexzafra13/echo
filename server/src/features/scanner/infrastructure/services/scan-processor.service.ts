@@ -437,6 +437,12 @@ export class ScanProcessorService implements OnModuleInit {
       let coverExtracted = false;
       const updates: any = {};
 
+      // Log existing album state for debugging
+      this.logger.debug(
+        `Found existing album "${existingAlbum[0].name}" (ID: ${existingAlbum[0].id}), ` +
+        `coverArtPath: ${existingAlbum[0].coverArtPath === null ? 'NULL' : existingAlbum[0].coverArtPath === undefined ? 'UNDEFINED' : `"${existingAlbum[0].coverArtPath}"`}`
+      );
+
       // Update MBID if provided and the album doesn't have one yet
       if (metadata.mbzAlbumId && !existingAlbum[0].mbzAlbumId) {
         updates.mbzAlbumId = metadata.mbzAlbumId;
@@ -446,16 +452,24 @@ export class ScanProcessorService implements OnModuleInit {
 
       // Extract cover if missing (Navidrome-style: always check and fill gaps)
       if (!existingAlbum[0].coverArtPath) {
+        this.logger.debug(`Attempting to extract cover for existing album "${existingAlbum[0].name}" from: ${trackPath}`);
+
         const coverPath = await this.coverArtService.extractAndCacheCover(
           existingAlbum[0].id,
           trackPath,
         );
 
+        this.logger.debug(`Cover extraction result for "${existingAlbum[0].name}": ${coverPath || 'NULL'}`);
+
         if (coverPath) {
           updates.coverArtPath = coverPath;
           coverExtracted = true;
-          this.logger.debug(`Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`);
+          this.logger.log(`✅ Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`);
+        } else {
+          this.logger.warn(`❌ No cover found for existing album "${existingAlbum[0].name}"`);
         }
+      } else {
+        this.logger.debug(`Skipping cover extraction for "${existingAlbum[0].name}" - already has cover: ${existingAlbum[0].coverArtPath}`);
       }
 
       // Apply updates if any
