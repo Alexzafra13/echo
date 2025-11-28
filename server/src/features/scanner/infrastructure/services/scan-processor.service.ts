@@ -18,6 +18,7 @@ import { CachedAlbumRepository } from '@features/albums/infrastructure/persisten
 import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { MbidAutoSearchService } from '@features/external-metadata/infrastructure/services/mbid-auto-search.service';
+import { EnrichmentQueueService } from '@features/external-metadata/infrastructure/services/enrichment-queue.service';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import * as path from 'path';
 
@@ -69,6 +70,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly externalMetadataService: ExternalMetadataService,
     private readonly settingsService: SettingsService,
     private readonly mbidAutoSearchService: MbidAutoSearchService,
+    private readonly enrichmentQueueService: EnrichmentQueueService,
     private readonly logService: LogService,
     @InjectPinoLogger(ScanProcessorService.name)
     private readonly logger: PinoLogger,
@@ -1025,7 +1027,8 @@ export class ScanProcessorService implements OnModuleInit {
 
   /**
    * Realiza auto-enriquecimiento de metadatos externos si está habilitado
-   * Se ejecuta después de completar un escaneo exitoso
+   * Se ejecuta después de completar un escaneo exitoso.
+   * Inicia la cola de enriquecimiento continuo en background.
    */
   private async performAutoEnrichment(
     artistsCreated: number,
@@ -1039,191 +1042,28 @@ export class ScanProcessorService implements OnModuleInit {
       );
 
       if (!autoEnrichEnabled) {
-        this.logger.debug('Auto-enriquecimiento deshabilitado, omitiendo');
+        this.logger.info('Auto-enriquecimiento deshabilitado en configuración');
         return;
       }
 
-      const batchSize = await this.settingsService.getNumber(
-        'metadata.auto_enrich.batch_size',
-        10,
-      );
+      // Iniciar cola de enriquecimiento continuo
+      // Esto procesará TODOS los items pendientes en background, uno a uno,
+      // respetando los rate limits de las APIs externas
+      const result = await this.enrichmentQueueService.startEnrichmentQueue();
 
-      this.logger.info(
-        `Iniciando auto-enriquecimiento (batch size: ${batchSize})`,
-      );
-
-      // Obtener artistas recientes sin metadatos externos (ordenar por fecha de creación desc, limit por batch size)
-      // Solo seleccionar artistas que NUNCA han sido procesados (mbidSearchedAt es NULL)
-      // Esto evita loops infinitos - cada artista solo se procesa UNA VEZ
-      const artistsToEnrich = await this.drizzle.db
-        .select({
-          id: artists.id,
-          name: artists.name,
-          mbzArtistId: artists.mbzArtistId,
-          mbidSearchedAt: artists.mbidSearchedAt,
-          biography: artists.biography,
-        })
-        .from(artists)
-        .where(
-          // Nunca buscado - intentar enriquecer UNA VEZ
-          isNull(artists.mbidSearchedAt),
-        )
-        .orderBy(sql`${artists.createdAt} DESC`)
-        .limit(batchSize);
-
-      // Enriquecer artistas en background (no esperar)
-      if (artistsToEnrich.length > 0) {
-        const withoutMbid = artistsToEnrich.filter(a => !a.mbzArtistId).length;
-        const withoutBio = artistsToEnrich.filter(a => !a.biography).length;
+      if (result.started) {
         this.logger.info(
-          `🎨 Auto-enriquecimiento: ${artistsToEnrich.length} artistas (${withoutMbid} sin MBID, ${withoutBio} sin biografía)`,
+          `🚀 Cola de enriquecimiento iniciada: ${result.pending} items pendientes`
         );
-
-        // Log each artist being enriched for debugging
-        artistsToEnrich.forEach(a => {
-          this.logger.info(
-            `   📌 Artista: "${a.name}" - MBID: ${a.mbzArtistId ? 'SI' : 'NO'}, Bio: ${a.biography ? 'SI' : 'NO'}, Buscado: ${a.mbidSearchedAt ? 'SI' : 'NO'}`
-          );
-        });
-
-        // Ejecutar en background sin bloquear
-        this.enrichArtistsInBackground(artistsToEnrich).catch((error) => {
-          this.logger.error(
-            `Error en auto-enriquecimiento de artistas: ${(error as Error).message}`,
-            (error as Error).stack,
-          );
-        });
       } else {
-        this.logger.info('🎨 Auto-enriquecimiento: No hay artistas que necesiten enriquecimiento');
+        this.logger.info(`ℹ️ ${result.message}`);
       }
-
-      // Obtener álbumes recientes sin portadas externas o con enriquecimiento incompleto
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-      const albumsToEnrich = await this.drizzle.db
-        .select({
-          id: albums.id,
-          name: albums.name,
-          mbzAlbumId: albums.mbzAlbumId,
-          mbidSearchedAt: albums.mbidSearchedAt,
-          externalCoverPath: albums.externalCoverPath,
-          externalInfoUpdatedAt: albums.externalInfoUpdatedAt,
-        })
-        .from(albums)
-        .where(
-          or(
-            // No tiene portada externa
-            isNull(albums.externalCoverPath),
-            // Sin MBID y nunca buscado - intentar buscar UNA VEZ
-            and(isNull(albums.mbzAlbumId), isNull(albums.mbidSearchedAt)),
-            // Tiene path pero nunca se completó el enriquecimiento
-            and(
-              sql`${albums.externalCoverPath} IS NOT NULL`,
-              isNull(albums.externalInfoUpdatedAt),
-            ),
-          ),
-        )
-        .orderBy(sql`${albums.createdAt} DESC`)
-        .limit(batchSize);
-
-      // Enriquecer álbumes en background (no esperar)
-      if (albumsToEnrich.length > 0) {
-        const withoutCover = albumsToEnrich.filter(a => !a.externalCoverPath).length;
-        const withoutMbid = albumsToEnrich.filter(a => !a.mbzAlbumId && !a.mbidSearchedAt).length;
-        const withIncomplete = albumsToEnrich.filter(a => a.externalCoverPath && !a.externalInfoUpdatedAt).length;
-
-        this.logger.info(
-          `🖼️ Auto-enriquecimiento: ${albumsToEnrich.length} álbumes ` +
-          `(${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos)`
-        );
-
-        // Log each album being enriched for debugging
-        albumsToEnrich.forEach(a => {
-          this.logger.info(
-            `   💿 Álbum: "${a.name}" - MBID: ${a.mbzAlbumId ? 'SI' : 'NO'}, Cover: ${a.externalCoverPath ? 'SI' : 'NO'}, Buscado: ${a.mbidSearchedAt ? 'SI' : 'NO'}`
-          );
-        });
-
-        // Ejecutar en background sin bloquear
-        this.enrichAlbumsInBackground(albumsToEnrich).catch((error) => {
-          this.logger.error(
-            `Error en auto-enriquecimiento de álbumes: ${(error as Error).message}`,
-            (error as Error).stack,
-          );
-        });
-      } else {
-        this.logger.info('🖼️ Auto-enriquecimiento: No hay álbumes que necesiten enriquecimiento');
-      }
-
-      this.logger.info('Auto-enriquecimiento iniciado en background');
     } catch (error) {
       this.logger.error(
-        `Error al iniciar auto-enriquecimiento: ${(error as Error).message}`,
+        `Error al iniciar cola de enriquecimiento: ${(error as Error).message}`,
         (error as Error).stack,
       );
       // No lanzar error para no afectar el escaneo principal
-    }
-  }
-
-  /**
-   * Enriquece artistas en background
-   */
-  private async enrichArtistsInBackground(
-    artists: Array<{ id: string; name: string; mbzArtistId: string | null; mbidSearchedAt: Date | null; biography: string | null }>,
-  ): Promise<void> {
-    for (const artist of artists) {
-      try {
-        await this.externalMetadataService.enrichArtist(artist.id, false);
-        this.logger.debug(`Artista enriquecido: ${artist.name}`);
-      } catch (error) {
-        this.logger.warn(
-          `Error enriqueciendo artista ${artist.name}: ${(error as Error).message}`,
-        );
-      }
-    }
-  }
-
-  /**
-   * Enriquece álbumes en background
-   */
-  private async enrichAlbumsInBackground(
-    albums: Array<{
-      id: string;
-      name: string;
-      mbzAlbumId: string | null;
-      mbidSearchedAt: Date | null;
-      externalCoverPath?: string | null;
-      externalInfoUpdatedAt?: Date | null;
-    }>,
-  ): Promise<void> {
-    const fs = await import('fs/promises');
-    const path = await import('path');
-
-    for (const album of albums) {
-      try {
-        // Si tiene cover path, verificar si el archivo existe físicamente
-        let needsRefresh = false;
-        if (album.externalCoverPath) {
-          try {
-            const fullPath = path.join(process.cwd(), album.externalCoverPath);
-            await fs.access(fullPath);
-            // El archivo existe, no necesita refresh
-          } catch {
-            // El archivo no existe, necesita refresh
-            needsRefresh = true;
-            this.logger.debug(
-              `Cover file missing for album "${album.name}", will re-download`
-            );
-          }
-        }
-
-        await this.externalMetadataService.enrichAlbum(album.id, needsRefresh);
-        this.logger.debug(`Album enriched: ${album.name}`);
-      } catch (error) {
-        this.logger.warn(
-          `Error enriching album ${album.name}: ${(error as Error).message}`,
-        );
-      }
     }
   }
 
