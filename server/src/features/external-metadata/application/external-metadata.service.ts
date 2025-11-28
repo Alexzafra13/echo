@@ -174,7 +174,7 @@ export class ExternalMetadataService {
       }
 
       // Enrich biography - Strategy based on source priority
-      const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh);
+      const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh, artistId);
       if (bio) {
         const hasExistingBio = !!artist.biography;
         const isMusicBrainzSource = bio.source === 'musicbrainz';
@@ -255,7 +255,7 @@ export class ExternalMetadataService {
         !artist.externalLogoPath;
 
       if (needsImages) {
-        const images = await this.getArtistImages(artist.mbzArtistId, artist.name, forceRefresh);
+        const images = await this.getArtistImages(artist.mbzArtistId, artist.name, forceRefresh, artistId);
         if (images) {
           // Download images locally (V2)
           const localPaths = await this.downloadArtistImages(artistId, images);
@@ -511,7 +511,8 @@ export class ExternalMetadataService {
           artistData?.mbzArtistId || null, // Pass artist MBID for Fanart.tv
           artistName,
           album.name,
-          forceRefresh
+          forceRefresh,
+          albumId
         );
 
         if (cover) {
@@ -856,11 +857,12 @@ export class ExternalMetadataService {
   private async getArtistBio(
     mbzArtistId: string | null,
     name: string,
-    forceRefresh: boolean
+    forceRefresh: boolean,
+    artistId?: string
   ): Promise<ArtistBio | null> {
-    // Check cache first
-    if (!forceRefresh) {
-      const cached = await this.cache.get('artist', mbzArtistId || name, 'bio');
+    // Check cache first (use internal artistId for consistent UUID-based caching)
+    if (!forceRefresh && artistId) {
+      const cached = await this.cache.get('artist', artistId, 'bio');
       if (cached) {
         return new ArtistBio(
           cached.content,
@@ -880,13 +882,15 @@ export class ExternalMetadataService {
         const bio = await agent.getArtistBio(mbzArtistId, name);
 
         if (bio && bio.hasContent()) {
-          // Cache the result
-          await this.cache.set('artist', mbzArtistId || name, bio.source, {
-            content: bio.content,
-            summary: bio.summary,
-            url: bio.url,
-            source: bio.source,
-          });
+          // Cache the result (use internal artistId for consistent caching)
+          if (artistId) {
+            await this.cache.set('artist', artistId, bio.source, {
+              content: bio.content,
+              summary: bio.summary,
+              url: bio.url,
+              source: bio.source,
+            });
+          }
 
           return bio;
         }
@@ -906,11 +910,12 @@ export class ExternalMetadataService {
   private async getArtistImages(
     mbzArtistId: string | null,
     name: string,
-    forceRefresh: boolean
+    forceRefresh: boolean,
+    artistId?: string
   ): Promise<ArtistImages | null> {
-    // Check cache first
-    if (!forceRefresh) {
-      const cached = await this.cache.get('artist', mbzArtistId || name, 'images');
+    // Check cache first (use internal artistId for consistent UUID-based caching)
+    if (!forceRefresh && artistId) {
+      const cached = await this.cache.get('artist', artistId, 'images');
       if (cached) {
         return new ArtistImages(
           cached.smallUrl,
@@ -962,16 +967,18 @@ export class ExternalMetadataService {
     }
 
     if (mergedImages) {
-      // Cache the merged result
-      await this.cache.set('artist', mbzArtistId || name, mergedImages.source, {
-        smallUrl: mergedImages.smallUrl,
-        mediumUrl: mergedImages.mediumUrl,
-        largeUrl: mergedImages.largeUrl,
-        backgroundUrl: mergedImages.backgroundUrl,
-        bannerUrl: mergedImages.bannerUrl,
-        logoUrl: mergedImages.logoUrl,
-        source: mergedImages.source,
-      });
+      // Cache the merged result (use internal artistId for consistent caching)
+      if (artistId) {
+        await this.cache.set('artist', artistId, mergedImages.source, {
+          smallUrl: mergedImages.smallUrl,
+          mediumUrl: mergedImages.mediumUrl,
+          largeUrl: mergedImages.largeUrl,
+          backgroundUrl: mergedImages.backgroundUrl,
+          bannerUrl: mergedImages.bannerUrl,
+          logoUrl: mergedImages.logoUrl,
+          source: mergedImages.source,
+        });
+      }
 
       return mergedImages;
     }
@@ -989,11 +996,12 @@ export class ExternalMetadataService {
     mbzArtistId: string | null,
     artist: string,
     album: string,
-    forceRefresh: boolean
+    forceRefresh: boolean,
+    albumId?: string
   ): Promise<AlbumCover | null> {
-    // Check cache first
-    if (!forceRefresh) {
-      const cached = await this.cache.get('album', mbzAlbumId || `${artist}:${album}`, 'cover');
+    // Check cache first (use internal albumId for consistent UUID-based caching)
+    if (!forceRefresh && albumId) {
+      const cached = await this.cache.get('album', albumId, 'cover');
       if (cached) {
         return new AlbumCover(
           cached.smallUrl,
@@ -1017,13 +1025,15 @@ export class ExternalMetadataService {
           if (fanartAgent.getAlbumCoverByArtist) {
             const cover = await fanartAgent.getAlbumCoverByArtist(mbzArtistId, mbzAlbumId, artist, album);
             if (cover) {
-              // Cache the result
-              await this.cache.set('album', mbzAlbumId || `${artist}:${album}`, cover.source, {
-                smallUrl: cover.smallUrl,
-                mediumUrl: cover.mediumUrl,
-                largeUrl: cover.largeUrl,
-                source: cover.source,
-              });
+              // Cache the result (use internal albumId for consistent caching)
+              if (albumId) {
+                await this.cache.set('album', albumId, cover.source, {
+                  smallUrl: cover.smallUrl,
+                  mediumUrl: cover.mediumUrl,
+                  largeUrl: cover.largeUrl,
+                  source: cover.source,
+                });
+              }
               return cover;
             }
           }
@@ -1034,13 +1044,15 @@ export class ExternalMetadataService {
         const cover = await agent.getAlbumCover(mbzAlbumId, artist, album);
 
         if (cover) {
-          // Cache the result
-          await this.cache.set('album', mbzAlbumId || `${artist}:${album}`, cover.source, {
-            smallUrl: cover.smallUrl,
-            mediumUrl: cover.mediumUrl,
-            largeUrl: cover.largeUrl,
-            source: cover.source,
-          });
+          // Cache the result (use internal albumId for consistent caching)
+          if (albumId) {
+            await this.cache.set('album', albumId, cover.source, {
+              smallUrl: cover.smallUrl,
+              mediumUrl: cover.mediumUrl,
+              largeUrl: cover.largeUrl,
+              source: cover.source,
+            });
+          }
 
           return cover;
         }
