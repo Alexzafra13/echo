@@ -55,8 +55,38 @@ export function useRadioPlayer({
     };
 
     // Error handler for radio loading issues
-    audio.onerror = () => {
-      logger.error('[Player] Failed to load radio station:', station.name);
+    audio.onerror = (event) => {
+      // Get detailed error information from MediaError
+      const mediaError = audio.error;
+      let errorMessage = 'Unknown error';
+      let errorCode = 'UNKNOWN';
+
+      if (mediaError) {
+        switch (mediaError.code) {
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMessage = 'Playback aborted by user';
+            errorCode = 'ABORTED';
+            break;
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMessage = 'Network error - stream may be offline or unreachable';
+            errorCode = 'NETWORK';
+            break;
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMessage = 'Decoding error - stream format may not be supported';
+            errorCode = 'DECODE';
+            break;
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage = 'Stream format not supported by browser';
+            errorCode = 'FORMAT';
+            break;
+        }
+      }
+
+      logger.error(
+        `[Player] Failed to load radio station: ${station.name}`,
+        `Error: ${errorCode} - ${errorMessage}`,
+        `URL: ${streamUrl}`
+      );
       audio.onerror = null;
     };
 
