@@ -251,4 +251,80 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       `Cache invalidation: ${data.entityType}:${data.entityId} - ${data.reason}`
     );
   }
+
+  // ========================
+  // ENRICHMENT QUEUE EVENTS
+  // ========================
+
+  /**
+   * Emit enrichment queue started event
+   */
+  emitQueueStarted(data: {
+    totalPending: number;
+    pendingArtists: number;
+    pendingAlbums: number;
+  }) {
+    this.server.emit('queue:started', {
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`Queue started: ${data.totalPending} items pending`);
+  }
+
+  /**
+   * Emit enrichment queue stopped event
+   */
+  emitQueueStopped(data: { processedInSession: number }) {
+    this.server.emit('queue:stopped', {
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`Queue stopped: ${data.processedInSession} items processed`);
+  }
+
+  /**
+   * Emit enrichment queue item completed event
+   */
+  emitQueueItemCompleted(data: {
+    itemType: 'artist' | 'album';
+    entityName: string;
+    processedInSession: number;
+    totalPending: number;
+    estimatedTimeRemaining: string | null;
+  }) {
+    this.server.emit('queue:item:completed', {
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.debug(`Queue item completed: ${data.entityName}`);
+  }
+
+  /**
+   * Emit enrichment queue item error event
+   */
+  emitQueueItemError(data: {
+    itemType: 'artist' | 'album';
+    entityName: string;
+    error: string;
+  }) {
+    this.server.emit('queue:item:error', {
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.error(`Queue item error: ${data.entityName} - ${data.error}`);
+  }
+
+  /**
+   * Emit enrichment queue completed event
+   */
+  emitQueueCompleted(data: {
+    processedInSession: number;
+    duration: string;
+  }) {
+    this.server.emit('queue:completed', {
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`Queue completed: ${data.processedInSession} items in ${data.duration}`);
+  }
 }
