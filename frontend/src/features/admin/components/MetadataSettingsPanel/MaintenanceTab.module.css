@@ -257,6 +257,75 @@
   color: #f59e0b;
 }
 
+/* Paths List */
+.pathsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.pathItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.pathItem:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pathIcon {
+  flex-shrink: 0;
+  color: var(--color-primary, #ff6b6b);
+  opacity: 0.8;
+}
+
+.pathInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pathLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #b8bcc8);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pathValue {
+  font-size: 13px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: var(--color-text-primary, #ffffff);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.pathBadge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border-radius: 4px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .statsGrid {

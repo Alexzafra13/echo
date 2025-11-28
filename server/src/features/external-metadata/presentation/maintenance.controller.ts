@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CleanupService } from '../infrastructure/services/cleanup.service';
@@ -51,6 +52,7 @@ export class MaintenanceController {
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly enrichmentQueue: EnrichmentQueueService,
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -729,6 +731,53 @@ export class MaintenanceController {
       };
     } catch (error) {
       this.logger.error(`Error stopping queue: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene las rutas de almacenamiento configuradas
+   * GET /api/maintenance/storage/paths
+   */
+  @Get('storage/paths')
+  @ApiOperation({
+    summary: 'Get storage paths',
+    description: 'Returns configured storage paths for data, music, metadata, etc. (admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Storage paths configuration',
+    schema: {
+      type: 'object',
+      properties: {
+        dataPath: { type: 'string', description: 'Base data directory' },
+        musicPath: { type: 'string', description: 'Music library path (read-only)' },
+        metadataPath: { type: 'string', description: 'External metadata storage' },
+        albumCoversPath: { type: 'string', description: 'Album covers directory' },
+        artistImagesPath: { type: 'string', description: 'Artist images directory' },
+        userUploadsPath: { type: 'string', description: 'User uploads directory' },
+        isReadOnlyMusic: { type: 'boolean', description: 'Whether music folder is read-only' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async getStoragePaths() {
+    try {
+      const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+      const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
+      const metadataBasePath = await this.storage.getBasePath();
+
+      return {
+        dataPath,
+        musicPath,
+        metadataPath: metadataBasePath,
+        albumCoversPath: path.join(metadataBasePath, 'albums'),
+        artistImagesPath: path.join(metadataBasePath, 'artists'),
+        userUploadsPath: path.join(dataPath, 'uploads', 'users'),
+        isReadOnlyMusic: true, // By design, music folder should be read-only
+      };
+    } catch (error) {
+      this.logger.error(`Error getting storage paths: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
