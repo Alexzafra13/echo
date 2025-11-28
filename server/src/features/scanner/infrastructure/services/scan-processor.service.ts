@@ -1053,7 +1053,8 @@ export class ScanProcessorService implements OnModuleInit {
       );
 
       // Obtener artistas recientes sin metadatos externos (ordenar por fecha de creación desc, limit por batch size)
-      // Enriquecer tanto artistas con MBID (para Fanart.tv) como sin MBID (para buscar en MusicBrainz)
+      // Solo seleccionar artistas que NUNCA han sido procesados (mbidSearchedAt es NULL)
+      // Esto evita loops infinitos - cada artista solo se procesa UNA VEZ
       const artistsToEnrich = await this.drizzle.db
         .select({
           id: artists.id,
@@ -1064,19 +1065,8 @@ export class ScanProcessorService implements OnModuleInit {
         })
         .from(artists)
         .where(
-          or(
-            // Sin MBID y nunca buscado - intentar buscar UNA VEZ
-            and(isNull(artists.mbzArtistId), isNull(artists.mbidSearchedAt)),
-            // Sin biografía - necesita enriquecimiento de bio
-            isNull(artists.biography),
-            // Sin ninguna imagen externa - necesita enriquecimiento completo
-            and(
-              isNull(artists.externalProfileUpdatedAt),
-              isNull(artists.externalBackgroundUpdatedAt),
-              isNull(artists.externalBannerUpdatedAt),
-              isNull(artists.externalLogoUpdatedAt),
-            ),
-          ),
+          // Nunca buscado - intentar enriquecer UNA VEZ
+          isNull(artists.mbidSearchedAt),
         )
         .orderBy(sql`${artists.createdAt} DESC`)
         .limit(batchSize);
