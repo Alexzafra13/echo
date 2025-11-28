@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Edit2, X } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Edit2 } from 'lucide-react';
+import { Button, Modal } from '@shared/components/ui';
 import { useUpdateUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
+import { logger } from '@shared/utils/logger';
 import styles from './UserFormModal.module.css';
 
 interface EditUserModalProps {
@@ -46,37 +47,26 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
       });
 
       onClose();
-    } catch (error: any) {
-      if (import.meta.env.DEV) {
-        console.error('Error updating user:', error);
-      }
+    } catch (error: unknown) {
+      logger.error('Error updating user:', error);
+      const errorMessage = error instanceof Error && 'response' in error
+        ? (error as any).response?.data?.message
+        : 'Error al actualizar usuario';
       setErrors({
-        submit: error.response?.data?.message || 'Error al actualizar usuario',
+        submit: errorMessage || 'Error al actualizar usuario',
       });
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <div className={styles.iconContainer}>
-              <Edit2 size={24} />
-            </div>
-            <div>
-              <h2 className={styles.title}>Editar Usuario</h2>
-              <p className={styles.subtitle}>
-                ID: {user.id}
-              </p>
-            </div>
-          </div>
-          <button className={styles.closeButton} onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Editar Usuario"
+      icon={Edit2}
+      subtitle={`ID: ${user.id}`}
+    >
+      <form onSubmit={handleSubmit} className={styles.form}>
           {user.isSystemAdmin && (
             <div className={styles.infoBox}>
               <p>
@@ -164,7 +154,6 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
