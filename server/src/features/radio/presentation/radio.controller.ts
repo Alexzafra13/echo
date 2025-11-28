@@ -10,11 +10,9 @@ import {
   HttpStatus,
   Sse,
   Req,
-  Res,
   UseGuards,
-  BadRequestException,
 } from '@nestjs/common';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
@@ -25,7 +23,6 @@ import { GetUserFavoritesUseCase } from '../domain/use-cases/get-user-favorites/
 import { DeleteFavoriteStationUseCase } from '../domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from '../domain/use-cases/search-stations/search-stations.use-case';
 import { IcyMetadataService } from '../domain/services/icy-metadata.service';
-import { RadioStreamProxyService } from '../domain/services/radio-stream-proxy.service';
 import { RadioStationResponseDto } from './dto/radio-station-response.dto';
 import { SearchStationsDto } from './dto/search-stations.dto';
 import { CreateCustomStationDto } from './dto/create-custom-station.dto';
@@ -44,7 +41,6 @@ export class RadioController {
     private readonly deleteFavoriteUseCase: DeleteFavoriteStationUseCase,
     private readonly searchStationsUseCase: SearchStationsUseCase,
     private readonly icyMetadataService: IcyMetadataService,
-    private readonly streamProxyService: RadioStreamProxyService,
   ) {}
 
   /**
