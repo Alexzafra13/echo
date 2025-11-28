@@ -464,7 +464,7 @@ export class ScanProcessorService implements OnModuleInit {
         if (coverPath) {
           updates.coverArtPath = coverPath;
           coverExtracted = true;
-          this.logger.log(`✅ Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`);
+          this.logger.info(`✅ Extracted cover for existing album "${existingAlbum[0].name}": ${coverPath}`);
         } else {
           this.logger.warn(`❌ No cover found for existing album "${existingAlbum[0].name}"`);
         }
