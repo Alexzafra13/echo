@@ -2,57 +2,91 @@
 
 ## Variables de entorno
 
-### Producción (docker-compose.yml)
+### Producción (.env)
+
+Crea un archivo `.env` junto a `docker-compose.yml`:
+
+```bash
+# Puerto de Echo (default: 4567)
+ECHO_PORT=4567
+
+# Base de datos
+POSTGRES_USER=echo
+POSTGRES_PASSWORD=tu_password_segura
+POSTGRES_DB=echo
+
+# Redis
+REDIS_PASSWORD=otra_password_segura
+
+# CORS (opcional, para dominios personalizados)
+CORS_ORIGINS=https://music.tudominio.com
+```
+
+### Variables completas
 
 | Variable | Default | Descripción |
 |----------|---------|-------------|
-| `NODE_ENV` | `production` | Modo de ejecución |
-| `DATABASE_URL` | - | URL conexión PostgreSQL |
-| `REDIS_HOST` | `redis` | Host de Redis |
-| `REDIS_PASSWORD` | - | Contraseña Redis |
-| `DATA_PATH` | `/app/data` | Ruta datos persistentes |
+| `ECHO_PORT` | `4567` | Puerto externo |
+| `POSTGRES_USER` | `echo` | Usuario PostgreSQL |
+| `POSTGRES_PASSWORD` | `echo_music_server` | Contraseña PostgreSQL |
+| `POSTGRES_DB` | `echo` | Nombre de la BD |
+| `REDIS_PASSWORD` | `echo_music_server` | Contraseña Redis |
+| `DATA_PATH` | `/app/data` | Ruta datos internos |
+| `CORS_ORIGINS` | auto-detectado | Orígenes CORS permitidos |
 
 ### Desarrollo (server/.env)
 
-| Variable | Default | Descripción |
-|----------|---------|-------------|
-| `NODE_ENV` | `development` | Modo desarrollo |
-| `PORT` | `3000` | Puerto backend |
-| `DATABASE_URL` | - | URL PostgreSQL local |
-| `JWT_SECRET` | - | Secreto JWT (auto-generado en producción) |
-| `JWT_EXPIRATION` | `7d` | Expiración tokens |
-| `REDIS_HOST` | `localhost` | Host Redis |
-| `CORS_ORIGINS` | `localhost:5173` | Orígenes permitidos |
+Se genera automáticamente con `pnpm quickstart`:
 
-## Almacenamiento
+```bash
+NODE_ENV=development
+PORT=3000
+DATABASE_URL=postgresql://echo:echo_local@localhost:5432/echo
+JWT_SECRET=<auto-generado>
+JWT_REFRESH_SECRET=<auto-generado>
+REDIS_HOST=localhost
+REDIS_PASSWORD=echo_local
+```
 
-| Entorno | Ruta | Descripción |
-|---------|------|-------------|
-| Desarrollo | `server/uploads/` | Creado automáticamente por `pnpm quickstart` |
-| Producción | `/app/data` | Volumen Docker montado desde `./data` |
+## Volúmenes
 
-## Volúmenes Docker
-
-| Volumen | Contenido |
-|---------|-----------|
-| `./data:/app/data` | Covers, metadatos, configuración |
-| `/mnt:/mnt:ro` | Música (solo lectura) |
-| `/media:/media:ro` | Música (solo lectura) |
-| `postgres_data` | Base de datos |
+| Volumen | Descripción | Backup |
+|---------|-------------|--------|
+| `./data:/app/data` | Covers, metadatos, config | Sí |
+| `postgres_data` | Base de datos | Sí |
+| `redis_data` | Caché | No (se regenera) |
+| `/mnt:/mnt:ro` | Música (solo lectura) | No |
 
 ## Puertos
 
-| Puerto | Servicio |
-|--------|----------|
-| 4567 | Echo (producción) |
-| 5173 | Frontend (desarrollo) |
-| 3000 | Backend (desarrollo) |
-| 5432 | PostgreSQL |
-| 6379 | Redis |
+| Puerto | Servicio | Entorno |
+|--------|----------|---------|
+| 4567 | Echo | Producción |
+| 5173 | Frontend | Desarrollo |
+| 3000 | Backend | Desarrollo |
+| 5432 | PostgreSQL | Desarrollo (expuesto) |
+| 6379 | Redis | Desarrollo (expuesto) |
+
+> En producción, PostgreSQL y Redis no están expuestos (solo accesibles dentro de la red Docker).
+
+## Rutas de música
+
+Añade volúmenes de solo lectura:
+
+```yaml
+services:
+  echo:
+    volumes:
+      - ./data:/app/data
+      - /mnt/nas/musica:/music:ro
+      - /home/user/Music:/local:ro
+```
+
+Las rutas aparecerán en el panel de administración para configurar bibliotecas.
 
 ## Seguridad
 
-- JWT secrets se auto-generan en primera ejecución
-- Contraseñas mínimo 12 caracteres en producción
-- Música montada como solo lectura (`:ro`)
-- PostgreSQL/Redis no expuestos en producción
+- **JWT secrets**: Se auto-generan en `/app/data/secrets.env` en primera ejecución
+- **Contraseñas**: Usa valores únicos en `.env` para producción
+- **Música**: Montada como solo lectura (`:ro`)
+- **Red Docker**: PostgreSQL/Redis aislados, no expuestos
