@@ -55,7 +55,7 @@ export function useRadioPlayer({
     };
 
     // Error handler for radio loading issues
-    audio.onerror = (event) => {
+    audio.onerror = () => {
       // Get detailed error information from MediaError
       const mediaError = audio.error;
       let errorMessage = 'Unknown error';
