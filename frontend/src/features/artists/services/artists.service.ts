@@ -1,5 +1,17 @@
 import { apiClient } from '@shared/services/api';
 import type { ArtistDetail, PaginatedArtists } from '../types';
+import type { Album } from '@features/home/types';
+
+/**
+ * Paginated albums response for artist
+ */
+interface PaginatedArtistAlbums {
+  data: Album[];
+  total: number;
+  skip: number;
+  take: number;
+  hasMore: boolean;
+}
 
 /**
  * Artists Service
@@ -46,6 +58,23 @@ export const artistsService = {
     const take = params?.take ?? 50;
 
     const response = await apiClient.get<PaginatedArtists>(`/artists/search/${encodeURIComponent(query)}`, {
+      params: { skip, take },
+    });
+
+    return response.data;
+  },
+
+  /**
+   * Get albums by artist ID
+   */
+  async getAlbums(artistId: string, params?: {
+    skip?: number;
+    take?: number;
+  }): Promise<PaginatedArtistAlbums> {
+    const skip = params?.skip ?? 0;
+    const take = params?.take ?? 100;
+
+    const response = await apiClient.get<PaginatedArtistAlbums>(`/artists/${artistId}/albums`, {
       params: { skip, take },
     });
 

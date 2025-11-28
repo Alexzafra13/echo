@@ -6,8 +6,7 @@ import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
-import { useArtist } from '../../hooks';
-import { useAlbums } from '@features/home/hooks';
+import { useArtist, useArtistAlbums } from '../../hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
@@ -38,8 +37,8 @@ export default function ArtistDetailPage() {
   // Fetch artist details
   const { data: artist, isLoading: loadingArtist, error: artistError } = useArtist(id);
 
-  // Fetch all albums to filter by this artist
-  const { data: allAlbumsData } = useAlbums({ skip: 0, take: 500 });
+  // Fetch albums for this artist directly from the API
+  const { data: artistAlbumsData } = useArtistAlbums(id);
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
@@ -50,8 +49,8 @@ export default function ArtistDetailPage() {
   // Auto-enrich artist if they don't have biography or hero images yet
   useAutoEnrichArtist(id, hasHeroImages);
 
-  // Filter albums by this artist
-  const artistAlbums = allAlbumsData?.data.filter(album => album.artistId === id) || [];
+  // Get albums for this artist
+  const artistAlbums = artistAlbumsData?.data || [];
 
   // Get background image with tag-based cache busting (V2)
   // Determine which background image to show (most recently updated)
