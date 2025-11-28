@@ -1086,8 +1086,15 @@ export class ScanProcessorService implements OnModuleInit {
         const withoutMbid = artistsToEnrich.filter(a => !a.mbzArtistId).length;
         const withoutBio = artistsToEnrich.filter(a => !a.biography).length;
         this.logger.info(
-          `Enriqueciendo ${artistsToEnrich.length} artistas en background (${withoutMbid} sin MBID, ${withoutBio} sin biografía)`,
+          `🎨 Auto-enriquecimiento: ${artistsToEnrich.length} artistas (${withoutMbid} sin MBID, ${withoutBio} sin biografía)`,
         );
+
+        // Log each artist being enriched for debugging
+        artistsToEnrich.forEach(a => {
+          this.logger.info(
+            `   📌 Artista: "${a.name}" - MBID: ${a.mbzArtistId ? 'SI' : 'NO'}, Bio: ${a.biography ? 'SI' : 'NO'}, Buscado: ${a.mbidSearchedAt ? 'SI' : 'NO'}`
+          );
+        });
 
         // Ejecutar en background sin bloquear
         this.enrichArtistsInBackground(artistsToEnrich).catch((error) => {
@@ -1096,6 +1103,8 @@ export class ScanProcessorService implements OnModuleInit {
             (error as Error).stack,
           );
         });
+      } else {
+        this.logger.info('🎨 Auto-enriquecimiento: No hay artistas que necesiten enriquecimiento');
       }
 
       // Obtener álbumes recientes sin portadas externas o con enriquecimiento incompleto
@@ -1140,9 +1149,16 @@ export class ScanProcessorService implements OnModuleInit {
         const recentWithCover = albumsToEnrich.filter(a => a.externalCoverPath && a.externalInfoUpdatedAt).length;
 
         this.logger.info(
-          `Enriqueciendo ${albumsToEnrich.length} álbumes en background: ` +
-          `${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos, ${recentWithCover} recientes para verificar`
+          `🖼️ Auto-enriquecimiento: ${albumsToEnrich.length} álbumes ` +
+          `(${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos, ${recentWithCover} recientes)`
         );
+
+        // Log each album being enriched for debugging
+        albumsToEnrich.forEach(a => {
+          this.logger.info(
+            `   💿 Álbum: "${a.name}" - MBID: ${a.mbzAlbumId ? 'SI' : 'NO'}, Cover: ${a.externalCoverPath ? 'SI' : 'NO'}, Buscado: ${a.mbidSearchedAt ? 'SI' : 'NO'}`
+          );
+        });
 
         // Ejecutar en background sin bloquear
         this.enrichAlbumsInBackground(albumsToEnrich).catch((error) => {
@@ -1151,6 +1167,8 @@ export class ScanProcessorService implements OnModuleInit {
             (error as Error).stack,
           );
         });
+      } else {
+        this.logger.info('🖼️ Auto-enriquecimiento: No hay álbumes que necesiten enriquecimiento');
       }
 
       this.logger.info('Auto-enriquecimiento iniciado en background');

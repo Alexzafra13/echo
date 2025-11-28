@@ -883,8 +883,9 @@ export class ExternalMetadataService {
 
         if (bio && bio.hasContent()) {
           // Cache the result (use internal artistId for consistent caching)
+          // IMPORTANT: Use 'bio' as provider key for consistent cache lookup (not bio.source)
           if (artistId) {
-            await this.cache.set('artist', artistId, bio.source, {
+            await this.cache.set('artist', artistId, 'bio', {
               content: bio.content,
               summary: bio.summary,
               url: bio.url,
@@ -968,8 +969,9 @@ export class ExternalMetadataService {
 
     if (mergedImages) {
       // Cache the merged result (use internal artistId for consistent caching)
+      // IMPORTANT: Use 'images' as provider key for consistent cache lookup (not mergedImages.source)
       if (artistId) {
-        await this.cache.set('artist', artistId, mergedImages.source, {
+        await this.cache.set('artist', artistId, 'images', {
           smallUrl: mergedImages.smallUrl,
           mediumUrl: mergedImages.mediumUrl,
           largeUrl: mergedImages.largeUrl,
