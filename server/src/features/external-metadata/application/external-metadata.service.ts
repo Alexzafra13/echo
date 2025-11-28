@@ -692,6 +692,19 @@ export class ExternalMetadataService {
         });
       }
 
+      // IMPORTANT: Always mark album as processed (even if cover wasn't updated)
+      // This prevents infinite re-selection in auto-enrichment queries
+      if (!coverUpdated) {
+        await this.drizzle.db
+          .update(albums)
+          .set({
+            externalInfoUpdatedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(albums.id, albumId));
+        this.logger.debug(`Marked album "${album.name}" as processed (no cover update needed)`);
+      }
+
       return { coverUpdated, errors };
     } catch (error) {
       this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
