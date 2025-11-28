@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw, FolderOpen, Lock } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
@@ -12,6 +12,16 @@ interface StorageStats {
   artistImages: number;
   albumImages: number;
   orphanedFiles: number;
+}
+
+interface StoragePaths {
+  dataPath: string;
+  musicPath: string;
+  metadataPath: string;
+  albumCoversPath: string;
+  artistImagesPath: string;
+  userUploadsPath: string;
+  isReadOnlyMusic: boolean;
 }
 
 interface CleanupResult {
@@ -33,6 +43,7 @@ interface PopulateResult {
  */
 export function MaintenanceTab() {
   const [stats, setStats] = useState<StorageStats | null>(null);
+  const [paths, setPaths] = useState<StoragePaths | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isCleaning, setIsCleaning] = useState(false);
   const [isPopulating, setIsPopulating] = useState(false);
@@ -45,6 +56,7 @@ export function MaintenanceTab() {
 
   useEffect(() => {
     loadStats();
+    loadPaths();
   }, []);
 
   const loadStats = async () => {
@@ -68,6 +80,17 @@ export function MaintenanceTab() {
       }
     } finally {
       setIsLoadingStats(false);
+    }
+  };
+
+  const loadPaths = async () => {
+    try {
+      const response = await apiClient.get('/maintenance/storage/paths');
+      setPaths(response.data);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error loading storage paths:', error);
+      }
     }
   };
 
@@ -228,6 +251,73 @@ export function MaintenanceTab() {
           <div className={styles.error}>Error al cargar estadísticas</div>
         )}
       </div>
+
+      {/* Storage Paths */}
+      {paths && (
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h3 className={styles.sectionTitle}>Rutas de Almacenamiento</h3>
+          </div>
+          <div className={styles.pathsList}>
+            <div className={styles.pathItem}>
+              <div className={styles.pathIcon}>
+                <FolderOpen size={18} />
+              </div>
+              <div className={styles.pathInfo}>
+                <span className={styles.pathLabel}>Datos</span>
+                <code className={styles.pathValue}>{paths.dataPath}</code>
+              </div>
+            </div>
+            <div className={styles.pathItem}>
+              <div className={styles.pathIcon}>
+                {paths.isReadOnlyMusic ? <Lock size={18} /> : <FolderOpen size={18} />}
+              </div>
+              <div className={styles.pathInfo}>
+                <span className={styles.pathLabel}>
+                  Música {paths.isReadOnlyMusic && <span className={styles.pathBadge}>Solo lectura</span>}
+                </span>
+                <code className={styles.pathValue}>{paths.musicPath}</code>
+              </div>
+            </div>
+            <div className={styles.pathItem}>
+              <div className={styles.pathIcon}>
+                <FolderOpen size={18} />
+              </div>
+              <div className={styles.pathInfo}>
+                <span className={styles.pathLabel}>Metadatos externos</span>
+                <code className={styles.pathValue}>{paths.metadataPath}</code>
+              </div>
+            </div>
+            <div className={styles.pathItem}>
+              <div className={styles.pathIcon}>
+                <FolderOpen size={18} />
+              </div>
+              <div className={styles.pathInfo}>
+                <span className={styles.pathLabel}>Carátulas de álbumes</span>
+                <code className={styles.pathValue}>{paths.albumCoversPath}</code>
+              </div>
+            </div>
+            <div className={styles.pathItem}>
+              <div className={styles.pathIcon}>
+                <FolderOpen size={18} />
+              </div>
+              <div className={styles.pathInfo}>
+                <span className={styles.pathLabel}>Imágenes de artistas</span>
+                <code className={styles.pathValue}>{paths.artistImagesPath}</code>
+              </div>
+            </div>
+            <div className={styles.pathItem}>
+              <div className={styles.pathIcon}>
+                <FolderOpen size={18} />
+              </div>
+              <div className={styles.pathInfo}>
+                <span className={styles.pathLabel}>Avatares de usuarios</span>
+                <code className={styles.pathValue}>{paths.userUploadsPath}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cleanup Actions */}
       <div className={styles.section}>
