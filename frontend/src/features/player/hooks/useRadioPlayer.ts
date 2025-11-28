@@ -9,6 +9,26 @@ import { useCallback } from 'react';
 import { logger } from '@shared/utils/logger';
 import type { RadioStation, RadioBrowserStation } from '@shared/types/radio.types';
 
+/**
+ * Gets the proper stream URL, using nginx proxy for HTTP streams when on HTTPS
+ * This fixes the Mixed Content issue where browsers block HTTP content on HTTPS pages
+ */
+function getProxiedStreamUrl(streamUrl: string): string {
+  // Check if we're on HTTPS and the stream is HTTP
+  const isHttpsPage = window.location.protocol === 'https:';
+  const isHttpStream = streamUrl.startsWith('http://');
+
+  if (isHttpsPage && isHttpStream) {
+    // Use nginx proxy to avoid Mixed Content blocking
+    const proxyUrl = `/api/radio/stream/proxy?url=${encodeURIComponent(streamUrl)}`;
+    logger.debug('[Player] Using proxy for HTTP stream:', streamUrl);
+    return proxyUrl;
+  }
+
+  // Stream is already HTTPS or we're on HTTP page - use directly
+  return streamUrl;
+}
+
 interface UseRadioPlayerParams {
   audioRef: React.RefObject<HTMLAudioElement | null>;
   onRadioStateChange: (station: RadioStation | RadioBrowserStation | null, isPlaying: boolean) => void;
@@ -43,7 +63,9 @@ export function useRadioPlayer({
     audio.oncanplay = null;
     audio.onerror = null;
 
-    audio.src = streamUrl;
+    // Use proxy for HTTP streams when on HTTPS (Mixed Content fix)
+    const finalStreamUrl = getProxiedStreamUrl(streamUrl);
+    audio.src = finalStreamUrl;
     audio.load();
 
     // Wait for audio to be ready before playing
@@ -85,7 +107,8 @@ export function useRadioPlayer({
       logger.error(
         `[Player] Failed to load radio station: ${station.name}`,
         `Error: ${errorCode} - ${errorMessage}`,
-        `URL: ${streamUrl}`
+        `Original URL: ${streamUrl}`,
+        finalStreamUrl !== streamUrl ? `Proxied URL: ${finalStreamUrl}` : ''
       );
       audio.onerror = null;
     };
