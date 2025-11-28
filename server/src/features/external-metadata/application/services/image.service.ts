@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../infrastructure/services/storage.service';
 import * as fs from 'fs/promises';
@@ -58,11 +59,28 @@ export class ImageService {
   private readonly logger = new Logger(ImageService.name);
   private readonly imageCache = new Map<string, ImageResult>();
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+  private readonly coversPath: string;
 
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    // Same path resolution logic as CoverArtService to ensure consistency
+    const coversPath = this.config.get<string>('COVERS_PATH');
+    if (coversPath) {
+      this.coversPath = coversPath;
+    } else {
+      const dataPath = this.config.get<string>('DATA_PATH');
+      if (dataPath) {
+        this.coversPath = path.join(dataPath, 'uploads', 'covers');
+      } else {
+        const uploadPath = this.config.get<string>('UPLOAD_PATH', './uploads');
+        this.coversPath = path.join(uploadPath, 'covers');
+      }
+    }
+    this.logger.log(`Album covers path: ${this.coversPath}`);
+  }
 
   /**
    * Obtiene una imagen de artista con priorización Custom > Local > External
@@ -317,16 +335,29 @@ export class ImageService {
       const defaultCoverPath = 'defaults/album-cover-default.png';
       imageResult = await this.getImageFileInfo(defaultCoverPath, 'local');
     } else {
-      // Si coverPath no tiene path absoluto ni relativo (solo nombre de archivo),
-      // asumir que está en uploads/covers/
-      let fullPath = coverPath;
-      if (!coverPath.includes('/') && !coverPath.includes('\\')) {
-        fullPath = `uploads/covers/${coverPath}`;
-        this.logger.debug(`Converted relative cover path to: ${fullPath}`);
+      // Resolve cover path:
+      // - If it's an absolute path, use as-is
+      // - If it's just a filename (no path separators), it's from the covers cache
+      // - Otherwise, it's a relative path from the album folder
+      let fullPath: string;
+
+      if (path.isAbsolute(coverPath)) {
+        // Already an absolute path (e.g., external covers in metadata storage)
+        fullPath = coverPath;
+      } else if (!coverPath.includes('/') && !coverPath.includes('\\')) {
+        // Just a filename - it's in the covers cache (from embedded or folder.jpg)
+        fullPath = path.join(this.coversPath, coverPath);
+        this.logger.debug(`Resolved cover from cache: ${fullPath}`);
+      } else {
+        // Relative path - treat as-is (might be relative to cwd or album folder)
+        fullPath = coverPath;
       }
 
+      // Determine source based on which field we're using
+      const source = album.externalCoverPath ? 'external' : 'local';
+
       // Verificar que el archivo existe y obtener metadata
-      imageResult = await this.getImageFileInfo(fullPath, 'external');
+      imageResult = await this.getImageFileInfo(fullPath, source);
     }
 
     // Cachear resultado
