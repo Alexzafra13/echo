@@ -1,10 +1,18 @@
 # =============================================
 # Echo Music Server
 # =============================================
-# docker compose up -d
-# Abre http://localhost:4567
+#
+# INSTALACIÓN RÁPIDA:
+#
+#   1. Configura tus rutas de música abajo (busca ">>> TU MÚSICA")
+#   2. Ejecuta: docker compose up -d
+#   3. Abre: http://localhost:4567
+#
+# DESCARGAR ESTE ARCHIVO:
+#   mkdir echo && cd echo
+#   curl -O https://raw.githubusercontent.com/Alexzafra13/echo/main/docker-compose.yml
+#
 # =============================================
-# Nota: 'version' omitida intencionalmente (deprecada en Docker Compose V2+)
 
 services:
   echo:
@@ -13,11 +21,26 @@ services:
     ports:
       - "${ECHO_PORT:-4567}:4567"
     volumes:
-      - ./data:/app/data          # Config, metadatos, covers
-      - /mnt:/mnt:ro              # Montar /mnt del host
-      - /media:/media:ro          # Montar /media del host
-      # Añade más rutas si tu música está en otro sitio:
-      # - /home/usuario/Musica:/music:ro
+      - ./data:/app/data
+
+      # ===========================================
+      #        >>> TU MÚSICA - EDITA AQUÍ <<<
+      # ===========================================
+      # Añade las carpetas donde tienes tu música.
+      # Formato: /ruta/en/tu/pc:/ruta/en/echo:ro
+      # El :ro significa solo lectura (recomendado)
+      #
+      # EJEMPLOS:
+      # - /home/juan/Musica:/music:ro
+      # - /mnt/nas/canciones:/nas:ro
+      # - /media/disco-usb:/usb:ro
+      # - "D:/Mi Musica:/music:ro"  # Windows
+      #
+      # Por defecto se montan /mnt y /media:
+      - /mnt:/mnt:ro
+      - /media:/media:ro
+      # ===========================================
+
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-echo}:${POSTGRES_PASSWORD:-echo_music_server}@postgres:5432/${POSTGRES_DB:-echo}
