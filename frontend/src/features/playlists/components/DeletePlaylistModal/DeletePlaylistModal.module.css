@@ -1,171 +1,30 @@
-/* DeletePlaylistModal Styles */
+/* DeletePlaylistModal Styles - Simplified (Modal handles structure) */
 
-.deletePlaylistModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.deletePlaylistModal__content {
-  background: var(--color-bg-secondary, #1e293b);
-  border-radius: 16px;
-  max-width: 480px;
-  width: 100%;
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Header */
-.deletePlaylistModal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 24px 0;
-}
-
-.deletePlaylistModal__iconWrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.deletePlaylistModal__icon {
-  color: #ef4444;
-}
-
-.deletePlaylistModal__closeButton {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary, #b8bcc8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.deletePlaylistModal__closeButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary, #ffffff);
-}
-
-.deletePlaylistModal__closeButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Body */
-.deletePlaylistModal__body {
-  padding: 20px 24px 24px;
+.content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-lg);
 }
 
-.deletePlaylistModal__title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
-  margin: 0;
-}
-
-.deletePlaylistModal__description {
-  font-size: 15px;
+.description {
+  font-size: var(--font-size-base);
   line-height: 1.6;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
-.deletePlaylistModal__description strong {
-  color: var(--color-text-primary, #ffffff);
-  font-weight: 600;
+.description strong {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
-/* Actions */
-.deletePlaylistModal__actions {
+.actions {
   display: flex;
-  gap: 12px;
-  padding: 0 24px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 20px;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
 }
 
-.deletePlaylistModal__actions button {
+.actions button {
   flex: 1;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .deletePlaylistModal {
-    padding: 16px;
-  }
-
-  .deletePlaylistModal__content {
-    max-width: 100%;
-  }
-
-  .deletePlaylistModal__header {
-    padding: 20px 20px 0;
-  }
-
-  .deletePlaylistModal__iconWrapper {
-    width: 44px;
-    height: 44px;
-  }
-
-  .deletePlaylistModal__icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .deletePlaylistModal__body {
-    padding: 16px 20px 20px;
-  }
-
-  .deletePlaylistModal__title {
-    font-size: 18px;
-  }
-
-  .deletePlaylistModal__description {
-    font-size: 14px;
-  }
-
-  .deletePlaylistModal__actions {
-    padding: 0 20px 20px;
-    padding-top: 16px;
-  }
 }

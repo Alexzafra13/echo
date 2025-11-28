@@ -33,11 +33,43 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.modalHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
+.modalIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-md);
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+}
+
+.modalTitleWrapper {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
 .modalTitle {
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+}
+
+.modalSubtitle {
+  margin: 4px 0 0 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
 }
 
 .closeButton {
@@ -107,5 +139,14 @@
 
   .modalTitle {
     font-size: var(--font-size-lg);
+  }
+
+  .modalSubtitle {
+    font-size: var(--font-size-xs);
+  }
+
+  .modalIcon {
+    width: 36px;
+    height: 36px;
   }
 }
