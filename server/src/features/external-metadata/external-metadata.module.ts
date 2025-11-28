@@ -1,5 +1,6 @@
 import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { QueueModule } from '@infrastructure/queue/queue.module';
 
 // Domain
 // (Interfaces and entities are imported as needed, no providers for them)
@@ -16,6 +17,7 @@ import { CleanupService } from './infrastructure/services/cleanup.service';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
 import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
 import { MaintenanceSchedulerService } from './infrastructure/services/maintenance-scheduler.service';
+import { EnrichmentQueueService } from './infrastructure/services/enrichment-queue.service';
 
 // Infrastructure - Agents
 import { CoverArtArchiveAgent } from './infrastructure/agents/coverart-archive.agent';
@@ -75,6 +77,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
 @Module({
   imports: [
     ConfigModule,
+    QueueModule, // For BullMQ enrichment queue
   ],
   providers: [
     // Core services
@@ -89,6 +92,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     MetadataConflictService,
     MbidAutoSearchService,
     MaintenanceSchedulerService,
+    EnrichmentQueueService,
 
     // Persistence
     SettingsRepository,
@@ -130,6 +134,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     MetadataConflictService,
     MbidAutoSearchService,
     MetadataEnrichmentGateway,
+    EnrichmentQueueService,
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {
