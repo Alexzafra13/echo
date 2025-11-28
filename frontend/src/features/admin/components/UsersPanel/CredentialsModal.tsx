@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Key, Copy, Check, AlertCircle } from 'lucide-react';
-import { Button } from '@shared/components/ui';
+import { Button, Modal } from '@shared/components/ui';
 import styles from './CredentialsModal.module.css';
 
 interface CredentialsModalProps {
@@ -31,14 +31,13 @@ export function CredentialsModal({
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.iconContainer}>
-          <Key size={48} className={styles.icon} />
-        </div>
-
-        <h2 className={styles.title}>Credenciales Generadas</h2>
-
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Credenciales Generadas"
+      icon={Key}
+    >
+      <div className={styles.content}>
         <div className={styles.alert}>
           <AlertCircle size={20} />
           <p>
@@ -76,6 +75,6 @@ export function CredentialsModal({
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
