@@ -2,78 +2,101 @@
 
 Servidor de streaming de música autoalojado.
 
-## Quick Start
+## Instalación
+
+### 1. Crear carpeta y descargar configuración
 
 ```bash
 mkdir echo && cd echo
 curl -O https://raw.githubusercontent.com/Alexzafra13/echo/main/docker-compose.yml
-docker compose up -d
 ```
 
-Abre http://localhost:4567 y sigue el asistente de configuración.
+O crea el archivo `docker-compose.yml` manualmente ([ver plantilla](#docker-composeyml-plantilla)).
 
-## Configurar rutas de música
+### 2. Configurar rutas de música
 
-Edita `docker-compose.yml` y añade tus rutas:
+Edita `docker-compose.yml` y añade tus carpetas de música:
 
 ```yaml
 services:
   echo:
     volumes:
       - ./data:/app/data
-      - /tu/ruta/musica:/music:ro      # Añade tus rutas
-      - /otro/disco:/disco2:ro         # Puedes añadir varias
+      - /ruta/a/tu/musica:/music:ro    # <- Cambia esto
+      # Puedes añadir varias rutas:
+      # - /otro/disco:/disco2:ro
 ```
 
-Reinicia: `docker compose restart echo`
-
-## Configuración opcional
-
-Crea un archivo `.env` junto al `docker-compose.yml`:
+### 3. Iniciar
 
 ```bash
-# Cambiar puerto (default: 4567)
-ECHO_PORT=8080
-
-# Contraseñas personalizadas (recomendado en producción)
-POSTGRES_PASSWORD=tu_password_segura
-REDIS_PASSWORD=otra_password_segura
+docker compose up -d
 ```
+
+### 4. Abrir navegador
+
+Abre http://localhost:4567 y sigue el asistente de configuración.
+
+---
 
 ## Comandos útiles
 
 ```bash
-docker compose up -d            # Iniciar
-docker compose down             # Parar
-docker compose logs -f echo     # Ver logs
-docker compose pull && docker compose up -d  # Actualizar
+docker compose up -d              # Iniciar
+docker compose down               # Parar
+docker compose logs -f echo       # Ver logs
+docker compose restart echo       # Reiniciar
+docker compose pull && docker compose up -d   # Actualizar a última versión
 ```
+
+## Configuración adicional
+
+### Cambiar puerto
+
+Crea un archivo `.env` junto al `docker-compose.yml`:
+
+```bash
+ECHO_PORT=8080
+```
+
+### Contraseñas personalizadas (recomendado para servidores expuestos)
+
+```bash
+# .env
+POSTGRES_PASSWORD=contraseña_segura_1
+REDIS_PASSWORD=contraseña_segura_2
+```
+
+### Exponer a internet con HTTPS
+
+Ver [docs/reverse-proxy.md](docs/reverse-proxy.md) para configurar Nginx, Caddy o Traefik.
+
+---
 
 ## Documentación
 
 | Documento | Descripción |
 |-----------|-------------|
 | [Configuración](docs/configuration.md) | Variables de entorno y puertos |
-| [Reverse Proxy](docs/reverse-proxy.md) | Nginx, Caddy, Traefik con HTTPS |
+| [Reverse Proxy](docs/reverse-proxy.md) | HTTPS con Nginx, Caddy, Traefik |
 | [Backups](docs/backup.md) | Backup, restauración y migración |
 | [Desarrollo](docs/development.md) | Contribuir al proyecto |
 
-## Stack
-
-- **Backend:** NestJS + Fastify + Drizzle ORM + PostgreSQL + Redis
-- **Frontend:** React + Vite + Zustand + Socket.io
-
 ---
 
+## docker-compose.yml (plantilla)
+
 <details>
-<summary><b>docker-compose.yml</b> (clic para copiar)</summary>
+<summary>Clic para ver/copiar</summary>
 
 ```yaml
 # =============================================
 # Echo Music Server
 # =============================================
-# docker compose up -d
-# Abre http://localhost:4567
+# 1. Guarda este archivo como docker-compose.yml
+# 2. Edita las rutas de música en "volumes"
+# 3. Ejecuta: docker compose up -d
+# 4. Abre: http://localhost:4567
 # =============================================
 
 services:
@@ -84,10 +107,12 @@ services:
       - "${ECHO_PORT:-4567}:4567"
     volumes:
       - ./data:/app/data
-      - /mnt:/mnt:ro
-      - /media:/media:ro
-      # Añade tus rutas de música:
+      # === CONFIGURA TUS RUTAS DE MÚSICA AQUÍ ===
+      - /ruta/a/tu/musica:/music:ro
+      # Ejemplos:
       # - /home/usuario/Musica:/music:ro
+      # - /mnt/nas/music:/nas:ro
+      # - /media/disco2:/disco2:ro
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-echo}:${POSTGRES_PASSWORD:-echo_music_server}@postgres:5432/${POSTGRES_DB:-echo}
@@ -146,6 +171,13 @@ volumes:
 ```
 
 </details>
+
+---
+
+## Stack
+
+- **Backend:** NestJS + Fastify + Drizzle ORM + PostgreSQL + Redis
+- **Frontend:** React + Vite + Zustand
 
 ## Licencia
 
