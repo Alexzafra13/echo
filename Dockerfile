@@ -1,10 +1,10 @@
+# syntax=docker/dockerfile:1
 # ============================================
 # ECHO MUSIC SERVER - OPTIMIZED BUILD
 # ============================================
 # Single container with Backend + Frontend
 # Using BuildKit cache for faster rebuilds
 # ============================================
-# syntax=docker/dockerfile:1
 
 # ----------------------------------------
 # Stage 1: Build Everything
