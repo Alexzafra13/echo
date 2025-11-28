@@ -6,6 +6,24 @@ import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
+/**
+ * Gets the proper stream URL, using nginx proxy for HTTP streams when on HTTPS
+ * This fixes the Mixed Content issue where browsers block HTTP content on HTTPS pages
+ */
+function getProxiedStreamUrl(streamUrl: string): string {
+  const isHttpsPage = window.location.protocol === 'https:';
+  const isHttpStream = streamUrl.startsWith('http://');
+
+  if (isHttpsPage && isHttpStream) {
+    // Use nginx proxy to avoid Mixed Content blocking
+    const proxyUrl = `/api/radio/stream/proxy?url=${encodeURIComponent(streamUrl)}`;
+    logger.debug('[Player] Using proxy for HTTP stream:', streamUrl);
+    return proxyUrl;
+  }
+
+  return streamUrl;
+}
+
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
 interface PlayerProviderProps {
@@ -211,7 +229,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     audio.oncanplay = null;
     audio.onerror = null;
 
-    audio.src = streamUrl;
+    // Use proxy for HTTP streams when on HTTPS (Mixed Content fix)
+    const finalStreamUrl = getProxiedStreamUrl(streamUrl);
+    audio.src = finalStreamUrl;
     audio.load();
 
     // Wait for audio to be ready before playing
@@ -224,7 +244,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     // Error handler for radio loading issues
     audio.onerror = () => {
-      logger.error('[Player] Failed to load radio station:', station.name);
+      logger.error('[Player] Failed to load radio station:', station.name, 'URL:', finalStreamUrl);
       audio.onerror = null;
     };
 
