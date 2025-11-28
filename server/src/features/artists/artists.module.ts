@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CacheModule } from '@infrastructure/cache/cache.module';
+import { AlbumsModule } from '@features/albums/albums.module';
 import { ArtistsController } from './presentation/controller/artists.controller';
-import { GetArtistUseCase, GetArtistsUseCase, SearchArtistsUseCase } from './domain/use-cases';
+import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from './domain/use-cases';
 import { DrizzleArtistRepository } from './infrastructure/persistence/artist.repository';
 import { CachedArtistRepository } from './infrastructure/persistence/cached-artist.repository';
 import { ARTIST_REPOSITORY } from './domain/ports/artist-repository.port';
@@ -30,12 +31,14 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
 @Module({
   imports: [
     CacheModule,
+    forwardRef(() => AlbumsModule), // For GetArtistAlbumsUseCase
   ],
   controllers: [ArtistsController],
   providers: [
     // Use Cases
     GetArtistUseCase,
     GetArtistsUseCase,
+    GetArtistAlbumsUseCase,
     SearchArtistsUseCase,
 
     // Repositories
