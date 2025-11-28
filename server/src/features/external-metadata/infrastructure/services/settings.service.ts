@@ -39,7 +39,9 @@ export class SettingsService {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      this.logger.warn(`Setting "${key}" not found and no default provided`);
+      // Use debug level to avoid log spam for optional settings like API keys
+      // These are expected to be missing until user configures them
+      this.logger.debug(`Setting "${key}" not found and no default provided`);
       return null as T;
     }
 
