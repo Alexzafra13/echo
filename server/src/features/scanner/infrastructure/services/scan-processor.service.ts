@@ -1131,11 +1131,6 @@ export class ScanProcessorService implements OnModuleInit {
               sql`${albums.externalCoverPath} IS NOT NULL`,
               isNull(albums.externalInfoUpdatedAt),
             ),
-            // Tiene path y fue creado recientemente (últimas 24h)
-            and(
-              sql`${albums.externalCoverPath} IS NOT NULL`,
-              gte(albums.createdAt, oneDayAgo),
-            ),
           ),
         )
         .orderBy(sql`${albums.createdAt} DESC`)
@@ -1144,13 +1139,12 @@ export class ScanProcessorService implements OnModuleInit {
       // Enriquecer álbumes en background (no esperar)
       if (albumsToEnrich.length > 0) {
         const withoutCover = albumsToEnrich.filter(a => !a.externalCoverPath).length;
-        const withoutMbid = albumsToEnrich.filter(a => !a.mbzAlbumId).length;
+        const withoutMbid = albumsToEnrich.filter(a => !a.mbzAlbumId && !a.mbidSearchedAt).length;
         const withIncomplete = albumsToEnrich.filter(a => a.externalCoverPath && !a.externalInfoUpdatedAt).length;
-        const recentWithCover = albumsToEnrich.filter(a => a.externalCoverPath && a.externalInfoUpdatedAt).length;
 
         this.logger.info(
           `🖼️ Auto-enriquecimiento: ${albumsToEnrich.length} álbumes ` +
-          `(${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos, ${recentWithCover} recientes)`
+          `(${withoutCover} sin cover, ${withoutMbid} sin MBID, ${withIncomplete} incompletos)`
         );
 
         // Log each album being enriched for debugging
