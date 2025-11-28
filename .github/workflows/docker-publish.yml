@@ -60,12 +60,6 @@ jobs:
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
 
-      # Generate cache key based on frontend files
-      - name: Generate frontend hash
-        id: frontend-hash
-        run: |
-          echo "hash=$(find frontend/src -type f -exec sha256sum {} \; | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v6
@@ -75,11 +69,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Use registry cache with lowercase image name
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:buildcache
-          cache-to: ${{ github.event_name != 'pull_request' && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, steps.image.outputs.name) || '' }}
+          # NO CACHE - always rebuild fresh to ensure frontend changes are included
+          no-cache: true
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ steps.meta.outputs.version }}
-            FRONTEND_HASH=${{ steps.frontend-hash.outputs.hash }}
