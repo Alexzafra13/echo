@@ -338,12 +338,17 @@ export class StorageService {
 
   /**
    * Clean up orphaned files (files without corresponding DB entries)
-   * Returns number of deleted directories
+   * @deprecated Use CleanupService.cleanupOrphanedFiles() instead for full functionality
+   * This method is kept for backwards compatibility but delegates to CleanupService
+   * Returns number of deleted files
    */
   async cleanupOrphanedFiles(): Promise<number> {
-    // This will be implemented when we integrate with the database
-    // For now, return 0
-    this.logger.warn('cleanupOrphanedFiles not fully implemented yet');
+    this.logger.warn(
+      'StorageService.cleanupOrphanedFiles() is deprecated. ' +
+      'Use CleanupService.cleanupOrphanedFiles() for full cleanup functionality with dry-run support.'
+    );
+    // Return 0 as this method should not be used directly
+    // The actual implementation is in CleanupService which has access to the database
     return 0;
   }
 

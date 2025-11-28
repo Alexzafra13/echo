@@ -166,6 +166,83 @@ export class MaintenanceController {
   }
 
   /**
+   * Ejecuta limpieza completa: archivos huérfanos + caché expirado
+   * POST /api/maintenance/cleanup/full?dryRun=true
+   */
+  @Post('cleanup/full')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Run full cleanup (orphaned files + expired cache)',
+    description:
+      'Performs complete cleanup: removes orphaned files AND expired cache entries. ' +
+      'Use dryRun=true to preview file deletions without actually deleting (admin only). ' +
+      'Note: Cache cleanup always runs (no dry-run for cache entries)',
+  })
+  @ApiQuery({
+    name: 'dryRun',
+    required: false,
+    type: Boolean,
+    description: 'Preview mode for file deletion - show what would be deleted without actually deleting',
+    example: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Full cleanup result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        files: {
+          type: 'object',
+          properties: {
+            filesRemoved: { type: 'number' },
+            spaceFree: { type: 'number' },
+            spaceFreeMB: { type: 'number' },
+            orphanedFiles: { type: 'array', items: { type: 'string' } },
+            errors: { type: 'array', items: { type: 'string' } },
+            duration: { type: 'number' },
+          },
+        },
+        cache: {
+          type: 'object',
+          properties: {
+            entriesRemoved: { type: 'number' },
+            errors: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        dryRun: { type: 'boolean' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async runFullCleanup(@Query('dryRun') dryRun?: string) {
+    const isDryRun = dryRun === 'true' || dryRun === '1' || dryRun === undefined;
+
+    try {
+      this.logger.log(`Starting full cleanup (dry run: ${isDryRun})`);
+
+      const result = await this.cleanupService.runFullCleanup(isDryRun);
+
+      return {
+        success: result.files.errors.length === 0 && result.cache.errors.length === 0,
+        files: {
+          filesRemoved: result.files.filesRemoved,
+          spaceFree: result.files.spaceFree,
+          spaceFreeMB: result.files.spaceFree / 1024 / 1024,
+          orphanedFiles: result.files.orphanedFiles,
+          errors: result.files.errors,
+          duration: result.files.duration,
+        },
+        cache: result.cache,
+        dryRun: isDryRun,
+      };
+    } catch (error) {
+      this.logger.error(`Error during full cleanup: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
    * Recalcula los tamaños de almacenamiento
    * POST /api/maintenance/storage/recalculate
    */
