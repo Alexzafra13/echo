@@ -335,6 +335,26 @@ export class ExternalMetadataService {
         });
       }
 
+      // IMPORTANT: Always mark artist as processed (mbidSearchedAt)
+      // This prevents infinite re-selection in auto-enrichment queries
+      // Note: If artist had MBID, the search block wasn't executed, so we need to ensure it's marked
+      const artistAfter = await this.drizzle.db
+        .select({ mbidSearchedAt: artists.mbidSearchedAt })
+        .from(artists)
+        .where(eq(artists.id, artistId))
+        .limit(1);
+
+      if (!artistAfter[0]?.mbidSearchedAt) {
+        await this.drizzle.db
+          .update(artists)
+          .set({
+            mbidSearchedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(artists.id, artistId));
+        this.logger.debug(`Marked artist "${artist.name}" as processed (mbidSearchedAt)`);
+      }
+
       return { bioUpdated, imagesUpdated, errors };
     } catch (error) {
       this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
