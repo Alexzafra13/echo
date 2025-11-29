@@ -23,14 +23,6 @@ export interface ExploreTrack {
   playCount: number;
 }
 
-export interface ExploreArtist {
-  id: string;
-  name: string;
-  imagePath: string | null;
-  albumCount: number;
-  songCount: number;
-}
-
 export interface ExploreAlbumsResponse {
   albums: ExploreAlbum[];
   total: number;
@@ -78,22 +70,6 @@ export const exploreService = {
     const { data } = await apiClient.get<ExploreTracksResponse>('/explore/hidden-gems', {
       params: { limit },
     });
-    return data;
-  },
-
-  /**
-   * Get a random album
-   */
-  getRandomAlbum: async (): Promise<{ album: ExploreAlbum | null }> => {
-    const { data } = await apiClient.get<{ album: ExploreAlbum | null }>('/explore/random/album');
-    return data;
-  },
-
-  /**
-   * Get a random artist
-   */
-  getRandomArtist: async (): Promise<{ artist: ExploreArtist | null }> => {
-    const { data } = await apiClient.get<{ artist: ExploreArtist | null }>('/explore/random/artist');
     return data;
   },
 
