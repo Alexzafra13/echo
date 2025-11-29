@@ -18,23 +18,23 @@ import {
 import { toAlbum } from '../../utils/transform';
 import styles from './ExplorePage.module.css';
 
-// Vibrant gradient color palettes
+// Dark gradient color palettes for better contrast with white text
 const GRADIENT_PALETTES = [
-  ['#667eea', '#764ba2'], // Purple-violet
-  ['#f093fb', '#f5576c'], // Pink-red
-  ['#4facfe', '#00f2fe'], // Blue-cyan
-  ['#43e97b', '#38f9d7'], // Green-teal
-  ['#fa709a', '#fee140'], // Pink-yellow
-  ['#a8edea', '#fed6e3'], // Soft teal-pink
-  ['#ff9a9e', '#fecfef'], // Soft pink
-  ['#667eea', '#43e97b'], // Purple-green
-  ['#f093fb', '#4facfe'], // Pink-blue
-  ['#ffecd2', '#fcb69f'], // Peach
-  ['#a1c4fd', '#c2e9fb'], // Soft blue
-  ['#d299c2', '#fef9d7'], // Lavender-cream
-  ['#89f7fe', '#66a6ff'], // Cyan-blue
-  ['#cd9cf2', '#f6f3ff'], // Lavender
-  ['#fddb92', '#d1fdff'], // Yellow-cyan
+  ['#1a1a2e', '#16213e'], // Dark blue
+  ['#0f0c29', '#302b63'], // Deep purple
+  ['#232526', '#414345'], // Dark gray
+  ['#1e3c72', '#2a5298'], // Ocean blue
+  ['#141e30', '#243b55'], // Navy
+  ['#0f2027', '#203a43'], // Dark teal
+  ['#2c3e50', '#4ca1af'], // Slate teal
+  ['#1f1c2c', '#928dab'], // Muted purple
+  ['#0b486b', '#f56217'], // Dark blue to orange
+  ['#1d4350', '#a43931'], // Dark teal to red
+  ['#360033', '#0b8793'], // Purple to cyan
+  ['#4b134f', '#c94b4b'], // Dark magenta
+  ['#373b44', '#4286f4'], // Gray to blue
+  ['#134e5e', '#71b280'], // Dark green
+  ['#3a1c71', '#d76d77'], // Purple to coral
 ];
 
 /**
