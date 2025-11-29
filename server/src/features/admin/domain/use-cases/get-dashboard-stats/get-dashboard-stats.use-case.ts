@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { RedisService } from '@infrastructure/cache/redis.service';
 import { eq, count, sum, sql, gte, lt, inArray, and, desc, isNotNull } from 'drizzle-orm';
 import {
   tracks,
@@ -32,11 +33,15 @@ import {
 @Injectable()
 export class GetDashboardStatsUseCase {
   private readonly logger = new Logger(GetDashboardStatsUseCase.name);
+  private readonly CACHE_TTL = 300; // 5 minutos para stats de librería
+  private readonly CACHE_TTL_SHORT = 120; // 2 minutos para actividad
+  private readonly CACHE_PREFIX = 'dashboard:';
 
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly healthCheck: HealthCheckService,
     private readonly settingsService: SettingsService,
+    private readonly cache: RedisService,
   ) {}
 
   async execute(input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {
@@ -82,6 +87,13 @@ export class GetDashboardStatsUseCase {
   }
 
   private async getLibraryStats(): Promise<LibraryStats> {
+    const cacheKey = `${this.CACHE_PREFIX}library-stats`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug('Library stats cache hit');
+      return cached;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -107,7 +119,7 @@ export class GetDashboardStatsUseCase {
       this.drizzle.db.select({ count: count() }).from(artists).where(gte(artists.createdAt, today)),
     ]);
 
-    return {
+    const stats: LibraryStats = {
       totalTracks: totalTracksResult[0]?.count ?? 0,
       totalAlbums: totalAlbumsResult[0]?.count ?? 0,
       totalArtists: totalArtistsResult[0]?.count ?? 0,
@@ -118,9 +130,19 @@ export class GetDashboardStatsUseCase {
       albumsAddedToday: albumsAddedTodayResult[0]?.count ?? 0,
       artistsAddedToday: artistsAddedTodayResult[0]?.count ?? 0,
     };
+
+    await this.cache.set(cacheKey, stats, this.CACHE_TTL);
+    return stats;
   }
 
   private async getStorageBreakdown(): Promise<StorageBreakdown> {
+    const cacheKey = `${this.CACHE_PREFIX}storage-breakdown`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug('Storage breakdown cache hit');
+      return cached;
+    }
+
     const [musicSizeResult, metadataSizeResult, avatarSizeResult] = await Promise.all([
       // Music files size
       this.drizzle.db.select({ sum: sum(tracks.size) }).from(tracks),
@@ -134,12 +156,15 @@ export class GetDashboardStatsUseCase {
     const metadata = Number(metadataSizeResult[0]?.sum || 0);
     const avatars = Number(avatarSizeResult[0]?.sum || 0);
 
-    return {
+    const breakdown: StorageBreakdown = {
       music,
       metadata,
       avatars,
       total: music + metadata + avatars,
     };
+
+    await this.cache.set(cacheKey, breakdown, this.CACHE_TTL);
+    return breakdown;
   }
 
   private async getSystemHealth(): Promise<SystemHealth> {
@@ -215,6 +240,13 @@ export class GetDashboardStatsUseCase {
   }
 
   private async getEnrichmentStats(): Promise<EnrichmentStats> {
+    const cacheKey = `${this.CACHE_PREFIX}enrichment-stats`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug('Enrichment stats cache hit');
+      return cached;
+    }
+
     const now = new Date();
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
@@ -256,15 +288,25 @@ export class GetDashboardStatsUseCase {
       return { total, successful, failed, byProvider };
     };
 
-    return {
+    const stats: EnrichmentStats = {
       today: calculateStats(todayLogs),
       week: calculateStats(weekLogs),
       month: calculateStats(monthLogs),
       allTime: calculateStats(allTimeLogs),
     };
+
+    await this.cache.set(cacheKey, stats, this.CACHE_TTL_SHORT);
+    return stats;
   }
 
   private async getActivityStats(): Promise<ActivityStats> {
+    const cacheKey = `${this.CACHE_PREFIX}activity-stats`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug('Activity stats cache hit');
+      return cached;
+    }
+
     const now = new Date();
     const last24h = new Date(now);
     last24h.setHours(last24h.getHours() - 24);
@@ -287,11 +329,14 @@ export class GetDashboardStatsUseCase {
         .where(and(eq(users.isActive, true), gte(users.lastAccessAt, last7d))),
     ]);
 
-    return {
+    const stats: ActivityStats = {
       totalUsers: totalUsersResult[0]?.count ?? 0,
       activeUsersLast24h: activeUsersLast24hResult[0]?.count ?? 0,
       activeUsersLast7d: activeUsersLast7dResult[0]?.count ?? 0,
     };
+
+    await this.cache.set(cacheKey, stats, this.CACHE_TTL_SHORT);
+    return stats;
   }
 
   private async getScanStats(): Promise<ScanStats> {
@@ -386,6 +431,13 @@ export class GetDashboardStatsUseCase {
   }
 
   private async getActivityTimeline(): Promise<ActivityTimelineDay[]> {
+    const cacheKey = `${this.CACHE_PREFIX}activity-timeline`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug('Activity timeline cache hit');
+      return cached;
+    }
+
     const timeline: ActivityTimelineDay[] = [];
     const now = new Date();
 
@@ -439,10 +491,19 @@ export class GetDashboardStatsUseCase {
       });
     }
 
+    await this.cache.set(cacheKey, timeline, this.CACHE_TTL_SHORT);
     return timeline;
   }
 
   private async getRecentActivities(): Promise<RecentActivity[]> {
+    const cacheKey = `${this.CACHE_PREFIX}recent-activities`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug('Recent activities cache hit');
+      // Reconstruct Date objects from cached data
+      return cached.map((a: any) => ({ ...a, timestamp: new Date(a.timestamp) }));
+    }
+
     const activities: RecentActivity[] = [];
 
     // Get recent scans (last 3)
@@ -514,6 +575,9 @@ export class GetDashboardStatsUseCase {
     });
 
     // Sort all activities by timestamp and return last 10
-    return activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10);
+    const result = activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10);
+
+    await this.cache.set(cacheKey, result, 60); // 1 minuto para actividades recientes
+    return result;
   }
 }
