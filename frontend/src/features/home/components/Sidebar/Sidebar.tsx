@@ -7,7 +7,6 @@ import {
   Radio,
   Waves,
   Compass,
-  Settings,
   Shield,
 } from 'lucide-react';
 import { useAuthStore } from '@shared/store';
@@ -35,7 +34,6 @@ export function Sidebar() {
     { icon: Radio, label: 'Radio', path: '/radio' },
     { icon: Waves, label: 'Wave Mix', path: '/wave-mix' },
     { icon: Compass, label: 'Explorar', path: '/explore' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   // Add Admin item if user is admin
