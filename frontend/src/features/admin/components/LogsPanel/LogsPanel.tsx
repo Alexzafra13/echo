@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { formatDateWithTime } from '@shared/utils/format';
 import styles from './LogsPanel.module.css';
 
 interface SystemLog {
@@ -85,18 +86,6 @@ export function LogsPanel() {
 
   const toggleLogDetails = (logId: string) => {
     setExpandedLog(expandedLog === logId ? null : logId);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(date);
   };
 
   const formatDetails = (details: string | null) => {
@@ -214,7 +203,7 @@ export function LogsPanel() {
 
                 <div className={styles.logTime}>
                   <Calendar size={14} />
-                  {formatDate(log.createdAt)}
+                  {formatDateWithTime(log.createdAt)}
                 </div>
               </div>
 

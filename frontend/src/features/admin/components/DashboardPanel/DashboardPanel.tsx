@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, TrendingUp, TrendingDown } from 'lucide-react';
 import { apiClient } from '@shared/services/api';
-import { formatDuration } from '@shared/utils/format';
+import { formatDuration, formatBytes } from '@shared/utils/format';
 import { StatCard } from './StatCard';
 import { HealthPanel } from './HealthPanel';
 import { ActivityTimelineChart } from './ActivityTimelineChart';
@@ -130,14 +130,6 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
 
   if (isLoading) {

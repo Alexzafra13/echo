@@ -4,6 +4,7 @@ import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
 import { useAuthStore } from '@shared/store';
+import { formatDateShort } from '@shared/utils/format';
 import styles from './ScannerPanel.module.css';
 
 /**
@@ -86,16 +87,6 @@ export function ScannerPanel() {
       default:
         return status;
     }
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   return (
@@ -205,7 +196,7 @@ export function ScannerPanel() {
                 {getStatusText(latestScan.status)}
               </h3>
               <p className={styles.statusDate}>
-                {formatDate(latestScan.startedAt)}
+                {formatDateShort(latestScan.startedAt)}
               </p>
             </div>
           </div>
@@ -275,7 +266,7 @@ export function ScannerPanel() {
                   <div className={styles.historyItemHeader}>
                     {getStatusIcon(scan.status)}
                     <span className={styles.historyItemDate}>
-                      {formatDate(scan.startedAt)}
+                      {formatDateShort(scan.startedAt)}
                     </span>
                   </div>
                   <div className={styles.historyItemStats}>
