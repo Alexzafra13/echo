@@ -68,6 +68,12 @@ export interface ITrackRepository {
   count(): Promise<number>;
 
   /**
+   * Obtiene todos los tracks en orden aleatorio
+   * @returns Array de todos los tracks barajados
+   */
+  findAllShuffled(): Promise<Track[]>;
+
+  /**
    * Crea un nuevo track en la BD
    * @param track - La entidad Track a guardar
    * @returns El Track guardado (con datos de la BD)

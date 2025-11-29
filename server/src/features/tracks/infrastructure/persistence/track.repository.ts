@@ -99,6 +99,15 @@ export class DrizzleTrackRepository
     return result[0]?.count ?? 0;
   }
 
+  async findAllShuffled(): Promise<Track[]> {
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .orderBy(sql`RANDOM()`);
+
+    return TrackMapper.toDomainArray(result);
+  }
+
   async create(track: Track): Promise<Track> {
     const persistenceData = TrackMapper.toPersistence(track);
 
