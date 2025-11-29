@@ -477,7 +477,7 @@ export class WaveMixService {
   private getGenreColor(genreName: string): string {
     const genreColors: Record<string, string> = {
       // Rock family
-      'Rock': '#E74C3C',
+      'Rock': '#34495E', // Slate gray (overlay image has red text)
       'Alternative': '#C0392B',
       'Indie': '#E67E22',
       'Metal': '#34495E',
