@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, desc, or, inArray, count, sql, asc } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
+import { createSearchPattern } from '@shared/utils';
 import { tracks } from '@infrastructure/database/schema';
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
@@ -54,8 +55,8 @@ export class DrizzleTrackRepository
   }
 
   async search(title: string, skip: number, take: number): Promise<Track[]> {
-    // Use ILIKE for case-insensitive search with wildcards
-    const searchPattern = `%${title}%`;
+    // Use ILIKE for case-insensitive search with escaped wildcards
+    const searchPattern = createSearchPattern(title);
 
     const result = await this.drizzle.db
       .select()
