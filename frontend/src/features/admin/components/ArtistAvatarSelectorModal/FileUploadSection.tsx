@@ -1,6 +1,7 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState } from 'react';
 import { Upload, X, Check, AlertCircle, Trash2 } from 'lucide-react';
 import { Button } from '@shared/components/ui';
+import { useFileUpload } from '@shared/hooks/useFileUpload';
 import { formatFileSize } from '@shared/utils/format';
 import {
   useUploadCustomImage,
@@ -17,19 +18,25 @@ interface FileUploadSectionProps {
   onSuccess?: () => void;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-
 /**
  * FileUploadSection Component
  * Permite subir imágenes personalizadas desde el PC
  */
 export function FileUploadSection({ artistId, imageType, onSuccess }: FileUploadSectionProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedCustomImage, setSelectedCustomImage] = useState<CustomImage | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Hook para manejo de archivos
+  const {
+    selectedFile,
+    previewUrl,
+    error: fileError,
+    handleFileSelect,
+    resetInput,
+    fileInputRef,
+  } = useFileUpload({
+    onError: setUploadError,
+  });
 
   const { mutate: uploadImage, isPending: isUploading } = useUploadCustomImage();
   const { data: customImagesData, isLoading: isLoadingCustomImages } = useListCustomImages(artistId);
@@ -39,33 +46,8 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
   // Filtrar imágenes por tipo
   const customImages = (customImagesData?.customImages || []).filter((img) => img.imageType === imageType);
 
-  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadError(null);
-
-    // Validar tipo
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('Tipo de archivo no permitido. Use JPEG, PNG o WebP.');
-      return;
-    }
-
-    // Validar tamaño
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('El archivo excede el tamaño máximo de 10MB.');
-      return;
-    }
-
-    setSelectedFile(file);
-
-    // Crear preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
+  // Combinar errores del hook y de upload
+  const displayError = uploadError || fileError;
 
   const handleUpload = () => {
     if (!selectedFile) return;
@@ -87,11 +69,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
             },
             {
               onSuccess: () => {
-                setSelectedFile(null);
-                setPreviewUrl(null);
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = '';
-                }
+                resetInput();
                 onSuccess?.();
               },
               onError: (error: any) => {
@@ -99,12 +77,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
                   console.error('[FileUpload] ❌ Apply error:', error);
                 }
                 setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
-                // Limpiar el formulario aunque falle la aplicación
-                setSelectedFile(null);
-                setPreviewUrl(null);
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = '';
-                }
+                resetInput();
               },
             }
           );
@@ -120,12 +93,8 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
   };
 
   const handleCancel = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    resetInput();
     setUploadError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const handleApplyCustomImage = (image: CustomImage) => {
@@ -247,10 +216,10 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
           </div>
         )}
 
-        {uploadError && (
+        {displayError && (
           <div className={styles.errorAlert}>
             <AlertCircle size={16} />
-            <span>{uploadError}</span>
+            <span>{displayError}</span>
           </div>
         )}
       </div>

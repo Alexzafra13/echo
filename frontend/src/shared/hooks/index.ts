@@ -9,3 +9,5 @@ export type { ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidatio
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
 export { useDropdownPosition } from './useDropdownPosition';
+export { useFileUpload } from './useFileUpload';
+export type { FileUploadOptions, FileUploadState, FileUploadActions, UseFileUploadReturn } from './useFileUpload';
