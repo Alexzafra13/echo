@@ -1,8 +1,8 @@
 /* StatCard Component Styles */
 
 .card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   padding: 20px;
   transition: all 0.2s ease;
@@ -12,8 +12,8 @@
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-05);
+  border-color: var(--white-12);
   transform: translateY(-2px);
 }
 
@@ -65,7 +65,7 @@
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: #10b981;
+  color: var(--color-success);
   font-weight: 600;
 }
 

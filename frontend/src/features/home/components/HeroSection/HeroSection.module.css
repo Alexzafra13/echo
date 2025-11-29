@@ -51,7 +51,7 @@
   color: var(--color-text-primary, #ffffff);
   transition: all 0.3s ease;
   opacity: 0.9;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 20px var(--black-50);
 }
 
 .heroSection__navButton:hover {
@@ -98,7 +98,7 @@
   flex-shrink: 0;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 32px var(--black-60);
   animation: fadeInScale 1.2s ease-out;
 }
 
@@ -163,7 +163,7 @@
   height: auto;
   object-fit: contain;
   object-position: left center;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 2px 8px var(--black-50));
   margin-bottom: 4px;
   transition: filter 0.3s ease;
 }
@@ -180,7 +180,7 @@
   text-transform: uppercase;
   letter-spacing: -1px;
   line-height: 1.1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 8px var(--black-50);
 }
 
 .heroSection__albumTitle {
@@ -191,7 +191,7 @@
   text-transform: uppercase;
   letter-spacing: -2px;
   line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 8px var(--black-50);
 }
 
 .heroSection__meta {
@@ -223,7 +223,7 @@
   outline: none;
   user-select: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px var(--black-20);
 }
 
 .heroSection__playButton:hover {
@@ -234,7 +234,7 @@
 
 .heroSection__playButton:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--black-20);
 }
 
 .heroSection__playIcon {
@@ -266,7 +266,7 @@
   height: 400px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 4px 16px var(--black-50));
   flex-shrink: 0;
 }
 
@@ -284,7 +284,7 @@
   }
 
   .heroSection__albumCoverButton {
-    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 6px 28px var(--black-60);
   }
 
   .heroSection__albumCover {

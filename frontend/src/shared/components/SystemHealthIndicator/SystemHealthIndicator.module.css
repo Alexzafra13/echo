@@ -50,9 +50,9 @@
   padding: 0;
   min-width: 280px;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 10px 25px -3px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.15);
+    0 4px 6px -1px var(--black-10),
+    0 10px 25px -3px var(--black-30),
+    0 0 0 1px var(--white-15);
   z-index: 1001; /* Mayor que hero buttons */
 
   /* Animación de entrada - Spring effect */
@@ -92,7 +92,7 @@
   align-items: center;
   gap: 10px;
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
 }
 
 .tooltipTitle {
@@ -123,27 +123,27 @@
 /* Status colors */
 .status-healthy,
 .status-idle {
-  color: #10b981;
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .status-degraded,
 .status-warning,
 .status-running {
-  color: #f59e0b;
+  color: var(--color-warning);
   font-weight: 600;
 }
 
 .status-down,
 .status-error,
 .status-critical {
-  color: #ef4444;
+  color: var(--color-error);
   font-weight: 600;
 }
 
 .tooltipDivider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   margin: 8px 0;
 }
 
@@ -155,7 +155,7 @@
 
 .tooltipAlert {
   font-size: 12px;
-  color: #f59e0b;
+  color: var(--color-warning);
   line-height: 1.4;
 }
 
@@ -165,7 +165,7 @@
   padding-top: 12px;
   padding-bottom: 4px;
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-10);
   background: transparent;
   font-size: 12px;
   color: var(--color-primary, #ff6b6b);
@@ -182,15 +182,15 @@
 
 /* Icon colors in tooltip */
 .iconHealthy {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .iconWarning {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .iconCritical {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 /* ===== Responsive Design ===== */
@@ -215,7 +215,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 0; /* Sin bordes redondeados */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px var(--black-30);
     animation: slideDown 0.3s ease;
     z-index: 1001; /* Mayor que hero buttons */
     min-width: auto; /* Ancho completo */

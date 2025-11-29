@@ -2,7 +2,7 @@
 
 .breadcrumbs {
   padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--white-08);
   margin-bottom: 24px;
 }
 
@@ -44,7 +44,7 @@
 }
 
 .link:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
 }
 

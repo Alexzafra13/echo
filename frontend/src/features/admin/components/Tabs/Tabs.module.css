@@ -10,7 +10,7 @@
 .tabs__nav {
   display: flex;
   gap: 8px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--white-10);
   margin-bottom: 32px;
   position: relative;
 }
@@ -36,7 +36,7 @@
 
 .tabs__button:hover {
   color: var(--color-text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 .tabs__button__active {

@@ -1,8 +1,8 @@
 /* StorageBreakdownChart Component Styles */
 
 .container {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   padding: 24px;
   display: flex;
