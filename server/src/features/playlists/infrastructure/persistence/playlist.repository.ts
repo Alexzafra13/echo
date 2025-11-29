@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, desc, and, count, sql, inArray, asc, max } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { createSearchPattern } from '@shared/utils';
 import { playlists, playlistTracks, tracks, albums, artists } from '@infrastructure/database/schema';
 import { IPlaylistRepository } from '../../domain/ports';
 import { Playlist, PlaylistTrack } from '../../domain/entities';
@@ -52,8 +53,8 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
   }
 
   async search(name: string, skip: number, take: number): Promise<Playlist[]> {
-    // Use ILIKE for case-insensitive search with wildcards
-    const searchPattern = `%${name}%`;
+    // Use ILIKE for case-insensitive search with escaped wildcards
+    const searchPattern = createSearchPattern(name);
 
     const result = await this.drizzle.db
       .select()
@@ -290,20 +291,23 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     playlistId: string,
     trackOrders: Array<{ trackId: string; order: number }>,
   ): Promise<boolean> {
-    // Use a transaction to update all orders
-    await this.drizzle.db.transaction(async (tx) => {
-      for (const item of trackOrders) {
-        await tx
-          .update(playlistTracks)
-          .set({ trackOrder: item.order })
-          .where(
-            and(
-              eq(playlistTracks.playlistId, playlistId),
-              eq(playlistTracks.trackId, item.trackId),
-            ),
-          );
-      }
-    });
+    if (trackOrders.length === 0) {
+      return true;
+    }
+
+    // Build CASE/WHEN clause for bulk update (single query instead of N queries)
+    // Each WHEN clause is properly parameterized to prevent SQL injection
+    const trackIds = trackOrders.map((item) => item.trackId);
+    const caseWhenClauses = trackOrders.map(
+      (item) => sql`WHEN ${item.trackId} THEN ${item.order}`,
+    );
+
+    await this.drizzle.db.execute(sql`
+      UPDATE ${playlistTracks}
+      SET track_order = CASE track_id ${sql.join(caseWhenClauses, sql` `)} END
+      WHERE playlist_id = ${playlistId}
+        AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
+    `);
 
     return true;
   }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, desc, or, inArray, count, sql, and } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
+import { createSearchPattern } from '@shared/utils';
 import { albums, artists, userStarred } from '@infrastructure/database/schema';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
@@ -59,8 +60,8 @@ export class DrizzleAlbumRepository
   }
 
   async search(name: string, skip: number, take: number): Promise<Album[]> {
-    // Use ILIKE for case-insensitive search with wildcards
-    const searchPattern = `%${name}%`;
+    // Use ILIKE for case-insensitive search with escaped wildcards
+    const searchPattern = createSearchPattern(name);
 
     const result = await this.drizzle.db
       .select({
