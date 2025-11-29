@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Search, Sun, Moon } from 'lucide-react';
-import { useAuth, useTheme } from '@shared/hooks';
+import { useAuth, useTheme, useScrollDetection, useClickOutside } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchPanel } from './SearchPanel';
-import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
+import { UserMenu } from './UserMenu';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -32,151 +32,48 @@ interface HeaderProps {
  * Supports admin mode with back navigation instead of search
  * Live search results with debouncing (300ms)
  */
-export function Header({ adminMode = false, showBackButton = false, alwaysGlass = false, customSearch, customContent, disableSearch = false }: HeaderProps) {
+export function Header({
+  adminMode = false,
+  showBackButton = false,
+  alwaysGlass = false,
+  customSearch,
+  customContent,
+  disableSearch = false,
+}: HeaderProps) {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const accessToken = useAuthStore((state) => state.accessToken);
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
+
+  // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+
+  // User menu state
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isUserMenuClosing, setIsUserMenuClosing] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(alwaysGlass);
-  const searchRef = useRef<HTMLFormElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const userMenuCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Detect scroll to apply glassmorphism effect
-  // The scroll happens in the content container (sibling element), not in window
-  useEffect(() => {
-    // Skip scroll detection if alwaysGlass is enabled
-    if (alwaysGlass) return;
+  // Scroll detection for glassmorphism
+  const { isScrolled, headerRef } = useScrollDetection({ alwaysScrolled: alwaysGlass });
 
-    // Find the scrollable content container
-    const findScrollContainer = () => {
-      if (!headerRef.current) return null;
-
-      // Strategy 1: Try next sibling (most common case)
-      let scrollableElement = headerRef.current.nextElementSibling as HTMLElement | null;
-
-      if (scrollableElement) {
-        const styles = window.getComputedStyle(scrollableElement);
-        const hasScroll = styles.overflowY === 'auto' || styles.overflowY === 'scroll';
-
-        if (hasScroll) {
-          return scrollableElement;
-        }
-      }
-
-      // Strategy 2: Find any child with overflow-y: auto in parent
-      const parent = headerRef.current.parentElement;
-      if (parent) {
-        const children = Array.from(parent.children) as HTMLElement[];
-        scrollableElement = children.find((child) => {
-          if (child === headerRef.current) return false;
-          const styles = window.getComputedStyle(child);
-          return styles.overflowY === 'auto' || styles.overflowY === 'scroll';
-        }) || null;
-
-        if (scrollableElement) {
-          return scrollableElement;
-        }
-
-        // Strategy 3: Check if parent itself is scrollable
-        const parentStyles = window.getComputedStyle(parent);
-        const parentHasScroll = parentStyles.overflowY === 'auto' || parentStyles.overflowY === 'scroll';
-
-        if (parentHasScroll) {
-          return parent;
-        }
-      }
-
-      return null;
-    };
-
-    const scrollContainer = findScrollContainer();
-
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLElement;
-      const scrollTop = target.scrollTop;
-      const shouldBeScrolled = scrollTop > 50;
-      setIsScrolled(shouldBeScrolled);
-    };
-
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-
-      // Check initial scroll position
-      if (scrollContainer.scrollTop > 50) {
-        setIsScrolled(true);
-      }
-
-      return () => {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      };
-    }
-
-    // Fallback to window scroll for pages that might use it
-    const handleWindowScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener('scroll', handleWindowScroll);
-    return () => window.removeEventListener('scroll', handleWindowScroll);
-  }, [alwaysGlass]);
+  // Search click outside
+  const { ref: searchRef } = useClickOutside<HTMLFormElement>(
+    () => setShowResults(false),
+    { enabled: showResults }
+  );
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-    }, 300); // Wait 300ms after user stops typing
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Close search results when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Close user menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        // Trigger closing animation
-        setIsUserMenuClosing(true);
-        userMenuCloseTimeoutRef.current = setTimeout(() => {
-          setShowUserMenu(false);
-          setIsUserMenuClosing(false);
-        }, 200); // Match animation duration
-      }
-    };
-
-    if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      if (userMenuCloseTimeoutRef.current) {
-        clearTimeout(userMenuCloseTimeoutRef.current);
-      }
-    };
-  }, [showUserMenu]);
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to dedicated search page on Enter press
     if (searchQuery.trim().length >= 2) {
       setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setShowResults(false);
@@ -189,7 +86,6 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // On Enter key, navigate to search page (not dropdown item)
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
       e.preventDefault();
       setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -202,21 +98,11 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
     setSearchQuery('');
   };
 
-  const handleCloseUserMenu = (callback?: () => void) => {
-    setIsUserMenuClosing(true);
-    userMenuCloseTimeoutRef.current = setTimeout(() => {
-      setShowUserMenu(false);
-      setIsUserMenuClosing(false);
-      if (callback) callback();
-    }, 200);
-  };
-
-  const handleLogout = () => {
-    handleCloseUserMenu(() => logout());
-  };
-
   return (
-    <header ref={headerRef} className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}>
+    <header
+      ref={headerRef as React.RefObject<HTMLElement>}
+      className={`${styles.header} ${isScrolled ? styles['header--scrolled'] : ''}`}
+    >
       {/* Back button */}
       {showBackButton && (
         <BackButton className={styles.header__backButton} />
@@ -224,14 +110,18 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
 
       {/* Left section - Search and custom content */}
       <div className={styles.header__leftSection}>
-        {/* Custom search or default search bar (hidden in admin mode or when disableSearch is true) */}
+        {/* Custom search or default search bar */}
         {!adminMode && !disableSearch && (
           customSearch ? (
             <div className={styles.header__customSearch}>
               {customSearch}
             </div>
           ) : (
-            <form className={styles.header__searchForm} onSubmit={handleSearchSubmit} ref={searchRef}>
+            <form
+              className={styles.header__searchForm}
+              onSubmit={handleSearchSubmit}
+              ref={searchRef}
+            >
               <div className={styles.header__searchWrapper}>
                 <Search size={20} className={styles.header__searchIcon} />
                 <input
@@ -277,63 +167,13 @@ export function Header({ adminMode = false, showBackButton = false, alwaysGlass 
         <MetadataNotifications token={accessToken} isAdmin={user?.isAdmin || false} />
 
         {/* User menu */}
-        <div className={styles.header__userMenu} ref={userMenuRef}>
-          <button
-            className={styles.header__userButton}
-            onClick={() => {
-              if (showUserMenu) {
-                // Si está abierto, cerrar con animación
-                setIsUserMenuClosing(true);
-                userMenuCloseTimeoutRef.current = setTimeout(() => {
-                  setShowUserMenu(false);
-                  setIsUserMenuClosing(false);
-                }, 200);
-              } else {
-                // Si está cerrado, abrir
-                setShowUserMenu(true);
-              }
-            }}
-            aria-label="User menu"
-          >
-            <img
-              src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
-              alt={user?.username || 'User'}
-              className={styles.header__userAvatar}
-              onError={handleAvatarError}
-            />
-          </button>
-
-          {/* User dropdown - same approach as MetadataNotifications */}
-          {showUserMenu && (
-            <div className={`${styles.header__userDropdown} ${isUserMenuClosing ? styles['header__userDropdown--closing'] : ''}`}>
-              <div className={styles.header__userInfo}>
-                <img
-                  src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
-                  alt={user?.username || 'User'}
-                  className={styles.header__userAvatarLarge}
-                  onError={handleAvatarError}
-                />
-                <div>
-                  <p className={styles.header__userName}>{user?.username || 'User'}</p>
-                  <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
-                </div>
-              </div>
-              <button className={styles.header__userMenuItem} onClick={() => handleCloseUserMenu(() => setLocation('/profile'))}>
-                Profile
-              </button>
-              <button className={styles.header__userMenuItem} onClick={() => handleCloseUserMenu(() => setLocation('/settings'))}>
-                Settings
-              </button>
-              <div className={styles.header__userDivider} />
-              <button
-                className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--danger']}`}
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+        <UserMenu
+          user={user}
+          avatarTimestamp={avatarTimestamp}
+          isOpen={showUserMenu}
+          onOpenChange={setShowUserMenu}
+          onLogout={logout}
+        />
       </div>
     </header>
   );
