@@ -1,10 +1,5 @@
-// Load dotenv only in development (it's not available in production)
-try {
-  require('dotenv/config');
-} catch {
-  // In production, env vars are already loaded
-}
-
+// drizzle.config.ts
+import 'dotenv/config';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
@@ -14,7 +9,6 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-  // Use snake_case in database, camelCase in TypeScript
   casing: 'snake_case',
   verbose: true,
   strict: true,
