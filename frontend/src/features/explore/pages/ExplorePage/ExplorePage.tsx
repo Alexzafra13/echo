@@ -5,32 +5,14 @@ import { Header } from '@shared/components/layout/Header';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridDimensions } from '@features/home/hooks';
 import { getCoverUrl } from '@shared/utils/cover.utils';
-import type { Album } from '@features/home/types';
 import {
   useUnplayedAlbums,
   useForgottenAlbums,
   useHiddenGems,
   useRandomAlbums,
 } from '../../hooks/useExplore';
-import type { ExploreAlbum } from '../../services/explore.service';
+import { toAlbum } from '../../utils/transform';
 import styles from './ExplorePage.module.css';
-
-/**
- * Transform ExploreAlbum to Album type for AlbumGrid compatibility
- */
-function toAlbum(exploreAlbum: ExploreAlbum): Album {
-  return {
-    id: exploreAlbum.id,
-    title: exploreAlbum.name,
-    artist: exploreAlbum.artistName || 'Artista desconocido',
-    artistId: exploreAlbum.artistId || '',
-    coverImage: `/api/images/albums/${exploreAlbum.id}/cover`,
-    year: exploreAlbum.year || 0,
-    totalTracks: exploreAlbum.songCount,
-    duration: exploreAlbum.duration,
-    addedAt: new Date(),
-  };
-}
 
 /**
  * ExplorePage Component
