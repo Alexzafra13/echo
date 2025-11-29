@@ -4,26 +4,8 @@ import { Sidebar, AlbumGrid } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { useUnplayedAlbums } from '../../hooks/useExplore';
 import { useGridDimensions } from '@features/home/hooks';
-import type { Album } from '@features/home/types';
-import type { ExploreAlbum } from '../../services/explore.service';
+import { toAlbum } from '../../utils/transform';
 import styles from './UnplayedAlbumsPage.module.css';
-
-/**
- * Transform ExploreAlbum to Album type for AlbumGrid compatibility
- */
-function toAlbum(exploreAlbum: ExploreAlbum): Album {
-  return {
-    id: exploreAlbum.id,
-    title: exploreAlbum.name,
-    artist: exploreAlbum.artistName || 'Artista desconocido',
-    artistId: exploreAlbum.artistId || '',
-    coverImage: `/api/images/albums/${exploreAlbum.id}/cover`,
-    year: exploreAlbum.year || 0,
-    totalTracks: exploreAlbum.songCount,
-    duration: exploreAlbum.duration,
-    addedAt: new Date(),
-  };
-}
 
 /**
  * UnplayedAlbumsPage Component

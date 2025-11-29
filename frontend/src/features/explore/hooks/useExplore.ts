@@ -39,30 +39,6 @@ export function useHiddenGems(limit: number = 30) {
 }
 
 /**
- * Hook to fetch random album
- */
-export function useRandomAlbum() {
-  return useQuery({
-    queryKey: ['explore', 'random-album'],
-    queryFn: () => exploreService.getRandomAlbum(),
-    staleTime: 0, // Always fetch fresh
-    refetchOnWindowFocus: false,
-  });
-}
-
-/**
- * Hook to fetch random artist
- */
-export function useRandomArtist() {
-  return useQuery({
-    queryKey: ['explore', 'random-artist'],
-    queryFn: () => exploreService.getRandomArtist(),
-    staleTime: 0,
-    refetchOnWindowFocus: false,
-  });
-}
-
-/**
  * Hook to fetch random albums for surprise section
  */
 export function useRandomAlbums(count: number = 6) {

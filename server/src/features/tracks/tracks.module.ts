@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@infrastructure/cache/cache.module';
 import { TracksController } from './presentation/controller/tracks.controller';
-import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase } from './domain/use-cases';
+import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase } from './domain/use-cases';
 import { DrizzleTrackRepository } from './infrastructure/persistence/track.repository';
 import { CachedTrackRepository } from './infrastructure/persistence/cached-track.repository';
 import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
@@ -38,6 +38,7 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     GetTrackUseCase,
     GetTracksUseCase,
     SearchTracksUseCase,
+    GetShuffledTracksUseCase,
 
     // Repositories
     DrizzleTrackRepository,

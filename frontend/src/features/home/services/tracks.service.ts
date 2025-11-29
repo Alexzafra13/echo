@@ -22,4 +22,15 @@ export const tracksService = {
     });
     return response.data.data; // Extract the tracks array from the response
   },
+
+  /**
+   * Get all tracks in random order for shuffle playback
+   */
+  getShuffled: async (): Promise<{ data: Track[]; total: number }> => {
+    const response = await apiClient.get<{
+      data: Track[];
+      total: number;
+    }>('/tracks/shuffle');
+    return response.data;
+  },
 };

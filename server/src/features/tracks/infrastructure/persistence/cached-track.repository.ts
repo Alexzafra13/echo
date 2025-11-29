@@ -86,6 +86,11 @@ export class CachedTrackRepository implements ITrackRepository {
     return this.baseRepository.count();
   }
 
+  async findAllShuffled(): Promise<Track[]> {
+    // No cache for shuffled tracks - always fresh random order
+    return this.baseRepository.findAllShuffled();
+  }
+
   async create(track: Track): Promise<Track> {
     const created = await this.baseRepository.create(track);
     // Invalidar cache de búsquedas

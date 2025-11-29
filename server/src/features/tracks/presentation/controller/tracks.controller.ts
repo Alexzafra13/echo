@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase } from '../../domain/use-cases';
-import { TrackResponseDto, GetTracksResponseDto, SearchTracksResponseDto } from '../dtos';
+import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase } from '../../domain/use-cases';
+import { TrackResponseDto, GetTracksResponseDto, SearchTracksResponseDto, ShuffledTracksResponseDto } from '../dtos';
 
 /**
  * TracksController - Controlador de tracks
@@ -21,7 +21,28 @@ export class TracksController {
     private readonly getTrackUseCase: GetTrackUseCase,
     private readonly getTracksUseCase: GetTracksUseCase,
     private readonly searchTracksUseCase: SearchTracksUseCase,
+    private readonly getShuffledTracksUseCase: GetShuffledTracksUseCase,
   ) {}
+
+  /**
+   * GET /tracks/shuffle
+   * Obtener todos los tracks en orden aleatorio
+   */
+  @Get('shuffle')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener tracks aleatorios',
+    description: 'Retorna todos los tracks de la biblioteca en orden aleatorio para reproducción shuffle'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tracks obtenidos exitosamente en orden aleatorio',
+    type: ShuffledTracksResponseDto
+  })
+  async getShuffledTracks(): Promise<ShuffledTracksResponseDto> {
+    const result = await this.getShuffledTracksUseCase.execute();
+    return ShuffledTracksResponseDto.fromDomain(result);
+  }
 
   /**
    * GET /tracks/:id
