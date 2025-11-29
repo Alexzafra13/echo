@@ -1,8 +1,8 @@
 /* HealthPanel Component Styles */
 
 .container {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   padding: 24px;
   display: flex;
@@ -34,7 +34,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
 }
@@ -61,28 +61,28 @@
 }
 
 .iconHealthy {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .iconWarning {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .iconError {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 /* Alerts Section */
 .alertsSection {
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--white-08);
 }
 
 .alertsHeader {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #f59e0b;
+  color: var(--color-warning);
   margin-bottom: 12px;
 }
 
@@ -107,7 +107,7 @@
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .alert svg {
@@ -126,7 +126,7 @@
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: #f59e0b;
+  color: var(--color-warning);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;

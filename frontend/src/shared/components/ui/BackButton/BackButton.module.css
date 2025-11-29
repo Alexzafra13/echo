@@ -4,7 +4,7 @@
   position: relative;
   height: 40px;
   padding: 0 14px 0 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: none;
@@ -17,7 +17,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--black-10);
 }
 
 .backButton:hover {

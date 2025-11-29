@@ -29,7 +29,7 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 20px 80px var(--black-80);
   animation: slideUp 0.3s ease;
 }
 
@@ -50,7 +50,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 24px 24px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
 }
 
 .albumInfoModal__title {
@@ -75,7 +75,7 @@
 }
 
 .albumInfoModal__closeButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -84,8 +84,8 @@
   display: flex;
   gap: 24px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.15), rgba(237, 104, 66, 0.05));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, var(--primary-15), rgba(237, 104, 66, 0.05));
+  border-bottom: 1px solid var(--white-10);
 }
 
 .albumInfoModal__cover {
@@ -94,7 +94,7 @@
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px var(--black-40);
 }
 
 .albumInfoModal__coverImage {
@@ -154,7 +154,7 @@
   color: var(--color-primary, #ed6842);
   margin: 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(237, 104, 66, 0.2);
+  border-bottom: 1px solid var(--primary-20);
 }
 
 .albumInfoModal__infoGrid {
@@ -193,12 +193,12 @@
 }
 
 .albumInfoModal__content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   border-radius: 4px;
 }
 
 .albumInfoModal__content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--white-30);
 }
 
 /* Responsive */

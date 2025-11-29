@@ -19,7 +19,7 @@
   grid-template-columns: 40px 1fr 140px 80px 200px 40px;
   gap: 16px;
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--white-08);
   font-size: 12px;
   font-weight: 500;
   color: var(--color-text-tertiary, #6b7280);
@@ -85,7 +85,7 @@
 .trackList__discLine {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(90deg, var(--white-15) 0%, var(--white-05) 100%);
 }
 
 /* Track Item */
@@ -101,7 +101,7 @@
 }
 
 .trackList__track:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .trackList__track:hover .trackList__trackNumber {
@@ -119,7 +119,7 @@
 
 /* Active/Playing Track */
 .trackList__track__active {
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
 }
 
 .trackList__track__active .trackList__trackTitle {

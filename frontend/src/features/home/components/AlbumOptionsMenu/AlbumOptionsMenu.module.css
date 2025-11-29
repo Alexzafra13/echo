@@ -19,7 +19,7 @@
 }
 
 .albumOptionsMenu__trigger:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -32,9 +32,9 @@
   min-width: 220px;
   overflow-y: auto;
   background: var(--color-bg-elevated, #1e293b);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 32px var(--black-60);
   padding: 8px;
   animation: fadeIn 0.15s ease;
   /* Position, top, left/right, max-height set via inline styles */
@@ -70,11 +70,11 @@
 }
 
 .albumOptionsMenu__option:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
 }
 
 .albumOptionsMenu__option:active:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
 }
 
 .albumOptionsMenu__option:disabled {
@@ -90,6 +90,6 @@
 /* Separator */
 .albumOptionsMenu__separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   margin: 8px 0;
 }
