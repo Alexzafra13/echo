@@ -23,16 +23,11 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding: 116px 48px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px for header glassmorphism + base padding + player spacer */
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Center children horizontally */
+  padding: 116px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px for header glassmorphism + base padding + player spacer */
 }
 
-/* Center content while allowing full-width scroll */
-.playlistsPage__content > * {
-  width: 100%;
-  max-width: 1400px; /* Limit content width for better readability */
+.playlistsPage__content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Search Form (in Header) */
@@ -206,6 +201,25 @@
   margin: 0;
 }
 
+/* Grid wrapper - mantener paginación en posición fija */
+.playlistsPage__gridWrapper {
+  min-height: 75vh; /* Altura mínima del contenedor completo */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Grid arriba, paginación abajo */
+}
+
+/* Pagination spacing */
+.playlistsPage__gridWrapper > :global(.pagination) {
+  margin-top: 48px;
+  flex-shrink: 0; /* Evitar que la paginación se comprima */
+}
+
+/* Top pagination - only visible on mobile */
+.playlistsPage__paginationTop {
+  display: none;
+}
+
 /* Playlists Grid */
 .playlistsPage__grid {
   display: grid;
@@ -334,23 +348,25 @@
   cursor: not-allowed;
 }
 
-/* Scrollbar */
-.playlistsPage__content::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
+/* ===== Responsive Design ===== */
 
-/* Responsive */
+/* Tablet */
 @media (max-width: 1024px) {
   .playlistsPage__content {
-    padding: 24px 32px calc(40px + var(--player-bottom-spacer, 0px));
+    padding: 116px 32px calc(40px + var(--player-bottom-spacer, 0px));
   }
 
   .playlistsPage__grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px;
   }
+
+  .playlistsPage__title {
+    font-size: 32px;
+  }
 }
 
+/* Mobile - iOS Style */
 @media (max-width: 768px) {
   .playlistsPage__main {
     margin-left: 0; /* No sidebar en mobile */
@@ -358,14 +374,31 @@
   }
 
   .playlistsPage__content {
+    overflow-x: hidden; /* Evitar desbordamiento horizontal */
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + base padding + player spacer */
-    align-items: stretch; /* Full width on mobile */
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
 
-  .playlistsPage__content > * {
-    max-width: none; /* Remove max-width constraint on mobile */
+  /* Remove grid layout on mobile for natural content flow */
+  .playlistsPage__gridWrapper {
+    display: block; /* Override grid layout */
+    min-height: 0;
+  }
+
+  /* Hide bottom pagination on mobile */
+  .playlistsPage__gridWrapper > :global(.pagination) {
+    display: none;
+  }
+
+  /* Show top pagination on mobile */
+  .playlistsPage__paginationTop {
+    display: block;
+    margin-bottom: 24px;
+  }
+
+  .playlistsPage__header {
+    margin-bottom: 16px; /* Reduced since pagination is below */
   }
 
   .playlistsPage__title {
@@ -399,6 +432,7 @@
   }
 }
 
+/* Small Mobile */
 @media (max-width: 480px) {
   .playlistsPage__main {
     margin-left: 0;
@@ -406,10 +440,18 @@
   }
 
   .playlistsPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño */
+    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+  }
+
+  .playlistsPage__header {
+    margin-bottom: 24px;
   }
 
   .playlistsPage__title {
     font-size: 24px;
+  }
+
+  .playlistsPage__subtitle {
+    font-size: 14px;
   }
 }
