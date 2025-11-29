@@ -69,6 +69,19 @@
   overflow: hidden;
 }
 
+/* Texture overlay - simplified version of app gradient-textured */
+.shuffleCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(116deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) 12%, transparent 12%, transparent 66%, rgba(255,255,255,0.05) 66%, rgba(255,255,255,0.05) 74%, transparent 74%),
+    linear-gradient(109deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 60%, rgba(255,255,255,0.04) 60%, rgba(255,255,255,0.04) 75%, transparent 75%),
+    linear-gradient(79deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.05) 30%, transparent 30%, transparent 65%, rgba(255,255,255,0.06) 65%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
 .shuffleCard:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
