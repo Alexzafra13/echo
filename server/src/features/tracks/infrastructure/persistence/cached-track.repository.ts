@@ -8,7 +8,9 @@ import { DrizzleTrackRepository } from './track.repository';
 @Injectable()
 export class CachedTrackRepository implements ITrackRepository {
   private readonly CACHE_TTL = parseInt(process.env.CACHE_TRACK_TTL || '3600');
+  private readonly SEARCH_CACHE_TTL = 60; // 1 minuto para búsquedas
   private readonly KEY_PREFIX = 'track:';
+  private readonly SEARCH_KEY_PREFIX = 'tracks:search:';
 
   constructor(
     private readonly baseRepository: DrizzleTrackRepository,
@@ -44,8 +46,32 @@ export class CachedTrackRepository implements ITrackRepository {
     return this.baseRepository.findAll(skip, take);
   }
 
+  /**
+   * Busca tracks por título con cache
+   * TTL corto (60s) porque los resultados pueden cambiar
+   */
   async search(title: string, skip: number, take: number): Promise<Track[]> {
-    return this.baseRepository.search(title, skip, take);
+    // Normalizar query para clave consistente
+    const normalizedQuery = title.toLowerCase().trim();
+    const cacheKey = `${this.SEARCH_KEY_PREFIX}${normalizedQuery}:${skip}:${take}`;
+
+    // Check cache
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Track search cache hit');
+      return cached.map((item: any) => Track.reconstruct(item));
+    }
+
+    this.logger.debug({ cacheKey, type: 'MISS' }, 'Track search cache miss');
+
+    // Fetch from DB
+    const tracks = await this.baseRepository.search(title, skip, take);
+
+    // Store in cache (even empty results to prevent repeated DB hits)
+    const primitives = tracks.map((t: Track) => t.toPrimitives());
+    await this.cache.set(cacheKey, primitives, this.SEARCH_CACHE_TTL);
+
+    return tracks;
   }
 
   async findByAlbumId(albumId: string): Promise<Track[]> {
@@ -61,14 +87,21 @@ export class CachedTrackRepository implements ITrackRepository {
   }
 
   async create(track: Track): Promise<Track> {
-    return this.baseRepository.create(track);
+    const created = await this.baseRepository.create(track);
+    // Invalidar cache de búsquedas
+    await this.cache.delPattern(`${this.SEARCH_KEY_PREFIX}*`);
+    this.logger.debug('Search cache invalidated after create');
+    return created;
   }
 
   async update(id: string, track: Partial<Track>): Promise<Track | null> {
     const updated = await this.baseRepository.update(id, track);
 
     if (updated) {
-      await this.cache.del(`${this.KEY_PREFIX}${id}`);
+      await Promise.all([
+        this.cache.del(`${this.KEY_PREFIX}${id}`),
+        this.cache.delPattern(`${this.SEARCH_KEY_PREFIX}*`), // Invalidar búsquedas
+      ]);
       this.logger.debug({ trackId: id }, 'Cache invalidated after update');
     }
 
@@ -79,7 +112,10 @@ export class CachedTrackRepository implements ITrackRepository {
     const deleted = await this.baseRepository.delete(id);
 
     if (deleted) {
-      await this.cache.del(`${this.KEY_PREFIX}${id}`);
+      await Promise.all([
+        this.cache.del(`${this.KEY_PREFIX}${id}`),
+        this.cache.delPattern(`${this.SEARCH_KEY_PREFIX}*`), // Invalidar búsquedas
+      ]);
       this.logger.debug({ trackId: id }, 'Cache invalidated after delete');
     }
 
