@@ -30,7 +30,7 @@
   left: var(--pagination-inset);
   width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border-radius: calc(var(--pagination-radius) * 1px);
   backdrop-filter: blur(12px);
   opacity: 0;
@@ -100,7 +100,7 @@
 }
 
 .pagination__link:hover:not(.pagination__link__disabled):not(.pagination__link__current) {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--color-primary, #ff6b6b);
 }
 
@@ -185,6 +185,6 @@
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .pagination__link:hover:not(.pagination__link__disabled):not(.pagination__link__current) {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--white-08);
   }
 }

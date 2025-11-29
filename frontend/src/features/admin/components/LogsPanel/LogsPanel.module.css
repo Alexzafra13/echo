@@ -74,7 +74,7 @@
 }
 
 .select:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--white-25);
 }
 
 .select:focus {

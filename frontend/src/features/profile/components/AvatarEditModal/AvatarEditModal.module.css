@@ -31,8 +31,8 @@
   border-radius: 20px;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 80px var(--black-60);
+  border: 1px solid var(--white-10);
   overflow: hidden;
   animation: slideUp 0.3s ease;
 }
@@ -54,8 +54,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 24px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--white-08);
+  background: var(--white-02);
 }
 
 .modal__header h2 {
@@ -72,8 +72,8 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-05);
+  border: 1px solid var(--white-08);
   color: var(--text-secondary, #b8bcc8);
   display: flex;
   align-items: center;
@@ -83,8 +83,8 @@
 }
 
 .modal__closeButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--white-10);
+  border-color: var(--white-15);
   color: var(--text-primary, #ffffff);
 }
 
@@ -104,12 +104,12 @@
   border-radius: 50%;
   overflow: hidden;
   border: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(198, 64, 29, 0.3);
+  box-shadow: 0 8px 32px var(--black-40), 0 0 0 4px rgba(198, 64, 29, 0.3);
   transition: all 0.3s ease;
 }
 
 .modal__avatarPreview:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(198, 64, 29, 0.5);
+  box-shadow: 0 12px 40px var(--black-50), 0 0 0 4px rgba(198, 64, 29, 0.5);
 }
 
 .modal__avatar {
@@ -216,9 +216,9 @@
   justify-content: center;
   gap: 8px;
   padding: 14px 24px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--text-secondary, #b8bcc8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   border-radius: 10px;
   font-size: 15px;
   font-weight: 500;
@@ -228,8 +228,8 @@
 }
 
 .modal__buttonSecondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--white-10);
+  border-color: var(--white-15);
   color: var(--text-primary, #ffffff);
 }
 
@@ -244,9 +244,9 @@
   justify-content: center;
   gap: 8px;
   padding: 14px 24px;
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--error-color, #ef4444);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  color: var(--error-color, var(--color-error));
+  border: 1px solid var(--error-30);
   border-radius: 10px;
   font-size: 15px;
   font-weight: 500;
@@ -256,7 +256,7 @@
 }
 
 .modal__buttonDanger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--error-20);
   border-color: rgba(239, 68, 68, 0.5);
   color: #f87171;
 }
@@ -279,10 +279,10 @@
 .modal__error {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--error-color, #ef4444);
+  background: var(--error-10);
+  border: 1px solid var(--error-color, var(--color-error));
   border-radius: 8px;
-  color: var(--error-color, #ef4444);
+  color: var(--error-color, var(--color-error));
   font-size: 14px;
   text-align: center;
 }
@@ -310,8 +310,8 @@
   padding: 28px;
   max-width: 340px;
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--white-10);
+  box-shadow: 0 20px 60px var(--black-50);
   animation: slideUp 0.3s ease;
 }
 

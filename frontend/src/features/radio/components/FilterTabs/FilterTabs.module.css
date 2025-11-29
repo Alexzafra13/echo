@@ -42,12 +42,12 @@
   font-size: 11px;
   font-weight: 600;
   padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   border-radius: 4px;
 }
 
 .tab--active .tabCount {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--white-30);
 }
 
 /* Mobile */

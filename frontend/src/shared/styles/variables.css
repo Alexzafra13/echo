@@ -286,17 +286,24 @@
 
   /* ===== Transparency Utilities ===== */
   /* White transparency - Most commonly used for overlays, hovers, borders */
+  --white-01: rgba(255, 255, 255, 0.01);
   --white-02: rgba(255, 255, 255, 0.02);
   --white-03: rgba(255, 255, 255, 0.03);
+  --white-04: rgba(255, 255, 255, 0.04);
   --white-05: rgba(255, 255, 255, 0.05);
+  --white-06: rgba(255, 255, 255, 0.06);
   --white-08: rgba(255, 255, 255, 0.08);
   --white-10: rgba(255, 255, 255, 0.10);
   --white-12: rgba(255, 255, 255, 0.12);
   --white-15: rgba(255, 255, 255, 0.15);
   --white-20: rgba(255, 255, 255, 0.20);
+  --white-25: rgba(255, 255, 255, 0.25);
   --white-30: rgba(255, 255, 255, 0.30);
+  --white-35: rgba(255, 255, 255, 0.35);
+  --white-40: rgba(255, 255, 255, 0.40);
   --white-50: rgba(255, 255, 255, 0.50);
   --white-60: rgba(255, 255, 255, 0.60);
+  --white-70: rgba(255, 255, 255, 0.70);
   --white-80: rgba(255, 255, 255, 0.80);
 
   /* Black transparency - For shadows, overlays, backdrops */

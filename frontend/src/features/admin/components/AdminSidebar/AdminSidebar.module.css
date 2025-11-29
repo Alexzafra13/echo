@@ -9,7 +9,7 @@
   background-image: var(--gradient-sidebar);
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--white-08);
   display: flex;
   flex-direction: column;
   padding: 24px 0;
@@ -83,7 +83,7 @@
 }
 
 .sidebar__navItem:hover {
-  background: var(--color-hover, rgba(255, 255, 255, 0.05));
+  background: var(--color-hover, var(--white-05));
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -142,7 +142,7 @@
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-right: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--white-08);
     z-index: 9999; /* Z-index muy alto para estar siempre visible */
     /* iOS safe area */
     padding-bottom: env(safe-area-inset-bottom, 0);
@@ -228,12 +228,12 @@
 }
 
 .sidebar__nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border-radius: 3px;
 }
 
 .sidebar__nav::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
 }
 
 /* ===== Light Theme Styles ===== */

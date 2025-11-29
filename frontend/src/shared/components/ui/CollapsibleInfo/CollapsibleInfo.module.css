@@ -2,7 +2,7 @@
 
 .infoBox {
   background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid var(--info-30);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -37,7 +37,7 @@
 }
 
 .infoBox__icon {
-  color: #3b82f6;
+  color: var(--color-info);
   flex-shrink: 0;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .infoBox__toggle {
-  color: #3b82f6;
+  color: var(--color-info);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,7 +87,7 @@
 .infoBox__content code {
   display: inline-block;
   padding: 2px 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border-radius: 4px;
   font-family: 'Courier New', monospace;
   font-size: 13px;

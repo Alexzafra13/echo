@@ -58,5 +58,5 @@
 
 .clearButton:hover {
   color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
 }

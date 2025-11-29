@@ -8,7 +8,7 @@
 }
 
 .menuButton {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border: none;
   color: var(--text-secondary);
   padding: 6px;
@@ -23,13 +23,13 @@
 
 .menuButton:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--white-12);
   color: var(--text-primary);
 }
 
 .menuButton--active {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
   color: var(--text-primary);
 }
 
@@ -39,11 +39,11 @@
   right: 0;
   margin-bottom: 8px;
   background: rgba(20, 20, 20, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--white-15);
   border-radius: 6px;
   padding: 4px;
   min-width: 180px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--black-50);
   backdrop-filter: blur(12px);
   animation: menuFadeIn 0.15s ease;
 }
@@ -74,15 +74,15 @@
 }
 
 .menuOption:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--text-primary);
 }
 
 .menuOption--active {
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
   color: var(--color-primary-500);
 }
 
 .menuOption--active:hover {
-  background: rgba(237, 104, 66, 0.2);
+  background: var(--primary-20);
 }

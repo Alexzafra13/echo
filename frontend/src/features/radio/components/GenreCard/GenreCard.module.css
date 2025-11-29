@@ -17,7 +17,7 @@
   background: var(--bg-elevated);
   border-color: var(--color-primary);
   transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px var(--black-30);
 }
 
 .genreIcon {

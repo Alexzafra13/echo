@@ -275,7 +275,7 @@
   align-items: center;
   gap: 10px;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white-04);
   backdrop-filter: blur(8px);
   border: 1px solid var(--white-08);
   border-radius: 12px;
@@ -327,7 +327,7 @@
   gap: 12px;
   padding: 14px 18px;
   background: var(--white-03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--white-06);
   border-radius: 10px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;

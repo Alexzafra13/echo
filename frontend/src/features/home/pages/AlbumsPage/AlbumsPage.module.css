@@ -65,7 +65,7 @@
 .albumsPage__spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
+  border: 4px solid var(--white-10);
   border-top-color: var(--color-primary, #ff6b6b);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -233,8 +233,8 @@
   height: 44px;
   padding: 0 40px 0 48px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   transition: all 0.2s ease;
@@ -246,7 +246,7 @@
 
 .albumsPage__searchInput:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-color: var(--color-primary, #ff6b6b);
 }
 
@@ -268,7 +268,7 @@
 }
 
 .albumsPage__searchClearButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary);
 }
 
@@ -289,8 +289,8 @@
 
 .albumsPage__filterSelect {
   padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 12px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
@@ -302,12 +302,12 @@
 }
 
 .albumsPage__filterSelect:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--white-08);
+  border-color: var(--white-20);
 }
 
 .albumsPage__filterSelect:focus {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-color: var(--color-primary, #ff6b6b);
 }
 
