@@ -3,7 +3,6 @@ import { apiClient } from '@shared/services/api';
 export interface User {
   id: string;
   username: string;
-  email?: string;
   name?: string;
   isAdmin: boolean;
   isActive: boolean;
@@ -15,7 +14,6 @@ export interface User {
 
 export interface CreateUserRequest {
   username: string;
-  email?: string;
   name?: string;
   isAdmin: boolean;
 }
@@ -27,7 +25,6 @@ export interface CreateUserResponse {
 
 export interface UpdateUserRequest {
   name?: string;
-  email?: string;
   isAdmin?: boolean;
   isActive?: boolean;
 }

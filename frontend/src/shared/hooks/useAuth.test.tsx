@@ -99,7 +99,6 @@ describe('useAuth', () => {
         user: {
           id: '1',
           username: 'testuser',
-          email: 'test@example.com',
           isAdmin: false,
         },
         accessToken: 'mock-access-token',
@@ -301,7 +300,6 @@ describe('useAuth', () => {
       const mockUser = {
         id: '1',
         username: 'testuser',
-        email: 'test@example.com',
         isAdmin: true,
       };
 
