@@ -30,7 +30,7 @@ export default function ExplorePage() {
   };
 
   const navigateToAlbum = (albumId: string) => {
-    setLocation(`/albums/${albumId}`);
+    setLocation(`/album/${albumId}`);
   };
 
   return (
