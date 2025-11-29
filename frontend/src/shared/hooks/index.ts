@@ -13,3 +13,7 @@ export { useAlbumMetadataSync } from './useAlbumMetadataSync';
 export { useDropdownPosition } from './useDropdownPosition';
 export { useFileUpload } from './useFileUpload';
 export type { FileUploadOptions, FileUploadState, FileUploadActions, UseFileUploadReturn } from './useFileUpload';
+export { useScrollDetection } from './useScrollDetection';
+export type { UseScrollDetectionOptions, UseScrollDetectionReturn } from './useScrollDetection';
+export { useClickOutside } from './useClickOutside';
+export type { UseClickOutsideOptions, UseClickOutsideReturn } from './useClickOutside';
