@@ -81,7 +81,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Actualizar perfil',
-    description: 'Actualiza la información del perfil del usuario (nombre y/o email)'
+    description: 'Actualiza la información del perfil del usuario (nombre)'
   })
   @ApiBody({ type: UpdateProfileRequestDto })
   @ApiResponse({
@@ -91,7 +91,7 @@ export class UsersController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Email ya registrado o datos inválidos'
+    description: 'Datos inválidos'
   })
   @ApiResponse({
     status: 401,
@@ -104,7 +104,6 @@ export class UsersController {
     const result = await this.updateProfileUseCase.execute({
       userId: user.id,
       name: dto.name,
-      email: dto.email,
     });
 
     return UserResponseDto.fromDomain(result);
