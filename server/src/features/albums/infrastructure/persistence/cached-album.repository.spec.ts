@@ -125,19 +125,46 @@ describe('CachedAlbumRepository', () => {
   });
 
   describe('search', () => {
-    it('should NOT cache search results', async () => {
+    it('should cache search results', async () => {
       // Arrange
       const albums = [mockAlbum];
+      cacheService.get.mockResolvedValue(null);
       baseRepository.search.mockResolvedValue(albums);
 
       // Act
       const result = await cachedRepository.search('test', 0, 10);
 
       // Assert
+      expect(cacheService.get).toHaveBeenCalledWith('albums:search:test:0:10');
       expect(baseRepository.search).toHaveBeenCalledWith('test', 0, 10);
-      expect(cacheService.get).not.toHaveBeenCalled();
-      expect(cacheService.set).not.toHaveBeenCalled();
-      expect(result).toBe(albums);
+      expect(cacheService.set).toHaveBeenCalled();
+      expect(result).toEqual(albums);
+    });
+
+    it('should return cached search results on cache hit', async () => {
+      // Arrange
+      const albumsPrimitives = [mockAlbumPrimitives];
+      cacheService.get.mockResolvedValue(albumsPrimitives);
+
+      // Act
+      const result = await cachedRepository.search('test', 0, 10);
+
+      // Assert
+      expect(cacheService.get).toHaveBeenCalledWith('albums:search:test:0:10');
+      expect(baseRepository.search).not.toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+    });
+
+    it('should normalize search query for cache key', async () => {
+      // Arrange
+      cacheService.get.mockResolvedValue(null);
+      baseRepository.search.mockResolvedValue([]);
+
+      // Act
+      await cachedRepository.search('  TEST  ', 0, 10);
+
+      // Assert - query should be normalized to lowercase and trimmed
+      expect(cacheService.get).toHaveBeenCalledWith('albums:search:test:0:10');
     });
   });
 
@@ -286,8 +313,8 @@ describe('CachedAlbumRepository', () => {
 
       // Assert
       expect(baseRepository.create).toHaveBeenCalledWith(mockAlbum);
-      // invalidateListCaches now uses: 4x delPattern() (album:*, recent:*, most-played:*, artist:*) + 2x del()
-      expect(cacheService.delPattern).toHaveBeenCalledTimes(4);
+      // invalidateListCaches now uses: 5x delPattern() (album:*, recent:*, most-played:*, artist:*, search:*) + 2x del()
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(5);
       expect(cacheService.del).toHaveBeenCalledTimes(2);
       expect(result).toBe(mockAlbum);
     });
@@ -305,9 +332,9 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.update).toHaveBeenCalledWith('album-1', updates);
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      // 1 specific del() + invalidateListCaches (4x delPattern + 2x del)
+      // 1 specific del() + invalidateListCaches (5x delPattern + 2x del)
       expect(cacheService.del).toHaveBeenCalledTimes(3);
-      expect(cacheService.delPattern).toHaveBeenCalledTimes(4);
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(5);
       expect(result).toBe(mockAlbum);
     });
 
@@ -335,9 +362,9 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.delete).toHaveBeenCalledWith('album-1');
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      // 1 specific del() + invalidateListCaches (4x delPattern + 2x del)
+      // 1 specific del() + invalidateListCaches (5x delPattern + 2x del)
       expect(cacheService.del).toHaveBeenCalledTimes(3);
-      expect(cacheService.delPattern).toHaveBeenCalledTimes(4);
+      expect(cacheService.delPattern).toHaveBeenCalledTimes(5);
       expect(result).toBe(true);
     });
 

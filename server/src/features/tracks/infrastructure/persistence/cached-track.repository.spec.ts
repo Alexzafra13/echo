@@ -44,6 +44,7 @@ describe('CachedTrackRepository', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
+      delPattern: jest.fn(),
     };
 
     // Mock logger
@@ -128,19 +129,46 @@ describe('CachedTrackRepository', () => {
   });
 
   describe('search', () => {
-    it('should delegate to base repository without caching', async () => {
+    it('should cache search results', async () => {
       // Arrange
       const tracks = [mockTrack];
+      cacheService.get.mockResolvedValue(null);
       baseRepository.search.mockResolvedValue(tracks);
 
       // Act
       const result = await cachedRepository.search('test', 0, 10);
 
       // Assert
+      expect(cacheService.get).toHaveBeenCalledWith('tracks:search:test:0:10');
       expect(baseRepository.search).toHaveBeenCalledWith('test', 0, 10);
-      expect(cacheService.get).not.toHaveBeenCalled();
-      expect(cacheService.set).not.toHaveBeenCalled();
-      expect(result).toBe(tracks);
+      expect(cacheService.set).toHaveBeenCalled();
+      expect(result).toEqual(tracks);
+    });
+
+    it('should return cached search results on cache hit', async () => {
+      // Arrange
+      const tracksPrimitives = [mockTrackPrimitives];
+      cacheService.get.mockResolvedValue(tracksPrimitives);
+
+      // Act
+      const result = await cachedRepository.search('test', 0, 10);
+
+      // Assert
+      expect(cacheService.get).toHaveBeenCalledWith('tracks:search:test:0:10');
+      expect(baseRepository.search).not.toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+    });
+
+    it('should normalize search query for cache key', async () => {
+      // Arrange
+      cacheService.get.mockResolvedValue(null);
+      baseRepository.search.mockResolvedValue([]);
+
+      // Act
+      await cachedRepository.search('  TEST  ', 0, 10);
+
+      // Assert - query should be normalized to lowercase and trimmed
+      expect(cacheService.get).toHaveBeenCalledWith('tracks:search:test:0:10');
     });
   });
 
@@ -192,7 +220,7 @@ describe('CachedTrackRepository', () => {
   });
 
   describe('create', () => {
-    it('should create track without cache invalidation', async () => {
+    it('should create track and invalidate search cache', async () => {
       // Arrange
       baseRepository.create.mockResolvedValue(mockTrack);
 
@@ -201,13 +229,13 @@ describe('CachedTrackRepository', () => {
 
       // Assert
       expect(baseRepository.create).toHaveBeenCalledWith(mockTrack);
-      expect(cacheService.del).not.toHaveBeenCalled();
+      expect(cacheService.delPattern).toHaveBeenCalledWith('tracks:search:*');
       expect(result).toBe(mockTrack);
     });
   });
 
   describe('update', () => {
-    it('should update track and invalidate specific cache', async () => {
+    it('should update track and invalidate caches', async () => {
       // Arrange
       const updates = { title: 'Updated Track' };
       baseRepository.update.mockResolvedValue(mockTrack);
@@ -218,6 +246,7 @@ describe('CachedTrackRepository', () => {
       // Assert
       expect(baseRepository.update).toHaveBeenCalledWith('track-1', updates);
       expect(cacheService.del).toHaveBeenCalledWith('track:track-1');
+      expect(cacheService.delPattern).toHaveBeenCalledWith('tracks:search:*');
       expect(result).toBe(mockTrack);
     });
 
@@ -230,12 +259,13 @@ describe('CachedTrackRepository', () => {
 
       // Assert
       expect(cacheService.del).not.toHaveBeenCalled();
+      expect(cacheService.delPattern).not.toHaveBeenCalled();
       expect(result).toBeNull();
     });
   });
 
   describe('delete', () => {
-    it('should delete track and invalidate cache', async () => {
+    it('should delete track and invalidate caches', async () => {
       // Arrange
       baseRepository.delete.mockResolvedValue(true);
 
@@ -245,6 +275,7 @@ describe('CachedTrackRepository', () => {
       // Assert
       expect(baseRepository.delete).toHaveBeenCalledWith('track-1');
       expect(cacheService.del).toHaveBeenCalledWith('track:track-1');
+      expect(cacheService.delPattern).toHaveBeenCalledWith('tracks:search:*');
       expect(result).toBe(true);
     });
 
@@ -257,6 +288,7 @@ describe('CachedTrackRepository', () => {
 
       // Assert
       expect(cacheService.del).not.toHaveBeenCalled();
+      expect(cacheService.delPattern).not.toHaveBeenCalled();
       expect(result).toBe(false);
     });
   });
