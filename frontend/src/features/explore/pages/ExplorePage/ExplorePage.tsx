@@ -2,7 +2,10 @@ import { useLocation } from 'wouter';
 import { Shuffle, Clock, Sparkles, Disc, RefreshCw } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
+import { AlbumCard } from '@features/home/components/AlbumCard';
 import { useQueryClient } from '@tanstack/react-query';
+import { useGridDimensions } from '@features/home/hooks';
+import { getCoverUrl } from '@shared/utils/cover.utils';
 import {
   useUnplayedAlbums,
   useForgottenAlbums,
@@ -19,11 +22,14 @@ export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  // Fetch data
-  const { data: unplayedData, isLoading: loadingUnplayed } = useUnplayedAlbums(6);
-  const { data: forgottenData, isLoading: loadingForgotten } = useForgottenAlbums(6);
+  // Calculate items for single row based on screen size
+  const { itemsPerPage: itemsPerRow } = useGridDimensions({ maxRows: 1 });
+
+  // Fetch data - limit to one row of items
+  const { data: unplayedData, isLoading: loadingUnplayed } = useUnplayedAlbums(itemsPerRow);
+  const { data: forgottenData, isLoading: loadingForgotten } = useForgottenAlbums(itemsPerRow);
   const { data: hiddenGemsData, isLoading: loadingGems } = useHiddenGems(10);
-  const { data: randomData, isLoading: loadingRandom } = useRandomAlbums(6);
+  const { data: randomData, isLoading: loadingRandom } = useRandomAlbums(itemsPerRow);
 
   const handleRefreshRandom = () => {
     queryClient.invalidateQueries({ queryKey: ['explore', 'random-albums'] });
@@ -52,46 +58,28 @@ export default function ExplorePage() {
           {/* Surprise Me Section */}
           <section className={styles.explorePage__section}>
             <div className={styles.explorePage__sectionHeader}>
-              <div className={styles.explorePage__sectionTitle}>
-                <Shuffle size={24} />
-                <h2>Sorpréndeme</h2>
-              </div>
+              <Shuffle size={24} className={styles.explorePage__sectionIcon} />
+              <h2 className={styles.explorePage__sectionTitle}>Sorpréndeme</h2>
               <button
                 className={styles.explorePage__refreshButton}
                 onClick={handleRefreshRandom}
                 title="Obtener otros aleatorios"
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={16} />
               </button>
             </div>
             {loadingRandom ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
             ) : randomData?.albums && randomData.albums.length > 0 ? (
-              <div className={styles.explorePage__grid}>
+              <div className={styles.explorePage__albumGrid}>
                 {randomData.albums.map((album) => (
-                  <div
+                  <AlbumCard
                     key={album.id}
-                    className={styles.albumCard}
+                    cover={getCoverUrl(album.coverArtPath)}
+                    title={album.name}
+                    artist={album.artistName || 'Artista desconocido'}
                     onClick={() => navigateToAlbum(album.id)}
-                  >
-                    <div className={styles.albumCard__cover}>
-                      {album.coverArtPath ? (
-                        <img
-                          src={`/api/albums/${album.id}/cover`}
-                          alt={album.name}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className={styles.albumCard__placeholder}>
-                          <Disc size={40} />
-                        </div>
-                      )}
-                    </div>
-                    <div className={styles.albumCard__info}>
-                      <h3 className={styles.albumCard__title}>{album.name}</h3>
-                      <p className={styles.albumCard__artist}>{album.artistName || 'Artista desconocido'}</p>
-                    </div>
-                  </div>
+                  />
                 ))}
               </div>
             ) : (
@@ -102,42 +90,29 @@ export default function ExplorePage() {
           {/* Unplayed Albums Section */}
           <section className={styles.explorePage__section}>
             <div className={styles.explorePage__sectionHeader}>
-              <div className={styles.explorePage__sectionTitle}>
-                <Disc size={24} />
-                <h2>Sin escuchar</h2>
-              </div>
-              <span className={styles.explorePage__count}>
-                {unplayedData?.total ?? 0} albums
-              </span>
+              <Disc size={24} className={styles.explorePage__sectionIcon} />
+              <h2 className={styles.explorePage__sectionTitle}>Sin escuchar</h2>
+              {unplayedData?.total && unplayedData.total > itemsPerRow && (
+                <button
+                  className={styles.explorePage__viewAllButton}
+                  onClick={() => setLocation('/explore/unplayed')}
+                >
+                  Ver todos ({unplayedData.total}) →
+                </button>
+              )}
             </div>
             {loadingUnplayed ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
             ) : unplayedData?.albums && unplayedData.albums.length > 0 ? (
-              <div className={styles.explorePage__grid}>
+              <div className={styles.explorePage__albumGrid}>
                 {unplayedData.albums.map((album) => (
-                  <div
+                  <AlbumCard
                     key={album.id}
-                    className={styles.albumCard}
+                    cover={getCoverUrl(album.coverArtPath)}
+                    title={album.name}
+                    artist={album.artistName || 'Artista desconocido'}
                     onClick={() => navigateToAlbum(album.id)}
-                  >
-                    <div className={styles.albumCard__cover}>
-                      {album.coverArtPath ? (
-                        <img
-                          src={`/api/albums/${album.id}/cover`}
-                          alt={album.name}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className={styles.albumCard__placeholder}>
-                          <Disc size={40} />
-                        </div>
-                      )}
-                    </div>
-                    <div className={styles.albumCard__info}>
-                      <h3 className={styles.albumCard__title}>{album.name}</h3>
-                      <p className={styles.albumCard__artist}>{album.artistName || 'Artista desconocido'}</p>
-                    </div>
-                  </div>
+                  />
                 ))}
               </div>
             ) : (
@@ -148,42 +123,26 @@ export default function ExplorePage() {
           {/* Forgotten Albums Section */}
           <section className={styles.explorePage__section}>
             <div className={styles.explorePage__sectionHeader}>
-              <div className={styles.explorePage__sectionTitle}>
-                <Clock size={24} />
-                <h2>Olvidados</h2>
-              </div>
-              <span className={styles.explorePage__count}>
-                {forgottenData?.total ?? 0} albums
-              </span>
+              <Clock size={24} className={styles.explorePage__sectionIcon} />
+              <h2 className={styles.explorePage__sectionTitle}>Olvidados</h2>
+              {forgottenData?.total && forgottenData.total > itemsPerRow && (
+                <span className={styles.explorePage__count}>
+                  {forgottenData.total} albums
+                </span>
+              )}
             </div>
             {loadingForgotten ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
             ) : forgottenData?.albums && forgottenData.albums.length > 0 ? (
-              <div className={styles.explorePage__grid}>
+              <div className={styles.explorePage__albumGrid}>
                 {forgottenData.albums.map((album) => (
-                  <div
+                  <AlbumCard
                     key={album.id}
-                    className={styles.albumCard}
+                    cover={getCoverUrl(album.coverArtPath)}
+                    title={album.name}
+                    artist={album.artistName || 'Artista desconocido'}
                     onClick={() => navigateToAlbum(album.id)}
-                  >
-                    <div className={styles.albumCard__cover}>
-                      {album.coverArtPath ? (
-                        <img
-                          src={`/api/albums/${album.id}/cover`}
-                          alt={album.name}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className={styles.albumCard__placeholder}>
-                          <Disc size={40} />
-                        </div>
-                      )}
-                    </div>
-                    <div className={styles.albumCard__info}>
-                      <h3 className={styles.albumCard__title}>{album.name}</h3>
-                      <p className={styles.albumCard__artist}>{album.artistName || 'Artista desconocido'}</p>
-                    </div>
-                  </div>
+                  />
                 ))}
               </div>
             ) : (
@@ -194,14 +153,12 @@ export default function ExplorePage() {
           {/* Hidden Gems Section */}
           <section className={styles.explorePage__section}>
             <div className={styles.explorePage__sectionHeader}>
-              <div className={styles.explorePage__sectionTitle}>
-                <Sparkles size={24} />
-                <h2>Joyas ocultas</h2>
-              </div>
-              <span className={styles.explorePage__hint}>
-                Canciones poco escuchadas de tus artistas favoritos
-              </span>
+              <Sparkles size={24} className={styles.explorePage__sectionIcon} />
+              <h2 className={styles.explorePage__sectionTitle}>Joyas ocultas</h2>
             </div>
+            <p className={styles.explorePage__sectionHint}>
+              Canciones poco escuchadas de tus artistas favoritos
+            </p>
             {loadingGems ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
             ) : hiddenGemsData?.tracks && hiddenGemsData.tracks.length > 0 ? (
@@ -216,7 +173,7 @@ export default function ExplorePage() {
                     <div className={styles.trackItem__cover}>
                       {track.coverArtPath ? (
                         <img
-                          src={`/api/albums/${track.albumId}/cover`}
+                          src={getCoverUrl(track.coverArtPath)}
                           alt={track.albumName || ''}
                           loading="lazy"
                         />

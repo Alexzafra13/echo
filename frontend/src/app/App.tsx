@@ -19,6 +19,7 @@ import { DailyMixPage } from '@features/recommendations/pages/DailyMixPage';
 import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlaylistsPage';
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
 import { ExplorePage } from '@features/explore/pages/ExplorePage';
+import { UnplayedAlbumsPage } from '@features/explore/pages/UnplayedAlbumsPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { SetupGuard } from '@shared/components/SetupGuard';
@@ -154,7 +155,12 @@ function App() {
           </ProtectedRoute>
         </Route>
 
-        {/* Explore Route (Protected) */}
+        {/* Explore Routes (Protected) */}
+        <Route path="/explore/unplayed">
+          <ProtectedRoute>
+            <UnplayedAlbumsPage />
+          </ProtectedRoute>
+        </Route>
         <Route path="/explore">
           <ProtectedRoute>
             <ExplorePage />
