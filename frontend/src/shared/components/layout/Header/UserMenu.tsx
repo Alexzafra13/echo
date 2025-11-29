@@ -57,8 +57,12 @@ export function UserMenu({
     }
   };
 
-  const handleNavigate = (path: string) => {
-    close(() => setLocation(path));
+  const handleNavigate = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Close menu and navigate
+    onOpenChange(false);
+    setLocation(path);
   };
 
   const handleLogout = () => {
@@ -104,14 +108,14 @@ export function UserMenu({
 
           <button
             className={styles.header__userMenuItem}
-            onClick={() => handleNavigate('/profile')}
+            onClick={(e) => handleNavigate(e, '/profile')}
             role="menuitem"
           >
             Profile
           </button>
           <button
             className={styles.header__userMenuItem}
-            onClick={() => handleNavigate('/settings')}
+            onClick={(e) => handleNavigate(e, '/settings')}
             role="menuitem"
           >
             Settings
