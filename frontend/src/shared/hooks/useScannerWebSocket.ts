@@ -1,6 +1,5 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import type { Socket } from 'socket.io-client';
-import WebSocketService from '../services/websocket.service';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useWebSocketConnection } from './useWebSocketConnection';
 
 /**
  * Estados del escaneo
@@ -81,111 +80,89 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [errors, setErrors] = useState<ScanError[]>([]);
   const [completed, setCompleted] = useState<ScanCompleted | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
+
+  // Handlers para eventos
+  const handleProgress = useCallback((data: ScanProgress) => {
+    setProgress(data);
+  }, []);
+
+  const handleError = useCallback((data: ScanError) => {
+    setErrors((prev) => [...prev, data]);
+  }, []);
+
+  const handleCompleted = useCallback((data: ScanCompleted) => {
+    setCompleted(data);
+    setProgress((prev) =>
+      prev ? { ...prev, progress: 100, status: ScanStatus.COMPLETED } : null
+    );
+  }, []);
+
+  // Eventos a registrar
+  const events = useMemo(
+    () => [
+      { event: 'scan:progress', handler: handleProgress },
+      { event: 'scan:error', handler: handleError },
+      { event: 'scan:completed', handler: handleCompleted },
+    ],
+    [handleProgress, handleError, handleCompleted]
+  );
+
+  // Callback cuando se conecta: suscribirse al scan
+  const handleConnect = useCallback(() => {
+    // Se suscribe después de conectar usando emit
+  }, []);
+
+  // Usar el hook base de WebSocket
+  const { isConnected, emit } = useWebSocketConnection({
+    namespace: 'scanner',
+    token,
+    enabled: !!scanId && !!token,
+    events,
+    onConnect: handleConnect,
+  });
+
+  // Suscribirse al scan cuando se conecta
+  useEffect(() => {
+    if (isConnected && scanId) {
+      emit('scanner:subscribe', { scanId });
+    }
+
+    return () => {
+      if (isConnected && scanId) {
+        emit('scanner:unsubscribe', { scanId });
+      }
+    };
+  }, [isConnected, scanId, emit]);
 
   /**
    * Pausar scan (solo admin)
    */
   const pauseScan = useCallback(() => {
-    if (socketRef.current && scanId) {
-      socketRef.current.emit('scanner:pause', { scanId });
+    if (scanId) {
+      emit('scanner:pause', { scanId });
     }
-  }, [scanId]);
+  }, [scanId, emit]);
 
   /**
    * Cancelar scan (solo admin)
    */
-  const cancelScan = useCallback((reason?: string) => {
-    if (socketRef.current && scanId) {
-      socketRef.current.emit('scanner:cancel', { scanId, reason });
-    }
-  }, [scanId]);
+  const cancelScan = useCallback(
+    (reason?: string) => {
+      if (scanId) {
+        emit('scanner:cancel', { scanId, reason });
+      }
+    },
+    [scanId, emit]
+  );
 
   /**
    * Resumir scan (solo admin)
    */
   const resumeScan = useCallback(() => {
-    if (socketRef.current && scanId) {
-      socketRef.current.emit('scanner:resume', { scanId });
+    if (scanId) {
+      emit('scanner:resume', { scanId });
     }
-  }, [scanId]);
-
-  useEffect(() => {
-    // Si no hay scanId o token, no conectar
-    if (!scanId || !token) {
-      return;
-    }
-
-    // Conectar al namespace de scanner
-    const wsService = WebSocketService;
-    const socket = wsService.connect('scanner', token);
-    socketRef.current = socket;
-
-    // Event: Conectado
-    const handleConnect = () => {
-      setIsConnected(true);
-      // Suscribirse al scan
-      socket.emit('scanner:subscribe', { scanId });
-    };
-
-    // Event: Desconectado
-    const handleDisconnect = () => {
-      setIsConnected(false);
-    };
-
-    // Event: Progreso del scan
-    const handleProgress = (data: ScanProgress) => {
-      setProgress(data);
-    };
-
-    // Event: Error en un archivo
-    const handleError = (data: ScanError) => {
-      setErrors((prev) => [...prev, data]);
-    };
-
-    // Event: Scan completado
-    const handleCompleted = (data: ScanCompleted) => {
-      setCompleted(data);
-      setProgress((prev) => prev ? { ...prev, progress: 100, status: ScanStatus.COMPLETED } : null);
-    };
-
-    // Event: Subscripción confirmada
-    const handleSubscribed = () => {
-      // Subscribed to scan
-    };
-
-    // Registrar event listeners
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('scan:progress', handleProgress);
-    socket.on('scan:error', handleError);
-    socket.on('scan:completed', handleCompleted);
-    socket.on('scanner:subscribed', handleSubscribed);
-
-    // Si ya está conectado, suscribirse inmediatamente
-    if (socket.connected) {
-      handleConnect();
-    }
-
-    // Cleanup
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('scan:progress', handleProgress);
-      socket.off('scan:error', handleError);
-      socket.off('scan:completed', handleCompleted);
-      socket.off('scanner:subscribed', handleSubscribed);
-
-      // Desuscribirse del scan
-      if (socket.connected) {
-        socket.emit('scanner:unsubscribe', { scanId });
-      }
-
-      // No desconectamos el socket aquí para permitir múltiples hooks
-      // El socket se desconectará cuando el componente principal se desmonte
-    };
-  }, [scanId, token]);
+  }, [scanId, emit]);
 
   return {
     progress,

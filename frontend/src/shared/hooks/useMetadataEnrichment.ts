@@ -1,6 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import type { Socket } from 'socket.io-client';
-import WebSocketService from '../services/websocket.service';
+import { useState, useCallback, useMemo } from 'react';
+import { useWebSocketConnection } from './useWebSocketConnection';
 
 /**
  * Notificación de enriquecimiento de metadatos
@@ -32,6 +31,33 @@ export interface EnrichmentProgress {
   timestamp: string;
 }
 
+interface EnrichmentStartedData {
+  entityType: 'artist' | 'album';
+  entityId: string;
+  entityName: string;
+  total: number;
+  timestamp: string;
+}
+
+interface EnrichmentCompletedData {
+  entityType: 'artist' | 'album';
+  entityId: string;
+  entityName: string;
+  bioUpdated?: boolean;
+  imagesUpdated?: boolean;
+  coverUpdated?: boolean;
+  duration: number;
+  timestamp: string;
+}
+
+interface EnrichmentErrorData {
+  entityType: 'artist' | 'album';
+  entityId: string;
+  entityName: string;
+  error: string;
+  timestamp: string;
+}
+
 /**
  * Hook para conectarse a los eventos de metadata enrichment via WebSocket
  *
@@ -54,150 +80,95 @@ export interface EnrichmentProgress {
 export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
   const [notifications, setNotifications] = useState<EnrichmentNotification[]>([]);
   const [progress, setProgress] = useState<EnrichmentProgress | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
+
+  // Handlers para eventos
+  const handleStarted = useCallback((data: EnrichmentStartedData) => {
+    setProgress({
+      ...data,
+      current: 0,
+      step: 'Iniciando...',
+      percentage: 0,
+    });
+  }, []);
+
+  const handleProgress = useCallback((data: EnrichmentProgress) => {
+    setProgress(data);
+  }, []);
+
+  const handleCompleted = useCallback((data: EnrichmentCompletedData) => {
+    // Limpiar progreso
+    setProgress(null);
+
+    // Agregar notificación si hubo actualizaciones
+    if (data.bioUpdated || data.imagesUpdated || data.coverUpdated) {
+      setNotifications((prev) => [
+        ...prev,
+        {
+          id: `${data.entityId}-${Date.now()}`,
+          entityType: data.entityType,
+          entityId: data.entityId,
+          entityName: data.entityName,
+          bioUpdated: data.bioUpdated,
+          imagesUpdated: data.imagesUpdated,
+          coverUpdated: data.coverUpdated,
+          timestamp: data.timestamp,
+          read: false,
+        },
+      ]);
+    }
+  }, []);
+
+  const handleError = useCallback((data: EnrichmentErrorData) => {
+    console.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
+    setProgress(null);
+  }, []);
+
+  // Eventos a registrar
+  const events = useMemo(
+    () => [
+      { event: 'enrichment:started', handler: handleStarted },
+      { event: 'enrichment:progress', handler: handleProgress },
+      { event: 'enrichment:completed', handler: handleCompleted },
+      { event: 'enrichment:error', handler: handleError },
+    ],
+    [handleStarted, handleProgress, handleCompleted, handleError]
+  );
+
+  // Usar el hook base de WebSocket
+  const { isConnected } = useWebSocketConnection({
+    namespace: 'metadata',
+    token,
+    enabled: !!token && isAdmin,
+    events,
+  });
 
   /**
    * Marcar notificación como leída
    */
-  const markAsRead = (id: string) => {
+  const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
-  };
+  }, []);
 
   /**
    * Marcar todas como leídas
    */
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  }, []);
 
   /**
    * Limpiar todas las notificaciones
    */
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
   /**
    * Obtener solo notificaciones no leídas
    */
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  useEffect(() => {
-    // Solo conectar si es admin y tiene token
-    if (!token || !isAdmin) {
-      return;
-    }
-
-    // Conectar al namespace de metadata
-    const wsService = WebSocketService;
-    const socket = wsService.connect('metadata', token);
-    socketRef.current = socket;
-
-    // Event: Conectado
-    const handleConnect = () => {
-      setIsConnected(true);
-    };
-
-    // Event: Desconectado
-    const handleDisconnect = () => {
-      setIsConnected(false);
-    };
-
-    // Event: Enriquecimiento iniciado
-    const handleStarted = (data: {
-      entityType: 'artist' | 'album';
-      entityId: string;
-      entityName: string;
-      total: number;
-      timestamp: string;
-    }) => {
-      setProgress({
-        ...data,
-        current: 0,
-        step: 'Iniciando...',
-        percentage: 0,
-      });
-    };
-
-    // Event: Progreso del enriquecimiento
-    const handleProgress = (data: EnrichmentProgress) => {
-      setProgress(data);
-    };
-
-    // Event: Enriquecimiento completado
-    const handleCompleted = (data: {
-      entityType: 'artist' | 'album';
-      entityId: string;
-      entityName: string;
-      bioUpdated?: boolean;
-      imagesUpdated?: boolean;
-      coverUpdated?: boolean;
-      duration: number;
-      timestamp: string;
-    }) => {
-      // Limpiar progreso
-      setProgress(null);
-
-      // Agregar notificación si hubo actualizaciones
-      if (data.bioUpdated || data.imagesUpdated || data.coverUpdated) {
-        setNotifications((prev) => [
-          ...prev,
-          {
-            id: `${data.entityId}-${Date.now()}`,
-            entityType: data.entityType,
-            entityId: data.entityId,
-            entityName: data.entityName,
-            bioUpdated: data.bioUpdated,
-            imagesUpdated: data.imagesUpdated,
-            coverUpdated: data.coverUpdated,
-            timestamp: data.timestamp,
-            read: false,
-          },
-        ]);
-      }
-    };
-
-    // Event: Error en el enriquecimiento
-    const handleError = (data: {
-      entityType: 'artist' | 'album';
-      entityId: string;
-      entityName: string;
-      error: string;
-      timestamp: string;
-    }) => {
-      console.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
-      setProgress(null);
-    };
-
-    // Registrar event listeners
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('enrichment:started', handleStarted);
-    socket.on('enrichment:progress', handleProgress);
-    socket.on('enrichment:completed', handleCompleted);
-    socket.on('enrichment:error', handleError);
-
-    // Si ya está conectado, ejecutar handleConnect inmediatamente
-    if (socket.connected) {
-      handleConnect();
-    }
-
-    // Cleanup
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('enrichment:started', handleStarted);
-      socket.off('enrichment:progress', handleProgress);
-      socket.off('enrichment:completed', handleCompleted);
-      socket.off('enrichment:error', handleError);
-
-      // No desconectamos el socket aquí para permitir múltiples hooks
-      // El socket se desconectará cuando el componente principal se desmonte
-    };
-  }, [token, isAdmin]);
 
   return {
     notifications,
