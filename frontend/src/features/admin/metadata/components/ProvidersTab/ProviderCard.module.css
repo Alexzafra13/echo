@@ -9,7 +9,7 @@
 
 .providerCard:hover {
   border-color: #3a3a4c;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--black-10);
 }
 
 .providerHeader {
@@ -49,7 +49,7 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 20px;
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: var(--success-10);
   color: #10b981;
   font-size: 13px;
   font-weight: 600;

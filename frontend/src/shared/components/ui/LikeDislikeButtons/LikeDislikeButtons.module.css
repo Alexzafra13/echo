@@ -10,7 +10,7 @@
   padding: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--white-60);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,7 +19,7 @@
 
 .button:hover:not(:disabled) {
   transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .button:disabled {
@@ -52,7 +52,7 @@
 
 /* Dislike button - Red when active */
 .dislikeButton.active {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .dislikeButton.active:hover:not(:disabled) {

@@ -48,8 +48,8 @@
 
 /* Success variant */
 .success {
-  background-color: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background-color: var(--success-10);
+  border: 1px solid var(--success-30);
   color: #10b981;
 }
 
@@ -59,8 +59,8 @@
 
 /* Error variant */
 .error {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: var(--error-10);
+  border: 1px solid var(--error-30);
   color: #ef4444;
 }
 
@@ -70,7 +70,7 @@
 
 /* Warning variant */
 .warning {
-  background-color: rgba(245, 158, 11, 0.1);
+  background-color: var(--warning-10);
   border: 1px solid rgba(245, 158, 11, 0.3);
   color: #f59e0b;
 }
@@ -81,8 +81,8 @@
 
 /* Info variant */
 .info {
-  background-color: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: var(--info-10);
+  border: 1px solid var(--info-30);
   color: #3b82f6;
 }
 

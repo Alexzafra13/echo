@@ -75,15 +75,15 @@
   border-radius: 50%;
   object-fit: cover;
   object-position: center top; /* Show face/head instead of cutting at middle */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  border: 4px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px var(--black-60);
+  border: 4px solid var(--white-10);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .artistDetailPage__avatar:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 40px var(--black-80);
 }
 
 .artistDetailPage__avatarFallback {
@@ -98,8 +98,8 @@
   font-weight: 900;
   color: white;
   text-transform: uppercase;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  border: 4px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px var(--black-60);
+  border: 4px solid var(--white-10);
 }
 
 .artistDetailPage__info {
@@ -118,7 +118,7 @@
   height: auto;
   object-fit: contain;
   object-position: left bottom;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0 4px 12px var(--black-80));
 }
 
 .artistDetailPage__name {
@@ -129,7 +129,7 @@
   text-transform: uppercase;
   letter-spacing: -2px;
   line-height: 1;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 4px 12px var(--black-80);
 }
 
 .artistDetailPage__stats {
@@ -139,7 +139,7 @@
   font-size: 16px;
   font-weight: 500;
   color: var(--color-text-secondary, #b8bcc8);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 4px var(--black-80);
 }
 
 /* Biography Section */
@@ -168,10 +168,10 @@
 
 .artistDetailPage__biographyContent {
   max-width: 900px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   padding: 28px 32px;
   border-radius: 12px;
-  border-left: 3px solid rgba(237, 104, 66, 0.3);
+  border-left: 3px solid var(--primary-30);
   position: relative;
 }
 
@@ -225,8 +225,8 @@
 .artistDetailPage__biographyToggle {
   margin-top: 16px;
   padding: 8px 20px;
-  background: rgba(237, 104, 66, 0.1);
-  border: 1px solid rgba(237, 104, 66, 0.3);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-30);
   border-radius: 20px;
   color: var(--color-accent, #ed6842);
   font-size: 14px;
@@ -236,7 +236,7 @@
 }
 
 .artistDetailPage__biographyToggle:hover {
-  background: rgba(237, 104, 66, 0.2);
+  background: var(--primary-20);
   border-color: rgba(237, 104, 66, 0.5);
   transform: translateY(-1px);
 }
@@ -245,7 +245,7 @@
 .artistDetailPage__biographySource {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--white-05);
   font-size: 13px;
   color: var(--color-text-tertiary, #6b7280);
   font-style: italic;

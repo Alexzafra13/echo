@@ -51,7 +51,7 @@
   display: flex;
   gap: 40px;
   height: 450px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border-radius: 12px;
   padding: 50px;
   margin-bottom: 40px;
@@ -61,7 +61,7 @@
 .hero__cover--loading {
   width: 200px;
   height: 200px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 10px;
   flex-shrink: 0;
 }
@@ -76,21 +76,21 @@
 .hero__title--loading {
   height: 60px;
   width: 60%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 8px;
 }
 
 .hero__subtitle--loading {
   height: 40px;
   width: 40%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 8px;
 }
 
 .hero__button--loading {
   height: 50px;
   width: 150px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 8px;
   margin-top: 20px;
 }
@@ -103,7 +103,7 @@
 .albumGrid__sectionTitle--loading {
   height: 32px;
   width: 300px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 8px;
   margin: 0 20px 20px;
 }
@@ -123,7 +123,7 @@
 .albumCard__cover--loading {
   width: 100%;
   aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 10px;
   margin-bottom: 12px;
 }
@@ -131,7 +131,7 @@
 .albumCard__title--loading {
   height: 20px;
   width: 80%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 4px;
   margin-bottom: 8px;
 }
@@ -139,7 +139,7 @@
 .albumCard__artist--loading {
   height: 16px;
   width: 6%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 4px;
 }
 
@@ -272,8 +272,8 @@
   height: 44px;
   padding: 0 40px 0 48px; /* Extra padding right for clear button */
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   transition: all 0.2s ease;
@@ -285,7 +285,7 @@
 
 .homePage__searchInput:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-color: var(--color-primary, #ff6b6b);
 }
 
@@ -307,7 +307,7 @@
 }
 
 .homePage__searchClearButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary);
 }
 

@@ -39,7 +39,7 @@
 .logo {
   width: 120px;
   height: auto;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 4px 12px var(--black-50));
 }
 
 .card {
@@ -47,8 +47,8 @@
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px var(--black-40);
+  border: 1px solid var(--white-10);
   width: 100%;
 }
 
@@ -148,9 +148,9 @@
 
 .requirements {
   padding: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--white-05);
 }
 
 .requirementsTitle {
@@ -179,7 +179,7 @@
 }
 
 .requirementMet {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .requirementIcon {
@@ -187,7 +187,7 @@
 }
 
 .requirement.requirementMet .requirementIcon {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .requirement:not(.requirementMet) .requirementIcon {

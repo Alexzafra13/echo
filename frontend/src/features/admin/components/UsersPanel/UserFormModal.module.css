@@ -25,8 +25,8 @@
 
 .input {
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: var(--border-radius-md);
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
@@ -36,7 +36,7 @@
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
 }
 
 .input::placeholder {
@@ -71,7 +71,7 @@
   width: 20px;
   height: 20px;
   border-radius: var(--border-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--white-20);
   cursor: pointer;
   accent-color: var(--color-primary);
 }
@@ -85,8 +85,8 @@
 
 .errorBox {
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: var(--border-radius-md);
   color: var(--color-error);
   font-size: var(--font-size-sm);

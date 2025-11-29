@@ -245,7 +245,7 @@
 }
 
 .historyItem:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white-04);
   border-color: var(--white-10);
 }
 

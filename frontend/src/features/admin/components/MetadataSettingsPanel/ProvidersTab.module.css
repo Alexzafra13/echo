@@ -43,16 +43,16 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .toggleRow:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-05);
+  border-color: var(--white-12);
 }
 
 .checkbox {
@@ -70,15 +70,15 @@
 
 /* Provider Card */
 .providerCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   padding: 20px;
   transition: all 0.2s ease;
 }
 
 .providerCard:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--white-12);
 }
 
 .providerHeader {
@@ -115,10 +115,10 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--success-10);
+  border: 1px solid var(--success-30);
   border-radius: 6px;
-  color: #10b981;
+  color: var(--color-success);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -161,15 +161,15 @@
 }
 
 .validationSuccess {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #10b981;
+  background: var(--success-10);
+  border: 1px solid var(--success-30);
+  color: var(--color-success);
 }
 
 .validationError {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
+  color: var(--color-error);
 }
 
 /* Info Box */
@@ -177,13 +177,13 @@
   display: flex;
   gap: 16px;
   padding: 20px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--info-10);
+  border: 1px solid var(--info-30);
   border-radius: 12px;
 }
 
 .infoIcon {
-  color: #3b82f6;
+  color: var(--color-info);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -232,15 +232,15 @@
   align-items: center;
   gap: 8px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .statCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px var(--black-15);
 }
 
 .statCardSuccess {
@@ -250,7 +250,7 @@
 
 .statCardSuccess:hover {
   background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: var(--success-30);
 }
 
 .statCardWarning {
@@ -270,7 +270,7 @@
 
 .statCardInfo:hover {
   background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: var(--info-30);
 }
 
 .statValue {
@@ -294,7 +294,7 @@
   align-items: flex-end;
   gap: 12px;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-10);
 }
 
 /* Save Messages */
@@ -311,15 +311,15 @@
 }
 
 .saveSuccess {
-  background: rgba(16, 185, 129, 0.15);
+  background: var(--success-15);
   border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .saveError {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--error-10);
   border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 @keyframes slideIn {

@@ -1,10 +1,10 @@
 /* MetadataSettingsPanel Component Styles */
 
 .panel {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   border-radius: 16px;
   padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   width: 100%; /* Ensure full width in admin container */
   max-width: 100%; /* Prevent overflow */
   box-sizing: border-box; /* Include padding in width calculation */
@@ -13,8 +13,8 @@
 }
 
 .panel:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-05);
+  border-color: var(--white-12);
 }
 
 .header {
@@ -48,7 +48,7 @@
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
   padding-bottom: 0;
 }
 
@@ -71,7 +71,7 @@
 
 .tabButton:hover {
   color: var(--color-text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 .tabButtonActive {

@@ -4,7 +4,7 @@
 .mosaic {
   width: 100%;
   aspect-ratio: 1;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+  background: linear-gradient(135deg, var(--primary-10) 0%, var(--black-30) 100%);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -26,7 +26,7 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-tertiary, #6b7280);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 /* Grid container for 2-4 albums */
@@ -64,7 +64,7 @@
 .mosaic__gridItem {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 /* Grid image */
@@ -83,7 +83,7 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-tertiary, #6b7280);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 /* Responsive */

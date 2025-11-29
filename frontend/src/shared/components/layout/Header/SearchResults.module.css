@@ -9,8 +9,8 @@
   overflow-y: auto;
   background: var(--color-bg-secondary, #1e293b);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px var(--black-40);
+  border: 1px solid var(--white-10);
   z-index: 100;
   padding: 8px;
 }
@@ -67,11 +67,11 @@
 }
 
 .searchResults__item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .searchResults__item:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
 }
 
 /* Avatar (circular for artists) */
@@ -81,7 +81,7 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 /* Cover (square for albums/tracks) */
@@ -91,7 +91,7 @@
   border-radius: 4px;
   object-fit: cover;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 /* Playlist Cover (mosaic container) */
@@ -101,7 +101,7 @@
   border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 /* Info */
@@ -142,10 +142,10 @@
 }
 
 .searchResults::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   border-radius: 4px;
 }
 
 .searchResults::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--white-30);
 }
