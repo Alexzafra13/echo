@@ -18,7 +18,7 @@ import {
 import { toAlbum } from '../../utils/transform';
 import styles from './ExplorePage.module.css';
 
-// Dark gradient color palettes for better contrast with white text
+// Dark gradient color palettes for the shuffle card
 const GRADIENT_PALETTES = [
   ['#1a1a2e', '#16213e'], // Dark blue
   ['#0f0c29', '#302b63'], // Deep purple
@@ -48,9 +48,11 @@ export default function ExplorePage() {
   const [isShuffleLoading, setIsShuffleLoading] = useState(false);
 
   // Generate random gradient on each page load
-  const randomGradient = useMemo(() => {
+  const cardStyle = useMemo(() => {
     const palette = GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
-    return `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`;
+    return {
+      background: `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
+    };
   }, []);
 
   // Calculate items for single row based on screen size
@@ -139,7 +141,7 @@ export default function ExplorePage() {
             className={styles.shuffleCard}
             onClick={handleShufflePlay}
             disabled={isShuffleLoading}
-            style={{ background: randomGradient }}
+            style={cardStyle}
           >
             <div className={styles.shuffleCard__content}>
               <div className={styles.shuffleCard__icon}>
