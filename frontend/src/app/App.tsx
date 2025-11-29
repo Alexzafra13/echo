@@ -18,6 +18,7 @@ import { PlaylistDetailPage as WavePlaylistDetailPage } from '@features/recommen
 import { DailyMixPage } from '@features/recommendations/pages/DailyMixPage';
 import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlaylistsPage';
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
+import { ExplorePage } from '@features/explore/pages/ExplorePage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { SetupGuard } from '@shared/components/SetupGuard';
@@ -150,6 +151,13 @@ function App() {
         <Route path="/daily-mix">
           <ProtectedRoute>
             <DailyMixPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Explore Route (Protected) */}
+        <Route path="/explore">
+          <ProtectedRoute>
+            <ExplorePage />
           </ProtectedRoute>
         </Route>
 

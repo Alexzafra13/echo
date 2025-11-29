@@ -28,6 +28,7 @@ import { RadioModule } from './features/radio/radio.module';
 import { UserInteractionsModule } from './features/user-interactions/user-interactions.module';
 import { PlayTrackingModule } from './features/play-tracking/play-tracking.module';
 import { RecommendationsModule } from './features/recommendations/recommendations.module';
+import { ExploreModule } from './features/explore/explore.module';
 import { LogsModule } from './features/logs/logs.module';
 import { HealthModule } from './features/health/health.module';
 import { SetupModule } from './features/setup/setup.module';
@@ -104,6 +105,7 @@ import { validateEnvironment } from './config/env.validation';
     UserInteractionsModule,
     PlayTrackingModule,
     RecommendationsModule,
+    ExploreModule,
   ],
   controllers: [
     // SPA fallback is registered manually in main.ts (must be outside /api prefix)
