@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { logger } from '@shared/utils/logger';
 
 export interface RadioMetadata {
   stationUuid: string;
@@ -68,7 +69,7 @@ export function useRadioMetadata({
             const data = JSON.parse(event.data);
             setMetadata(data);
           } catch (err) {
-            console.error('[ICY] Failed to parse metadata:', err);
+            logger.error('[ICY] Failed to parse metadata:', err);
           }
         });
 
@@ -89,7 +90,7 @@ export function useRadioMetadata({
 
         // Handle connection errors
         eventSource.onerror = (err) => {
-          console.error('❌ SSE Error:', err);
+          logger.error('[SSE] Connection error:', err);
           setIsConnected(false);
 
           // Close the event source
@@ -111,7 +112,7 @@ export function useRadioMetadata({
 
         eventSourceRef.current = eventSource;
       } catch (err) {
-        console.error('Failed to create EventSource:', err);
+        logger.error('[SSE] Failed to create EventSource:', err);
         setError(err instanceof Error ? err.message : 'Connection failed');
       }
     };
