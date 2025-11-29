@@ -2,6 +2,9 @@
 // Resets the database by dropping all tables and re-applying the schema
 // Usage: node scripts/db-reset.js
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const { Pool } = require('pg');
 const { spawn } = require('child_process');
 const path = require('path');
