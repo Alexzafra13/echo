@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Shuffle, Clock, Sparkles, Disc, RefreshCw } from 'lucide-react';
+import { Shuffle, Clock, Sparkles, Disc, RefreshCw, Play } from 'lucide-react';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridDimensions } from '@features/home/hooks';
+import { tracksService } from '@features/home/services/tracks.service';
+import { usePlayer } from '@features/player';
 import { getCoverUrl } from '@shared/utils/cover.utils';
+import type { Track } from '@shared/types/track.types';
 import {
   useUnplayedAlbums,
   useForgottenAlbums,
@@ -21,6 +25,8 @@ import styles from './ExplorePage.module.css';
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { playQueue } = usePlayer();
+  const [isShuffleLoading, setIsShuffleLoading] = useState(false);
 
   // Calculate items for single row based on screen size
   const { itemsPerPage: itemsPerRow } = useGridDimensions({ maxRows: 1 });
@@ -33,6 +39,43 @@ export default function ExplorePage() {
 
   const handleRefreshRandom = () => {
     queryClient.invalidateQueries({ queryKey: ['explore', 'random-albums'] });
+  };
+
+  /**
+   * Play all library tracks in random order
+   * Fetches shuffled tracks from backend and plays them
+   */
+  const handleShufflePlay = async () => {
+    if (isShuffleLoading) return;
+
+    setIsShuffleLoading(true);
+    try {
+      const { data: shuffledTracks } = await tracksService.getShuffled();
+
+      if (shuffledTracks.length === 0) {
+        return;
+      }
+
+      // Convert to player format
+      const playerTracks: Track[] = shuffledTracks.map(track => ({
+        id: track.id,
+        title: track.title,
+        artist: track.artistName || 'Artista desconocido',
+        artistId: track.artistId,
+        albumId: track.albumId,
+        albumName: track.albumName,
+        duration: track.duration,
+        coverImage: track.albumId ? `/api/images/albums/${track.albumId}/cover` : undefined,
+        trackNumber: track.trackNumber,
+        discNumber: track.discNumber,
+      }));
+
+      playQueue(playerTracks, 0);
+    } catch (error) {
+      console.error('Error loading shuffled tracks:', error);
+    } finally {
+      setIsShuffleLoading(false);
+    }
   };
 
   const navigateToAlbum = (albumId: string) => {
@@ -54,10 +97,27 @@ export default function ExplorePage() {
         <div className={styles.explorePage__content}>
           {/* Page Header */}
           <div className={styles.explorePage__header}>
-            <h1 className={styles.explorePage__title}>Explorar</h1>
-            <p className={styles.explorePage__subtitle}>
-              Descubre música en tu biblioteca
-            </p>
+            <div className={styles.explorePage__headerTop}>
+              <div>
+                <h1 className={styles.explorePage__title}>Explorar</h1>
+                <p className={styles.explorePage__subtitle}>
+                  Descubre música en tu biblioteca
+                </p>
+              </div>
+              <button
+                className={styles.explorePage__shuffleAllButton}
+                onClick={handleShufflePlay}
+                disabled={isShuffleLoading}
+                title="Reproducir toda la biblioteca en orden aleatorio"
+              >
+                {isShuffleLoading ? (
+                  <RefreshCw size={20} className={styles.explorePage__spinning} />
+                ) : (
+                  <Shuffle size={20} />
+                )}
+                <span>{isShuffleLoading ? 'Cargando...' : 'Reproducir todo aleatorio'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Surprise Me Section */}
