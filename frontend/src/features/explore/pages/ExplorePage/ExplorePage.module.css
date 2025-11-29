@@ -51,13 +51,16 @@
 /* Shuffle Card */
 .shuffleCard {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 20px 24px;
+  justify-content: center;
+  width: 180px;
+  height: 180px;
+  padding: 20px;
   margin-bottom: 32px;
+  margin-left: 20px;
   border: none;
-  border-radius: 16px;
+  border-radius: 12px;
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -70,17 +73,17 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
   pointer-events: none;
 }
 
 .shuffleCard:hover:not(:disabled) {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.02);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .shuffleCard:active:not(:disabled) {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
 }
 
 .shuffleCard:disabled {
@@ -90,52 +93,40 @@
 
 .shuffleCard__content {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  text-align: center;
 }
 
 .shuffleCard__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border-radius: 50%;
   backdrop-filter: blur(4px);
 }
 
 .shuffleCard__text {
-  text-align: left;
+  text-align: center;
 }
 
 .shuffleCard__title {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 700;
-  margin: 0 0 4px 0;
+  margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .shuffleCard__description {
-  font-size: 14px;
-  margin: 0;
-  opacity: 0.9;
+  display: none;
 }
 
 .shuffleCard__playIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.shuffleCard:hover .shuffleCard__playIcon {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.1);
+  display: none;
 }
 
 .explorePage__spinning {
@@ -353,30 +344,18 @@
   }
 
   .shuffleCard {
-    padding: 16px 20px;
+    width: 150px;
+    height: 150px;
+    margin-left: 16px;
   }
 
   .shuffleCard__icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .shuffleCard__icon svg {
-    width: 24px;
-    height: 24px;
+    width: 52px;
+    height: 52px;
   }
 
   .shuffleCard__title {
-    font-size: 18px;
-  }
-
-  .shuffleCard__description {
     font-size: 13px;
-  }
-
-  .shuffleCard__playIcon {
-    width: 40px;
-    height: 40px;
   }
 
   .explorePage__sectionHeader {
