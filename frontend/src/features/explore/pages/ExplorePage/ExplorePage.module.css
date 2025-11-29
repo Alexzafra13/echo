@@ -23,6 +23,7 @@
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  max-width: 1600px;
 }
 
 .explorePage__content::-webkit-scrollbar {
@@ -56,8 +57,9 @@
 .explorePage__sectionHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .explorePage__sectionTitle {
@@ -80,6 +82,9 @@
 .explorePage__count {
   font-size: 14px;
   color: var(--text-tertiary, #6b7280);
+  padding: 4px 12px;
+  background: var(--white-05);
+  border-radius: 20px;
 }
 
 .explorePage__hint {
@@ -316,8 +321,6 @@
   }
 
   .explorePage__sectionHeader {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 8px;
   }
 
