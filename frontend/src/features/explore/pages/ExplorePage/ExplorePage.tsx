@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Shuffle, Clock, Sparkles, Disc, RefreshCw, Play } from 'lucide-react';
 import { Sidebar, AlbumGrid } from '@features/home/components';
@@ -18,6 +18,25 @@ import {
 import { toAlbum } from '../../utils/transform';
 import styles from './ExplorePage.module.css';
 
+// Vibrant gradient color palettes
+const GRADIENT_PALETTES = [
+  ['#667eea', '#764ba2'], // Purple-violet
+  ['#f093fb', '#f5576c'], // Pink-red
+  ['#4facfe', '#00f2fe'], // Blue-cyan
+  ['#43e97b', '#38f9d7'], // Green-teal
+  ['#fa709a', '#fee140'], // Pink-yellow
+  ['#a8edea', '#fed6e3'], // Soft teal-pink
+  ['#ff9a9e', '#fecfef'], // Soft pink
+  ['#667eea', '#43e97b'], // Purple-green
+  ['#f093fb', '#4facfe'], // Pink-blue
+  ['#ffecd2', '#fcb69f'], // Peach
+  ['#a1c4fd', '#c2e9fb'], // Soft blue
+  ['#d299c2', '#fef9d7'], // Lavender-cream
+  ['#89f7fe', '#66a6ff'], // Cyan-blue
+  ['#cd9cf2', '#f6f3ff'], // Lavender
+  ['#fddb92', '#d1fdff'], // Yellow-cyan
+];
+
 /**
  * ExplorePage Component
  * Discovery section with unplayed albums, forgotten albums, hidden gems, and random picks
@@ -25,8 +44,14 @@ import styles from './ExplorePage.module.css';
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { playQueue } = usePlayer();
+  const { playQueue, isShuffle, toggleShuffle } = usePlayer();
   const [isShuffleLoading, setIsShuffleLoading] = useState(false);
+
+  // Generate random gradient on each page load
+  const randomGradient = useMemo(() => {
+    const palette = GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
+    return `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`;
+  }, []);
 
   // Calculate items for single row based on screen size
   const { itemsPerPage: itemsPerRow } = useGridDimensions({ maxRows: 1 });
@@ -44,6 +69,7 @@ export default function ExplorePage() {
   /**
    * Play all library tracks in random order
    * Fetches shuffled tracks from backend and plays them
+   * Also enables shuffle mode in the player
    */
   const handleShufflePlay = async () => {
     if (isShuffleLoading) return;
@@ -69,6 +95,11 @@ export default function ExplorePage() {
         trackNumber: track.trackNumber,
         discNumber: track.discNumber,
       }));
+
+      // Enable shuffle mode if not already enabled
+      if (!isShuffle) {
+        toggleShuffle();
+      }
 
       playQueue(playerTracks, 0);
     } catch (error) {
@@ -97,28 +128,40 @@ export default function ExplorePage() {
         <div className={styles.explorePage__content}>
           {/* Page Header */}
           <div className={styles.explorePage__header}>
-            <div className={styles.explorePage__headerTop}>
-              <div>
-                <h1 className={styles.explorePage__title}>Explorar</h1>
-                <p className={styles.explorePage__subtitle}>
-                  Descubre música en tu biblioteca
+            <h1 className={styles.explorePage__title}>Explorar</h1>
+            <p className={styles.explorePage__subtitle}>
+              Descubre música en tu biblioteca
+            </p>
+          </div>
+
+          {/* Shuffle All Card */}
+          <button
+            className={styles.shuffleCard}
+            onClick={handleShufflePlay}
+            disabled={isShuffleLoading}
+            style={{ background: randomGradient }}
+          >
+            <div className={styles.shuffleCard__content}>
+              <div className={styles.shuffleCard__icon}>
+                {isShuffleLoading ? (
+                  <RefreshCw size={32} className={styles.explorePage__spinning} />
+                ) : (
+                  <Shuffle size={32} />
+                )}
+              </div>
+              <div className={styles.shuffleCard__text}>
+                <h3 className={styles.shuffleCard__title}>
+                  {isShuffleLoading ? 'Preparando...' : 'Modo Aleatorio'}
+                </h3>
+                <p className={styles.shuffleCard__description}>
+                  Reproduce toda tu biblioteca en orden aleatorio
                 </p>
               </div>
-              <button
-                className={styles.explorePage__shuffleAllButton}
-                onClick={handleShufflePlay}
-                disabled={isShuffleLoading}
-                title="Reproducir toda la biblioteca en orden aleatorio"
-              >
-                {isShuffleLoading ? (
-                  <RefreshCw size={20} className={styles.explorePage__spinning} />
-                ) : (
-                  <Shuffle size={20} />
-                )}
-                <span>{isShuffleLoading ? 'Cargando...' : 'Reproducir todo aleatorio'}</span>
-              </button>
             </div>
-          </div>
+            <div className={styles.shuffleCard__playIcon}>
+              <Play size={24} fill="currentColor" />
+            </div>
+          </button>
 
           {/* Surprise Me Section */}
           <section className={styles.explorePage__section}>
