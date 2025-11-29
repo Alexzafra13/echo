@@ -1,4 +1,4 @@
-/* ExplorePage Styles */
+/* ExplorePage Styles - Based on AlbumsPage pattern */
 
 .explorePage {
   display: flex;
@@ -23,7 +23,6 @@
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  max-width: 1600px;
 }
 
 .explorePage__content::-webkit-scrollbar {
@@ -58,7 +57,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   padding: 0 20px;
 }
 
@@ -83,7 +82,7 @@
 .explorePage__sectionHint {
   font-size: 14px;
   color: var(--text-tertiary, #6b7280);
-  margin: -12px 0 16px 0;
+  margin: -16px 0 16px 0;
   padding: 0 20px;
 }
 
@@ -118,7 +117,6 @@
   color: var(--text-secondary, #b8bcc8);
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-left: 8px;
 }
 
 .explorePage__refreshButton:hover {
@@ -129,14 +127,6 @@
 
 .explorePage__refreshButton:active {
   transform: rotate(180deg);
-}
-
-/* Album Grid - matches AlbumGrid.module.css */
-.explorePage__albumGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 0 20px;
 }
 
 /* Track List (for Hidden Gems) */
@@ -182,15 +172,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.trackItem__placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary, #6b7280);
 }
 
 .trackItem__info {
@@ -242,11 +223,6 @@
 /* ===== Responsive ===== */
 
 @media (max-width: 1200px) {
-  .explorePage__albumGrid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-  }
-
   .explorePage__sectionTitle {
     font-size: 22px;
   }
@@ -265,12 +241,9 @@
 @media (max-width: 768px) {
   .explorePage__main {
     margin-left: 0;
-    padding-top: 0;
   }
 
   .explorePage__content {
-    overflow-x: hidden;
-    overflow-y: auto;
     margin-top: 0;
     padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
@@ -285,12 +258,6 @@
 
   .explorePage__sectionTitle {
     font-size: 20px;
-  }
-
-  .explorePage__albumGrid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    padding: 0 16px;
   }
 
   .explorePage__trackList {
@@ -336,12 +303,6 @@
   .explorePage__viewAllButton {
     font-size: 13px;
     padding: 4px 8px;
-  }
-
-  .explorePage__albumGrid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-    padding: 0 12px;
   }
 
   .explorePage__trackList {
