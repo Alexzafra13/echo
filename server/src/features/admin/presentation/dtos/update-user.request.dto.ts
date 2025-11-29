@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsBoolean, IsOptional, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserRequestDto {
@@ -11,15 +11,6 @@ export class UpdateUserRequestDto {
   @IsString()
   @MaxLength(100)
   name?: string;
-
-  @ApiProperty({
-    description: 'Email del usuario',
-    example: 'juan@example.com',
-    required: false,
-  })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
 
   @ApiProperty({
     description: 'Si el usuario tiene permisos de administrador',

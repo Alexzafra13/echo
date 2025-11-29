@@ -21,7 +21,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -54,7 +53,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -86,7 +84,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -128,7 +125,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -162,7 +158,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -190,7 +185,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -233,7 +227,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -263,7 +256,6 @@ describe('ChangeThemeUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: false,

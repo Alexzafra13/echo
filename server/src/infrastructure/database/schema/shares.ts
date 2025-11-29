@@ -8,7 +8,9 @@ import {
   bigint,
   text,
   unique,
+  index,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
 
 // ============================================
 // Share
@@ -17,7 +19,7 @@ export const shares = pgTable(
   'shares',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     description: varchar('description', { length: 512 }),
     expiresAt: timestamp('expires_at'),
     lastVisitedAt: timestamp('last_visited_at'),
@@ -28,6 +30,9 @@ export const shares = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
+  (table) => [
+    index('idx_shares_user').on(table.userId),
+  ],
 );
 
 // ============================================
@@ -37,8 +42,8 @@ export const bookmarks = pgTable(
   'bookmarks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    itemId: uuid('item_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    itemId: uuid('item_id').notNull(), // Polymorphic: can reference tracks, albums, etc.
     itemType: varchar('item_type', { length: 50 }).notNull(),
     position: bigint('position', { mode: 'number' }).notNull(),
     comment: varchar('comment', { length: 512 }),

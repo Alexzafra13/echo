@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError, ValidationError } from '@shared/errors';
+import { ConflictError, NotFoundError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { UpdateUserUseCase } from './update-user.use-case';
 
@@ -9,7 +9,6 @@ describe('UpdateUserUseCase', () => {
   beforeEach(() => {
     mockUserRepository = {
       findById: jest.fn(),
-      findByEmail: jest.fn(),
       findByUsername: jest.fn(),
       findAll: jest.fn(),
       updatePartial: jest.fn(),
@@ -24,7 +23,6 @@ describe('UpdateUserUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -62,52 +60,11 @@ describe('UpdateUserUseCase', () => {
       expect(result.username).toBe('juanperez');
     });
 
-    it('debería actualizar el email del usuario correctamente', async () => {
-      // Arrange
-      const existingUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juanperez',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const updatedUser = User.reconstruct({
-        ...existingUser.toPrimitives(),
-        email: 'juan.perez@test.com',
-      });
-
-      mockUserRepository.findById.mockResolvedValue(existingUser);
-      mockUserRepository.findAll.mockResolvedValue([existingUser]);
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-      mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
-
-      const input = {
-        userId: 'user-123',
-        email: 'juan.perez@test.com',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('juan.perez@test.com');
-      expect(result.email).toBe('juan.perez@test.com');
-    });
-
     it('debería actualizar el rol de admin del usuario', async () => {
       // Arrange
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -148,7 +105,6 @@ describe('UpdateUserUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -189,7 +145,6 @@ describe('UpdateUserUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -204,19 +159,16 @@ describe('UpdateUserUseCase', () => {
       const updatedUser = User.reconstruct({
         ...existingUser.toPrimitives(),
         name: 'Juan Pérez',
-        email: 'juan.perez@test.com',
         isAdmin: true,
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
       mockUserRepository.findAll.mockResolvedValue([existingUser]);
-      mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       const input = {
         userId: 'user-123',
         name: 'Juan Pérez',
-        email: 'juan.perez@test.com',
         isAdmin: true,
       };
 
@@ -226,11 +178,9 @@ describe('UpdateUserUseCase', () => {
       // Assert
       expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
         name: 'Juan Pérez',
-        email: 'juan.perez@test.com',
         isAdmin: true,
       });
       expect(result.name).toBe('Juan Pérez');
-      expect(result.email).toBe('juan.perez@test.com');
       expect(result.isAdmin).toBe(true);
     });
 
@@ -248,12 +198,11 @@ describe('UpdateUserUseCase', () => {
       await expect(useCase.execute(input)).rejects.toThrow('User not found');
     });
 
-    it('debería lanzar error si el email ya existe en otro usuario', async () => {
+    it('debería lanzar error si el username ya existe en otro usuario', async () => {
       // Arrange
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -268,7 +217,6 @@ describe('UpdateUserUseCase', () => {
       const otherUser = User.reconstruct({
         id: 'user-456',
         username: 'maria',
-        email: 'maria@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'María García',
         isActive: true,
@@ -282,24 +230,23 @@ describe('UpdateUserUseCase', () => {
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
       mockUserRepository.findAll.mockResolvedValue([existingUser, otherUser]);
-      mockUserRepository.findByEmail.mockResolvedValue(otherUser);
+      mockUserRepository.findByUsername.mockResolvedValue(otherUser);
 
       const input = {
         userId: 'user-123',
-        email: 'maria@test.com',
+        username: 'maria',
       };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictError);
-      await expect(useCase.execute(input)).rejects.toThrow('Email already exists');
+      await expect(useCase.execute(input)).rejects.toThrow('Username already exists');
     });
 
-    it('debería permitir actualizar con el mismo email del usuario', async () => {
+    it('debería permitir actualizar con el mismo username del usuario', async () => {
       // Arrange
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -313,12 +260,12 @@ describe('UpdateUserUseCase', () => {
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
       mockUserRepository.findAll.mockResolvedValue([existingUser]);
-      mockUserRepository.findByEmail.mockResolvedValue(existingUser);
+      mockUserRepository.findByUsername.mockResolvedValue(existingUser);
       mockUserRepository.updatePartial.mockResolvedValue(existingUser);
 
       const input = {
         userId: 'user-123',
-        email: 'juan@test.com',
+        username: 'juanperez',
         name: 'Juan Pérez Updated',
       };
 
@@ -328,113 +275,6 @@ describe('UpdateUserUseCase', () => {
       // Assert
       expect(result).toBeDefined();
       // No debe lanzar ConflictError
-    });
-
-    it('debería lanzar error si el formato del email es inválido', async () => {
-      // Arrange
-      const existingUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juanperez',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      mockUserRepository.findById.mockResolvedValue(existingUser);
-      mockUserRepository.findAll.mockResolvedValue([existingUser]);
-
-      const input = {
-        userId: 'user-123',
-        email: 'invalid-email',
-      };
-
-      // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(ValidationError);
-      await expect(useCase.execute(input)).rejects.toThrow('Invalid email format');
-    });
-
-    it('debería permitir email vacío (sin validación)', async () => {
-      // Arrange
-      const existingUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juanperez',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const updatedUser = User.reconstruct({
-        ...existingUser.toPrimitives(),
-        email: '',
-      });
-
-      mockUserRepository.findById.mockResolvedValue(existingUser);
-      mockUserRepository.findAll.mockResolvedValue([existingUser]);
-      mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
-
-      const input = {
-        userId: 'user-123',
-        email: '',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result).toBeDefined();
-      // No debe lanzar ValidationError para email vacío
-    });
-
-    it('no debería verificar email duplicado si no se está cambiando', async () => {
-      // Arrange
-      const existingUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juanperez',
-        email: 'juan@test.com',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const updatedUser = User.reconstruct({
-        ...existingUser.toPrimitives(),
-        name: 'Juan Pérez Updated',
-      });
-
-      mockUserRepository.findById.mockResolvedValue(existingUser);
-      mockUserRepository.findAll.mockResolvedValue([existingUser]);
-      mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
-
-      const input = {
-        userId: 'user-123',
-        name: 'Juan Pérez Updated',
-      };
-
-      // Act
-      await useCase.execute(input);
-
-      // Assert
-      expect(mockUserRepository.findByEmail).not.toHaveBeenCalled();
     });
   });
 });

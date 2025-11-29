@@ -156,14 +156,12 @@ describe('UsersController', () => {
       // Arrange
       const dto = {
         name: 'Updated Name',
-        email: 'updated@test.com',
       };
 
       const useCaseResponse = {
         id: 'user-123',
         username: 'testuser',
         name: 'Updated Name',
-        email: 'updated@test.com',
       };
 
       mockUpdateProfileUseCase.execute.mockResolvedValue(useCaseResponse);
@@ -175,13 +173,11 @@ describe('UsersController', () => {
       expect(mockUpdateProfileUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-123',
         name: 'Updated Name',
-        email: 'updated@test.com',
       });
       expect(result).toMatchObject({
         id: 'user-123',
         username: 'testuser',
         name: 'Updated Name',
-        email: 'updated@test.com',
         avatarUrl: '/api/images/users/user-123/avatar',
       });
     });
@@ -196,7 +192,6 @@ describe('UsersController', () => {
         id: 'user-123',
         username: 'testuser',
         name: 'Only Name',
-        email: 'old@test.com',
       };
 
       mockUpdateProfileUseCase.execute.mockResolvedValue(useCaseResponse);
@@ -208,33 +203,6 @@ describe('UsersController', () => {
       expect(mockUpdateProfileUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-123',
         name: 'Only Name',
-        email: undefined,
-      });
-    });
-
-    it('debería actualizar solo el email', async () => {
-      // Arrange
-      const dto = {
-        email: 'newemail@test.com',
-      };
-
-      const useCaseResponse = {
-        id: 'user-123',
-        username: 'testuser',
-        name: 'Old Name',
-        email: 'newemail@test.com',
-      };
-
-      mockUpdateProfileUseCase.execute.mockResolvedValue(useCaseResponse);
-
-      // Act
-      const result = await controller.updateProfile(mockUser, dto);
-
-      // Assert
-      expect(mockUpdateProfileUseCase.execute).toHaveBeenCalledWith({
-        userId: 'user-123',
-        name: undefined,
-        email: 'newemail@test.com',
       });
     });
   });

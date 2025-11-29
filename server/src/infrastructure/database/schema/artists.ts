@@ -66,7 +66,7 @@ export const artistBanners = pgTable(
   'artist_banners',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    artistId: uuid('artist_id').notNull(),
+    artistId: uuid('artist_id').notNull().references(() => artists.id, { onDelete: 'cascade' }),
     imageUrl: varchar('image_url', { length: 512 }).notNull(),
     provider: varchar('provider', { length: 50 }).notNull(),
     order: integer('order').default(0).notNull(),
@@ -85,7 +85,7 @@ export const customArtistImages = pgTable(
   'custom_artist_images',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    artistId: uuid('artist_id').notNull(),
+    artistId: uuid('artist_id').notNull().references(() => artists.id, { onDelete: 'cascade' }),
     imageType: varchar('image_type', { length: 20 }).notNull(),
     filePath: varchar('file_path', { length: 512 }).notNull(),
     fileName: varchar('file_name', { length: 255 }).notNull(),

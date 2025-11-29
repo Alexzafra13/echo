@@ -40,11 +40,6 @@ describe.skip('DrizzleUserRepository', () => {
       expect(true).toBe(true);
     });
 
-    it('debería crear usuario sin email', async () => {
-      // Test needs real database setup
-      expect(true).toBe(true);
-    });
-
     it('debería guardar todos los campos correctamente', async () => {
       // Test needs real database setup
       expect(true).toBe(true);
@@ -63,28 +58,6 @@ describe.skip('DrizzleUserRepository', () => {
     });
 
     it('debería ser case-sensitive en búsqueda', async () => {
-      // Test needs real database setup
-      expect(true).toBe(true);
-    });
-  });
-
-  describe('findByEmail', () => {
-    it('debería encontrar usuario por email', async () => {
-      // Test needs real database setup
-      expect(true).toBe(true);
-    });
-
-    it('debería retornar null si email no existe', async () => {
-      // Test needs real database setup
-      expect(true).toBe(true);
-    });
-
-    it('debería retornar null si usuario no tiene email', async () => {
-      // Test needs real database setup
-      expect(true).toBe(true);
-    });
-
-    it('debería ser case-insensitive en búsqueda de email', async () => {
       // Test needs real database setup
       expect(true).toBe(true);
     });

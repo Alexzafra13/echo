@@ -35,7 +35,6 @@ describe('RefreshTokenUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -129,7 +128,6 @@ describe('RefreshTokenUseCase', () => {
       const inactiveUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: false,
@@ -180,7 +178,6 @@ describe('RefreshTokenUseCase', () => {
       const adminUser = User.reconstruct({
         id: 'admin-123',
         username: 'admin',
-        email: 'admin@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Admin',
         isActive: true,
@@ -216,7 +213,6 @@ describe('RefreshTokenUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,

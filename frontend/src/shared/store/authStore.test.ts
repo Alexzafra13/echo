@@ -6,7 +6,6 @@ describe('authStore', () => {
   const mockUser: User = {
     id: '1',
     username: 'testuser',
-    email: 'test@example.com',
     name: 'Test User',
     isAdmin: false,
     mustChangePassword: false,
@@ -73,13 +72,13 @@ describe('authStore', () => {
     it('should not affect other user properties', () => {
       useAuthStore.getState().setAuth(mockUser, mockAccessToken, mockRefreshToken);
 
-      useAuthStore.getState().updateUser({ email: 'newemail@example.com' });
+      useAuthStore.getState().updateUser({ name: 'New Name' });
 
       const state = useAuthStore.getState();
 
       expect(state.user?.id).toBe(mockUser.id);
       expect(state.user?.username).toBe(mockUser.username);
-      expect(state.user?.email).toBe('newemail@example.com');
+      expect(state.user?.name).toBe('New Name');
     });
 
     it('should do nothing if user is null', () => {

@@ -13,7 +13,6 @@ interface CreateUserModalProps {
 export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
     name: '',
     isAdmin: false,
   });
@@ -29,11 +28,6 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
       newErrors.username = 'El username debe tener al menos 3 caracteres';
     }
 
-    // Email opcional pero debe ser válido
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -46,7 +40,6 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
     try {
       const result = await createUserMutation.mutateAsync({
         username: formData.username,
-        email: formData.email || undefined,
         name: formData.name || undefined,
         isAdmin: formData.isAdmin,
       });
@@ -106,23 +99,6 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Juan Pérez"
             />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="email" className={styles.label}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="juan@example.com"
-            />
-            {errors.email && (
-              <span className={styles.errorText}>{errors.email}</span>
-            )}
           </div>
 
           <div className={styles.formGroup}>

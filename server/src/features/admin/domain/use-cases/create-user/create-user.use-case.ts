@@ -35,24 +35,13 @@ export class CreateUserUseCase {
       throw new ConflictError('Username already exists');
     }
 
-    // 3. Verificar que email no exista (si se proporciona)
-    if (input.email) {
-      const existingUserByEmail = await this.userRepository.findByEmail(
-        input.email,
-      );
-      if (existingUserByEmail) {
-        throw new ConflictError('Email already exists');
-      }
-    }
-
-    // 4. Generar contraseña temporal de 6 dígitos
+    // 3. Generar contraseña temporal de 6 dígitos
     const temporaryPassword = PasswordUtil.generateTemporaryPassword();
     const passwordHash = await this.passwordService.hash(temporaryPassword);
 
-    // 5. Crear usuario
+    // 4. Crear usuario
     const user = User.create({
       username: input.username,
-      email: input.email,
       passwordHash,
       name: input.name,
       isActive: true,
@@ -60,10 +49,10 @@ export class CreateUserUseCase {
       mustChangePassword: true, // DEBE cambiar en primer login
     });
 
-    // 6. Persistir
+    // 5. Persistir
     const savedUser = await this.userRepository.create(user);
 
-    // 7. Log user creation
+    // 6. Log user creation
     await this.logService.info(
       LogCategory.AUTH,
       `User created by admin: ${savedUser.username}`,
@@ -75,12 +64,11 @@ export class CreateUserUseCase {
       },
     );
 
-    // 8. Retornar credenciales
+    // 7. Retornar credenciales
     return {
       user: {
         id: savedUser.id,
         username: savedUser.username,
-        email: savedUser.email,
         name: savedUser.name,
         isAdmin: savedUser.isAdmin,
       },

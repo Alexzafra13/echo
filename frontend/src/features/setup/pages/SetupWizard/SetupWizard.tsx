@@ -15,7 +15,6 @@ import { z } from 'zod';
 import {
   User,
   Lock,
-  Mail,
   FolderOpen,
   ChevronRight,
   ChevronLeft,
@@ -42,7 +41,6 @@ const adminSchema = z.object({
   username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
   confirmPassword: z.string(),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
@@ -137,7 +135,6 @@ export default function SetupWizard() {
       await createAdmin({
         username: data.username,
         password: data.password,
-        email: data.email || undefined,
       });
       setStep('library');
       loadDirectory('/');
@@ -272,16 +269,6 @@ export default function SetupWizard() {
                   error={errors.username?.message}
                   leftIcon={<User size={20} />}
                   autoComplete="username"
-                />
-
-                <Input
-                  {...register('email')}
-                  type="email"
-                  label="Email (opcional)"
-                  placeholder="admin@example.com"
-                  error={errors.email?.message}
-                  leftIcon={<Mail size={20} />}
-                  autoComplete="email"
                 />
 
                 <Input

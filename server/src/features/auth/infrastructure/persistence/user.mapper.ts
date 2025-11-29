@@ -5,7 +5,6 @@ export class UserMapper {
     return User.reconstruct({
       id: raw.id,
       username: raw.username,
-      email: raw.email || undefined,
       passwordHash: raw.passwordHash,
       name: raw.name || undefined,
       isActive: raw.isActive,
@@ -29,7 +28,6 @@ export class UserMapper {
     return {
       id: primitives.id,
       username: primitives.username,
-      email: primitives.email || null,
       password_hash: primitives.passwordHash,
       name: primitives.name || null,
       is_active: primitives.isActive,

@@ -6,7 +6,6 @@ describe('User Entity', () => {
       // Act
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan García',
         isActive: true,
@@ -16,7 +15,6 @@ describe('User Entity', () => {
       // Assert
       expect(user.id).toBeDefined();
       expect(user.username).toBe('juan');
-      expect(user.email).toBe('juan@test.com');
       expect(user.passwordHash).toBe('$2b$12$hashed');
       expect(user.name).toBe('Juan García');
       expect(user.isActive).toBe(true);
@@ -29,7 +27,6 @@ describe('User Entity', () => {
       // Act
       const user1 = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         isActive: true,
         isAdmin: false,
@@ -37,7 +34,6 @@ describe('User Entity', () => {
 
       const user2 = User.create({
         username: 'maria',
-        email: 'maria@test.com',
         passwordHash: '$2b$12$hashed',
         isActive: true,
         isAdmin: false,
@@ -51,7 +47,6 @@ describe('User Entity', () => {
       // Act
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         isActive: true,
         isAdmin: false,
@@ -59,20 +54,6 @@ describe('User Entity', () => {
 
       // Assert
       expect(user.isAdmin).toBe(false);
-    });
-
-    it('debería permitir crear sin email', () => {
-      // Act
-      const user = User.create({
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
-
-      // Assert
-      expect(user.email).toBeUndefined();
-      expect(user.username).toBe('juan');
     });
   });
 
@@ -83,7 +64,6 @@ describe('User Entity', () => {
       const props = {
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -98,7 +78,6 @@ describe('User Entity', () => {
       // Assert
       expect(user.id).toBe('user-123');
       expect(user.username).toBe('juan');
-      expect(user.email).toBe('juan@test.com');
       expect(user.passwordHash).toBe('$2b$12$hashed');
       expect(user.isActive).toBe(true);
     });
@@ -112,7 +91,6 @@ describe('User Entity', () => {
       const user = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -132,7 +110,6 @@ describe('User Entity', () => {
       // Arrange
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -142,7 +119,6 @@ describe('User Entity', () => {
       // Assert
       expect(user.id).toBeDefined();
       expect(user.username).toBe('juan');
-      expect(user.email).toBe('juan@test.com');
       expect(user.passwordHash).toBe('$2b$12$hashed');
       expect(user.name).toBe('Juan');
       expect(user.isActive).toBe(true);
@@ -151,24 +127,10 @@ describe('User Entity', () => {
       expect(user.updatedAt).toBeDefined();
     });
 
-    it('debería retornar undefined para email si no existe', () => {
-      // Arrange
-      const user = User.create({
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
-
-      // Assert
-      expect(user.email).toBeUndefined();
-    });
-
     it('debería retornar undefined para name si no existe', () => {
       // Arrange
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         isActive: true,
         isAdmin: false,
@@ -184,7 +146,6 @@ describe('User Entity', () => {
       // Arrange
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -197,7 +158,6 @@ describe('User Entity', () => {
       // Assert
       expect(primitives.id).toBe(user.id);
       expect(primitives.username).toBe('juan');
-      expect(primitives.email).toBe('juan@test.com');
       expect(primitives.passwordHash).toBe('$2b$12$hashed');
       expect(primitives.name).toBe('Juan');
       expect(primitives.isActive).toBe(true);
@@ -208,7 +168,6 @@ describe('User Entity', () => {
       // Arrange
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -228,7 +187,6 @@ describe('User Entity', () => {
       // Arrange
       const user1 = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: true,
@@ -242,7 +200,6 @@ describe('User Entity', () => {
       // Assert
       expect(user2.id).toBe(user1.id);
       expect(user2.username).toBe(user1.username);
-      expect(user2.email).toBe(user1.email);
       expect(user2.passwordHash).toBe(user1.passwordHash);
     });
   });
@@ -252,7 +209,6 @@ describe('User Entity', () => {
       // Arrange
       const user = User.create({
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         isActive: true,
         isAdmin: false,

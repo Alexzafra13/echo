@@ -3,7 +3,6 @@ import { User } from '../entities/user.entity';
 export interface UserUpdateableFields {
   username?: string;
   name?: string;
-  email?: string;
   theme?: string;
   language?: string;
   isAdmin?: boolean;
@@ -20,7 +19,6 @@ export interface UserUpdateableFields {
 export interface IUserRepository {
   findById(id: string): Promise<User | null>;
   findByUsername(username: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
   findAll(skip: number, take: number): Promise<User[]>;
   count(): Promise<number>;
 

@@ -29,7 +29,6 @@ describe('DeleteUserUseCase', () => {
       const userToDelete = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -68,7 +67,6 @@ describe('DeleteUserUseCase', () => {
       const systemAdmin = User.reconstruct({
         id: 'admin-000',
         username: 'admin0',
-        email: 'admin0@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'System Admin',
         isActive: true,
@@ -83,7 +81,6 @@ describe('DeleteUserUseCase', () => {
       const adminToDelete = User.reconstruct({
         id: 'admin-123',
         username: 'admin1',
-        email: 'admin1@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Admin One',
         isActive: true,
@@ -98,7 +95,6 @@ describe('DeleteUserUseCase', () => {
       const otherAdmin = User.reconstruct({
         id: 'admin-456',
         username: 'admin2',
-        email: 'admin2@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Admin Two',
         isActive: true,
@@ -113,7 +109,6 @@ describe('DeleteUserUseCase', () => {
       const regularUser = User.reconstruct({
         id: 'user-789',
         username: 'user1',
-        email: 'user1@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'User One',
         isActive: true,
@@ -152,7 +147,6 @@ describe('DeleteUserUseCase', () => {
       const systemAdmin = User.reconstruct({
         id: 'admin-000',
         username: 'admin0',
-        email: 'admin0@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'System Admin',
         isActive: false, // Inactive - oldest admin
@@ -167,7 +161,6 @@ describe('DeleteUserUseCase', () => {
       const lastAdmin = User.reconstruct({
         id: 'admin-123',
         username: 'admin',
-        email: 'admin@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Last Admin',
         isActive: true,
@@ -182,7 +175,6 @@ describe('DeleteUserUseCase', () => {
       const regularUser1 = User.reconstruct({
         id: 'user-456',
         username: 'user1',
-        email: 'user1@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'User One',
         isActive: true,
@@ -197,7 +189,6 @@ describe('DeleteUserUseCase', () => {
       const regularUser2 = User.reconstruct({
         id: 'user-789',
         username: 'user2',
-        email: 'user2@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'User Two',
         isActive: true,
@@ -247,7 +238,6 @@ describe('DeleteUserUseCase', () => {
       const userToDelete = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -286,7 +276,6 @@ describe('DeleteUserUseCase', () => {
       const systemAdmin = User.reconstruct({
         id: 'admin-000',
         username: 'admin0',
-        email: 'admin0@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'System Admin',
         isActive: true,
@@ -301,7 +290,6 @@ describe('DeleteUserUseCase', () => {
       const regularUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -342,7 +330,6 @@ describe('DeleteUserUseCase', () => {
       const systemAdmin = User.reconstruct({
         id: 'admin-000',
         username: 'admin0',
-        email: 'admin0@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'System Admin',
         isActive: false, // Inactive
@@ -357,7 +344,6 @@ describe('DeleteUserUseCase', () => {
       const adminToDelete = User.reconstruct({
         id: 'admin-123',
         username: 'admin1',
-        email: 'admin1@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Admin One',
         isActive: true,
@@ -373,7 +359,6 @@ describe('DeleteUserUseCase', () => {
       const inactiveAdmin = User.reconstruct({
         id: 'admin-456',
         username: 'admin2',
-        email: 'admin2@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Admin Two',
         isActive: false,

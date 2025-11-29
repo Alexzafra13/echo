@@ -20,7 +20,6 @@ describe('JwtAdapter', () => {
       const user = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: 'hash',
         name: 'Juan',
         isActive: true,
@@ -46,7 +45,6 @@ describe('JwtAdapter', () => {
       const user = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: 'hash',
         name: 'Juan',
         isActive: true,
