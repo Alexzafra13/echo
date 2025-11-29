@@ -146,7 +146,6 @@ export class AuthController {
         sub: freshUser.id,
         id: freshUser.id,
         username: freshUser.username,
-        email: freshUser.email,
         name: freshUser.name,
         isAdmin: freshUser.isAdmin,
         isActive: freshUser.isActive,
