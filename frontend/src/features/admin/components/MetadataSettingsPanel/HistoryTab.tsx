@@ -11,6 +11,7 @@ import {
   Disc,
 } from 'lucide-react';
 import { Button } from '@shared/components/ui';
+import { formatDateCompact } from '@shared/utils/format';
 import { useEnrichmentLogs, useEnrichmentStats } from '../../hooks/useEnrichmentHistory';
 import { ListEnrichmentLogsFilters } from '../../api/enrichment.api';
 import styles from './HistoryTab.module.css';
@@ -52,17 +53,6 @@ export function HistoryTab() {
 
   const handleRefresh = () => {
     refetchLogs();
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -302,7 +292,7 @@ export function HistoryTab() {
                       }}
                       title={log.previewUrl ? 'Clic para ver imagen' : ''}
                     >
-                      <td>{formatDate(log.createdAt)}</td>
+                      <td>{formatDateCompact(log.createdAt)}</td>
                       <td>
                         <div className={styles.entityCell}>
                           {getEntityIcon(log.entityType)}

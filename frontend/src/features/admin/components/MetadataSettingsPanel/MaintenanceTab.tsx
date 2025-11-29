@@ -3,6 +3,7 @@ import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw, FolderOpen, Loc
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { formatBytes } from '@shared/utils/format';
 import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
 import styles from './MaintenanceTab.module.css';
 
@@ -92,16 +93,6 @@ export function MaintenanceTab() {
         console.error('Error loading storage paths:', error);
       }
     }
-  };
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
 
   const handleCleanupClick = () => {

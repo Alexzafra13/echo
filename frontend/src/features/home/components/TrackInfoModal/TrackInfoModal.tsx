@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import type { Track } from '../../types';
-import { formatDuration } from '../../types/track.types';
+import { formatDuration, formatFileSize, formatBitrate, formatDate } from '@shared/utils/format';
 import { getCoverUrl } from '@shared/utils/cover.utils';
 import styles from './TrackInfoModal.module.css';
 
@@ -15,44 +15,6 @@ interface TrackInfoModalProps {
  */
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   const coverUrl = track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined;
-
-  const formatFileSize = (bytes?: number | string): string => {
-    if (!bytes) return 'Desconocido';
-
-    // If already formatted as string, return it
-    if (typeof bytes === 'string') return bytes;
-
-    if (!isFinite(bytes)) return 'Desconocido';
-
-    const kb = bytes / 1024;
-    const mb = kb / 1024;
-    const gb = mb / 1024;
-
-    if (gb >= 1) {
-      return `${gb.toFixed(2)} GB`;
-    }
-    if (mb >= 1) {
-      return `${mb.toFixed(2)} MB`;
-    }
-    if (kb >= 1) {
-      return `${kb.toFixed(2)} KB`;
-    }
-    return `${bytes} bytes`;
-  };
-
-  const formatBitrate = (bitrate?: number): string => {
-    if (!bitrate) return 'Desconocido';
-    return `${bitrate} kbps`;
-  };
-
-  const formatDate = (date: Date | string | undefined): string => {
-    if (!date) return 'Desconocida';
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   return (
     <div className={styles.trackInfoModal} onClick={onClose}>

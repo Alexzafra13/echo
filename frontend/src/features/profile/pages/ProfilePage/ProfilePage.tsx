@@ -8,6 +8,7 @@ import { useChangePassword, useUpdateProfile } from '../../hooks';
 // import { AvatarUpload } from '../../components/AvatarUpload'; // Available if needed
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
+import { formatDate } from '@shared/utils/format';
 import styles from './ProfilePage.module.css';
 
 /**
@@ -100,15 +101,6 @@ export function ProfilePage() {
         },
       }
     );
-  };
-
-  const formatDate = (date?: string) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   return (
