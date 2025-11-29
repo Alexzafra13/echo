@@ -28,8 +28,8 @@
   padding: 32px;
   max-width: 480px;
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--white-10);
+  box-shadow: 0 20px 60px var(--black-50);
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-height: 90vh;
   display: flex;
@@ -71,8 +71,8 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.2), rgba(237, 104, 66, 0.1));
-  border: 1px solid rgba(237, 104, 66, 0.3);
+  background: linear-gradient(135deg, var(--primary-20), var(--primary-10));
+  border: 1px solid var(--primary-30);
   color: var(--color-primary-500, #ed6842);
   flex-shrink: 0;
 }
@@ -98,7 +98,7 @@
   height: 32px;
   border-radius: 8px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   color: var(--text-secondary, #b8bcc8);
   display: flex;
   align-items: center;
@@ -109,18 +109,18 @@
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--white-05);
+  border-color: var(--white-20);
   color: var(--text-primary, #ffffff);
 }
 
 /* Error Box */
 .errorBox {
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: 8px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 16px;
@@ -133,7 +133,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: rgba(237, 104, 66, 0.1);
+  background: var(--primary-10);
   border: 1px dashed rgba(237, 104, 66, 0.4);
   border-radius: 8px;
   color: var(--color-primary-500, #ed6842);
@@ -145,7 +145,7 @@
 }
 
 .createButton:hover:not(:disabled) {
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
   border-color: rgba(237, 104, 66, 0.6);
 }
 
@@ -161,15 +161,15 @@
   gap: 12px;
   margin-bottom: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
 }
 
 .input {
   padding: 12px 16px;
   background: var(--bg-base, #0f1218);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   font-size: 15px;
   color: var(--text-primary, #ffffff);
@@ -179,7 +179,7 @@
 .input:focus {
   outline: none;
   border-color: var(--color-primary-500, #ed6842);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .input::placeholder {
@@ -209,8 +209,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -218,7 +218,7 @@
 
 .playlistItem:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(237, 104, 66, 0.3);
+  border-color: var(--primary-30);
 }
 
 .playlistItem:disabled {
@@ -314,12 +314,12 @@
 }
 
 .playlistsList::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   border-radius: 3px;
 }
 
 .playlistsList::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--white-30);
 }
 
 /* Responsive */

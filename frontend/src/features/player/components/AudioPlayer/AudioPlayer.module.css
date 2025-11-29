@@ -7,7 +7,7 @@
   right: var(--space-4);
   height: auto; /* Auto height para acomodar la barra de progreso */
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.85));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   border-radius: var(--radius-md);
   display: grid;
   grid-template-columns: 320px 1fr 260px;
@@ -40,7 +40,7 @@
 }
 
 .menuButton {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border: none;
   color: var(--text-secondary);
   padding: 6px;
@@ -55,13 +55,13 @@
 
 .menuButton:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--white-12);
   color: var(--text-primary);
 }
 
 .menuButton--active {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
   color: var(--text-primary);
 }
 
@@ -71,11 +71,11 @@
   right: 0;
   margin-bottom: 8px;
   background: rgba(20, 20, 20, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--white-15);
   border-radius: 6px;
   padding: 4px;
   min-width: 180px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--black-50);
   backdrop-filter: blur(12px);
   animation: menuFadeIn 0.15s ease;
 }
@@ -106,17 +106,17 @@
 }
 
 .menuOption:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--text-primary);
 }
 
 .menuOption--active {
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
   color: var(--color-primary-500);
 }
 
 .menuOption--active:hover {
-  background: rgba(237, 104, 66, 0.2);
+  background: var(--primary-20);
 }
 
 /* ===== Track Info ===== */
@@ -228,7 +228,7 @@
 .controlButton:hover {
   color: var(--text-primary);
   transform: scale(1.08);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
 }
 
 .controlButton:active {
@@ -283,7 +283,7 @@
   flex: 1;
   max-width: 1200px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   border-radius: var(--radius-sm);
   cursor: pointer;
   position: relative;
@@ -350,7 +350,7 @@
 
 .volumeButton:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   transform: scale(1.05);
 }
 
@@ -404,15 +404,15 @@
     to right,
     var(--color-primary-500) 0%,
     var(--color-primary-500) var(--volume-percent, 70%),
-    rgba(255, 255, 255, 0.2) var(--volume-percent, 70%),
-    rgba(255, 255, 255, 0.2) 100%
+    var(--white-20) var(--volume-percent, 70%),
+    var(--white-20) 100%
   );
   height: 5px;
   border-radius: var(--radius-sm);
 }
 
 .volumeSlider::-moz-range-track {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   height: 5px;
   border-radius: var(--radius-sm);
 }
@@ -447,13 +447,13 @@
 
 .queueButton:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   transform: scale(1.05);
 }
 
 .queueButton--active {
   color: var(--color-primary-500);
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
 }
 
 .queueButton__badge {
@@ -471,7 +471,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px var(--black-30);
 }
 
 /* ===== Live Indicator (Radio) ===== */
@@ -519,16 +519,16 @@
 
 .liveIndicator--error {
   background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: var(--error-20);
 }
 
 .liveIndicator--error .liveAntenna {
-  color: #ef4444; /* Rojo - sin señal */
+  color: var(--color-error); /* Rojo - sin señal */
   animation: none;
 }
 
 .liveIndicator--error .liveText {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .liveAntenna {
@@ -548,7 +548,7 @@
 }
 
 .liveText.error {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 @keyframes pulse-antenna {
@@ -594,9 +594,9 @@
     );
     backdrop-filter: blur(60px) saturate(150%);
     -webkit-backdrop-filter: blur(60px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--white-08);
+    box-shadow: 0 8px 32px var(--black-40),
+                inset 0 1px 1px var(--white-05);
     z-index: 9998; /* Justo debajo de la bottom nav (9999) */
     overflow: visible;
   }
@@ -620,7 +620,7 @@
   .progressBar {
     height: 3px;
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--white-15);
     cursor: default; /* Dificultar interacción */
     width: 100%;
   }
@@ -716,7 +716,7 @@
   }
 
   .playButton:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--white-10);
     transform: scale(1);
   }
 
