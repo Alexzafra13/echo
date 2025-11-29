@@ -47,7 +47,7 @@
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 50px 40px 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px var(--black-50);
 }
 
 /* Progress Bar */
@@ -76,8 +76,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--white-10);
+  border: 2px solid var(--white-20);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,7 +102,7 @@
 .progressLine {
   flex: 1;
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   max-width: 60px;
   margin-bottom: 20px;
 }
@@ -144,10 +144,10 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: 8px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 14px;
 }
 
@@ -186,7 +186,7 @@
   padding: 14px 18px;
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--white-08);
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -198,7 +198,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
   padding: 6px 12px;
   border-radius: 6px;
   color: var(--color-secondary-400, #22d3ee);
@@ -236,19 +236,19 @@
 }
 
 .validationResult.invalid {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
+  color: var(--color-error);
 }
 
 .browser {
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(12px);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   max-height: 320px;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px var(--black-30);
 }
 
 .browser::-webkit-scrollbar {
@@ -256,16 +256,16 @@
 }
 
 .browser::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
 }
 
 .browser::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border-radius: 3px;
 }
 
 .browser::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
 }
 
 .directoryList {
@@ -286,7 +286,7 @@
 }
 
 .directoryRow:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 .directoryItem {
@@ -295,7 +295,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   color: var(--color-text-primary);
@@ -306,8 +306,8 @@
 }
 
 .directoryItem:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-08);
+  border-color: var(--white-12);
   transform: translateX(4px);
 }
 
@@ -355,7 +355,7 @@
   text-align: center;
   color: var(--color-text-tertiary);
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border-radius: 8px;
   margin: 8px;
 }
@@ -374,9 +374,9 @@
   flex-direction: column;
   gap: 12px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
 }
 
 .summaryItem {
@@ -411,8 +411,8 @@
 
 /* Instructions Box (when no library mounted) */
 .instructionsBox {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--info-10);
+  border: 1px solid var(--info-30);
   border-radius: 8px;
   padding: 20px;
 }
@@ -436,7 +436,7 @@
 }
 
 .instructionsBox pre {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
   padding: 8px 12px;
   border-radius: 4px;
   font-family: monospace;
@@ -447,7 +447,7 @@
 }
 
 .instructionsBox code {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: monospace;
@@ -458,7 +458,7 @@
 .examplesBox {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-10);
 }
 
 .examplesBox strong {
@@ -482,14 +482,14 @@
 /* Advanced Options (collapsible) */
 .advancedOptions {
   margin-top: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .advancedOptions summary {
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   cursor: pointer;
   font-size: 14px;
   color: var(--color-text-secondary);
@@ -497,11 +497,11 @@
 }
 
 .advancedOptions summary:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .advancedOptions[open] summary {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
 }
 
 .advancedText {

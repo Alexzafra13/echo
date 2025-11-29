@@ -60,7 +60,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: none;
@@ -70,7 +70,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--black-10);
 }
 
 .header__backButton:hover {
@@ -139,8 +139,8 @@
   height: 44px;
   padding: 0 40px 0 48px; /* Extra padding right for clear button */
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   transition: all 0.2s ease;
@@ -152,7 +152,7 @@
 
 .header__searchInput:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-color: var(--color-primary, #ff6b6b);
 }
 
@@ -174,7 +174,7 @@
 }
 
 .header__searchClearButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary);
 }
 
@@ -183,7 +183,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border: none;
   display: flex;
   align-items: center;
@@ -194,7 +194,7 @@
 }
 
 .header__themeToggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-primary, #ff6b6b);
   transform: rotate(15deg);
 }
@@ -211,7 +211,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border: none;
   display: flex;
   align-items: center;
@@ -224,7 +224,7 @@
 }
 
 .header__userButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -234,7 +234,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px var(--black-30);
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
@@ -256,9 +256,9 @@
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 10px 25px -3px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.15);
+    0 4px 6px -1px var(--black-10),
+    0 10px 25px -3px var(--black-30),
+    0 0 0 1px var(--white-15);
   padding: 8px;
   z-index: 1001; /* Mayor que hero buttons */
 
@@ -303,7 +303,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
   margin-bottom: 4px;
 }
 
@@ -333,7 +333,7 @@
 
 .header__userDivider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   margin: 4px 0;
 }
 
@@ -351,7 +351,7 @@
 }
 
 .header__userMenuItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
   transform: translateX(4px);
 }
@@ -428,7 +428,7 @@
     );
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--white-10);
   }
 
   /* Light theme en móvil */
@@ -497,7 +497,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 0; /* Sin bordes redondeados */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px var(--black-30);
     padding: 20px 16px;
     animation: slideDown 0.3s ease;
     z-index: 1001; /* Mayor que hero buttons */
@@ -539,7 +539,7 @@
     padding: 16px;
     margin-bottom: 16px;
     border-bottom: none; /* Sin borde, ya tiene el card */
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--white-05);
     border-radius: 12px;
   }
 
@@ -568,7 +568,7 @@
 
   .header__userMenuItem:active {
     transform: scale(0.98);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--white-10);
   }
 
   .header__userDivider {

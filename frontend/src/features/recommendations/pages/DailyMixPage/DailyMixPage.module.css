@@ -36,7 +36,7 @@
   gap: 32px;
   margin-bottom: 32px;
   padding-bottom: 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .dailyMixPage__heroIcon {
@@ -49,7 +49,7 @@
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 8px 32px rgba(237, 104, 66, 0.3);
+  box-shadow: 0 8px 32px var(--primary-30);
 }
 
 .dailyMixPage__heroInfo {
@@ -114,7 +114,7 @@
   height: 44px;
   border-radius: 8px;
   border: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--color-text-secondary, #b8bcc8);
   display: flex;
   align-items: center;
@@ -124,14 +124,14 @@
 }
 
 .dailyMixPage__infoButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary, #ffffff);
 }
 
 /* Info Panel */
 .dailyMixPage__infoPanel {
-  background: rgba(237, 104, 66, 0.1);
-  border: 1px solid rgba(237, 104, 66, 0.2);
+  background: var(--primary-10);
+  border: 1px solid var(--primary-20);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 32px;
@@ -175,7 +175,7 @@
 .dailyMixPage__infoBreakdown {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-10);
 }
 
 /* Loading State */
@@ -210,7 +210,7 @@
 
 .dailyMixPage__error p {
   font-size: 16px;
-  color: var(--color-danger, #ef4444);
+  color: var(--color-danger, var(--color-error));
   margin-bottom: 24px;
 }
 
