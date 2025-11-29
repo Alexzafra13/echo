@@ -31,58 +31,7 @@
 
 /* Page Header */
 .explorePage__header {
-  margin-bottom: 40px;
-}
-
-.explorePage__headerTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.explorePage__shuffleAllButton {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--color-primary-500, #ed6842) 0%, var(--color-primary-600, #d85838) 100%);
-  border: none;
-  border-radius: 50px;
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.3);
-}
-
-.explorePage__shuffleAllButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(237, 104, 66, 0.4);
-}
-
-.explorePage__shuffleAllButton:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.explorePage__shuffleAllButton:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.explorePage__spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  margin-bottom: 24px;
 }
 
 .explorePage__title {
@@ -97,6 +46,109 @@
   font-size: 16px;
   color: var(--text-secondary, #b8bcc8);
   margin: 0;
+}
+
+/* Shuffle Card */
+.shuffleCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  border: none;
+  border-radius: 16px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.shuffleCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.shuffleCard:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.shuffleCard:active:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.shuffleCard:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.shuffleCard__content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shuffleCard__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.shuffleCard__text {
+  text-align: left;
+}
+
+.shuffleCard__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.shuffleCard__description {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.shuffleCard__playIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.shuffleCard:hover .shuffleCard__playIcon {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.1);
+}
+
+.explorePage__spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Sections */
@@ -296,19 +348,35 @@
     padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
-  .explorePage__headerTop {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .explorePage__shuffleAllButton {
-    width: 100%;
-    justify-content: center;
-    padding: 14px 20px;
-  }
-
   .explorePage__title {
     font-size: 28px;
+  }
+
+  .shuffleCard {
+    padding: 16px 20px;
+  }
+
+  .shuffleCard__icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .shuffleCard__icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .shuffleCard__title {
+    font-size: 18px;
+  }
+
+  .shuffleCard__description {
+    font-size: 13px;
+  }
+
+  .shuffleCard__playIcon {
+    width: 40px;
+    height: 40px;
   }
 
   .explorePage__sectionHeader {
