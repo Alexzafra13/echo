@@ -161,7 +161,7 @@ export class SetupService {
   /**
    * Create admin account (step 1 of wizard)
    */
-  async createAdmin(username: string, password: string, email?: string): Promise<void> {
+  async createAdmin(username: string, password: string): Promise<void> {
     // Check if admin already exists
     const [state, existingAdmin] = await Promise.all([
       this.getSetupState(),
@@ -201,7 +201,6 @@ export class SetupService {
       .insert(users)
       .values({
         username,
-        email: email || `${username}@localhost`,
         passwordHash,
         name: username,
         isAdmin: true,

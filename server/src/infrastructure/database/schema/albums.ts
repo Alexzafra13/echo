@@ -10,6 +10,7 @@ import {
   date,
   index,
 } from 'drizzle-orm/pg-core';
+import { artists } from './artists';
 
 // ============================================
 // Album
@@ -19,8 +20,8 @@ export const albums = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).notNull(),
-    albumArtistId: uuid('album_artist_id'),
-    artistId: uuid('artist_id'),
+    albumArtistId: uuid('album_artist_id').references(() => artists.id, { onDelete: 'set null' }),
+    artistId: uuid('artist_id').references(() => artists.id, { onDelete: 'set null' }),
     coverArtPath: varchar('cover_art_path', { length: 512 }),
     externalCoverPath: varchar('external_cover_path', { length: 512 }),
     externalCoverSource: varchar('external_cover_source', { length: 50 }),
@@ -65,7 +66,7 @@ export const customAlbumCovers = pgTable(
   'custom_album_covers',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    albumId: uuid('album_id').notNull(),
+    albumId: uuid('album_id').notNull().references(() => albums.id, { onDelete: 'cascade' }),
     filePath: varchar('file_path', { length: 512 }).notNull(),
     fileName: varchar('file_name', { length: 255 }).notNull(),
     fileSize: bigint('file_size', { mode: 'number' }).default(0).notNull(),

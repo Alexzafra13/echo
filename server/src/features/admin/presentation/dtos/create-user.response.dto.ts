@@ -2,7 +2,6 @@ export class CreateUserResponseDto {
   user!: {
     id: string;
     username: string;
-    email?: string;
     name?: string;
     isAdmin: boolean;
   };

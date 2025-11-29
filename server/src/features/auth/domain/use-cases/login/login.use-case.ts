@@ -95,7 +95,6 @@ export class LoginUseCase {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
         name: user.name,
         isAdmin: user.isAdmin,
         avatarPath: user.avatarPath,

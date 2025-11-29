@@ -15,13 +15,6 @@ export class UpdateUserResponseDto {
   username!: string;
 
   @ApiProperty({
-    description: 'Email del usuario',
-    example: 'juan@example.com',
-    required: false,
-  })
-  email?: string;
-
-  @ApiProperty({
     description: 'Nombre completo del usuario',
     example: 'Juan Pérez',
     required: false,
@@ -44,7 +37,6 @@ export class UpdateUserResponseDto {
     return {
       id: data.id,
       username: data.username,
-      email: data.email,
       name: data.name,
       isAdmin: data.isAdmin,
       isActive: data.isActive,

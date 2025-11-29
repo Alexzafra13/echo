@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, MaxLength, Matches, IsOptional } from 'class-validator';
+import { IsString, MinLength, MaxLength, Matches, IsOptional } from 'class-validator';
 
 export class RegisterRequestDto {
   @IsString()
@@ -8,10 +8,6 @@ export class RegisterRequestDto {
     message: 'Username must be alphanumeric with underscores only',
   })
   username!: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
 
   @IsString()
   @MinLength(8)

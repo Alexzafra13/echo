@@ -7,7 +7,6 @@ export interface LoginOutput {
   user: {
     id: string;
     username: string;
-    email?: string;
     name?: string;
     isAdmin: boolean;
     avatarPath?: string | null;

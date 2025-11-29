@@ -6,7 +6,6 @@ import {
   timestamp,
   bigint,
   index,
-  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 // ============================================
@@ -17,7 +16,6 @@ export const users = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     username: varchar('username', { length: 50 }).notNull().unique(),
-    email: varchar('email', { length: 255 }).unique(),
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     name: varchar('name', { length: 100 }),
     isAdmin: boolean('is_admin').default(false).notNull(),
@@ -43,7 +41,7 @@ export const streamTokens = pgTable(
   'stream_tokens',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     token: varchar('token', { length: 255 }).notNull().unique(),
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
