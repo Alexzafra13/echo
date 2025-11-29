@@ -30,7 +30,7 @@
 .periodSelector {
   display: flex;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   padding: 4px;
   border-radius: 8px;
 }
@@ -48,7 +48,7 @@
 }
 
 .periodButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -68,8 +68,8 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
 }
 
@@ -80,14 +80,14 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
   color: var(--color-primary, #ed6842);
   flex-shrink: 0;
 }
 
 .statIconSuccess {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: var(--success-15);
+  color: var(--color-success);
 }
 
 .statContent {
@@ -128,8 +128,8 @@
 
 .providerStatCard {
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 8px;
 }
 
@@ -150,7 +150,7 @@
 .providerSuccessRate {
   font-size: 16px;
   font-weight: 700;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .providerStatCounts {
@@ -160,15 +160,15 @@
 }
 
 .providerStatSuccess {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .providerStatPartial {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .providerStatError {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 /* History Section */
@@ -211,8 +211,8 @@
 
 .filterSelect {
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
@@ -221,8 +221,8 @@
 }
 
 .filterSelect:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--white-20);
+  background: var(--white-08);
 }
 
 .filterSelect:focus {
@@ -234,7 +234,7 @@
 .tableContainer {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
 }
 
 .table {
@@ -243,7 +243,7 @@
 }
 
 .table thead {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .table th {
@@ -254,16 +254,16 @@
   color: var(--color-text-secondary, #b8bcc8);
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .table tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--white-05);
   transition: background 0.2s ease;
 }
 
 .table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 .table td {
@@ -283,10 +283,10 @@
   align-items: center;
   padding: 4px 8px;
   background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid var(--info-30);
   border-radius: 6px;
   font-size: 12px;
-  color: #3b82f6;
+  color: var(--color-info);
   text-transform: capitalize;
   font-weight: 500;
 }
@@ -305,21 +305,21 @@
 }
 
 .badgeSuccess {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--success-15);
+  color: var(--color-success);
+  border: 1px solid var(--success-30);
 }
 
 .badgePartial {
   background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  color: var(--color-warning);
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .badgeError {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  color: var(--color-error);
+  border: 1px solid var(--error-30);
 }
 
 /* Pagination */
@@ -328,7 +328,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--white-08);
   margin-top: 16px;
 }
 
@@ -350,8 +350,8 @@
 
 .paginationButton {
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
@@ -360,8 +360,8 @@
 }
 
 .paginationButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--white-08);
+  border-color: var(--white-20);
 }
 
 .paginationButton:disabled {
@@ -490,7 +490,7 @@
   background: var(--color-bg-tertiary, #1f2937);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px var(--black-50);
 }
 
 .imageModalClose {
@@ -501,7 +501,7 @@
   height: 40px;
   border-radius: 50%;
   background: var(--color-bg-primary, #0a0e27);
-  border: 2px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  border: 2px solid var(--color-border, var(--white-10));
   color: var(--color-text-primary, #ffffff);
   font-size: 24px;
   font-weight: 300;
@@ -514,8 +514,8 @@
 }
 
 .imageModalClose:hover {
-  background: var(--color-error, #ef4444);
-  border-color: var(--color-error, #ef4444);
+  background: var(--color-error, var(--color-error));
+  border-color: var(--color-error, var(--color-error));
   transform: scale(1.1);
 }
 

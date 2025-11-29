@@ -284,12 +284,54 @@
   --button-shadow: var(--shadow-md);
   --button-shadow-hover: var(--shadow-lg);
 
+  /* ===== Transparency Utilities ===== */
+  /* White transparency - Most commonly used for overlays, hovers, borders */
+  --white-02: rgba(255, 255, 255, 0.02);
+  --white-03: rgba(255, 255, 255, 0.03);
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-08: rgba(255, 255, 255, 0.08);
+  --white-10: rgba(255, 255, 255, 0.10);
+  --white-12: rgba(255, 255, 255, 0.12);
+  --white-15: rgba(255, 255, 255, 0.15);
+  --white-20: rgba(255, 255, 255, 0.20);
+  --white-30: rgba(255, 255, 255, 0.30);
+  --white-50: rgba(255, 255, 255, 0.50);
+  --white-60: rgba(255, 255, 255, 0.60);
+  --white-80: rgba(255, 255, 255, 0.80);
+
+  /* Black transparency - For shadows, overlays, backdrops */
+  --black-05: rgba(0, 0, 0, 0.05);
+  --black-10: rgba(0, 0, 0, 0.10);
+  --black-15: rgba(0, 0, 0, 0.15);
+  --black-20: rgba(0, 0, 0, 0.20);
+  --black-30: rgba(0, 0, 0, 0.30);
+  --black-40: rgba(0, 0, 0, 0.40);
+  --black-50: rgba(0, 0, 0, 0.50);
+  --black-60: rgba(0, 0, 0, 0.60);
+  --black-80: rgba(0, 0, 0, 0.80);
+
+  /* Semantic color transparency - For status indicators, badges */
+  --error-10: rgba(239, 68, 68, 0.10);
+  --error-20: rgba(239, 68, 68, 0.20);
+  --error-30: rgba(239, 68, 68, 0.30);
+  --success-10: rgba(16, 185, 129, 0.10);
+  --success-15: rgba(16, 185, 129, 0.15);
+  --success-30: rgba(16, 185, 129, 0.30);
+  --warning-10: rgba(245, 158, 11, 0.10);
+  --warning-20: rgba(245, 158, 11, 0.20);
+  --info-10: rgba(59, 130, 246, 0.10);
+  --info-30: rgba(59, 130, 246, 0.30);
+  --primary-10: rgba(237, 104, 66, 0.10);
+  --primary-15: rgba(237, 104, 66, 0.15);
+  --primary-20: rgba(237, 104, 66, 0.20);
+  --primary-30: rgba(237, 104, 66, 0.30);
+
   /* ===== Aliases for Compatibility ===== */
   /* Legacy variable names used in existing components */
   --color-primary: var(--color-primary-500);
   --color-primary-hover: var(--color-primary-600);
   --color-primary-dark: var(--color-primary-700);
-  --color-primary-light: rgba(237, 104, 66, 0.15);
+  --color-primary-light: var(--primary-15);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -299,7 +341,7 @@
   --color-bg-secondary: var(--bg-elevated);
   --color-bg-tertiary: var(--bg-surface);
 
-  --color-hover: rgba(255, 255, 255, 0.05);
+  --color-hover: var(--white-05);
   --color-accent: var(--color-primary-600);
 }
 
