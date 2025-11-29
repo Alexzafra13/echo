@@ -103,3 +103,13 @@
   text-shadow: 0 2px 8px var(--black-80);
   line-height: 1.2;
 }
+
+/* Genre overlay image (PNG with transparency) */
+.genreOverlay {
+  position: relative;
+  z-index: 1;
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
