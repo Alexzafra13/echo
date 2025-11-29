@@ -9,9 +9,6 @@ export class UserResponseDto {
   username!: string;
 
   @Expose()
-  email?: string;
-
-  @Expose()
   name?: string;
 
   @Expose()
@@ -21,7 +18,6 @@ export class UserResponseDto {
     const dto = new UserResponseDto();
     dto.id = data.id;
     dto.username = data.username;
-    dto.email = data.email;
     dto.name = data.name;
     // avatarUrl will be constructed in the controller or by a helper
     dto.avatarUrl = data.id ? `/api/images/users/${data.id}/avatar` : undefined;
