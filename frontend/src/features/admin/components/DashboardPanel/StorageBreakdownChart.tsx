@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { HardDrive } from 'lucide-react';
+import { formatBytes } from '@shared/utils/format';
 import styles from './StorageBreakdownChart.module.css';
 
 interface StorageBreakdown {
@@ -24,14 +25,6 @@ const COLORS = {
  * Muestra un gráfico de torta con el desglose de almacenamiento
  */
 export function StorageBreakdownChart({ data }: StorageBreakdownChartProps) {
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-  };
-
   // Transform data for Recharts
   // Note: "metadata" = artist/album images from external providers
   // Note: "avatars" = user profile pictures (not artist images)

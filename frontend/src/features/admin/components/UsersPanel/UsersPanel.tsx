@@ -8,6 +8,7 @@ import { EditUserModal } from './EditUserModal';
 import { CredentialsModal } from './CredentialsModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
+import { formatDateCompact } from '@shared/utils/format';
 import styles from './UsersPanel.module.css';
 import type { NotificationType } from '@shared/components/ui';
 
@@ -109,18 +110,6 @@ export function UsersPanel() {
       }
       setNotification({ type: 'error', message: 'Error al resetear contraseña. Por favor intenta de nuevo.' });
     }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Nunca';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const allUsers = data?.users || [];
@@ -367,7 +356,7 @@ export function UsersPanel() {
                       {user.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td data-label="Último acceso">{formatDate(user.lastLoginAt)}</td>
+                  <td data-label="Último acceso">{formatDateCompact(user.lastLoginAt)}</td>
                   <td data-label="Acciones">
                     <div className={styles.actions}>
                       <button
