@@ -1,18 +1,36 @@
 import { useLocation } from 'wouter';
 import { Shuffle, Clock, Sparkles, Disc, RefreshCw } from 'lucide-react';
-import { Sidebar } from '@features/home/components';
+import { Sidebar, AlbumGrid } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
-import { AlbumCard } from '@features/home/components/AlbumCard';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridDimensions } from '@features/home/hooks';
 import { getCoverUrl } from '@shared/utils/cover.utils';
+import type { Album } from '@features/home/types';
 import {
   useUnplayedAlbums,
   useForgottenAlbums,
   useHiddenGems,
   useRandomAlbums,
 } from '../../hooks/useExplore';
+import type { ExploreAlbum } from '../../services/explore.service';
 import styles from './ExplorePage.module.css';
+
+/**
+ * Transform ExploreAlbum to Album type for AlbumGrid compatibility
+ */
+function toAlbum(exploreAlbum: ExploreAlbum): Album {
+  return {
+    id: exploreAlbum.id,
+    title: exploreAlbum.name,
+    artist: exploreAlbum.artistName || 'Artista desconocido',
+    artistId: exploreAlbum.artistId || '',
+    coverImage: `/api/images/albums/${exploreAlbum.id}/cover`,
+    year: exploreAlbum.year || 0,
+    totalTracks: exploreAlbum.songCount,
+    duration: exploreAlbum.duration,
+    addedAt: new Date(),
+  };
+}
 
 /**
  * ExplorePage Component
@@ -38,6 +56,11 @@ export default function ExplorePage() {
   const navigateToAlbum = (albumId: string) => {
     setLocation(`/album/${albumId}`);
   };
+
+  // Transform explore albums to Album type
+  const randomAlbums = randomData?.albums?.map(toAlbum) || [];
+  const unplayedAlbums = unplayedData?.albums?.map(toAlbum) || [];
+  const forgottenAlbums = forgottenData?.albums?.map(toAlbum) || [];
 
   return (
     <div className={styles.explorePage}>
@@ -70,18 +93,8 @@ export default function ExplorePage() {
             </div>
             {loadingRandom ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
-            ) : randomData?.albums && randomData.albums.length > 0 ? (
-              <div className={styles.explorePage__albumGrid}>
-                {randomData.albums.map((album) => (
-                  <AlbumCard
-                    key={album.id}
-                    cover={getCoverUrl(album.coverArtPath)}
-                    title={album.name}
-                    artist={album.artistName || 'Artista desconocido'}
-                    onClick={() => navigateToAlbum(album.id)}
-                  />
-                ))}
-              </div>
+            ) : randomAlbums.length > 0 ? (
+              <AlbumGrid title="" albums={randomAlbums} />
             ) : (
               <p className={styles.explorePage__empty}>No hay albums disponibles</p>
             )}
@@ -103,18 +116,8 @@ export default function ExplorePage() {
             </div>
             {loadingUnplayed ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
-            ) : unplayedData?.albums && unplayedData.albums.length > 0 ? (
-              <div className={styles.explorePage__albumGrid}>
-                {unplayedData.albums.map((album) => (
-                  <AlbumCard
-                    key={album.id}
-                    cover={getCoverUrl(album.coverArtPath)}
-                    title={album.name}
-                    artist={album.artistName || 'Artista desconocido'}
-                    onClick={() => navigateToAlbum(album.id)}
-                  />
-                ))}
-              </div>
+            ) : unplayedAlbums.length > 0 ? (
+              <AlbumGrid title="" albums={unplayedAlbums} />
             ) : (
               <p className={styles.explorePage__empty}>¡Has escuchado todos tus albums!</p>
             )}
@@ -133,18 +136,8 @@ export default function ExplorePage() {
             </div>
             {loadingForgotten ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
-            ) : forgottenData?.albums && forgottenData.albums.length > 0 ? (
-              <div className={styles.explorePage__albumGrid}>
-                {forgottenData.albums.map((album) => (
-                  <AlbumCard
-                    key={album.id}
-                    cover={getCoverUrl(album.coverArtPath)}
-                    title={album.name}
-                    artist={album.artistName || 'Artista desconocido'}
-                    onClick={() => navigateToAlbum(album.id)}
-                  />
-                ))}
-              </div>
+            ) : forgottenAlbums.length > 0 ? (
+              <AlbumGrid title="" albums={forgottenAlbums} />
             ) : (
               <p className={styles.explorePage__empty}>No tienes albums olvidados</p>
             )}
@@ -171,17 +164,11 @@ export default function ExplorePage() {
                   >
                     <span className={styles.trackItem__number}>{index + 1}</span>
                     <div className={styles.trackItem__cover}>
-                      {track.coverArtPath ? (
-                        <img
-                          src={getCoverUrl(track.coverArtPath)}
-                          alt={track.albumName || ''}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className={styles.trackItem__placeholder}>
-                          <Disc size={20} />
-                        </div>
-                      )}
+                      <img
+                        src={track.albumId ? `/api/images/albums/${track.albumId}/cover` : getCoverUrl(null)}
+                        alt={track.albumName || ''}
+                        loading="lazy"
+                      />
                     </div>
                     <div className={styles.trackItem__info}>
                       <h4 className={styles.trackItem__title}>{track.title}</h4>

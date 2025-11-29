@@ -1,12 +1,29 @@
 import { useLocation } from 'wouter';
 import { Disc, ChevronLeft } from 'lucide-react';
-import { Sidebar } from '@features/home/components';
+import { Sidebar, AlbumGrid } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
-import { AlbumCard } from '@features/home/components/AlbumCard';
 import { useUnplayedAlbums } from '../../hooks/useExplore';
 import { useGridDimensions } from '@features/home/hooks';
-import { getCoverUrl } from '@shared/utils/cover.utils';
+import type { Album } from '@features/home/types';
+import type { ExploreAlbum } from '../../services/explore.service';
 import styles from './UnplayedAlbumsPage.module.css';
+
+/**
+ * Transform ExploreAlbum to Album type for AlbumGrid compatibility
+ */
+function toAlbum(exploreAlbum: ExploreAlbum): Album {
+  return {
+    id: exploreAlbum.id,
+    title: exploreAlbum.name,
+    artist: exploreAlbum.artistName || 'Artista desconocido',
+    artistId: exploreAlbum.artistId || '',
+    coverImage: `/api/images/albums/${exploreAlbum.id}/cover`,
+    year: exploreAlbum.year || 0,
+    totalTracks: exploreAlbum.songCount,
+    duration: exploreAlbum.duration,
+    addedAt: new Date(),
+  };
+}
 
 /**
  * UnplayedAlbumsPage Component
@@ -16,17 +33,16 @@ export default function UnplayedAlbumsPage() {
   const [, setLocation] = useLocation();
 
   // Calculate items per page based on screen size (multiple rows)
-  const { itemsPerPage } = useGridDimensions({ maxRows: 4 });
+  const { itemsPerPage } = useGridDimensions({ maxRows: 6 });
 
-  const { data, isLoading } = useUnplayedAlbums(Math.min(itemsPerPage * 3, 100));
-
-  const navigateToAlbum = (albumId: string) => {
-    setLocation(`/album/${albumId}`);
-  };
+  const { data, isLoading } = useUnplayedAlbums(Math.min(itemsPerPage, 100));
 
   const handleBack = () => {
     setLocation('/explore');
   };
+
+  // Transform to Album type
+  const albums = data?.albums?.map(toAlbum) || [];
 
   return (
     <div className={styles.unplayedPage}>
@@ -56,18 +72,8 @@ export default function UnplayedAlbumsPage() {
           {/* Albums Grid */}
           {isLoading ? (
             <div className={styles.unplayedPage__loading}>Cargando...</div>
-          ) : data?.albums && data.albums.length > 0 ? (
-            <div className={styles.unplayedPage__grid}>
-              {data.albums.map((album) => (
-                <AlbumCard
-                  key={album.id}
-                  cover={getCoverUrl(album.coverArtPath)}
-                  title={album.name}
-                  artist={album.artistName || 'Artista desconocido'}
-                  onClick={() => navigateToAlbum(album.id)}
-                />
-              ))}
-            </div>
+          ) : albums.length > 0 ? (
+            <AlbumGrid title="" albums={albums} />
           ) : (
             <div className={styles.unplayedPage__empty}>
               <Disc size={48} />
