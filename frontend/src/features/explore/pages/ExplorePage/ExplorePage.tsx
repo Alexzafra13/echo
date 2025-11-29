@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Shuffle, Clock, Sparkles, Disc, User, RefreshCw } from 'lucide-react';
+import { Shuffle, Clock, Sparkles, Disc, RefreshCw } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,12 +31,6 @@ export default function ExplorePage() {
 
   const navigateToAlbum = (albumId: string) => {
     setLocation(`/albums/${albumId}`);
-  };
-
-  const navigateToArtist = (artistId: string) => {
-    if (artistId) {
-      setLocation(`/artists/${artistId}`);
-    }
   };
 
   return (
