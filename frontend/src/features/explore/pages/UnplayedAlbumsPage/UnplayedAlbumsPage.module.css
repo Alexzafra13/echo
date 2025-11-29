@@ -1,4 +1,4 @@
-/* UnplayedAlbumsPage Styles */
+/* UnplayedAlbumsPage Styles - Based on AlbumsPage pattern */
 
 .unplayedPage {
   display: flex;
@@ -23,7 +23,6 @@
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  max-width: 1600px;
 }
 
 .unplayedPage__content::-webkit-scrollbar {
@@ -79,13 +78,6 @@
   margin: 0;
 }
 
-/* Grid */
-.unplayedPage__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-}
-
 /* States */
 .unplayedPage__loading {
   display: flex;
@@ -115,11 +107,6 @@
   .unplayedPage__title {
     font-size: 36px;
   }
-
-  .unplayedPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -134,10 +121,5 @@
 
   .unplayedPage__title {
     font-size: 28px;
-  }
-
-  .unplayedPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
   }
 }
