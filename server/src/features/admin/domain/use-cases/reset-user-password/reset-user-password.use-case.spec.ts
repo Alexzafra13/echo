@@ -38,7 +38,6 @@ describe('ResetUserPasswordUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_hashed_password',
         name: 'Juan Pérez',
         isActive: true,
@@ -81,7 +80,6 @@ describe('ResetUserPasswordUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -115,7 +113,6 @@ describe('ResetUserPasswordUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -150,7 +147,6 @@ describe('ResetUserPasswordUseCase', () => {
       const adminUser = User.reconstruct({
         id: 'admin-123',
         username: 'admin',
-        email: 'admin@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Admin User',
         isActive: true,
@@ -203,7 +199,6 @@ describe('ResetUserPasswordUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_hash',
         name: 'Juan Pérez',
         isActive: true,
@@ -246,7 +241,6 @@ describe('ResetUserPasswordUseCase', () => {
       const existingUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: true,
@@ -283,7 +277,6 @@ describe('ResetUserPasswordUseCase', () => {
       const inactiveUser = User.reconstruct({
         id: 'user-123',
         username: 'juanperez',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: false,

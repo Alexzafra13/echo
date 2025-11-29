@@ -37,7 +37,7 @@ describe('WsJwtGuard', () => {
   describe('canActivate', () => {
     it('should allow connection with valid token from query param', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-123', email: 'test@test.com' };
+      const payload = { sub: 'user-123', username: 'testuser' };
 
       mockSocket.handshake!.query = { token };
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
@@ -54,7 +54,7 @@ describe('WsJwtGuard', () => {
 
     it('should allow connection with valid token from auth object', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-456', email: 'test2@test.com' };
+      const payload = { sub: 'user-456', username: 'testuser2' };
 
       mockSocket.handshake!.auth = { token };
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
@@ -67,7 +67,7 @@ describe('WsJwtGuard', () => {
 
     it('should allow connection with valid token from Authorization header', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-789', email: 'test3@test.com' };
+      const payload = { sub: 'user-789', username: 'testuser3' };
 
       mockSocket.handshake!.headers = { authorization: `Bearer ${token}` };
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
@@ -100,7 +100,7 @@ describe('WsJwtGuard', () => {
 
     it('should handle array of tokens in query param', async () => {
       const token = 'valid-token';
-      const payload = { sub: 'user-999', email: 'test4@test.com' };
+      const payload = { sub: 'user-999', username: 'testuser4' };
 
       mockSocket.handshake!.query = { token: [token, 'other-token'] };
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);

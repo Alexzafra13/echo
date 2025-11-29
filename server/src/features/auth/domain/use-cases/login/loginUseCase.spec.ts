@@ -16,7 +16,6 @@ describe('LoginUseCase', () => {
     return User.reconstruct({
       id: 'user-123',
       username: 'juan',
-      email: 'juan@test.com',
       passwordHash: '$2b$12$hashed_password',
       name: 'Juan',
       isActive: true,
@@ -77,7 +76,6 @@ describe('LoginUseCase', () => {
 
       // Assert
       expect(result.user.username).toBe('juan');
-      expect(result.user.email).toBe('juan@test.com');
       expect(result.user.id).toBe('user-123');
       expect(result.accessToken).toBe('access_token_123');
       expect(result.refreshToken).toBe('refresh_token_123');
@@ -158,25 +156,6 @@ describe('LoginUseCase', () => {
           password: 'WrongPassword!',
         }),
       ).rejects.toThrow(new UnauthorizedError('Invalid credentials'));
-    });
-
-    it('debería retornar sin email si el usuario no tiene', async () => {
-      // Arrange
-      const mockUser = createMockUser({ email: undefined });
-      mockUserRepository.findByUsername.mockResolvedValue(mockUser);
-      mockPasswordService.compare.mockResolvedValue(true);
-      mockTokenService.generateAccessToken.mockResolvedValue('access_token');
-      mockTokenService.generateRefreshToken.mockResolvedValue('refresh_token');
-
-      // Act
-      const result = await useCase.execute({
-        username: 'juan',
-        password: 'Pass123!',
-      });
-
-      // Assert
-      expect(result.user.email).toBeUndefined();
-      expect(result.user.username).toBe('juan');
     });
 
     it('debería generar tokens correctamente', async () => {
