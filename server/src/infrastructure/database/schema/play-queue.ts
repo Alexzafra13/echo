@@ -8,6 +8,8 @@ import {
   index,
   unique,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
+import { tracks } from './tracks';
 
 // ============================================
 // PlayQueue
@@ -16,8 +18,8 @@ export const playQueues = pgTable(
   'play_queue',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().unique(),
-    currentTrackId: uuid('current_track_id'),
+    userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+    currentTrackId: uuid('current_track_id').references(() => tracks.id, { onDelete: 'set null' }),
     position: bigint('position', { mode: 'number' }).default(0).notNull(),
     changedBy: varchar('changed_by', { length: 255 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -32,8 +34,8 @@ export const playQueueTracks = pgTable(
   'play_queue_tracks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    queueId: uuid('queue_id').notNull(),
-    trackId: uuid('track_id').notNull(),
+    queueId: uuid('queue_id').notNull().references(() => playQueues.id, { onDelete: 'cascade' }),
+    trackId: uuid('track_id').notNull().references(() => tracks.id, { onDelete: 'cascade' }),
     queueOrder: integer('queue_order').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

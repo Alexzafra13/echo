@@ -9,9 +9,6 @@ export class UserItemDto {
   username!: string;
 
   @Expose()
-  email?: string;
-
-  @Expose()
   name?: string;
 
   @Expose()
@@ -50,7 +47,6 @@ export class ListUsersResponseDto {
       const userDto = new UserItemDto();
       userDto.id = user.id;
       userDto.username = user.username;
-      userDto.email = user.email;
       userDto.name = user.name;
       userDto.isAdmin = user.isAdmin;
       userDto.isActive = user.isActive;

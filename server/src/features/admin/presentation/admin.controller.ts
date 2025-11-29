@@ -60,7 +60,7 @@ export class AdminController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Username o email ya existe'
+    description: 'Username ya existe'
   })
   @ApiResponse({
     status: 401,
@@ -76,7 +76,6 @@ export class AdminController {
   ) {
     const result = await this.createUserUseCase.execute({
       username: dto.username,
-      email: dto.email,
       name: dto.name,
       isAdmin: dto.isAdmin,
       adminId: currentUser?.id,
@@ -134,7 +133,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Actualizar usuario (Admin)',
-    description: 'Actualiza la información de un usuario existente. Permite cambiar nombre, email, rol de admin y estado activo. Solo accesible por administradores.'
+    description: 'Actualiza la información de un usuario existente. Permite cambiar nombre, rol de admin y estado activo. Solo accesible por administradores.'
   })
   @ApiParam({
     name: 'id',
@@ -149,7 +148,7 @@ export class AdminController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Email ya existe o datos inválidos'
+    description: 'Datos inválidos'
   })
   @ApiResponse({
     status: 401,
@@ -170,7 +169,6 @@ export class AdminController {
     const result = await this.updateUserUseCase.execute({
       userId: id,
       name: dto.name,
-      email: dto.email,
       isAdmin: dto.isAdmin,
       isActive: dto.isActive,
     });

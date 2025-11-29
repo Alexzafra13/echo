@@ -57,7 +57,6 @@ export async function getSetupStatus(): Promise<SetupStatus> {
 export async function createAdmin(data: {
   username: string;
   password: string;
-  email?: string;
 }): Promise<{ success: boolean; message: string; username: string }> {
   const response = await axios.post(`${API_BASE}/admin`, data);
   return response.data;

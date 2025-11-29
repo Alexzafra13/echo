@@ -4,7 +4,6 @@ import { DateUtil } from '@shared/utils/date.util';
 export interface UserProps {
   id: string;
   username: string;
-  email?: string;
   passwordHash: string;
   name?: string;
   isActive: boolean;
@@ -59,10 +58,6 @@ export class User {
 
   get username(): string {
     return this.props.username;
-  }
-
-  get email(): string | undefined {
-    return this.props.email;
   }
 
   get passwordHash(): string {

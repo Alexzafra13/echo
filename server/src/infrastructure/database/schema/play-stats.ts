@@ -10,6 +10,8 @@ import {
   index,
   primaryKey,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
+import { tracks } from './tracks';
 
 // ============================================
 // UserStarred
@@ -17,8 +19,8 @@ import {
 export const userStarred = pgTable(
   'user_starred',
   {
-    userId: uuid('user_id').notNull(),
-    starredId: uuid('starred_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    starredId: uuid('starred_id').notNull(), // Polymorphic: can reference tracks, albums, artists, playlists
     starredType: varchar('starred_type', { length: 50 }).notNull(),
     sentiment: varchar('sentiment', { length: 20 }).notNull(),
     starredAt: timestamp('starred_at').defaultNow().notNull(),
@@ -39,8 +41,8 @@ export const userStarred = pgTable(
 export const userRatings = pgTable(
   'user_ratings',
   {
-    userId: uuid('user_id').notNull(),
-    itemId: uuid('item_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    itemId: uuid('item_id').notNull(), // Polymorphic: can reference tracks, albums, artists
     itemType: varchar('item_type', { length: 50 }).notNull(),
     rating: integer('rating').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -60,8 +62,8 @@ export const playHistory = pgTable(
   'play_history',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    trackId: uuid('track_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    trackId: uuid('track_id').notNull().references(() => tracks.id, { onDelete: 'cascade' }),
     playedAt: timestamp('played_at').notNull(),
     client: varchar('client', { length: 255 }),
     playContext: varchar('play_context', { length: 50 }).default('direct').notNull(),
@@ -86,8 +88,8 @@ export const playHistory = pgTable(
 export const userPlayStats = pgTable(
   'user_play_stats',
   {
-    userId: uuid('user_id').notNull(),
-    itemId: uuid('item_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    itemId: uuid('item_id').notNull(), // Polymorphic: can reference tracks, albums, artists
     itemType: varchar('item_type', { length: 50 }).notNull(),
     playCount: bigint('play_count', { mode: 'number' }).default(0).notNull(),
     weightedPlayCount: real('weighted_play_count').default(0).notNull(),

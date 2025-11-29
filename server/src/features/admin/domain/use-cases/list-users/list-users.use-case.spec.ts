@@ -34,7 +34,6 @@ describe('ListUsersUseCase', () => {
         User.reconstruct({
           id: '1',
           username: 'user1',
-          email: 'user1@test.com',
           name: 'User One',
           password: 'hashed_password',
           isAdmin: false,
@@ -49,7 +48,6 @@ describe('ListUsersUseCase', () => {
         User.reconstruct({
           id: '2',
           username: 'user2',
-          email: 'user2@test.com',
           name: 'User Two',
           password: 'hashed_password',
           isAdmin: true,
@@ -77,7 +75,6 @@ describe('ListUsersUseCase', () => {
       expect(result.users[0]).toEqual({
         id: '1',
         username: 'user1',
-        email: 'user1@test.com',
         name: 'User One',
         isAdmin: false,
         isActive: true,
@@ -95,7 +92,6 @@ describe('ListUsersUseCase', () => {
         User.reconstruct({
           id: '3',
           username: 'user3',
-          email: 'user3@test.com',
           name: 'User Three',
           password: 'hashed_password',
           isAdmin: false,
@@ -134,13 +130,12 @@ describe('ListUsersUseCase', () => {
       expect(result.total).toBe(0);
     });
 
-    it('debería mapear correctamente usuarios sin email ni lastLoginAt', async () => {
+    it('debería mapear correctamente usuarios sin lastLoginAt', async () => {
       // Arrange
       const mockUsers = [
         User.reconstruct({
           id: '4',
           username: 'user4',
-          email: undefined,
           name: 'User Four',
           password: 'hashed_password',
           isAdmin: false,
@@ -161,7 +156,6 @@ describe('ListUsersUseCase', () => {
       const result = await useCase.execute({});
 
       // Assert
-      expect(result.users[0].email).toBeUndefined();
       expect(result.users[0].lastLoginAt).toBeUndefined();
       expect(result.users[0].mustChangePassword).toBe(true);
     });

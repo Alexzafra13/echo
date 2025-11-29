@@ -9,9 +9,6 @@ export class UserResponseDto {
   username!: string;
 
   @Expose()
-  email?: string;
-
-  @Expose()
   name?: string;
 
   @Expose()
@@ -43,7 +40,6 @@ export class AuthResponseDto {
     dto.user = new UserResponseDto();
     dto.user.id = data.user.id;
     dto.user.username = data.user.username;
-    dto.user.email = data.user.email;
     dto.user.name = data.user.name;
     dto.user.isAdmin = data.user.isAdmin;
     dto.user.hasAvatar = !!data.user.avatarPath; // true if avatarPath exists
