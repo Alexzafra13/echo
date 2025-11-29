@@ -46,7 +46,9 @@ export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/
         playQueue(tracksWithCover, 0);
       }
     } catch (error) {
-      console.error('Failed to load album tracks:', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to load album tracks:', error);
+      }
     }
   };
 
