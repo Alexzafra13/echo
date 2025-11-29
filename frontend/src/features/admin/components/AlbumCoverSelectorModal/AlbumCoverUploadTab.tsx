@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Upload, X, Check, AlertCircle, Loader, Trash2 } from 'lucide-react';
 import { Button } from '@shared/components/ui';
+import { useFileUpload } from '@shared/hooks/useFileUpload';
+import { formatFileSize } from '@shared/utils/format';
 import {
   useUploadCustomCover,
   useListCustomCovers,
@@ -14,20 +16,20 @@ interface AlbumCoverUploadTabProps {
   onSuccess?: () => void;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Hook para manejo de archivos
+  const {
+    selectedFile,
+    previewUrl,
+    error: fileError,
+    handleFileSelect,
+    resetInput,
+    fileInputRef,
+  } = useFileUpload({
+    onError: setUploadError,
+  });
 
   const { mutate: uploadCover, isPending: isUploading } = useUploadCustomCover();
   const { mutate: applyCover, isPending: isApplying } = useApplyCustomCover();
@@ -38,33 +40,8 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
     (cover) => cover.albumId === albumId
   );
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploadError(null);
-
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError('Formato no válido. Solo se permiten JPG, PNG y WebP');
-      return;
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError('El archivo excede el tamaño máximo de 10MB');
-      return;
-    }
-
-    setSelectedFile(file);
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
+  // Combinar errores del hook y de upload
+  const displayError = uploadError || fileError;
 
   const handleUpload = () => {
     if (!selectedFile) return;
@@ -83,8 +60,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
             },
             {
               onSuccess: () => {
-                setSelectedFile(null);
-                setPreviewUrl(null);
+                resetInput();
                 onSuccess?.();
               },
               onError: (error: any) => {
@@ -130,12 +106,8 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
   };
 
   const handleCancelSelection = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    resetInput();
     setUploadError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const isProcessing = isUploading || isApplying;
@@ -147,7 +119,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         <input
           ref={fileInputRef}
           type="file"
-          accept={ALLOWED_TYPES.join(',')}
+          accept="image/jpeg,image/jpg,image/png,image/webp"
           onChange={handleFileSelect}
           disabled={isProcessing}
           style={{ display: 'none' }}
@@ -187,10 +159,10 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
       </div>
 
       {/* Error Message */}
-      {uploadError && (
+      {displayError && (
         <div className={styles.errorMessage}>
           <AlertCircle size={16} />
-          <span>{uploadError}</span>
+          <span>{displayError}</span>
         </div>
       )}
 
