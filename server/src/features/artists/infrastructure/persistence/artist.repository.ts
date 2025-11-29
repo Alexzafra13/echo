@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { eq, desc, count, sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
+import { createSearchPattern } from '@shared/utils';
 import { artists } from '@infrastructure/database/schema';
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
@@ -41,8 +42,8 @@ export class DrizzleArtistRepository
   }
 
   async search(name: string, skip: number, take: number): Promise<Artist[]> {
-    // Use ILIKE for case-insensitive search with wildcards
-    const searchPattern = `%${name}%`;
+    // Use ILIKE for case-insensitive search with escaped wildcards
+    const searchPattern = createSearchPattern(name);
 
     const result = await this.drizzle.db
       .select()
