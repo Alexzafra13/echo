@@ -17,3 +17,5 @@ export { useScrollDetection } from './useScrollDetection';
 export type { UseScrollDetectionOptions, UseScrollDetectionReturn } from './useScrollDetection';
 export { useClickOutside } from './useClickOutside';
 export type { UseClickOutsideOptions, UseClickOutsideReturn } from './useClickOutside';
+export { useShufflePlay } from './useShufflePlay';
+export type { UseShufflePlayReturn } from './useShufflePlay';
