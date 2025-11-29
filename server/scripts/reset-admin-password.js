@@ -9,17 +9,17 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
 // Define users table inline (to avoid TypeScript import issues)
+// Must match the actual schema in src/infrastructure/database/schema/users.ts
 const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: varchar('username', { length: 50 }).notNull().unique(),
-  email: varchar('email', { length: 255 }).notNull(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   name: varchar('name', { length: 100 }),
   isAdmin: boolean('is_admin').default(false).notNull(),
   isActive: boolean('is_active').default(true).notNull(),
-  theme: varchar('theme', { length: 20 }).default('dark'),
-  language: varchar('language', { length: 10 }).default('en'),
-  mustChangePassword: boolean('must_change_password').default(false),
+  theme: varchar('theme', { length: 20 }).default('dark').notNull(),
+  language: varchar('language', { length: 10 }).default('es').notNull(),
+  mustChangePassword: boolean('must_change_password').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -75,7 +75,6 @@ async function main() {
 
       await db.insert(users).values({
         username: 'admin',
-        email: 'admin@musicserver.local',
         passwordHash: passwordHash,
         name: 'Administrator',
         isAdmin: true,
