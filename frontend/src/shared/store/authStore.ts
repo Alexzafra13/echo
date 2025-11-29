@@ -4,7 +4,6 @@ import { persist } from 'zustand/middleware';
 export interface User {
   id: string;
   username: string;
-  email?: string;
   name?: string;
   isAdmin: boolean;
   hasAvatar?: boolean;
