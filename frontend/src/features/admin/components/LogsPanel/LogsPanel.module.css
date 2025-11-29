@@ -21,7 +21,7 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
 }
 
 .title {
@@ -38,8 +38,8 @@
   gap: 16px;
   flex-wrap: wrap;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
 }
 
@@ -58,8 +58,8 @@
 
 .select {
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--black-50);
+  border: 1px solid var(--white-20);
   border-radius: 8px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
@@ -123,8 +123,8 @@
 
 /* Log Card */
 .logCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   padding: 16px 20px;
   cursor: pointer;
@@ -132,13 +132,13 @@
 }
 
 .logCard:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-05);
+  border-color: var(--white-12);
 }
 
 /* Level-specific borders */
 .level-critical {
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--color-error);
 }
 
 .level-error {
@@ -150,7 +150,7 @@
 }
 
 .level-info {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--color-info);
 }
 
 .level-debug {
@@ -182,7 +182,7 @@
 
 .logCategory {
   padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
@@ -212,7 +212,7 @@
 .logDetails {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--white-08);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -232,8 +232,8 @@
 
 .detailsJson,
 .stackTrace {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--black-40);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   padding: 12px;
   font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
@@ -246,7 +246,7 @@
 }
 
 .stackTrace {
-  color: #ef4444;
+  color: var(--color-error);
   max-height: 300px;
   overflow-y: auto;
 }
@@ -258,7 +258,7 @@
   justify-content: center;
   gap: 20px;
   padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-10);
 }
 
 .pagination span {

@@ -27,7 +27,7 @@
   border-radius: 12px;
   padding: 48px 24px;
   text-align: center;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   transition: all 0.2s ease;
 }
 
@@ -74,7 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 1px solid var(--color-border, #2a3150);
   border-radius: 12px;
   padding: 16px;
@@ -104,7 +104,7 @@
 
 .cancelButton:hover {
   color: var(--color-text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .previewImageWrapper {
@@ -112,7 +112,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 8px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
 }
 
 .previewImage {
@@ -147,10 +147,10 @@
   align-items: center;
   gap: 8px;
   padding: 12px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: 8px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 13px;
 }
 
@@ -169,7 +169,7 @@
 
 .customImageCard {
   position: relative;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 2px solid var(--color-border, #2a3150);
   border-radius: 8px;
   padding: 12px;
@@ -188,11 +188,11 @@
 
 .customImageCardSelected {
   border-color: var(--color-primary-500, #ed6842);
-  background: rgba(237, 104, 66, 0.1);
+  background: var(--primary-10);
 }
 
 .customImageCardActive {
-  border-color: #10b981;
+  border-color: var(--color-success);
   background: rgba(16, 185, 129, 0.05);
 }
 
@@ -209,14 +209,14 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px var(--black-30);
 }
 
 .activeBadge {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: #10b981;
+  background: var(--color-success);
   color: white;
   font-size: 11px;
   font-weight: 600;
@@ -225,7 +225,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   z-index: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px var(--black-30);
 }
 
 .customImageWrapper {
@@ -233,7 +233,7 @@
   aspect-ratio: 1;
   border-radius: 6px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
 }
 
 .customImage {
@@ -282,9 +282,9 @@
 }
 
 .deleteButton:hover:not(:disabled) {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--color-error);
+  color: var(--color-error);
+  background: var(--error-10);
 }
 
 .deleteButton:disabled {
