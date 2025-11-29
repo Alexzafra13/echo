@@ -106,20 +106,18 @@ export default function ExplorePage() {
               <Disc size={24} className={styles.explorePage__sectionIcon} />
               <h2 className={styles.explorePage__sectionTitle}>Sin escuchar</h2>
             </div>
+            {unplayedData?.total && unplayedData.total > itemsPerRow && (
+              <button
+                className={styles.explorePage__viewAllButton}
+                onClick={() => setLocation('/explore/unplayed')}
+              >
+                Ver todos ({unplayedData.total}) →
+              </button>
+            )}
             {loadingUnplayed ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
             ) : unplayedAlbums.length > 0 ? (
-              <>
-                <AlbumGrid title="" albums={unplayedAlbums} />
-                {unplayedData?.total && unplayedData.total > itemsPerRow && (
-                  <button
-                    className={styles.explorePage__viewAllButton}
-                    onClick={() => setLocation('/explore/unplayed')}
-                  >
-                    Ver todos ({unplayedData.total}) →
-                  </button>
-                )}
-              </>
+              <AlbumGrid title="" albums={unplayedAlbums} />
             ) : (
               <p className={styles.explorePage__empty}>¡Has escuchado todos tus albums!</p>
             )}
