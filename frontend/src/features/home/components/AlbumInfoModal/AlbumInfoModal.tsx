@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { getCoverUrl } from '@shared/utils/cover.utils';
-import { formatDuration } from '@shared/utils/format';
+import { formatDuration, formatFileSize, formatDate } from '@shared/utils/format';
 import styles from './AlbumInfoModal.module.css';
 
 interface AlbumInfoModalProps {
@@ -15,33 +15,6 @@ interface AlbumInfoModalProps {
  */
 export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalProps) {
   const coverUrl = getCoverUrl(album.coverImage);
-
-  const formatFileSize = (bytes: number): string => {
-    if (!bytes || bytes === 0 || !isFinite(bytes)) return 'Desconocido';
-
-    const kb = bytes / 1024;
-    const mb = kb / 1024;
-    const gb = mb / 1024;
-
-    if (gb >= 1) {
-      return `${gb.toFixed(2)} GB`;
-    }
-    if (mb >= 1) {
-      return `${mb.toFixed(2)} MB`;
-    }
-    if (kb >= 1) {
-      return `${kb.toFixed(2)} KB`;
-    }
-    return `${bytes} bytes`;
-  };
-
-  const formatDate = (date: Date | string): string => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   // Calculate total size and duration from tracks
   const totalSize = tracks.reduce((acc, track) => {
