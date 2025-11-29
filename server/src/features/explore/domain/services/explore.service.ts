@@ -220,7 +220,7 @@ export class ExploreService {
         artistId: tracks.artistId,
         artistName: artists.name,
         coverArtPath: albums.coverArtPath,
-        duration: tracks.duration,
+        duration: sql<number>`coalesce(${tracks.duration}, 0)::int`,
         playCount: sql<number>`coalesce(${userPlayStats.playCount}, 0)::int`,
       })
       .from(tracks)
