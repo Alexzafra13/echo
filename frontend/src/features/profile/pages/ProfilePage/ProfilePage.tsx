@@ -108,7 +108,7 @@ export function ProfilePage() {
       <Sidebar />
 
       <main className={styles.profilePage__main}>
-        <Header showBackButton />
+        <Header showBackButton disableSearch />
 
         <div className={styles.profilePage__content}>
           {/* Header with Avatar */}
