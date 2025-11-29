@@ -52,8 +52,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 12px;
   color: var(--color-text-primary);
   font-size: 15px;
@@ -63,7 +63,7 @@
 }
 
 .radioPage__genreButton:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-color: var(--color-primary-alpha);
   transform: translateY(-1px);
 }

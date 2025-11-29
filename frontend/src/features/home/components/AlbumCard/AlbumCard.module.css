@@ -22,13 +22,13 @@
   aspect-ratio: 1;
   border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--black-30);
   transition: box-shadow 0.3s ease;
   background: var(--bg-surface);
 }
 
 .albumCard:hover .albumCard__coverContainer {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--black-50);
 }
 
 .albumCard__cover {
@@ -51,7 +51,7 @@
 }
 
 .albumCard:hover .albumCard__overlay {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
 }
 
 .albumCard__playButton {

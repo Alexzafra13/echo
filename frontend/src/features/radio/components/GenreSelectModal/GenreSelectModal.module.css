@@ -34,7 +34,7 @@
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 60px var(--black-40);
   animation: slideDownFromTop 0.3s ease-out;
 }
 
@@ -200,7 +200,7 @@
     padding: 0;
     padding-top: 0;
     align-items: flex-start;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--black-50);
   }
 
   .modal__content {

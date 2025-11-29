@@ -303,7 +303,7 @@
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--black-80);
   backdrop-filter: blur(8px);
   border: 1px solid var(--white-10);
   color: var(--text-primary, #ffffff);

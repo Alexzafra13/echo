@@ -25,7 +25,7 @@
 .trackOptionsMenu__trigger:hover,
 :global(.trackOptionsMenu__trigger):hover {
   color: var(--text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
 }
 
 /* Keep visible when menu is open */
@@ -33,7 +33,7 @@
 .trackOptionsMenu:has(.trackOptionsMenu__dropdown) :global(.trackOptionsMenu__trigger) {
   opacity: 1;
   color: var(--color-primary-500, #ed6842);
-  background: rgba(237, 104, 66, 0.15);
+  background: var(--primary-15);
 }
 
 /* Dropdown Menu - Portal rendered with fixed positioning */
@@ -42,8 +42,8 @@
   overflow-y: auto;
   background: var(--bg-elevated, #1e293b);
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px var(--black-40);
+  border: 1px solid var(--white-10);
   padding: 4px;
   animation: fadeIn 0.15s ease;
   /* Position, top, left/right, max-height set via inline styles */
@@ -78,11 +78,11 @@
 }
 
 .trackOptionsMenu__option:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 .trackOptionsMenu__option:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
 }
 
 .trackOptionsMenu__option svg {
@@ -104,7 +104,7 @@
 }
 
 .trackOptionsMenu__optionDanger:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--error-10);
 }
 
 .trackOptionsMenu__optionDanger:hover svg {
@@ -114,6 +114,6 @@
 /* Separator */
 .trackOptionsMenu__separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   margin: 4px 0;
 }

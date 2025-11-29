@@ -56,7 +56,7 @@
   backdrop-filter: blur(10px);
   border-radius: 10px;
   padding: 50px 60px 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px var(--black-50);
 }
 
 .form {
@@ -70,8 +70,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: 8px;
   color: #ef4444;
   font-size: 14px;
