@@ -12,6 +12,8 @@ import {
   index,
   primaryKey,
 } from 'drizzle-orm/pg-core';
+import { albums } from './albums';
+import { artists } from './artists';
 
 // ============================================
 // Track
@@ -21,9 +23,9 @@ export const tracks = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     title: varchar('title', { length: 255 }).notNull(),
-    albumId: uuid('album_id'),
-    albumArtistId: uuid('album_artist_id'),
-    artistId: uuid('artist_id'),
+    albumId: uuid('album_id').references(() => albums.id, { onDelete: 'cascade' }),
+    albumArtistId: uuid('album_artist_id').references(() => artists.id, { onDelete: 'set null' }),
+    artistId: uuid('artist_id').references(() => artists.id, { onDelete: 'set null' }),
     hasCoverArt: boolean('has_cover_art').default(false).notNull(),
     trackNumber: integer('track_number'),
     discNumber: integer('disc_number').default(1).notNull(),
@@ -86,8 +88,8 @@ export const tracks = pgTable(
 export const trackArtists = pgTable(
   'track_artists',
   {
-    trackId: uuid('track_id').notNull(),
-    artistId: uuid('artist_id').notNull(),
+    trackId: uuid('track_id').notNull().references(() => tracks.id, { onDelete: 'cascade' }),
+    artistId: uuid('artist_id').notNull().references(() => artists.id, { onDelete: 'cascade' }),
     artistName: varchar('artist_name', { length: 255 }).notNull(),
   },
   (table) => [

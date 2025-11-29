@@ -55,43 +55,23 @@ export class UpdateUserUseCase {
       }
     }
 
-    // 5. Si se está actualizando el email, verificar que no exista
-    if (input.email !== undefined && input.email !== user.email) {
-      const existingUserByEmail = await this.userRepository.findByEmail(
-        input.email,
-      );
-      if (existingUserByEmail && existingUserByEmail.id !== user.id) {
-        throw new ConflictError('Email already exists');
-      }
-    }
-
-    // 6. Validar email si se proporciona
-    if (input.email !== undefined && input.email.length > 0) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(input.email)) {
-        throw new ValidationError('Invalid email format');
-      }
-    }
-
-    // 7. Preparar datos de actualización
+    // 5. Preparar datos de actualización
     const updateData: Partial<UserUpdateableFields> = {};
     if (input.username !== undefined) updateData.username = input.username;
     if (input.name !== undefined) updateData.name = input.name;
-    if (input.email !== undefined) updateData.email = input.email;
     if (input.isAdmin !== undefined) updateData.isAdmin = input.isAdmin;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
 
-    // 8. Actualizar usuario
+    // 6. Actualizar usuario
     const updatedUser = await this.userRepository.updatePartial(
       input.userId,
       updateData,
     );
 
-    // 9. Retornar usuario actualizado
+    // 7. Retornar usuario actualizado
     return {
       id: updatedUser.id,
       username: updatedUser.username,
-      email: updatedUser.email,
       name: updatedUser.name,
       isAdmin: updatedUser.isAdmin,
       isActive: updatedUser.isActive,

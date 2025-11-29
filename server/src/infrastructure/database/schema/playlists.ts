@@ -10,6 +10,8 @@ import {
   index,
   unique,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
+import { tracks } from './tracks';
 
 // ============================================
 // Playlist
@@ -23,7 +25,7 @@ export const playlists = pgTable(
     coverImageUrl: varchar('cover_image_url', { length: 512 }),
     duration: integer('duration').default(0).notNull(),
     size: bigint('size', { mode: 'number' }).default(0).notNull(),
-    ownerId: uuid('owner_id').notNull(),
+    ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     public: boolean('public').default(false).notNull(),
     songCount: integer('song_count').default(0).notNull(),
     path: varchar('path', { length: 512 }),
@@ -43,8 +45,8 @@ export const playlistTracks = pgTable(
   'playlist_tracks',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    playlistId: uuid('playlist_id').notNull(),
-    trackId: uuid('track_id').notNull(),
+    playlistId: uuid('playlist_id').notNull().references(() => playlists.id, { onDelete: 'cascade' }),
+    trackId: uuid('track_id').notNull().references(() => tracks.id, { onDelete: 'cascade' }),
     trackOrder: integer('track_order').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

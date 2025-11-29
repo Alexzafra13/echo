@@ -14,7 +14,7 @@ import {
   ApiResponse,
   ApiBody,
 } from '@nestjs/swagger';
-import { IsString, MinLength, IsOptional, IsEmail } from 'class-validator';
+import { IsString, MinLength } from 'class-validator';
 import { SetupService } from '../application/setup.service';
 import { Public } from '@shared/decorators/public.decorator';
 
@@ -29,10 +29,6 @@ class CreateAdminDto {
   @IsString()
   @MinLength(8)
   password!: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
 }
 
 /**
@@ -116,14 +112,13 @@ export class SetupController {
       properties: {
         username: { type: 'string', minLength: 3, example: 'admin' },
         password: { type: 'string', minLength: 8, example: 'securepassword123' },
-        email: { type: 'string', format: 'email', example: 'admin@example.com' },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Admin account created successfully' })
   @ApiResponse({ status: 400, description: 'Setup already completed or validation error' })
   async createAdmin(@Body() dto: CreateAdminDto) {
-    await this.setupService.createAdmin(dto.username, dto.password, dto.email);
+    await this.setupService.createAdmin(dto.username, dto.password);
 
     this.logger.log(`Admin account created via setup wizard: ${dto.username}`);
 

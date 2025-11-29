@@ -6,7 +6,9 @@ import {
   boolean,
   timestamp,
   text,
+  index,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
 
 // ============================================
 // Transcoding
@@ -33,14 +35,17 @@ export const players = pgTable(
     name: varchar('name', { length: 255 }).notNull(),
     type: varchar('type', { length: 50 }),
     userName: varchar('user_name', { length: 255 }),
-    userId: uuid('user_id'),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
     client: varchar('client', { length: 255 }),
     ipAddress: varchar('ip_address', { length: 45 }),
     lastSeen: timestamp('last_seen'),
     maxBitRate: integer('max_bit_rate'),
-    transcodingId: uuid('transcoding_id'),
+    transcodingId: uuid('transcoding_id').references(() => transcodings.id, { onDelete: 'set null' }),
     scrobbleEnabled: boolean('scrobble_enabled').default(true).notNull(),
   },
+  (table) => [
+    index('idx_players_user').on(table.userId),
+  ],
 );
 
 // Type exports

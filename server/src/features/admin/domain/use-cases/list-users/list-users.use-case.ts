@@ -39,7 +39,6 @@ export class ListUsersUseCase {
     const users = usersEntities.map((user) => ({
       id: user.id,
       username: user.username,
-      email: user.email,
       name: user.name,
       isAdmin: user.isAdmin,
       isActive: user.isActive,

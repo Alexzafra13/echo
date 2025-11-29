@@ -33,16 +33,6 @@ export class DrizzleUserRepository implements IUserRepository {
     return result[0] ? UserMapper.toDomain(result[0]) : null;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    const result = await this.drizzle.db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    return result[0] ? UserMapper.toDomain(result[0]) : null;
-  }
-
   async findAll(skip: number, take: number): Promise<User[]> {
     const result = await this.drizzle.db
       .select()
@@ -70,7 +60,6 @@ export class DrizzleUserRepository implements IUserRepository {
       .values({
         id: primitives.id,
         username: primitives.username,
-        email: primitives.email || null,
         passwordHash: primitives.passwordHash,
         name: primitives.name || null,
         isActive: primitives.isActive,

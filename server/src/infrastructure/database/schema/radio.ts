@@ -7,6 +7,7 @@ import {
   timestamp,
   index,
 } from 'drizzle-orm/pg-core';
+import { users } from './users';
 
 // ============================================
 // RadioStation
@@ -15,7 +16,7 @@ export const radioStations = pgTable(
   'radio_stations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     stationUuid: varchar('station_uuid', { length: 255 }),
     name: varchar('name', { length: 255 }).notNull(),
     url: varchar('url', { length: 512 }).notNull(),
