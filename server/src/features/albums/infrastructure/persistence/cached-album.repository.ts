@@ -26,8 +26,10 @@ import { DrizzleAlbumRepository } from './album.repository';
 @Injectable()
 export class CachedAlbumRepository implements IAlbumRepository {
   private readonly CACHE_TTL = parseInt(process.env.CACHE_ALBUM_TTL || '3600');
+  private readonly SEARCH_CACHE_TTL = 60; // 1 minuto para búsquedas
   private readonly KEY_PREFIX = 'album:';
   private readonly LIST_KEY_PREFIX = 'albums:';
+  private readonly SEARCH_KEY_PREFIX = 'albums:search:';
 
   constructor(
     @InjectPinoLogger(CachedAlbumRepository.name)
@@ -73,11 +75,33 @@ export class CachedAlbumRepository implements IAlbumRepository {
   }
 
   /**
-   * Busca álbumes por nombre
-   * No se cachea por la variabilidad de búsquedas
+   * Busca álbumes por nombre con cache
+   * TTL corto (60s) porque los resultados pueden cambiar
    */
   async search(name: string, skip: number, take: number): Promise<Album[]> {
-    return this.baseRepository.search(name, skip, take);
+    // Normalizar query para clave consistente
+    const normalizedQuery = name.toLowerCase().trim();
+    const cacheKey = `${this.SEARCH_KEY_PREFIX}${normalizedQuery}:${skip}:${take}`;
+
+    // Check cache
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Album search cache hit');
+      return cached.map((item: any) => Album.reconstruct(item));
+    }
+
+    this.logger.debug({ cacheKey, type: 'MISS' }, 'Album search cache miss');
+
+    // Fetch from DB
+    const albums = await this.baseRepository.search(name, skip, take);
+
+    // Store in cache (even empty results to prevent repeated DB hits)
+    const primitives = albums.map((a: Album) =>
+      a.toPrimitives ? a.toPrimitives() : a,
+    );
+    await this.cache.set(cacheKey, primitives, this.SEARCH_CACHE_TTL);
+
+    return albums;
   }
 
   /**
@@ -271,6 +295,7 @@ export class CachedAlbumRepository implements IAlbumRepository {
       this.cache.delPattern(`${this.LIST_KEY_PREFIX}recent:*`),
       this.cache.delPattern(`${this.LIST_KEY_PREFIX}most-played:*`),
       this.cache.delPattern(`${this.LIST_KEY_PREFIX}artist:*`),
+      this.cache.delPattern(`${this.SEARCH_KEY_PREFIX}*`), // Invalida búsquedas
       this.cache.del(`${this.LIST_KEY_PREFIX}count`),
       this.cache.del(`${this.LIST_KEY_PREFIX}featured`), // Si existe
     ]);
