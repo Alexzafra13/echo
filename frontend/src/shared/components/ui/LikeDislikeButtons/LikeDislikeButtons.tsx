@@ -68,7 +68,9 @@ export function LikeDislikeButtons({
       setSentiment(newSentiment);
       onSentimentChange?.(newSentiment);
     } catch (error) {
-      console.error('Error toggling like:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error toggling like:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +87,9 @@ export function LikeDislikeButtons({
       setSentiment(newSentiment);
       onSentimentChange?.(newSentiment);
     } catch (error) {
-      console.error('Error toggling dislike:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error toggling dislike:', error);
+      }
     } finally {
       setIsLoading(false);
     }
