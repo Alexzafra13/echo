@@ -1,7 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { eq, sql, and, lt, notExists, desc, isNull } from 'drizzle-orm';
-import { DRIZZLE } from '@infrastructure/database/drizzle.provider';
-import { DrizzleDB } from '@infrastructure/database/drizzle.types';
+import { Injectable } from '@nestjs/common';
+import { eq, sql, and, lt, notExists, desc } from 'drizzle-orm';
+import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { albums } from '@infrastructure/database/schema/albums';
 import { artists } from '@infrastructure/database/schema/artists';
 import { tracks } from '@infrastructure/database/schema/tracks';
@@ -33,16 +32,18 @@ export interface ExploreTrack {
 export interface ExploreArtist {
   id: string;
   name: string;
-  imagePath: string | null;
+  profileImagePath: string | null;
   albumCount: number;
   songCount: number;
 }
 
 @Injectable()
 export class ExploreService {
-  constructor(
-    @Inject(DRIZZLE) private readonly db: DrizzleDB,
-  ) {}
+  constructor(private readonly drizzle: DrizzleService) {}
+
+  private get db() {
+    return this.drizzle.db;
+  }
 
   /**
    * Get albums that the user has never played
@@ -55,17 +56,6 @@ export class ExploreService {
     limit: number = 20,
     offset: number = 0,
   ): Promise<{ albums: ExploreAlbum[]; total: number }> {
-    // Subquery: albums that have been played by this user
-    const playedAlbumsSubquery = this.db
-      .select({ itemId: userPlayStats.itemId })
-      .from(userPlayStats)
-      .where(
-        and(
-          eq(userPlayStats.userId, userId),
-          eq(userPlayStats.itemType, 'album'),
-        ),
-      );
-
     // Get albums NOT in the played list
     const result = await this.db
       .select({
@@ -182,7 +172,7 @@ export class ExploreService {
       .where(lt(userPlayStats.lastPlayedAt, cutoffDate));
 
     return {
-      albums: result.map(({ lastPlayedAt, ...album }) => album),
+      albums: result.map(({ lastPlayedAt: _lastPlayedAt, ...album }) => album),
       total: countResult?.count ?? 0,
     };
   }
@@ -218,7 +208,7 @@ export class ExploreService {
       return [];
     }
 
-    const topArtistIds = topArtists.map((a) => a.artistId);
+    const topArtistIds = topArtists.map((a: { artistId: string }) => a.artistId);
 
     // Step 2: Get tracks from these artists with low or no play count
     const result = await this.db
@@ -246,7 +236,7 @@ export class ExploreService {
       )
       .where(
         and(
-          sql`${tracks.artistId} IN (${sql.join(topArtistIds.map(id => sql`${id}::uuid`), sql`, `)})`,
+          sql`${tracks.artistId} IN (${sql.join(topArtistIds.map((id: string) => sql`${id}::uuid`), sql`, `)})`,
           sql`coalesce(${userPlayStats.playCount}, 0) < 3`,
         ),
       )
@@ -258,7 +248,6 @@ export class ExploreService {
 
   /**
    * Get a random album
-   * @param userId User ID (optional, for future personalization)
    */
   async getRandomAlbum(): Promise<ExploreAlbum | null> {
     const [result] = await this.db
@@ -288,7 +277,7 @@ export class ExploreService {
       .select({
         id: artists.id,
         name: artists.name,
-        imagePath: artists.imagePath,
+        profileImagePath: artists.profileImagePath,
         albumCount: artists.albumCount,
         songCount: artists.songCount,
       })
