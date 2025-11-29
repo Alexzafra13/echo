@@ -94,7 +94,6 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
   const handlePlay = (track: Track) => {
     onTrackPlay?.(track);
-    console.log('Playing track:', track.id);
   };
 
   // Track options handlers

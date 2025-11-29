@@ -74,7 +74,9 @@ export function RatingStars({
         onRatingChange?.(value);
       }
     } catch (error) {
-      console.error('Error updating rating:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error updating rating:', error);
+      }
     } finally {
       setIsLoading(false);
     }
