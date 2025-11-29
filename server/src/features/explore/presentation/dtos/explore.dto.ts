@@ -31,109 +31,109 @@ export class ForgottenAlbumsQueryDto extends ExploreQueryDto {
 
 export class ExploreAlbumDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional()
-  artistId: string | null;
+  artistId!: string | null;
 
   @ApiPropertyOptional()
-  artistName: string | null;
+  artistName!: string | null;
 
   @ApiPropertyOptional()
-  coverArtPath: string | null;
+  coverArtPath!: string | null;
 
   @ApiPropertyOptional()
-  year: number | null;
+  year!: number | null;
 
   @ApiProperty()
-  songCount: number;
+  songCount!: number;
 
   @ApiProperty()
-  duration: number;
+  duration!: number;
 }
 
 export class ExploreTrackDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional()
-  albumId: string | null;
+  albumId!: string | null;
 
   @ApiPropertyOptional()
-  albumName: string | null;
+  albumName!: string | null;
 
   @ApiPropertyOptional()
-  artistId: string | null;
+  artistId!: string | null;
 
   @ApiPropertyOptional()
-  artistName: string | null;
+  artistName!: string | null;
 
   @ApiPropertyOptional()
-  coverArtPath: string | null;
+  coverArtPath!: string | null;
 
   @ApiProperty()
-  duration: number;
+  duration!: number;
 
   @ApiProperty()
-  playCount: number;
+  playCount!: number;
 }
 
 export class ExploreArtistDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional()
-  imagePath: string | null;
+  profileImagePath!: string | null;
 
   @ApiProperty()
-  albumCount: number;
+  albumCount!: number;
 
   @ApiProperty()
-  songCount: number;
+  songCount!: number;
 }
 
 export class ExploreAlbumsResponseDto {
   @ApiProperty({ type: [ExploreAlbumDto] })
-  albums: ExploreAlbumDto[];
+  albums!: ExploreAlbumDto[];
 
   @ApiProperty()
-  total: number;
+  total!: number;
 
   @ApiProperty()
-  limit: number;
+  limit!: number;
 
   @ApiProperty()
-  offset: number;
+  offset!: number;
 }
 
 export class ExploreTracksResponseDto {
   @ApiProperty({ type: [ExploreTrackDto] })
-  tracks: ExploreTrackDto[];
+  tracks!: ExploreTrackDto[];
 
   @ApiProperty()
-  total: number;
+  total!: number;
 }
 
 export class RandomAlbumResponseDto {
   @ApiPropertyOptional({ type: ExploreAlbumDto })
-  album: ExploreAlbumDto | null;
+  album!: ExploreAlbumDto | null;
 }
 
 export class RandomArtistResponseDto {
   @ApiPropertyOptional({ type: ExploreArtistDto })
-  artist: ExploreArtistDto | null;
+  artist!: ExploreArtistDto | null;
 }
 
 export class RandomAlbumsResponseDto {
   @ApiProperty({ type: [ExploreAlbumDto] })
-  albums: ExploreAlbumDto[];
+  albums!: ExploreAlbumDto[];
 }
