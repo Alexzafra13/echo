@@ -1,53 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Shuffle, RefreshCw } from 'lucide-react';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
+import { ShuffleCard } from '@shared/components/ShuffleCard';
 import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
-import { tracksService } from '../../services/tracks.service';
-import { usePlayer } from '@features/player';
 import type { Album } from '../../types';
-import type { Track } from '@shared/types/track.types';
 import styles from './HomePage.module.css';
-
-// Dark gradient color palettes for the shuffle card
-const GRADIENT_PALETTES = [
-  ['#1a1a2e', '#16213e'], // Dark blue
-  ['#0f0c29', '#302b63'], // Deep purple
-  ['#232526', '#414345'], // Dark gray
-  ['#1e3c72', '#2a5298'], // Ocean blue
-  ['#141e30', '#243b55'], // Navy
-  ['#0f2027', '#203a43'], // Dark teal
-  ['#2c3e50', '#4ca1af'], // Slate teal
-  ['#1f1c2c', '#928dab'], // Muted purple
-  ['#0b486b', '#f56217'], // Dark blue to orange
-  ['#1d4350', '#a43931'], // Dark teal to red
-  ['#360033', '#0b8793'], // Purple to cyan
-  ['#4b134f', '#c94b4b'], // Dark magenta
-  ['#373b44', '#4286f4'], // Gray to blue
-  ['#134e5e', '#71b280'], // Dark green
-  ['#3a1c71', '#d76d77'], // Purple to coral
-];
 
 /**
  * HomePage Component
  * Main page after login - displays featured album, recent albums, and Wave Mix recommendations
  */
 export default function HomePage() {
-  // Auto-refresh when scan completes ✨
+  // Auto-refresh when scan completes
   useAutoRefreshOnScan();
-
-  // Shuffle state
-  const { playQueue, isShuffle, toggleShuffle } = usePlayer();
-  const [isShuffleLoading, setIsShuffleLoading] = useState(false);
-
-  // Generate random gradient on each page load
-  const shuffleCardStyle = useMemo(() => {
-    const palette = GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
-    return {
-      background: `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
-    };
-  }, []);
 
   // Calculate how many albums we need for 2 rows dynamically
   const { itemsPerPage: neededAlbums } = useGridDimensions({
@@ -224,47 +190,6 @@ export default function HomePage() {
     );
   };
 
-  /**
-   * Play all library tracks in random order
-   */
-  const handleShufflePlay = async () => {
-    if (isShuffleLoading) return;
-
-    setIsShuffleLoading(true);
-    try {
-      const { data: shuffledTracks } = await tracksService.getShuffled();
-
-      if (shuffledTracks.length === 0) {
-        return;
-      }
-
-      // Convert to player format
-      const playerTracks: Track[] = shuffledTracks.map(track => ({
-        id: track.id,
-        title: track.title,
-        artist: track.artistName || 'Artista desconocido',
-        artistId: track.artistId,
-        albumId: track.albumId,
-        albumName: track.albumName,
-        duration: track.duration,
-        coverImage: track.albumId ? `/api/images/albums/${track.albumId}/cover` : undefined,
-        trackNumber: track.trackNumber,
-        discNumber: track.discNumber,
-      }));
-
-      // Enable shuffle mode if not already enabled
-      if (!isShuffle) {
-        toggleShuffle();
-      }
-
-      playQueue(playerTracks, 0);
-    } catch (error) {
-      console.error('Error loading shuffled tracks:', error);
-    } finally {
-      setIsShuffleLoading(false);
-    }
-  };
-
   // Current hero album (from pool or fallback to API featured)
   const currentHeroAlbum = featuredAlbumsPool.length > 0
     ? featuredAlbumsPool[currentHeroIndex]
@@ -306,27 +231,7 @@ export default function HomePage() {
           )}
 
           {/* Shuffle Card */}
-          <button
-            className={styles.shuffleCard}
-            onClick={handleShufflePlay}
-            disabled={isShuffleLoading}
-            style={shuffleCardStyle}
-          >
-            <div className={styles.shuffleCard__content}>
-              <div className={styles.shuffleCard__icon}>
-                {isShuffleLoading ? (
-                  <RefreshCw size={24} className={styles.shuffleCard__spinning} />
-                ) : (
-                  <Shuffle size={24} />
-                )}
-              </div>
-              <div className={styles.shuffleCard__text}>
-                <h3 className={styles.shuffleCard__title}>
-                  {isShuffleLoading ? 'Cargando...' : 'Aleatorio'}
-                </h3>
-              </div>
-            </div>
-          </button>
+          <ShuffleCard style={{ margin: '24px 0 32px 20px' }} />
 
           {/* Recently Added Albums */}
           {loadingRecent ? (

@@ -1,14 +1,11 @@
-import { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Shuffle, Clock, Sparkles, Disc, RefreshCw, Play } from 'lucide-react';
+import { Shuffle, Clock, Sparkles, Disc, RefreshCw } from 'lucide-react';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
+import { ShuffleCard } from '@shared/components/ShuffleCard';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridDimensions } from '@features/home/hooks';
-import { tracksService } from '@features/home/services/tracks.service';
-import { usePlayer } from '@features/player';
 import { getCoverUrl } from '@shared/utils/cover.utils';
-import type { Track } from '@shared/types/track.types';
 import {
   useUnplayedAlbums,
   useForgottenAlbums,
@@ -18,25 +15,6 @@ import {
 import { toAlbum } from '../../utils/transform';
 import styles from './ExplorePage.module.css';
 
-// Dark gradient color palettes for the shuffle card
-const GRADIENT_PALETTES = [
-  ['#1a1a2e', '#16213e'], // Dark blue
-  ['#0f0c29', '#302b63'], // Deep purple
-  ['#232526', '#414345'], // Dark gray
-  ['#1e3c72', '#2a5298'], // Ocean blue
-  ['#141e30', '#243b55'], // Navy
-  ['#0f2027', '#203a43'], // Dark teal
-  ['#2c3e50', '#4ca1af'], // Slate teal
-  ['#1f1c2c', '#928dab'], // Muted purple
-  ['#0b486b', '#f56217'], // Dark blue to orange
-  ['#1d4350', '#a43931'], // Dark teal to red
-  ['#360033', '#0b8793'], // Purple to cyan
-  ['#4b134f', '#c94b4b'], // Dark magenta
-  ['#373b44', '#4286f4'], // Gray to blue
-  ['#134e5e', '#71b280'], // Dark green
-  ['#3a1c71', '#d76d77'], // Purple to coral
-];
-
 /**
  * ExplorePage Component
  * Discovery section with unplayed albums, forgotten albums, hidden gems, and random picks
@@ -44,16 +22,6 @@ const GRADIENT_PALETTES = [
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { playQueue, isShuffle, toggleShuffle } = usePlayer();
-  const [isShuffleLoading, setIsShuffleLoading] = useState(false);
-
-  // Generate random gradient on each page load
-  const cardStyle = useMemo(() => {
-    const palette = GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
-    return {
-      background: `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
-    };
-  }, []);
 
   // Calculate items for single row based on screen size
   const { itemsPerPage: itemsPerRow } = useGridDimensions({ maxRows: 1 });
@@ -66,49 +34,6 @@ export default function ExplorePage() {
 
   const handleRefreshRandom = () => {
     queryClient.invalidateQueries({ queryKey: ['explore', 'random-albums'] });
-  };
-
-  /**
-   * Play all library tracks in random order
-   * Fetches shuffled tracks from backend and plays them
-   * Also enables shuffle mode in the player
-   */
-  const handleShufflePlay = async () => {
-    if (isShuffleLoading) return;
-
-    setIsShuffleLoading(true);
-    try {
-      const { data: shuffledTracks } = await tracksService.getShuffled();
-
-      if (shuffledTracks.length === 0) {
-        return;
-      }
-
-      // Convert to player format
-      const playerTracks: Track[] = shuffledTracks.map(track => ({
-        id: track.id,
-        title: track.title,
-        artist: track.artistName || 'Artista desconocido',
-        artistId: track.artistId,
-        albumId: track.albumId,
-        albumName: track.albumName,
-        duration: track.duration,
-        coverImage: track.albumId ? `/api/images/albums/${track.albumId}/cover` : undefined,
-        trackNumber: track.trackNumber,
-        discNumber: track.discNumber,
-      }));
-
-      // Enable shuffle mode if not already enabled
-      if (!isShuffle) {
-        toggleShuffle();
-      }
-
-      playQueue(playerTracks, 0);
-    } catch (error) {
-      console.error('Error loading shuffled tracks:', error);
-    } finally {
-      setIsShuffleLoading(false);
-    }
   };
 
   const navigateToAlbum = (albumId: string) => {
@@ -137,33 +62,11 @@ export default function ExplorePage() {
           </div>
 
           {/* Shuffle All Card */}
-          <button
-            className={styles.shuffleCard}
-            onClick={handleShufflePlay}
-            disabled={isShuffleLoading}
-            style={cardStyle}
-          >
-            <div className={styles.shuffleCard__content}>
-              <div className={styles.shuffleCard__icon}>
-                {isShuffleLoading ? (
-                  <RefreshCw size={32} className={styles.explorePage__spinning} />
-                ) : (
-                  <Shuffle size={32} />
-                )}
-              </div>
-              <div className={styles.shuffleCard__text}>
-                <h3 className={styles.shuffleCard__title}>
-                  {isShuffleLoading ? 'Preparando...' : 'Modo Aleatorio'}
-                </h3>
-                <p className={styles.shuffleCard__description}>
-                  Reproduce toda tu biblioteca en orden aleatorio
-                </p>
-              </div>
-            </div>
-            <div className={styles.shuffleCard__playIcon}>
-              <Play size={24} fill="currentColor" />
-            </div>
-          </button>
+          <ShuffleCard
+            title="Modo Aleatorio"
+            loadingTitle="Preparando..."
+            style={{ marginBottom: 32, marginLeft: 20 }}
+          />
 
           {/* Surprise Me Section */}
           <section className={styles.explorePage__section}>
