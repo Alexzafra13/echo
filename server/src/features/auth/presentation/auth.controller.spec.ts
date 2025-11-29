@@ -41,7 +41,6 @@ describe('AuthController', () => {
         user: {
           id: 'user-123',
           username: 'testuser',
-          email: 'test@test.com',
           name: 'Test User',
           isAdmin: false,
         },
@@ -77,7 +76,6 @@ describe('AuthController', () => {
         user: {
           id: 'user-456',
           username: 'newuser',
-          email: 'new@test.com',
           isAdmin: false,
         },
         accessToken: 'access_token',
@@ -201,7 +199,6 @@ describe('AuthController', () => {
       const freshUser = {
         id: 'user-123',
         username: 'testuser',
-        email: 'test@test.com',
         name: 'Test User',
         isAdmin: false,
         isActive: true,
@@ -233,7 +230,6 @@ describe('AuthController', () => {
       const freshUser = {
         id: 'user-123',
         username: 'testuser',
-        email: 'test@test.com',
         name: 'Test User',
         isAdmin: false,
         isActive: true,

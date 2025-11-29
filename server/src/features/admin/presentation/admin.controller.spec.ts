@@ -88,7 +88,6 @@ describe('AdminController', () => {
       // Arrange
       const dto = {
         username: 'newuser',
-        email: 'newuser@test.com',
         name: 'New User',
         isAdmin: false,
       };
@@ -97,7 +96,6 @@ describe('AdminController', () => {
         user: {
           id: 'user-123',
           username: 'newuser',
-          email: 'newuser@test.com',
           name: 'New User',
           isAdmin: false,
         },
@@ -112,7 +110,6 @@ describe('AdminController', () => {
       // Assert
       expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith({
         username: 'newuser',
-        email: 'newuser@test.com',
         name: 'New User',
         isAdmin: false,
       });
@@ -124,7 +121,6 @@ describe('AdminController', () => {
       // Arrange
       const dto = {
         username: 'admin',
-        email: 'admin@test.com',
         name: 'Admin User',
         isAdmin: true,
       };
@@ -133,7 +129,6 @@ describe('AdminController', () => {
         user: {
           id: 'admin-123',
           username: 'admin',
-          email: 'admin@test.com',
           name: 'Admin User',
           isAdmin: true,
         },
@@ -150,38 +145,10 @@ describe('AdminController', () => {
       expect(result.temporaryPassword).toBeDefined();
     });
 
-    it('debería crear usuario sin email', async () => {
-      // Arrange
-      const dto = {
-        username: 'nomail',
-        name: 'No Email User',
-      };
-
-      const useCaseResponse = {
-        user: {
-          id: 'user-456',
-          username: 'nomail',
-          email: undefined,
-          name: 'No Email User',
-          isAdmin: false,
-        },
-        temporaryPassword: '111111',
-      };
-
-      mockCreateUserUseCase.execute.mockResolvedValue(useCaseResponse);
-
-      // Act
-      const result = await controller.createUser(dto);
-
-      // Assert
-      expect(result.user.email).toBeUndefined();
-    });
-
     it('debería propagar error del use case', async () => {
       // Arrange
       const dto = {
         username: 'test',
-        email: 'test@test.com',
       };
 
       mockCreateUserUseCase.execute.mockRejectedValue(
@@ -203,7 +170,6 @@ describe('AdminController', () => {
           {
             id: 'user-1',
             username: 'user1',
-            email: 'user1@test.com',
             name: 'User One',
             isAdmin: false,
             isActive: true,
@@ -214,7 +180,6 @@ describe('AdminController', () => {
           {
             id: 'user-2',
             username: 'user2',
-            email: 'user2@test.com',
             name: 'User Two',
             isAdmin: true,
             isActive: true,
@@ -247,7 +212,6 @@ describe('AdminController', () => {
           {
             id: 'user-3',
             username: 'user3',
-            email: 'user3@test.com',
             name: 'User Three',
             isAdmin: false,
             isActive: true,
@@ -346,13 +310,11 @@ describe('AdminController', () => {
       const userId = 'user-123';
       const dto = {
         name: 'Juan Pérez Updated',
-        email: 'juan.updated@test.com',
       };
 
       const useCaseResponse = {
         id: userId,
         username: 'juanperez',
-        email: 'juan.updated@test.com',
         name: 'Juan Pérez Updated',
         isAdmin: false,
         isActive: true,
@@ -370,7 +332,6 @@ describe('AdminController', () => {
       });
       expect(result.id).toBe(userId);
       expect(result.name).toBe('Juan Pérez Updated');
-      expect(result.email).toBe('juan.updated@test.com');
     });
 
     it('debería actualizar el rol de admin de un usuario', async () => {
@@ -383,7 +344,6 @@ describe('AdminController', () => {
       const useCaseResponse = {
         id: userId,
         username: 'maria',
-        email: 'maria@test.com',
         name: 'María García',
         isAdmin: true,
         isActive: true,
@@ -412,7 +372,6 @@ describe('AdminController', () => {
       const useCaseResponse = {
         id: userId,
         username: 'pedro',
-        email: 'pedro@test.com',
         name: 'Pedro López',
         isAdmin: false,
         isActive: false,

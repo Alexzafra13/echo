@@ -39,7 +39,6 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_password_hash',
         name: 'Juan',
         isActive: true,
@@ -83,7 +82,6 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_password_hash',
         name: 'Juan',
         isActive: true,
@@ -121,7 +119,6 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_password_hash',
         name: 'Juan',
         isActive: true,
@@ -188,7 +185,6 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_password_hash',
         name: 'Juan',
         isActive: true,
@@ -225,7 +221,6 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$password_hash',
         name: 'Juan',
         isActive: true,
@@ -262,7 +257,6 @@ describe('ChangePasswordUseCase', () => {
       const mockUser = User.reconstruct({
         id: 'user-123',
         username: 'juan',
-        email: 'juan@test.com',
         passwordHash: '$2b$12$old_password_hash',
         name: 'Juan',
         isActive: true,
