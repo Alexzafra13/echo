@@ -1,11 +1,13 @@
 /* ShuffleCard Component Styles */
+/* Width synced with AlbumGrid: 2 album covers + 1 gap */
 
 .shuffleCard {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 14px;
-  width: 440px;
+  /* Desktop: 2 covers (200px each) + 1 gap (20px) = 420px */
+  width: calc(200px * 2 + 20px);
   height: 80px;
   padding: 16px;
   border: none;
@@ -87,29 +89,29 @@
 }
 
 /* ===== Responsive ===== */
+/* Breakpoints synced with AlbumGrid.module.css */
 
+/* Tablet: 2 covers (180px each) + 1 gap (16px) = 376px */
+@media (max-width: 1200px) {
+  .shuffleCard {
+    width: calc(180px * 2 + 16px);
+  }
+}
+
+/* Mobile: 2 covers (140px each) + 1 gap (12px) = 292px */
 @media (max-width: 768px) {
   .shuffleCard {
-    width: 150px;
-    height: 150px;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .shuffleCard__content {
-    flex-direction: column;
-  }
-
-  .shuffleCard__icon {
-    width: 52px;
-    height: 52px;
-  }
-
-  .shuffleCard__text {
-    text-align: center;
+    width: calc(140px * 2 + 12px);
   }
 
   .shuffleCard__title {
     font-size: 13px;
+  }
+}
+
+/* Small mobile: keep same ratio */
+@media (max-width: 480px) {
+  .shuffleCard {
+    width: calc(130px * 2 + 10px);
   }
 }
