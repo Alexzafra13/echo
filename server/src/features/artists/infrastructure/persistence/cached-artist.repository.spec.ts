@@ -35,6 +35,7 @@ describe('CachedArtistRepository', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
+      delPattern: jest.fn(),
     };
 
     // Create instance directly without TestingModule for simplicity
@@ -123,19 +124,46 @@ describe('CachedArtistRepository', () => {
   });
 
   describe('search', () => {
-    it('should delegate to base repository without caching', async () => {
+    it('should cache search results', async () => {
       // Arrange
       const artists = [mockArtist];
+      cacheService.get.mockResolvedValue(null);
       baseRepository.search.mockResolvedValue(artists);
 
       // Act
       const result = await cachedRepository.search('test', 0, 10);
 
       // Assert
+      expect(cacheService.get).toHaveBeenCalledWith('artists:search:test:0:10');
       expect(baseRepository.search).toHaveBeenCalledWith('test', 0, 10);
-      expect(cacheService.get).not.toHaveBeenCalled();
-      expect(cacheService.set).not.toHaveBeenCalled();
-      expect(result).toBe(artists);
+      expect(cacheService.set).toHaveBeenCalled();
+      expect(result).toEqual(artists);
+    });
+
+    it('should return cached search results on cache hit', async () => {
+      // Arrange
+      const artistsPrimitives = [mockArtistPrimitives];
+      cacheService.get.mockResolvedValue(artistsPrimitives);
+
+      // Act
+      const result = await cachedRepository.search('test', 0, 10);
+
+      // Assert
+      expect(cacheService.get).toHaveBeenCalledWith('artists:search:test:0:10');
+      expect(baseRepository.search).not.toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+    });
+
+    it('should normalize search query for cache key', async () => {
+      // Arrange
+      cacheService.get.mockResolvedValue(null);
+      baseRepository.search.mockResolvedValue([]);
+
+      // Act
+      await cachedRepository.search('  TEST  ', 0, 10);
+
+      // Assert - query should be normalized to lowercase and trimmed
+      expect(cacheService.get).toHaveBeenCalledWith('artists:search:test:0:10');
     });
   });
 
@@ -155,7 +183,7 @@ describe('CachedArtistRepository', () => {
   });
 
   describe('create', () => {
-    it('should create artist without cache invalidation', async () => {
+    it('should create artist and invalidate search cache', async () => {
       // Arrange
       baseRepository.create.mockResolvedValue(mockArtist);
 
@@ -164,13 +192,13 @@ describe('CachedArtistRepository', () => {
 
       // Assert
       expect(baseRepository.create).toHaveBeenCalledWith(mockArtist);
-      expect(cacheService.del).not.toHaveBeenCalled();
+      expect(cacheService.delPattern).toHaveBeenCalledWith('artists:search:*');
       expect(result).toBe(mockArtist);
     });
   });
 
   describe('update', () => {
-    it('should update artist and invalidate specific cache', async () => {
+    it('should update artist and invalidate caches', async () => {
       // Arrange
       const updates = { name: 'Updated Artist' };
       baseRepository.update.mockResolvedValue(mockArtist);
@@ -181,7 +209,7 @@ describe('CachedArtistRepository', () => {
       // Assert
       expect(baseRepository.update).toHaveBeenCalledWith('artist-1', updates);
       expect(cacheService.del).toHaveBeenCalledWith('artist:artist-1');
-      expect(cacheService.del).toHaveBeenCalledTimes(1);
+      expect(cacheService.delPattern).toHaveBeenCalledWith('artists:search:*');
       expect(result).toBe(mockArtist);
     });
 
@@ -194,6 +222,7 @@ describe('CachedArtistRepository', () => {
 
       // Assert
       expect(cacheService.del).not.toHaveBeenCalled();
+      expect(cacheService.delPattern).not.toHaveBeenCalled();
       expect(result).toBeNull();
     });
 
@@ -209,11 +238,12 @@ describe('CachedArtistRepository', () => {
       expect(baseRepository.update).toHaveBeenCalledWith('artist-1', updates);
       expect(result).toBe(mockArtist);
       expect(cacheService.del).toHaveBeenCalledWith('artist:artist-1');
+      expect(cacheService.delPattern).toHaveBeenCalledWith('artists:search:*');
     });
   });
 
   describe('delete', () => {
-    it('should delete artist and invalidate cache', async () => {
+    it('should delete artist and invalidate caches', async () => {
       // Arrange
       baseRepository.delete.mockResolvedValue(true);
 
@@ -223,7 +253,7 @@ describe('CachedArtistRepository', () => {
       // Assert
       expect(baseRepository.delete).toHaveBeenCalledWith('artist-1');
       expect(cacheService.del).toHaveBeenCalledWith('artist:artist-1');
-      expect(cacheService.del).toHaveBeenCalledTimes(1);
+      expect(cacheService.delPattern).toHaveBeenCalledWith('artists:search:*');
       expect(result).toBe(true);
     });
 
@@ -236,6 +266,7 @@ describe('CachedArtistRepository', () => {
 
       // Assert
       expect(cacheService.del).not.toHaveBeenCalled();
+      expect(cacheService.delPattern).not.toHaveBeenCalled();
       expect(result).toBe(false);
     });
   });
