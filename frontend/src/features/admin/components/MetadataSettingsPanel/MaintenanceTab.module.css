@@ -20,7 +20,7 @@
 .error {
   text-align: center;
   padding: 32px;
-  color: var(--color-error, #ef4444);
+  color: var(--color-error, var(--color-error));
   font-size: 14px;
 }
 
@@ -103,15 +103,15 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .statCard:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-05);
+  border-color: var(--white-12);
 }
 
 .statCardWarning {
@@ -120,7 +120,7 @@
 }
 
 .statCardWarning:hover {
-  background: rgba(245, 158, 11, 0.1);
+  background: var(--warning-10);
 }
 
 .statIcon {
@@ -129,7 +129,7 @@
 }
 
 .statCardWarning .statIcon {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .statContent {
@@ -164,14 +164,14 @@
   flex-direction: column;
   gap: 16px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .actionCard:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--white-12);
 }
 
 .actionHeader {
@@ -209,13 +209,13 @@
   display: flex;
   gap: 16px;
   padding: 20px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--success-10);
+  border: 1px solid var(--success-30);
   border-radius: 12px;
 }
 
 .resultIcon {
-  color: #10b981;
+  color: var(--color-success);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -250,11 +250,11 @@
 }
 
 .resultWarning {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .resultWarning strong {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 /* Paths List */
@@ -262,7 +262,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 16px;
@@ -273,7 +273,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border-radius: 8px;
   transition: background 0.2s ease;
 }
@@ -309,7 +309,7 @@
   font-size: 13px;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   color: var(--color-text-primary, #ffffff);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
   padding: 4px 8px;
   border-radius: 4px;
   word-break: break-all;
@@ -322,7 +322,7 @@
   letter-spacing: 0.5px;
   padding: 2px 6px;
   background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  color: var(--color-warning);
   border-radius: 4px;
 }
 

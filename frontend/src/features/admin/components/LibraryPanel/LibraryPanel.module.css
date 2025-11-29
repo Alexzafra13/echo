@@ -1,10 +1,10 @@
 /* LibraryPanel Component Styles */
 
 .panel {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   border-radius: 16px;
   padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -12,8 +12,8 @@
 }
 
 .panel:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-05);
+  border-color: var(--white-12);
 }
 
 .loading {
@@ -50,8 +50,8 @@
 
 /* Path Card */
 .pathCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -108,9 +108,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 13px;
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--error-10);
   padding: 6px 12px;
   border-radius: 20px;
 }
@@ -149,9 +149,9 @@
 }
 
 .errorMessage {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: var(--error-10);
+  color: var(--color-error);
+  border: 1px solid var(--error-20);
 }
 
 .successMessage {
@@ -164,11 +164,11 @@
 .browser {
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   border-radius: 16px;
   padding: 24px;
   margin-top: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px var(--black-30);
 }
 
 .browserHeader {
@@ -189,8 +189,8 @@
 }
 
 .browserClose {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--color-text-secondary, #b8bcc8);
   padding: 8px 16px;
   border-radius: 8px;
@@ -200,8 +200,8 @@
 }
 
 .browserClose:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--white-10);
+  border-color: var(--white-15);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -212,7 +212,7 @@
   padding: 14px 18px;
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   border-radius: 12px;
   margin-bottom: 16px;
 }
@@ -244,8 +244,8 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-05);
+  border: 1px solid var(--white-08);
   color: var(--color-text-secondary, #b8bcc8);
   border-radius: 8px;
   font-size: 13px;
@@ -254,8 +254,8 @@
 }
 
 .navButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-10);
+  border-color: var(--white-12);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -284,16 +284,16 @@
 }
 
 .directoryList::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
 }
 
 .directoryList::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border-radius: 3px;
 }
 
 .directoryList::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
 }
 
 .browserLoading,
@@ -334,7 +334,7 @@
 }
 
 .directoryItem:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
 }
 
 .directoryItemDisabled {
@@ -347,7 +347,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   color: var(--color-text-primary, #ffffff);
@@ -358,8 +358,8 @@
 }
 
 .directoryButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--white-08);
+  border-color: var(--white-10);
   transform: translateX(4px);
 }
 
@@ -421,7 +421,7 @@
 .browserActions {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--white-08);
 }
 
 .selectCurrentButton {

@@ -23,7 +23,7 @@
   padding: 48px 24px;
   border: 2px dashed var(--color-border, #2a3150);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   color: var(--color-primary-500, #ed6842);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -58,7 +58,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 1px solid var(--color-border, #2a3150);
   border-radius: 12px;
 }
@@ -67,7 +67,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--black-60);
   border: none;
   color: #ffffff;
   width: 32px;
@@ -91,7 +91,7 @@
   max-height: 300px;
   object-fit: contain;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
 }
 
 .fileInfo {
@@ -121,10 +121,10 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: 8px;
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 13px;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .gallery::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border-radius: 4px;
 }
 
@@ -218,7 +218,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
   border: 1px solid var(--color-border, #2a3150);
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -230,7 +230,7 @@
 }
 
 .coverCardActive {
-  border-color: var(--color-success, #10b981);
+  border-color: var(--color-success, var(--color-success));
   background: rgba(16, 185, 129, 0.05);
 }
 
@@ -242,7 +242,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: var(--color-success, #10b981);
+  background: var(--color-success, var(--color-success));
   color: #ffffff;
   font-size: 11px;
   font-weight: 600;
@@ -256,7 +256,7 @@
   aspect-ratio: 1;
   border-radius: 6px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
 }
 
 .coverImage {
@@ -309,9 +309,9 @@
 }
 
 .deleteButton:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
+  background: var(--error-10);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .deleteButton:disabled {

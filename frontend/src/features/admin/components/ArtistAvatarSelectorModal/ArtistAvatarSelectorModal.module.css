@@ -24,8 +24,8 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px var(--black-50);
+  border: 1px solid var(--white-10);
 }
 
 /* Header */
@@ -34,7 +34,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
 }
 
 .title {
@@ -61,7 +61,7 @@
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
 }
 
@@ -70,7 +70,7 @@
   display: flex;
   gap: 8px;
   padding: 0 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--white-10);
 }
 
 .tab {
@@ -92,7 +92,7 @@
 
 .tab:hover {
   color: var(--color-text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--white-02);
 }
 
 .tabActive {
@@ -127,7 +127,7 @@
 
 .spinner {
   animation: spin 1s linear infinite;
-  color: var(--color-primary, #3b82f6);
+  color: var(--color-primary, var(--color-info));
 }
 
 @keyframes spin {
@@ -136,7 +136,7 @@
 }
 
 .error {
-  color: var(--color-error, #ef4444);
+  color: var(--color-error, var(--color-error));
 }
 
 .error span,
@@ -152,7 +152,7 @@
   gap: 16px;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--white-05);
   flex-wrap: wrap;
 }
 
@@ -172,7 +172,7 @@
 .filterSelect {
   padding: 8px 16px;
   background: var(--color-bg-tertiary, #0f1629);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
@@ -182,13 +182,13 @@
 }
 
 .filterSelect:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--white-20);
 }
 
 .filterSelect:focus {
   outline: none;
-  border-color: var(--color-primary, #3b82f6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-primary, var(--color-info));
+  box-shadow: 0 0 0 3px var(--info-10);
 }
 
 /* Gallery */
@@ -202,7 +202,7 @@
 .avatarCard {
   position: relative;
   background: var(--color-bg-tertiary, #0f1629);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--white-10);
   border-radius: 12px;
   padding: 12px;
   cursor: pointer;
@@ -213,13 +213,13 @@
 }
 
 .avatarCard:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--white-20);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px var(--black-30);
 }
 
 .avatarCardSelected {
-  border-color: var(--color-primary, #3b82f6);
+  border-color: var(--color-primary, var(--color-info));
   background: rgba(59, 130, 246, 0.05);
 }
 
@@ -227,7 +227,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: var(--color-primary, #3b82f6);
+  background: var(--color-primary, var(--color-info));
   color: white;
   width: 32px;
   height: 32px;
@@ -279,8 +279,8 @@
 
 .typeBadgeProfile {
   background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #3b82f6;
+  border: 1px solid var(--info-30);
+  color: var(--color-info);
 }
 
 .typeBadgeBackground {
@@ -319,9 +319,9 @@
   align-items: center;
   gap: 8px;
   padding: 12px 32px;
-  background: rgba(239, 68, 68, 0.1);
-  border-top: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--error-10);
+  border-top: 1px solid var(--error-30);
+  color: var(--color-error);
   font-size: 14px;
 }
 
@@ -331,7 +331,7 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 20px 32px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-10);
 }
 
 /* Responsive */
