@@ -82,7 +82,7 @@
 }
 
 .removeButton:hover {
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--black-80);
   transform: scale(1.05);
 }
 
@@ -225,7 +225,7 @@
 }
 
 .coverCard:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white-04);
   border-color: var(--color-primary-500, #ed6842);
 }
 

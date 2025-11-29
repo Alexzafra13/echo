@@ -263,7 +263,7 @@
   flex-direction: column;
   gap: 8px;
   background: var(--white-02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--white-06);
   border-radius: 12px;
   padding: 16px;
 }
@@ -279,7 +279,7 @@
 }
 
 .pathItem:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white-04);
 }
 
 .pathIcon {

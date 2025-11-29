@@ -16,7 +16,7 @@
 }
 
 .radioCard--playing {
-  background: rgba(237, 104, 66, 0.1);
+  background: var(--primary-10);
 }
 
 /* Elements */
@@ -26,13 +26,13 @@
   aspect-ratio: 1;
   border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--black-30);
   transition: box-shadow 0.3s ease;
   background: var(--bg-surface);
 }
 
 .radioCard:hover .radioCard__coverContainer {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--black-50);
 }
 
 .radioCard__fallback {
@@ -70,7 +70,7 @@
 }
 
 .radioCard:hover .radioCard__overlay {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
 }
 
 .radioCard__playButton {
@@ -84,7 +84,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--black-60);
   border: none;
   display: flex;
   align-items: center;
@@ -104,17 +104,17 @@
 }
 
 .radioCard__favoriteButton:hover {
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--black-80);
   transform: scale(1.1);
 }
 
 .radioCard__favoriteButton--active {
   color: var(--color-primary, #ed6842);
-  background: rgba(237, 104, 66, 0.2);
+  background: var(--primary-20);
 }
 
 .radioCard__favoriteButton--active:hover {
-  background: rgba(237, 104, 66, 0.3);
+  background: var(--primary-30);
 }
 
 .radioCard__info {

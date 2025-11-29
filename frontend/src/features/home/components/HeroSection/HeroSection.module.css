@@ -43,7 +43,7 @@
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.507);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--white-40);
   display: flex;
   align-items: center;
   justify-content: center;

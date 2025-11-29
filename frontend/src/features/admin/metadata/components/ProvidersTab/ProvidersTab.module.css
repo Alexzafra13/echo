@@ -45,7 +45,7 @@
   display: flex;
   gap: 12px;
   padding: 16px;
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--info-10);
   border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 8px;
   margin-bottom: 24px;

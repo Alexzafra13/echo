@@ -24,7 +24,7 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  background: linear-gradient(180deg, rgba(237, 104, 66, 0.15) 0%, rgba(15, 18, 24, 1) 40%);
+  background: linear-gradient(180deg, var(--primary-15) 0%, rgba(15, 18, 24, 1) 40%);
 }
 
 /* Hero Section */
@@ -32,7 +32,7 @@
   display: flex;
   gap: 32px;
   padding: 32px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   margin-bottom: 32px;
@@ -42,7 +42,7 @@
   width: 240px;
   height: 240px;
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 32px var(--black-60);
   flex-shrink: 0;
   overflow: hidden;
   cursor: pointer;
@@ -51,7 +51,7 @@
 
 .playlistDetailPage__heroCover:hover {
   transform: scale(1.02);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 40px var(--black-80);
 }
 
 .playlistDetailPage__heroCover img {
@@ -66,7 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.3), rgba(237, 104, 66, 0.1));
+  background: linear-gradient(135deg, var(--primary-30), var(--primary-10));
   color: var(--color-primary-500, #ed6842);
 }
 
@@ -125,7 +125,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px var(--black-40);
   flex-shrink: 0;
 }
 
@@ -145,7 +145,7 @@
   height: 48px;
   border-radius: 50%;
   background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--white-20);
   color: var(--text-primary, #ffffff);
   display: flex;
   align-items: center;
@@ -155,8 +155,8 @@
 }
 
 .playlistDetailPage__heroActionButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--white-10);
+  border-color: var(--white-40);
   transform: scale(1.05);
 }
 
@@ -176,7 +176,7 @@
 
 .playlistDetailPage__heroMoreButton:hover {
   color: var(--text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
 }
 
 /* Track Section */
@@ -265,7 +265,7 @@
   max-height: 90vh;
   object-fit: contain;
   border-radius: 8px;
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 20px 80px var(--black-80);
 }
 
 /* Scrollbar */

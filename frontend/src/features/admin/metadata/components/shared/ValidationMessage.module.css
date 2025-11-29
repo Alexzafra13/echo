@@ -10,15 +10,15 @@
 }
 
 .validationMessage.valid {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: var(--success-10);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .validationMessage.invalid {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: var(--error-10);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid var(--error-20);
 }
 
 .validationMessage svg {

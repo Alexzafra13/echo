@@ -85,8 +85,8 @@
   height: 44px;
   padding: 0 40px 0 48px; /* Extra padding right for clear button */
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--color-text-primary, #ffffff);
   font-size: 14px;
   transition: all 0.2s ease;
@@ -98,7 +98,7 @@
 
 .artistsPage__searchInput:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-color: var(--color-primary, #ff6b6b);
 }
 
@@ -120,7 +120,7 @@
 }
 
 .artistsPage__searchClearButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary);
 }
 
@@ -155,7 +155,7 @@
   color: var(--color-primary, #ed6842);
   margin: 0 0 12px 12px;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(237, 104, 66, 0.3);
+  border-bottom: 2px solid var(--primary-30);
 }
 
 .artistsPage__groupList {

@@ -33,19 +33,19 @@
   border: 1px solid var(--white-15);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px var(--black-15);
 }
 
 .primary:hover:not(:disabled) {
   background: var(--white-12);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--white-25);
   box-shadow: 0 4px 16px var(--black-20);
   transform: translateY(-2px);
 }
 
 .primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px var(--black-15);
 }
 
 .secondary {
