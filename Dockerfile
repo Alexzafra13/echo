@@ -92,9 +92,10 @@ WORKDIR /app
 # Copy production node_modules from deps stage
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
-# Copy Drizzle config and schema for runtime migrations
+# Copy Drizzle config, schema and migrations for runtime
 COPY --from=deps --chown=echoapp:nodejs /prod/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder --chown=echoapp:nodejs /build/server/src/infrastructure/database/schema ./src/infrastructure/database/schema
+COPY --from=builder --chown=echoapp:nodejs /build/server/drizzle ./drizzle
 
 # Copy built application files
 COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
