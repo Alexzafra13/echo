@@ -87,17 +87,17 @@
 }
 
 .explorePage__viewAllButton {
+  display: block;
   background: none;
   border: none;
   color: var(--text-secondary, #b8bcc8);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 12px;
+  padding: 12px 24px;
   border-radius: 6px;
   transition: all 0.2s ease;
-  margin-left: auto;
-  flex-shrink: 0;
+  margin: 16px auto 0;
 }
 
 .explorePage__viewAllButton:hover {
@@ -300,10 +300,6 @@
     font-size: 18px;
   }
 
-  .explorePage__viewAllButton {
-    font-size: 13px;
-    padding: 4px 8px;
-  }
 
   .explorePage__trackList {
     padding: 0 12px;

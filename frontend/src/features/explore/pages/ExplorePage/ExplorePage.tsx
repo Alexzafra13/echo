@@ -67,7 +67,7 @@ export default function ExplorePage() {
       <Sidebar />
 
       <main className={styles.explorePage__main}>
-        <Header />
+        <Header disableSearch />
 
         <div className={styles.explorePage__content}>
           {/* Page Header */}
@@ -105,19 +105,21 @@ export default function ExplorePage() {
             <div className={styles.explorePage__sectionHeader}>
               <Disc size={24} className={styles.explorePage__sectionIcon} />
               <h2 className={styles.explorePage__sectionTitle}>Sin escuchar</h2>
-              {unplayedData?.total && unplayedData.total > itemsPerRow && (
-                <button
-                  className={styles.explorePage__viewAllButton}
-                  onClick={() => setLocation('/explore/unplayed')}
-                >
-                  Ver todos ({unplayedData.total}) →
-                </button>
-              )}
             </div>
             {loadingUnplayed ? (
               <div className={styles.explorePage__loading}>Cargando...</div>
             ) : unplayedAlbums.length > 0 ? (
-              <AlbumGrid title="" albums={unplayedAlbums} />
+              <>
+                <AlbumGrid title="" albums={unplayedAlbums} />
+                {unplayedData?.total && unplayedData.total > itemsPerRow && (
+                  <button
+                    className={styles.explorePage__viewAllButton}
+                    onClick={() => setLocation('/explore/unplayed')}
+                  >
+                    Ver todos ({unplayedData.total}) →
+                  </button>
+                )}
+              </>
             ) : (
               <p className={styles.explorePage__empty}>¡Has escuchado todos tus albums!</p>
             )}
