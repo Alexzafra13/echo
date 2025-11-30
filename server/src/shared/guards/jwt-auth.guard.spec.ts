@@ -1,106 +1,75 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { AdminGuard } from './admin.guard';
+import { UnauthorizedException } from '@nestjs/common';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { createMockExecutionContext, createMockReflector } from '@shared/testing/mock.types';
 
-describe('AdminGuard', () => {
-  let guard: AdminGuard;
+describe('JwtAuthGuard', () => {
+  let guard: JwtAuthGuard;
+  let mockReflector: ReturnType<typeof createMockReflector>;
 
   beforeEach(() => {
-    guard = new AdminGuard();
+    mockReflector = createMockReflector();
+    guard = new JwtAuthGuard(mockReflector);
   });
 
   describe('canActivate', () => {
-    it('debería permitir acceso si el usuario es admin', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'admin-123',
-          username: 'admin',
-          isAdmin: true,
-        },
+    it('debería permitir acceso si la ruta es pública', () => {
+      mockReflector.getAllAndOverride.mockReturnValue(true);
+
+      const mockContext = createMockExecutionContext({
+        handler: () => {},
+        class: class TestController {},
       });
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalled();
     });
 
-    it('debería denegar acceso si el usuario NO es admin', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'normaluser',
-          isAdmin: false,
-        },
+    it('debería delegar a AuthGuard si la ruta no es pública', () => {
+      mockReflector.getAllAndOverride.mockReturnValue(false);
+
+      const mockContext = createMockExecutionContext({
+        handler: () => {},
+        class: class TestController {},
       });
 
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        'Admin access required'
+      // When not public, it calls super.canActivate which we can't easily test
+      // The important thing is that it doesn't return true immediately
+      const result = guard.canActivate(mockContext);
+
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalled();
+      // Result will be a Promise from passport AuthGuard
+      expect(result).not.toBe(true);
+    });
+  });
+
+  describe('handleRequest', () => {
+    it('debería retornar el usuario si la autenticación es exitosa', () => {
+      const mockUser = { id: 'user-123', username: 'testuser' };
+
+      const result = guard.handleRequest(null, mockUser, null);
+
+      expect(result).toBe(mockUser);
+    });
+
+    it('debería lanzar UnauthorizedException si no hay usuario', () => {
+      expect(() => guard.handleRequest(null, null, null)).toThrow(
+        UnauthorizedException,
       );
+      expect(() => guard.handleRequest(null, null, null)).toThrow('Invalid token');
     });
 
-    it('debería denegar acceso si no hay usuario en el request', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: undefined,
-      });
+    it('debería lanzar el error original si hay un error', () => {
+      const mockError = new Error('Custom auth error');
 
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+      expect(() => guard.handleRequest(mockError, null, null)).toThrow(mockError);
     });
 
-    it('debería denegar acceso si user.isAdmin es undefined', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-        },
-      });
-
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    });
-
-    it('debería denegar acceso si user.isAdmin es null', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-          isAdmin: null,
-        },
-      });
-
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    });
-
-    it('debería denegar acceso si user.isAdmin es false explícitamente', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-          isAdmin: false,
-        },
-      });
-
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    it('debería lanzar UnauthorizedException si user es undefined', () => {
+      expect(() => guard.handleRequest(null, undefined, null)).toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });
-
-// Helper para crear mock context
-function createMockContext(request: any): ExecutionContext {
-  return {
-    switchToHttp: () => ({
-      getRequest: () => request,
-    }),
-  } as any;
-}
