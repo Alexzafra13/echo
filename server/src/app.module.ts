@@ -78,9 +78,10 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
 
     // Rate Limiting (protección contra fuerza bruta y DoS)
     // Very permissive for authenticated users - only protects against massive DDoS
+    // En tests (NODE_ENV=test), límites muy altos para evitar 429
     ThrottlerModule.forRoot([{
       ttl: 60000, // 60 segundos
-      limit: 10000, // 10,000 requests/min - effectively unlimited for normal user behavior
+      limit: process.env.NODE_ENV === 'test' ? 1000000 : 10000,
     }]),
 
     // Scheduled Tasks (cron jobs)
