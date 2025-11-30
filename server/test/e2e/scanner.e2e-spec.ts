@@ -1,9 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../../src/app.module';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
 import {
+  createTestApp,
   createAdminAndLogin,
   createUserAndLogin,
   cleanUserTables,
@@ -29,25 +28,9 @@ describe('Scanner E2E', () => {
   let testMusicDir: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    app.setGlobalPrefix('api');
-
-    await app.init();
-
-    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
+    const testApp = await createTestApp();
+    app = testApp.app;
+    drizzle = testApp.drizzle;
 
     // Crear directorio temporal para archivos de prueba
     testMusicDir = path.join(process.cwd(), 'test-music-temp');
