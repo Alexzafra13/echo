@@ -197,8 +197,9 @@ describe('Artists E2E', () => {
     });
 
     it('debería aplicar paginación en búsqueda', () => {
+      // Nota: la búsqueda requiere mínimo 2 caracteres
       return request(app.getHttpServer())
-        .get('/api/artists/search/e?skip=0&take=1')
+        .get('/api/artists/search/th?skip=0&take=1')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
@@ -221,8 +222,9 @@ describe('Artists E2E', () => {
     });
 
     it('debería incluir metadatos de paginación', () => {
+      // Nota: la búsqueda requiere mínimo 2 caracteres
       return request(app.getHttpServer())
-        .get('/api/artists/search/e?skip=0&take=10')
+        .get('/api/artists/search/th?skip=0&take=10')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
