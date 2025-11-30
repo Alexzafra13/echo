@@ -28,7 +28,12 @@ describe('UserRepository Integration', () => {
 
   // Helper para limpiar la tabla de usuarios
   const cleanUsers = async () => {
-    await drizzle.db.delete(schema.streamTokens);
+    // Intentar borrar tablas dependientes primero (pueden no existir)
+    try {
+      await drizzle.db.delete(schema.streamTokens);
+    } catch {
+      // Tabla puede no existir en el schema de test
+    }
     await drizzle.db.delete(schema.users);
   };
 
