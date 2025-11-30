@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
 import { eq } from 'drizzle-orm';
@@ -11,9 +11,9 @@ import request from 'supertest';
 /**
  * Mock ThrottlerGuard que siempre permite requests (para E2E tests)
  */
-class MockThrottlerGuard {
-  canActivate() {
-    return true;
+class NoOpThrottlerGuard extends ThrottlerGuard {
+  protected override async shouldSkip(): Promise<boolean> {
+    return true; // Siempre skip throttling en tests
   }
 }
 
@@ -30,7 +30,7 @@ export async function createTestApp(): Promise<{
     imports: [AppModule],
   })
     .overrideGuard(ThrottlerGuard)
-    .useClass(MockThrottlerGuard)
+    .useClass(NoOpThrottlerGuard)
     .compile();
 
   const app = moduleFixture.createNestApplication();
