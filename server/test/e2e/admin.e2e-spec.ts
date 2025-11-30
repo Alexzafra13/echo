@@ -229,7 +229,7 @@ describe('Admin E2E', () => {
         .send({ name: 'Updated Name' })
         .expect(200);
 
-      expect(response.body.user.name).toBe('Updated Name');
+      expect(response.body.name).toBe('Updated Name');
     });
 
     it('debería promover usuario a admin', async () => {
@@ -239,7 +239,7 @@ describe('Admin E2E', () => {
         .send({ isAdmin: true })
         .expect(200);
 
-      expect(response.body.user.isAdmin).toBe(true);
+      expect(response.body.isAdmin).toBe(true);
     });
 
     it('debería desactivar usuario', async () => {
@@ -249,7 +249,7 @@ describe('Admin E2E', () => {
         .send({ isActive: false })
         .expect(200);
 
-      expect(response.body.user.isActive).toBe(false);
+      expect(response.body.isActive).toBe(false);
     });
 
     it('debería retornar 404 si usuario no existe', () => {
