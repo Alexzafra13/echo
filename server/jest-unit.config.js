@@ -1,21 +1,13 @@
 /**
- * Jest DEFAULT config - Runs UNIT tests
+ * Jest config for UNIT tests only
  *
- * This is the default config used by `pnpm test`.
- * Unit tests use MOCKS and don't need real DB/Redis connections.
+ * These tests use MOCKS and do NOT require:
+ * - Database connection
+ * - Redis connection
+ * - External services
  *
- * Available configs:
- * - jest.config.js (this)     → Unit tests (mocks only)
- * - jest-unit.config.js       → Same as this (explicit unit tests)
- * - jest-integration.config.js → Real DB/Redis connections
- * - jest-e2e.config.js        → Full HTTP E2E tests
- *
- * Scripts:
- * - pnpm test           → Unit tests (this config)
- * - pnpm test:unit      → Unit tests (explicit)
- * - pnpm test:integration → Integration tests
- * - pnpm test:e2e       → E2E tests
- * - pnpm test:all       → All tests sequentially
+ * This makes them fast (~ms per test) and isolated.
+ * Run with: pnpm test:unit
  */
 module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
@@ -24,15 +16,15 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
 
-  // Excluir tests de integración y E2E
+  // Excluir tests de integración (están en test/integration/)
   testPathIgnorePatterns: [
     '/node_modules/',
-    '\\.integration-spec\\.ts$',
-    '\\.e2e-spec\\.ts$',
+    '/integration/',
+    '/e2e/',
   ],
 
-  // NO setup de BD para unit tests - son más rápidos sin él
-  // setupFilesAfterEnv: [] - intencionalmente sin setup de BD
+  // NO cargamos setup de BD - los unit tests usan mocks
+  // setupFilesAfterEnv: [] - intencionalmente vacío
 
   // Excluir archivos innecesarios del coverage
   collectCoverageFrom: [
@@ -44,7 +36,7 @@ module.exports = {
     '!**/main.ts',
     '!**/*.d.ts',
   ],
-  coverageDirectory: '../coverage',
+  coverageDirectory: '../coverage/unit',
 
   // Configuración de transform
   transform: {
@@ -76,10 +68,10 @@ module.exports = {
     '^(\\.\\./)+generated/prisma$': '<rootDir>/generated/prisma',
   },
 
-  // Más workers para unit tests (son rápidos, solo mocks)
+  // Más workers porque los unit tests son rápidos (solo mocks)
   maxWorkers: '50%',
 
-  // Timeout corto para unit tests - deben ser rápidos
+  // Timeout corto - unit tests deben ser rápidos
   testTimeout: 5000,
 
   // Mostrar resultados individuales
