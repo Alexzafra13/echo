@@ -80,7 +80,7 @@ describe('UserRepository Integration', () => {
 
   afterAll(async () => {
     await cleanUsers();
-    await drizzle?.onModuleDestroy();
+    // module.close() calls onModuleDestroy on all providers automatically
     await module?.close();
   });
 

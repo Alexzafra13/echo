@@ -86,9 +86,8 @@ jobs:
         working-directory: server
         run: |
           for i in {1..4}; do
-            export DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i"
             echo "Applying schema to music_server_test_$i..."
-            pnpm db:push --force
+            env DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm db:push --force
           done
 
       # Unit tests: Fast, use mocks, NO DB connection needed
