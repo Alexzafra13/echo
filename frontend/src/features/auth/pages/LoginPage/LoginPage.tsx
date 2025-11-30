@@ -28,10 +28,19 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { login, isLoggingIn, loginError } = useAuth();
 
-  // Select a random background on each page load
+  // Select a random background different from the last one
   const backgroundImage = useMemo(() => {
-    const randomIndex = Math.floor(Math.random() * LOGIN_BACKGROUNDS.length);
-    return LOGIN_BACKGROUNDS[randomIndex];
+    const lastBackground = sessionStorage.getItem('lastLoginBackground');
+    const availableBackgrounds = LOGIN_BACKGROUNDS.filter(bg => bg !== lastBackground);
+
+    // If all were filtered (shouldn't happen with 3+ images), use all
+    const pool = availableBackgrounds.length > 0 ? availableBackgrounds : LOGIN_BACKGROUNDS;
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    const selected = pool[randomIndex];
+
+    // Store for next time
+    sessionStorage.setItem('lastLoginBackground', selected);
+    return selected;
   }, []);
 
   const {
@@ -111,12 +120,6 @@ export default function LoginPage() {
               Sing In
             </Button>
           </form>
-
-          <div className={styles.forgotPassword}>
-            <a href="#" className={styles.forgotPasswordLink}>
-              ¿Has Olvidado Tu Contraseña?
-            </a>
-          </div>
         </div>
       </div>
     </div>
