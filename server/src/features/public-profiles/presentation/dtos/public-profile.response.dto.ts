@@ -114,7 +114,8 @@ export class PublicProfileResponseDto {
       dto.topArtists = data.topArtists.map((a) => ({
         id: a.id,
         name: a.name,
-        imageUrl: a.profileImagePath ? `/api/images/artists/${a.id}/profile` : undefined,
+        // Generate URL if artist has any profile image (local or external/Fanart)
+        imageUrl: (a.profileImagePath || a.externalProfilePath) ? `/api/images/artists/${a.id}/profile` : undefined,
         playCount: a.playCount,
       }));
     }

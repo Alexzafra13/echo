@@ -28,6 +28,7 @@ export interface TopArtist {
   id: string;
   name: string;
   profileImagePath?: string;
+  externalProfilePath?: string;
   playCount: number;
 }
 
