@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { StreamTokenService } from '../domain/stream-token.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
+import { JwtUser } from '@shared/types/request.types';
 
 @ApiTags('streaming')
 @ApiBearerAuth('JWT-auth')
@@ -32,7 +33,7 @@ export class StreamTokenController {
       },
     },
   })
-  async generateToken(@CurrentUser() user: any) {
+  async generateToken(@CurrentUser() user: JwtUser) {
     const { token, expiresAt } = await this.streamTokenService.generateToken(user.id);
     return { token, expiresAt };
   }
@@ -61,7 +62,7 @@ export class StreamTokenController {
     status: 404,
     description: 'No active token found',
   })
-  async getCurrentToken(@CurrentUser() user: any) {
+  async getCurrentToken(@CurrentUser() user: JwtUser) {
     const tokenData = await this.streamTokenService.getUserToken(user.id);
     if (!tokenData) {
       // If no token exists, generate one
@@ -84,7 +85,7 @@ export class StreamTokenController {
     status: 204,
     description: 'Token revoked successfully',
   })
-  async revokeToken(@CurrentUser() user: any) {
+  async revokeToken(@CurrentUser() user: JwtUser) {
     await this.streamTokenService.revokeToken(user.id);
   }
 }

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
+import { JwtUser } from '@shared/types/request.types';
 import { GetPublicProfileUseCase } from '../domain/use-cases/get-public-profile';
 import { PublicProfileResponseDto } from './dtos';
 
@@ -51,7 +52,7 @@ export class PublicProfilesController {
   })
   async getPublicProfile(
     @Param('userId') userId: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: JwtUser,
   ): Promise<PublicProfileResponseDto> {
     const result = await this.getPublicProfileUseCase.execute({
       userId,

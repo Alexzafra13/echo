@@ -13,6 +13,7 @@ import { Track } from '@features/tracks/domain/entities/track.entity';
 import { parsePaginationParams } from '@shared/utils';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators';
+import { JwtUser } from '@shared/types/request.types';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -205,7 +206,7 @@ export class AlbumsController {
     description: 'No autenticado o token inválido'
   })
   async getRecentlyPlayedAlbums(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Query() query: AlbumsLimitQueryDto,
   ) {
     const result = await this.getRecentlyPlayedAlbumsUseCase.execute({
@@ -258,7 +259,7 @@ export class AlbumsController {
     description: 'No autenticado o token inválido'
   })
   async getFavoriteAlbums(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Query() query: AlbumsPaginationQueryDto,
   ) {
     const result = await this.getFavoriteAlbumsUseCase.execute({
