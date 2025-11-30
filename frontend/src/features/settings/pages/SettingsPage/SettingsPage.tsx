@@ -64,6 +64,7 @@ export function SettingsPage() {
         <Header showBackButton disableSearch />
 
         <div className={styles.settingsPage__content}>
+          <div className={styles.settingsPage__contentInner}>
           {/* Header */}
           <div className={styles.settingsPage__header}>
             <div className={styles.settingsPage__headerIcon}>
@@ -306,6 +307,7 @@ export function SettingsPage() {
               </div>
             </>
           )}
+          </div>
         </div>
       </main>
     </div>
