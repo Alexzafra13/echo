@@ -1,11 +1,56 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
 import request from 'supertest';
+
+/**
+ * Mock ThrottlerGuard que siempre permite requests (para E2E tests)
+ */
+class MockThrottlerGuard {
+  canActivate() {
+    return true;
+  }
+}
+
+/**
+ * Crea y configura la aplicación NestJS para E2E tests
+ * con ThrottlerGuard deshabilitado
+ */
+export async function createTestApp(): Promise<{
+  app: INestApplication;
+  module: TestingModule;
+  drizzle: DrizzleService;
+}> {
+  const moduleFixture = await Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideGuard(ThrottlerGuard)
+    .useClass(MockThrottlerGuard)
+    .compile();
+
+  const app = moduleFixture.createNestApplication();
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  app.setGlobalPrefix('api');
+
+  await app.init();
+
+  const drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
+
+  return { app, module: moduleFixture, drizzle };
+}
 
 /**
  * Helpers para tests E2E
