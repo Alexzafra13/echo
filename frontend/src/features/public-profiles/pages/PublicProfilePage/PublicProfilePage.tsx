@@ -148,7 +148,7 @@ export function PublicProfilePage() {
               <div className={styles.publicProfilePage__sectionHeader}>
                 <h2 className={styles.publicProfilePage__sectionTitle}>
                   <UserIcon size={22} />
-                  Artistas favoritos
+                  Artistas más escuchados
                 </h2>
               </div>
               <div className={styles.publicProfilePage__scrollContainer}>
@@ -185,7 +185,7 @@ export function PublicProfilePage() {
               <div className={styles.publicProfilePage__sectionHeader}>
                 <h2 className={styles.publicProfilePage__sectionTitle}>
                   <Disc size={22} />
-                  Álbumes favoritos
+                  Álbumes más escuchados
                 </h2>
               </div>
               <div className={styles.publicProfilePage__scrollContainer}>
