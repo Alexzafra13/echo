@@ -36,11 +36,13 @@ describe('CachedTrackRepository', () => {
     // Mock base repository
     baseRepository = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findAll: jest.fn(),
       search: jest.fn(),
       findByAlbumId: jest.fn(),
       findByArtistId: jest.fn(),
       count: jest.fn(),
+      findShuffledPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -217,6 +219,38 @@ describe('CachedTrackRepository', () => {
       expect(baseRepository.count).toHaveBeenCalled();
       expect(cacheService.get).not.toHaveBeenCalled();
       expect(result).toBe(100);
+    });
+  });
+
+  describe('findShuffledPaginated', () => {
+    it('should delegate to base repository without caching', async () => {
+      // Arrange
+      const tracks = [mockTrack];
+      baseRepository.findShuffledPaginated.mockResolvedValue(tracks);
+
+      // Act
+      const result = await cachedRepository.findShuffledPaginated(0.5, 0, 50);
+
+      // Assert
+      expect(baseRepository.findShuffledPaginated).toHaveBeenCalledWith(0.5, 0, 50);
+      expect(cacheService.get).not.toHaveBeenCalled();
+      expect(cacheService.set).not.toHaveBeenCalled();
+      expect(result).toBe(tracks);
+    });
+
+    it('should support different seed values for different orderings', async () => {
+      // Arrange
+      const tracks = [mockTrack];
+      baseRepository.findShuffledPaginated.mockResolvedValue(tracks);
+
+      // Act
+      await cachedRepository.findShuffledPaginated(0.123, 0, 50);
+      await cachedRepository.findShuffledPaginated(0.456, 0, 50);
+
+      // Assert
+      expect(baseRepository.findShuffledPaginated).toHaveBeenCalledTimes(2);
+      expect(baseRepository.findShuffledPaginated).toHaveBeenNthCalledWith(1, 0.123, 0, 50);
+      expect(baseRepository.findShuffledPaginated).toHaveBeenNthCalledWith(2, 0.456, 0, 50);
     });
   });
 

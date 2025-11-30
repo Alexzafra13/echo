@@ -99,11 +99,21 @@ export class DrizzleTrackRepository
     return result[0]?.count ?? 0;
   }
 
-  async findAllShuffled(): Promise<Track[]> {
+  async findShuffledPaginated(
+    seed: number,
+    skip: number,
+    take: number,
+  ): Promise<Track[]> {
+    // Usa md5(id || seed) para crear un orden determinístico y reproducible
+    // Esto permite paginación consistente con el mismo seed
+    const seedStr = seed.toString();
+
     const result = await this.drizzle.db
       .select()
       .from(tracks)
-      .orderBy(sql`RANDOM()`);
+      .orderBy(sql`md5(${tracks.id} || ${seedStr})`)
+      .offset(skip)
+      .limit(take);
 
     return TrackMapper.toDomainArray(result);
   }
