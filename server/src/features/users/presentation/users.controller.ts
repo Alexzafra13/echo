@@ -17,6 +17,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth, ApiConsumes
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
+import { JwtUser } from '@shared/types/request.types';
 import {
   ChangePasswordUseCase,
   UpdateProfileUseCase,
@@ -72,7 +73,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async changePassword(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Body() dto: ChangePasswordRequestDto,
   ): Promise<void> {
     await this.changePasswordUseCase.execute({
@@ -103,7 +104,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async updateProfile(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Body() dto: UpdateProfileRequestDto,
   ): Promise<UserResponseDto> {
     const result = await this.updateProfileUseCase.execute({
@@ -134,7 +135,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async changeTheme(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Body() dto: ChangeThemeRequestDto,
   ): Promise<void> {
     await this.changeThemeUseCase.execute({
@@ -163,7 +164,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async changeLanguage(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Body() dto: ChangeLanguageRequestDto,
   ): Promise<void> {
     await this.changeLanguageUseCase.execute({
@@ -213,7 +214,7 @@ export class UsersController {
   })
   async uploadAvatar(
     @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> },
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
   ) {
     // Fastify multipart - get uploaded file
     const data = await request.file();
@@ -265,7 +266,7 @@ export class UsersController {
     status: 401,
     description: 'No autenticado'
   })
-  async deleteAvatar(@CurrentUser() user: any): Promise<void> {
+  async deleteAvatar(@CurrentUser() user: JwtUser): Promise<void> {
     await this.deleteAvatarUseCase.execute({
       userId: user.id,
     });
@@ -287,7 +288,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async getPrivacySettings(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
   ): Promise<PrivacySettingsResponseDto> {
     const result = await this.updatePrivacySettingsUseCase.execute({
       userId: user.id,
@@ -316,7 +317,7 @@ export class UsersController {
     description: 'No autenticado'
   })
   async updatePrivacySettings(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtUser,
     @Body() dto: UpdatePrivacySettingsRequestDto,
   ): Promise<PrivacySettingsResponseDto> {
     const result = await this.updatePrivacySettingsUseCase.execute({

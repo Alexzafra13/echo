@@ -1,7 +1,8 @@
+import { User as UserDb } from '@infrastructure/database/schema/users';
 import { User } from '../../domain/entities/user.entity';
 
 export class UserMapper {
-  static toDomain(raw: any): User {
+  static toDomain(raw: UserDb): User {
     return User.reconstruct({
       id: raw.id,
       username: raw.username,

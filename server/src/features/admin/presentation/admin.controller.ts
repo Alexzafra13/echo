@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiParam, ApiResponse, ApiBea
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { CurrentUser } from '@shared/decorators';
+import { JwtUser } from '@shared/types/request.types';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -72,7 +73,7 @@ export class AdminController {
   })
   async createUser(
     @Body() dto: CreateUserRequestDto,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: JwtUser,
   ) {
     const result = await this.createUserUseCase.execute({
       username: dto.username,
@@ -209,7 +210,7 @@ export class AdminController {
   })
   async deleteUser(
     @Param('id') id: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: JwtUser,
   ): Promise<void> {
     await this.deleteUserUseCase.execute({
       userId: id,
@@ -282,7 +283,7 @@ export class AdminController {
   })
   async resetUserPassword(
     @Param('id') id: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: JwtUser,
   ): Promise<ResetPasswordResponseDto> {
     const result = await this.resetUserPasswordUseCase.execute({
       userId: id,
