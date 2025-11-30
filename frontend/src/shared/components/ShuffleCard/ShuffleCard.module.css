@@ -1,13 +1,15 @@
 /* ShuffleCard Component Styles */
 /* Width synced with AlbumGrid: 2 album covers + 1 gap */
+/* Note: AlbumGrid uses minmax(Xpx, 1fr) so covers grow beyond minimum */
+/* These values are adjusted to match the actual rendered cover widths */
 
 .shuffleCard {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 14px;
-  /* Desktop: 2 covers (200px each) + 1 gap (20px) = 420px */
-  width: calc(200px * 2 + 20px);
+  /* Desktop: 2 covers (~218px each due to 1fr growth) + 1 gap (20px) */
+  width: calc(218px * 2 + 20px);
   height: 80px;
   padding: 16px;
   border: none;
@@ -90,18 +92,19 @@
 
 /* ===== Responsive ===== */
 /* Breakpoints synced with AlbumGrid.module.css */
+/* Values adjusted for 1fr growth factor */
 
-/* Tablet: 2 covers (180px each) + 1 gap (16px) = 376px */
+/* Tablet: 2 covers (~195px each) + 1 gap (16px) */
 @media (max-width: 1200px) {
   .shuffleCard {
-    width: calc(180px * 2 + 16px);
+    width: calc(195px * 2 + 16px);
   }
 }
 
-/* Mobile: 2 covers (140px each) + 1 gap (12px) = 292px */
+/* Mobile: 2 covers (~160px each) + 1 gap (12px) */
 @media (max-width: 768px) {
   .shuffleCard {
-    width: calc(140px * 2 + 12px);
+    width: calc(160px * 2 + 12px);
   }
 
   .shuffleCard__title {
@@ -109,9 +112,9 @@
   }
 }
 
-/* Small mobile: keep same ratio */
+/* Small mobile: 2 covers (~148px each) + 1 gap (10px) */
 @media (max-width: 480px) {
   .shuffleCard {
-    width: calc(130px * 2 + 10px);
+    width: calc(148px * 2 + 10px);
   }
 }
