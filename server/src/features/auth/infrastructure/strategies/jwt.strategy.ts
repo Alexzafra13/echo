@@ -4,23 +4,26 @@ import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt';
 import { TokenPayload } from '../../domain/ports/token-service.port';
 import { DrizzleUserRepository } from '../persistence/user.repository';
 import { UserProps } from '../../domain/entities/user.entity';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 
 /**
  * JwtStrategy - Estrategia de Passport para validar JWT
  *
  * Se usa en Guards para validar que el token sea válido
  * y extraer el usuario del token
+ *
+ * Uses SecuritySecretsService for auto-generated secrets (like Navidrome/Jellyfin)
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly userRepository: DrizzleUserRepository) {
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET environment variable is required');
-    }
+  constructor(
+    private readonly userRepository: DrizzleUserRepository,
+    secretsService: SecuritySecretsService,
+  ) {
     const options: StrategyOptions = {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: secretsService.jwtSecret,
     };
     super(options);
   }
