@@ -1,5 +1,10 @@
 // drizzle.config.ts
-import 'dotenv/config';
+// Only load dotenv in development (in production, env vars come from Docker)
+try {
+  require('dotenv/config');
+} catch {
+  // dotenv not available in production, that's fine
+}
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
