@@ -1,6 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { TRACK_REPOSITORY, ITrackRepository } from '../../ports/track-repository.port';
-import { GetShuffledTracksOutput } from './get-shuffled-tracks.dto';
+import { GetShuffledTracksInput, GetShuffledTracksOutput } from './get-shuffled-tracks.dto';
+
+/** Tamaño de página por defecto */
+const DEFAULT_TAKE = 50;
+/** Tamaño máximo de página permitido */
+const MAX_TAKE = 100;
 
 @Injectable()
 export class GetShuffledTracksUseCase {
@@ -9,8 +14,17 @@ export class GetShuffledTracksUseCase {
     private readonly trackRepository: ITrackRepository,
   ) {}
 
-  async execute(): Promise<GetShuffledTracksOutput> {
-    const tracks = await this.trackRepository.findAllShuffled();
+  async execute(input: GetShuffledTracksInput = {}): Promise<GetShuffledTracksOutput> {
+    // Generar seed si no se proporciona (para primera petición)
+    const seed = input.seed ?? Math.random();
+    const skip = Math.max(0, input.skip ?? 0);
+    const take = Math.min(MAX_TAKE, Math.max(1, input.take ?? DEFAULT_TAKE));
+
+    // Obtener tracks paginados con orden determinístico
+    const [tracks, total] = await Promise.all([
+      this.trackRepository.findShuffledPaginated(seed, skip, take),
+      this.trackRepository.count(),
+    ]);
 
     const data = tracks.map((track) => ({
       id: track.id,
@@ -36,7 +50,11 @@ export class GetShuffledTracksUseCase {
 
     return {
       data,
-      total: tracks.length,
+      total,
+      seed,
+      skip,
+      take,
+      hasMore: skip + tracks.length < total,
     };
   }
 }
