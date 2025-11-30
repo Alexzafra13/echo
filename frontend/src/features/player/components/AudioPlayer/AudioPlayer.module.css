@@ -199,12 +199,6 @@
 
 .trackCoverContainer--clickable {
   cursor: pointer;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
-}
-
-.trackCoverContainer--clickable:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px var(--black-30);
 }
 
 .trackMetadata {
