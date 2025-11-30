@@ -117,10 +117,10 @@ describe('Tracks E2E', () => {
         });
     });
 
-    it('debería rechazar sin autenticación', () => {
+    it('debería permitir acceso sin autenticación (endpoint público)', () => {
       return request(app.getHttpServer())
         .get(`/api/tracks/${track1Id}`)
-        .expect(401);
+        .expect(200);
     });
   });
 
@@ -182,10 +182,10 @@ describe('Tracks E2E', () => {
         });
     });
 
-    it('debería rechazar sin autenticación', () => {
+    it('debería permitir acceso sin autenticación (endpoint público)', () => {
       return request(app.getHttpServer())
         .get('/api/tracks')
-        .expect(401);
+        .expect(200);
     });
   });
 
@@ -240,10 +240,10 @@ describe('Tracks E2E', () => {
         });
     });
 
-    it('debería rechazar sin autenticación', () => {
+    it('debería permitir acceso sin autenticación (endpoint público)', () => {
       return request(app.getHttpServer())
         .get('/api/tracks/search/Come')
-        .expect(401);
+        .expect(200);
     });
   });
 
