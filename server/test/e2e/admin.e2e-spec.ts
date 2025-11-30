@@ -94,7 +94,7 @@ describe('Admin E2E', () => {
           username: 'existing',
           name: 'Existing User',
         })
-        .expect(400)
+        .expect(409)
         .expect((res) => {
           expect(res.body.message).toContain('already exists');
         });
@@ -157,8 +157,8 @@ describe('Admin E2E', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      expect(response.body.data).toBeInstanceOf(Array);
-      expect(response.body.data.length).toBe(4); // admin + 3 users
+      expect(response.body.users).toBeInstanceOf(Array);
+      expect(response.body.users.length).toBe(4); // admin + 3 users
       expect(response.body.total).toBe(4);
     });
 
@@ -168,7 +168,7 @@ describe('Admin E2E', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      expect(response.body.data.length).toBe(2);
+      expect(response.body.users.length).toBe(2);
       expect(response.body.total).toBe(4);
     });
 
@@ -178,7 +178,7 @@ describe('Admin E2E', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      const user = response.body.data[0];
+      const user = response.body.users[0];
       expect(user).toHaveProperty('id');
       expect(user).toHaveProperty('username');
       expect(user).toHaveProperty('name');
