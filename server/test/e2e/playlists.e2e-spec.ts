@@ -208,7 +208,7 @@ describe('Playlists E2E', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.data).toHaveLength(2);
+          expect(res.body.items).toHaveLength(2);
           expect(res.body.total).toBe(2);
         });
     });
@@ -227,7 +227,7 @@ describe('Playlists E2E', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      expect(response.body.data.length).toBe(2);
+      expect(response.body.items.length).toBe(2);
       expect(response.body.total).toBe(3);
     });
 
