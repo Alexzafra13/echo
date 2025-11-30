@@ -37,6 +37,7 @@ class PublicPlaylistDto {
   @Expose() songCount!: number;
   @Expose() duration!: number;
   @Expose() createdAt!: string;
+  @Expose() albumIds!: string[];
 }
 
 class PublicUserDto {
@@ -139,6 +140,7 @@ export class PublicProfileResponseDto {
         songCount: p.songCount,
         duration: p.duration,
         createdAt: p.createdAt.toISOString(),
+        albumIds: p.albumIds,
       }));
     }
 
