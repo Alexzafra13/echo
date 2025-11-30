@@ -120,6 +120,7 @@ export default function AlbumPage() {
       id: track.id,
       title: track.title,
       artist: track.artistName || album?.artist || 'Unknown Artist',
+      albumId: id,
       albumName: album?.title,
       duration: track.duration || 0,
       coverImage: album?.coverImage,

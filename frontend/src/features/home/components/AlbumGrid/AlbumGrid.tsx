@@ -38,6 +38,7 @@ export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/
           id: track.id,
           title: track.title,
           artist: track.artistName || album?.artist || 'Unknown Artist',
+          albumId: albumId,
           albumName: track.albumName || album?.title,
           duration: track.duration || 0,
           coverImage: coverImage,
