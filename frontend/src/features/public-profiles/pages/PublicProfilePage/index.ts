@@ -1,0 +1,1 @@
+export { PublicProfilePage } from './PublicProfilePage';

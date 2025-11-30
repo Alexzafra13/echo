@@ -5,6 +5,7 @@ import {
   boolean,
   timestamp,
   bigint,
+  text,
   index,
 } from 'drizzle-orm/pg-core';
 
@@ -29,6 +30,13 @@ export const users = pgTable(
     avatarMimeType: varchar('avatar_mime_type', { length: 50 }),
     avatarSize: bigint('avatar_size', { mode: 'number' }),
     avatarUpdatedAt: timestamp('avatar_updated_at'),
+    // Profile privacy settings
+    isPublicProfile: boolean('is_public_profile').default(false).notNull(),
+    showTopTracks: boolean('show_top_tracks').default(true).notNull(),
+    showTopArtists: boolean('show_top_artists').default(true).notNull(),
+    showTopAlbums: boolean('show_top_albums').default(true).notNull(),
+    showPlaylists: boolean('show_playlists').default(true).notNull(),
+    bio: text('bio'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
