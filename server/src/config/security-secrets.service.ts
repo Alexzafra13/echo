@@ -26,10 +26,21 @@ export class SecuritySecretsService implements OnModuleInit {
     private readonly drizzle: DrizzleService,
     @InjectPinoLogger(SecuritySecretsService.name)
     private readonly logger: PinoLogger,
-  ) {}
+  ) {
+    // Synchronous initialization from environment variables
+    // This allows JwtStrategy to access secrets in its constructor
+    if (process.env.JWT_SECRET && process.env.JWT_REFRESH_SECRET) {
+      this._jwtSecret = process.env.JWT_SECRET;
+      this._jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+      this.initialized = true;
+    }
+  }
 
   async onModuleInit() {
-    await this.initializeSecrets();
+    // Only initialize from database if not already initialized from env vars
+    if (!this.initialized) {
+      await this.initializeSecrets();
+    }
   }
 
   /**
