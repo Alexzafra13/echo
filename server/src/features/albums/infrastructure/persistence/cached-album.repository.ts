@@ -157,7 +157,7 @@ export class CachedAlbumRepository
    */
   override async create(album: Album): Promise<Album> {
     const created = await this.baseRepository.create(album);
-    await this.invalidateAllAlbumCaches();
+    await this.invalidateListCaches();
     return created;
   }
 
@@ -172,7 +172,7 @@ export class CachedAlbumRepository
 
     if (updated) {
       await this.cache.del(`${this.config.keyPrefix}${id}`);
-      await this.invalidateAllAlbumCaches();
+      await this.invalidateListCaches();
     }
 
     return updated;
@@ -186,18 +186,19 @@ export class CachedAlbumRepository
 
     if (deleted) {
       await this.cache.del(`${this.config.keyPrefix}${id}`);
-      await this.invalidateAllAlbumCaches();
+      await this.invalidateListCaches();
     }
 
     return deleted;
   }
 
-  // ==================== PRIVATE HELPERS ====================
+  // ==================== PUBLIC CACHE INVALIDATION ====================
 
   /**
-   * Invalidate all album-related caches (lists, searches, etc.)
+   * Invalidate all album-related list caches (lists, searches, etc.)
+   * This is exposed publicly for use by other services (e.g., scanner).
    */
-  private async invalidateAllAlbumCaches(): Promise<void> {
+  async invalidateListCaches(): Promise<void> {
     await Promise.all([
       this.invalidatePattern(`${this.config.keyPrefix}*`),
       this.invalidatePattern(`${this.config.listKeyPrefix}recent:*`),
