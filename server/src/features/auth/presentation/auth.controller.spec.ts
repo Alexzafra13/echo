@@ -1,12 +1,29 @@
 import { UnauthorizedError } from '@shared/errors';
 import { AuthController } from './auth.controller';
 import { LoginRequestDto } from './dtos';
+import { JwtUser } from '@shared/types/request.types';
+import { IUserRepository } from '../../domain/ports';
+import { LoginUseCase } from '../../domain/use-cases/login';
+import { RefreshTokenUseCase } from '../../domain/use-cases/refresh-token';
+
+interface MockLoginUseCase {
+  execute: jest.Mock;
+}
+
+interface MockRefreshTokenUseCase {
+  execute: jest.Mock;
+}
+
+interface MockUserRepository {
+  findById: jest.Mock;
+  findByUsername: jest.Mock;
+}
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let mockLoginUseCase: any;
-  let mockRefreshTokenUseCase: any;
-  let mockUserRepository: any;
+  let mockLoginUseCase: MockLoginUseCase;
+  let mockRefreshTokenUseCase: MockRefreshTokenUseCase;
+  let mockUserRepository: MockUserRepository;
 
   beforeEach(() => {
     mockLoginUseCase = {
@@ -23,9 +40,9 @@ describe('AuthController', () => {
     };
 
     controller = new AuthController(
-      mockLoginUseCase,
-      mockRefreshTokenUseCase,
-      mockUserRepository,
+      mockLoginUseCase as unknown as LoginUseCase,
+      mockRefreshTokenUseCase as unknown as RefreshTokenUseCase,
+      mockUserRepository as unknown as IUserRepository,
     );
   });
 
@@ -189,8 +206,8 @@ describe('AuthController', () => {
   describe('GET /auth/me', () => {
     it('debería retornar el usuario autenticado', async () => {
       // Arrange
-      const jwtUser = {
-        sub: 'user-123',
+      const jwtUser: Partial<JwtUser> = {
+        id: 'user-123',
         username: 'testuser',
         isAdmin: false,
       };
@@ -209,7 +226,7 @@ describe('AuthController', () => {
       mockUserRepository.findById.mockResolvedValue(freshUser);
 
       // Act
-      const result = await controller.me(jwtUser);
+      const result = await controller.me(jwtUser as JwtUser);
 
       // Assert
       expect(result).toHaveProperty('user');
@@ -221,8 +238,8 @@ describe('AuthController', () => {
 
     it('debería retornar hasAvatar true si el usuario tiene avatar', async () => {
       // Arrange
-      const jwtUser = {
-        sub: 'user-123',
+      const jwtUser: Partial<JwtUser> = {
+        id: 'user-123',
         username: 'testuser',
         isAdmin: false,
       };
@@ -240,7 +257,7 @@ describe('AuthController', () => {
       mockUserRepository.findById.mockResolvedValue(freshUser);
 
       // Act
-      const result = await controller.me(jwtUser);
+      const result = await controller.me(jwtUser as JwtUser);
 
       // Assert
       expect(result.user.hasAvatar).toBe(true);
@@ -248,20 +265,28 @@ describe('AuthController', () => {
 
     it('debería retornar datos del JWT si el usuario no existe en la BD', async () => {
       // Arrange
-      const jwtUser = {
-        sub: 'user-123',
+      const jwtUser: Partial<JwtUser> = {
+        id: 'user-123',
         username: 'testuser',
+        name: 'Test User',
         isAdmin: false,
+        isActive: true,
+        mustChangePassword: false,
+        avatarPath: null,
+        createdAt: new Date(),
       };
 
       mockUserRepository.findById.mockResolvedValue(null);
 
       // Act
-      const result = await controller.me(jwtUser);
+      const result = await controller.me(jwtUser as JwtUser);
 
       // Assert
       expect(result).toHaveProperty('user');
-      expect(result.user).toEqual(jwtUser);
+      expect(result.user.id).toBe('user-123');
+      expect(result.user.username).toBe('testuser');
+      expect(result.user.isAdmin).toBe(false);
+      expect(result.user.hasAvatar).toBe(false);
     });
   });
 });
