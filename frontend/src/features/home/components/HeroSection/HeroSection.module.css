@@ -7,23 +7,26 @@
   width: calc(100% + 60px);
   margin-left: -30px;
   margin-top: 0; /* Content container already extends behind header */
-  overflow: hidden;
+  overflow: visible; /* Allow background to extend beyond */
   border-radius: 0;
-  margin-bottom: 20px;
+  margin-bottom: -60px; /* Negative margin to overlap with next content */
 }
 
 .heroSection__background {
   position: absolute;
-  inset: 0;
-  background-size: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(100% + 120px); /* Extend 120px beyond hero for fade overlap */
+  background-size: cover;
   /* background-position set dynamically in component based on image type */
   filter: blur(2px) brightness(0.5);
-  transform: scale(1.1);
+  transform: scale(1.05);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
   /* Fade to transparent at bottom - gradual transition for smooth blend */
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 100%);
 }
 
 @keyframes fadeInBackground {
@@ -279,6 +282,11 @@
 @media (max-width: 1200px) {
   .heroSection {
     height: 510px;
+    margin-bottom: -50px;
+  }
+
+  .heroSection__background {
+    height: calc(100% + 100px);
   }
 
   .heroSection__content {
@@ -320,7 +328,11 @@
     width: calc(100% + 32px);
     margin-left: -16px;
     margin-top: 0; /* Content container already extends behind header */
-    margin-bottom: 16px;
+    margin-bottom: -30px; /* Overlap with next content */
+  }
+
+  .heroSection__background {
+    height: calc(100% + 60px);
   }
 
   /* Ocultar flechas de navegación en móvil */
@@ -431,7 +443,11 @@
     width: calc(100% + 24px);
     margin-left: -12px;
     margin-top: 0; /* Content container already extends behind header */
-    margin-bottom: 12px;
+    margin-bottom: -25px; /* Overlap with next content */
+  }
+
+  .heroSection__background {
+    height: calc(100% + 50px);
   }
 
   /* Flechas ya ocultas en breakpoint anterior */
