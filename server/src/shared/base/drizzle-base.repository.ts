@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { PgTableWithColumns } from 'drizzle-orm/pg-core';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { RepositoryError } from '@shared/errors';
 
 /**
  * Interface for mapping between domain entities and persistence models.
@@ -59,7 +60,7 @@ export abstract class DrizzleBaseRepository<
       const idColumn = tableWithId.id;
 
       if (!idColumn) {
-        throw new Error('Table must have an id column for delete operation');
+        throw new RepositoryError('delete', 'Table must have an id column');
       }
 
       const result = await this.drizzle.db

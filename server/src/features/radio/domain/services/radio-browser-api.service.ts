@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ExternalApiError } from '@shared/errors';
 
 /**
  * Interfaz que representa una estación de radio de la API
@@ -97,7 +98,7 @@ export class RadioBrowserApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`Radio Browser API error: ${response.status} ${response.statusText}`);
+        throw new ExternalApiError('RadioBrowser', response.status, response.statusText);
       }
 
       const stations: RadioBrowserStation[] = await response.json();
@@ -198,7 +199,7 @@ export class RadioBrowserApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`Radio Browser API error: ${response.status} ${response.statusText}`);
+        throw new ExternalApiError('RadioBrowser', response.status, response.statusText);
       }
 
       return await response.json();
@@ -223,7 +224,7 @@ export class RadioBrowserApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`Radio Browser API error: ${response.status} ${response.statusText}`);
+        throw new ExternalApiError('RadioBrowser', response.status, response.statusText);
       }
 
       return await response.json();

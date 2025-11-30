@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { StartScanUseCase, SCAN_PROCESSOR } from './start-scan.use-case';
 import { SCANNER_REPOSITORY, IScannerRepository } from '../../ports/scanner-repository.port';
 import { LibraryScan } from '../../entities/library-scan.entity';
+import { ScannerError } from '@shared/errors';
 
 describe('StartScanUseCase', () => {
   let useCase: StartScanUseCase;
@@ -87,9 +88,7 @@ describe('StartScanUseCase', () => {
       scannerRepository.findByStatus.mockResolvedValue([runningScan]);
 
       // Act & Assert
-      await expect(useCase.execute({})).rejects.toThrow(
-        'Ya hay un escaneo en progreso',
-      );
+      await expect(useCase.execute({})).rejects.toThrow(ScannerError);
 
       expect(scannerRepository.findByStatus).toHaveBeenCalledWith('running');
       expect(scannerRepository.create).not.toHaveBeenCalled();
