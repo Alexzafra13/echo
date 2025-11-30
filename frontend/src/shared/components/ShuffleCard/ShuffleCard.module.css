@@ -19,6 +19,7 @@
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   position: relative;
+  z-index: 1; /* Above hero background fade */
   overflow: hidden;
 }
 
