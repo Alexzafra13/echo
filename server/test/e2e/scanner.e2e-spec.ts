@@ -78,7 +78,7 @@ describe('Scanner E2E', () => {
         })
         .expect(202)
         .expect((res) => {
-          expect(res.body.scanId).toBeDefined();
+          expect(res.body.id).toBeDefined();
           expect(res.body.status).toBeDefined();
         });
     });
@@ -126,7 +126,7 @@ describe('Scanner E2E', () => {
         })
         .expect(202)
         .expect((res) => {
-          expect(res.body.scanId).toBeDefined();
+          expect(res.body.id).toBeDefined();
         });
     });
   });
@@ -201,7 +201,7 @@ describe('Scanner E2E', () => {
         })
         .expect(202);
 
-      const scanId = startRes.body.scanId;
+      const scanId = startRes.body.id;
 
       // Luego obtener su estado
       return request(app.getHttpServer())
@@ -227,7 +227,7 @@ describe('Scanner E2E', () => {
         })
         .expect(202);
 
-      const scanId = startRes.body.scanId;
+      const scanId = startRes.body.id;
       expect(scanId).toBeDefined();
 
       // 2. Obtener estado del escaneo
