@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from '../../src/infrastructure/cache/redis.service';
 import { CachedAlbumRepository } from '../../src/features/albums/infrastructure/persistence/cached-album.repository';
-import { Album } from '../../src/features/albums/domain/entities/album.entity';
+import { Album, AlbumProps } from '../../src/features/albums/domain/entities/album.entity';
 import { IAlbumRepository } from '../../src/features/albums/domain/ports/album-repository.port';
 import { ConfigModule } from '@nestjs/config';
 
@@ -20,12 +20,21 @@ describe('CachedAlbumRepository Integration', () => {
   let baseRepository: jest.Mocked<IAlbumRepository>;
   let module: TestingModule;
 
-  const mockAlbumData = {
+  // Mock album data usando los campos correctos según AlbumProps
+  const mockAlbumData: AlbumProps = {
     id: 'album-test-1',
-    title: 'Integration Test Album',
+    name: 'Integration Test Album',
     artistId: 'artist-1',
+    artistName: 'Test Artist',
+    albumArtistId: undefined,
+    coverArtPath: '/covers/test.jpg',
+    year: 2024,
     releaseDate: new Date('2024-01-15'),
-    coverPath: '/covers/test.jpg',
+    compilation: false,
+    songCount: 10,
+    duration: 2400,
+    size: 100000000,
+    description: 'Test album for integration tests',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -96,7 +105,7 @@ describe('CachedAlbumRepository Integration', () => {
       const cached = await redisService.get('album:album-test-1');
       expect(cached).toBeDefined();
       expect(cached.id).toBe('album-test-1');
-      expect(cached.title).toBe('Integration Test Album');
+      expect(cached.name).toBe('Integration Test Album');
     });
 
     it('should return from Redis cache on second call (cache hit)', async () => {
@@ -114,7 +123,7 @@ describe('CachedAlbumRepository Integration', () => {
       expect(baseRepository.findById).not.toHaveBeenCalled();
       expect(result).toBeDefined();
       expect(result?.id).toBe('album-test-1');
-      expect(result?.title).toBe('Integration Test Album');
+      expect(result?.name).toBe('Integration Test Album');
     });
 
     it('should return null if album not found in DB or cache', async () => {
@@ -168,10 +177,16 @@ describe('CachedAlbumRepository Integration', () => {
     it('should create album and cache it', async () => {
       // Arrange
       const newAlbum = Album.create({
-        title: 'New Album',
+        name: 'New Album',
         artistId: 'artist-1',
+        artistName: 'New Artist',
+        coverArtPath: '/covers/new.jpg',
+        year: 2024,
         releaseDate: new Date('2024-03-01'),
-        coverPath: '/covers/new.jpg',
+        compilation: false,
+        songCount: 12,
+        duration: 3000,
+        size: 120000000,
       });
 
       baseRepository.create.mockResolvedValue(newAlbum);
@@ -186,7 +201,7 @@ describe('CachedAlbumRepository Integration', () => {
       // Verificar que se cacheó
       const cached = await redisService.get(`album:${result.id}`);
       expect(cached).toBeDefined();
-      expect(cached.title).toBe('New Album');
+      expect(cached.name).toBe('New Album');
     });
   });
 
@@ -203,7 +218,7 @@ describe('CachedAlbumRepository Integration', () => {
       // Act - Actualizar
       const updatedAlbum = Album.reconstruct({
         ...mockAlbumData,
-        title: 'Updated Title',
+        name: 'Updated Title',
       });
       baseRepository.update.mockResolvedValue(updatedAlbum);
       await cachedRepository.update(updatedAlbum);
@@ -241,17 +256,17 @@ describe('CachedAlbumRepository Integration', () => {
       const album1 = Album.reconstruct({
         ...mockAlbumData,
         id: 'album-1',
-        title: 'Album 1',
+        name: 'Album 1',
       });
       const album2 = Album.reconstruct({
         ...mockAlbumData,
         id: 'album-2',
-        title: 'Album 2',
+        name: 'Album 2',
       });
       const album3 = Album.reconstruct({
         ...mockAlbumData,
         id: 'album-3',
-        title: 'Album 3',
+        name: 'Album 3',
       });
 
       baseRepository.findById
@@ -269,9 +284,9 @@ describe('CachedAlbumRepository Integration', () => {
       const cached2 = await redisService.get('album:album-2');
       const cached3 = await redisService.get('album:album-3');
 
-      expect(cached1?.title).toBe('Album 1');
-      expect(cached2?.title).toBe('Album 2');
-      expect(cached3?.title).toBe('Album 3');
+      expect(cached1?.name).toBe('Album 1');
+      expect(cached2?.name).toBe('Album 2');
+      expect(cached3?.name).toBe('Album 3');
 
       // Segunda ronda - deberían venir de cache
       jest.clearAllMocks();
@@ -287,12 +302,12 @@ describe('CachedAlbumRepository Integration', () => {
       const album1 = Album.reconstruct({
         ...mockAlbumData,
         id: 'album-1',
-        title: 'Album 1',
+        name: 'Album 1',
       });
       const album2 = Album.reconstruct({
         ...mockAlbumData,
         id: 'album-2',
-        title: 'Album 2',
+        name: 'Album 2',
       });
 
       baseRepository.findById
@@ -306,7 +321,7 @@ describe('CachedAlbumRepository Integration', () => {
       const updatedAlbum1 = Album.reconstruct({
         ...mockAlbumData,
         id: 'album-1',
-        title: 'Updated Album 1',
+        name: 'Updated Album 1',
       });
       baseRepository.update.mockResolvedValue(updatedAlbum1);
       await cachedRepository.update(updatedAlbum1);
@@ -317,7 +332,48 @@ describe('CachedAlbumRepository Integration', () => {
 
       expect(cached1).toBeNull(); // Invalidado
       expect(cached2).toBeDefined(); // Sigue en cache
-      expect(cached2.title).toBe('Album 2');
+      expect(cached2.name).toBe('Album 2');
+    });
+  });
+
+  describe('Cache key format', () => {
+    it('should use consistent key format: album:{id}', async () => {
+      // Arrange
+      baseRepository.findById.mockResolvedValue(mockAlbum);
+
+      // Act
+      await cachedRepository.findById('album-test-1');
+
+      // Assert - Verificar formato de clave
+      const cached = await redisService.get('album:album-test-1');
+      expect(cached).toBeDefined();
+      expect(cached.id).toBe('album-test-1');
+    });
+  });
+
+  describe('Compilation albums', () => {
+    it('should cache compilation albums correctly', async () => {
+      // Arrange
+      const compilationAlbum = Album.reconstruct({
+        ...mockAlbumData,
+        id: 'compilation-1',
+        name: 'Greatest Hits',
+        compilation: true,
+        artistId: undefined,
+        artistName: 'Various Artists',
+      });
+
+      baseRepository.findById.mockResolvedValue(compilationAlbum);
+
+      // Act
+      const result = await cachedRepository.findById('compilation-1');
+
+      // Assert
+      expect(result?.compilation).toBe(true);
+      expect(result?.artistName).toBe('Various Artists');
+
+      const cached = await redisService.get('album:compilation-1');
+      expect(cached.compilation).toBe(true);
     });
   });
 });

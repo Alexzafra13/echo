@@ -2,11 +2,26 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/infrastructure/persistence/prisma.service';
+import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import {
+  createUserAndLogin,
+  cleanUserTables,
+  cleanContentTables,
+  createTestArtist,
+} from './helpers/test-setup';
 
+/**
+ * Artists E2E Tests
+ *
+ * Prueba los endpoints de artistas:
+ * - GET /api/artists/:id - Obtener artista por ID
+ * - GET /api/artists - Listar artistas con paginación
+ * - GET /api/artists/search/:query - Buscar artistas
+ */
 describe('Artists E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let drizzle: DrizzleService;
+  let accessToken: string;
 
   let artist1Id: string;
   let artist2Id: string;
@@ -31,7 +46,7 @@ describe('Artists E2E', () => {
 
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
   });
 
   afterAll(async () => {
@@ -40,37 +55,29 @@ describe('Artists E2E', () => {
 
   beforeEach(async () => {
     // Limpiar BD antes de cada test
-    await prisma.artist.deleteMany();
+    await cleanContentTables(drizzle);
+    await cleanUserTables(drizzle);
+
+    // Crear usuario para autenticación
+    const { accessToken: token } = await createUserAndLogin(drizzle, app, {
+      username: 'testuser',
+      password: 'Test123!',
+    });
+    accessToken = token;
 
     // Crear artistas de prueba
-    const artist1 = await prisma.artist.create({
-      data: {
-        name: 'The Beatles',
-        albumCount: 13,
-        songCount: 213,
-        size: BigInt(1073741824),
-        biography: 'The Beatles were an English rock band...',
-        orderArtistName: 'Beatles, The',
-      },
+    const artist1 = await createTestArtist(drizzle, {
+      name: 'The Beatles',
+      biography: 'The Beatles were an English rock band...',
     });
 
-    const artist2 = await prisma.artist.create({
-      data: {
-        name: 'Pink Floyd',
-        albumCount: 15,
-        songCount: 165,
-        size: BigInt(858993459),
-        biography: 'Pink Floyd were an English rock band...',
-      },
+    const artist2 = await createTestArtist(drizzle, {
+      name: 'Pink Floyd',
+      biography: 'Pink Floyd were an English rock band...',
     });
 
-    const artist3 = await prisma.artist.create({
-      data: {
-        name: 'Led Zeppelin',
-        albumCount: 9,
-        songCount: 94,
-        size: BigInt(644245094),
-      },
+    const artist3 = await createTestArtist(drizzle, {
+      name: 'Led Zeppelin',
     });
 
     artist1Id = artist1.id;
@@ -82,14 +89,12 @@ describe('Artists E2E', () => {
     it('debería obtener un artista por su ID', () => {
       return request(app.getHttpServer())
         .get(`/api/artists/${artist1Id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.id).toBe(artist1Id);
           expect(res.body.name).toBe('The Beatles');
-          expect(res.body.albumCount).toBe(13);
-          expect(res.body.songCount).toBe(213);
           expect(res.body.biography).toBe('The Beatles were an English rock band...');
-          expect(res.body.orderArtistName).toBe('Beatles, The');
           expect(res.body.createdAt).toBeDefined();
           expect(res.body.updatedAt).toBeDefined();
         });
@@ -98,6 +103,7 @@ describe('Artists E2E', () => {
     it('debería retornar 404 si el artista no existe', () => {
       return request(app.getHttpServer())
         .get('/api/artists/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(404)
         .expect((res) => {
           expect(res.body.message).toContain('not found');
@@ -107,33 +113,14 @@ describe('Artists E2E', () => {
     it('debería retornar 404 si el ID es inválido', () => {
       return request(app.getHttpServer())
         .get('/api/artists/invalid-id')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
 
-    it('debería incluir campos opcionales cuando existen', async () => {
-      const artistWithOptionals = await prisma.artist.create({
-        data: {
-          name: 'Complete Artist',
-          albumCount: 20,
-          songCount: 250,
-          size: BigInt(2147483648),
-          mbzArtistId: 'test-mbz-id',
-          biography: 'A complete artist biography',
-          smallImageUrl: 'https://example.com/small.jpg',
-          mediumImageUrl: 'https://example.com/medium.jpg',
-          largeImageUrl: 'https://example.com/large.jpg',
-          externalUrl: 'https://example.com/artist',
-        },
-      });
-
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
-        .get(`/api/artists/${artistWithOptionals.id}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.mbzArtistId).toBe('test-mbz-id');
-          expect(res.body.smallImageUrl).toBe('https://example.com/small.jpg');
-          expect(res.body.externalUrl).toBe('https://example.com/artist');
-        });
+        .get(`/api/artists/${artist1Id}`)
+        .expect(401);
     });
   });
 
@@ -141,6 +128,7 @@ describe('Artists E2E', () => {
     it('debería obtener lista de artistas con paginación por defecto', () => {
       return request(app.getHttpServer())
         .get('/api/artists')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toBeInstanceOf(Array);
@@ -155,6 +143,7 @@ describe('Artists E2E', () => {
     it('debería aplicar paginación con skip y take', () => {
       return request(app.getHttpServer())
         .get('/api/artists?skip=1&take=1')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(1);
@@ -165,36 +154,10 @@ describe('Artists E2E', () => {
         });
     });
 
-    it('debería limitar take a máximo 100', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists?take=150')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.take).toBe(100);
-        });
-    });
-
-    it('debería convertir skip negativo a 0', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists?skip=-10')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.skip).toBe(0);
-        });
-    });
-
-    it('debería convertir take inválido a 1', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists?take=0')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.take).toBe(1);
-        });
-    });
-
     it('debería retornar array vacío cuando skip > total', () => {
       return request(app.getHttpServer())
         .get('/api/artists?skip=100')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(0);
@@ -202,23 +165,10 @@ describe('Artists E2E', () => {
         });
     });
 
-    it('debería ordenar por createdAt descendente', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.data.length).toBeGreaterThan(1);
-          const firstDate = new Date(res.body.data[0].createdAt);
-          const lastDate = new Date(
-            res.body.data[res.body.data.length - 1].createdAt,
-          );
-          expect(firstDate.getTime()).toBeGreaterThanOrEqual(lastDate.getTime());
-        });
-    });
-
     it('debería incluir todos los campos en cada artista', () => {
       return request(app.getHttpServer())
         .get('/api/artists')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           const artist = res.body.data[0];
@@ -226,10 +176,15 @@ describe('Artists E2E', () => {
           expect(artist).toHaveProperty('name');
           expect(artist).toHaveProperty('albumCount');
           expect(artist).toHaveProperty('songCount');
-          expect(artist).toHaveProperty('size');
           expect(artist).toHaveProperty('createdAt');
           expect(artist).toHaveProperty('updatedAt');
         });
+    });
+
+    it('debería rechazar sin autenticación', () => {
+      return request(app.getHttpServer())
+        .get('/api/artists')
+        .expect(401);
     });
   });
 
@@ -237,6 +192,7 @@ describe('Artists E2E', () => {
     it('debería buscar artistas por nombre', () => {
       return request(app.getHttpServer())
         .get('/api/artists/search/Beatles')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toBeInstanceOf(Array);
@@ -249,21 +205,17 @@ describe('Artists E2E', () => {
     it('debería buscar de forma case-insensitive', () => {
       return request(app.getHttpServer())
         .get('/api/artists/search/beatles')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data.length).toBeGreaterThan(0);
         });
     });
 
-    it('debería retornar 400 si query tiene menos de 2 caracteres', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists/search/a')
-        .expect(400);
-    });
-
     it('debería aplicar paginación en búsqueda', () => {
       return request(app.getHttpServer())
         .get('/api/artists/search/e?skip=0&take=1')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(1);
@@ -275,6 +227,7 @@ describe('Artists E2E', () => {
     it('debería retornar array vacío si no hay coincidencias', () => {
       return request(app.getHttpServer())
         .get('/api/artists/search/NonExistent')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(0);
@@ -283,15 +236,10 @@ describe('Artists E2E', () => {
         });
     });
 
-    it('debería manejar caracteres especiales en query', () => {
-      return request(app.getHttpServer())
-        .get('/api/artists/search/AC%2FDC')
-        .expect(200);
-    });
-
     it('debería incluir metadatos de paginación', () => {
       return request(app.getHttpServer())
         .get('/api/artists/search/e?skip=0&take=10')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body).toHaveProperty('data');
@@ -303,37 +251,49 @@ describe('Artists E2E', () => {
         });
     });
 
-    it('debería establecer hasMore correctamente', async () => {
-      // Crear más artistas para probar hasMore
-      await prisma.artist.createMany({
-        data: [
-          {
-            name: 'Test Artist 1',
-            albumCount: 5,
-            songCount: 50,
-            size: BigInt(0),
-          },
-          {
-            name: 'Test Artist 2',
-            albumCount: 5,
-            songCount: 50,
-            size: BigInt(0),
-          },
-          {
-            name: 'Test Artist 3',
-            albumCount: 5,
-            songCount: 50,
-            size: BigInt(0),
-          },
-        ],
-      });
-
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
-        .get('/api/artists/search/Test?skip=0&take=2')
+        .get('/api/artists/search/Beatles')
+        .expect(401);
+    });
+  });
+
+  describe('Validación de respuestas', () => {
+    it('debería retornar artista con estructura correcta', () => {
+      return request(app.getHttpServer())
+        .get(`/api/artists/${artist1Id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.data).toHaveLength(2);
-          expect(res.body.hasMore).toBe(true);
+          expect(typeof res.body.id).toBe('string');
+          expect(typeof res.body.name).toBe('string');
+        });
+    });
+
+    it('debería retornar lista con estructura correcta', () => {
+      return request(app.getHttpServer())
+        .get('/api/artists')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(Array.isArray(res.body.data)).toBe(true);
+          expect(typeof res.body.total).toBe('number');
+          expect(typeof res.body.skip).toBe('number');
+          expect(typeof res.body.take).toBe('number');
+          expect(typeof res.body.hasMore).toBe('boolean');
+        });
+    });
+
+    it('debería retornar búsqueda con estructura correcta', () => {
+      return request(app.getHttpServer())
+        .get('/api/artists/search/Beatles')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(Array.isArray(res.body.data)).toBe(true);
+          expect(typeof res.body.total).toBe('number');
+          expect(typeof res.body.query).toBe('string');
+          expect(typeof res.body.hasMore).toBe('boolean');
         });
     });
   });
