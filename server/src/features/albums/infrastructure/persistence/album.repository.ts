@@ -315,12 +315,18 @@ export class DrizzleAlbumRepository
       'description',
     ]);
 
+    // Convert releaseDate to string format if present (Drizzle date type expects string)
+    const dbUpdateData = {
+      ...updateData,
+      updatedAt: new Date(),
+      ...(updateData.releaseDate instanceof Date && {
+        releaseDate: updateData.releaseDate.toISOString().split('T')[0],
+      }),
+    };
+
     const result = await this.drizzle.db
       .update(albums)
-      .set({
-        ...updateData,
-        updatedAt: new Date(),
-      })
+      .set(dbUpdateData as typeof albums.$inferInsert)
       .where(eq(albums.id, id))
       .returning();
 
