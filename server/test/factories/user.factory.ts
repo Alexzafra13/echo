@@ -1,34 +1,20 @@
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 
 /**
  * Factory para crear instancias de User en tests
  * Elimina duplicación de código en +40 archivos de test
+ *
+ * Nota: El schema de usuarios NO tiene campo email (diseño similar a Navidrome/Jellyfin)
  */
 export class UserFactory {
   /**
    * Crea un usuario de test con valores por defecto
    * @param overrides Propiedades a sobrescribir
    */
-  static create(overrides?: Partial<{
-    id: string;
-    username: string;
-    email: string;
-    passwordHash: string;
-    name: string;
-    isActive: boolean;
-    isAdmin: boolean;
-    mustChangePassword: boolean;
-    theme: string;
-    language: string;
-    avatarPath: string | null;
-    isSystemAdmin: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-  }>): User {
+  static create(overrides?: Partial<UserProps>): User {
     return User.reconstruct({
       id: 'user-123',
       username: 'testuser',
-      email: 'test@test.com',
       passwordHash: '$2b$12$hashed_password',
       name: 'Test User',
       isActive: true,
@@ -36,8 +22,18 @@ export class UserFactory {
       mustChangePassword: false,
       theme: 'dark',
       language: 'es',
-      avatarPath: null,
-      isSystemAdmin: false,
+      avatarPath: undefined,
+      avatarMimeType: undefined,
+      avatarSize: undefined,
+      avatarUpdatedAt: undefined,
+      lastLoginAt: undefined,
+      lastAccessAt: undefined,
+      isPublicProfile: false,
+      showTopTracks: true,
+      showTopArtists: true,
+      showTopAlbums: true,
+      showPlaylists: true,
+      bio: undefined,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-01'),
       ...overrides,
@@ -47,11 +43,10 @@ export class UserFactory {
   /**
    * Crea un usuario administrador
    */
-  static createAdmin(overrides?: Partial<any>): User {
+  static createAdmin(overrides?: Partial<UserProps>): User {
     return UserFactory.create({
       id: 'admin-123',
       username: 'admin',
-      email: 'admin@test.com',
       name: 'Admin User',
       isAdmin: true,
       ...overrides,
@@ -59,17 +54,14 @@ export class UserFactory {
   }
 
   /**
-   * Crea el system admin (primer admin creado)
+   * Crea un usuario que debe cambiar su contraseña (recién creado por admin)
    */
-  static createSystemAdmin(overrides?: Partial<any>): User {
+  static createWithMustChangePassword(overrides?: Partial<UserProps>): User {
     return UserFactory.create({
-      id: 'system-admin',
-      username: 'systemadmin',
-      email: 'system@test.com',
-      name: 'System Admin',
-      isAdmin: true,
-      isSystemAdmin: true,
-      createdAt: new Date('2020-01-01'),
+      id: 'new-user-123',
+      username: 'newuser',
+      name: 'New User',
+      mustChangePassword: true,
       ...overrides,
     });
   }
@@ -77,7 +69,7 @@ export class UserFactory {
   /**
    * Crea un usuario inactivo
    */
-  static createInactive(overrides?: Partial<any>): User {
+  static createInactive(overrides?: Partial<UserProps>): User {
     return UserFactory.create({
       isActive: false,
       ...overrides,
@@ -85,14 +77,24 @@ export class UserFactory {
   }
 
   /**
+   * Crea un usuario con perfil público
+   */
+  static createPublicProfile(overrides?: Partial<UserProps>): User {
+    return UserFactory.create({
+      isPublicProfile: true,
+      bio: 'Music lover',
+      ...overrides,
+    });
+  }
+
+  /**
    * Crea múltiples usuarios
    */
-  static createMany(count: number, overridesFn?: (index: number) => Partial<any>): User[] {
+  static createMany(count: number, overridesFn?: (index: number) => Partial<UserProps>): User[] {
     return Array.from({ length: count }, (_, i) =>
       UserFactory.create(overridesFn ? overridesFn(i) : {
         id: `user-${i}`,
         username: `user${i}`,
-        email: `user${i}@test.com`,
       })
     );
   }

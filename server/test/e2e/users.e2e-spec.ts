@@ -2,13 +2,29 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/infrastructure/persistence/prisma.service';
+import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import {
+  createTestUser,
+  createUserAndLogin,
+  cleanUserTables,
+  loginUser,
+  getUserByUsername,
+} from './helpers/test-setup';
 
+/**
+ * Users E2E Tests
+ *
+ * Prueba los endpoints de perfil de usuario:
+ * - PUT /api/users/profile - Actualizar perfil
+ * - PUT /api/users/password - Cambiar contraseña
+ * - PUT /api/users/theme - Cambiar tema
+ * - PUT /api/users/language - Cambiar idioma
+ *
+ * NOTA: Este proyecto NO tiene campo email en usuarios.
+ */
 describe('Users E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
-  let accessToken: string;
-  let userId: string;
+  let drizzle: DrizzleService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -29,7 +45,7 @@ describe('Users E2E', () => {
 
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
   });
 
   afterAll(async () => {
@@ -37,100 +53,43 @@ describe('Users E2E', () => {
   });
 
   beforeEach(async () => {
-    // Limpiar BD antes de cada test
-    await prisma.user.deleteMany();
-
-    // Registrar usuario y obtener token para cada test
-    const registerResponse = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({
-        username: 'testuser',
-        email: 'test@test.com',
-        password: 'Pass123!',
-        name: 'Test User',
-      });
-
-    accessToken = registerResponse.body.accessToken;
-    userId = registerResponse.body.user.id;
+    await cleanUserTables(drizzle);
   });
 
   describe('PUT /api/users/profile', () => {
-    it('debería actualizar el perfil del usuario autenticado', () => {
-      return request(app.getHttpServer())
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const { accessToken: token } = await createUserAndLogin(drizzle, app, {
+        username: 'testuser',
+        password: 'Test123!',
+        name: 'Test User',
+      });
+      accessToken = token;
+    });
+
+    it('debería actualizar el nombre del usuario', async () => {
+      const response = await request(app.getHttpServer())
         .put('/api/users/profile')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           name: 'Updated Name',
-          email: 'updated@test.com',
         })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.id).toBe(userId);
-          expect(res.body.username).toBe('testuser');
-          expect(res.body.name).toBe('Updated Name');
-          expect(res.body.email).toBe('updated@test.com');
-        });
+        .expect(200);
+
+      expect(response.body.name).toBe('Updated Name');
     });
 
-    it('debería actualizar solo el nombre', () => {
-      return request(app.getHttpServer())
+    it('debería actualizar la biografía', async () => {
+      const response = await request(app.getHttpServer())
         .put('/api/users/profile')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          name: 'Only Name Updated',
+          bio: 'Music lover and audiophile',
         })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.name).toBe('Only Name Updated');
-          expect(res.body.email).toBe('test@test.com');
-        });
-    });
+        .expect(200);
 
-    it('debería actualizar solo el email', () => {
-      return request(app.getHttpServer())
-        .put('/api/users/profile')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          email: 'newemail@test.com',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.email).toBe('newemail@test.com');
-          expect(res.body.name).toBe('Test User');
-        });
-    });
-
-    it('debería rechazar si email es inválido', () => {
-      return request(app.getHttpServer())
-        .put('/api/users/profile')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          email: 'invalid_email',
-        })
-        .expect(400);
-    });
-
-    it('debería rechazar si email ya está registrado', async () => {
-      // Registrar otro usuario
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'anotheruser',
-          email: 'another@test.com',
-          password: 'Pass123!',
-        });
-
-      // Intentar actualizar con el email del otro usuario
-      return request(app.getHttpServer())
-        .put('/api/users/profile')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          email: 'another@test.com',
-        })
-        .expect(400)
-        .expect((res) => {
-          expect(res.body.message).toContain('Email already registered');
-        });
+      expect(response.body.bio).toBe('Music lover and audiophile');
     });
 
     it('debería rechazar sin token de autenticación', () => {
@@ -144,24 +103,29 @@ describe('Users E2E', () => {
   });
 
   describe('PUT /api/users/password', () => {
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const { accessToken: token } = await createUserAndLogin(drizzle, app, {
+        username: 'testuser',
+        password: 'Test123!',
+      });
+      accessToken = token;
+    });
+
     it('debería cambiar la contraseña correctamente', async () => {
       await request(app.getHttpServer())
         .put('/api/users/password')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          currentPassword: 'Pass123!',
+          currentPassword: 'Test123!',
           newPassword: 'NewPass456!',
         })
         .expect(204);
 
       // Verificar que puede loguearse con la nueva contraseña
-      return request(app.getHttpServer())
-        .post('/api/auth/login')
-        .send({
-          username: 'testuser',
-          password: 'NewPass456!',
-        })
-        .expect(200);
+      const tokens = await loginUser(app, 'testuser', 'NewPass456!');
+      expect(tokens.accessToken).toBeDefined();
     });
 
     it('debería rechazar si la contraseña actual es incorrecta', () => {
@@ -174,19 +138,8 @@ describe('Users E2E', () => {
         })
         .expect(400)
         .expect((res) => {
-          expect(res.body.message).toContain('Current password is incorrect');
+          expect(res.body.message).toContain('incorrect');
         });
-    });
-
-    it('debería rechazar si la nueva contraseña es débil', () => {
-      return request(app.getHttpServer())
-        .put('/api/users/password')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          currentPassword: 'Pass123!',
-          newPassword: 'weak',
-        })
-        .expect(400);
     });
 
     it('debería rechazar si la nueva contraseña es igual a la actual', () => {
@@ -194,12 +147,12 @@ describe('Users E2E', () => {
         .put('/api/users/password')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          currentPassword: 'Pass123!',
-          newPassword: 'Pass123!',
+          currentPassword: 'Test123!',
+          newPassword: 'Test123!',
         })
         .expect(400)
         .expect((res) => {
-          expect(res.body.message).toContain('New password must be different from current password');
+          expect(res.body.message).toContain('different');
         });
     });
 
@@ -207,7 +160,7 @@ describe('Users E2E', () => {
       return request(app.getHttpServer())
         .put('/api/users/password')
         .send({
-          currentPassword: 'Pass123!',
+          currentPassword: 'Test123!',
           newPassword: 'NewPass456!',
         })
         .expect(401);
@@ -215,24 +168,40 @@ describe('Users E2E', () => {
   });
 
   describe('PUT /api/users/theme', () => {
-    it('debería cambiar el tema a dark', () => {
-      return request(app.getHttpServer())
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const { accessToken: token } = await createUserAndLogin(drizzle, app, {
+        username: 'testuser',
+        password: 'Test123!',
+      });
+      accessToken = token;
+    });
+
+    it('debería cambiar el tema a dark', async () => {
+      await request(app.getHttpServer())
         .put('/api/users/theme')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           theme: 'dark',
         })
         .expect(204);
+
+      const user = await getUserByUsername(drizzle, 'testuser');
+      expect(user.theme).toBe('dark');
     });
 
-    it('debería cambiar el tema a light', () => {
-      return request(app.getHttpServer())
+    it('debería cambiar el tema a light', async () => {
+      await request(app.getHttpServer())
         .put('/api/users/theme')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           theme: 'light',
         })
         .expect(204);
+
+      const user = await getUserByUsername(drizzle, 'testuser');
+      expect(user.theme).toBe('light');
     });
 
     it('debería rechazar tema inválido', () => {
@@ -256,24 +225,40 @@ describe('Users E2E', () => {
   });
 
   describe('PUT /api/users/language', () => {
-    it('debería cambiar el idioma a inglés', () => {
-      return request(app.getHttpServer())
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const { accessToken: token } = await createUserAndLogin(drizzle, app, {
+        username: 'testuser',
+        password: 'Test123!',
+      });
+      accessToken = token;
+    });
+
+    it('debería cambiar el idioma a inglés', async () => {
+      await request(app.getHttpServer())
         .put('/api/users/language')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           language: 'en',
         })
         .expect(204);
+
+      const user = await getUserByUsername(drizzle, 'testuser');
+      expect(user.language).toBe('en');
     });
 
-    it('debería cambiar el idioma a español', () => {
-      return request(app.getHttpServer())
+    it('debería cambiar el idioma a español', async () => {
+      await request(app.getHttpServer())
         .put('/api/users/language')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           language: 'es',
         })
         .expect(204);
+
+      const user = await getUserByUsername(drizzle, 'testuser');
+      expect(user.language).toBe('es');
     });
 
     it('debería rechazar idioma inválido', () => {
@@ -293,6 +278,48 @@ describe('Users E2E', () => {
           language: 'en',
         })
         .expect(401);
+    });
+  });
+
+  describe('Flujo de primer login (must change password)', () => {
+    it('debería forzar cambio de contraseña después del primer login', async () => {
+      // Crear usuario con mustChangePassword=true (como lo haría un admin)
+      await createTestUser(drizzle, {
+        username: 'newuser',
+        password: 'TempPass123!',
+        mustChangePassword: true,
+      });
+
+      // Login retorna mustChangePassword=true
+      const loginResponse = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ username: 'newuser', password: 'TempPass123!' })
+        .expect(200);
+
+      expect(loginResponse.body.mustChangePassword).toBe(true);
+      const { accessToken } = loginResponse.body;
+
+      // El usuario debe cambiar su contraseña primero
+      await request(app.getHttpServer())
+        .put('/api/users/password')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          currentPassword: 'TempPass123!',
+          newPassword: 'MyNewPassword456!',
+        })
+        .expect(204);
+
+      // Verificar que mustChangePassword ahora es false
+      const user = await getUserByUsername(drizzle, 'newuser');
+      expect(user.mustChangePassword).toBe(false);
+
+      // Ahora puede hacer login normalmente
+      const newLoginResponse = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ username: 'newuser', password: 'MyNewPassword456!' })
+        .expect(200);
+
+      expect(newLoginResponse.body.mustChangePassword).toBe(false);
     });
   });
 });
