@@ -12,23 +12,6 @@
   margin-bottom: 20px;
 }
 
-/* Gradient fade at bottom - blends into background */
-.heroSection::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--color-bg-primary, #0a0e27) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
 .heroSection__background {
   position: absolute;
   inset: 0;
@@ -38,6 +21,9 @@
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
+  /* Fade out the image itself at the bottom */
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
 
 @keyframes fadeInBackground {
@@ -295,10 +281,6 @@
     height: 510px;
   }
 
-  .heroSection::after {
-    height: 100px;
-  }
-
   .heroSection__content {
     padding: 124px 40px 40px 40px;
     gap: 40px;
@@ -339,10 +321,6 @@
     margin-left: -16px;
     margin-top: 0; /* Content container already extends behind header */
     margin-bottom: 16px;
-  }
-
-  .heroSection::after {
-    height: 60px;
   }
 
   /* Ocultar flechas de navegación en móvil */
@@ -454,10 +432,6 @@
     margin-left: -12px;
     margin-top: 0; /* Content container already extends behind header */
     margin-bottom: 12px;
-  }
-
-  .heroSection::after {
-    height: 50px;
   }
 
   /* Flechas ya ocultas en breakpoint anterior */
