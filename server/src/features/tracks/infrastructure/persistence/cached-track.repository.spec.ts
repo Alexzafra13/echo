@@ -1,11 +1,18 @@
+import { PinoLogger } from 'nestjs-pino';
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
 import { CachedTrackRepository } from './cached-track.repository';
+import {
+  MockCacheService,
+  MockPinoLogger,
+  createMockCacheService,
+  createMockPinoLogger,
+} from '@shared/testing/mock.types';
 
 describe('CachedTrackRepository', () => {
   let cachedRepository: CachedTrackRepository;
   let baseRepository: jest.Mocked<ITrackRepository>;
-  let cacheService: any;
+  let cacheService: MockCacheService;
 
   const mockTrackPrimitives = {
     id: 'track-1',
@@ -37,26 +44,20 @@ describe('CachedTrackRepository', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as any;
+    } as jest.Mocked<ITrackRepository>;
 
     // Mock cache service
-    cacheService = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-      delPattern: jest.fn(),
-    };
+    cacheService = createMockCacheService();
 
     // Mock logger
-    const mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+    const mockLogger: MockPinoLogger = createMockPinoLogger();
 
     // Create instance directly without TestingModule for simplicity
-    cachedRepository = new CachedTrackRepository(baseRepository as any, cacheService, mockLogger as any);
+    cachedRepository = new CachedTrackRepository(
+      baseRepository,
+      cacheService,
+      mockLogger as unknown as PinoLogger,
+    );
   });
 
   afterEach(() => {

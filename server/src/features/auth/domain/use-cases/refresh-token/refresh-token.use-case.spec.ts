@@ -1,22 +1,21 @@
 import { UnauthorizedError } from '@shared/errors';
 import { User } from '../../entities/user.entity';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
+import {
+  MockUserRepository,
+  MockTokenService,
+  createMockUserRepository,
+  createMockTokenService,
+} from '@shared/testing/mock.types';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
-  let mockUserRepository: any;
-  let mockTokenService: any;
+  let mockUserRepository: MockUserRepository;
+  let mockTokenService: MockTokenService;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-    };
-
-    mockTokenService = {
-      verifyRefreshToken: jest.fn(),
-      generateAccessToken: jest.fn(),
-      generateRefreshToken: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
+    mockTokenService = createMockTokenService();
 
     useCase = new RefreshTokenUseCase(
       mockUserRepository,

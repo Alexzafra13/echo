@@ -1,9 +1,15 @@
+import { JwtService } from '@nestjs/jwt';
 import { User } from '../../domain/entities/user.entity';
 import { JwtAdapter } from './jwt.adapter';
 
+interface MockJwtService {
+  sign: jest.Mock;
+  verify: jest.Mock;
+}
+
 describe('JwtAdapter', () => {
   let adapter: JwtAdapter;
-  let mockJwtService: any;
+  let mockJwtService: MockJwtService;
 
   beforeEach(() => {
     mockJwtService = {
@@ -11,7 +17,7 @@ describe('JwtAdapter', () => {
       verify: jest.fn(),
     };
 
-    adapter = new JwtAdapter(mockJwtService);
+    adapter = new JwtAdapter(mockJwtService as unknown as JwtService);
   });
 
   describe('generateAccessToken', () => {

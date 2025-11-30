@@ -1,16 +1,17 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { ChangeLanguageUseCase } from './change-language.use-case';
+import {
+  MockUserRepository,
+  createMockUserRepository,
+} from '@shared/testing/mock.types';
 
 describe('ChangeLanguageUseCase', () => {
   let useCase: ChangeLanguageUseCase;
-  let mockUserRepository: any;
+  let mockUserRepository: MockUserRepository;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      updatePartial: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
 
     useCase = new ChangeLanguageUseCase(mockUserRepository);
   });

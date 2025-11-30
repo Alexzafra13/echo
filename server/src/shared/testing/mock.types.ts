@@ -146,3 +146,146 @@ export function createMockService<T extends object>(
   }
   return mock;
 }
+
+// ============================================================================
+// Domain Service Mock Interfaces
+// ============================================================================
+
+/**
+ * Mock interface for IUserRepository
+ */
+export interface MockUserRepository {
+  findById: jest.Mock;
+  findByUsername: jest.Mock;
+  findAll: jest.Mock;
+  count: jest.Mock;
+  create: jest.Mock;
+  updatePartial: jest.Mock;
+  updatePassword: jest.Mock;
+  updateAdminStatus: jest.Mock;
+  delete: jest.Mock;
+}
+
+export function createMockUserRepository(): MockUserRepository {
+  return {
+    findById: jest.fn(),
+    findByUsername: jest.fn(),
+    findAll: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    updatePartial: jest.fn(),
+    updatePassword: jest.fn(),
+    updateAdminStatus: jest.fn(),
+    delete: jest.fn(),
+  };
+}
+
+/**
+ * Mock interface for IPasswordService
+ */
+export interface MockPasswordService {
+  hash: jest.Mock;
+  compare: jest.Mock;
+}
+
+export function createMockPasswordService(): MockPasswordService {
+  return {
+    hash: jest.fn(),
+    compare: jest.fn(),
+  };
+}
+
+/**
+ * Mock interface for ITokenService
+ */
+export interface MockTokenService {
+  generateAccessToken: jest.Mock;
+  generateRefreshToken: jest.Mock;
+  verifyAccessToken: jest.Mock;
+  verifyRefreshToken: jest.Mock;
+}
+
+export function createMockTokenService(): MockTokenService {
+  return {
+    generateAccessToken: jest.fn(),
+    generateRefreshToken: jest.fn(),
+    verifyAccessToken: jest.fn(),
+    verifyRefreshToken: jest.fn(),
+  };
+}
+
+/**
+ * Mock interface for LogService (simplified for tests)
+ */
+export interface MockLogService {
+  info: jest.Mock;
+  warning: jest.Mock;
+  error: jest.Mock;
+  critical: jest.Mock;
+  debug: jest.Mock;
+}
+
+export function createMockLogService(): MockLogService {
+  return {
+    info: jest.fn(),
+    warning: jest.fn(),
+    error: jest.fn(),
+    critical: jest.fn(),
+    debug: jest.fn(),
+  };
+}
+
+/**
+ * Mock interface for CacheService
+ */
+export interface MockCacheService {
+  get: jest.Mock;
+  set: jest.Mock;
+  del: jest.Mock;
+  delPattern: jest.Mock;
+}
+
+export function createMockCacheService(): MockCacheService {
+  return {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    delPattern: jest.fn(),
+  };
+}
+
+/**
+ * Mock interface for PinoLogger
+ */
+export interface MockPinoLogger {
+  debug: jest.Mock;
+  info: jest.Mock;
+  warn: jest.Mock;
+  error: jest.Mock;
+  trace: jest.Mock;
+  fatal: jest.Mock;
+}
+
+export function createMockPinoLogger(): MockPinoLogger {
+  return {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    trace: jest.fn(),
+    fatal: jest.fn(),
+  };
+}
+
+/**
+ * Generic mock interface for use cases
+ */
+export interface MockUseCase {
+  execute: jest.Mock;
+}
+
+export function createMockUseCase(): MockUseCase {
+  return {
+    execute: jest.fn(),
+  };
+}

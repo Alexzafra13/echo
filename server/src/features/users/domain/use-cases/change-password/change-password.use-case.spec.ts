@@ -1,30 +1,25 @@
 import { NotFoundError, ValidationError, UnauthorizedError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { ChangePasswordUseCase } from './change-password.use-case';
+import {
+  MockUserRepository,
+  MockPasswordService,
+  MockLogService,
+  createMockUserRepository,
+  createMockPasswordService,
+  createMockLogService,
+} from '@shared/testing/mock.types';
 
 describe('ChangePasswordUseCase', () => {
   let useCase: ChangePasswordUseCase;
-  let mockUserRepository: any;
-  let mockPasswordService: any;
-  let mockLogService: any;
+  let mockUserRepository: MockUserRepository;
+  let mockPasswordService: MockPasswordService;
+  let mockLogService: MockLogService;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      updatePassword: jest.fn(),
-      updatePartial: jest.fn(),
-    };
-
-    mockPasswordService = {
-      compare: jest.fn(),
-      hash: jest.fn(),
-    };
-
-    mockLogService = {
-      info: jest.fn(),
-      warning: jest.fn(),
-      error: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
+    mockPasswordService = createMockPasswordService();
+    mockLogService = createMockLogService();
 
     useCase = new ChangePasswordUseCase(
       mockUserRepository,

@@ -1,18 +1,17 @@
 import { ConflictError, NotFoundError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { UpdateUserUseCase } from './update-user.use-case';
+import {
+  MockUserRepository,
+  createMockUserRepository,
+} from '@shared/testing/mock.types';
 
 describe('UpdateUserUseCase', () => {
   let useCase: UpdateUserUseCase;
-  let mockUserRepository: any;
+  let mockUserRepository: MockUserRepository;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      findByUsername: jest.fn(),
-      findAll: jest.fn(),
-      updatePartial: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
 
     useCase = new UpdateUserUseCase(mockUserRepository);
   });

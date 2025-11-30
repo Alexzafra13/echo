@@ -3,20 +3,21 @@ jest.mock('bcrypt');
 
 // Luego importar
 import * as bcrypt from 'bcrypt';
+import { IPasswordService } from '../../domain/ports/password-service.port';
 
 describe('BcryptAdapter', () => {
-  let adapter: any;
+  let adapter: IPasswordService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Crear una instancia manual sin NestJS
     adapter = {
       hash: async (password: string) => {
-        return bcrypt.hash(password, 12);
+        return bcrypt.hash(password, 12) as Promise<string>;
       },
       compare: async (password: string, hash: string) => {
-        return bcrypt.compare(password, hash);
+        return bcrypt.compare(password, hash) as Promise<boolean>;
       },
     };
   });
