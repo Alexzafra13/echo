@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Music } from 'lucide-react';
 import styles from './PlaylistCoverMosaic.module.css';
 
@@ -6,6 +7,31 @@ interface PlaylistCoverMosaicProps {
   albumIds: string[];
   /** Playlist name for alt text */
   playlistName: string;
+}
+
+/**
+ * SingleCoverImage - Image component with fallback placeholder
+ * Avoids innerHTML to prevent XSS vulnerabilities
+ */
+function SingleCoverImage({ albumId, playlistName }: { albumId: string; playlistName: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className={styles.mosaic__placeholder}>
+        <Music size={48} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`/api/albums/${albumId}/cover`}
+      alt={playlistName}
+      className={styles.mosaic__single}
+      onError={() => setHasError(true)}
+    />
+  );
 }
 
 /**
@@ -31,23 +57,7 @@ export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMos
   if (uniqueAlbumIds.length === 1) {
     return (
       <div className={styles.mosaic}>
-        <img
-          src={`/api/albums/${uniqueAlbumIds[0]}/cover`}
-          alt={playlistName}
-          className={styles.mosaic__single}
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement!.innerHTML = `
-              <div class="${styles.mosaic__placeholder}">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18V5l12-2v13"></path>
-                  <circle cx="6" cy="18" r="3"></circle>
-                  <circle cx="18" cy="16" r="3"></circle>
-                </svg>
-              </div>
-            `;
-          }}
-        />
+        <SingleCoverImage albumId={uniqueAlbumIds[0]} playlistName={playlistName} />
       </div>
     );
   }

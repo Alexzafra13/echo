@@ -54,7 +54,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, isShuffle, toggleShuffle, playQueue]);
+  }, [isShuffle, toggleShuffle, playQueue]);
 
   return { shufflePlay, isLoading };
 }

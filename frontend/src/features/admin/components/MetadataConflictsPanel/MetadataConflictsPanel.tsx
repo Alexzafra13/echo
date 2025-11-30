@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AlertCircle, Check, X, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
 import {
@@ -10,6 +10,54 @@ import {
   type MetadataConflict,
 } from '../../hooks/useMetadataConflicts';
 import styles from './MetadataConflictsPanel.module.css';
+
+/**
+ * ImageWithFallback component - Safe image component that shows fallback on error
+ * Avoids innerHTML to prevent XSS vulnerabilities
+ */
+function ImageWithFallback({
+  src,
+  alt,
+  className,
+  fallbackMessage
+}: {
+  src: string | undefined;
+  alt: string;
+  className: string;
+  fallbackMessage: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError || !src) {
+    return (
+      <div className={className}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          color: 'var(--text-tertiary)',
+          fontSize: '0.875rem',
+          fontStyle: 'italic',
+          textAlign: 'center',
+          padding: '1rem'
+        }}>
+          {fallbackMessage}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={className}>
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 /**
  * Source badge component
@@ -205,21 +253,12 @@ function ConflictCard({ conflict }: { conflict: MetadataConflict }) {
           <div className={styles.comparisonLabel}>Actual</div>
           {isImage && currentImageUrl ? (
             <>
-              <div className={styles.imageCompact}>
-                <img
-                  src={currentImageUrl}
-                  alt="Current"
-                  onError={(e) => {
-                    // Hide the broken image
-                    e.currentTarget.style.display = 'none';
-                    // Show message in container
-                    const container = e.currentTarget.parentElement;
-                    if (container) {
-                      container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:0.875rem;font-style:italic;text-align:center;padding:1rem;">Archivo no encontrado</div>';
-                    }
-                  }}
-                />
-              </div>
+              <ImageWithFallback
+                src={currentImageUrl}
+                alt="Current"
+                className={styles.imageCompact}
+                fallbackMessage="Archivo no encontrado"
+              />
               {conflict.metadata?.currentResolution ? (
                 <div className={styles.resolutionText}>{conflict.metadata.currentResolution}</div>
               ) : (

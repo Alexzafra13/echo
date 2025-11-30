@@ -117,20 +117,20 @@
   opacity: 1;
 }
 
-/* Active/Playing Track */
-.trackList__track__active {
+/* Active/Playing Track - Using BEM modifier syntax */
+.trackList__track--active {
   background: var(--primary-15);
 }
 
-.trackList__track__active .trackList__trackTitle {
+.trackList__track--active .trackList__trackTitle {
   color: var(--color-primary-500);
 }
 
-.trackList__track__active .trackList__trackNumber {
+.trackList__track--active .trackList__trackNumber {
   display: none;
 }
 
-.trackList__track__active .trackList__playButton {
+.trackList__track--active .trackList__playButton {
   display: flex;
 }
 
