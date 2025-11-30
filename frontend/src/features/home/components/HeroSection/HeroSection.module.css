@@ -3,13 +3,13 @@
 /* Block: heroSection */
 .heroSection {
   position: relative;
-  height: 520px;
+  height: 560px;
   width: calc(100% + 60px);
   margin-left: -30px;
   margin-top: 0; /* Content container already extends behind header */
   overflow: hidden;
   border-radius: 0;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .heroSection__background {
@@ -21,6 +21,9 @@
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
+  /* Fade out the image itself at the bottom */
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
 
 @keyframes fadeInBackground {
@@ -275,7 +278,7 @@
 /* Tablet */
 @media (max-width: 1200px) {
   .heroSection {
-    height: 470px;
+    height: 510px;
   }
 
   .heroSection__content {
@@ -313,11 +316,11 @@
 /* Mobile - iOS Compact Style */
 @media (max-width: 768px) {
   .heroSection {
-    height: 240px; /* Reducido para evitar repetición de imagen */
+    height: 260px;
     width: calc(100% + 32px);
     margin-left: -16px;
     margin-top: 0; /* Content container already extends behind header */
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   /* Ocultar flechas de navegación en móvil */
@@ -424,11 +427,11 @@
 /* Small Mobile - Ultra Compact */
 @media (max-width: 480px) {
   .heroSection {
-    height: 220px; /* Más compacto aún */
+    height: 240px;
     width: calc(100% + 24px);
     margin-left: -12px;
     margin-top: 0; /* Content container already extends behind header */
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
 
   /* Flechas ya ocultas en breakpoint anterior */
