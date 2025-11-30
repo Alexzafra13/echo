@@ -2,12 +2,28 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/infrastructure/persistence/prisma.service'; 
+import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import {
+  createTestUser,
+  loginUser,
+  cleanUserTables,
+  getUserByUsername,
+} from './helpers/test-setup';
 
-
+/**
+ * Auth E2E Tests
+ *
+ * Prueba los endpoints de autenticación:
+ * - POST /api/auth/login - Login con credenciales
+ * - POST /api/auth/refresh - Refrescar tokens
+ * - GET /api/auth/me - Obtener usuario autenticado
+ *
+ * NOTA: Este proyecto NO tiene endpoint de registro público.
+ * Los usuarios se crean via admin panel (/api/admin/users).
+ */
 describe('Auth E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let drizzle: DrizzleService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,7 +32,6 @@ describe('Auth E2E', () => {
 
     app = moduleFixture.createNestApplication();
 
-    // Aplicar los mismos pipes que en main.ts
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -29,164 +44,84 @@ describe('Auth E2E', () => {
 
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  afterEach(async () => {
-    // Limpiar BD después de cada test
-    await prisma.user.deleteMany();
-  });
-
-  describe('POST /api/auth/register', () => {
-    it('debería registrar un usuario válido', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-          name: 'Juan García',
-        })
-        .expect(201)
-        .expect((res) => {
-          expect(res.body.user).toBeDefined();
-          expect(res.body.user.username).toBe('juan');
-          expect(res.body.user.email).toBe('juan@test.com');
-          expect(res.body.user.name).toBe('Juan García');
-          expect(res.body.accessToken).toBeDefined();
-          expect(res.body.refreshToken).toBeDefined();
-        });
-    });
-
-    it('debería registrar usuario sin email', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'maria',
-          password: 'Pass123!',
-          name: 'María',
-        })
-        .expect(201)
-        .expect((res) => {
-          expect(res.body.user.username).toBe('maria');
-          expect(res.body.user.email).toBeUndefined();
-        });
-    });
-
-    it('debería rechazar si username ya existe', async () => {
-      // Registrar primer usuario
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-        });
-
-      // Intentar registrar con el mismo username
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'otro@test.com',
-          password: 'Pass123!',
-        })
-        .expect(400)
-        .expect((res) => {
-          expect(res.body.message).toContain('Username already exists');
-        });
-    });
-
-    it('debería rechazar si email ya está registrado', async () => {
-      // Registrar primer usuario
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-        });
-
-      // Intentar registrar con el mismo email
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'maria',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-        })
-        .expect(400)
-        .expect((res) => {
-          expect(res.body.message).toContain('Email already registered');
-        });
-    });
-
-    it('debería rechazar si email es inválido', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'email_invalido',
-          password: 'Pass123!',
-        })
-        .expect(400);
-    });
-
-    it('debería rechazar si username es muy corto', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'ab',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-        })
-        .expect(400);
-    });
-
-    it('debería rechazar si password es débil', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'weak',
-        })
-        .expect(400);
-    });
+  beforeEach(async () => {
+    // Limpiar usuarios antes de cada test
+    await cleanUserTables(drizzle);
   });
 
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
-      // Registrar usuario antes de cada test
-      await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-          name: 'Juan',
-        });
+      // Crear usuario de prueba para tests de login
+      await createTestUser(drizzle, {
+        username: 'testuser',
+        password: 'Test123!',
+        name: 'Test User',
+        isAdmin: false,
+        mustChangePassword: false,
+      });
     });
 
-    it('debería loguear un usuario válido', () => {
-      return request(app.getHttpServer())
+    it('debería loguear un usuario válido', async () => {
+      const response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          username: 'juan',
-          password: 'Pass123!',
+          username: 'testuser',
+          password: 'Test123!',
         })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.user).toBeDefined();
-          expect(res.body.user.username).toBe('juan');
-          expect(res.body.user.email).toBe('juan@test.com');
-          expect(res.body.accessToken).toBeDefined();
-          expect(res.body.refreshToken).toBeDefined();
-        });
+        .expect(200);
+
+      expect(response.body.user).toBeDefined();
+      expect(response.body.user.username).toBe('testuser');
+      expect(response.body.accessToken).toBeDefined();
+      expect(response.body.refreshToken).toBeDefined();
+      expect(response.body.mustChangePassword).toBe(false);
+    });
+
+    it('debería retornar mustChangePassword=true para usuarios nuevos', async () => {
+      // Crear usuario que debe cambiar contraseña
+      await createTestUser(drizzle, {
+        username: 'newuser',
+        password: 'Temp123!',
+        name: 'New User',
+        mustChangePassword: true,
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          username: 'newuser',
+          password: 'Temp123!',
+        })
+        .expect(200);
+
+      expect(response.body.mustChangePassword).toBe(true);
+    });
+
+    it('debería loguear un usuario admin', async () => {
+      await createTestUser(drizzle, {
+        username: 'admin',
+        password: 'Admin123!',
+        name: 'Admin User',
+        isAdmin: true,
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          username: 'admin',
+          password: 'Admin123!',
+        })
+        .expect(200);
+
+      expect(response.body.user.username).toBe('admin');
+      expect(response.body.user.isAdmin).toBe(true);
     });
 
     it('debería rechazar si username no existe', () => {
@@ -194,7 +129,7 @@ describe('Auth E2E', () => {
         .post('/api/auth/login')
         .send({
           username: 'noexiste',
-          password: 'Pass123!',
+          password: 'Test123!',
         })
         .expect(401)
         .expect((res) => {
@@ -206,7 +141,7 @@ describe('Auth E2E', () => {
       return request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          username: 'juan',
+          username: 'testuser',
           password: 'WrongPassword!',
         })
         .expect(401)
@@ -215,12 +150,31 @@ describe('Auth E2E', () => {
         });
     });
 
+    it('debería rechazar si usuario está inactivo', async () => {
+      await createTestUser(drizzle, {
+        username: 'inactive',
+        password: 'Test123!',
+        isActive: false,
+      });
+
+      return request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          username: 'inactive',
+          password: 'Test123!',
+        })
+        .expect(401)
+        .expect((res) => {
+          expect(res.body.message).toContain('inactive');
+        });
+    });
+
     it('debería rechazar si username está vacío', () => {
       return request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
           username: '',
-          password: 'Pass123!',
+          password: 'Test123!',
         })
         .expect(400);
     });
@@ -229,49 +183,54 @@ describe('Auth E2E', () => {
       return request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          username: 'juan',
+          username: 'testuser',
           password: '',
         })
+        .expect(400);
+    });
+
+    it('debería rechazar si faltan campos', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({})
         .expect(400);
     });
   });
 
   describe('POST /api/auth/refresh', () => {
     let refreshToken: string;
+    let accessToken: string;
 
     beforeEach(async () => {
-      // Registrar y obtener refresh token
-      const response = await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-        });
+      await createTestUser(drizzle, {
+        username: 'testuser',
+        password: 'Test123!',
+        name: 'Test User',
+      });
 
-      refreshToken = response.body.refreshToken;
+      const tokens = await loginUser(app, 'testuser', 'Test123!');
+      refreshToken = tokens.refreshToken;
+      accessToken = tokens.accessToken;
     });
 
-    it('debería generar nuevos tokens con refresh token válido', () => {
-      return request(app.getHttpServer())
+    it('debería generar nuevos tokens con refresh token válido', async () => {
+      const response = await request(app.getHttpServer())
         .post('/api/auth/refresh')
-        .send({
-          refreshToken,
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.accessToken).toBeDefined();
-          expect(res.body.refreshToken).toBeDefined();
-          expect(res.body.accessToken).not.toBe(refreshToken);
-        });
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ refreshToken })
+        .expect(200);
+
+      expect(response.body.accessToken).toBeDefined();
+      expect(response.body.refreshToken).toBeDefined();
+      // Los nuevos tokens deberían ser diferentes
+      expect(response.body.accessToken).not.toBe(accessToken);
     });
 
     it('debería rechazar si refresh token es inválido', () => {
       return request(app.getHttpServer())
         .post('/api/auth/refresh')
-        .send({
-          refreshToken: 'invalid_token_123',
-        })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ refreshToken: 'invalid_token_123' })
         .expect(401)
         .expect((res) => {
           expect(res.body.message).toContain('Invalid refresh token');
@@ -281,10 +240,16 @@ describe('Auth E2E', () => {
     it('debería rechazar si refresh token está vacío', () => {
       return request(app.getHttpServer())
         .post('/api/auth/refresh')
-        .send({
-          refreshToken: '',
-        })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ refreshToken: '' })
         .expect(400);
+    });
+
+    it('debería rechazar sin Authorization header', () => {
+      return request(app.getHttpServer())
+        .post('/api/auth/refresh')
+        .send({ refreshToken })
+        .expect(401);
     });
   });
 
@@ -292,17 +257,14 @@ describe('Auth E2E', () => {
     let accessToken: string;
 
     beforeEach(async () => {
-      // Registrar y obtener access token
-      const response = await request(app.getHttpServer())
-        .post('/api/auth/register')
-        .send({
-          username: 'juan',
-          email: 'juan@test.com',
-          password: 'Pass123!',
-          name: 'Juan',
-        });
+      await createTestUser(drizzle, {
+        username: 'testuser',
+        password: 'Test123!',
+        name: 'Test User',
+      });
 
-      accessToken = response.body.accessToken;
+      const tokens = await loginUser(app, 'testuser', 'Test123!');
+      accessToken = tokens.accessToken;
     });
 
     it('debería retornar datos del usuario actual con token válido', () => {
@@ -312,8 +274,30 @@ describe('Auth E2E', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.user).toBeDefined();
-          expect(res.body.user.username).toBe('juan');
-          expect(res.body.user.email).toBe('juan@test.com');
+          expect(res.body.user.username).toBe('testuser');
+          expect(res.body.user.name).toBe('Test User');
+          expect(res.body.user.isAdmin).toBe(false);
+          expect(res.body.user.hasAvatar).toBe(false);
+        });
+    });
+
+    it('debería retornar hasAvatar=true si usuario tiene avatar', async () => {
+      // Actualizar usuario con avatar
+      const user = await getUserByUsername(drizzle, 'testuser');
+      await drizzle.db
+        .update(require('../../src/infrastructure/database/schema').users)
+        .set({ avatarPath: '/avatars/testuser.jpg' })
+        .where(require('drizzle-orm').eq(
+          require('../../src/infrastructure/database/schema').users.id,
+          user.id,
+        ));
+
+      return request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.user.hasAvatar).toBe(true);
         });
     });
 
@@ -334,6 +318,54 @@ describe('Auth E2E', () => {
       return request(app.getHttpServer())
         .get('/api/auth/me')
         .expect(401);
+    });
+  });
+
+  describe('Flujo completo de autenticación', () => {
+    it('debería completar el flujo login → me → refresh → me', async () => {
+      // Crear usuario
+      await createTestUser(drizzle, {
+        username: 'flowuser',
+        password: 'Flow123!',
+        name: 'Flow User',
+      });
+
+      // 1. Login
+      const loginResponse = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ username: 'flowuser', password: 'Flow123!' })
+        .expect(200);
+
+      const { accessToken, refreshToken } = loginResponse.body;
+      expect(accessToken).toBeDefined();
+      expect(refreshToken).toBeDefined();
+
+      // 2. Get /me con access token
+      const meResponse1 = await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(meResponse1.body.user.username).toBe('flowuser');
+
+      // 3. Refresh tokens
+      const refreshResponse = await request(app.getHttpServer())
+        .post('/api/auth/refresh')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ refreshToken })
+        .expect(200);
+
+      const newAccessToken = refreshResponse.body.accessToken;
+      expect(newAccessToken).toBeDefined();
+      expect(newAccessToken).not.toBe(accessToken);
+
+      // 4. Get /me con nuevo access token
+      const meResponse2 = await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${newAccessToken}`)
+        .expect(200);
+
+      expect(meResponse2.body.user.username).toBe('flowuser');
     });
   });
 });
