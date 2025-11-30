@@ -78,12 +78,40 @@
   gap: 12px;
 }
 
+.playlistDetailPage__heroTypeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .playlistDetailPage__heroType {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-secondary, #b8bcc8);
+}
+
+.playlistDetailPage__visibilityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.playlistDetailPage__visibilityBadge--public {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.playlistDetailPage__visibilityBadge--private {
+  background: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
 }
 
 .playlistDetailPage__heroTitle {
@@ -365,4 +393,14 @@
 
 :root[data-theme="light"] .playlistDetailPage__imageModal {
   background: rgba(229, 231, 235, 0.95);
+}
+
+:root[data-theme="light"] .playlistDetailPage__visibilityBadge--public {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+:root[data-theme="light"] .playlistDetailPage__visibilityBadge--private {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
 }

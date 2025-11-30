@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Put,
   Post,
   Delete,
@@ -23,6 +24,7 @@ import {
   ChangeLanguageUseCase,
   UploadAvatarUseCase,
   DeleteAvatarUseCase,
+  UpdatePrivacySettingsUseCase,
 } from '../domain/use-cases';
 import {
   ChangePasswordRequestDto,
@@ -30,6 +32,8 @@ import {
   ChangeThemeRequestDto,
   ChangeLanguageRequestDto,
   UserResponseDto,
+  UpdatePrivacySettingsRequestDto,
+  PrivacySettingsResponseDto,
 } from './dtos';
 
 @ApiTags('users')
@@ -44,6 +48,7 @@ export class UsersController {
     private readonly changeLanguageUseCase: ChangeLanguageUseCase,
     private readonly uploadAvatarUseCase: UploadAvatarUseCase,
     private readonly deleteAvatarUseCase: DeleteAvatarUseCase,
+    private readonly updatePrivacySettingsUseCase: UpdatePrivacySettingsUseCase,
   ) {}
 
   @Put('password')
@@ -264,5 +269,66 @@ export class UsersController {
     await this.deleteAvatarUseCase.execute({
       userId: user.id,
     });
+  }
+
+  @Get('privacy')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener configuración de privacidad',
+    description: 'Obtiene la configuración de privacidad del perfil del usuario actual'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuración de privacidad',
+    type: PrivacySettingsResponseDto
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  async getPrivacySettings(
+    @CurrentUser() user: any,
+  ): Promise<PrivacySettingsResponseDto> {
+    const result = await this.updatePrivacySettingsUseCase.execute({
+      userId: user.id,
+    });
+    return PrivacySettingsResponseDto.fromDomain(result);
+  }
+
+  @Put('privacy')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Actualizar configuración de privacidad',
+    description: 'Actualiza la configuración de privacidad del perfil público del usuario'
+  })
+  @ApiBody({ type: UpdatePrivacySettingsRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuración de privacidad actualizada',
+    type: PrivacySettingsResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  async updatePrivacySettings(
+    @CurrentUser() user: any,
+    @Body() dto: UpdatePrivacySettingsRequestDto,
+  ): Promise<PrivacySettingsResponseDto> {
+    const result = await this.updatePrivacySettingsUseCase.execute({
+      userId: user.id,
+      isPublicProfile: dto.isPublicProfile,
+      showTopTracks: dto.showTopTracks,
+      showTopArtists: dto.showTopArtists,
+      showTopAlbums: dto.showTopAlbums,
+      showPlaylists: dto.showPlaylists,
+      bio: dto.bio,
+    });
+
+    return PrivacySettingsResponseDto.fromDomain(result);
   }
 }

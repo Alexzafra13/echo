@@ -55,13 +55,25 @@
 
 .checkboxLabel {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   cursor: pointer;
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   user-select: none;
+}
+
+.checkboxContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkboxHint {
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--color-text-tertiary);
 }
 
 .checkbox {
