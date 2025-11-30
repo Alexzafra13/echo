@@ -17,6 +17,13 @@ export interface UserProps {
   avatarUpdatedAt?: Date;
   lastLoginAt?: Date;
   lastAccessAt?: Date;
+  // Profile privacy settings
+  isPublicProfile: boolean;
+  showTopTracks: boolean;
+  showTopArtists: boolean;
+  showTopAlbums: boolean;
+  showPlaylists: boolean;
+  bio?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,9 +36,14 @@ export class User {
   }
 
   static create(
-    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt' | 'theme' | 'language' | 'lastLoginAt' | 'lastAccessAt'> & {
+    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt' | 'theme' | 'language' | 'lastLoginAt' | 'lastAccessAt' | 'isPublicProfile' | 'showTopTracks' | 'showTopArtists' | 'showTopAlbums' | 'showPlaylists'> & {
       theme?: string;
       language?: string;
+      isPublicProfile?: boolean;
+      showTopTracks?: boolean;
+      showTopArtists?: boolean;
+      showTopAlbums?: boolean;
+      showPlaylists?: boolean;
     },
   ): User {
     return new User({
@@ -41,6 +53,11 @@ export class User {
       language: props.language || 'es',
       lastLoginAt: undefined,
       lastAccessAt: undefined,
+      isPublicProfile: props.isPublicProfile ?? false,
+      showTopTracks: props.showTopTracks ?? true,
+      showTopArtists: props.showTopArtists ?? true,
+      showTopAlbums: props.showTopAlbums ?? true,
+      showPlaylists: props.showPlaylists ?? true,
       createdAt: DateUtil.now(),
       updatedAt: DateUtil.now(),
     });
@@ -110,6 +127,30 @@ export class User {
 
   get lastAccessAt(): Date | undefined {
     return this.props.lastAccessAt;
+  }
+
+  get isPublicProfile(): boolean {
+    return this.props.isPublicProfile;
+  }
+
+  get showTopTracks(): boolean {
+    return this.props.showTopTracks;
+  }
+
+  get showTopArtists(): boolean {
+    return this.props.showTopArtists;
+  }
+
+  get showTopAlbums(): boolean {
+    return this.props.showTopAlbums;
+  }
+
+  get showPlaylists(): boolean {
+    return this.props.showPlaylists;
+  }
+
+  get bio(): string | undefined {
+    return this.props.bio;
   }
 
   get createdAt(): Date {

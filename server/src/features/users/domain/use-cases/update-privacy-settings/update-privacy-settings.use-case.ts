@@ -1,0 +1,57 @@
+import { Injectable, Inject } from '@nestjs/common';
+import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
+import { NotFoundError } from '@shared/errors';
+import { UpdatePrivacySettingsInput, UpdatePrivacySettingsOutput } from './update-privacy-settings.dto';
+
+@Injectable()
+export class UpdatePrivacySettingsUseCase {
+  constructor(
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: IUserRepository,
+  ) {}
+
+  async execute(input: UpdatePrivacySettingsInput): Promise<UpdatePrivacySettingsOutput> {
+    // 1. Verify user exists
+    const user = await this.userRepository.findById(input.userId);
+    if (!user) {
+      throw new NotFoundError('User', input.userId);
+    }
+
+    // 2. Build update object with only provided fields
+    const updateData: Record<string, any> = {};
+
+    if (input.isPublicProfile !== undefined) {
+      updateData.isPublicProfile = input.isPublicProfile;
+    }
+    if (input.showTopTracks !== undefined) {
+      updateData.showTopTracks = input.showTopTracks;
+    }
+    if (input.showTopArtists !== undefined) {
+      updateData.showTopArtists = input.showTopArtists;
+    }
+    if (input.showTopAlbums !== undefined) {
+      updateData.showTopAlbums = input.showTopAlbums;
+    }
+    if (input.showPlaylists !== undefined) {
+      updateData.showPlaylists = input.showPlaylists;
+    }
+    if (input.bio !== undefined) {
+      updateData.bio = input.bio;
+    }
+
+    // 3. Update user if there are changes
+    let updatedUser = user;
+    if (Object.keys(updateData).length > 0) {
+      updatedUser = await this.userRepository.updatePartial(input.userId, updateData);
+    }
+
+    return {
+      isPublicProfile: updatedUser.isPublicProfile,
+      showTopTracks: updatedUser.showTopTracks,
+      showTopArtists: updatedUser.showTopArtists,
+      showTopAlbums: updatedUser.showTopAlbums,
+      showPlaylists: updatedUser.showPlaylists,
+      bio: updatedUser.bio,
+    };
+  }
+}

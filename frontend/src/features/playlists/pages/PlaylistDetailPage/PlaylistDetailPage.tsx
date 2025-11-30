@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
-import { Play, Music, Edit2, MoreHorizontal } from 'lucide-react';
+import { Play, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
@@ -153,7 +153,13 @@ export default function PlaylistDetailPage() {
 
             {/* Playlist info */}
             <div className={styles.playlistDetailPage__heroInfo}>
-              <span className={styles.playlistDetailPage__heroType}>Playlist</span>
+              <div className={styles.playlistDetailPage__heroTypeRow}>
+                <span className={styles.playlistDetailPage__heroType}>Playlist</span>
+                <span className={`${styles.playlistDetailPage__visibilityBadge} ${playlist.public ? styles['playlistDetailPage__visibilityBadge--public'] : styles['playlistDetailPage__visibilityBadge--private']}`}>
+                  {playlist.public ? <Globe size={14} /> : <Lock size={14} />}
+                  {playlist.public ? 'Pública' : 'Privada'}
+                </span>
+              </div>
               <h1 className={styles.playlistDetailPage__heroTitle}>{playlist.name}</h1>
               {playlist.description && (
                 <p className={styles.playlistDetailPage__heroDescription}>

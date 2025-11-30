@@ -87,7 +87,14 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
               disabled={isLoading}
               className={styles.checkbox}
             />
-            <span>Playlist pública</span>
+            <div className={styles.checkboxContent}>
+              <span>Playlist pública</span>
+              <span className={styles.checkboxHint}>
+                {isPublic
+                  ? 'Visible en tu perfil público'
+                  : 'Solo visible para ti'}
+              </span>
+            </div>
           </label>
         </div>
 
