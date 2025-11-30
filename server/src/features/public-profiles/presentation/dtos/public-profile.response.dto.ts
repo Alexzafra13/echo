@@ -105,7 +105,7 @@ export class PublicProfileResponseDto {
         albumId: t.albumId,
         artistId: t.artistId,
         playCount: t.playCount,
-        coverUrl: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
+        coverUrl: t.albumId ? `/api/albums/${t.albumId}/cover` : undefined,
       }));
     }
 
@@ -124,7 +124,7 @@ export class PublicProfileResponseDto {
         name: a.name,
         artistName: a.artistName,
         artistId: a.artistId,
-        coverUrl: `/api/images/albums/${a.id}/cover`,
+        coverUrl: `/api/albums/${a.id}/cover`,
         playCount: a.playCount,
         year: a.year,
       }));
