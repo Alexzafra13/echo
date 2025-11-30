@@ -1,15 +1,22 @@
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../../domain/entities/user.entity';
 import { JwtAdapter } from './jwt.adapter';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 
 interface MockJwtService {
   sign: jest.Mock;
   verify: jest.Mock;
 }
 
+interface MockSecretsService {
+  jwtSecret: string;
+  jwtRefreshSecret: string;
+}
+
 describe('JwtAdapter', () => {
   let adapter: JwtAdapter;
   let mockJwtService: MockJwtService;
+  let mockSecretsService: MockSecretsService;
 
   beforeEach(() => {
     mockJwtService = {
@@ -17,7 +24,15 @@ describe('JwtAdapter', () => {
       verify: jest.fn(),
     };
 
-    adapter = new JwtAdapter(mockJwtService as unknown as JwtService);
+    mockSecretsService = {
+      jwtSecret: 'test-jwt-secret',
+      jwtRefreshSecret: 'test-refresh-secret',
+    };
+
+    adapter = new JwtAdapter(
+      mockJwtService as unknown as JwtService,
+      mockSecretsService as unknown as SecuritySecretsService,
+    );
   });
 
   describe('generateAccessToken', () => {
