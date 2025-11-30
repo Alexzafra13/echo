@@ -28,18 +28,19 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { login, isLoggingIn, loginError } = useAuth();
 
-  // Select a random background different from the last one
+  // Cycle through all backgrounds before repeating (shuffled queue)
   const backgroundImage = useMemo(() => {
-    const lastBackground = sessionStorage.getItem('lastLoginBackground');
-    const availableBackgrounds = LOGIN_BACKGROUNDS.filter(bg => bg !== lastBackground);
+    let queue: string[] = JSON.parse(localStorage.getItem('loginBgQueue') || '[]');
 
-    // If all were filtered (shouldn't happen with 3+ images), use all
-    const pool = availableBackgrounds.length > 0 ? availableBackgrounds : LOGIN_BACKGROUNDS;
-    const randomIndex = Math.floor(Math.random() * pool.length);
-    const selected = pool[randomIndex];
+    // If queue is empty, reshuffle all backgrounds
+    if (queue.length === 0) {
+      queue = [...LOGIN_BACKGROUNDS].sort(() => Math.random() - 0.5);
+    }
 
-    // Store for next time
-    sessionStorage.setItem('lastLoginBackground', selected);
+    // Take the next background from the queue
+    const selected = queue.shift()!;
+    localStorage.setItem('loginBgQueue', JSON.stringify(queue));
+
     return selected;
   }, []);
 
