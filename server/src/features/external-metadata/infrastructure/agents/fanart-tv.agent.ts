@@ -4,6 +4,7 @@ import { ArtistImages, AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
+import { ExternalApiError } from '@shared/errors';
 
 /**
  * Fanart.tv Agent
@@ -94,7 +95,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
           this.logger.debug(`No Fanart.tv data found for: ${name}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('Fanart.tv', response.status, response.statusText);
       }
 
       const data = await response.json();
@@ -201,7 +202,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
           this.logger.debug(`No Fanart.tv data found for artist: ${artistName}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('Fanart.tv', response.status, response.statusText);
       }
 
       const data = await response.json();
@@ -270,7 +271,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
           this.logger.debug(`No Fanart.tv data found for artist: ${artistName}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('Fanart.tv', response.status, response.statusText);
       }
 
       const data = await response.json();
@@ -352,7 +353,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
           this.logger.debug(`No Fanart.tv data found for: ${name}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('Fanart.tv', response.status, response.statusText);
       }
 
       const data = await response.json();

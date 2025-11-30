@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { StorageService } from './storage.service';
 import probe from 'probe-image-size';
 import * as fs from 'fs/promises';
+import { ExternalApiError, ImageProcessingError } from '@shared/errors';
 
 export interface ImageDimensions {
   width: number;
@@ -47,19 +48,19 @@ export class ImageDownloadService {
       clearTimeout(timeout);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('ImageDownload', response.status, response.statusText);
       }
 
       // Check content type
       const contentType = response.headers.get('content-type');
       if (!contentType?.startsWith('image/')) {
-        throw new Error(`Invalid content type: ${contentType}`);
+        throw new ImageProcessingError('INVALID_CONTENT_TYPE', contentType || 'unknown');
       }
 
       // Check content length
       const contentLength = response.headers.get('content-length');
       if (contentLength && parseInt(contentLength) > this.MAX_IMAGE_SIZE) {
-        throw new Error(`Image too large: ${contentLength} bytes`);
+        throw new ImageProcessingError('FILE_TOO_LARGE', `${contentLength} bytes`);
       }
 
       // Download as buffer
@@ -68,12 +69,12 @@ export class ImageDownloadService {
 
       // Validate buffer size
       if (buffer.length > this.MAX_IMAGE_SIZE) {
-        throw new Error(`Image too large: ${buffer.length} bytes`);
+        throw new ImageProcessingError('FILE_TOO_LARGE', `${buffer.length} bytes`);
       }
 
       // Validate it's actually an image
       if (!this.isValidImageBuffer(buffer)) {
-        throw new Error('Downloaded file is not a valid image');
+        throw new ImageProcessingError('INVALID_IMAGE');
       }
 
       this.logger.debug(`Downloaded image: ${buffer.length} bytes`);
@@ -279,13 +280,13 @@ export class ImageDownloadService {
         clearTimeout(timeout);
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw new ExternalApiError('ImageDownload', response.status, response.statusText);
         }
 
         // Read first 50KB (enough for dimension detection)
         const reader = response.body?.getReader();
         if (!reader) {
-          throw new Error('No response body');
+          throw new ImageProcessingError('DOWNLOAD_FAILED', 'No response body');
         }
 
         const chunks: Uint8Array[] = [];

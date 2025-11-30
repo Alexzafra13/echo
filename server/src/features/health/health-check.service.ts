@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import Redis from 'ioredis';
 import { cacheConfig } from '@config/cache.config';
+import { InfrastructureError } from '@shared/errors';
 
 export interface HealthCheckResult {
   status: 'ok' | 'error';
@@ -94,7 +95,7 @@ export class HealthCheckService {
       const pong = await this.redis.ping();
 
       if (pong !== 'PONG') {
-        throw new Error('Invalid Redis response');
+        throw new InfrastructureError('REDIS', 'Invalid ping response');
       }
     } catch (error) {
       // Attempt to reconnect for next health check

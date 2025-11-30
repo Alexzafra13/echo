@@ -105,7 +105,7 @@ describe('ImageDownloadService', () => {
       // Act & Assert
       await expect(
         service.downloadImage('https://example.com/notfound.jpg')
-      ).rejects.toThrow('HTTP 404: Not Found');
+      ).rejects.toThrow('ImageDownload API error: HTTP 404 Not Found');
     });
 
     it('debería rechazar si content-type no es imagen', async () => {

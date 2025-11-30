@@ -7,6 +7,7 @@ import { ImageDownloadService } from '@features/external-metadata/infrastructure
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { ImageProcessingError } from '@shared/errors';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -77,7 +78,7 @@ export class ApplyAlbumCoverUseCase {
       const dimensions = await this.imageDownload.getImageDimensionsFromFile(tempPath);
 
       if (!dimensions) {
-        throw new Error('Failed to detect image dimensions');
+        throw new ImageProcessingError('INVALID_DIMENSIONS');
       }
 
       const width = dimensions.width;

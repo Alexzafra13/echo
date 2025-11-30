@@ -6,6 +6,7 @@ import { MetadataConflictService } from '../infrastructure/services/metadata-con
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
+import { NotFoundError } from '@shared/errors';
 import {
   GetConflictsQueryDto,
   ResolveConflictDto,
@@ -97,7 +98,7 @@ export class MetadataConflictsController {
     const conflict = conflicts.conflicts.find((c) => c.id === id);
 
     if (!conflict) {
-      throw new Error(`Conflict ${id} not found`);
+      throw new NotFoundError('MetadataConflict', id);
     }
 
     return conflict as any;
