@@ -107,6 +107,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
       id: track.id,
       title: track.title,
       artist: track.artistName || 'Unknown Artist',
+      albumId: track.albumId,
       albumName: track.albumName,
       duration: track.duration || 0,
       coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
