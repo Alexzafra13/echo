@@ -27,7 +27,7 @@ describe('CachedAlbumRepository', () => {
   const mockAlbum = Album.reconstruct(mockAlbumPrimitives);
 
   beforeEach(() => {
-    // Mock base repository
+    // Mock base repository with all IAlbumRepository methods
     baseRepository = {
       findById: jest.fn(),
       findAll: jest.fn(),
@@ -35,6 +35,9 @@ describe('CachedAlbumRepository', () => {
       findByArtistId: jest.fn(),
       findRecent: jest.fn(),
       findMostPlayed: jest.fn(),
+      findAlphabetically: jest.fn(),
+      findRecentlyPlayed: jest.fn(),
+      findFavorites: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -48,11 +51,11 @@ describe('CachedAlbumRepository', () => {
     const mockLogger: MockPinoLogger = createMockPinoLogger();
 
     // Create instance directly without TestingModule for simplicity
-    // Constructor expects: (logger, baseRepository, cache)
+    // Constructor expects: (baseRepository, cache, logger)
     cachedRepository = new CachedAlbumRepository(
-      mockLogger as unknown as PinoLogger,
-      baseRepository,
+      baseRepository as unknown as import('./album.repository').DrizzleAlbumRepository,
       cacheService,
+      mockLogger as unknown as PinoLogger,
     );
   });
 
@@ -204,7 +207,7 @@ describe('CachedAlbumRepository', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('should NOT cache empty results', async () => {
+    it('should cache empty results to prevent repeated DB hits', async () => {
       // Arrange
       cacheService.get.mockResolvedValue(null);
       baseRepository.findByArtistId.mockResolvedValue([]);
@@ -214,7 +217,11 @@ describe('CachedAlbumRepository', () => {
 
       // Assert
       expect(baseRepository.findByArtistId).toHaveBeenCalledWith('artist-2', 0, 10);
-      expect(cacheService.set).not.toHaveBeenCalled();
+      expect(cacheService.set).toHaveBeenCalledWith(
+        'albums:artist:artist-2:0:10',
+        [],
+        expect.any(Number),
+      );
       expect(result).toHaveLength(0);
     });
   });
@@ -314,9 +321,9 @@ describe('CachedAlbumRepository', () => {
 
       // Assert
       expect(baseRepository.create).toHaveBeenCalledWith(mockAlbum);
-      // invalidateListCaches now uses: 5x delPattern() (album:*, recent:*, most-played:*, artist:*, search:*) + 2x del()
+      // invalidateAllAlbumCaches: 5x delPattern (album:*, recent:*, most-played:*, artist:*, search:*) + 1x del (count)
       expect(cacheService.delPattern).toHaveBeenCalledTimes(5);
-      expect(cacheService.del).toHaveBeenCalledTimes(2);
+      expect(cacheService.del).toHaveBeenCalledTimes(1);
       expect(result).toBe(mockAlbum);
     });
   });
@@ -333,8 +340,8 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.update).toHaveBeenCalledWith('album-1', updates);
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      // 1 specific del() + invalidateListCaches (5x delPattern + 2x del)
-      expect(cacheService.del).toHaveBeenCalledTimes(3);
+      // 1 specific del() + invalidateAllAlbumCaches (5x delPattern + 1x del for count)
+      expect(cacheService.del).toHaveBeenCalledTimes(2);
       expect(cacheService.delPattern).toHaveBeenCalledTimes(5);
       expect(result).toBe(mockAlbum);
     });
@@ -363,8 +370,8 @@ describe('CachedAlbumRepository', () => {
       // Assert
       expect(baseRepository.delete).toHaveBeenCalledWith('album-1');
       expect(cacheService.del).toHaveBeenCalledWith('album:album-1');
-      // 1 specific del() + invalidateListCaches (5x delPattern + 2x del)
-      expect(cacheService.del).toHaveBeenCalledTimes(3);
+      // 1 specific del() + invalidateAllAlbumCaches (5x delPattern + 1x del for count)
+      expect(cacheService.del).toHaveBeenCalledTimes(2);
       expect(cacheService.delPattern).toHaveBeenCalledTimes(5);
       expect(result).toBe(true);
     });
