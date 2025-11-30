@@ -33,11 +33,31 @@ export function useShufflePlay(): UseShufflePlayReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
-  const shuffleRef = useRef<{ seed: number | null; skip: number; loading: boolean }>({
+  const shuffleRef = useRef<{ seed: number | null; skip: number; loading: boolean; queueIds: Set<string> }>({
     seed: null,
     skip: 0,
     loading: false,
+    queueIds: new Set(),
   });
+
+  // Detect when queue has been completely replaced (not by shuffle)
+  // and clear the shuffle state to prevent auto-loading more shuffle tracks
+  useEffect(() => {
+    const state = shuffleRef.current;
+    if (!state.seed || queue.length === 0) return;
+
+    // Check if current queue is from our shuffle session
+    const currentIds = new Set(queue.map(t => t.id));
+    const hasOverlap = [...state.queueIds].some(id => currentIds.has(id));
+
+    // If no overlap, queue was completely replaced - clear shuffle state
+    if (!hasOverlap && state.queueIds.size > 0) {
+      state.seed = null;
+      state.skip = 0;
+      state.queueIds = new Set();
+      setHasMore(false);
+    }
+  }, [queue]);
 
   const loadMoreTracks = useCallback(async () => {
     const state = shuffleRef.current;
@@ -52,7 +72,10 @@ export function useShufflePlay(): UseShufflePlayReturn {
       });
 
       if (response.data.length > 0) {
-        addToQueue(response.data.map(convertToPlayerTrack));
+        const tracks = response.data.map(convertToPlayerTrack);
+        // Track IDs from this shuffle session
+        tracks.forEach(t => state.queueIds.add(t.id));
+        addToQueue(tracks);
         state.skip += response.data.length;
         setHasMore(response.hasMore);
       } else {
@@ -73,11 +96,14 @@ export function useShufflePlay(): UseShufflePlayReturn {
       const response = await tracksService.getShuffled({ take: BATCH_SIZE });
       if (response.data.length === 0) return;
 
-      shuffleRef.current = { seed: response.seed, skip: response.data.length, loading: false };
+      const tracks = response.data.map(convertToPlayerTrack);
+      const queueIds = new Set(tracks.map(t => t.id));
+
+      shuffleRef.current = { seed: response.seed, skip: response.data.length, loading: false, queueIds };
       setHasMore(response.hasMore);
 
       if (!isShuffle) toggleShuffle();
-      playQueue(response.data.map(convertToPlayerTrack), 0);
+      playQueue(tracks, 0);
     } catch (error) {
       console.error('[ShufflePlay] Error:', error);
     } finally {
