@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 /**
  * PasswordUtil - Utilidades para manejo de contraseñas
  */
@@ -5,6 +7,7 @@ export class PasswordUtil {
   /**
    * Genera una contraseña temporal alfanumérica de 8 caracteres
    * Incluye letras mayúsculas, minúsculas y números para mayor seguridad
+   * Usa crypto.randomBytes para generación criptográficamente segura
    * Ejemplo: "X7h4Km2p"
    */
   static generateTemporaryPassword(): string {
@@ -13,22 +16,29 @@ export class PasswordUtil {
     const numbers = '23456789'; // Sin 0, 1 para evitar confusión con O, I
 
     const allChars = uppercase + lowercase + numbers;
-    let password = '';
+
+    // Generar bytes aleatorios criptográficamente seguros
+    const randomBytesBuffer = randomBytes(8);
 
     // Asegurar al menos 1 mayúscula, 1 minúscula, 1 número
-    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    let password = '';
+    password += uppercase.charAt(randomBytesBuffer[0] % uppercase.length);
+    password += lowercase.charAt(randomBytesBuffer[1] % lowercase.length);
+    password += numbers.charAt(randomBytesBuffer[2] % numbers.length);
 
     // Rellenar hasta 8 caracteres con caracteres aleatorios
     for (let i = 3; i < 8; i++) {
-      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+      password += allChars.charAt(randomBytesBuffer[i] % allChars.length);
     }
 
-    // Mezclar los caracteres para que no sea predecible
-    return password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('');
+    // Mezclar los caracteres usando Fisher-Yates shuffle con crypto
+    const shuffleBytes = randomBytes(8);
+    const chars = password.split('');
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = shuffleBytes[i] % (i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+
+    return chars.join('');
   }
 }

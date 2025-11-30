@@ -1,9 +1,10 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, OnModuleDestroy } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import Redis from 'ioredis';
 import { cacheConfig } from '@config/cache.config';
 import { InfrastructureError } from '@shared/errors';
+import * as os from 'os';
 
 export interface HealthCheckResult {
   status: 'ok' | 'error';
@@ -14,11 +15,22 @@ export interface HealthCheckResult {
     database: 'ok' | 'error';
     cache: 'ok' | 'error';
   };
+  system?: {
+    memory: {
+      total: number;
+      free: number;
+      used: number;
+      usagePercent: number;
+    };
+    cpu: {
+      loadAverage: number[];
+    };
+  };
   error?: string;
 }
 
 @Injectable()
-export class HealthCheckService {
+export class HealthCheckService implements OnModuleDestroy {
   private redis: Redis;
   private startTime: number = Date.now();
 
@@ -49,27 +61,36 @@ export class HealthCheckService {
       },
     };
 
-    try {
-      // Check database connection
-      await this.checkDatabase();
-    } catch (error) {
+    // Run all checks in parallel for faster response
+    const [dbResult, cacheResult] = await Promise.allSettled([
+      this.checkDatabase(),
+      this.checkRedis(),
+    ]);
+
+    // Process database check result
+    if (dbResult.status === 'rejected') {
       result.services.database = 'error';
       result.status = 'error';
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = dbResult.reason instanceof Error
+        ? dbResult.reason.message
+        : String(dbResult.reason);
       result.error = `Database: ${errorMessage}`;
     }
 
-    try {
-      // Check Redis connection
-      await this.checkRedis();
-    } catch (error) {
+    // Process cache check result
+    if (cacheResult.status === 'rejected') {
       result.services.cache = 'error';
       result.status = 'error';
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = cacheResult.reason instanceof Error
+        ? cacheResult.reason.message
+        : String(cacheResult.reason);
       result.error = result.error
         ? `${result.error}; Cache: ${errorMessage}`
         : `Cache: ${errorMessage}`;
     }
+
+    // Add system metrics (non-critical)
+    result.system = this.getSystemMetrics();
 
     // If any service is down, return 503
     if (result.status === 'error') {
@@ -77,6 +98,28 @@ export class HealthCheckService {
     }
 
     return result;
+  }
+
+  /**
+   * Get system metrics for monitoring
+   */
+  private getSystemMetrics() {
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const usedMemory = totalMemory - freeMemory;
+    const usagePercent = Math.round((usedMemory / totalMemory) * 100);
+
+    return {
+      memory: {
+        total: Math.round(totalMemory / 1024 / 1024), // MB
+        free: Math.round(freeMemory / 1024 / 1024), // MB
+        used: Math.round(usedMemory / 1024 / 1024), // MB
+        usagePercent,
+      },
+      cpu: {
+        loadAverage: os.loadavg(),
+      },
+    };
   }
 
   private async checkDatabase(): Promise<void> {

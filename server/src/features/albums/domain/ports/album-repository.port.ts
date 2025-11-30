@@ -94,6 +94,13 @@ export interface IAlbumRepository {
   count(): Promise<number>;
 
   /**
+   * Obtiene el total de álbumes de un artista específico
+   * @param artistId - ID del artista
+   * @returns Número total de álbumes del artista
+   */
+  countByArtistId(artistId: string): Promise<number>;
+
+  /**
    * Crea un nuevo álbum en la BD
    * @param album - La entidad Album a guardar
    * @returns El Album guardado (con datos de la BD)

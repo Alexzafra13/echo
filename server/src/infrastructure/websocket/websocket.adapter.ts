@@ -23,7 +23,8 @@ export class WebSocketAdapter extends IoAdapter {
    */
   createIOServer(port: number, options?: ServerOptions): any {
     // Obtener configuración desde variables de entorno
-    const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['*'];
+    // Default a localhost en lugar de wildcard para seguridad
+    const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:4567'];
 
     // Configuración del servidor Socket.IO
     const serverOptions: Partial<ServerOptions> = {
