@@ -21,9 +21,9 @@
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
-  /* Fade out the image itself at the bottom - gradual and subtle */
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.2) 90%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.2) 90%, transparent 100%);
+  /* Fade out only at the very bottom */
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);
 }
 
 @keyframes fadeInBackground {
