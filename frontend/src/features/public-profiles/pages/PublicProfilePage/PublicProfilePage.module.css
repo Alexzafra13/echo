@@ -250,11 +250,6 @@
   object-fit: cover;
   margin-bottom: 12px;
   border: 1px solid var(--white-08);
-  transition: border-color 0.2s ease;
-}
-
-.publicProfilePage__albumCard:hover .publicProfilePage__albumCover {
-  border-color: var(--color-primary);
 }
 
 .publicProfilePage__albumPlaceholder {
@@ -400,6 +395,12 @@
   background: var(--white-05);
   border-color: var(--white-12);
   transform: translateY(-2px);
+}
+
+.publicProfilePage__playlistCoverWrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
 }
 
 .publicProfilePage__playlistCover {
