@@ -155,19 +155,13 @@
   opacity: 0.8;
 }
 
-.playlistDetailPage__heroOwner:hover .playlistDetailPage__heroOwnerAvatar {
-  border-color: var(--color-primary);
-}
-
 .playlistDetailPage__heroOwnerAvatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid transparent;
   box-shadow: 0 2px 8px var(--black-40);
   flex-shrink: 0;
-  transition: border-color 0.15s ease;
 }
 
 .playlistDetailPage__heroDivider {
