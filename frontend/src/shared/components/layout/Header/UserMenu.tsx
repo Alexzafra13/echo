@@ -66,7 +66,10 @@ export function UserMenu({
   };
 
   const handleLogout = () => {
-    close(() => onLogout());
+    // Close menu immediately and logout
+    // Don't use animation to avoid timing issues with auth state
+    onOpenChange(false);
+    onLogout();
   };
 
   const avatarUrl = getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp);
