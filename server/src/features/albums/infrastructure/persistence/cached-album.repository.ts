@@ -120,6 +120,23 @@ export class CachedAlbumRepository
     return count;
   }
 
+  /**
+   * Count albums by artist ID with caching.
+   */
+  async countByArtistId(artistId: string): Promise<number> {
+    const cacheKey = `${this.config.listKeyPrefix}count:artist:${artistId}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached !== null) {
+      return cached as number;
+    }
+
+    const count = await this.baseRepository.countByArtistId(artistId);
+    await this.cache.set(cacheKey, count, this.COUNT_TTL);
+
+    return count;
+  }
+
   // ==================== NON-CACHED METHODS (DELEGATED) ====================
 
   /**

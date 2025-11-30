@@ -287,6 +287,15 @@ export class DrizzleAlbumRepository
     return result[0]?.count ?? 0;
   }
 
+  async countByArtistId(artistId: string): Promise<number> {
+    const result = await this.drizzle.db
+      .select({ count: count() })
+      .from(albums)
+      .where(or(eq(albums.artistId, artistId), eq(albums.albumArtistId, artistId)));
+
+    return result[0]?.count ?? 0;
+  }
+
   async create(album: Album): Promise<Album> {
     const persistenceData = AlbumMapper.toPersistence(album);
 

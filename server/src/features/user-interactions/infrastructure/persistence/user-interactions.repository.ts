@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, desc, count, avg } from 'drizzle-orm';
+import { eq, and, desc, count, avg, sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { userStarred, userRatings } from '@infrastructure/database/schema';
 import { IUserInteractionsRepository } from '../../domain/ports/user-interactions.repository.port';
@@ -18,101 +18,43 @@ import { UserInteractionsMapper } from '../mappers/user-interactions.mapper';
 export class DrizzleUserInteractionsRepository implements IUserInteractionsRepository {
   constructor(private readonly drizzle: DrizzleService) {}
 
-  // Like/Dislike operations
+  // Like/Dislike operations - Using upsert to avoid race conditions
   async setLike(userId: string, itemId: string, itemType: ItemType): Promise<UserStarred> {
-    // Check if exists
-    const existing = await this.drizzle.db
-      .select()
-      .from(userStarred)
-      .where(
-        and(
-          eq(userStarred.userId, userId),
-          eq(userStarred.starredId, itemId),
-          eq(userStarred.starredType, itemType),
-        ),
-      )
-      .limit(1);
-
-    if (existing[0]) {
-      // Update
-      const result = await this.drizzle.db
-        .update(userStarred)
-        .set({
-          sentiment: 'like',
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(userStarred.userId, userId),
-            eq(userStarred.starredId, itemId),
-            eq(userStarred.starredType, itemType),
-          ),
-        )
-        .returning();
-
-      return UserInteractionsMapper.toUserStarredDomain(result[0]);
-    } else {
-      // Create
-      const result = await this.drizzle.db
-        .insert(userStarred)
-        .values({
-          userId,
-          starredId: itemId,
-          starredType: itemType,
-          sentiment: 'like',
-        })
-        .returning();
-
-      return UserInteractionsMapper.toUserStarredDomain(result[0]);
-    }
+    return this.setSentiment(userId, itemId, itemType, 'like');
   }
 
   async setDislike(userId: string, itemId: string, itemType: ItemType): Promise<UserStarred> {
-    // Check if exists
-    const existing = await this.drizzle.db
-      .select()
-      .from(userStarred)
-      .where(
-        and(
-          eq(userStarred.userId, userId),
-          eq(userStarred.starredId, itemId),
-          eq(userStarred.starredType, itemType),
-        ),
-      )
-      .limit(1);
+    return this.setSentiment(userId, itemId, itemType, 'dislike');
+  }
 
-    if (existing[0]) {
-      // Update
-      const result = await this.drizzle.db
-        .update(userStarred)
-        .set({
-          sentiment: 'dislike',
+  /**
+   * Set sentiment using upsert (INSERT ... ON CONFLICT) to avoid race conditions
+   * This is atomic and thread-safe
+   */
+  private async setSentiment(
+    userId: string,
+    itemId: string,
+    itemType: ItemType,
+    sentiment: Sentiment,
+  ): Promise<UserStarred> {
+    const result = await this.drizzle.db
+      .insert(userStarred)
+      .values({
+        userId,
+        starredId: itemId,
+        starredType: itemType,
+        sentiment,
+      })
+      .onConflictDoUpdate({
+        target: [userStarred.userId, userStarred.starredId, userStarred.starredType],
+        set: {
+          sentiment,
           updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(userStarred.userId, userId),
-            eq(userStarred.starredId, itemId),
-            eq(userStarred.starredType, itemType),
-          ),
-        )
-        .returning();
+        },
+      })
+      .returning();
 
-      return UserInteractionsMapper.toUserStarredDomain(result[0]);
-    } else {
-      // Create
-      const result = await this.drizzle.db
-        .insert(userStarred)
-        .values({
-          userId,
-          starredId: itemId,
-          starredType: itemType,
-          sentiment: 'dislike',
-        })
-        .returning();
-
-      return UserInteractionsMapper.toUserStarredDomain(result[0]);
-    }
+    return UserInteractionsMapper.toUserStarredDomain(result[0]);
   }
 
   async removeSentiment(userId: string, itemId: string, itemType: ItemType): Promise<void> {
@@ -143,53 +85,26 @@ export class DrizzleUserInteractionsRepository implements IUserInteractionsRepos
     return result[0] ? (result[0].sentiment as Sentiment) : null;
   }
 
-  // Rating operations
+  // Rating operations - Using upsert to avoid race conditions
   async setRating(userId: string, itemId: string, itemType: ItemType, rating: number): Promise<UserRating> {
-    // Check if exists
-    const existing = await this.drizzle.db
-      .select()
-      .from(userRatings)
-      .where(
-        and(
-          eq(userRatings.userId, userId),
-          eq(userRatings.itemId, itemId),
-          eq(userRatings.itemType, itemType),
-        ),
-      )
-      .limit(1);
-
-    if (existing[0]) {
-      // Update
-      const result = await this.drizzle.db
-        .update(userRatings)
-        .set({
+    const result = await this.drizzle.db
+      .insert(userRatings)
+      .values({
+        userId,
+        itemId,
+        itemType,
+        rating,
+      })
+      .onConflictDoUpdate({
+        target: [userRatings.userId, userRatings.itemId, userRatings.itemType],
+        set: {
           rating,
           updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(userRatings.userId, userId),
-            eq(userRatings.itemId, itemId),
-            eq(userRatings.itemType, itemType),
-          ),
-        )
-        .returning();
+        },
+      })
+      .returning();
 
-      return UserInteractionsMapper.toUserRatingDomain(result[0]);
-    } else {
-      // Create
-      const result = await this.drizzle.db
-        .insert(userRatings)
-        .values({
-          userId,
-          itemId,
-          itemType,
-          rating,
-        })
-        .returning();
-
-      return UserInteractionsMapper.toUserRatingDomain(result[0]);
-    }
+    return UserInteractionsMapper.toUserRatingDomain(result[0]);
   }
 
   async removeRating(userId: string, itemId: string, itemType: ItemType): Promise<void> {
