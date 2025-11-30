@@ -46,6 +46,7 @@ export interface PublicPlaylist {
   songCount: number;
   duration: number;
   createdAt: string;
+  albumIds: string[];
 }
 
 export interface PrivacySettingsVisibility {

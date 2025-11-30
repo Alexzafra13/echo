@@ -8,6 +8,7 @@ import {
   artists,
   albums,
   playlists,
+  playlistTracks,
 } from '@infrastructure/database/schema';
 import { NotFoundError } from '@shared/errors';
 import {
@@ -224,6 +225,26 @@ export class GetPublicProfileUseCase {
       .orderBy(desc(playlists.createdAt))
       .limit(limit);
 
+    // Fetch album IDs for each playlist (for cover mosaic)
+    const playlistIds = results.map((r) => r.id);
+    const albumIdsMap: Record<string, string[]> = {};
+
+    if (playlistIds.length > 0) {
+      for (const playlistId of playlistIds) {
+        const trackResults = await this.drizzle.db
+          .select({ albumId: tracks.albumId })
+          .from(playlistTracks)
+          .innerJoin(tracks, eq(tracks.id, playlistTracks.trackId))
+          .where(eq(playlistTracks.playlistId, playlistId))
+          .orderBy(playlistTracks.trackOrder)
+          .limit(4);
+
+        albumIdsMap[playlistId] = trackResults
+          .map((t) => t.albumId)
+          .filter((id): id is string => !!id);
+      }
+    }
+
     return results.map((r) => ({
       id: r.id,
       name: r.name,
@@ -232,6 +253,7 @@ export class GetPublicProfileUseCase {
       songCount: r.songCount,
       duration: r.duration,
       createdAt: r.createdAt,
+      albumIds: albumIdsMap[r.id] || [],
     }));
   }
 }

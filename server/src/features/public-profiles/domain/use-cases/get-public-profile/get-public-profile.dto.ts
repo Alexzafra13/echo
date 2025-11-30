@@ -49,6 +49,7 @@ export interface PublicPlaylist {
   songCount: number;
   duration: number;
   createdAt: Date;
+  albumIds: string[];
 }
 
 export interface GetPublicProfileOutput {

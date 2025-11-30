@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { Lock, Music, Disc, User as UserIcon, ListMusic, Calendar } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
+import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { usePublicProfile } from '../../hooks';
 import { formatDate, formatDuration } from '@shared/utils/format';
 import styles from './PublicProfilePage.module.css';
@@ -280,17 +281,12 @@ export function PublicProfilePage() {
                     href={`/playlists/${playlist.id}`}
                     className={styles.publicProfilePage__playlistCard}
                   >
-                    {playlist.coverUrl ? (
-                      <img
-                        src={playlist.coverUrl}
-                        alt={playlist.name}
-                        className={styles.publicProfilePage__playlistCover}
+                    <div className={styles.publicProfilePage__playlistCoverWrapper}>
+                      <PlaylistCoverMosaic
+                        albumIds={playlist.albumIds}
+                        playlistName={playlist.name}
                       />
-                    ) : (
-                      <div className={styles.publicProfilePage__playlistCoverPlaceholder}>
-                        <ListMusic size={48} />
-                      </div>
-                    )}
+                    </div>
                     <div className={styles.publicProfilePage__playlistInfo}>
                       <h3 className={styles.publicProfilePage__playlistName}>
                         {playlist.name}
