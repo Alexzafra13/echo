@@ -135,6 +135,16 @@
   display: block;
 }
 
+.coverContainer--clickable {
+  cursor: pointer;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.coverContainer--clickable:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px var(--black-30);
+}
+
 /* Playing Indicator - Barras animadas en la parte inferior */
 .playingIndicator {
   position: absolute;
