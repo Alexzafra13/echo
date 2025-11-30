@@ -47,15 +47,42 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
 
   const ref = useRef<T>(null);
   const isClosingRef = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingCallbackRef = useRef<(() => void) | null>(null);
   // Use state for isClosing so component re-renders with animation class
   const [isClosing, setIsClosing] = useState(false);
+
+  // Reset closing state when enabled changes (menu opens/closes)
+  useEffect(() => {
+    if (!enabled) {
+      // Menu closed - reset state
+      isClosingRef.current = false;
+      setIsClosing(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      // Execute any pending callback (like logout)
+      if (pendingCallbackRef.current) {
+        pendingCallbackRef.current();
+        pendingCallbackRef.current = null;
+      }
+    }
+  }, [enabled]);
 
   /**
    * Close with optional animation
    */
   const close = useCallback((callback?: () => void) => {
-    if (isClosingRef.current) return;
+    // Store callback to execute after close
+    if (callback) {
+      pendingCallbackRef.current = callback;
+    }
+
+    // If already closing, don't start again but ensure callback runs
+    if (isClosingRef.current) {
+      return;
+    }
 
     if (animationDuration > 0) {
       isClosingRef.current = true;
@@ -63,13 +90,21 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
 
       timeoutRef.current = setTimeout(() => {
         onClose();
-        callback?.();
+        // Execute pending callback
+        if (pendingCallbackRef.current) {
+          pendingCallbackRef.current();
+          pendingCallbackRef.current = null;
+        }
         isClosingRef.current = false;
         setIsClosing(false);
       }, animationDuration);
     } else {
       onClose();
-      callback?.();
+      // Execute callback immediately
+      if (pendingCallbackRef.current) {
+        pendingCallbackRef.current();
+        pendingCallbackRef.current = null;
+      }
     }
   }, [onClose, animationDuration]);
 
