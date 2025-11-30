@@ -23,6 +23,30 @@ describe('WsThrottlerGuard', () => {
     } as any;
   });
 
+  afterEach(() => {
+    // Limpiar recursos del guard
+    guard.onModuleDestroy();
+  });
+
+  describe('lifecycle', () => {
+    it('should initialize cleanup interval on module init', () => {
+      const setIntervalSpy = jest.spyOn(global, 'setInterval');
+      guard.onModuleInit();
+
+      expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 10 * 60 * 1000);
+      setIntervalSpy.mockRestore();
+    });
+
+    it('should clear interval on module destroy', () => {
+      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      guard.onModuleInit();
+      guard.onModuleDestroy();
+
+      expect(clearIntervalSpy).toHaveBeenCalled();
+      clearIntervalSpy.mockRestore();
+    });
+  });
+
   describe('canActivate', () => {
     it('should allow first request', async () => {
       const result = await guard.canActivate(mockContext);
@@ -45,7 +69,7 @@ describe('WsThrottlerGuard', () => {
 
       // El request 21 debe fallar
       await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
-      await expect(guard.canActivate(mockContext)).rejects.toThrow('Too many requests');
+      await expect(guard.canActivate(mockContext)).rejects.toThrow('Demasiadas solicitudes');
     });
 
     it('should reset after time window passes', async () => {
@@ -84,9 +108,14 @@ describe('WsThrottlerGuard', () => {
       expect(result).toBe(true);
     });
 
-    it('should register cleanup on disconnect', async () => {
+    it('should register cleanup on disconnect only once per client', async () => {
+      // Hacer múltiples requests del mismo cliente
+      await guard.canActivate(mockContext);
+      await guard.canActivate(mockContext);
       await guard.canActivate(mockContext);
 
+      // Solo debe registrar el listener una vez
+      expect(mockSocket.once).toHaveBeenCalledTimes(1);
       expect(mockSocket.once).toHaveBeenCalledWith('disconnect', expect.any(Function));
     });
   });
