@@ -35,6 +35,7 @@ import { HealthModule } from './features/health/health.module';
 import { SetupModule } from './features/setup/setup.module';
 import { PublicProfilesModule } from './features/public-profiles/public-profiles.module';
 import { validateEnvironment } from './config/env.validation';
+import { SecuritySecretsModule } from './config/security-secrets.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { validateEnvironment } from './config/env.validation';
 
     // Global Infrastructure
     DrizzleModule,
+    SecuritySecretsModule, // Auto-generates JWT secrets on first run (like Navidrome)
     CacheModule,
     QueueModule,
     FilesystemModule,

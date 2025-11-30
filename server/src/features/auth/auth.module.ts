@@ -11,15 +11,25 @@ import { JwtAdapter } from './infrastructure/adapters/jwt.adapter';
 import { BcryptAdapter } from './infrastructure/adapters/bcrypt.adapter';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { USER_REPOSITORY, TOKEN_SERVICE, PASSWORD_SERVICE } from './domain/ports';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: {
-        expiresIn: process.env.JWT_EXPIRATION || '24h',
-      } as any,
+    // Use registerAsync to get secret from SecuritySecretsService
+    // Secrets are auto-generated on first run (like Navidrome/Jellyfin)
+    JwtModule.registerAsync({
+      useFactory: async (secretsService: SecuritySecretsService) => {
+        // Ensure secrets are initialized before using them
+        await secretsService.initializeSecrets();
+        return {
+          secret: secretsService.jwtSecret,
+          signOptions: {
+            expiresIn: process.env.JWT_EXPIRATION || '24h',
+          },
+        };
+      },
+      inject: [SecuritySecretsService],
     }),
   ],
   controllers: [AuthController],
