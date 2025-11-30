@@ -48,11 +48,13 @@ describe('SearchTracksUseCase', () => {
   beforeEach(async () => {
     const mockTrackRepository: Partial<ITrackRepository> = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findAll: jest.fn(),
       search: jest.fn(),
       findByAlbumId: jest.fn(),
       findByArtistId: jest.fn(),
       count: jest.fn(),
+      findShuffledPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

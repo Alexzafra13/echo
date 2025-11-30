@@ -15,7 +15,7 @@ import { DrizzleTrackRepository } from './track.repository';
  * - create/update/delete (with cache invalidation)
  *
  * Additional methods delegated to base repository (not cached):
- * - findByIds, findAll, findByAlbumId, findByArtistId, findAllShuffled, count
+ * - findByIds, findAll, findByAlbumId, findByArtistId, findShuffledPaginated, count
  */
 @Injectable()
 export class CachedTrackRepository
@@ -74,10 +74,14 @@ export class CachedTrackRepository
   }
 
   /**
-   * Get all tracks in random order.
-   * Never cached - must return fresh random order each time.
+   * Get tracks in deterministic random order with pagination.
+   * Not cached - pagination combinations are too many.
    */
-  async findAllShuffled(): Promise<Track[]> {
-    return this.baseRepository.findAllShuffled();
+  async findShuffledPaginated(
+    seed: number,
+    skip: number,
+    take: number,
+  ): Promise<Track[]> {
+    return this.baseRepository.findShuffledPaginated(seed, skip, take);
   }
 }
