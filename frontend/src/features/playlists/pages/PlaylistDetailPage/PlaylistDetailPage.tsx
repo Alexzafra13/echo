@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'wouter';
+import { useParams, Link } from 'wouter';
 import { Play, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
@@ -167,9 +167,12 @@ export default function PlaylistDetailPage() {
                 </p>
               )}
               <div className={styles.playlistDetailPage__heroMeta}>
-                {playlist.ownerName && (
+                {playlist.ownerName && playlist.ownerId && (
                   <>
-                    <span className={styles.playlistDetailPage__heroOwner}>
+                    <Link
+                      href={`/user/${playlist.ownerId}`}
+                      className={styles.playlistDetailPage__heroOwner}
+                    >
                       <img
                         src={getUserAvatarUrl(playlist.ownerId, undefined, avatarTimestamp)}
                         alt={playlist.ownerName}
@@ -177,7 +180,7 @@ export default function PlaylistDetailPage() {
                         onError={handleAvatarError}
                       />
                       {playlist.ownerName}
-                    </span>
+                    </Link>
                     <span className={styles.playlistDetailPage__heroDivider}>•</span>
                   </>
                 )}
