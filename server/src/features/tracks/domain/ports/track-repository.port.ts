@@ -68,10 +68,19 @@ export interface ITrackRepository {
   count(): Promise<number>;
 
   /**
-   * Obtiene todos los tracks en orden aleatorio
-   * @returns Array de todos los tracks barajados
+   * Obtiene tracks en orden aleatorio determinístico con paginación
+   * Usa un seed para garantizar orden consistente entre peticiones
+   *
+   * @param seed - Valor numérico para generar orden determinístico (0-1)
+   * @param skip - Cuántos registros saltar
+   * @param take - Cuántos registros traer
+   * @returns Array de tracks en orden aleatorio reproducible
    */
-  findAllShuffled(): Promise<Track[]>;
+  findShuffledPaginated(
+    seed: number,
+    skip: number,
+    take: number,
+  ): Promise<Track[]>;
 
   /**
    * Crea un nuevo track en la BD
