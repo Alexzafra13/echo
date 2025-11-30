@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './presentation/auth.controller';
 import {
@@ -19,13 +19,13 @@ import { SecuritySecretsService } from '@config/security-secrets.service';
     // Use registerAsync to get secret from SecuritySecretsService
     // Secrets are auto-generated on first run (like Navidrome/Jellyfin)
     JwtModule.registerAsync({
-      useFactory: async (secretsService: SecuritySecretsService) => {
+      useFactory: async (secretsService: SecuritySecretsService): Promise<JwtModuleOptions> => {
         // Ensure secrets are initialized before using them
         await secretsService.initializeSecrets();
         return {
           secret: secretsService.jwtSecret,
           signOptions: {
-            expiresIn: process.env.JWT_EXPIRATION || '24h',
+            expiresIn: (process.env.JWT_EXPIRATION || '24h') as '24h',
           },
         };
       },
