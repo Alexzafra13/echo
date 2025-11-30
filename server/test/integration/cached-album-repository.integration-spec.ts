@@ -1,9 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
+import { getLoggerToken } from 'nestjs-pino';
 import { RedisService } from '../../src/infrastructure/cache/redis.service';
 import { CachedAlbumRepository } from '../../src/features/albums/infrastructure/persistence/cached-album.repository';
 import { Album, AlbumProps } from '../../src/features/albums/domain/entities/album.entity';
 import { IAlbumRepository } from '../../src/features/albums/domain/ports/album-repository.port';
-import { ConfigModule } from '@nestjs/config';
+
+// Mock logger para tests de integración
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+};
 
 /**
  * CachedAlbumRepository Integration Tests
@@ -12,7 +21,7 @@ import { ConfigModule } from '@nestjs/config';
  * con una instancia REAL de Redis (no mocks).
  *
  * Requieren: Redis corriendo (docker-compose.dev.yml)
- * Ejecutar: pnpm test cached-album-repository.integration-spec
+ * Ejecutar: pnpm test:integration cached-album-repository.integration-spec
  */
 describe('CachedAlbumRepository Integration', () => {
   let redisService: RedisService;
@@ -44,7 +53,13 @@ describe('CachedAlbumRepository Integration', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [ConfigModule.forRoot()],
-      providers: [RedisService],
+      providers: [
+        RedisService,
+        {
+          provide: getLoggerToken(RedisService.name),
+          useValue: mockLogger,
+        },
+      ],
     }).compile();
 
     redisService = module.get<RedisService>(RedisService);
