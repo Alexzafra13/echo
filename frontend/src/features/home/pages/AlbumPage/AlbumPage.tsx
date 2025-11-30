@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Play } from 'lucide-react';
@@ -28,7 +28,6 @@ export default function AlbumPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
-  const [coverRenderKey, setCoverRenderKey] = useState(0); // Force re-render when cover changes
   const { playQueue, currentTrack } = usePlayer();
 
   // Real-time synchronization via WebSocket for album cover
@@ -37,11 +36,16 @@ export default function AlbumPage() {
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
 
-  
   // Fetch artist images metadata for tag-based cache busting on artist avatar
   const { data: artistImages } = useArtistImages(album?.artistId);
   // Fetch cover metadata with tag for cache busting
   const { data: coverMeta } = useAlbumCoverMetadata(id);
+
+  // Derive cover key from metadata tag instead of using unnecessary state
+  const coverKey = useMemo(
+    () => coverMeta?.cover.tag || 'default',
+    [coverMeta?.cover.tag]
+  );
 
   // Get cover URL with tag-based cache busting
   const coverUrl = id && coverMeta?.cover.exists
@@ -70,26 +74,20 @@ export default function AlbumPage() {
     }
   }, [coverUrl]);
 
-  // CRITICAL: Force browser to reload cover image when URL changes
-  // This preloads the image to ensure browser cache is updated
-  // Adding timestamp to defeat aggressive browser caching
+  // Preload cover image when URL changes (cache busting handled by coverKey)
   useEffect(() => {
     if (coverUrl && coverMeta?.cover.tag) {
-      // Add timestamp to force cache bust
       const cacheBustUrl = coverUrl.includes('?')
         ? `${coverUrl}&_cb=${Date.now()}`
         : `${coverUrl}?_cb=${Date.now()}`;
 
       logger.debug('[AlbumPage] 🔄 Preloading cover with cache bust:', cacheBustUrl);
       logger.debug('[AlbumPage] 📌 Current tag:', coverMeta.cover.tag);
-      logger.debug('[AlbumPage] 📌 Current renderKey:', coverRenderKey);
 
       const img = new window.Image();
       img.src = cacheBustUrl;
       img.onload = () => {
         logger.debug('[AlbumPage] ✅ Cover image preloaded successfully');
-        logger.debug('[AlbumPage] 📐 Image dimensions:', img.width, 'x', img.height);
-        setCoverRenderKey(prev => prev + 1); // Force component re-render
       };
       img.onerror = () => {
         logger.error('[AlbumPage] ❌ Failed to preload cover');
@@ -229,7 +227,7 @@ export default function AlbumPage() {
           <div className={styles.albumPage__hero}>
             {/* Album cover */}
             <img
-              key={`cover-${coverRenderKey}`}
+              key={`cover-${coverKey}`}
               src={coverUrl}
               alt={album.title}
               className={styles.albumPage__heroCover}
@@ -316,7 +314,7 @@ export default function AlbumPage() {
         >
           <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img
-              key={`modal-cover-${coverRenderKey}`}
+              key={`modal-cover-${coverKey}`}
               src={coverUrl}
               alt={album.title}
               className={styles.albumPage__imageModalImage}

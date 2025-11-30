@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Play, Disc } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
@@ -92,16 +92,16 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handlePlay = (track: Track) => {
+  const handlePlay = useCallback((track: Track) => {
     onTrackPlay?.(track);
-  };
+  }, [onTrackPlay]);
 
-  // Track options handlers
-  const handleAddToPlaylist = (track: Track) => {
+  // Track options handlers - memoized to prevent unnecessary re-renders
+  const handleAddToPlaylist = useCallback((track: Track) => {
     setSelectedTrackForPlaylist(track);
-  };
+  }, []);
 
-  const handleAddToQueue = (track: Track) => {
+  const handleAddToQueue = useCallback((track: Track) => {
     // Map track to player format
     const playerTrack = {
       id: track.id,
@@ -113,23 +113,23 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
       trackNumber: track.trackNumber,
     };
     addToQueue(playerTrack);
-  };
+  }, [addToQueue]);
 
-  const handleGoToAlbum = (track: Track) => {
+  const handleGoToAlbum = useCallback((track: Track) => {
     if (track.albumId) {
       setLocation(`/album/${track.albumId}`);
     }
-  };
+  }, [setLocation]);
 
-  const handleGoToArtist = (track: Track) => {
+  const handleGoToArtist = useCallback((track: Track) => {
     if (track.artistId) {
       setLocation(`/artists/${track.artistId}`);
     }
-  };
+  }, [setLocation]);
 
-  const handleShowInfo = (track: Track) => {
+  const handleShowInfo = useCallback((track: Track) => {
     setSelectedTrackForInfo(track);
-  };
+  }, []);
 
   // Helper function to render a single track row
   const renderTrackRow = (track: Track, index: number) => {
@@ -141,7 +141,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     return (
       <div
         key={track.id}
-        className={`${styles.trackList__track} ${isPlaying ? styles.trackList__track__active : ''}`}
+        className={`${styles.trackList__track} ${isPlaying ? styles['trackList__track--active'] : ''}`}
         onClick={() => handlePlay(track)}
       >
         {/* Track number / Play button container */}
