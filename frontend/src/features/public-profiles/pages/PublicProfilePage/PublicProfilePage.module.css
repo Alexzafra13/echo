@@ -163,21 +163,15 @@
   gap: 10px;
 }
 
-/* Horizontal Scroll Container */
+/* Artists/Albums Container - Grid on desktop, scroll on mobile */
 .publicProfilePage__scrollContainer {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: hidden;
   padding-top: 8px;
   padding-bottom: 12px;
   margin-top: -8px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.publicProfilePage__scrollContainer::-webkit-scrollbar {
-  display: none;
 }
 
 /* Artist Card - Round Avatar */
@@ -502,6 +496,19 @@
 
   .publicProfilePage__sectionTitle {
     font-size: 18px;
+  }
+
+  /* Mobile: horizontal scroll */
+  .publicProfilePage__scrollContainer {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .publicProfilePage__scrollContainer::-webkit-scrollbar {
+    display: none;
   }
 
   .publicProfilePage__artistCard {
