@@ -1,24 +1,21 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { DeleteUserUseCase } from './delete-user.use-case';
+import {
+  MockUserRepository,
+  MockLogService,
+  createMockUserRepository,
+  createMockLogService,
+} from '@shared/testing/mock.types';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
-  let mockUserRepository: any;
-  let mockLogService: any;
+  let mockUserRepository: MockUserRepository;
+  let mockLogService: MockLogService;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      findAll: jest.fn(),
-      updatePartial: jest.fn(),
-    };
-
-    mockLogService = {
-      info: jest.fn(),
-      warning: jest.fn(),
-      error: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
+    mockLogService = createMockLogService();
 
     useCase = new DeleteUserUseCase(mockUserRepository, mockLogService);
   });

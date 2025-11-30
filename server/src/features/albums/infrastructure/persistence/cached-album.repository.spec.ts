@@ -1,11 +1,18 @@
+import { PinoLogger } from 'nestjs-pino';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { CachedAlbumRepository } from './cached-album.repository';
+import {
+  MockCacheService,
+  MockPinoLogger,
+  createMockCacheService,
+  createMockPinoLogger,
+} from '@shared/testing/mock.types';
 
 describe('CachedAlbumRepository', () => {
   let cachedRepository: CachedAlbumRepository;
   let baseRepository: jest.Mocked<IAlbumRepository>;
-  let cacheService: any;
+  let cacheService: MockCacheService;
 
   const mockAlbumPrimitives = {
     id: 'album-1',
@@ -32,27 +39,21 @@ describe('CachedAlbumRepository', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as any;
+    } as jest.Mocked<IAlbumRepository>;
 
     // Mock cache service
-    cacheService = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-      delPattern: jest.fn(), // For wildcard key deletion
-    };
+    cacheService = createMockCacheService();
 
     // Mock PinoLogger
-    const mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    } as any;
+    const mockLogger: MockPinoLogger = createMockPinoLogger();
 
     // Create instance directly without TestingModule for simplicity
     // Constructor expects: (logger, baseRepository, cache)
-    cachedRepository = new CachedAlbumRepository(mockLogger, baseRepository as any, cacheService);
+    cachedRepository = new CachedAlbumRepository(
+      mockLogger as unknown as PinoLogger,
+      baseRepository,
+      cacheService,
+    );
   });
 
   afterEach(() => {
