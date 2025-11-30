@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import { User } from '../../domain/entities/user.entity';
 import { ITokenService, TokenPayload } from '../../domain/ports/token-service.port';
+
+// Type for JWT expiresIn option (e.g., '24h', '7d')
+type ExpiresIn = JwtSignOptions['expiresIn'];
 
 /**
  * JwtAdapter - Implementa ITokenService con NestJS JWT
@@ -11,35 +14,41 @@ export class JwtAdapter implements ITokenService {
   constructor(private readonly jwtService: JwtService) {}
 
   async generateAccessToken(user: User): Promise<string> {
-    const payload: any = {
+    const payload: TokenPayload = {
       userId: user.id,
       username: user.username,
     };
 
-    return this.jwtService.sign(payload, {
-      expiresIn: process.env.JWT_EXPIRATION || '24h',
-    } as any);
+    const options: JwtSignOptions = {
+      expiresIn: (process.env.JWT_EXPIRATION || '24h') as ExpiresIn,
+    };
+
+    return this.jwtService.sign(payload, options);
   }
 
   async generateRefreshToken(user: User): Promise<string> {
-    const payload: any = {
+    const payload: TokenPayload = {
       userId: user.id,
       username: user.username,
     };
 
-    return this.jwtService.sign(payload, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+    const options: JwtSignOptions = {
+      expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as ExpiresIn,
       secret: process.env.JWT_REFRESH_SECRET,
-    } as any);
+    };
+
+    return this.jwtService.sign(payload, options);
   }
 
   async verifyAccessToken(token: string): Promise<TokenPayload> {
-    return this.jwtService.verify(token);
+    return this.jwtService.verify<TokenPayload>(token);
   }
 
   async verifyRefreshToken(token: string): Promise<TokenPayload> {
-    return this.jwtService.verify(token, {
+    const options: JwtVerifyOptions = {
       secret: process.env.JWT_REFRESH_SECRET,
-    } as any);
+    };
+
+    return this.jwtService.verify<TokenPayload>(token, options);
   }
 }

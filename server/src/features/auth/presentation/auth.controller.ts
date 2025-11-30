@@ -12,6 +12,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nes
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser, AllowChangePassword, Public } from '@shared/decorators';
+import { JwtUser } from '@shared/types/request.types';
 import {
   LoginUseCase,
   RefreshTokenUseCase,
@@ -131,19 +132,29 @@ export class AuthController {
     status: 401,
     description: 'No autenticado o token inválido'
   })
-  async me(@CurrentUser() jwtUser: any) {
+  async me(@CurrentUser() jwtUser: JwtUser) {
     // Fetch fresh user data from database to get updated avatar status
-    const freshUser = await this.userRepository.findById(jwtUser.sub);
+    const freshUser = await this.userRepository.findById(jwtUser.id);
 
     if (!freshUser) {
       // Fallback to JWT data if user not found (shouldn't happen)
-      return { user: jwtUser };
+      return {
+        user: {
+          id: jwtUser.id,
+          username: jwtUser.username,
+          name: jwtUser.name,
+          isAdmin: jwtUser.isAdmin,
+          isActive: jwtUser.isActive,
+          mustChangePassword: jwtUser.mustChangePassword,
+          hasAvatar: !!jwtUser.avatarPath,
+          createdAt: jwtUser.createdAt,
+        },
+      };
     }
 
     // Return user with updated data including hasAvatar
     return {
       user: {
-        sub: freshUser.id,
         id: freshUser.id,
         username: freshUser.username,
         name: freshUser.name,

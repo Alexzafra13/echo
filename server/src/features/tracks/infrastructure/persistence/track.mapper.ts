@@ -1,3 +1,4 @@
+import { Track as TrackDb } from '@infrastructure/database/schema/tracks';
 import { Track } from '../../domain/entities/track.entity';
 
 /**
@@ -10,7 +11,7 @@ export class TrackMapper {
    * Convierte Drizzle Track a Domain Track
    * Se usa cuando traes datos de BD
    */
-  static toDomain(raw: any): Track {
+  static toDomain(raw: TrackDb): Track {
     return Track.reconstruct({
       id: raw.id,
       title: raw.title,
@@ -70,7 +71,7 @@ export class TrackMapper {
   /**
    * Convierte Array de Drizzle Tracks a Domain Tracks
    */
-  static toDomainArray(raw: any[]): Track[] {
+  static toDomainArray(raw: TrackDb[]): Track[] {
     return raw.map((item) => this.toDomain(item));
   }
 }
