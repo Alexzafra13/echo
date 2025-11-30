@@ -1,6 +1,7 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Logger } from '@nestjs/common';
 import { ServerOptions } from 'socket.io';
+import { appConfig } from '@config/app.config';
 
 /**
  * WebSocketAdapter - Adaptador personalizado para Socket.IO
@@ -22,9 +23,8 @@ export class WebSocketAdapter extends IoAdapter {
    * Crea servidor de Socket.IO con configuración personalizada
    */
   createIOServer(port: number, options?: ServerOptions): any {
-    // Obtener configuración desde variables de entorno
-    // Default a localhost en lugar de wildcard para seguridad
-    const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:4567'];
+    // Use same CORS config as HTTP (auto-detects IPs in production)
+    const corsOrigins = appConfig.cors_origins;
 
     // Configuración del servidor Socket.IO
     const serverOptions: Partial<ServerOptions> = {
