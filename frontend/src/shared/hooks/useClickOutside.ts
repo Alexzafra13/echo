@@ -54,19 +54,25 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
 
   // Reset closing state when enabled changes (menu opens/closes)
   useEffect(() => {
-    if (!enabled) {
-      // Menu closed - reset state
+    if (enabled) {
+      // Menu opening - reset any stuck state from previous close
       isClosingRef.current = false;
       setIsClosing(false);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      // Execute any pending callback (like logout)
-      if (pendingCallbackRef.current) {
-        pendingCallbackRef.current();
-        pendingCallbackRef.current = null;
-      }
+      pendingCallbackRef.current = null;
+    }
+  }, [enabled]);
+
+  // Execute pending callbacks when menu closes externally
+  useEffect(() => {
+    if (!enabled && pendingCallbackRef.current) {
+      const callback = pendingCallbackRef.current;
+      pendingCallbackRef.current = null;
+      // Use setTimeout to ensure state updates have propagated
+      setTimeout(callback, 0);
     }
   }, [enabled]);
 
@@ -121,11 +127,18 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [enabled, close]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      pendingCallbackRef.current = null;
     };
-  }, [enabled, close]);
+  }, []);
 
   return { ref, isClosing, close };
 }
