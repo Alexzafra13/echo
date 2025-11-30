@@ -89,17 +89,23 @@ jobs:
             DATABASE_URL="postgresql://music_admin:music_password@localhost:5432/music_server_test_$i" pnpm db:push
           done
 
+      # Unit tests: Fast, use mocks, NO DB connection needed
       - name: Run unit tests
         working-directory: server
+        run: pnpm test:unit
+
+      # Integration tests: Test real DB/Redis operations
+      - name: Run integration tests
+        working-directory: server
         env:
-          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
-          JEST_MAX_WORKERS: "4"
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
           JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-        run: pnpm test
+        run: pnpm test:integration
 
+      # E2E tests: Full HTTP requests with real app
       - name: Run E2E tests
         working-directory: server
         env:
