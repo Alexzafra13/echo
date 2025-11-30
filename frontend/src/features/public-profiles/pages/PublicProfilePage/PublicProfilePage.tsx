@@ -111,6 +111,7 @@ export function PublicProfilePage() {
       <main className={styles.publicProfilePage__main}>
         <Header showBackButton disableSearch />
         <div className={styles.publicProfilePage__content}>
+          <div className={styles.publicProfilePage__contentInner}>
           {/* Profile Header */}
           <div className={styles.publicProfilePage__profileHeader}>
             {user.avatarUrl ? (
@@ -307,6 +308,7 @@ export function PublicProfilePage() {
               Este usuario aún no tiene actividad para mostrar.
             </div>
           )}
+          </div>
         </div>
       </main>
     </div>
