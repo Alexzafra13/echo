@@ -18,6 +18,13 @@ export class UserMapper {
       avatarUpdatedAt: raw.avatarUpdatedAt || undefined,
       lastLoginAt: raw.lastLoginAt || undefined,
       lastAccessAt: raw.lastAccessAt || undefined,
+      // Profile privacy settings
+      isPublicProfile: raw.isPublicProfile ?? false,
+      showTopTracks: raw.showTopTracks ?? true,
+      showTopArtists: raw.showTopArtists ?? true,
+      showTopAlbums: raw.showTopAlbums ?? true,
+      showPlaylists: raw.showPlaylists ?? true,
+      bio: raw.bio || undefined,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });
@@ -41,6 +48,13 @@ export class UserMapper {
       avatar_updated_at: primitives.avatarUpdatedAt || null,
       last_login_at: primitives.lastLoginAt || null,
       last_access_at: primitives.lastAccessAt || null,
+      // Profile privacy settings
+      is_public_profile: primitives.isPublicProfile,
+      show_top_tracks: primitives.showTopTracks,
+      show_top_artists: primitives.showTopArtists,
+      show_top_albums: primitives.showTopAlbums,
+      show_playlists: primitives.showPlaylists,
+      bio: primitives.bio || null,
       created_at: primitives.createdAt,
       updated_at: primitives.updatedAt,
     };

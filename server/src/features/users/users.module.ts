@@ -9,6 +9,7 @@ import {
   ChangeLanguageUseCase,
   UploadAvatarUseCase,
   DeleteAvatarUseCase,
+  UpdatePrivacySettingsUseCase,
 } from './domain/use-cases';
 
 @Module({
@@ -24,6 +25,7 @@ import {
     ChangeLanguageUseCase,
     UploadAvatarUseCase,
     DeleteAvatarUseCase,
+    UpdatePrivacySettingsUseCase,
   ],
 })
 export class UsersModule {}

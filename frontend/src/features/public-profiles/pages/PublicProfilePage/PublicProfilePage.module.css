@@ -1,0 +1,530 @@
+/**
+ * PublicProfilePage Styles
+ * Beautiful public profile with top artists, albums, tracks, and playlists
+ */
+
+/* Layout */
+.publicProfilePage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-primary, #0a0e27);
+  background-image: var(--gradient-textured);
+}
+
+.publicProfilePage__main {
+  flex: 1;
+  margin-left: 200px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.publicProfilePage__content {
+  flex: 1 1 0;
+  min-height: 0;
+  margin: -84px auto 0;
+  padding: 84px 40px calc(40px + var(--player-bottom-spacer, 0px));
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.publicProfilePage__content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Profile Header */
+.publicProfilePage__profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--white-08);
+}
+
+.publicProfilePage__avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--white-10);
+  flex-shrink: 0;
+}
+
+.publicProfilePage__avatarPlaceholder {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--white-05);
+  border: 3px solid var(--white-10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.publicProfilePage__info {
+  flex: 1;
+}
+
+.publicProfilePage__name {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.publicProfilePage__username {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+}
+
+.publicProfilePage__bio {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+  max-width: 600px;
+}
+
+.publicProfilePage__memberSince {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Private Profile Message */
+.publicProfilePage__privateMessage {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.publicProfilePage__privateIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--white-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: var(--text-tertiary);
+}
+
+.publicProfilePage__privateMessage h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.publicProfilePage__privateMessage p {
+  font-size: 15px;
+  margin: 0;
+}
+
+/* Section */
+.publicProfilePage__section {
+  margin-bottom: 40px;
+}
+
+.publicProfilePage__sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.publicProfilePage__sectionTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Horizontal Scroll Container */
+.publicProfilePage__scrollContainer {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.publicProfilePage__scrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* Artist Card - Round Avatar */
+.publicProfilePage__artistCard {
+  flex-shrink: 0;
+  width: 140px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+}
+
+.publicProfilePage__artistCard:hover {
+  transform: translateY(-4px);
+}
+
+.publicProfilePage__artistImage {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 12px;
+  border: 2px solid var(--white-08);
+  transition: border-color 0.2s ease;
+}
+
+.publicProfilePage__artistCard:hover .publicProfilePage__artistImage {
+  border-color: var(--color-primary);
+}
+
+.publicProfilePage__artistPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--white-05);
+  border: 2px solid var(--white-08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: var(--text-tertiary);
+}
+
+.publicProfilePage__artistName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__artistPlays {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* Album Card - Square with rounded corners */
+.publicProfilePage__albumCard {
+  flex-shrink: 0;
+  width: 160px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+}
+
+.publicProfilePage__albumCard:hover {
+  transform: translateY(-4px);
+}
+
+.publicProfilePage__albumCover {
+  width: 160px;
+  height: 160px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-bottom: 12px;
+  border: 1px solid var(--white-08);
+  transition: border-color 0.2s ease;
+}
+
+.publicProfilePage__albumCard:hover .publicProfilePage__albumCover {
+  border-color: var(--color-primary);
+}
+
+.publicProfilePage__albumPlaceholder {
+  width: 160px;
+  height: 160px;
+  border-radius: 8px;
+  background: var(--white-05);
+  border: 1px solid var(--white-08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: var(--text-tertiary);
+}
+
+.publicProfilePage__albumName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__albumArtist {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__albumPlays {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* Track List */
+.publicProfilePage__trackList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--white-03);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--white-08);
+}
+
+.publicProfilePage__trackItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: transparent;
+  transition: background 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.publicProfilePage__trackItem:hover {
+  background: var(--white-05);
+}
+
+.publicProfilePage__trackNumber {
+  width: 24px;
+  font-size: 14px;
+  color: var(--text-tertiary);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.publicProfilePage__trackCover {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.publicProfilePage__trackCoverPlaceholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  background: var(--white-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.publicProfilePage__trackInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.publicProfilePage__trackTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__trackArtist {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__trackPlays {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Playlist Grid */
+.publicProfilePage__playlistGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.publicProfilePage__playlistCard {
+  background: var(--white-03);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--white-08);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.publicProfilePage__playlistCard:hover {
+  background: var(--white-05);
+  border-color: var(--white-12);
+  transform: translateY(-2px);
+}
+
+.publicProfilePage__playlistCover {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.publicProfilePage__playlistCoverPlaceholder {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--white-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+}
+
+.publicProfilePage__playlistInfo {
+  padding: 16px;
+}
+
+.publicProfilePage__playlistName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__playlistMeta {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* Loading */
+.publicProfilePage__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-secondary);
+  gap: 16px;
+}
+
+/* Empty State */
+.publicProfilePage__empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .publicProfilePage__main {
+    margin-left: 0;
+  }
+
+  .publicProfilePage__content {
+    margin-top: 0;
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px));
+  }
+
+  .publicProfilePage__profileHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .publicProfilePage__avatar,
+  .publicProfilePage__avatarPlaceholder {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+
+  .publicProfilePage__name {
+    font-size: 28px;
+  }
+
+  .publicProfilePage__bio {
+    text-align: center;
+  }
+
+  .publicProfilePage__memberSince {
+    justify-content: center;
+  }
+
+  .publicProfilePage__sectionTitle {
+    font-size: 18px;
+  }
+
+  .publicProfilePage__artistCard {
+    width: 110px;
+  }
+
+  .publicProfilePage__artistImage,
+  .publicProfilePage__artistPlaceholder {
+    width: 90px;
+    height: 90px;
+  }
+
+  .publicProfilePage__albumCard {
+    width: 130px;
+  }
+
+  .publicProfilePage__albumCover,
+  .publicProfilePage__albumPlaceholder {
+    width: 130px;
+    height: 130px;
+  }
+
+  .publicProfilePage__playlistGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .publicProfilePage__content {
+    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px));
+  }
+
+  .publicProfilePage__name {
+    font-size: 24px;
+  }
+}

@@ -32,6 +32,7 @@ import { ExploreModule } from './features/explore/explore.module';
 import { LogsModule } from './features/logs/logs.module';
 import { HealthModule } from './features/health/health.module';
 import { SetupModule } from './features/setup/setup.module';
+import { PublicProfilesModule } from './features/public-profiles/public-profiles.module';
 import { validateEnvironment } from './config/env.validation';
 
 @Module({
@@ -106,6 +107,7 @@ import { validateEnvironment } from './config/env.validation';
     PlayTrackingModule,
     RecommendationsModule,
     ExploreModule,
+    PublicProfilesModule,
   ],
   controllers: [
     // SPA fallback is registered manually in main.ts (must be outside /api prefix)

@@ -9,6 +9,8 @@ import { SearchResultsPage } from '@features/home/pages/SearchResultsPage';
 import ArtistsPage from '@features/artists/pages/ArtistsPage/ArtistsPage';
 import ArtistDetailPage from '@features/artists/pages/ArtistDetailPage/ArtistDetailPage';
 import { ProfilePage } from '@features/profile/pages/ProfilePage';
+import { SettingsPage } from '@features/settings';
+import { PublicProfilePage } from '@features/public-profiles';
 import AdminPage from '@features/admin/pages/AdminPage/AdminPage';
 import PlaylistsPage from '@features/playlists/pages/PlaylistsPage';
 import PlaylistDetailPage from '@features/playlists/pages/PlaylistDetailPage';
@@ -68,6 +70,20 @@ function App() {
         <Route path="/profile">
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Settings Route (Protected) */}
+        <Route path="/settings">
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* User Public Profile Route (Protected) */}
+        <Route path="/user/:userId">
+          <ProtectedRoute>
+            <PublicProfilePage />
           </ProtectedRoute>
         </Route>
 
