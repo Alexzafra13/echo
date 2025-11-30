@@ -135,6 +135,7 @@ export class GetPublicProfileUseCase {
         playCount: userPlayStats.playCount,
         name: artists.name,
         profileImagePath: artists.profileImagePath,
+        externalProfilePath: artists.externalProfilePath,
       })
       .from(userPlayStats)
       .innerJoin(artists, eq(artists.id, userPlayStats.itemId))
@@ -151,6 +152,7 @@ export class GetPublicProfileUseCase {
       id: r.artistId,
       name: r.name,
       profileImagePath: r.profileImagePath ?? undefined,
+      externalProfilePath: r.externalProfilePath ?? undefined,
       playCount: Number(r.playCount),
     }));
   }
