@@ -3,9 +3,11 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 
 /**
  * Interface for entities that can be serialized/deserialized for caching.
+ * Uses a flexible return type to accommodate various entity prop types.
  */
 export interface CacheableEntity {
-  toPrimitives(): Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toPrimitives(): any;
 }
 
 /**
@@ -42,10 +44,10 @@ export interface CachedRepositoryConfig {
 
 /**
  * Function type for reconstructing an entity from cached primitives.
+ * Uses 'unknown' to allow flexible input types from cache.
  */
-export type EntityReconstructor<TEntity> = (
-  primitives: Record<string, unknown>,
-) => TEntity;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type EntityReconstructor<TEntity> = (primitives: any) => TEntity;
 
 /**
  * Abstract base class for cached repositories implementing the Cache-Aside pattern.
@@ -245,11 +247,11 @@ export abstract class BaseCachedRepository<
     if (cached !== null && cached !== undefined) {
       this.logCacheHit(cacheKey, 'custom');
       if (isArray && Array.isArray(cached)) {
-        return this.reconstructArray(cached) as T;
+        return this.reconstructArray(cached) as unknown as T;
       }
       // For non-array single entities
       if (!isArray && typeof cached === 'object') {
-        return this.reconstruct(cached as Record<string, unknown>) as T;
+        return this.reconstruct(cached) as unknown as T;
       }
       // For primitive values (like count)
       return cached as T;
@@ -332,9 +334,8 @@ export abstract class BaseCachedRepository<
   /**
    * Reconstruct an array of entities from cached primitives.
    */
-  protected reconstructArray(
-    cached: Record<string, unknown>[],
-  ): TEntity[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected reconstructArray(cached: any[]): TEntity[] {
     return cached.map((item) => this.reconstruct(item));
   }
 
