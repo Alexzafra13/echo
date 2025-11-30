@@ -6,6 +6,7 @@ import { AppModule } from '../../../src/app.module';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
+import { libraryScans } from '../../../src/infrastructure/database/schema/system';
 import request from 'supertest';
 
 /**
@@ -205,6 +206,14 @@ export async function cleanContentTables(drizzle: DrizzleService): Promise<void>
 export async function cleanAllTables(drizzle: DrizzleService): Promise<void> {
   await cleanContentTables(drizzle);
   await cleanUserTables(drizzle);
+  await cleanScannerTables(drizzle);
+}
+
+/**
+ * Limpia tablas del scanner
+ */
+export async function cleanScannerTables(drizzle: DrizzleService): Promise<void> {
+  await drizzle.db.delete(libraryScans);
 }
 
 /**
