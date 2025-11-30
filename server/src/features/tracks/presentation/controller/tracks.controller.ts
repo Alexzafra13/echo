@@ -26,21 +26,60 @@ export class TracksController {
 
   /**
    * GET /tracks/shuffle
-   * Obtener todos los tracks en orden aleatorio
+   * Obtener tracks en orden aleatorio con paginación
+   *
+   * Query params:
+   * - seed: valor para orden determinístico (opcional, se genera si no se provee)
+   * - skip: número de tracks a saltar (default: 0)
+   * - take: número de tracks a traer (default: 50, máximo: 100)
    */
   @Get('shuffle')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Obtener tracks aleatorios',
-    description: 'Retorna todos los tracks de la biblioteca en orden aleatorio para reproducción shuffle'
+    summary: 'Obtener tracks aleatorios con paginación',
+    description:
+      'Retorna tracks en orden aleatorio determinístico. Usa el mismo seed para paginar la misma secuencia.',
+  })
+  @ApiQuery({
+    name: 'seed',
+    required: false,
+    type: Number,
+    description: 'Seed para orden determinístico (0-1). Si no se provee, se genera uno nuevo.',
+    example: 0.123456789,
+  })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    type: Number,
+    description: 'Número de tracks a omitir (para paginación)',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Número de tracks a retornar (1-100)',
+    example: 50,
   })
   @ApiResponse({
     status: 200,
     description: 'Tracks obtenidos exitosamente en orden aleatorio',
-    type: ShuffledTracksResponseDto
+    type: ShuffledTracksResponseDto,
   })
-  async getShuffledTracks(): Promise<ShuffledTracksResponseDto> {
-    const result = await this.getShuffledTracksUseCase.execute();
+  async getShuffledTracks(
+    @Query('seed') seed?: string,
+    @Query('skip') skip: string = '0',
+    @Query('take') take: string = '50',
+  ): Promise<ShuffledTracksResponseDto> {
+    const seedNum = seed ? parseFloat(seed) : undefined;
+    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
+    const takeNum = Math.max(1, parseInt(take, 10) || 50);
+
+    const result = await this.getShuffledTracksUseCase.execute({
+      seed: seedNum,
+      skip: skipNum,
+      take: takeNum,
+    });
     return ShuffledTracksResponseDto.fromDomain(result);
   }
 
