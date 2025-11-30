@@ -1,16 +1,17 @@
 import { NotFoundError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { UpdateProfileUseCase } from './update-profile.use-case';
+import {
+  MockUserRepository,
+  createMockUserRepository,
+} from '@shared/testing/mock.types';
 
 describe('UpdateProfileUseCase', () => {
   let useCase: UpdateProfileUseCase;
-  let mockUserRepository: any;
+  let mockUserRepository: MockUserRepository;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      updatePartial: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
 
     useCase = new UpdateProfileUseCase(mockUserRepository);
   });

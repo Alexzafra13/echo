@@ -1,11 +1,15 @@
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 import { CachedArtistRepository } from './cached-artist.repository';
+import {
+  MockCacheService,
+  createMockCacheService,
+} from '@shared/testing/mock.types';
 
 describe('CachedArtistRepository', () => {
   let cachedRepository: CachedArtistRepository;
   let baseRepository: jest.Mocked<IArtistRepository>;
-  let cacheService: any;
+  let cacheService: MockCacheService;
 
   const mockArtistPrimitives = {
     id: 'artist-1',
@@ -28,18 +32,13 @@ describe('CachedArtistRepository', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as any;
+    } as jest.Mocked<IArtistRepository>;
 
     // Mock cache service
-    cacheService = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
-      delPattern: jest.fn(),
-    };
+    cacheService = createMockCacheService();
 
     // Create instance directly without TestingModule for simplicity
-    cachedRepository = new CachedArtistRepository(baseRepository as any, cacheService);
+    cachedRepository = new CachedArtistRepository(baseRepository, cacheService);
   });
 
   afterEach(() => {

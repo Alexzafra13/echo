@@ -1,16 +1,17 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { ChangeThemeUseCase } from './change-theme.use-case';
+import {
+  MockUserRepository,
+  createMockUserRepository,
+} from '@shared/testing/mock.types';
 
 describe('ChangeThemeUseCase', () => {
   let useCase: ChangeThemeUseCase;
-  let mockUserRepository: any;
+  let mockUserRepository: MockUserRepository;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      updatePartial: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
 
     useCase = new ChangeThemeUseCase(mockUserRepository);
   });

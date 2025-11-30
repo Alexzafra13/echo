@@ -10,16 +10,17 @@ import {
 import { UploadAvatarUseCase } from '../domain/use-cases/upload-avatar/upload-avatar.use-case';
 import { DeleteAvatarUseCase } from '../domain/use-cases/delete-avatar/delete-avatar.use-case';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
 
 describe('UsersController', () => {
   let controller: UsersController;
-  let mockChangePasswordUseCase: any;
-  let mockUpdateProfileUseCase: any;
-  let mockChangeThemeUseCase: any;
-  let mockChangeLanguageUseCase: any;
-  let mockUploadAvatarUseCase: any;
-  let mockDeleteAvatarUseCase: any;
-  let mockUpdatePrivacySettingsUseCase: any;
+  let mockChangePasswordUseCase: MockUseCase;
+  let mockUpdateProfileUseCase: MockUseCase;
+  let mockChangeThemeUseCase: MockUseCase;
+  let mockChangeLanguageUseCase: MockUseCase;
+  let mockUploadAvatarUseCase: MockUseCase;
+  let mockDeleteAvatarUseCase: MockUseCase;
+  let mockUpdatePrivacySettingsUseCase: MockUseCase;
 
   const mockUser = {
     id: 'user-123',
@@ -28,33 +29,13 @@ describe('UsersController', () => {
   };
 
   beforeEach(async () => {
-    mockChangePasswordUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockUpdateProfileUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockChangeThemeUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockChangeLanguageUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockUploadAvatarUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockDeleteAvatarUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockUpdatePrivacySettingsUseCase = {
-      execute: jest.fn(),
-    };
+    mockChangePasswordUseCase = createMockUseCase();
+    mockUpdateProfileUseCase = createMockUseCase();
+    mockChangeThemeUseCase = createMockUseCase();
+    mockChangeLanguageUseCase = createMockUseCase();
+    mockUploadAvatarUseCase = createMockUseCase();
+    mockDeleteAvatarUseCase = createMockUseCase();
+    mockUpdatePrivacySettingsUseCase = createMockUseCase();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
