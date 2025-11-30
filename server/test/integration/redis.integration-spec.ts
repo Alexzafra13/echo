@@ -44,9 +44,11 @@ describe('Redis Integration', () => {
 
   afterAll(async () => {
     // Limpiar Redis después de los tests
-    await redisService.clear();
-    await redisService.onModuleDestroy();
-    await module.close();
+    if (redisService) {
+      await redisService.clear();
+    }
+    // module.close() calls onModuleDestroy on all providers automatically
+    await module?.close();
   });
 
   afterEach(async () => {
