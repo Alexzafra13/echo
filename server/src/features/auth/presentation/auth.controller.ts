@@ -47,11 +47,11 @@ export class AuthController {
   /**
    * Login - ÚNICA ruta pública de toda la aplicación
    * No requiere JWT porque el usuario aún no está autenticado
-   * Rate limit: 5 intentos por minuto para prevenir fuerza bruta
+   * Rate limit: 50 intentos por minuto para prevenir fuerza bruta
    */
   @Post('login')
   @Public() // ← IMPORTANTE: Única ruta con @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 intentos por minuto
+  @Throttle({ default: { limit: 50, ttl: 60000 } }) // 50 intentos/min - protege brute force, permite E2E
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Iniciar sesión',
