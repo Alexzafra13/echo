@@ -3,6 +3,8 @@
  * Prevents hanging requests to external APIs
  */
 
+import { TimeoutError } from '@shared/errors';
+
 export interface FetchOptions extends RequestInit {
   timeout?: number; // in milliseconds
 }
@@ -14,7 +16,7 @@ export interface FetchOptions extends RequestInit {
  * @param url URL to fetch
  * @param options Fetch options with optional timeout
  * @returns Response
- * @throws Error if timeout is reached
+ * @throws TimeoutError if timeout is reached
  */
 export async function fetchWithTimeout(
   url: string,
@@ -35,7 +37,7 @@ export async function fetchWithTimeout(
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Request timeout after ${timeout}ms`);
+      throw new TimeoutError(timeout, 'HTTP request');
     }
     throw error;
   }

@@ -4,6 +4,7 @@ import { ArtistBio, ArtistImages } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
+import { ExternalApiError } from '@shared/errors';
 
 /**
  * Artist genre tag from Last.fm
@@ -302,7 +303,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new ExternalApiError('Last.fm', response.status, response.statusText);
     }
 
     const data = await response.json();

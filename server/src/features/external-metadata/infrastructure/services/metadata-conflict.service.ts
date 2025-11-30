@@ -4,6 +4,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 import { ImageDownloadService } from './image-download.service';
 import { StorageService } from './storage.service';
+import { NotFoundError, ConflictError } from '@shared/errors';
 import * as path from 'path';
 
 /**
@@ -362,11 +363,11 @@ export class MetadataConflictService {
     const conflict = conflictResults[0] || null;
 
     if (!conflict) {
-      throw new Error(`Conflict ${conflictId} not found`);
+      throw new NotFoundError('MetadataConflict', conflictId);
     }
 
     if (conflict.status !== 'pending') {
-      throw new Error(`Conflict ${conflictId} is already ${conflict.status}`);
+      throw new ConflictError(`Conflict ${conflictId} is already ${conflict.status}`);
     }
 
     // Verify that the entity still exists before attempting to apply changes
@@ -387,8 +388,9 @@ export class MetadataConflictService {
         `Conflict ${conflictId} rejected automatically: ${conflict.entityType} ${conflict.entityId} no longer exists (orphaned conflict)`,
       );
 
-      throw new Error(
-        `Cannot accept conflict: ${conflict.entityType} with ID ${conflict.entityId} no longer exists. The conflict has been automatically rejected.`,
+      throw new NotFoundError(
+        conflict.entityType,
+        `${conflict.entityId} (conflict auto-rejected)`,
       );
     }
 
