@@ -89,4 +89,61 @@ describe('GetShuffledTracksUseCase', () => {
 
     expect(result.hasMore).toBe(false); // 50 + 2 >= 52
   });
+
+  it('should handle empty results', async () => {
+    trackRepository.findShuffledPaginated.mockResolvedValue([]);
+    trackRepository.count.mockResolvedValue(0);
+
+    const result = await useCase.execute({});
+
+    expect(result.data).toHaveLength(0);
+    expect(result.total).toBe(0);
+    expect(result.hasMore).toBe(false);
+  });
+
+  it('should map track fields correctly', async () => {
+    const fullTrack = Track.reconstruct({
+      id: 'track-full',
+      title: 'Full Track',
+      albumId: 'album-1',
+      artistId: 'artist-1',
+      artistName: 'Artist Name',
+      albumName: 'Album Name',
+      discNumber: 2,
+      trackNumber: 5,
+      duration: 300,
+      path: '/music/full.mp3',
+      compilation: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    trackRepository.findShuffledPaginated.mockResolvedValue([fullTrack]);
+    trackRepository.count.mockResolvedValue(1);
+
+    const result = await useCase.execute({});
+
+    expect(result.data[0]).toMatchObject({
+      id: 'track-full',
+      title: 'Full Track',
+      albumId: 'album-1',
+      artistName: 'Artist Name',
+      compilation: true,
+    });
+  });
+
+  it('should allow pagination with same seed for consistent sequence', async () => {
+    const seed = 0.42;
+    trackRepository.findShuffledPaginated.mockResolvedValue([mockTrack]);
+    trackRepository.count.mockResolvedValue(100);
+
+    const page1 = await useCase.execute({ seed, skip: 0, take: 10 });
+    const page2 = await useCase.execute({ seed, skip: 10, take: 10 });
+
+    // Both pages should use the same seed
+    expect(page1.seed).toBe(seed);
+    expect(page2.seed).toBe(seed);
+    // Repository should be called with correct pagination
+    expect(trackRepository.findShuffledPaginated).toHaveBeenNthCalledWith(1, seed, 0, 10);
+    expect(trackRepository.findShuffledPaginated).toHaveBeenNthCalledWith(2, seed, 10, 10);
+  });
 });

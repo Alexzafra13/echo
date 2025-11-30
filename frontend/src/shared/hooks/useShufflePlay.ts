@@ -20,6 +20,9 @@ interface ShuffleState {
 const BATCH_SIZE = 50;
 const PREFETCH_THRESHOLD = 10;
 
+const BATCH_SIZE = 50;
+const PREFETCH_THRESHOLD = 10;
+
 export interface UseShufflePlayReturn {
   shufflePlay: () => Promise<void>;
   isLoading: boolean;
