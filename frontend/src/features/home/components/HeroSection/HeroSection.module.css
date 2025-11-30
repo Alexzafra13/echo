@@ -21,19 +21,9 @@
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
-}
-
-/* Gradient fade overlay - blends hero into page background */
-.heroSection::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent, var(--bg-base));
-  pointer-events: none;
-  z-index: 1;
+  /* Fade to transparent at bottom */
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent);
+  mask-image: linear-gradient(to bottom, black 80%, transparent);
 }
 
 @keyframes fadeInBackground {
@@ -82,7 +72,7 @@
 
 .heroSection__content {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 50px;
@@ -333,10 +323,6 @@
     margin-bottom: 16px;
   }
 
-  .heroSection::after {
-    height: 80px;
-  }
-
   /* Ocultar flechas de navegación en móvil */
   .heroSection__navButton {
     display: none;
@@ -446,10 +432,6 @@
     margin-left: -12px;
     margin-top: 0; /* Content container already extends behind header */
     margin-bottom: 12px;
-  }
-
-  .heroSection::after {
-    height: 60px;
   }
 
   /* Flechas ya ocultas en breakpoint anterior */
