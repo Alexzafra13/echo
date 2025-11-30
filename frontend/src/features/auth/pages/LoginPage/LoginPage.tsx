@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -5,6 +6,16 @@ import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
 import styles from './LoginPage.module.css';
+
+/**
+ * Available background images for login page
+ * Add new images to /public/images/backgrounds/ and include them here
+ */
+const LOGIN_BACKGROUNDS = [
+  '/images/backgrounds/login-bg.jpg',
+  '/images/backgrounds/concert_orange_light.jpg',
+  '/images/backgrounds/concert_instruments.jpg',
+] as const;
 
 // Validation schema
 const loginSchema = z.object({
@@ -16,7 +27,13 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login, isLoggingIn, loginError } = useAuth();
-  
+
+  // Select a random background on each page load
+  const backgroundImage = useMemo(() => {
+    const randomIndex = Math.floor(Math.random() * LOGIN_BACKGROUNDS.length);
+    return LOGIN_BACKGROUNDS[randomIndex];
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -31,11 +48,11 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
-      {/* Background image */}
+      {/* Background image - rotates randomly on each visit */}
       <div
         className={styles.background}
         style={{
-          backgroundImage: 'url(/images/backgrounds/login-bg.jpg)'
+          backgroundImage: `url(${backgroundImage})`
         }}
       />
 
