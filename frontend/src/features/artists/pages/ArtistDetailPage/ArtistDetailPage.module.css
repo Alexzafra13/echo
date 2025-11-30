@@ -24,6 +24,7 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  position: relative; /* For absolute positioned background */
 }
 
 .artistDetailPage__content::-webkit-scrollbar {
@@ -34,22 +35,32 @@
   margin-bottom: 24px;
 }
 
-/* Hero Section */
+/* Hero Section - Immersive design */
 .artistDetailPage__hero {
   position: relative;
-  min-height: 400px;
-  border-radius: 12px;
-  overflow: hidden; /* Prevent scroll bars and clip background */
+  min-height: 450px;
   margin-bottom: 48px;
+  /* No border-radius for immersive effect */
+  /* Extend to edges */
+  margin-left: -40px;
+  margin-right: -40px;
+  padding-left: 40px;
+  padding-right: 40px;
 }
 
 .artistDetailPage__background {
   position: absolute;
-  inset: 0;
-  background-size: 100%;
+  top: -114px; /* Extend behind header */
+  left: 0;
+  right: 0;
+  height: calc(100% + 114px + 100px); /* Full hero + header + extra for fade */
+  background-size: cover;
   /* background-position set dynamically in component based on image type */
   filter: blur(2px) brightness(0.4);
-  transform: scale(1.1);
+  transform: scale(1.05);
+  /* Smooth fade to transparent at bottom */
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
 }
 
 .artistDetailPage__heroContent {
@@ -346,7 +357,15 @@
 
   .artistDetailPage__hero {
     min-height: 300px;
-    border-radius: 8px; /* Menos redondeado */
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .artistDetailPage__background {
+    top: -100px;
+    height: calc(100% + 100px + 80px);
   }
 
   .artistDetailPage__heroContent {
@@ -408,6 +427,18 @@
 
   .artistDetailPage__content {
     padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+  }
+
+  .artistDetailPage__hero {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .artistDetailPage__background {
+    top: -90px;
+    height: calc(100% + 90px + 60px);
   }
 
   .artistDetailPage__name {
