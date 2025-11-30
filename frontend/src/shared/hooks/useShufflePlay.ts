@@ -1,7 +1,24 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePlayer } from '@features/player';
-import { tracksService } from '@features/home/services/tracks.service';
+import { tracksService, type ShuffledTracksResponse } from '@features/home/services/tracks.service';
 import type { Track } from '@shared/types/track.types';
+import { logger } from '@shared/utils/logger';
+
+/** Tracks to load per batch */
+const BATCH_SIZE = 50;
+/** Load more when queue has fewer tracks remaining */
+const PREFETCH_THRESHOLD = 10;
+
+interface ShuffleState {
+  seed: number | null;
+  skip: number;
+  total: number;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+}
+
+const BATCH_SIZE = 50;
+const PREFETCH_THRESHOLD = 10;
 
 const BATCH_SIZE = 50;
 const PREFETCH_THRESHOLD = 10;
