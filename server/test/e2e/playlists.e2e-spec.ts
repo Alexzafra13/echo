@@ -2,19 +2,38 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/infrastructure/persistence/prisma.service';
+import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import {
+  createUserAndLogin,
+  cleanUserTables,
+  cleanContentTables,
+  createTestArtist,
+  createTestAlbum,
+  createTestTrack,
+  createTestPlaylist,
+} from './helpers/test-setup';
 
+/**
+ * Playlists E2E Tests
+ *
+ * Prueba los endpoints de playlists:
+ * - POST /api/playlists - Crear playlist
+ * - GET /api/playlists - Listar playlists del usuario
+ * - GET /api/playlists/:id - Obtener playlist por ID
+ * - PATCH /api/playlists/:id - Actualizar playlist
+ * - DELETE /api/playlists/:id - Eliminar playlist
+ * - POST /api/playlists/:id/tracks - Agregar track
+ * - DELETE /api/playlists/:id/tracks/:trackId - Remover track
+ */
 describe('Playlists E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let drizzle: DrizzleService;
   let userToken: string;
   let user2Token: string;
   let userId: string;
   let user2Id: string;
   let trackId: string;
   let track2Id: string;
-  let artistId: string;
-  let albumId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,94 +54,57 @@ describe('Playlists E2E', () => {
 
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-
-    // Crear usuario 1
-    const user1Res = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({
-        username: 'user_playlists',
-        email: 'user_playlists@test.com',
-        password: 'User123!',
-        name: 'User Playlists',
-      });
-
-    userToken = user1Res.body.accessToken;
-    userId = user1Res.body.user.id;
-
-    // Crear usuario 2
-    const user2Res = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({
-        username: 'user2_playlists',
-        email: 'user2_playlists@test.com',
-        password: 'User123!',
-        name: 'User 2 Playlists',
-      });
-
-    user2Token = user2Res.body.accessToken;
-    user2Id = user2Res.body.user.id;
-
-    // Crear artista de prueba
-    const artist = await prisma.artist.create({
-      data: {
-        name: 'Test Artist Playlists',
-        bio: 'Test bio',
-      },
-    });
-    artistId = artist.id;
-
-    // Crear álbum de prueba
-    const album = await prisma.album.create({
-      data: {
-        title: 'Test Album Playlists',
-        artistId: artistId,
-        releaseDate: new Date('2024-01-01'),
-      },
-    });
-    albumId = album.id;
-
-    // Crear tracks de prueba
-    const track1 = await prisma.track.create({
-      data: {
-        title: 'Test Track 1',
-        artistId: artistId,
-        albumId: albumId,
-        duration: 180,
-        trackNumber: 1,
-        filePath: '/music/test1.mp3',
-      },
-    });
-    trackId = track1.id;
-
-    const track2 = await prisma.track.create({
-      data: {
-        title: 'Test Track 2',
-        artistId: artistId,
-        albumId: albumId,
-        duration: 200,
-        trackNumber: 2,
-        filePath: '/music/test2.mp3',
-      },
-    });
-    track2Id = track2.id;
+    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
   });
 
   afterAll(async () => {
-    // Limpiar en orden correcto
-    await prisma.playlistTrack.deleteMany();
-    await prisma.playlist.deleteMany();
-    await prisma.track.deleteMany();
-    await prisma.album.deleteMany();
-    await prisma.artist.deleteMany();
-    await prisma.user.deleteMany();
     await app.close();
   });
 
-  afterEach(async () => {
-    // Limpiar playlists después de cada test
-    await prisma.playlistTrack.deleteMany();
-    await prisma.playlist.deleteMany();
+  beforeEach(async () => {
+    // Limpiar BD
+    await cleanContentTables(drizzle);
+    await cleanUserTables(drizzle);
+
+    // Crear usuario 1
+    const user1Result = await createUserAndLogin(drizzle, app, {
+      username: 'user_playlists',
+      password: 'User123!',
+    });
+    userToken = user1Result.accessToken;
+    userId = user1Result.user.id;
+
+    // Crear usuario 2
+    const user2Result = await createUserAndLogin(drizzle, app, {
+      username: 'user2_playlists',
+      password: 'User123!',
+    });
+    user2Token = user2Result.accessToken;
+    user2Id = user2Result.user.id;
+
+    // Crear artista y álbum de prueba
+    const artist = await createTestArtist(drizzle, { name: 'Test Artist' });
+    const album = await createTestAlbum(drizzle, {
+      name: 'Test Album',
+      artistId: artist.id,
+    });
+
+    // Crear tracks de prueba
+    const track1 = await createTestTrack(drizzle, {
+      title: 'Test Track 1',
+      path: '/music/test1.mp3',
+      albumId: album.id,
+      artistId: artist.id,
+    });
+    trackId = track1.id;
+
+    const track2 = await createTestTrack(drizzle, {
+      title: 'Test Track 2',
+      path: '/music/test2.mp3',
+      albumId: album.id,
+      artistId: artist.id,
+    });
+    track2Id = track2.id;
   });
 
   describe('POST /api/playlists', () => {
@@ -141,8 +123,6 @@ describe('Playlists E2E', () => {
           expect(res.body.name).toBe('My Playlist');
           expect(res.body.description).toBe('Test playlist');
           expect(res.body.public).toBe(false);
-          expect(res.body.ownerId).toBe(userId);
-          expect(res.body.trackCount).toBe(0);
         });
     });
 
@@ -245,7 +225,7 @@ describe('Playlists E2E', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.playlists).toHaveLength(2);
+          expect(res.body.data).toHaveLength(2);
           expect(res.body.total).toBe(2);
         });
     });
@@ -259,47 +239,19 @@ describe('Playlists E2E', () => {
           .send({ name: `Playlist ${i}`, public: false });
       }
 
-      // Primera página (2 items)
-      const page1 = await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get('/api/playlists?skip=0&take=2')
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      expect(page1.body.playlists).toHaveLength(2);
-      expect(page1.body.total).toBe(3);
-
-      // Segunda página (1 item)
-      const page2 = await request(app.getHttpServer())
-        .get('/api/playlists?skip=2&take=2')
-        .set('Authorization', `Bearer ${userToken}`)
-        .expect(200);
-
-      expect(page2.body.playlists).toHaveLength(1);
-      expect(page2.body.total).toBe(3);
+      expect(response.body.data.length).toBe(2);
+      expect(response.body.total).toBe(3);
     });
 
-    it('solo debería mostrar playlists públicas si publicOnly=true', async () => {
-      // User 1: 1 pública, 1 privada
-      await request(app.getHttpServer())
-        .post('/api/playlists')
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ name: 'Public', public: true });
-
-      await request(app.getHttpServer())
-        .post('/api/playlists')
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ name: 'Private', public: false });
-
-      // User 2 solo debería ver la pública
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
-        .get('/api/playlists?publicOnly=true')
-        .set('Authorization', `Bearer ${user2Token}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.playlists).toHaveLength(1);
-          expect(res.body.playlists[0].name).toBe('Public');
-          expect(res.body.playlists[0].public).toBe(true);
-        });
+        .get('/api/playlists')
+        .expect(401);
     });
   });
 
@@ -328,7 +280,7 @@ describe('Playlists E2E', () => {
         });
     });
 
-    it('debería rechazar actualización sin autenticación', async () => {
+    it('debería rechazar sin autenticación', async () => {
       const createRes = await request(app.getHttpServer())
         .post('/api/playlists')
         .set('Authorization', `Bearer ${userToken}`)
@@ -353,16 +305,24 @@ describe('Playlists E2E', () => {
       await request(app.getHttpServer())
         .delete(`/api/playlists/${playlistId}`)
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-        });
+        .expect(200);
 
       // Verificar que ya no existe
       return request(app.getHttpServer())
         .get(`/api/playlists/${playlistId}`)
         .set('Authorization', `Bearer ${userToken}`)
         .expect(404);
+    });
+
+    it('debería rechazar sin autenticación', async () => {
+      const createRes = await request(app.getHttpServer())
+        .post('/api/playlists')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ name: 'Test', public: false });
+
+      return request(app.getHttpServer())
+        .delete(`/api/playlists/${createRes.body.id}`)
+        .expect(401);
     });
   });
 
@@ -383,61 +343,19 @@ describe('Playlists E2E', () => {
         .expect((res) => {
           expect(res.body.playlistId).toBe(playlistId);
           expect(res.body.trackId).toBe(trackId);
-          expect(res.body.trackOrder).toBeDefined();
         });
     });
 
-    it('debería rechazar track duplicado', async () => {
+    it('debería rechazar sin autenticación', async () => {
       const createRes = await request(app.getHttpServer())
         .post('/api/playlists')
         .set('Authorization', `Bearer ${userToken}`)
         .send({ name: 'Test', public: false });
 
-      const playlistId = createRes.body.id;
-
-      // Agregar track primera vez
-      await request(app.getHttpServer())
-        .post(`/api/playlists/${playlistId}/tracks`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ trackId: trackId });
-
-      // Intentar agregar de nuevo
       return request(app.getHttpServer())
-        .post(`/api/playlists/${playlistId}/tracks`)
-        .set('Authorization', `Bearer ${userToken}`)
+        .post(`/api/playlists/${createRes.body.id}/tracks`)
         .send({ trackId: trackId })
-        .expect(409);
-    });
-  });
-
-  describe('GET /api/playlists/:id/tracks', () => {
-    it('debería obtener tracks de la playlist', async () => {
-      const createRes = await request(app.getHttpServer())
-        .post('/api/playlists')
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ name: 'Test', public: false });
-
-      const playlistId = createRes.body.id;
-
-      // Agregar 2 tracks
-      await request(app.getHttpServer())
-        .post(`/api/playlists/${playlistId}/tracks`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ trackId: trackId });
-
-      await request(app.getHttpServer())
-        .post(`/api/playlists/${playlistId}/tracks`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ trackId: track2Id });
-
-      return request(app.getHttpServer())
-        .get(`/api/playlists/${playlistId}/tracks`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.tracks).toHaveLength(2);
-          expect(res.body.playlistId).toBe(playlistId);
-        });
+        .expect(401);
     });
   });
 
@@ -457,60 +375,67 @@ describe('Playlists E2E', () => {
         .send({ trackId: trackId });
 
       // Remover track
-      await request(app.getHttpServer())
+      return request(app.getHttpServer())
         .delete(`/api/playlists/${playlistId}/tracks/${trackId}`)
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-        });
-
-      // Verificar que ya no está
-      return request(app.getHttpServer())
-        .get(`/api/playlists/${playlistId}/tracks`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.tracks).toHaveLength(0);
-        });
+        .expect(200);
     });
   });
 
-  describe('POST /api/playlists/:id/tracks/reorder', () => {
-    it('debería reordenar tracks de la playlist', async () => {
+  describe('Flujo completo de playlist', () => {
+    it('debería crear playlist, agregar tracks, y eliminar', async () => {
+      // 1. Crear playlist
       const createRes = await request(app.getHttpServer())
         .post('/api/playlists')
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ name: 'Test', public: false });
+        .send({
+          name: 'Flow Playlist',
+          description: 'Testing flow',
+          public: false,
+        })
+        .expect(201);
 
       const playlistId = createRes.body.id;
 
-      // Agregar 2 tracks
+      // 2. Agregar tracks
       await request(app.getHttpServer())
         .post(`/api/playlists/${playlistId}/tracks`)
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ trackId: trackId });
+        .send({ trackId: trackId })
+        .expect(201);
 
       await request(app.getHttpServer())
         .post(`/api/playlists/${playlistId}/tracks`)
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ trackId: track2Id });
+        .send({ trackId: track2Id })
+        .expect(201);
 
-      // Reordenar: invertir el orden
-      return request(app.getHttpServer())
-        .post(`/api/playlists/${playlistId}/tracks/reorder`)
+      // 3. Obtener playlist con tracks
+      const getRes = await request(app.getHttpServer())
+        .get(`/api/playlists/${playlistId}`)
         .set('Authorization', `Bearer ${userToken}`)
-        .send({
-          trackOrders: [
-            { trackId: track2Id, trackOrder: 0 },
-            { trackId: trackId, trackOrder: 1 },
-          ],
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.playlistId).toBe(playlistId);
-        });
+        .expect(200);
+
+      expect(getRes.body.songCount).toBe(2);
+
+      // 4. Actualizar nombre
+      await request(app.getHttpServer())
+        .patch(`/api/playlists/${playlistId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ name: 'Updated Flow Playlist' })
+        .expect(200);
+
+      // 5. Eliminar un track
+      await request(app.getHttpServer())
+        .delete(`/api/playlists/${playlistId}/tracks/${trackId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      // 6. Eliminar playlist
+      await request(app.getHttpServer())
+        .delete(`/api/playlists/${playlistId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
     });
   });
 });

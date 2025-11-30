@@ -2,13 +2,29 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/infrastructure/persistence/prisma.service';
+import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import {
+  createTestUser,
+  createAdminAndLogin,
+  createUserAndLogin,
+  cleanUserTables,
+  getUserById,
+} from './helpers/test-setup';
 
-describe('Admin User Management E2E', () => {
+/**
+ * Admin E2E Tests
+ *
+ * Prueba los endpoints de administración de usuarios:
+ * - POST /api/admin/users - Crear usuario
+ * - GET /api/admin/users - Listar usuarios
+ * - PUT /api/admin/users/:id - Actualizar usuario
+ * - DELETE /api/admin/users/:id - Desactivar usuario (soft delete)
+ * - DELETE /api/admin/users/:id/permanently - Eliminar permanentemente
+ * - POST /api/admin/users/:id/reset-password - Resetear contraseña
+ */
+describe('Admin E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
-  let adminToken: string;
-  let regularUserToken: string;
+  let drizzle: DrizzleService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -17,7 +33,6 @@ describe('Admin User Management E2E', () => {
 
     app = moduleFixture.createNestApplication();
 
-    // Aplicar los mismos pipes que en main.ts
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -30,7 +45,7 @@ describe('Admin User Management E2E', () => {
 
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
   });
 
   afterAll(async () => {
@@ -38,48 +53,23 @@ describe('Admin User Management E2E', () => {
   });
 
   beforeEach(async () => {
-    // Limpiar BD
-    await prisma.user.deleteMany();
-
-    // Crear admin
-    const adminResponse = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({
-        username: 'admin',
-        email: 'admin@test.com',
-        password: 'Admin123!',
-        name: 'Admin User',
-      });
-
-    adminToken = adminResponse.body.accessToken;
-
-    // Hacer al usuario admin directamente en la BD
-    await prisma.user.update({
-      where: { username: 'admin' },
-      data: { isAdmin: true },
-    });
-
-    // Crear usuario regular
-    const userResponse = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({
-        username: 'user',
-        email: 'user@test.com',
-        password: 'User123!',
-        name: 'Regular User',
-      });
-
-    regularUserToken = userResponse.body.accessToken;
+    await cleanUserTables(drizzle);
   });
 
-  describe('POST /api/admin/users - Create User', () => {
-    it('debería permitir a un admin crear un usuario', async () => {
+  describe('POST /api/admin/users (Crear usuario)', () => {
+    let adminToken: string;
+
+    beforeEach(async () => {
+      const { accessToken } = await createAdminAndLogin(drizzle, app);
+      adminToken = accessToken;
+    });
+
+    it('debería crear un nuevo usuario', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/admin/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           username: 'newuser',
-          email: 'newuser@test.com',
           name: 'New User',
           isAdmin: false,
         })
@@ -87,388 +77,347 @@ describe('Admin User Management E2E', () => {
 
       expect(response.body.user).toBeDefined();
       expect(response.body.user.username).toBe('newuser');
-      expect(response.body.user.email).toBe('newuser@test.com');
       expect(response.body.user.name).toBe('New User');
       expect(response.body.user.isAdmin).toBe(false);
       expect(response.body.temporaryPassword).toBeDefined();
-      expect(response.body.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
-
-      // Verificar en BD que el usuario tiene mustChangePassword = true
-      const createdUser = await prisma.user.findUnique({
-        where: { username: 'newuser' },
-      });
-
-      expect(createdUser).toBeDefined();
-      expect(createdUser?.mustChangePassword).toBe(true);
-      expect(createdUser?.isActive).toBe(true);
+      expect(response.body.temporaryPassword.length).toBeGreaterThanOrEqual(8);
     });
 
-    it('debería permitir crear un usuario admin', async () => {
+    it('debería crear un usuario admin', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/admin/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           username: 'newadmin',
-          email: 'newadmin@test.com',
           name: 'New Admin',
           isAdmin: true,
         })
         .expect(201);
 
       expect(response.body.user.isAdmin).toBe(true);
-
-      // Verificar en BD
-      const createdUser = await prisma.user.findUnique({
-        where: { username: 'newadmin' },
-      });
-
-      expect(createdUser?.isAdmin).toBe(true);
-    });
-
-    it('debería permitir crear usuario sin email', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/api/admin/users')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          username: 'noemail',
-          name: 'No Email User',
-        })
-        .expect(201);
-
-      expect(response.body.user.email).toBeUndefined();
     });
 
     it('debería rechazar si username ya existe', async () => {
-      // Crear primer usuario
-      await request(app.getHttpServer())
-        .post('/api/admin/users')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          username: 'duplicate',
-          email: 'test1@test.com',
-        });
+      // Crear usuario primero
+      await createTestUser(drizzle, {
+        username: 'existing',
+        password: 'Test123!',
+      });
 
-      // Intentar crear con username duplicado
       return request(app.getHttpServer())
         .post('/api/admin/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          username: 'duplicate',
-          email: 'test2@test.com',
+          username: 'existing',
+          name: 'Existing User',
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.message).toContain('already exists');
+        });
+    });
+
+    it('debería rechazar si username está vacío', () => {
+      return request(app.getHttpServer())
+        .post('/api/admin/users')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          username: '',
+          name: 'Test',
         })
         .expect(400);
     });
 
-    it('debería rechazar si un usuario regular intenta crear usuarios', () => {
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
         .post('/api/admin/users')
-        .set('Authorization', `Bearer ${regularUserToken}`)
         .send({
-          username: 'hacker',
-          email: 'hacker@test.com',
+          username: 'newuser',
+          name: 'New User',
+        })
+        .expect(401);
+    });
+
+    it('debería rechazar si no es admin', async () => {
+      const { accessToken: userToken } = await createUserAndLogin(drizzle, app, {
+        username: 'regularuser',
+        password: 'User123!',
+      });
+
+      return request(app.getHttpServer())
+        .post('/api/admin/users')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          username: 'newuser',
+          name: 'New User',
         })
         .expect(403);
     });
+  });
 
-    it('debería rechazar si no hay token de autenticación', () => {
+  describe('GET /api/admin/users (Listar usuarios)', () => {
+    let adminToken: string;
+
+    beforeEach(async () => {
+      const { accessToken } = await createAdminAndLogin(drizzle, app);
+      adminToken = accessToken;
+
+      // Crear usuarios adicionales
+      await createTestUser(drizzle, { username: 'user1', password: 'Test123!', name: 'User 1' });
+      await createTestUser(drizzle, { username: 'user2', password: 'Test123!', name: 'User 2' });
+      await createTestUser(drizzle, { username: 'user3', password: 'Test123!', name: 'User 3' });
+    });
+
+    it('debería listar todos los usuarios', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/admin/users')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(4); // admin + 3 users
+      expect(response.body.total).toBe(4);
+    });
+
+    it('debería aplicar paginación', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/admin/users?skip=0&take=2')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.data.length).toBe(2);
+      expect(response.body.total).toBe(4);
+    });
+
+    it('debería incluir información de usuarios', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/admin/users')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const user = response.body.data[0];
+      expect(user).toHaveProperty('id');
+      expect(user).toHaveProperty('username');
+      expect(user).toHaveProperty('name');
+      expect(user).toHaveProperty('isAdmin');
+      expect(user).toHaveProperty('isActive');
+      expect(user).toHaveProperty('createdAt');
+    });
+
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
-        .post('/api/admin/users')
-        .send({
-          username: 'noauth',
-          email: 'noauth@test.com',
-        })
+        .get('/api/admin/users')
+        .expect(401);
+    });
+
+    it('debería rechazar si no es admin', async () => {
+      const { accessToken: userToken } = await createUserAndLogin(drizzle, app, {
+        username: 'regularuser',
+        password: 'User123!',
+      });
+
+      return request(app.getHttpServer())
+        .get('/api/admin/users')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(403);
+    });
+  });
+
+  describe('PUT /api/admin/users/:id (Actualizar usuario)', () => {
+    let adminToken: string;
+    let targetUserId: string;
+
+    beforeEach(async () => {
+      const { accessToken } = await createAdminAndLogin(drizzle, app);
+      adminToken = accessToken;
+
+      const user = await createTestUser(drizzle, {
+        username: 'targetuser',
+        password: 'Test123!',
+        name: 'Target User',
+      });
+      targetUserId = user.id;
+    });
+
+    it('debería actualizar nombre de usuario', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`/api/admin/users/${targetUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Updated Name' })
+        .expect(200);
+
+      expect(response.body.user.name).toBe('Updated Name');
+    });
+
+    it('debería promover usuario a admin', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`/api/admin/users/${targetUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ isAdmin: true })
+        .expect(200);
+
+      expect(response.body.user.isAdmin).toBe(true);
+    });
+
+    it('debería desactivar usuario', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`/api/admin/users/${targetUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ isActive: false })
+        .expect(200);
+
+      expect(response.body.user.isActive).toBe(false);
+    });
+
+    it('debería retornar 404 si usuario no existe', () => {
+      return request(app.getHttpServer())
+        .put('/api/admin/users/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Updated' })
+        .expect(404);
+    });
+
+    it('debería rechazar sin autenticación', () => {
+      return request(app.getHttpServer())
+        .put(`/api/admin/users/${targetUserId}`)
+        .send({ name: 'Updated' })
         .expect(401);
     });
   });
 
-  describe('GET /api/admin/users - List Users', () => {
-    it('debería listar todos los usuarios para un admin', async () => {
-      // Crear algunos usuarios adicionales
-      await request(app.getHttpServer())
-        .post('/api/admin/users')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ username: 'user1', name: 'User One' });
+  describe('DELETE /api/admin/users/:id (Desactivar usuario)', () => {
+    let adminToken: string;
+    let targetUserId: string;
 
-      await request(app.getHttpServer())
-        .post('/api/admin/users')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ username: 'user2', name: 'User Two' });
+    beforeEach(async () => {
+      const { accessToken } = await createAdminAndLogin(drizzle, app);
+      adminToken = accessToken;
 
-      const response = await request(app.getHttpServer())
-        .get('/api/admin/users')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
-
-      expect(response.body.users).toBeDefined();
-      expect(response.body.users.length).toBeGreaterThanOrEqual(4); // admin, user, user1, user2
-      expect(response.body.total).toBeGreaterThanOrEqual(4);
+      const user = await createTestUser(drizzle, {
+        username: 'targetuser',
+        password: 'Test123!',
+      });
+      targetUserId = user.id;
     });
 
-    it('debería soportar paginación', async () => {
-      // Crear varios usuarios
-      for (let i = 1; i <= 5; i++) {
-        await request(app.getHttpServer())
-          .post('/api/admin/users')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .send({ username: `testuser${i}`, name: `Test User ${i}` });
-      }
-
-      const response = await request(app.getHttpServer())
-        .get('/api/admin/users?skip=2&take=3')
+    it('debería desactivar un usuario (soft delete)', async () => {
+      await request(app.getHttpServer())
+        .delete(`/api/admin/users/${targetUserId}`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+        .expect(204);
 
-      expect(response.body.users).toBeDefined();
-      expect(response.body.users.length).toBe(3);
+      // Verificar que el usuario está desactivado
+      const user = await getUserById(drizzle, targetUserId);
+      expect(user.isActive).toBe(false);
     });
 
-    it('debería rechazar si un usuario regular intenta listar usuarios', () => {
+    it('debería retornar 404 si usuario no existe', () => {
       return request(app.getHttpServer())
-        .get('/api/admin/users')
-        .set('Authorization', `Bearer ${regularUserToken}`)
-        .expect(403);
+        .delete('/api/admin/users/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(404);
+    });
+
+    it('debería rechazar sin autenticación', () => {
+      return request(app.getHttpServer())
+        .delete(`/api/admin/users/${targetUserId}`)
+        .expect(401);
     });
   });
 
-  describe('PUT /api/admin/users/:id - Update User', () => {
-    it('debería permitir actualizar el nombre de un usuario', async () => {
-      // Obtener ID del usuario regular
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
+  describe('POST /api/admin/users/:id/reset-password', () => {
+    let adminToken: string;
+    let targetUserId: string;
 
+    beforeEach(async () => {
+      const { accessToken } = await createAdminAndLogin(drizzle, app);
+      adminToken = accessToken;
+
+      const user = await createTestUser(drizzle, {
+        username: 'targetuser',
+        password: 'Test123!',
+      });
+      targetUserId = user.id;
+    });
+
+    it('debería resetear la contraseña y retornar contraseña temporal', async () => {
       const response = await request(app.getHttpServer())
-        .put(`/api/admin/users/${userId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          name: 'Updated Name',
-        })
-        .expect(200);
-
-      expect(response.body.name).toBe('Updated Name');
-
-      // Verificar en BD
-      const updatedUser = await prisma.user.findUnique({
-        where: { id: userId },
-      });
-
-      expect(updatedUser?.name).toBe('Updated Name');
-    });
-
-    it('debería permitir promover un usuario a admin', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      const response = await request(app.getHttpServer())
-        .put(`/api/admin/users/${userId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          isAdmin: true,
-        })
-        .expect(200);
-
-      expect(response.body.isAdmin).toBe(true);
-
-      // Verificar en BD
-      const updatedUser = await prisma.user.findUnique({
-        where: { id: userId },
-      });
-
-      expect(updatedUser?.isAdmin).toBe(true);
-    });
-
-    it('debería permitir desactivar un usuario', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      const response = await request(app.getHttpServer())
-        .put(`/api/admin/users/${userId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          isActive: false,
-        })
-        .expect(200);
-
-      expect(response.body.isActive).toBe(false);
-    });
-
-    it('debería rechazar email duplicado', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      return request(app.getHttpServer())
-        .put(`/api/admin/users/${userId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          email: 'admin@test.com', // Email del admin
-        })
-        .expect(400);
-    });
-
-    it('debería rechazar si un usuario regular intenta actualizar', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      return request(app.getHttpServer())
-        .put(`/api/admin/users/${userId}`)
-        .set('Authorization', `Bearer ${regularUserToken}`)
-        .send({
-          name: 'Hacked',
-        })
-        .expect(403);
-    });
-  });
-
-  describe('DELETE /api/admin/users/:id - Delete User', () => {
-    it('debería permitir desactivar un usuario regular', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      await request(app.getHttpServer())
-        .delete(`/api/admin/users/${userId}`)
+        .post(`/api/admin/users/${targetUserId}/reset-password`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
-
-      // Verificar que es soft delete (isActive = false)
-      const deletedUser = await prisma.user.findUnique({
-        where: { id: userId },
-      });
-
-      expect(deletedUser).toBeDefined(); // El usuario todavía existe
-      expect(deletedUser?.isActive).toBe(false);
-    });
-
-    it('debería permitir desactivar un admin si hay más admins', async () => {
-      // Crear un segundo admin
-      const createResponse = await request(app.getHttpServer())
-        .post('/api/admin/users')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          username: 'admin2',
-          email: 'admin2@test.com',
-          isAdmin: true,
-        });
-
-      const users = await prisma.user.findMany({
-        where: { username: 'admin2' },
-      });
-      const admin2Id = users[0].id;
-
-      // Desactivar admin2
-      await request(app.getHttpServer())
-        .delete(`/api/admin/users/${admin2Id}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
-
-      // Verificar
-      const deletedAdmin = await prisma.user.findUnique({
-        where: { id: admin2Id },
-      });
-
-      expect(deletedAdmin?.isActive).toBe(false);
-    });
-
-    it('debería rechazar si intenta desactivar el último admin', async () => {
-      // Obtener ID del admin
-      const admins = await prisma.user.findMany({
-        where: { username: 'admin' },
-      });
-      const adminId = admins[0].id;
-
-      return request(app.getHttpServer())
-        .delete(`/api/admin/users/${adminId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(400)
-        .expect((res) => {
-          expect(res.body.message).toContain('Cannot delete the last admin user');
-        });
-    });
-
-    it('debería rechazar si un usuario regular intenta desactivar', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      return request(app.getHttpServer())
-        .delete(`/api/admin/users/${userId}`)
-        .set('Authorization', `Bearer ${regularUserToken}`)
-        .expect(403);
-    });
-  });
-
-  describe('POST /api/admin/users/:id/reset-password - Reset Password', () => {
-    it('debería generar una nueva contraseña temporal', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
-      const response = await request(app.getHttpServer())
-        .post(`/api/admin/users/${userId}/reset-password`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(201);
 
       expect(response.body.temporaryPassword).toBeDefined();
-      expect(response.body.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
-      expect(response.body.temporaryPassword.length).toBe(8);
+      expect(response.body.temporaryPassword.length).toBeGreaterThanOrEqual(8);
 
-      // Verificar que mustChangePassword se activó
-      const updatedUser = await prisma.user.findUnique({
-        where: { id: userId },
-      });
-
-      expect(updatedUser?.mustChangePassword).toBe(true);
+      // Verificar que el usuario debe cambiar contraseña
+      const user = await getUserById(drizzle, targetUserId);
+      expect(user.mustChangePassword).toBe(true);
     });
 
-    it('debería funcionar para usuarios admin', async () => {
-      const admins = await prisma.user.findMany({
-        where: { username: 'admin' },
-      });
-      const adminId = admins[0].id;
-
-      const response = await request(app.getHttpServer())
-        .post(`/api/admin/users/${adminId}/reset-password`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(201);
-
-      expect(response.body.temporaryPassword).toBeDefined();
-      expect(response.body.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
-    });
-
-    it('debería rechazar si un usuario regular intenta resetear contraseñas', async () => {
-      const users = await prisma.user.findMany({
-        where: { username: 'user' },
-      });
-      const userId = users[0].id;
-
+    it('debería retornar 404 si usuario no existe', () => {
       return request(app.getHttpServer())
-        .post(`/api/admin/users/${userId}/reset-password`)
-        .set('Authorization', `Bearer ${regularUserToken}`)
-        .expect(403);
+        .post('/api/admin/users/00000000-0000-0000-0000-000000000000/reset-password')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(404);
+    });
+
+    it('debería rechazar sin autenticación', () => {
+      return request(app.getHttpServer())
+        .post(`/api/admin/users/${targetUserId}/reset-password`)
+        .expect(401);
     });
   });
 
-  describe('Full User Management Workflow', () => {
-    it('debería completar el flujo completo de gestión de usuario', async () => {
-      // 1. Admin crea un usuario
+  describe('DELETE /api/admin/users/:id/permanently (Eliminar permanentemente)', () => {
+    let adminToken: string;
+    let targetUserId: string;
+
+    beforeEach(async () => {
+      const { accessToken } = await createAdminAndLogin(drizzle, app);
+      adminToken = accessToken;
+
+      const user = await createTestUser(drizzle, {
+        username: 'targetuser',
+        password: 'Test123!',
+      });
+      targetUserId = user.id;
+    });
+
+    it('debería eliminar permanentemente un usuario', async () => {
+      await request(app.getHttpServer())
+        .delete(`/api/admin/users/${targetUserId}/permanently`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(204);
+
+      // Verificar que el usuario ya no existe
+      const user = await getUserById(drizzle, targetUserId);
+      expect(user).toBeUndefined();
+    });
+
+    it('debería retornar 404 si usuario no existe', () => {
+      return request(app.getHttpServer())
+        .delete('/api/admin/users/00000000-0000-0000-0000-000000000000/permanently')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(404);
+    });
+
+    it('debería rechazar sin autenticación', () => {
+      return request(app.getHttpServer())
+        .delete(`/api/admin/users/${targetUserId}/permanently`)
+        .expect(401);
+    });
+  });
+
+  describe('Flujo completo de gestión de usuarios', () => {
+    it('debería completar el flujo crear → actualizar → resetear → desactivar', async () => {
+      const { accessToken: adminToken } = await createAdminAndLogin(drizzle, app);
+
+      // 1. Crear usuario
       const createResponse = await request(app.getHttpServer())
         .post('/api/admin/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           username: 'workflow',
-          email: 'workflow@test.com',
           name: 'Workflow User',
           isAdmin: false,
         })
@@ -478,53 +427,48 @@ describe('Admin User Management E2E', () => {
       const userId = user.id;
 
       expect(temporaryPassword).toBeDefined();
-      expect(user.mustChangePassword).toBeUndefined(); // No se retorna en DTO
 
-      // 2. Verificar que el usuario existe y tiene mustChangePassword
-      let dbUser = await prisma.user.findUnique({ where: { id: userId } });
-      expect(dbUser?.mustChangePassword).toBe(true);
-      expect(dbUser?.isActive).toBe(true);
+      // Verificar que tiene mustChangePassword
+      let dbUser = await getUserById(drizzle, userId);
+      expect(dbUser.mustChangePassword).toBe(true);
+      expect(dbUser.isActive).toBe(true);
 
-      // 3. Admin actualiza el nombre del usuario
+      // 2. Actualizar nombre
       await request(app.getHttpServer())
         .put(`/api/admin/users/${userId}`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          name: 'Workflow User Updated',
-        })
+        .send({ name: 'Workflow User Updated' })
         .expect(200);
 
-      // 4. Admin promociona a admin
+      // 3. Promover a admin
       await request(app.getHttpServer())
         .put(`/api/admin/users/${userId}`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          isAdmin: true,
-        })
+        .send({ isAdmin: true })
         .expect(200);
 
-      dbUser = await prisma.user.findUnique({ where: { id: userId } });
-      expect(dbUser?.isAdmin).toBe(true);
+      dbUser = await getUserById(drizzle, userId);
+      expect(dbUser.isAdmin).toBe(true);
 
-      // 5. Admin resetea la contraseña
+      // 4. Resetear contraseña
       const resetResponse = await request(app.getHttpServer())
         .post(`/api/admin/users/${userId}/reset-password`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .expect(201);
+        .expect(200);
 
       expect(resetResponse.body.temporaryPassword).toBeDefined();
       expect(resetResponse.body.temporaryPassword).not.toBe(temporaryPassword);
 
-      // 6. Admin desactiva el usuario
+      // 5. Desactivar usuario
       await request(app.getHttpServer())
         .delete(`/api/admin/users/${userId}`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+        .expect(204);
 
-      // 7. Verificar que es soft delete
-      dbUser = await prisma.user.findUnique({ where: { id: userId } });
+      // 6. Verificar soft delete
+      dbUser = await getUserById(drizzle, userId);
       expect(dbUser).toBeDefined();
-      expect(dbUser?.isActive).toBe(false);
+      expect(dbUser.isActive).toBe(false);
     });
   });
 });

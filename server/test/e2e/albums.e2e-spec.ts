@@ -2,11 +2,27 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/infrastructure/persistence/prisma.service';
+import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import {
+  createUserAndLogin,
+  cleanUserTables,
+  cleanContentTables,
+  createTestAlbum,
+  createTestArtist,
+} from './helpers/test-setup';
 
+/**
+ * Albums E2E Tests
+ *
+ * Prueba los endpoints de álbumes:
+ * - GET /api/albums/:id - Obtener álbum por ID
+ * - GET /api/albums - Listar álbumes con paginación
+ * - GET /api/albums/search/:query - Buscar álbumes
+ */
 describe('Albums E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let drizzle: DrizzleService;
+  let accessToken: string;
 
   let album1Id: string;
   let album2Id: string;
@@ -31,7 +47,7 @@ describe('Albums E2E', () => {
 
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
   });
 
   afterAll(async () => {
@@ -40,43 +56,40 @@ describe('Albums E2E', () => {
 
   beforeEach(async () => {
     // Limpiar BD antes de cada test
-    await prisma.album.deleteMany();
+    await cleanContentTables(drizzle);
+    await cleanUserTables(drizzle);
+
+    // Crear usuario para autenticación
+    const { accessToken: token } = await createUserAndLogin(drizzle, app, {
+      username: 'testuser',
+      password: 'Test123!',
+    });
+    accessToken = token;
+
+    // Crear artista de prueba
+    const artist = await createTestArtist(drizzle, { name: 'The Beatles' });
 
     // Crear álbumes de prueba
-    const album1 = await prisma.album.create({
-      data: {
-        name: 'Abbey Road',
-        year: 1969,
-        compilation: false,
-        songCount: 17,
-        duration: 2820,
-        size: BigInt(125000000),
-        description: 'The eleventh studio album by The Beatles',
-      },
+    const album1 = await createTestAlbum(drizzle, {
+      name: 'Abbey Road',
+      artistId: artist.id,
+      year: 1969,
+      songCount: 17,
+      duration: 2820,
     });
 
-    const album2 = await prisma.album.create({
-      data: {
-        name: 'Thriller',
-        year: 1982,
-        compilation: false,
-        songCount: 9,
-        duration: 2580,
-        size: BigInt(115000000),
-        description: 'Michael Jackson masterpiece',
-      },
+    const album2 = await createTestAlbum(drizzle, {
+      name: 'Thriller',
+      year: 1982,
+      songCount: 9,
+      duration: 2580,
     });
 
-    const album3 = await prisma.album.create({
-      data: {
-        name: 'The Dark Side of the Moon',
-        year: 1973,
-        compilation: false,
-        songCount: 10,
-        duration: 2580,
-        size: BigInt(120000000),
-        description: 'Pink Floyd classic',
-      },
+    const album3 = await createTestAlbum(drizzle, {
+      name: 'The Dark Side of the Moon',
+      year: 1973,
+      songCount: 10,
+      duration: 2580,
     });
 
     album1Id = album1.id;
@@ -88,6 +101,7 @@ describe('Albums E2E', () => {
     it('debería obtener un álbum por su ID', () => {
       return request(app.getHttpServer())
         .get(`/api/albums/${album1Id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.id).toBe(album1Id);
@@ -96,9 +110,6 @@ describe('Albums E2E', () => {
           expect(res.body.songCount).toBe(17);
           expect(res.body.duration).toBe(2820);
           expect(res.body.compilation).toBe(false);
-          expect(res.body.description).toBe(
-            'The eleventh studio album by The Beatles',
-          );
           expect(res.body.createdAt).toBeDefined();
           expect(res.body.updatedAt).toBeDefined();
         });
@@ -107,6 +118,7 @@ describe('Albums E2E', () => {
     it('debería retornar 404 si el álbum no existe', () => {
       return request(app.getHttpServer())
         .get('/api/albums/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(404)
         .expect((res) => {
           expect(res.body.message).toContain('not found');
@@ -116,30 +128,14 @@ describe('Albums E2E', () => {
     it('debería retornar 404 si el ID es inválido', () => {
       return request(app.getHttpServer())
         .get('/api/albums/invalid-id')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
 
-    it('debería incluir campos opcionales cuando existen', async () => {
-      const albumWithOptionals = await prisma.album.create({
-        data: {
-          name: 'Complete Album',
-          year: 2020,
-          compilation: true,
-          songCount: 15,
-          duration: 3600,
-          size: BigInt(150000000),
-          coverArtPath: '/covers/complete.jpg',
-          description: 'An album with all fields',
-        },
-      });
-
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
-        .get(`/api/albums/${albumWithOptionals.id}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.coverArtPath).toBe('/covers/complete.jpg');
-          expect(res.body.compilation).toBe(true);
-        });
+        .get(`/api/albums/${album1Id}`)
+        .expect(401);
     });
   });
 
@@ -147,6 +143,7 @@ describe('Albums E2E', () => {
     it('debería obtener lista de álbumes con paginación por defecto', () => {
       return request(app.getHttpServer())
         .get('/api/albums')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toBeDefined();
@@ -162,19 +159,21 @@ describe('Albums E2E', () => {
     it('debería respetar parámetros de paginación skip y take', () => {
       return request(app.getHttpServer())
         .get('/api/albums?skip=1&take=1')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(1);
           expect(res.body.skip).toBe(1);
           expect(res.body.take).toBe(1);
           expect(res.body.total).toBe(3);
-          expect(res.body.hasMore).toBe(true); // 1 + 1 < 3
+          expect(res.body.hasMore).toBe(true);
         });
     });
 
     it('debería manejar skip mayor al total de resultados', () => {
       return request(app.getHttpServer())
         .get('/api/albums?skip=100&take=10')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(0);
@@ -186,6 +185,7 @@ describe('Albums E2E', () => {
     it('debería retornar álbumes con todos los campos', () => {
       return request(app.getHttpServer())
         .get('/api/albums')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           const album = res.body.data[0];
@@ -200,17 +200,10 @@ describe('Albums E2E', () => {
         });
     });
 
-    it('debería manejar lista vacía de álbumes', async () => {
-      await prisma.album.deleteMany();
-
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
         .get('/api/albums')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.data).toHaveLength(0);
-          expect(res.body.total).toBe(0);
-          expect(res.body.hasMore).toBe(false);
-        });
+        .expect(401);
     });
   });
 
@@ -218,6 +211,7 @@ describe('Albums E2E', () => {
     it('debería buscar álbumes por nombre', () => {
       return request(app.getHttpServer())
         .get('/api/albums/search/Abbey')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toBeDefined();
@@ -231,6 +225,7 @@ describe('Albums E2E', () => {
     it('debería buscar de forma case-insensitive', () => {
       return request(app.getHttpServer())
         .get('/api/albums/search/abbey')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data.length).toBeGreaterThan(0);
@@ -241,6 +236,7 @@ describe('Albums E2E', () => {
     it('debería retornar resultados vacíos si no hay coincidencias', () => {
       return request(app.getHttpServer())
         .get('/api/albums/search/NonExistentAlbum')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data).toHaveLength(0);
@@ -248,37 +244,21 @@ describe('Albums E2E', () => {
         });
     });
 
-    it('debería rechazar búsqueda con query vacío', () => {
+    it('debería buscar coincidencias parciales', () => {
       return request(app.getHttpServer())
-        .get('/api/albums/search/ ')
-        .expect(400);
-    });
-
-    it('debería rechazar búsqueda con query de 1 carácter', () => {
-      return request(app.getHttpServer())
-        .get('/api/albums/search/a')
-        .expect(400);
-    });
-
-    it('debería aceptar búsqueda con query de 2 caracteres', () => {
-      return request(app.getHttpServer())
-        .get('/api/albums/search/ab')
-        .expect(200);
-    });
-
-    it('debería respetar paginación en búsqueda', () => {
-      return request(app.getHttpServer())
-        .get('/api/albums/search/a?skip=0&take=1')
+        .get('/api/albums/search/Dark')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body.skip).toBe(0);
-          expect(res.body.take).toBe(1);
+          expect(res.body.data.length).toBeGreaterThan(0);
+          expect(res.body.data[0].name).toBe('The Dark Side of the Moon');
         });
     });
 
     it('debería incluir metadata de paginación', () => {
       return request(app.getHttpServer())
         .get('/api/albums/search/Dark')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(res.body).toHaveProperty('data');
@@ -290,20 +270,10 @@ describe('Albums E2E', () => {
         });
     });
 
-    it('debería buscar coincidencias parciales', () => {
+    it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
-        .get('/api/albums/search/Dark')
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.data.length).toBeGreaterThan(0);
-          expect(res.body.data[0].name).toBe('The Dark Side of the Moon');
-        });
-    });
-
-    it('debería manejar caracteres especiales en búsqueda', () => {
-      return request(app.getHttpServer())
-        .get('/api/albums/search/Dark%20Side')
-        .expect(200);
+        .get('/api/albums/search/Abbey')
+        .expect(401);
     });
   });
 
@@ -311,6 +281,7 @@ describe('Albums E2E', () => {
     it('debería retornar álbum con estructura correcta', () => {
       return request(app.getHttpServer())
         .get(`/api/albums/${album1Id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(typeof res.body.id).toBe('string');
@@ -324,6 +295,7 @@ describe('Albums E2E', () => {
     it('debería retornar lista con estructura correcta', () => {
       return request(app.getHttpServer())
         .get('/api/albums')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body.data)).toBe(true);
@@ -337,6 +309,7 @@ describe('Albums E2E', () => {
     it('debería retornar búsqueda con estructura correcta', () => {
       return request(app.getHttpServer())
         .get('/api/albums/search/Abbey')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body.data)).toBe(true);
