@@ -49,16 +49,14 @@
   height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  border: none;
-  box-shadow: 0 4px 16px var(--black-30), 0 0 0 3px rgba(198, 64, 29, 0.25);
+  border: 2px solid var(--white-10);
   flex-shrink: 0;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .profilePage__avatarContainer:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(198, 64, 29, 0.4), 0 0 0 3px rgba(198, 64, 29, 0.5);
+  border-color: rgba(255, 107, 107, 0.5);
 }
 
 .profilePage__avatar {
@@ -76,10 +74,8 @@
   justify-content: center;
   font-size: 2.5rem;
   font-weight: 600;
-  color: var(--text-primary, #ffffff);
-  background: linear-gradient(135deg,
-    rgba(198, 64, 29, 0.25) 0%,
-    rgba(198, 64, 29, 0.1) 100%);
+  color: var(--text-primary);
+  background: var(--white-05);
   text-transform: uppercase;
 }
 
@@ -124,18 +120,23 @@
 
 /* Card */
 .profilePage__card {
-  background: var(--bg-elevated);
-  border-radius: 16px;
+  background: var(--white-03);
+  border-radius: 12px;
   overflow: hidden;
   margin-bottom: 24px;
-  border: 2px solid var(--border-base);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--white-08);
+  transition: all 0.2s ease;
+}
+
+.profilePage__card:hover {
+  background: var(--white-05);
+  border-color: var(--white-12);
 }
 
 .profilePage__cardHeader {
   padding: 20px 24px;
-  border-bottom: 2px solid var(--border-base);
-  background: var(--bg-surface);
+  border-bottom: 1px solid var(--white-08);
+  background: var(--white-05);
 }
 
 .profilePage__cardHeader h2 {
@@ -150,13 +151,12 @@
 
 .profilePage__cardBody {
   padding: 24px;
-  background: var(--bg-elevated);
 }
 
 /* Fields */
 .profilePage__field {
   padding: 16px 0;
-  border-bottom: 1.5px solid var(--border-base);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .profilePage__field:last-child {
@@ -226,22 +226,25 @@
 }
 
 .profilePage__btnIcon_save {
-  background: var(--color-primary-500);
-  color: white;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--color-success);
 }
 
 .profilePage__btnIcon_save:hover:not(:disabled) {
-  background: var(--color-primary-600);
-  transform: scale(1.05);
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.5);
 }
 
 .profilePage__btnIcon_cancel {
-  background: var(--bg-surface);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--text-secondary);
 }
 
 .profilePage__btnIcon_cancel:hover:not(:disabled) {
-  background: var(--bg-base);
+  background: var(--white-08);
+  border-color: var(--white-15);
   color: var(--text-primary);
 }
 
@@ -254,10 +257,10 @@
 .profilePage__btnEdit {
   margin-left: auto;
   padding: 6px 16px;
-  background: transparent;
-  border: 1px solid var(--border-base);
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
   border-radius: 6px;
-  color: var(--color-primary-500);
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -265,9 +268,8 @@
 }
 
 .profilePage__btnEdit:hover {
-  background: var(--color-primary-500);
-  color: white;
-  border-color: var(--color-primary-500);
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.5);
 }
 
 .profilePage__successSmall {
@@ -282,20 +284,22 @@
   display: inline-block;
   padding: 6px 14px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .profilePage__badge_admin {
-  background: var(--primary-15);
-  color: var(--color-primary-500);
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: var(--color-primary);
 }
 
 .profilePage__badge_user {
-  background: rgba(99, 102, 241, 0.15);
-  color: #6366f1;
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  color: var(--text-secondary);
 }
 
 /* Form */
@@ -332,20 +336,18 @@
 
 .profilePage__input {
   padding: 12px 16px;
-  background: var(--bg-base);
-  border: 2px solid var(--border-base);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 15px;
   transition: all 0.2s ease;
-  box-shadow: inset 0 1px 3px var(--black-20);
 }
 
 .profilePage__input:focus {
   outline: none;
-  border-color: var(--color-primary-500);
-  background: var(--bg-elevated);
-  box-shadow: var(--input-focus-ring), inset 0 1px 3px var(--black-20);
+  border-color: var(--color-primary);
+  background: var(--white-08);
 }
 
 .profilePage__input:disabled {
@@ -363,11 +365,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 2px solid rgba(239, 68, 68, 0.4);
+  padding: 12px 16px;
+  background: var(--error-10);
+  border: 1px solid var(--error-30);
   border-radius: 8px;
-  color: #f87171;
+  color: var(--color-error);
   font-size: 14px;
   line-height: 1.5;
   font-weight: 500;
@@ -377,42 +379,36 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
-  background: rgba(34, 197, 94, 0.15);
-  border: 2px solid rgba(34, 197, 94, 0.4);
+  padding: 12px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 8px;
-  color: #4ade80;
+  color: var(--color-success);
   font-size: 14px;
   font-weight: 500;
 }
 
 /* Submit Button */
 .profilePage__submitButton {
-  padding: 14px 28px;
-  background: var(--color-primary-500);
-  color: #ffffff;
-  border: none;
+  padding: 12px 24px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
   border-radius: 8px;
-  font-size: 15px;
+  color: var(--color-primary);
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   align-self: flex-start;
-  box-shadow: 0 2px 8px var(--primary-20);
 }
 
 .profilePage__submitButton:hover:not(:disabled) {
-  background: var(--color-primary-600);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--primary-30);
-}
-
-.profilePage__submitButton:active:not(:disabled) {
-  transform: translateY(0);
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.5);
 }
 
 .profilePage__submitButton:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
