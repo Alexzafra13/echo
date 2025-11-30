@@ -3,6 +3,9 @@ import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import { User } from '../../domain/entities/user.entity';
 import { ITokenService, TokenPayload } from '../../domain/ports/token-service.port';
 
+// Type for JWT expiresIn option (e.g., '24h', '7d')
+type ExpiresIn = JwtSignOptions['expiresIn'];
+
 /**
  * JwtAdapter - Implementa ITokenService con NestJS JWT
  */
@@ -17,7 +20,7 @@ export class JwtAdapter implements ITokenService {
     };
 
     const options: JwtSignOptions = {
-      expiresIn: process.env.JWT_EXPIRATION || '24h',
+      expiresIn: (process.env.JWT_EXPIRATION || '24h') as ExpiresIn,
     };
 
     return this.jwtService.sign(payload, options);
@@ -30,7 +33,7 @@ export class JwtAdapter implements ITokenService {
     };
 
     const options: JwtSignOptions = {
-      expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+      expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as ExpiresIn,
       secret: process.env.JWT_REFRESH_SECRET,
     };
 

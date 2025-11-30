@@ -1,12 +1,12 @@
 import { Album as AlbumDb } from '@infrastructure/database/schema/albums';
-import { Artist as ArtistDb } from '@infrastructure/database/schema/artists';
 import { Album } from '../../domain/entities/album.entity';
 
 /**
  * Album with optional artist relation from Drizzle query
+ * Artist can be full ArtistDb object or just { name: string } for partial queries
  */
 type AlbumWithRelations = AlbumDb & {
-  artist?: ArtistDb | null;
+  artist?: { name: string } | null;
 };
 
 /**
@@ -28,7 +28,7 @@ export class AlbumMapper {
       albumArtistId: raw.albumArtistId || undefined,
       coverArtPath: raw.coverArtPath || undefined,
       year: raw.year || undefined,
-      releaseDate: raw.releaseDate || undefined,
+      releaseDate: raw.releaseDate ? new Date(raw.releaseDate) : undefined,
       compilation: raw.compilation || false,
       songCount: raw.songCount || 0,
       duration: raw.duration || 0,

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig } from './config/app.config';
@@ -80,6 +81,9 @@ import { validateEnvironment } from './config/env.validation';
       ttl: 60000, // 60 segundos
       limit: 10000, // 10,000 requests/min - effectively unlimited for normal user behavior
     }]),
+
+    // Scheduled Tasks (cron jobs)
+    ScheduleModule.forRoot(),
 
     // Global Infrastructure
     DrizzleModule,

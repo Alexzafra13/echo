@@ -5,6 +5,7 @@ import { StreamTokenController } from './presentation/stream-token.controller';
 import { StreamTrackUseCase } from './domain/use-cases';
 import { StreamTokenService } from './domain/stream-token.service';
 import { StreamTokenGuard } from './domain/stream-token.guard';
+import { StreamTokenCleanupService } from './domain/stream-token-cleanup.service';
 
 /**
  * StreamingModule - Módulo de streaming de audio
@@ -26,7 +27,7 @@ import { StreamTokenGuard } from './domain/stream-token.guard';
 @Module({
   imports: [TracksModule],
   controllers: [StreamingController, StreamTokenController],
-  providers: [StreamTrackUseCase, StreamTokenService, StreamTokenGuard],
+  providers: [StreamTrackUseCase, StreamTokenService, StreamTokenGuard, StreamTokenCleanupService],
   exports: [StreamTokenService],
 })
 export class StreamingModule {}
