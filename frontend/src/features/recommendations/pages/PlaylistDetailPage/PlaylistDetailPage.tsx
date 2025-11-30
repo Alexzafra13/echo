@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { Play } from 'lucide-react';
+import { z } from 'zod';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { TrackList } from '@features/home/components/TrackList';
@@ -13,6 +14,34 @@ import type { Track as HomeTrack } from '@features/home/types';
 import type { Track as PlayerTrack } from '@features/player/types';
 import { logger } from '@shared/utils/logger';
 import styles from './PlaylistDetailPage.module.css';
+
+// Zod schema for validating playlist data from sessionStorage
+const AutoPlaylistSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  type: z.enum(['wave-mix', 'artist-playlist', 'genre-playlist', 'daily-mix']),
+  coverColor: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+  metadata: z.object({
+    totalTracks: z.number(),
+    avgScore: z.number(),
+    artistName: z.string().optional(),
+    genreName: z.string().optional(),
+  }),
+  tracks: z.array(z.object({
+    score: z.number().optional(),
+    track: z.object({
+      id: z.string(),
+      title: z.string(),
+      artistName: z.string().optional(),
+      albumName: z.string().optional(),
+      albumId: z.string().optional(),
+      artistId: z.string().optional(),
+      duration: z.number().optional(),
+    }).optional(),
+  })),
+});
 
 /**
  * PlaylistDetailPage Component
@@ -29,10 +58,12 @@ export function PlaylistDetailPage() {
     const storedPlaylist = sessionStorage.getItem('currentPlaylist');
     if (storedPlaylist) {
       try {
-        const parsedPlaylist = JSON.parse(storedPlaylist) as AutoPlaylist;
-        setPlaylist(parsedPlaylist);
+        const parsedData = JSON.parse(storedPlaylist);
+        // Validate with Zod schema for type safety
+        const validatedPlaylist = AutoPlaylistSchema.parse(parsedData);
+        setPlaylist(validatedPlaylist as AutoPlaylist);
       } catch (error) {
-        logger.error('Failed to parse playlist from sessionStorage', error);
+        logger.error('Failed to parse or validate playlist from sessionStorage', error);
         setLocation('/wave-mix');
       }
     } else {

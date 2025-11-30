@@ -1,3 +1,4 @@
+import React, { useCallback } from 'react';
 import { Play } from 'lucide-react';
 import type { AlbumCardProps } from '../../types';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -6,6 +7,7 @@ import styles from './AlbumCard.module.css';
 /**
  * AlbumCard Component
  * Displays a single album with cover, title, artist and play button on hover
+ * Memoized to prevent unnecessary re-renders in lists
  *
  * @example
  * <AlbumCard
@@ -16,17 +18,17 @@ import styles from './AlbumCard.module.css';
  *   onPlayClick={() => play(albumId)}
  * />
  */
-export function AlbumCard({
+export const AlbumCard = React.memo(function AlbumCard({
   cover,
   title,
   artist,
   onClick,
   onPlayClick,
 }: AlbumCardProps) {
-  const handlePlayClick = (e: React.MouseEvent) => {
+  const handlePlayClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onPlayClick?.();
-  };
+  }, [onPlayClick]);
 
   return (
     <article className={styles.albumCard} onClick={onClick}>
@@ -52,4 +54,4 @@ export function AlbumCard({
       <p className={styles.albumCard__artist}>{artist}</p>
     </article>
   );
-}
+});

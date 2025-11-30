@@ -19,8 +19,10 @@ export const useAuth = () => {
       // Save auth data to store
       setAuth(data.user, data.accessToken, data.refreshToken);
 
-      // Invalidate all queries to refetch with new auth
-      queryClient.invalidateQueries();
+      // Invalidate only user-specific queries (not all cached data)
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['admin'] });
+      queryClient.invalidateQueries({ queryKey: ['playlists'] });
 
       // Redirect based on mustChangePassword flag
       if (data.mustChangePassword) {
