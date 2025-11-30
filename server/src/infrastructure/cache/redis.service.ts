@@ -59,12 +59,33 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Borra todas las claves que coinciden con un patrón
+   * Usa SCAN en lugar de KEYS para evitar bloquear Redis en bases de datos grandes
    * Ejemplo: delPattern('albums:recent:*')
    */
   async delPattern(pattern: string): Promise<void> {
-    const keys = await this.redis.keys(pattern);
-    if (keys.length > 0) {
-      await this.redis.del(...keys);
+    let cursor = '0';
+    const keysToDelete: string[] = [];
+
+    // Usar SCAN para iterar de forma non-blocking
+    do {
+      const [nextCursor, keys] = await this.redis.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
+      cursor = nextCursor;
+      keysToDelete.push(...keys);
+    } while (cursor !== '0');
+
+    // Borrar en lotes para evitar comandos muy grandes
+    if (keysToDelete.length > 0) {
+      const batchSize = 100;
+      for (let i = 0; i < keysToDelete.length; i += batchSize) {
+        const batch = keysToDelete.slice(i, i + batchSize);
+        await this.redis.del(...batch);
+      }
     }
   }
 
