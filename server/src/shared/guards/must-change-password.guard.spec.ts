@@ -1,142 +1,119 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { ForbiddenException } from '@nestjs/common';
 import { MustChangePasswordGuard } from './must-change-password.guard';
+import { createMockExecutionContext, createMockReflector } from '@shared/testing/mock.types';
 
 describe('MustChangePasswordGuard', () => {
   let guard: MustChangePasswordGuard;
-  let mockReflector: any;
+  let mockReflector: ReturnType<typeof createMockReflector>;
 
   beforeEach(() => {
-    mockReflector = {
-      getAllAndOverride: jest.fn(),
-    };
-
+    mockReflector = createMockReflector();
     guard = new MustChangePasswordGuard(mockReflector);
   });
 
   describe('canActivate', () => {
     it('debería permitir acceso si mustChangePassword es false', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-          mustChangePassword: false,
+      const mockContext = createMockExecutionContext({
+        request: {
+          user: {
+            userId: 'user-123',
+            username: 'testuser',
+            mustChangePassword: false,
+          },
         },
       });
 
       mockReflector.getAllAndOverride.mockReturnValue(false);
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('debería denegar acceso si mustChangePassword es true', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'newuser',
-          mustChangePassword: true,
+      const mockContext = createMockExecutionContext({
+        request: {
+          user: {
+            userId: 'user-123',
+            username: 'newuser',
+            mustChangePassword: true,
+          },
         },
       });
 
       mockReflector.getAllAndOverride.mockReturnValue(false);
 
-      // Act & Assert
       expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
       expect(() => guard.canActivate(mockContext)).toThrow(
-        'You must change your password before accessing the system' // ⬅️ CORREGIDO
+        'You must change your password before accessing the system',
       );
     });
 
     it('debería permitir acceso a rutas con decorator AllowChangePassword', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'newuser',
-          mustChangePassword: true,
+      const mockContext = createMockExecutionContext({
+        request: {
+          user: {
+            userId: 'user-123',
+            username: 'newuser',
+            mustChangePassword: true,
+          },
         },
       });
 
-      // Simular que la ruta tiene el decorator AllowChangePassword
       mockReflector.getAllAndOverride.mockReturnValue(true);
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('debería permitir acceso si no hay usuario (caso edge)', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: undefined,
+      const mockContext = createMockExecutionContext({
+        request: { user: undefined },
       });
 
       mockReflector.getAllAndOverride.mockReturnValue(false);
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('debería permitir acceso si mustChangePassword es undefined', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-          // mustChangePassword no está definido
+      const mockContext = createMockExecutionContext({
+        request: {
+          user: {
+            userId: 'user-123',
+            username: 'testuser',
+          },
         },
       });
 
       mockReflector.getAllAndOverride.mockReturnValue(false);
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('debería verificar metadata ALLOW_CHANGE_PASSWORD_KEY', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          mustChangePassword: true,
+      const mockContext = createMockExecutionContext({
+        request: {
+          user: {
+            userId: 'user-123',
+            mustChangePassword: true,
+          },
         },
       });
 
       mockReflector.getAllAndOverride.mockReturnValue(true);
 
-      // Act
       guard.canActivate(mockContext);
 
-      // Assert
       expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
         'allowChangePassword',
-        expect.anything()
+        expect.anything(),
       );
     });
   });
 });
-
-// Helper para crear mock context
-function createMockContext(request: any): ExecutionContext {
-  return {
-    switchToHttp: () => ({
-      getRequest: () => request,
-    }),
-    getHandler: () => ({}),
-    getClass: () => ({}),
-  } as any;
-}

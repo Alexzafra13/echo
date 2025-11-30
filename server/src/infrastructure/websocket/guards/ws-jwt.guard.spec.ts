@@ -4,18 +4,28 @@ import { WsException } from '@nestjs/websockets';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { Socket } from 'socket.io';
 
+interface MockSocket {
+  id: string;
+  handshake: {
+    query: Record<string, string | string[]>;
+    auth: Record<string, string>;
+    headers: Record<string, string>;
+  };
+  data: Record<string, unknown>;
+}
+
 describe('WsJwtGuard', () => {
   let guard: WsJwtGuard;
-  let jwtService: JwtService;
-  let mockSocket: Partial<Socket>;
+  let mockJwtService: { verifyAsync: jest.Mock };
+  let mockSocket: MockSocket;
   let mockContext: ExecutionContext;
 
   beforeEach(() => {
-    jwtService = {
+    mockJwtService = {
       verifyAsync: jest.fn(),
-    } as any;
+    };
 
-    guard = new WsJwtGuard(jwtService);
+    guard = new WsJwtGuard(mockJwtService as unknown as JwtService);
 
     mockSocket = {
       id: 'test-socket-id',
@@ -23,15 +33,15 @@ describe('WsJwtGuard', () => {
         query: {},
         auth: {},
         headers: {},
-      } as any,
+      },
       data: {},
     };
 
     mockContext = {
       switchToWs: () => ({
-        getClient: () => mockSocket,
+        getClient: () => mockSocket as unknown as Socket,
       }),
-    } as any;
+    } as ExecutionContext;
   });
 
   describe('canActivate', () => {
@@ -39,15 +49,15 @@ describe('WsJwtGuard', () => {
       const token = 'valid-token';
       const payload = { sub: 'user-123', username: 'testuser' };
 
-      mockSocket.handshake!.query = { token };
-      (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
+      mockSocket.handshake.query = { token };
+      mockJwtService.verifyAsync.mockResolvedValue(payload);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(mockSocket.data!.user).toEqual(payload);
-      expect(mockSocket.data!.userId).toBe('user-123');
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith(token, {
+      expect(mockSocket.data.user).toEqual(payload);
+      expect(mockSocket.data.userId).toBe('user-123');
+      expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(token, {
         secret: process.env.JWT_SECRET,
       });
     });
@@ -56,26 +66,26 @@ describe('WsJwtGuard', () => {
       const token = 'valid-token';
       const payload = { sub: 'user-456', username: 'testuser2' };
 
-      mockSocket.handshake!.auth = { token };
-      (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
+      mockSocket.handshake.auth = { token };
+      mockJwtService.verifyAsync.mockResolvedValue(payload);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(mockSocket.data!.userId).toBe('user-456');
+      expect(mockSocket.data.userId).toBe('user-456');
     });
 
     it('should allow connection with valid token from Authorization header', async () => {
       const token = 'valid-token';
       const payload = { sub: 'user-789', username: 'testuser3' };
 
-      mockSocket.handshake!.headers = { authorization: `Bearer ${token}` };
-      (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
+      mockSocket.handshake.headers = { authorization: `Bearer ${token}` };
+      mockJwtService.verifyAsync.mockResolvedValue(payload);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(mockSocket.data!.userId).toBe('user-789');
+      expect(mockSocket.data.userId).toBe('user-789');
     });
 
     it('should reject connection without token', async () => {
@@ -84,16 +94,16 @@ describe('WsJwtGuard', () => {
     });
 
     it('should reject connection with invalid token', async () => {
-      mockSocket.handshake!.query = { token: 'invalid-token' };
-      (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Invalid token'));
+      mockSocket.handshake.query = { token: 'invalid-token' };
+      mockJwtService.verifyAsync.mockRejectedValue(new Error('Invalid token'));
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
       await expect(guard.canActivate(mockContext)).rejects.toThrow('Unauthorized');
     });
 
     it('should reject connection with expired token', async () => {
-      mockSocket.handshake!.query = { token: 'expired-token' };
-      (jwtService.verifyAsync as jest.Mock).mockRejectedValue(new Error('Token expired'));
+      mockSocket.handshake.query = { token: 'expired-token' };
+      mockJwtService.verifyAsync.mockRejectedValue(new Error('Token expired'));
 
       await expect(guard.canActivate(mockContext)).rejects.toThrow(WsException);
     });
@@ -102,13 +112,13 @@ describe('WsJwtGuard', () => {
       const token = 'valid-token';
       const payload = { sub: 'user-999', username: 'testuser4' };
 
-      mockSocket.handshake!.query = { token: [token, 'other-token'] };
-      (jwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
+      mockSocket.handshake.query = { token: [token, 'other-token'] };
+      mockJwtService.verifyAsync.mockResolvedValue(payload);
 
       const result = await guard.canActivate(mockContext);
 
       expect(result).toBe(true);
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith(token, expect.any(Object));
+      expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(token, expect.any(Object));
     });
   });
 });

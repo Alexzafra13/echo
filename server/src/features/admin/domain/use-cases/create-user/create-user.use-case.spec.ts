@@ -1,28 +1,25 @@
 import { ConflictError, ValidationError } from '@shared/errors';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { CreateUserUseCase } from './create-user.use-case';
+import {
+  MockUserRepository,
+  MockPasswordService,
+  MockLogService,
+  createMockUserRepository,
+  createMockPasswordService,
+  createMockLogService,
+} from '@shared/testing/mock.types';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
-  let mockUserRepository: any;
-  let mockPasswordService: any;
-  let mockLogService: any;
+  let mockUserRepository: MockUserRepository;
+  let mockPasswordService: MockPasswordService;
+  let mockLogService: MockLogService;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findByUsername: jest.fn(),
-      create: jest.fn(),
-    };
-
-    mockPasswordService = {
-      hash: jest.fn(),
-    };
-
-    mockLogService = {
-      info: jest.fn(),
-      warning: jest.fn(),
-      error: jest.fn(),
-    };
+    mockUserRepository = createMockUserRepository();
+    mockPasswordService = createMockPasswordService();
+    mockLogService = createMockLogService();
 
     useCase = new CreateUserUseCase(
       mockUserRepository,

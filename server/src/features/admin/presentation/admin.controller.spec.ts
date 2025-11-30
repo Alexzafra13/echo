@@ -10,40 +10,24 @@ import {
 import { PermanentlyDeleteUserUseCase } from '../domain/use-cases/permanently-delete-user/permanently-delete-user.use-case';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
+import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
 
 describe('AdminController', () => {
   let controller: AdminController;
-  let mockCreateUserUseCase: any;
-  let mockListUsersUseCase: any;
-  let mockUpdateUserUseCase: any;
-  let mockDeleteUserUseCase: any;
-  let mockResetUserPasswordUseCase: any;
-  let mockPermanentlyDeleteUserUseCase: any;
+  let mockCreateUserUseCase: MockUseCase;
+  let mockListUsersUseCase: MockUseCase;
+  let mockUpdateUserUseCase: MockUseCase;
+  let mockDeleteUserUseCase: MockUseCase;
+  let mockResetUserPasswordUseCase: MockUseCase;
+  let mockPermanentlyDeleteUserUseCase: MockUseCase;
 
   beforeEach(async () => {
-    mockCreateUserUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockListUsersUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockUpdateUserUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockDeleteUserUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockResetUserPasswordUseCase = {
-      execute: jest.fn(),
-    };
-
-    mockPermanentlyDeleteUserUseCase = {
-      execute: jest.fn(),
-    };
+    mockCreateUserUseCase = createMockUseCase();
+    mockListUsersUseCase = createMockUseCase();
+    mockUpdateUserUseCase = createMockUseCase();
+    mockDeleteUserUseCase = createMockUseCase();
+    mockResetUserPasswordUseCase = createMockUseCase();
+    mockPermanentlyDeleteUserUseCase = createMockUseCase();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],

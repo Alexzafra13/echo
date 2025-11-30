@@ -1,106 +1,117 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { AdminGuard } from './admin.guard';
+import { UnauthorizedException, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { createMockExecutionContext } from '@shared/testing/mock.types';
 
-describe('AdminGuard', () => {
-  let guard: AdminGuard;
+describe('JwtAuthGuard', () => {
+  let guard: JwtAuthGuard;
+  let mockReflector: { getAllAndOverride: jest.Mock };
 
   beforeEach(() => {
-    guard = new AdminGuard();
+    mockReflector = {
+      getAllAndOverride: jest.fn(),
+    };
+    guard = new JwtAuthGuard(mockReflector as unknown as Reflector);
   });
 
   describe('canActivate', () => {
-    it('debería permitir acceso si el usuario es admin', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'admin-123',
-          username: 'admin',
-          isAdmin: true,
-        },
+    it('debería permitir acceso si la ruta es pública', () => {
+      mockReflector.getAllAndOverride.mockReturnValue(true);
+
+      const mockContext = createMockExecutionContext({
+        handler: () => {},
+        class: class TestController {},
       });
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith('isPublic', [
+        mockContext.getHandler(),
+        mockContext.getClass(),
+      ]);
     });
 
-    it('debería denegar acceso si el usuario NO es admin', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'normaluser',
-          isAdmin: false,
-        },
+    it('debería llamar a super.canActivate si la ruta no es pública', () => {
+      mockReflector.getAllAndOverride.mockReturnValue(false);
+
+      const mockContext = createMockExecutionContext({
+        handler: () => {},
+        class: class TestController {},
       });
 
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        'Admin access required'
+      // Spy on the parent's canActivate to avoid passport execution
+      const superCanActivateSpy = jest
+        .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+        .mockReturnValue(Promise.resolve(true));
+
+      const result = guard.canActivate(mockContext);
+
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalled();
+      expect(superCanActivateSpy).toHaveBeenCalledWith(mockContext);
+
+      superCanActivateSpy.mockRestore();
+    });
+
+    it('debería verificar la clave IS_PUBLIC_KEY con handler y class', () => {
+      mockReflector.getAllAndOverride.mockReturnValue(true);
+
+      const handler = () => {};
+      class TestController {}
+
+      const mockContext = createMockExecutionContext({
+        handler,
+        class: TestController,
+      });
+
+      guard.canActivate(mockContext);
+
+      expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
+        'isPublic',
+        expect.any(Array),
+      );
+    });
+  });
+
+  describe('handleRequest', () => {
+    interface MockUser {
+      id: string;
+      username: string;
+    }
+
+    it('debería retornar el usuario si la autenticación es exitosa', () => {
+      const mockUser: MockUser = { id: 'user-123', username: 'testuser' };
+
+      const result = guard.handleRequest(null, mockUser, null);
+
+      expect(result).toBe(mockUser);
+    });
+
+    it('debería lanzar UnauthorizedException si no hay usuario', () => {
+      expect(() => guard.handleRequest(null, null, null)).toThrow(
+        UnauthorizedException,
+      );
+      expect(() => guard.handleRequest(null, null, null)).toThrow('Invalid token');
+    });
+
+    it('debería lanzar el error original si hay un error', () => {
+      const mockError = new Error('Custom auth error');
+
+      expect(() => guard.handleRequest(mockError, null, null)).toThrow(mockError);
+    });
+
+    it('debería lanzar UnauthorizedException si user es undefined', () => {
+      expect(() => guard.handleRequest(null, undefined, null)).toThrow(
+        UnauthorizedException,
       );
     });
 
-    it('debería denegar acceso si no hay usuario en el request', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: undefined,
-      });
+    it('debería priorizar el error sobre la falta de usuario', () => {
+      const customError = new UnauthorizedException('Custom error');
 
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    });
-
-    it('debería denegar acceso si user.isAdmin es undefined', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-        },
-      });
-
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    });
-
-    it('debería denegar acceso si user.isAdmin es null', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-          isAdmin: null,
-        },
-      });
-
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    });
-
-    it('debería denegar acceso si user.isAdmin es false explícitamente', () => {
-      // Arrange
-      const mockContext = createMockContext({
-        user: {
-          userId: 'user-123',
-          username: 'testuser',
-          isAdmin: false,
-        },
-      });
-
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+      expect(() => guard.handleRequest(customError, { id: '123' }, null)).toThrow(
+        customError,
+      );
     });
   });
 });
-
-// Helper para crear mock context
-function createMockContext(request: any): ExecutionContext {
-  return {
-    switchToHttp: () => ({
-      getRequest: () => request,
-    }),
-  } as any;
-}
