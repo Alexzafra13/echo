@@ -43,7 +43,7 @@ export function SystemHealthIndicator() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Solo mostrar para admins
   if (!user?.isAdmin) {

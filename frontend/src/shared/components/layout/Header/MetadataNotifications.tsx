@@ -27,7 +27,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   const [isClosing, setIsClosing] = useState(false);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     notifications,
