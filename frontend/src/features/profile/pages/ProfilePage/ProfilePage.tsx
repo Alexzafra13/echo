@@ -111,6 +111,7 @@ export function ProfilePage() {
         <Header showBackButton disableSearch />
 
         <div className={styles.profilePage__content}>
+          <div className={styles.profilePage__contentInner}>
           {/* Header with Avatar */}
           <div className={styles.profilePage__header}>
             <div
@@ -320,6 +321,7 @@ export function ProfilePage() {
                 </button>
               </form>
             </div>
+          </div>
           </div>
         </div>
       </main>
