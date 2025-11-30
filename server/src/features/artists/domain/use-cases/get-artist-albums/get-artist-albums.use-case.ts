@@ -18,11 +18,12 @@ export class GetArtistAlbumsUseCase {
   async execute(input: GetArtistAlbumsInput): Promise<GetArtistAlbumsOutput> {
     const { skip, take } = validatePagination(input.skip ?? 0, input.take ?? 100);
 
-    const albums = await this.albumRepository.findByArtistId(input.artistId, skip, take);
+    // Execute both queries in parallel to avoid N+1
+    const [albums, total] = await Promise.all([
+      this.albumRepository.findByArtistId(input.artistId, skip, take),
+      this.albumRepository.countByArtistId(input.artistId),
+    ]);
 
-    // Get total count for this artist (fetch one more to check hasMore)
-    const allAlbums = await this.albumRepository.findByArtistId(input.artistId, 0, 1000);
-    const total = allAlbums.length;
     const hasMore = skip + take < total;
 
     return {
