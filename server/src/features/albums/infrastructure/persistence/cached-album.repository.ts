@@ -1,304 +1,211 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RedisService } from '@infrastructure/cache/redis.service';
+import { BaseCachedRepository } from '@shared/base';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { DrizzleAlbumRepository } from './album.repository';
 
 /**
- * CachedAlbumRepository - Decorator Pattern con Redis Cache
+ * CachedAlbumRepository - Implements Cache-Aside pattern for Album entities.
  *
- * Implementa IAlbumRepository (mismo contrato que DrizzleAlbumRepository)
- * Agrega caching transparente sin que el dominio lo sepa
+ * Extends BaseCachedRepository for common operations and adds album-specific
+ * caching for methods like findByArtistId, findRecent, findMostPlayed, etc.
  *
- * Patrón Cache-Aside:
- * 1. Check cache
- * 2. If miss → fetch from DB
- * 3. Store in cache
- * 4. Return data
+ * Cache Strategy:
+ * - Single albums: 1 hour TTL (configurable via CACHE_ALBUM_TTL)
+ * - Search results: 1 minute TTL (frequent changes)
+ * - Recent/Most played lists: 5-10 minutes (balance freshness vs performance)
+ * - Count: 30 minutes (slow to change)
  *
- * Ventajas:
- * - Domain layer NO cambia (sigue usando IAlbumRepository)
- * - Use cases NO cambian
- * - Solo cambiamos provider en AlbumsModule
- * - Cache transparente
+ * Non-cached operations:
+ * - findAll (too many pagination combinations)
+ * - findAlphabetically (fast with index)
+ * - findRecentlyPlayed (user-specific, changes frequently)
+ * - findFavorites (user-specific, changes on like/unlike)
  */
 @Injectable()
-export class CachedAlbumRepository implements IAlbumRepository {
-  private readonly CACHE_TTL = parseInt(process.env.CACHE_ALBUM_TTL || '3600');
-  private readonly SEARCH_CACHE_TTL = 60; // 1 minuto para búsquedas
-  private readonly KEY_PREFIX = 'album:';
-  private readonly LIST_KEY_PREFIX = 'albums:';
-  private readonly SEARCH_KEY_PREFIX = 'albums:search:';
+export class CachedAlbumRepository
+  extends BaseCachedRepository<Album, IAlbumRepository>
+  implements IAlbumRepository
+{
+  // Additional TTLs for album-specific caches
+  private readonly RECENT_TTL = 300; // 5 minutes
+  private readonly MOST_PLAYED_TTL = 600; // 10 minutes
+  private readonly COUNT_TTL = 1800; // 30 minutes
 
   constructor(
+    baseRepository: DrizzleAlbumRepository,
+    cache: RedisService,
     @InjectPinoLogger(CachedAlbumRepository.name)
-    private readonly logger: PinoLogger,
-    private readonly baseRepository: DrizzleAlbumRepository,
-    private readonly cache: RedisService,
-  ) {}
-
-  /**
-   * Busca álbum por ID con cache
-   */
-  async findById(id: string): Promise<Album | null> {
-    const cacheKey = `${this.KEY_PREFIX}${id}`;
-
-    // 1. Check cache
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Album cache hit');
-      return Album.reconstruct(cached);
-    }
-
-    this.logger.debug({ cacheKey, type: 'MISS' }, 'Album cache miss');
-
-    // 2. Fetch from DB
-    const album = await this.baseRepository.findById(id);
-
-    // 3. Store in cache
-    if (album) {
-      const primitives = album.toPrimitives ? album.toPrimitives() : album;
-      await this.cache.set(cacheKey, primitives, this.CACHE_TTL);
-    }
-
-    return album;
-  }
-
-  /**
-   * Obtiene todos los álbumes
-   * NOTA: Lista paginada NO se cachea (varía mucho)
-   */
-  async findAll(skip: number, take: number): Promise<Album[]> {
-    // No cacheamos listas paginadas porque hay muchas combinaciones
-    return this.baseRepository.findAll(skip, take);
-  }
-
-  /**
-   * Busca álbumes por nombre con cache
-   * TTL corto (60s) porque los resultados pueden cambiar
-   */
-  async search(name: string, skip: number, take: number): Promise<Album[]> {
-    // Normalizar query para clave consistente
-    const normalizedQuery = name.toLowerCase().trim();
-    const cacheKey = `${this.SEARCH_KEY_PREFIX}${normalizedQuery}:${skip}:${take}`;
-
-    // Check cache
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Album search cache hit');
-      return cached.map((item: any) => Album.reconstruct(item));
-    }
-
-    this.logger.debug({ cacheKey, type: 'MISS' }, 'Album search cache miss');
-
-    // Fetch from DB
-    const albums = await this.baseRepository.search(name, skip, take);
-
-    // Store in cache (even empty results to prevent repeated DB hits)
-    const primitives = albums.map((a: Album) =>
-      a.toPrimitives ? a.toPrimitives() : a,
+    logger: PinoLogger,
+  ) {
+    super(
+      baseRepository,
+      cache,
+      logger,
+      {
+        keyPrefix: 'album:',
+        searchKeyPrefix: 'albums:search:',
+        listKeyPrefix: 'albums:',
+        entityTtl: parseInt(process.env.CACHE_ALBUM_TTL || '3600'),
+        searchTtl: 60,
+      },
+      Album.reconstruct,
     );
-    await this.cache.set(cacheKey, primitives, this.SEARCH_CACHE_TTL);
-
-    return albums;
   }
 
+  // ==================== ALBUM-SPECIFIC CACHED METHODS ====================
+
   /**
-   * Obtiene álbumes de un artista
-   * Cachea la lista completa por artista
+   * Find albums by artist ID with caching.
    */
   async findByArtistId(
     artistId: string,
     skip: number,
     take: number,
   ): Promise<Album[]> {
-    const cacheKey = `${this.LIST_KEY_PREFIX}artist:${artistId}:${skip}:${take}`;
+    const cacheKey = `${this.config.listKeyPrefix}artist:${artistId}:${skip}:${take}`;
 
-    // Check cache
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Albums by artist cache hit');
-      return cached.map((item: any) =>
-        Album.reconstruct(item),
-      );
-    }
-
-    this.logger.debug({ cacheKey, type: 'MISS' }, 'Albums by artist cache miss');
-
-    // Fetch from DB
-    const albums = await this.baseRepository.findByArtistId(
-      artistId,
-      skip,
-      take,
+    return this.getCachedOrFetch(
+      cacheKey,
+      () => this.baseRepository.findByArtistId(artistId, skip, take),
+      this.entityTtl,
+      true,
     );
-
-    // Store in cache
-    if (albums.length > 0) {
-      const primitives = albums.map((a: Album) =>
-        a.toPrimitives ? a.toPrimitives() : a,
-      );
-      await this.cache.set(cacheKey, primitives, this.CACHE_TTL);
-    }
-
-    return albums;
   }
 
   /**
-   * Obtiene álbumes recientes
-   * Cachea con TTL corto
+   * Find recent albums with caching.
    */
   async findRecent(take: number): Promise<Album[]> {
-    const cacheKey = `${this.LIST_KEY_PREFIX}recent:${take}`;
+    const cacheKey = `${this.config.listKeyPrefix}recent:${take}`;
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Recent albums cache hit');
-      return cached.map((item: any) =>
-        Album.reconstruct(item),
-      );
-    }
-
-    const albums = await this.baseRepository.findRecent(take);
-
-    if (albums.length > 0) {
-      const primitives = albums.map((a: Album) =>
-        a.toPrimitives ? a.toPrimitives() : a,
-      );
-      // TTL más corto para listas "recent"
-      await this.cache.set(cacheKey, primitives, 300); // 5 minutos
-    }
-
-    return albums;
+    return this.getCachedOrFetch(
+      cacheKey,
+      () => this.baseRepository.findRecent(take),
+      this.RECENT_TTL,
+      true,
+    );
   }
 
   /**
-   * Obtiene álbumes más reproducidos
+   * Find most played albums with caching.
    */
   async findMostPlayed(take: number): Promise<Album[]> {
-    const cacheKey = `${this.LIST_KEY_PREFIX}most-played:${take}`;
+    const cacheKey = `${this.config.listKeyPrefix}most-played:${take}`;
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Most played albums cache hit');
-      return cached.map((item: any) =>
-        Album.reconstruct(item),
-      );
-    }
-
-    const albums = await this.baseRepository.findMostPlayed(take);
-
-    if (albums.length > 0) {
-      const primitives = albums.map((a: Album) =>
-        a.toPrimitives ? a.toPrimitives() : a,
-      );
-      await this.cache.set(cacheKey, primitives, 600); // 10 minutos
-    }
-
-    return albums;
+    return this.getCachedOrFetch(
+      cacheKey,
+      () => this.baseRepository.findMostPlayed(take),
+      this.MOST_PLAYED_TTL,
+      true,
+    );
   }
 
   /**
-   * Cuenta total de álbumes
-   * Cache con TTL largo
+   * Count albums with caching.
    */
-  async count(): Promise<number> {
-    const cacheKey = `${this.LIST_KEY_PREFIX}count`;
+  override async count(): Promise<number> {
+    const cacheKey = `${this.config.listKeyPrefix}count`;
 
     const cached = await this.cache.get(cacheKey);
     if (cached !== null) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Albums count cache hit');
-      return cached;
+      return cached as number;
     }
 
     const count = await this.baseRepository.count();
-    await this.cache.set(cacheKey, count, 1800); // 30 minutos
+    await this.cache.set(cacheKey, count, this.COUNT_TTL);
 
     return count;
   }
 
-  /**
-   * Crea álbum e invalida cache
-   */
-  async create(album: Album): Promise<Album> {
-    const created = await this.baseRepository.create(album);
-
-    // Invalidar cache de listas
-    await this.invalidateListCaches();
-
-    return created;
-  }
+  // ==================== NON-CACHED METHODS (DELEGATED) ====================
 
   /**
-   * Actualiza álbum e invalida cache
-   */
-  async update(id: string, album: Partial<Album>): Promise<Album | null> {
-    const updated = await this.baseRepository.update(id, album);
-
-    if (updated) {
-      // Invalidar cache del álbum específico
-      await this.cache.del(`${this.KEY_PREFIX}${id}`);
-
-      // Invalidar cache de listas
-      await this.invalidateListCaches();
-    }
-
-    return updated;
-  }
-
-  /**
-   * Elimina álbum e invalida cache
-   */
-  async delete(id: string): Promise<boolean> {
-    const deleted = await this.baseRepository.delete(id);
-
-    if (deleted) {
-      await this.cache.del(`${this.KEY_PREFIX}${id}`);
-      await this.invalidateListCaches();
-    }
-
-    return deleted;
-  }
-
-  /**
-   * Obtiene álbumes ordenados alfabéticamente
-   * No se cachea porque cambia poco y las queries son rápidas con índice
+   * Find albums alphabetically.
+   * Not cached - fast with database index.
    */
   async findAlphabetically(skip: number, take: number): Promise<Album[]> {
     return this.baseRepository.findAlphabetically(skip, take);
   }
 
   /**
-   * Obtiene álbumes reproducidos recientemente por un usuario
-   * No se cachea porque es específico por usuario y cambia frecuentemente
+   * Find recently played albums for a user.
+   * Not cached - user-specific and changes frequently.
    */
   async findRecentlyPlayed(userId: string, take: number): Promise<Album[]> {
     return this.baseRepository.findRecentlyPlayed(userId, take);
   }
 
   /**
-   * Obtiene álbumes favoritos del usuario
-   * No se cachea porque es específico por usuario y cambia cuando hace like/unlike
+   * Find favorite albums for a user.
+   * Not cached - user-specific and changes on like/unlike.
    */
-  async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
+  async findFavorites(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<Album[]> {
     return this.baseRepository.findFavorites(userId, skip, take);
   }
 
+  // ==================== OVERRIDE WRITE OPERATIONS FOR EXTENDED INVALIDATION ====================
+
   /**
-   * Invalida todas las listas en cache
-   * Se llama cuando hay escrituras (create, update, delete)
+   * Create album and invalidate all related caches.
    */
-  async invalidateListCaches(): Promise<void> {
-    // Borrar todas las listas cacheadas usando pattern matching
+  override async create(album: Album): Promise<Album> {
+    const created = await this.baseRepository.create(album);
+    await this.invalidateAllAlbumCaches();
+    return created;
+  }
+
+  /**
+   * Update album and invalidate all related caches.
+   */
+  override async update(
+    id: string,
+    album: Partial<Album>,
+  ): Promise<Album | null> {
+    const updated = await this.baseRepository.update(id, album);
+
+    if (updated) {
+      await this.cache.del(`${this.config.keyPrefix}${id}`);
+      await this.invalidateAllAlbumCaches();
+    }
+
+    return updated;
+  }
+
+  /**
+   * Delete album and invalidate all related caches.
+   */
+  override async delete(id: string): Promise<boolean> {
+    const deleted = await this.baseRepository.delete(id);
+
+    if (deleted) {
+      await this.cache.del(`${this.config.keyPrefix}${id}`);
+      await this.invalidateAllAlbumCaches();
+    }
+
+    return deleted;
+  }
+
+  // ==================== PRIVATE HELPERS ====================
+
+  /**
+   * Invalidate all album-related caches (lists, searches, etc.)
+   */
+  private async invalidateAllAlbumCaches(): Promise<void> {
     await Promise.all([
-      this.cache.delPattern(`${this.KEY_PREFIX}*`), // Invalida TODOS los álbumes individuales (album:*)
-      this.cache.delPattern(`${this.LIST_KEY_PREFIX}recent:*`),
-      this.cache.delPattern(`${this.LIST_KEY_PREFIX}most-played:*`),
-      this.cache.delPattern(`${this.LIST_KEY_PREFIX}artist:*`),
-      this.cache.delPattern(`${this.SEARCH_KEY_PREFIX}*`), // Invalida búsquedas
-      this.cache.del(`${this.LIST_KEY_PREFIX}count`),
-      this.cache.del(`${this.LIST_KEY_PREFIX}featured`), // Si existe
+      this.invalidatePattern(`${this.config.keyPrefix}*`),
+      this.invalidatePattern(`${this.config.listKeyPrefix}recent:*`),
+      this.invalidatePattern(`${this.config.listKeyPrefix}most-played:*`),
+      this.invalidatePattern(`${this.config.listKeyPrefix}artist:*`),
+      this.invalidatePattern(`${this.config.searchKeyPrefix}*`),
+      this.invalidateKey(`${this.config.listKeyPrefix}count`),
     ]);
-    this.logger.info('Album cache invalidated');
+    this.logger?.info('Album caches invalidated');
   }
 }
