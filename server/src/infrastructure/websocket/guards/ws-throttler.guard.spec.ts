@@ -24,7 +24,6 @@ describe('WsThrottlerGuard', () => {
   });
 
   afterEach(() => {
-    // Limpiar recursos del guard
     guard.onModuleDestroy();
   });
 
@@ -33,7 +32,8 @@ describe('WsThrottlerGuard', () => {
       const setIntervalSpy = jest.spyOn(global, 'setInterval');
       guard.onModuleInit();
 
-      expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 10 * 60 * 1000);
+      // 5 minutos = 5 * 60 * 1000
+      expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 5 * 60 * 1000);
       setIntervalSpy.mockRestore();
     });
 
@@ -47,7 +47,7 @@ describe('WsThrottlerGuard', () => {
     });
   });
 
-  describe('canActivate', () => {
+  describe('canActivate - Fixed Window Counter', () => {
     it('should allow first request', async () => {
       const result = await guard.canActivate(mockContext);
       expect(result).toBe(true);
@@ -72,8 +72,8 @@ describe('WsThrottlerGuard', () => {
       await expect(guard.canActivate(mockContext)).rejects.toThrow('Demasiadas solicitudes');
     });
 
-    it('should reset after time window passes', async () => {
-      // Hacer 20 requests
+    it('should reset counter after time window passes', async () => {
+      // Hacer 20 requests (alcanzar límite)
       for (let i = 0; i < 20; i++) {
         await guard.canActivate(mockContext);
       }
@@ -81,7 +81,7 @@ describe('WsThrottlerGuard', () => {
       // Esperar más de 1 segundo (ventana de tiempo)
       await new Promise((resolve) => setTimeout(resolve, 1100));
 
-      // Ahora debería permitir nuevamente
+      // Nueva ventana, contador reseteado → debería permitir
       const result = await guard.canActivate(mockContext);
       expect(result).toBe(true);
     });
@@ -98,23 +98,23 @@ describe('WsThrottlerGuard', () => {
         }),
       } as any;
 
-      // Cliente 1 hace 20 requests
+      // Cliente 1 alcanza límite
       for (let i = 0; i < 20; i++) {
         await guard.canActivate(mockContext);
       }
 
-      // Cliente 2 debería poder hacer requests
+      // Cliente 2 tiene su propia ventana → debería poder hacer requests
       const result = await guard.canActivate(mockContext2);
       expect(result).toBe(true);
     });
 
-    it('should register cleanup on disconnect only once per client', async () => {
-      // Hacer múltiples requests del mismo cliente
+    it('should register disconnect listener only once per client', async () => {
+      // Múltiples requests del mismo cliente
       await guard.canActivate(mockContext);
       await guard.canActivate(mockContext);
       await guard.canActivate(mockContext);
 
-      // Solo debe registrar el listener una vez
+      // Solo debe registrar el listener una vez (evita memory leak)
       expect(mockSocket.once).toHaveBeenCalledTimes(1);
       expect(mockSocket.once).toHaveBeenCalledWith('disconnect', expect.any(Function));
     });
