@@ -52,6 +52,7 @@ export function HeroSection({ album, onPlay, onNext, onPrevious }: HeroSectionPr
       id: track.id,
       title: track.title,
       artist: track.artistName || album.artist || 'Unknown Artist',
+      albumId: album.id,
       albumName: album.title,
       duration: track.duration || 0,
       coverImage: album.coverImage, // Add album cover to each track

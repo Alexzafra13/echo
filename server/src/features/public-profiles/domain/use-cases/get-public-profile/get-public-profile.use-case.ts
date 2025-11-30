@@ -128,7 +128,7 @@ export class GetPublicProfileUseCase {
     }));
   }
 
-  private async getTopArtists(userId: string, limit = 10): Promise<TopArtist[]> {
+  private async getTopArtists(userId: string, limit = 6): Promise<TopArtist[]> {
     const results = await this.drizzle.db
       .select({
         artistId: userPlayStats.itemId,
@@ -157,7 +157,7 @@ export class GetPublicProfileUseCase {
     }));
   }
 
-  private async getTopAlbums(userId: string, limit = 10): Promise<TopAlbum[]> {
+  private async getTopAlbums(userId: string, limit = 6): Promise<TopAlbum[]> {
     const results = await this.drizzle.db
       .select({
         albumId: userPlayStats.itemId,

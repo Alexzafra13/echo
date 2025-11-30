@@ -198,9 +198,6 @@
   transition: border-color 0.2s ease;
 }
 
-.publicProfilePage__artistCard:hover .publicProfilePage__artistImage {
-  border-color: var(--color-primary);
-}
 
 .publicProfilePage__artistPlaceholder {
   width: 120px;

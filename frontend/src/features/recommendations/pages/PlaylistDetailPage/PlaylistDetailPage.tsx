@@ -93,6 +93,7 @@ export function PlaylistDetailPage() {
         id: st.track!.id,
         title: st.track!.title,
         artist: st.track!.artistName || 'Unknown Artist',
+        albumId: st.track!.albumId,
         albumName: st.track!.albumName,
         duration: st.track!.duration || 0,
         coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
