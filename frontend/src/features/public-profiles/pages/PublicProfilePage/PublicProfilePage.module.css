@@ -161,7 +161,10 @@
   display: flex;
   gap: 16px;
   overflow-x: auto;
+  overflow-y: visible;
+  padding-top: 8px;
   padding-bottom: 12px;
+  margin-top: -8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
