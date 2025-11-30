@@ -4,6 +4,7 @@ import { IAlbumCoverRetriever } from '../../domain/interfaces';
 import { AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { fetchWithTimeout } from '@shared/utils';
+import { ExternalApiError } from '@shared/errors';
 
 /**
  * Cover Art Archive Agent
@@ -69,7 +70,7 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
           this.logger.debug(`No cover art found for MBID: ${mbid}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('CoverArtArchive', response.status, response.statusText);
       }
 
       const data = await response.json();

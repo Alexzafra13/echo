@@ -18,6 +18,7 @@ import { StorageService } from '../infrastructure/services/storage.service';
 import { ImageDownloadService } from '../infrastructure/services/image-download.service';
 import { SettingsService } from '../infrastructure/services/settings.service';
 import { MetadataConflictService, ConflictPriority } from '../infrastructure/services/metadata-conflict.service';
+import { NotFoundError } from '@shared/errors';
 import * as path from 'path';
 
 /**
@@ -73,7 +74,7 @@ export class ExternalMetadataService {
       const artist = artistResult[0];
 
       if (!artist) {
-        throw new Error(`Artist not found: ${artistId}`);
+        throw new NotFoundError('Artist', artistId);
       }
 
       this.logger.log(`Enriching artist: ${artist.name} (ID: ${artistId})`);
@@ -425,7 +426,7 @@ export class ExternalMetadataService {
       const artistData = albumResult[0] ? { name: albumResult[0].artistName, mbzArtistId: albumResult[0].artistMbzId } : null;
 
       if (!album) {
-        throw new Error(`Album not found: ${albumId}`);
+        throw new NotFoundError('Album', albumId);
       }
 
       const artistName = artistData?.name || 'Unknown Artist';

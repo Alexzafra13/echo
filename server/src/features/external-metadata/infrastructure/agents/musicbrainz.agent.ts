@@ -7,6 +7,7 @@ import {
 } from '../../domain/interfaces/musicbrainz-search.interface';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { fetchWithTimeout } from '@shared/utils';
+import { ExternalApiError } from '@shared/errors';
 
 /**
  * MusicBrainz Agent
@@ -56,7 +57,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
       const data = await response.json();
@@ -125,7 +126,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
       const data = await response.json();
@@ -184,7 +185,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
           this.logger.debug(`Artist not found for MBID: ${mbid}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
       const artist = await response.json();
@@ -248,7 +249,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
           this.logger.debug(`Album not found for MBID: ${mbid}`);
           return null;
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
       const rg = await response.json();
@@ -364,7 +365,7 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
       const data = await response.json();

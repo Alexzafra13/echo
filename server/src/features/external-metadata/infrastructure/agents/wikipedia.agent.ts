@@ -3,6 +3,7 @@ import { IArtistBioRetriever } from '../../domain/interfaces';
 import { ArtistBio } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { fetchWithTimeout } from '@shared/utils';
+import { ExternalApiError } from '@shared/errors';
 
 /**
  * Wikipedia Agent
@@ -192,7 +193,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new ExternalApiError('Wikipedia', response.status, response.statusText);
     }
 
     const data = await response.json();
@@ -258,7 +259,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
       if (response.status === 404) {
         return null; // Page not found
       }
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new ExternalApiError('Wikipedia', response.status, response.statusText);
     }
 
     const data = await response.json();

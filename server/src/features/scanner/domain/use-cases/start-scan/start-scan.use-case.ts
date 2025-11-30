@@ -5,6 +5,7 @@ import {
   SCANNER_REPOSITORY,
 } from '../../ports/scanner-repository.port';
 import { StartScanInput, StartScanOutput } from './start-scan.dto';
+import { ScannerError } from '@shared/errors';
 
 // Inyectamos el servicio de procesamiento como dependencia externa
 export interface IScanProcessor {
@@ -36,9 +37,7 @@ export class StartScanUseCase {
     // 1. Verificar si hay un escaneo en progreso
     const runningScan = await this.scannerRepository.findByStatus('running');
     if (runningScan.length > 0) {
-      throw new Error(
-        'Ya hay un escaneo en progreso. Espere a que finalice antes de iniciar otro.',
-      );
+      throw new ScannerError('SCAN_ALREADY_RUNNING');
     }
 
     // 2. Crear nueva entidad de escaneo
