@@ -1,3 +1,4 @@
+import { Artist as ArtistDb } from '@infrastructure/database/schema/artists';
 import { Artist } from '../../domain/entities/artist.entity';
 
 /**
@@ -10,7 +11,7 @@ export class ArtistMapper {
    * Convierte Drizzle Artist a Domain Artist
    * Se usa cuando traes datos de BD
    */
-  static toDomain(raw: any): Artist {
+  static toDomain(raw: ArtistDb): Artist {
     return Artist.reconstruct({
       id: raw.id,
       name: raw.name,
@@ -19,7 +20,7 @@ export class ArtistMapper {
       mbzArtistId: raw.mbzArtistId || undefined,
       biography: raw.biography || undefined,
       externalUrl: raw.externalUrl || undefined,
-      externalInfoUpdatedAt: raw.externalInfoUpdatedAt || undefined,
+      externalInfoUpdatedAt: raw.externalProfileUpdatedAt || undefined,
       orderArtistName: raw.orderArtistName || undefined,
       size: Number(raw.size || 0),
       createdAt: raw.createdAt,
@@ -41,7 +42,7 @@ export class ArtistMapper {
       mbzArtistId: primitives.mbzArtistId || null,
       biography: primitives.biography || null,
       externalUrl: primitives.externalUrl || null,
-      externalInfoUpdatedAt: primitives.externalInfoUpdatedAt || null,
+      externalProfileUpdatedAt: primitives.externalInfoUpdatedAt || null,
       orderArtistName: primitives.orderArtistName || null,
       size: primitives.size,
       createdAt: primitives.createdAt,
@@ -52,7 +53,7 @@ export class ArtistMapper {
   /**
    * Convierte Array de Drizzle Artists a Domain Artists
    */
-  static toDomainArray(raw: any[]): Artist[] {
+  static toDomainArray(raw: ArtistDb[]): Artist[] {
     return raw.map((item) => this.toDomain(item));
   }
 }

@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { LoginOutput } from '../../domain/use-cases';
+import { LoginOutput, RefreshTokenOutput } from '../../domain/use-cases';
 
 export class UserResponseDto {
   @Expose()
@@ -60,7 +60,7 @@ export class RefreshTokenResponseDto {
   @Expose()
   refreshToken!: string;
 
-  static fromDomain(data: any): RefreshTokenResponseDto {
+  static fromDomain(data: RefreshTokenOutput): RefreshTokenResponseDto {
     const dto = new RefreshTokenResponseDto();
     dto.accessToken = data.accessToken;
     dto.refreshToken = data.refreshToken;

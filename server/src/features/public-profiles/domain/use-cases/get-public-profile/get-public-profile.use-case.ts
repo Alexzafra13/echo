@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, inArray } from 'drizzle-orm';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
@@ -178,17 +178,19 @@ export class GetPublicProfileUseCase {
       .orderBy(desc(userPlayStats.playCount))
       .limit(limit);
 
-    // Get artist names
-    const artistIds = results
-      .map((r) => r.artistId)
-      .filter((id): id is string => !!id);
+    // Get artist names in a single query using inArray
+    const artistIds = [...new Set(
+      results
+        .map((r) => r.artistId)
+        .filter((id): id is string => !!id)
+    )];
 
     let artistMap: Record<string, string> = {};
     if (artistIds.length > 0) {
       const artistResults = await this.drizzle.db
         .select({ id: artists.id, name: artists.name })
         .from(artists)
-        .where(eq(artists.id, artistIds[0])); // Simple version, could be improved
+        .where(inArray(artists.id, artistIds));
 
       artistMap = Object.fromEntries(
         artistResults.map((a) => [a.id, a.name])
@@ -227,23 +229,40 @@ export class GetPublicProfileUseCase {
       .orderBy(desc(playlists.createdAt))
       .limit(limit);
 
-    // Fetch album IDs for each playlist (for cover mosaic)
+    // Fetch album IDs for all playlists in a single query (for cover mosaic)
     const playlistIds = results.map((r) => r.id);
     const albumIdsMap: Record<string, string[]> = {};
 
     if (playlistIds.length > 0) {
-      for (const playlistId of playlistIds) {
-        const trackResults = await this.drizzle.db
-          .select({ albumId: tracks.albumId })
-          .from(playlistTracks)
-          .innerJoin(tracks, eq(tracks.id, playlistTracks.trackId))
-          .where(eq(playlistTracks.playlistId, playlistId))
-          .orderBy(playlistTracks.trackOrder)
-          .limit(4);
+      // Single query to get first 4 albums for each playlist
+      // We use a subquery approach: get all tracks ordered, then filter in JS
+      const allTrackResults = await this.drizzle.db
+        .select({
+          playlistId: playlistTracks.playlistId,
+          albumId: tracks.albumId,
+          trackOrder: playlistTracks.trackOrder,
+        })
+        .from(playlistTracks)
+        .innerJoin(tracks, eq(tracks.id, playlistTracks.trackId))
+        .where(inArray(playlistTracks.playlistId, playlistIds))
+        .orderBy(playlistTracks.playlistId, playlistTracks.trackOrder);
 
-        albumIdsMap[playlistId] = trackResults
+      // Group by playlist and take first 4 unique albums per playlist
+      for (const playlistId of playlistIds) {
+        const playlistAlbumIds = allTrackResults
+          .filter((t) => t.playlistId === playlistId)
           .map((t) => t.albumId)
           .filter((id): id is string => !!id);
+
+        // Get unique album IDs, maintaining order, limit to 4
+        const uniqueAlbums: string[] = [];
+        for (const albumId of playlistAlbumIds) {
+          if (!uniqueAlbums.includes(albumId)) {
+            uniqueAlbums.push(albumId);
+            if (uniqueAlbums.length >= 4) break;
+          }
+        }
+        albumIdsMap[playlistId] = uniqueAlbums;
       }
     }
 

@@ -1,4 +1,13 @@
+import { Album as AlbumDb } from '@infrastructure/database/schema/albums';
 import { Album } from '../../domain/entities/album.entity';
+
+/**
+ * Album with optional artist relation from Drizzle query
+ * Artist can be full ArtistDb object or just { name: string } for partial queries
+ */
+type AlbumWithRelations = AlbumDb & {
+  artist?: { name: string } | null;
+};
 
 /**
  * AlbumMapper - Convierte entre capas
@@ -10,7 +19,7 @@ export class AlbumMapper {
    * Convierte Drizzle Album a Domain Album
    * Se usa cuando traes datos de BD
    */
-  static toDomain(raw: any): Album {
+  static toDomain(raw: AlbumWithRelations): Album {
     return Album.reconstruct({
       id: raw.id,
       name: raw.name,
@@ -19,7 +28,7 @@ export class AlbumMapper {
       albumArtistId: raw.albumArtistId || undefined,
       coverArtPath: raw.coverArtPath || undefined,
       year: raw.year || undefined,
-      releaseDate: raw.releaseDate || undefined,
+      releaseDate: raw.releaseDate ? new Date(raw.releaseDate) : undefined,
       compilation: raw.compilation || false,
       songCount: raw.songCount || 0,
       duration: raw.duration || 0,
@@ -63,7 +72,7 @@ export class AlbumMapper {
   /**
    * Convierte Array de Drizzle Albums a Domain Albums
    */
-  static toDomainArray(raw: any[]): Album[] {
+  static toDomainArray(raw: AlbumWithRelations[]): Album[] {
     return raw.map((item) => this.toDomain(item));
   }
 }
