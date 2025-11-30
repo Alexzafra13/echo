@@ -108,7 +108,7 @@ describe('Scanner E2E', () => {
         .expect(403);
     });
 
-    it('debería validar path requerido', () => {
+    it('debería aceptar escaneo sin path (usa directorio por defecto)', () => {
       return request(app.getHttpServer())
         .post('/api/scanner/start')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -116,7 +116,11 @@ describe('Scanner E2E', () => {
           recursive: true,
           pruneDeleted: false,
         })
-        .expect(400);
+        .expect(202)
+        .expect((res) => {
+          expect(res.body.id).toBeDefined();
+          expect(res.body.status).toBeDefined();
+        });
     });
 
     it('debería usar valores por defecto para campos opcionales', () => {
