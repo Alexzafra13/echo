@@ -1,6 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RedisService } from '../../src/infrastructure/cache/redis.service';
 import { ConfigModule } from '@nestjs/config';
+import { getLoggerToken } from 'nestjs-pino';
+import { RedisService } from '../../src/infrastructure/cache/redis.service';
+
+// Mock logger para tests de integración
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+};
 
 /**
  * Redis Integration Tests
@@ -8,7 +17,7 @@ import { ConfigModule } from '@nestjs/config';
  * Estos tests verifican la integración real con Redis (no mocks).
  * Requieren que Redis esté corriendo (docker-compose.dev.yml).
  *
- * Ejecutar: pnpm test redis.integration-spec
+ * Ejecutar: pnpm test:integration redis.integration-spec
  */
 describe('Redis Integration', () => {
   let redisService: RedisService;
@@ -17,7 +26,13 @@ describe('Redis Integration', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [ConfigModule.forRoot()],
-      providers: [RedisService],
+      providers: [
+        RedisService,
+        {
+          provide: getLoggerToken(RedisService.name),
+          useValue: mockLogger,
+        },
+      ],
     }).compile();
 
     redisService = module.get<RedisService>(RedisService);

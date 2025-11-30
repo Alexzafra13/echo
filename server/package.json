@@ -22,9 +22,12 @@
     "db:reset": "node scripts/db-reset.js",
     "db:seed": "tsx src/infrastructure/database/seed.ts",
     "test": "jest",
+    "test:unit": "jest --config jest-unit.config.js",
+    "test:integration": "jest --config jest-integration.config.js",
+    "test:e2e": "jest --config jest-e2e.config.js",
+    "test:all": "pnpm test:unit && pnpm test:integration && pnpm test:e2e",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config jest-e2e.config.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix"
   },
   "dependencies": {
