@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
@@ -14,6 +15,7 @@ interface MiniPlayerProps {
 }
 
 export function MiniPlayer({ isVisible }: MiniPlayerProps) {
+  const [, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { preference } = usePlayerPreference();
@@ -58,11 +60,20 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   };
 
   // Obtener información de visualización (track o radio)
-  const { title, artist, cover } = getPlayerDisplayInfo(
+  const { title, artist, cover, albumId, albumName } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
   );
+
+  // Navegar al álbum al hacer clic en la carátula
+  const handleGoToAlbum = () => {
+    if (!isRadioMode && albumId) {
+      setLocation(`/album/${albumId}`);
+    }
+  };
+
+  const canNavigateToAlbum = !isRadioMode && albumId;
 
   // Lógica de visibilidad basada en preferencia
   // - 'sidebar': siempre visible en sidebar (shouldShow = true)
@@ -76,7 +87,11 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   return (
     <div className={`${styles.miniPlayer} ${shouldShow ? styles['miniPlayer--visible'] : ''}`}>
       {/* Cover con animación de reproducción */}
-      <div className={styles.coverContainer}>
+      <div
+        className={`${styles.coverContainer} ${canNavigateToAlbum ? styles['coverContainer--clickable'] : ''}`}
+        onClick={canNavigateToAlbum ? handleGoToAlbum : undefined}
+        title={canNavigateToAlbum ? `Ir al álbum: ${albumName || title}` : undefined}
+      >
         <img
           src={isRadioMode ? cover : getCoverUrl(cover)}
           alt={title}

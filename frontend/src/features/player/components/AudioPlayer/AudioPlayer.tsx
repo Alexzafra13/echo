@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
@@ -35,6 +36,7 @@ export function AudioPlayer() {
     toggleRepeat,
   } = usePlayer();
 
+  const [, setLocation] = useLocation();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('0, 0, 0');
@@ -147,11 +149,20 @@ export function AudioPlayer() {
   };
 
   // Obtener información de visualización (track o radio)
-  const { title, artist, cover } = getPlayerDisplayInfo(
+  const { title, artist, cover, albumId, albumName } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
   );
+
+  // Navegar al álbum al hacer clic en la carátula
+  const handleGoToAlbum = () => {
+    if (!isRadioMode && albumId) {
+      setLocation(`/album/${albumId}`);
+    }
+  };
+
+  const canNavigateToAlbum = !isRadioMode && albumId;
 
   return (
     <div
@@ -161,7 +172,11 @@ export function AudioPlayer() {
 
       {/* Track/Radio info - Left side */}
       <div className={styles.trackInfo}>
-        <div className={styles.trackCoverContainer}>
+        <div
+          className={`${styles.trackCoverContainer} ${canNavigateToAlbum ? styles['trackCoverContainer--clickable'] : ''}`}
+          onClick={canNavigateToAlbum ? handleGoToAlbum : undefined}
+          title={canNavigateToAlbum ? `Ir al álbum: ${albumName || title}` : undefined}
+        >
           {isRadioMode && (
             <div className={styles.trackCoverFallback}>
               <Radio size={24} />
@@ -177,10 +192,20 @@ export function AudioPlayer() {
         <div className={styles.trackDetails}>
           <div className={styles.trackTitle}>{title}</div>
           <div className={styles.trackArtist}>{artist}</div>
+          {/* Album name - clickable link to album */}
+          {canNavigateToAlbum && albumName && (
+            <div
+              className={styles.trackAlbum}
+              onClick={handleGoToAlbum}
+              title={`Ir al álbum: ${albumName}`}
+            >
+              {albumName}
+            </div>
+          )}
           {/* ICY Metadata - Now Playing for Radio */}
           {isRadioMode && radioMetadata && (
             <div className={styles.trackMetadata}>
-              🎵 {radioMetadata.title || `${radioMetadata.artist || ''} - ${radioMetadata.song || ''}`.trim()}
+              {radioMetadata.title || `${radioMetadata.artist || ''} - ${radioMetadata.song || ''}`.trim()}
             </div>
           )}
         </div>
