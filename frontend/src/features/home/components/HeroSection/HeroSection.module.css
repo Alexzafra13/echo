@@ -21,9 +21,6 @@
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
-  /* 80% visible, then fade to transparent */
-  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent);
-  mask-image: linear-gradient(to bottom, black 80%, transparent);
 }
 
 @keyframes fadeInBackground {
