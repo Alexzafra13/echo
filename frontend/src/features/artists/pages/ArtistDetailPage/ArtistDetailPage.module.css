@@ -24,15 +24,6 @@
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Center children horizontally */
-}
-
-/* Center content while allowing full-width scroll */
-.artistDetailPage__content > * {
-  width: 100%;
-  max-width: 1400px; /* Limit content width for better readability */
 }
 
 .artistDetailPage__content::-webkit-scrollbar {
@@ -351,11 +342,6 @@
     overflow-y: auto; /* Permitir scroll vertical */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
-    align-items: stretch; /* Full width on mobile */
-  }
-
-  .artistDetailPage__content > * {
-    max-width: none; /* Remove max-width constraint on mobile */
   }
 
   .artistDetailPage__hero {
