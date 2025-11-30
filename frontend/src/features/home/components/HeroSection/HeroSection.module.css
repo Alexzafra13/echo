@@ -12,23 +12,6 @@
   margin-bottom: 20px;
 }
 
-/* Gradient overlay that blends into the page background color */
-.heroSection::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 150px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--color-bg-primary, #0a0e27) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
 .heroSection__background {
   position: absolute;
   inset: 0;
@@ -38,9 +21,9 @@
   transform: scale(1.1);
   transition: opacity 1.2s ease-in-out;
   animation: fadeInBackground 1.2s ease-in-out;
-  /* Fade out the image itself at the bottom - gradual and subtle */
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.5) 80%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.5) 80%, transparent 100%);
+  /* 80% visible, then fade to transparent */
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent);
+  mask-image: linear-gradient(to bottom, black 80%, transparent);
 }
 
 @keyframes fadeInBackground {
