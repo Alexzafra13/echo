@@ -5,6 +5,7 @@ import {
   UpdateProfileUseCase,
   ChangeThemeUseCase,
   ChangeLanguageUseCase,
+  UpdatePrivacySettingsUseCase,
 } from '../domain/use-cases';
 import { UploadAvatarUseCase } from '../domain/use-cases/upload-avatar/upload-avatar.use-case';
 import { DeleteAvatarUseCase } from '../domain/use-cases/delete-avatar/delete-avatar.use-case';
@@ -18,6 +19,7 @@ describe('UsersController', () => {
   let mockChangeLanguageUseCase: any;
   let mockUploadAvatarUseCase: any;
   let mockDeleteAvatarUseCase: any;
+  let mockUpdatePrivacySettingsUseCase: any;
 
   const mockUser = {
     id: 'user-123',
@@ -50,6 +52,10 @@ describe('UsersController', () => {
       execute: jest.fn(),
     };
 
+    mockUpdatePrivacySettingsUseCase = {
+      execute: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
@@ -76,6 +82,10 @@ describe('UsersController', () => {
         {
           provide: DeleteAvatarUseCase,
           useValue: mockDeleteAvatarUseCase,
+        },
+        {
+          provide: UpdatePrivacySettingsUseCase,
+          useValue: mockUpdatePrivacySettingsUseCase,
         },
       ],
     })
