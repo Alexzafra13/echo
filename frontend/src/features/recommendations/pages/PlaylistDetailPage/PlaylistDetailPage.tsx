@@ -20,7 +20,7 @@ const AutoPlaylistSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  type: z.enum(['wave-mix', 'artist-playlist', 'genre-playlist', 'daily-mix']),
+  type: z.enum(['wave-mix', 'artist', 'genre', 'mood']),
   coverColor: z.string().optional(),
   coverImageUrl: z.string().optional(),
   metadata: z.object({
@@ -149,7 +149,10 @@ export function PlaylistDetailPage() {
               />
               <div className={styles.playlistDetailPage__info}>
                 <p className={styles.playlistType}>
-                  {playlist.type === 'wave-mix' ? 'Playlist Personalizada' : 'Playlist de Artista'}
+                  {playlist.type === 'wave-mix' && 'Playlist Personalizada'}
+                  {playlist.type === 'artist' && 'Playlist de Artista'}
+                  {playlist.type === 'genre' && 'Playlist de Género'}
+                  {playlist.type === 'mood' && 'Playlist de Estado de Ánimo'}
                 </p>
                 <h1 className={styles.playlistName}>{playlist.name}</h1>
                 <p className={styles.playlistDescription}>{playlist.description}</p>
