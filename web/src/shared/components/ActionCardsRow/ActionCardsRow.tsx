@@ -18,8 +18,8 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
   const [, setLocation] = useLocation();
   const { shufflePlay, isLoading: shuffleLoading } = useShufflePlay();
 
-  const handleDailyMix = () => {
-    setLocation('/daily-mix');
+  const handleDaily = () => {
+    setLocation('/daily');
   };
 
   // TODO: Implement social features
@@ -43,9 +43,8 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
       {/* Wave Mix - Daily Recommendations */}
       <ActionCard
         icon={<Calendar size={22} />}
-        title="Wave Mix Diario"
-        loadingTitle="Cargando..."
-        onClick={handleDailyMix}
+        title="Wavemix"
+        onClick={handleDaily}
         customGradient={['#2d1f3d', '#1a1a2e']}
       />
 
