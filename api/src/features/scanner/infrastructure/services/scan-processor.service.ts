@@ -10,6 +10,7 @@ import {
 } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
 import { MetadataExtractorService } from './metadata-extractor.service';
+import { LufsAnalyzerService } from './lufs-analyzer.service';
 import { CoverArtService } from '@shared/services';
 import { generateUuid, normalizeForSorting } from '@shared/utils';
 import { ScannerGateway } from '../gateways/scanner.gateway';
@@ -63,6 +64,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly metadataExtractor: MetadataExtractorService,
+    private readonly lufsAnalyzer: LufsAnalyzerService,
     private readonly coverArtService: CoverArtService,
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
@@ -583,6 +585,36 @@ export class ScanProcessorService implements OnModuleInit {
       const size = stats ? stats.size : 0;
 
       // ============================================================
+      // 1.5. ANALIZAR LUFS SI NO HAY REPLAYGAIN
+      // ============================================================
+      // Si el archivo no tiene tags ReplayGain, analizamos con FFmpeg
+      // para obtener valores de loudness y permitir normalización
+      let rgTrackGain = metadata.rgTrackGain;
+      let rgTrackPeak = metadata.rgTrackPeak;
+      let rgAlbumGain = metadata.rgAlbumGain;
+      let rgAlbumPeak = metadata.rgAlbumPeak;
+
+      if (rgTrackGain === undefined || rgTrackGain === null) {
+        try {
+          const lufsResult = await this.lufsAnalyzer.analyzeFile(filePath);
+          if (lufsResult) {
+            rgTrackGain = lufsResult.trackGain;
+            rgTrackPeak = lufsResult.trackPeak;
+            // Para álbum usamos los mismos valores (no tenemos análisis de álbum completo)
+            rgAlbumGain = lufsResult.trackGain;
+            rgAlbumPeak = lufsResult.trackPeak;
+            this.logger.debug(
+              `📊 LUFS analysis for "${metadata.title || path.basename(filePath)}": ` +
+              `gain=${lufsResult.trackGain.toFixed(2)}dB, peak=${lufsResult.trackPeak.toFixed(3)}`
+            );
+          }
+        } catch (error) {
+          this.logger.warn(`⚠️ LUFS analysis failed for ${filePath}: ${(error as Error).message}`);
+          // Continue without normalization data - not a critical error
+        }
+      }
+
+      // ============================================================
       // 2. BUSCAR O CREAR ARTISTA (atómico)
       // ============================================================
       // Use albumArtist if available to keep album under one artist,
@@ -706,11 +738,11 @@ export class ScanProcessorService implements OnModuleInit {
             ? metadata.comment
             : null,
         lyrics: metadata.lyrics,
-        // ReplayGain / Normalización de audio
-        rgTrackGain: metadata.rgTrackGain ?? null,
-        rgTrackPeak: metadata.rgTrackPeak ?? null,
-        rgAlbumGain: metadata.rgAlbumGain ?? null,
-        rgAlbumPeak: metadata.rgAlbumPeak ?? null,
+        // ReplayGain / Normalización de audio (from tags or FFmpeg LUFS analysis)
+        rgTrackGain: rgTrackGain ?? null,
+        rgTrackPeak: rgTrackPeak ?? null,
+        rgAlbumGain: rgAlbumGain ?? null,
+        rgAlbumPeak: rgAlbumPeak ?? null,
         // MusicBrainz IDs
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: mbzAlbumId,
