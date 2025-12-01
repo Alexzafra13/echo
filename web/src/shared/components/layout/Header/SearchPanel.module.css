@@ -19,6 +19,21 @@
   }
 }
 
+@keyframes slideUp {
+  from {
+    max-height: 700px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+.searchPanel--closing {
+  animation: slideUp 0.25s ease-in forwards;
+}
+
 .searchPanel__container {
   max-width: 1400px;
   margin: 0 auto;
