@@ -77,7 +77,8 @@ export function PlaylistDetailPage() {
         const parsedData = JSON.parse(storedPlaylist);
         // Validate with Zod schema for type safety
         const validatedPlaylist = AutoPlaylistSchema.parse(parsedData);
-        setPlaylist(validatedPlaylist as AutoPlaylist);
+        // Use double assertion since passthrough() returns a wider type
+        setPlaylist(validatedPlaylist as unknown as AutoPlaylist);
       } catch (error) {
         logger.error('Failed to parse or validate playlist from sessionStorage', error);
         setLocation('/wave-mix');
