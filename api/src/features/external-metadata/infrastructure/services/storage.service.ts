@@ -464,10 +464,10 @@ export class StorageService {
         return;
       }
 
-      // Source path: frontend public images
+      // Source path: web public images
       const defaultCoverSrc = path.resolve(
         process.cwd(),
-        '../frontend/public/images/empy_cover/empy_cover_default.png'
+        '../web/public/images/empy_cover/empy_cover_default.png'
       );
 
       // Check if source exists

@@ -60,12 +60,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('server/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('api/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
-        working-directory: server
+        working-directory: api
         run: pnpm install --frozen-lockfile
 
       - name: Create test databases
@@ -77,13 +77,13 @@ jobs:
           done
 
       - name: Apply database schema
-        working-directory: server
+        working-directory: api
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
         run: pnpm db:push --force
 
       - name: Apply schema to test DBs
-        working-directory: server
+        working-directory: api
         run: |
           for i in {1..4}; do
             echo "Applying schema to music_server_test_$i..."
@@ -92,12 +92,12 @@ jobs:
 
       # Unit tests: Fast, use mocks, NO DB connection needed
       - name: Run unit tests
-        working-directory: server
+        working-directory: api
         run: pnpm test:unit
 
       # Integration tests: Test real DB/Redis operations
       - name: Run integration tests
-        working-directory: server
+        working-directory: api
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
           JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
@@ -108,7 +108,7 @@ jobs:
 
       # E2E tests: Full HTTP requests with real app
       - name: Run E2E tests
-        working-directory: server
+        working-directory: api
         env:
           DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server_test_1
           JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
@@ -118,5 +118,5 @@ jobs:
         run: pnpm test:e2e
 
       - name: Build project
-        working-directory: server
+        working-directory: api
         run: pnpm build

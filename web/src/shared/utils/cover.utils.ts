@@ -6,7 +6,7 @@
 
 /**
  * Ruta de la imagen placeholder por defecto
- * Ubicada en: frontend/public/images/empy_cover/empy_cover_default.png
+ * Ubicada en: web/public/images/empy_cover/empy_cover_default.png
  */
 const DEFAULT_COVER_PLACEHOLDER = '/images/empy_cover/empy_cover_default.png';
 

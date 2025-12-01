@@ -18,7 +18,7 @@ El script:
 1. Verifica Node.js >= 22, pnpm, Docker
 2. Instala dependencias
 3. Levanta PostgreSQL + Redis
-4. Genera `server/.env` con JWT secrets
+4. Genera `api/.env` con JWT secrets
 5. Aplica migraciones
 
 ## Desarrollo
@@ -78,12 +78,12 @@ pnpm dev:all    # Frontend (5173) + Backend (3000)
 
 ```
 echo/
-├── frontend/                 # React + Vite
+├── web/                      # React + Vite
 │   └── src/
 │       ├── app/              # Rutas y providers
 │       ├── features/         # Módulos por funcionalidad
 │       └── shared/           # Componentes y utils compartidos
-├── server/                   # NestJS + Fastify
+├── api/                      # NestJS + Fastify
 │   └── src/
 │       ├── features/         # Módulos por funcionalidad
 │       ├── infrastructure/   # DB, cache, websocket
@@ -128,11 +128,11 @@ Disponible en http://localhost:4567
 
 ```bash
 # Backend
-cd server && pnpm test
+cd api && pnpm test
 pnpm test:cov       # Con cobertura
 
 # Frontend
-cd frontend && pnpm test
+cd web && pnpm test
 pnpm test:ui        # Con UI
 ```
 
@@ -140,7 +140,7 @@ pnpm test:ui        # Con UI
 
 ```bash
 # Crear migración después de cambiar schema
-cd server
+cd api
 pnpm db:generate
 
 # Aplicar migraciones
