@@ -14,7 +14,9 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, u
 import { Track, PlayerContextValue, RadioStation } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
 import { useCrossfadeSettings } from '../hooks/useCrossfadeSettings';
+import { useNormalizationSettings } from '../hooks/useNormalizationSettings';
 import { useAudioElements } from '../hooks/useAudioElements';
+import { useAudioNormalization } from '../hooks/useAudioNormalization';
 import { usePlayTracking } from '../hooks/usePlayTracking';
 import { useQueueManagement } from '../hooks/useQueueManagement';
 import { useCrossfadeLogic } from '../hooks/useCrossfadeLogic';
@@ -37,6 +39,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setEnabled: setCrossfadeEnabledStorage,
     setDuration: setCrossfadeDurationStorage,
   } = useCrossfadeSettings();
+  const {
+    settings: normalizationSettings,
+    setEnabled: setNormalizationEnabledStorage,
+    setTargetLufs: setNormalizationTargetLufsStorage,
+    setPreventClipping: setNormalizationPreventClippingStorage,
+  } = useNormalizationSettings();
 
   // ========== STATE ==========
   const [isPlaying, setIsPlaying] = useState(false);
@@ -57,6 +65,22 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       onDurationChange: (dur) => setDuration(dur),
     },
   });
+
+  // ========== AUDIO NORMALIZATION ==========
+  const normalization = useAudioNormalization(normalizationSettings);
+
+  // Connect audio elements to Web Audio API for normalization
+  useEffect(() => {
+    const audioA = audioElements.audioRefA.current;
+    const audioB = audioElements.audioRefB.current;
+
+    if (audioA) {
+      normalization.connectAudioElement(audioA, 'A');
+    }
+    if (audioB) {
+      normalization.connectAudioElement(audioB, 'B');
+    }
+  }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
   const queue = useQueueManagement();
@@ -165,6 +189,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       radio.stopRadio();
     }
 
+    // Resume AudioContext if suspended (required after user interaction)
+    normalization.resumeAudioContext();
+
+    // Apply audio normalization for the new track
+    normalization.applyGain(track);
+
     if (withCrossfade && crossfadeSettings.enabled && isPlaying) {
       // Crossfade: prepare next track on inactive audio
       logger.debug('[Player] Starting crossfade to:', track.title);
@@ -193,7 +223,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
 
     crossfade.resetCrossfadeFlag();
-  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking]);
+  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
 
   /**
    * Play - either a new track or resume current playback
@@ -402,6 +432,26 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setCrossfadeDurationStorage(dur);
   }, [setCrossfadeDurationStorage]);
 
+  // ========== NORMALIZATION SETTINGS ==========
+
+  const setNormalizationEnabled = useCallback((enabled: boolean) => {
+    setNormalizationEnabledStorage(enabled);
+    // Re-apply gain with new settings
+    normalization.applyGain(currentTrack);
+  }, [setNormalizationEnabledStorage, normalization, currentTrack]);
+
+  const setNormalizationTargetLufs = useCallback((target: -14 | -16) => {
+    setNormalizationTargetLufsStorage(target);
+    // Re-apply gain with new settings
+    normalization.applyGain(currentTrack);
+  }, [setNormalizationTargetLufsStorage, normalization, currentTrack]);
+
+  const setNormalizationPreventClipping = useCallback((prevent: boolean) => {
+    setNormalizationPreventClippingStorage(prevent);
+    // Re-apply gain with new settings
+    normalization.applyGain(currentTrack);
+  }, [setNormalizationPreventClippingStorage, normalization, currentTrack]);
+
   // ========== CONTEXT VALUE ==========
 
   const value: PlayerContextValue = useMemo(
@@ -419,6 +469,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Crossfade state
       crossfade: crossfadeSettings,
       isCrossfading: crossfade.isCrossfading,
+
+      // Normalization state
+      normalization: normalizationSettings,
 
       // Radio state
       currentRadioStation: radio.currentStation,
@@ -453,6 +506,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Crossfade controls
       setCrossfadeEnabled,
       setCrossfadeDuration,
+
+      // Normalization controls
+      setNormalizationEnabled,
+      setNormalizationTargetLufs,
+      setNormalizationPreventClipping,
     }),
     [
       currentTrack,
@@ -469,6 +527,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       duration,
       crossfadeSettings,
       crossfade.isCrossfading,
+      normalizationSettings,
       radio.currentStation,
       radio.isRadioMode,
       radio.metadata,
@@ -487,6 +546,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setVolume,
       setCrossfadeEnabled,
       setCrossfadeDuration,
+      setNormalizationEnabled,
+      setNormalizationTargetLufs,
+      setNormalizationPreventClipping,
     ]
   );
 

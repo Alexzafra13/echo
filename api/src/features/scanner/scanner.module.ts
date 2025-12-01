@@ -27,6 +27,7 @@ import { FileScannerService } from './infrastructure/services/file-scanner.servi
 import { MetadataExtractorService } from './infrastructure/services/metadata-extractor.service';
 import { ScanProcessorService } from './infrastructure/services/scan-processor.service';
 import { FileWatcherService } from './infrastructure/services/file-watcher.service';
+import { LufsAnalyzerService } from './infrastructure/services/lufs-analyzer.service';
 import { CoverArtService } from '@shared/services';
 
 /**
@@ -69,6 +70,7 @@ import { CoverArtService } from '@shared/services';
     MetadataExtractorService,
     ScanProcessorService,
     FileWatcherService,
+    LufsAnalyzerService,
     CoverArtService,
 
     // Gateways (WebSocket)
