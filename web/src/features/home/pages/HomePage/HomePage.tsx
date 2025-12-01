@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
-import { ShuffleCard } from '@shared/components/ShuffleCard';
+import { ActionCardsRow } from '@shared/components/ActionCardsRow';
 import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
 import type { Album, HeroItem } from '../../types';
@@ -247,8 +247,8 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Shuffle Card */}
-          <ShuffleCard style={{ margin: '24px 0 32px 20px' }} />
+          {/* Action Cards Row */}
+          <ActionCardsRow />
 
           {/* Recently Added Albums */}
           {loadingRecent ? (
