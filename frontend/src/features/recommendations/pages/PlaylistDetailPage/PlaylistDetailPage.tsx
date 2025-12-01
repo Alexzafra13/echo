@@ -9,6 +9,8 @@ import { Button } from '@shared/components/ui';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { formatDuration } from '@shared/utils/format';
 import { PlaylistCover } from '../../components/PlaylistCover';
+import { useArtistImages, getArtistImageUrl } from '@features/home/hooks';
+import { useArtist } from '@features/artists/hooks';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import type { Track as HomeTrack } from '@features/home/types';
 import type { Track as PlayerTrack } from '@features/player/types';
@@ -27,6 +29,7 @@ const AutoPlaylistSchema = z.object({
     totalTracks: z.number(),
     avgScore: z.number(),
     artistName: z.string().optional(),
+    artistId: z.string().optional(),
     genreName: z.string().optional(),
   }),
   tracks: z.array(z.object({
@@ -52,6 +55,11 @@ export function PlaylistDetailPage() {
   const [, setLocation] = useLocation();
   const { playQueue, currentTrack } = usePlayer();
   const [playlist, setPlaylist] = useState<AutoPlaylist | null>(null);
+
+  // For artist playlists, get artist images for the background
+  const artistId = playlist?.type === 'artist' ? playlist.metadata.artistId : undefined;
+  const { data: artistImages } = useArtistImages(artistId);
+  const { data: artist } = useArtist(artistId);
 
   useEffect(() => {
     // Get playlist from sessionStorage
@@ -120,12 +128,47 @@ export function PlaylistDetailPage() {
       }));
   };
 
+  // Get background image for artist playlists
+  const getBackgroundUrl = (): string | null => {
+    if (playlist?.type !== 'artist' || !artistId) return null;
+
+    const hasBackground = artistImages?.images.background?.exists;
+    const hasBanner = artistImages?.images.banner?.exists;
+
+    if (!hasBackground && !hasBanner) {
+      // Fallback to coverImageUrl if no artist background
+      return playlist.coverImageUrl || null;
+    }
+
+    // Use the most recently updated image
+    const bgModified = artistImages?.images.background?.lastModified;
+    const bannerModified = artistImages?.images.banner?.lastModified;
+
+    let imageType: 'background' | 'banner' = 'background';
+    if (!hasBackground) {
+      imageType = 'banner';
+    } else if (hasBanner && bannerModified && bgModified) {
+      imageType = new Date(bgModified) >= new Date(bannerModified) ? 'background' : 'banner';
+    }
+
+    const tag = imageType === 'background'
+      ? artistImages?.images.background?.tag
+      : artistImages?.images.banner?.tag;
+
+    return getArtistImageUrl(artistId, imageType, tag);
+  };
+
   if (!playlist) {
     return null;
   }
 
   const tracks = convertToHomeTracks(playlist);
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
+  const isArtistPlaylist = playlist.type === 'artist';
+  const backgroundUrl = getBackgroundUrl();
+
+  // Get background position from artist data if available
+  const backgroundPosition = artist?.backgroundPosition || 'center top';
 
   return (
     <div className={styles.playlistDetailPage}>
@@ -136,7 +179,18 @@ export function PlaylistDetailPage() {
 
         <div className={styles.playlistDetailPage__content}>
           {/* Hero Section */}
-          <div className={styles.playlistDetailPage__hero}>
+          <div className={`${styles.playlistDetailPage__hero} ${isArtistPlaylist ? styles['playlistDetailPage__hero--artist'] : ''}`}>
+            {/* Background for artist playlists */}
+            {isArtistPlaylist && backgroundUrl && (
+              <div
+                className={styles.playlistDetailPage__background}
+                style={{
+                  backgroundImage: `url(${backgroundUrl})`,
+                  backgroundPosition: backgroundPosition,
+                }}
+              />
+            )}
+
             <div className={styles.playlistDetailPage__heroContent}>
               <PlaylistCover
                 type={playlist.type}
