@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Shuffle, Calendar, Users, RefreshCw } from 'lucide-react';
 import { ActionCard } from '../ActionCard';
 import { useShufflePlay } from '@shared/hooks';
-import { getAutoPlaylists } from '@shared/services/recommendations.service';
 import styles from './ActionCardsRow.module.css';
 
 export interface ActionCardsRowProps {
@@ -19,28 +17,9 @@ export interface ActionCardsRowProps {
 export function ActionCardsRow({ className }: ActionCardsRowProps) {
   const [, setLocation] = useLocation();
   const { shufflePlay, isLoading: shuffleLoading } = useShufflePlay();
-  const [dailyLoading, setDailyLoading] = useState(false);
 
-  const handleDailyMix = async () => {
-    setDailyLoading(true);
-    try {
-      const playlists = await getAutoPlaylists();
-      const waveMixPlaylist = playlists.find(p => p.type === 'wave-mix');
-
-      if (waveMixPlaylist) {
-        sessionStorage.setItem('currentPlaylist', JSON.stringify(waveMixPlaylist));
-        sessionStorage.setItem('playlistReturnPath', '/');
-        setLocation(`/wave-mix/${waveMixPlaylist.id}`);
-      } else {
-        // Fallback to legacy page if no wave-mix playlist found
-        setLocation('/daily-mix');
-      }
-    } catch (error) {
-      console.error('Failed to load daily mix:', error);
-      setLocation('/daily-mix');
-    } finally {
-      setDailyLoading(false);
-    }
+  const handleDaily = () => {
+    setLocation('/daily');
   };
 
   // TODO: Implement social features
@@ -64,11 +43,8 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
       {/* Wave Mix - Daily Recommendations */}
       <ActionCard
         icon={<Calendar size={22} />}
-        loadingIcon={<RefreshCw size={22} className={styles.spinning} />}
-        title="Wave Mix Diario"
-        loadingTitle="Cargando..."
-        onClick={handleDailyMix}
-        isLoading={dailyLoading}
+        title="Wavemix"
+        onClick={handleDaily}
         customGradient={['#2d1f3d', '#1a1a2e']}
       />
 
