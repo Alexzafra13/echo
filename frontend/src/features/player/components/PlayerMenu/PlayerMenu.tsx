@@ -1,5 +1,6 @@
 import { MoreVertical } from 'lucide-react';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
+import { usePlayer } from '../../context/PlayerContext';
 import type { PlayerPreference } from '../../hooks/usePlayerPreference';
 import styles from './PlayerMenu.module.css';
 
@@ -13,10 +14,15 @@ interface PlayerMenuProps {
 
 export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16 }: PlayerMenuProps) {
   const { preference, setPreference } = usePlayerPreference();
+  const { crossfade, setCrossfadeEnabled } = usePlayer();
 
   const handleOptionClick = (value: PlayerPreference) => {
     setPreference(value);
     onClose();
+  };
+
+  const handleCrossfadeToggle = () => {
+    setCrossfadeEnabled(!crossfade.enabled);
   };
 
   return (
@@ -48,6 +54,16 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16 }: Pl
             onClick={() => handleOptionClick('footer')}
           >
             Reproductor por defecto
+          </button>
+
+          <div className={styles.menuSeparator} />
+
+          <button
+            className={`${styles.menuOptionToggle} ${crossfade.enabled ? styles['menuOptionToggle--active'] : ''}`}
+            onClick={handleCrossfadeToggle}
+          >
+            <span>Fundido entre canciones</span>
+            <span className={`${styles.toggleIndicator} ${crossfade.enabled ? styles['toggleIndicator--active'] : ''}`} />
           </button>
         </div>
       )}
