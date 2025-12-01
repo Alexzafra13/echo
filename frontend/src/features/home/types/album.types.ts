@@ -38,10 +38,31 @@ export interface AlbumGridProps {
 }
 
 /**
+ * Hero item - can be an Album or an Artist Playlist
+ */
+export type HeroItem =
+  | { type: 'album'; data: Album }
+  | { type: 'playlist'; data: import('@shared/services/recommendations.service').AutoPlaylist };
+
+/**
+ * Type guard to check if HeroItem is an album
+ */
+export function isHeroAlbum(item: HeroItem): item is { type: 'album'; data: Album } {
+  return item.type === 'album';
+}
+
+/**
+ * Type guard to check if HeroItem is a playlist
+ */
+export function isHeroPlaylist(item: HeroItem): item is { type: 'playlist'; data: import('@shared/services/recommendations.service').AutoPlaylist } {
+  return item.type === 'playlist';
+}
+
+/**
  * Props for HeroSection component
  */
 export interface HeroSectionProps {
-  album: Album;
+  item: HeroItem;
   onPlay?: () => void;
   onNext?: () => void;
   onPrevious?: () => void;
