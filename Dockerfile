@@ -81,7 +81,8 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
-RUN apk add --no-cache netcat-openbsd dumb-init su-exec
+# FFmpeg is used for audio analysis (LUFS normalization) when files lack ReplayGain tags
+RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

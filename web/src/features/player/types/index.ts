@@ -11,6 +11,12 @@ export interface CrossfadeSettings {
   duration: number; // Duration in seconds (1-12)
 }
 
+export interface NormalizationSettings {
+  enabled: boolean;
+  targetLufs: -14 | -16; // -14 = Spotify style, -16 = Apple style
+  preventClipping: boolean; // Apple style: don't boost beyond peak headroom
+}
+
 export interface PlayerState {
   // Track playback
   currentTrack: Track | null;
@@ -25,6 +31,9 @@ export interface PlayerState {
   // Crossfade
   crossfade: CrossfadeSettings;
   isCrossfading: boolean;
+
+  // Audio normalization
+  normalization: NormalizationSettings;
 
   // Radio playback
   currentRadioStation: RadioStation | null;
@@ -61,4 +70,9 @@ export interface PlayerContextValue extends PlayerState {
   // Crossfade controls
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
+
+  // Normalization controls
+  setNormalizationEnabled: (enabled: boolean) => void;
+  setNormalizationTargetLufs: (target: -14 | -16) => void;
+  setNormalizationPreventClipping: (prevent: boolean) => void;
 }

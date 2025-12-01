@@ -51,6 +51,12 @@ export interface Track {
   comment?: string;
   compilation?: boolean;
 
+  // ReplayGain / Audio normalization
+  rgTrackGain?: number; // Gain to normalize track (in dB)
+  rgTrackPeak?: number; // Track peak (0-1)
+  rgAlbumGain?: number; // Gain to normalize album (in dB)
+  rgAlbumPeak?: number; // Album peak (0-1)
+
   // Player/playlist context
   coverImage?: string; // Direct cover URL (for player UI)
   playlistOrder?: number; // Order in playlist (when track is from a playlist)

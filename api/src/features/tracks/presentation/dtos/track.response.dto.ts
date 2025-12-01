@@ -81,6 +81,22 @@ export class TrackResponseDto {
   @Expose()
   compilation!: boolean;
 
+  @ApiProperty({ example: -3.5, description: 'ReplayGain track gain in dB', required: false })
+  @Expose()
+  rgTrackGain?: number;
+
+  @ApiProperty({ example: 0.95, description: 'ReplayGain track peak (0-1)', required: false })
+  @Expose()
+  rgTrackPeak?: number;
+
+  @ApiProperty({ example: -4.2, description: 'ReplayGain album gain in dB', required: false })
+  @Expose()
+  rgAlbumGain?: number;
+
+  @ApiProperty({ example: 0.98, description: 'ReplayGain album peak (0-1)', required: false })
+  @Expose()
+  rgAlbumPeak?: number;
+
   @ApiProperty()
   @Expose()
   createdAt!: Date;
@@ -113,6 +129,11 @@ export class TrackResponseDto {
     dto.artistName = data.artistName;
     dto.albumArtistName = data.albumArtistName;
     dto.compilation = data.compilation;
+    // ReplayGain / Normalización
+    dto.rgTrackGain = data.rgTrackGain;
+    dto.rgTrackPeak = data.rgTrackPeak;
+    dto.rgAlbumGain = data.rgAlbumGain;
+    dto.rgAlbumPeak = data.rgAlbumPeak;
     dto.createdAt = data.createdAt;
     dto.updatedAt = data.updatedAt;
     return dto;
