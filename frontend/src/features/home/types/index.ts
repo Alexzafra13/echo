@@ -4,11 +4,14 @@ export type {
   AlbumGridProps,
   HeroSectionProps,
   HeroAlbumData,
+  HeroItem,
   AlbumSortOption,
   AlbumsAlphabeticalResponse,
   AlbumsRecentlyPlayedResponse,
   AlbumsFavoritesResponse,
 } from './album.types';
+
+export { isHeroAlbum, isHeroPlaylist } from './album.types';
 
 export type { Track } from './track.types';
 export { formatDuration } from './track.types';
