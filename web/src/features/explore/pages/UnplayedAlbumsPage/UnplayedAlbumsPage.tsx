@@ -31,6 +31,7 @@ export default function UnplayedAlbumsPage() {
       <Sidebar />
 
       <main className={styles.unplayedPage__main}>
+        <Header disableSearch />
 
         <div className={styles.unplayedPage__content}>
           {/* Back Button */}
