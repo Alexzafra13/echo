@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Input, Modal } from '@shared/components/ui';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import styles from './EditPlaylistModal.module.css';
 
@@ -37,11 +38,8 @@ export function EditPlaylistModal({ playlist, onClose, onSubmit, isLoading = fal
 
       await onSubmit(playlist.id, updateData);
       onClose();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error && 'response' in error
-        ? (error as any).response?.data?.message
-        : 'Error al actualizar la playlist';
-      setError(errorMessage || 'Error al actualizar la playlist');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Error al actualizar la playlist'));
     }
   };
 

@@ -7,6 +7,10 @@ import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
+import type { Artist } from '@features/artists/types';
+import type { Album } from '@features/home/types';
+import type { Track } from '@shared/types/track.types';
+import type { Playlist } from '@features/playlists/types';
 import styles from './SearchResults.module.css';
 
 interface SearchResultsProps {
@@ -95,7 +99,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
             <UserIcon size={16} />
             Artistas
           </h3>
-          {artists.map((artist: any) => (
+          {artists.map((artist: Artist) => (
             <button
               key={artist.id}
               className={styles.searchResults__item}
@@ -123,7 +127,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
             <Disc size={16} />
             Álbumes
           </h3>
-          {albums.slice(0, 4).map((album: any) => (
+          {albums.slice(0, 4).map((album: Album) => (
             <button
               key={album.id}
               className={styles.searchResults__item}
@@ -151,7 +155,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
             <ListMusic size={16} />
             Playlists
           </h3>
-          {playlists.map((playlist: any) => (
+          {playlists.map((playlist: Playlist) => (
             <button
               key={playlist.id}
               className={styles.searchResults__item}
@@ -182,7 +186,7 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
             <Music size={16} />
             Canciones
           </h3>
-          {tracks.map((track: any) => (
+          {tracks.map((track: Track) => (
             <button
               key={track.id}
               className={styles.searchResults__item}
