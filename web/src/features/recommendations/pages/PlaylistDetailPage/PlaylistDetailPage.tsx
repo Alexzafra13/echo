@@ -18,33 +18,41 @@ import { logger } from '@shared/utils/logger';
 import styles from './PlaylistDetailPage.module.css';
 
 // Zod schema for validating playlist data from sessionStorage
+// Using passthrough() to allow additional fields from API that aren't explicitly defined
 const AutoPlaylistSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
   type: z.enum(['wave-mix', 'artist', 'genre', 'mood']),
-  coverColor: z.string().optional(),
-  coverImageUrl: z.string().optional(),
+  coverColor: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
   metadata: z.object({
     totalTracks: z.number(),
     avgScore: z.number(),
-    artistName: z.string().optional(),
-    artistId: z.string().optional(),
-    genreName: z.string().optional(),
-  }),
+    artistName: z.string().optional().nullable(),
+    artistId: z.string().optional().nullable(),
+    genreName: z.string().optional().nullable(),
+    // Allow additional metadata fields (topGenres, topArtists, temporalDistribution, etc.)
+  }).passthrough(),
   tracks: z.array(z.object({
+    // Support both 'score' and 'totalScore' field names from API
     score: z.number().optional(),
+    totalScore: z.number().optional(),
+    trackId: z.string().optional(),
+    rank: z.number().optional(),
     track: z.object({
       id: z.string(),
       title: z.string(),
-      artistName: z.string().optional(),
-      albumName: z.string().optional(),
-      albumId: z.string().optional(),
-      artistId: z.string().optional(),
-      duration: z.number().optional(),
-    }).optional(),
-  })),
-});
+      artistName: z.string().optional().nullable(),
+      albumName: z.string().optional().nullable(),
+      albumId: z.string().optional().nullable(),
+      artistId: z.string().optional().nullable(),
+      duration: z.number().optional().nullable(),
+    }).passthrough().optional().nullable(),
+    // Allow additional track fields (breakdown, album, etc.)
+  }).passthrough()),
+  // Allow additional playlist fields (userId, createdAt, expiresAt, etc.)
+}).passthrough();
 
 /**
  * PlaylistDetailPage Component
