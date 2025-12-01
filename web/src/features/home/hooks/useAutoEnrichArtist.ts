@@ -31,20 +31,13 @@ export function useAutoEnrichArtist(
 
   const enrichMutation = useMutation({
     mutationFn: async (id: string) => {
-      console.log('[useAutoEnrichArtist] Starting enrichment for artist:', id);
       const response = await apiClient.post(`/metadata/artists/${id}/enrich?forceRefresh=false`);
-      console.log('[useAutoEnrichArtist] Enrichment result:', response.data);
       return response.data;
     },
-    onSuccess: (data, artistId) => {
-      console.log('[useAutoEnrichArtist] Successfully enriched artist:', artistId, data);
-    },
-    onError: (error: any, artistId) => {
-      // Don't show error if artist not found or API key not configured - this is expected
+    onError: (error: any) => {
+      // Only log unexpected errors (not 404/400 which are expected when enrichment is unavailable)
       if (error.response?.status !== 404 && error.response?.status !== 400) {
-        console.error('[useAutoEnrichArtist] Error enriching artist:', artistId, error);
-      } else {
-        console.log('[useAutoEnrichArtist] Enrichment not available for artist:', artistId);
+        console.error('[useAutoEnrichArtist] Unexpected error:', error);
       }
     },
   });
@@ -57,18 +50,15 @@ export function useAutoEnrichArtist(
 
     // Don't enrich if already has images
     if (hasImages) {
-      console.log('[useAutoEnrichArtist] Artist already has images, skipping enrichment');
       return;
     }
 
     // Don't enrich if we've already tried this artist
     if (enrichedArtists.current.has(artistId)) {
-      console.log('[useAutoEnrichArtist] Already tried enriching this artist, skipping');
       return;
     }
 
     // Mark as enriched and trigger enrichment
-    console.log('[useAutoEnrichArtist] Artist has no images, triggering enrichment...');
     enrichedArtists.current.add(artistId);
     enrichMutation.mutate(artistId);
   }, [artistId, hasImages, enabled]);
