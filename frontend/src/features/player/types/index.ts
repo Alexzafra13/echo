@@ -6,6 +6,11 @@ import type { RadioStation, RadioMetadata } from '@shared/types/radio.types';
 export type { Track, TrackAlbum };
 export type { RadioStation, RadioMetadata };
 
+export interface CrossfadeSettings {
+  enabled: boolean;
+  duration: number; // Duration in seconds (1-12)
+}
+
 export interface PlayerState {
   // Track playback
   currentTrack: Track | null;
@@ -16,6 +21,10 @@ export interface PlayerState {
   duration: number;
   isShuffle: boolean;
   repeatMode: 'off' | 'all' | 'one';
+
+  // Crossfade
+  crossfade: CrossfadeSettings;
+  isCrossfading: boolean;
 
   // Radio playback
   currentRadioStation: RadioStation | null;
@@ -48,4 +57,8 @@ export interface PlayerContextValue extends PlayerState {
   setVolume: (volume: number) => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
+
+  // Crossfade controls
+  setCrossfadeEnabled: (enabled: boolean) => void;
+  setCrossfadeDuration: (duration: number) => void;
 }
