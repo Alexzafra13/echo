@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@shared/store';
 import { MiniPlayer } from '@features/player/components/MiniPlayer';
-import { useScrollDetection } from '@features/player/hooks/useScrollDetection';
+import { usePageEndDetection } from '@features/player/hooks/usePageEndDetection';
 import styles from './Sidebar.module.css';
 
 /**
@@ -23,8 +23,8 @@ export function Sidebar() {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.isAdmin === true;
 
-  // Detectar scroll para mostrar mini-player
-  const isMiniMode = useScrollDetection(120);
+  // Detectar cuando el usuario llega al final de la página para mostrar mini-player
+  const isMiniMode = usePageEndDetection(120);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
