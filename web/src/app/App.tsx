@@ -17,7 +17,7 @@ import PlaylistDetailPage from '@features/playlists/pages/PlaylistDetailPage';
 import { RadioPage } from '@features/radio/pages/RadioPage';
 import { WaveMixPage } from '@features/recommendations/pages/WaveMixPage';
 import { PlaylistDetailPage as WavePlaylistDetailPage } from '@features/recommendations/pages/PlaylistDetailPage';
-import { DailyMixPage } from '@features/recommendations/pages/DailyMixPage';
+import { DailyRedirect } from '@features/recommendations/pages/DailyRedirect';
 import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlaylistsPage';
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
 import { ExplorePage } from '@features/explore/pages/ExplorePage';
@@ -164,10 +164,10 @@ function App() {
           </ProtectedRoute>
         </Route>
 
-        {/* Daily Mix Route (Protected) - Legacy, redirects to Wave Mix */}
-        <Route path="/daily-mix">
+        {/* Daily Mix Route (Protected) - Redirects to Wave Mix playlist */}
+        <Route path="/daily">
           <ProtectedRoute>
-            <DailyMixPage />
+            <DailyRedirect />
           </ProtectedRoute>
         </Route>
 

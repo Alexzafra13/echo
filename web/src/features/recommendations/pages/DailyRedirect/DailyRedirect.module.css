@@ -1,0 +1,34 @@
+.dailyRedirect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  color: var(--text-secondary);
+}
+
+.dailyRedirect__icon {
+  animation: pulse 1.5s ease-in-out infinite;
+  color: var(--color-primary-500);
+}
+
+.dailyRedirect__text {
+  font-size: 16px;
+}
+
+.dailyRedirect__error {
+  color: var(--color-error, #ef4444);
+  font-size: 14px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
