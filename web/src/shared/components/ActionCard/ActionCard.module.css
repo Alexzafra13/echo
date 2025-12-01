@@ -108,20 +108,42 @@
 
 @media (max-width: 480px) {
   .actionCard {
-    height: 60px;
-    padding: 10px 12px;
+    height: 56px;
+    padding: 8px 10px;
   }
 
   .actionCard__content {
-    gap: 10px;
+    gap: 8px;
   }
 
   .actionCard__icon {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 
   .actionCard__title {
-    font-size: 12px;
+    font-size: 11px;
+  }
+}
+
+/* Very small mobile - icon only mode */
+@media (max-width: 360px) {
+  .actionCard {
+    height: 52px;
+    padding: 8px;
+    justify-content: center;
+  }
+
+  .actionCard__content {
+    gap: 6px;
+  }
+
+  .actionCard__icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .actionCard__text {
+    display: none;
   }
 }

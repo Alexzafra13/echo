@@ -44,11 +44,10 @@
   }
 }
 
-/* Small mobile - stack vertically for very narrow screens */
+/* Small mobile - keep horizontal, tighter spacing */
 @media (max-width: 480px) {
   .actionCardsRow {
-    flex-direction: column;
-    gap: 10px;
-    padding: 12px 12px 20px;
+    gap: 8px;
+    padding: 12px 10px 20px;
   }
 }
