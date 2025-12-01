@@ -8,6 +8,10 @@ import { usePlayer } from '@features/player';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
+import type { Artist } from '@features/artists/types';
+import type { Album } from '@features/home/types';
+import type { Track } from '@shared/types/track.types';
+import type { Playlist } from '@features/playlists/types';
 import styles from './SearchPanel.module.css';
 
 interface SearchPanelProps {
@@ -53,14 +57,14 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   };
 
   // Handle track click - play the track and queue remaining search results
-  const handlePlayTrack = (_track: any, index: number) => {
+  const handlePlayTrack = (_track: Track, index: number) => {
     // Convert search results to player Track format and play
-    const playerTracks = tracks.map((t: any) => ({
+    const playerTracks = tracks.map((t: Track) => ({
       id: t.id,
       title: t.title,
       artist: t.artistName || t.artist,
       artistId: t.artistId,
-      album: t.albumTitle || t.albumName,
+      albumName: t.albumTitle || t.albumName,
       albumId: t.albumId,
       duration: t.duration,
       trackNumber: t.trackNumber,
@@ -108,7 +112,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
                     Artistas
                   </h4>
                   <div className={styles.searchPanel__grid}>
-                    {artists.map((artist: any) => (
+                    {artists.map((artist: Artist) => (
                       <button
                         key={artist.id}
                         className={styles.searchPanel__item}
@@ -138,7 +142,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
                     Álbumes
                   </h4>
                   <div className={styles.searchPanel__grid}>
-                    {albums.slice(0, 6).map((album: any) => (
+                    {albums.slice(0, 6).map((album: Album) => (
                       <button
                         key={album.id}
                         className={styles.searchPanel__item}
@@ -168,7 +172,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
                     Playlists
                   </h4>
                   <div className={styles.searchPanel__grid}>
-                    {playlists.map((playlist: any) => (
+                    {playlists.map((playlist: Playlist) => (
                       <button
                         key={playlist.id}
                         className={styles.searchPanel__item}
@@ -200,7 +204,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
                     Canciones
                   </h4>
                   <div className={styles.searchPanel__grid}>
-                    {tracks.map((track: any, index: number) => (
+                    {tracks.map((track: Track, index: number) => (
                       <button
                         key={track.id}
                         className={styles.searchPanel__item}

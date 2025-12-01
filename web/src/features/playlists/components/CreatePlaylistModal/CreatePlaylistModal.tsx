@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Input, Modal } from '@shared/components/ui';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './CreatePlaylistModal.module.css';
 
 interface CreatePlaylistModalProps {
@@ -27,11 +28,8 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
     try {
       await onSubmit(name.trim());
       onClose();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error && 'response' in error
-        ? (error as any).response?.data?.message
-        : 'Error al crear la playlist';
-      setError(errorMessage || 'Error al crear la playlist');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Error al crear la playlist'));
     }
   };
 

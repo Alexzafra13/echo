@@ -29,6 +29,7 @@ export interface Track {
   // Album information
   albumId?: string;
   albumName?: string;
+  albumTitle?: string; // Alias for albumName (some API responses use this)
   album?: TrackAlbum; // Nested album info (optional, for player UI)
   albumArtistId?: string;
   albumArtistName?: string;

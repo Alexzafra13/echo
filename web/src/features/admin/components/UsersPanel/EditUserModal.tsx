@@ -4,6 +4,7 @@ import { Button, Modal } from '@shared/components/ui';
 import { useUpdateUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './UserFormModal.module.css';
 
 interface EditUserModalProps {
@@ -47,13 +48,10 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
       });
 
       onClose();
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Error updating user:', error);
-      const errorMessage = error instanceof Error && 'response' in error
-        ? (error as any).response?.data?.message
-        : 'Error al actualizar usuario';
       setErrors({
-        submit: errorMessage || 'Error al actualizar usuario',
+        submit: getApiErrorMessage(error, 'Error al actualizar usuario'),
       });
     }
   };

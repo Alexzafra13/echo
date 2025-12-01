@@ -72,9 +72,7 @@ export function useArtistImages(artistId: string | undefined, enabled: boolean =
         throw new Error('Artist ID is required');
       }
 
-      console.log('[useArtistImages] Fetching images for artist:', artistId);
       const response = await apiClient.get(`/images/artists/${artistId}/all`);
-      console.log('[useArtistImages] Response:', response.data);
       return response.data;
     },
     enabled: enabled && !!artistId,

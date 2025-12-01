@@ -3,6 +3,7 @@ import { UserPlus } from 'lucide-react';
 import { Button, Modal } from '@shared/components/ui';
 import { useCreateUser } from '../../hooks/useUsers';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './UserFormModal.module.css';
 
 interface CreateUserModalProps {
@@ -45,13 +46,10 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
       });
 
       onSuccess(result.user.username, result.temporaryPassword);
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Error creating user:', error);
-      const errorMessage = error instanceof Error && 'response' in error
-        ? (error as any).response?.data?.message
-        : 'Error al crear usuario';
       setErrors({
-        submit: errorMessage || 'Error al crear usuario',
+        submit: getApiErrorMessage(error, 'Error al crear usuario'),
       });
     }
   };
