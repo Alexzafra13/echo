@@ -324,6 +324,76 @@
   color: var(--text-secondary);
 }
 
+/* Slider Control */
+.settingsPage__sliderContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.settingsPage__slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--white-10);
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settingsPage__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+}
+
+.settingsPage__slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+}
+
+.settingsPage__slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+}
+
+.settingsPage__slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--white-10);
+}
+
+.settingsPage__slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settingsPage__slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+
+.settingsPage__sliderValue {
+  min-width: 32px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .settingsPage__main {

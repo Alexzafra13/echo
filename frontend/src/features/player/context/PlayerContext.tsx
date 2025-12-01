@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Track, PlayerState, PlayerContextValue, RadioStation } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
+import { useCrossfadeSettings } from '../hooks/useCrossfadeSettings';
 import { recordPlay, recordSkip, type PlayContext } from '@shared/services/play-tracking.service';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
@@ -42,10 +43,18 @@ interface PlaySession {
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
+  // Primary and secondary audio elements for crossfade
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRefB = useRef<HTMLAudioElement | null>(null);
+  const activeAudioRef = useRef<'A' | 'B'>('A');
+  const crossfadeIntervalRef = useRef<number | null>(null);
+  const crossfadeTimeoutRef = useRef<number | null>(null);
+
   const playSessionRef = useRef<PlaySession | null>(null);
   const { data: streamTokenData } = useStreamToken();
-  const [state, setState] = useState<PlayerState>({
+  const { settings: crossfadeSettings, setEnabled: setCrossfadeEnabledStorage, setDuration: setCrossfadeDurationStorage } = useCrossfadeSettings();
+
+  const [state, setState] = useState<PlayerState>(() => ({
     currentTrack: null,
     queue: [],
     isPlaying: false,
@@ -54,11 +63,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     duration: 0,
     isShuffle: false,
     repeatMode: 'off',
+    crossfade: crossfadeSettings,
+    isCrossfading: false,
     currentRadioStation: null,
     isRadioMode: false,
     radioMetadata: null,
     radioSignalStatus: null,
-  });
+  }));
 
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
 
@@ -73,6 +84,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   useEffect(() => {
     setState(prev => ({ ...prev, radioMetadata }));
   }, [radioMetadata]);
+
+  // Sync crossfade settings from localStorage when they change
+  useEffect(() => {
+    setState(prev => ({ ...prev, crossfade: crossfadeSettings }));
+  }, [crossfadeSettings]);
 
   // ========== NIVEL 0: Sin dependencias de funciones ==========
 
@@ -109,10 +125,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * End current play session and record to backend
    */
   const endPlaySession = useCallback(async (skipped: boolean = false) => {
-    if (!playSessionRef.current || !audioRef.current) return;
+    const activeAudio = activeAudioRef.current === 'A' ? audioRef.current : audioRefB.current;
+    if (!playSessionRef.current || !activeAudio) return;
 
     const session = playSessionRef.current;
-    const audio = audioRef.current;
+    const audio = activeAudio;
     const duration = audio.duration || 0;
     const currentTime = audio.currentTime || 0;
 
@@ -154,32 +171,50 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // Pause
   const pause = useCallback(() => {
-    audioRef.current?.pause();
-  }, []); // No dependencies - only uses ref
+    const activeAudio = activeAudioRef.current === 'A' ? audioRef.current : audioRefB.current;
+    activeAudio?.pause();
+  }, []); // No dependencies - only uses refs
 
   // Stop
   const stop = useCallback(() => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-    setState(prev => ({ ...prev, isPlaying: false, currentTime: 0 }));
-  }, []); // No dependencies - uses ref and setState with prev
+    const audioA = audioRef.current;
+    const audioB = audioRefB.current;
+    if (!audioA || !audioB) return;
+
+    // Stop both audios and clear crossfade
+    audioA.pause();
+    audioA.currentTime = 0;
+    audioA.src = '';
+    audioB.pause();
+    audioB.currentTime = 0;
+    audioB.src = '';
+
+    // Reset to audio A
+    activeAudioRef.current = 'A';
+
+    setState(prev => ({ ...prev, isPlaying: false, currentTime: 0, isCrossfading: false }));
+  }, []); // No dependencies - uses refs and setState with prev
 
   // Seek to time
   const seek = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
+    const activeAudio = activeAudioRef.current === 'A' ? audioRef.current : audioRefB.current;
+    if (activeAudio) {
+      activeAudio.currentTime = time;
       setState(prev => ({ ...prev, currentTime: time }));
     }
-  }, []); // No dependencies - uses ref and setState with prev
+  }, []); // No dependencies - uses refs and setState with prev
 
   // Set volume
   const setVolume = useCallback((volume: number) => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
+    const audioA = audioRef.current;
+    const audioB = audioRefB.current;
+    if (audioA && audioB) {
+      // Set volume on both audios (the inactive one will be adjusted during crossfade)
+      audioA.volume = volume;
+      audioB.volume = volume;
       setState(prev => ({ ...prev, volume }));
     }
-  }, []); // No dependencies - uses ref and setState with prev
+  }, []); // No dependencies - uses refs and setState with prev
 
   // Toggle shuffle
   const toggleShuffle = useCallback(() => {
@@ -195,6 +230,39 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return { ...prev, repeatMode: nextMode };
     });
   }, []); // No dependencies - uses setState with prev
+
+  // Set crossfade enabled
+  const setCrossfadeEnabled = useCallback((enabled: boolean) => {
+    setCrossfadeEnabledStorage(enabled);
+  }, [setCrossfadeEnabledStorage]);
+
+  // Set crossfade duration
+  const setCrossfadeDuration = useCallback((duration: number) => {
+    setCrossfadeDurationStorage(duration);
+  }, [setCrossfadeDurationStorage]);
+
+  // Get the currently active audio element
+  const getActiveAudio = useCallback(() => {
+    return activeAudioRef.current === 'A' ? audioRef.current : audioRefB.current;
+  }, []);
+
+  // Get the inactive (next) audio element
+  const getInactiveAudio = useCallback(() => {
+    return activeAudioRef.current === 'A' ? audioRefB.current : audioRef.current;
+  }, []);
+
+  // Clear any ongoing crossfade
+  const clearCrossfade = useCallback(() => {
+    if (crossfadeIntervalRef.current) {
+      clearInterval(crossfadeIntervalRef.current);
+      crossfadeIntervalRef.current = null;
+    }
+    if (crossfadeTimeoutRef.current) {
+      clearTimeout(crossfadeTimeoutRef.current);
+      crossfadeTimeoutRef.current = null;
+    }
+    setState(prev => ({ ...prev, isCrossfading: false }));
+  }, []);
 
   // Add tracks to queue
   const addToQueue = useCallback((track: Track | Track[]) => {
@@ -213,7 +281,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // Play radio station
   const playRadio = useCallback((station: RadioStation | RadioBrowserStation) => {
-    if (!audioRef.current) return;
+    const audioA = audioRef.current;
+    const audioB = audioRefB.current;
+    if (!audioA || !audioB) return;
 
     // Use url_resolved if available (better quality), fallback to url
     const streamUrl = 'urlResolved' in station ? station.urlResolved : 'url_resolved' in station ? station.url_resolved : station.url;
@@ -223,7 +293,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return;
     }
 
-    const audio = audioRef.current;
+    // Stop any playing audio and reset to audio A for radio
+    audioA.pause();
+    audioA.src = '';
+    audioB.pause();
+    audioB.src = '';
+    activeAudioRef.current = 'A';
+
+    const audio = audioA;
 
     // Clear previous event listeners to avoid duplicates
     audio.oncanplay = null;
@@ -254,6 +331,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       isRadioMode: true,
       isPlaying: true,
       radioSignalStatus: 'good', // Initialize signal status (will update based on events)
+      isCrossfading: false, // Disable crossfade for radio
       // Clear track state when playing radio
       currentTrack: null,
       queue: [],
@@ -262,13 +340,22 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }));
 
     setCurrentQueueIndex(-1);
-  }, []); // No dependencies - uses ref and setState with prev
+  }, []); // No dependencies - uses refs and setState with prev
 
   // Stop radio
   const stopRadio = useCallback(() => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
+    const audioA = audioRef.current;
+    const audioB = audioRefB.current;
+    if (!audioA || !audioB) return;
+
+    audioA.pause();
+    audioA.currentTime = 0;
+    audioA.src = '';
+    audioB.pause();
+    audioB.currentTime = 0;
+    audioB.src = '';
+
+    activeAudioRef.current = 'A';
 
     setState(prev => ({
       ...prev,
@@ -278,13 +365,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       currentTime: 0,
       duration: 0,
     }));
-  }, []); // No dependencies - uses ref and setState with prev
+  }, []); // No dependencies - uses refs and setState with prev
 
   // ========== NIVEL 1: Depende solo de nivel 0 ==========
 
-  // Play a track
-  const play = useCallback((track?: Track) => {
-    if (!audioRef.current) return;
+  // Play a track (with optional crossfade support)
+  const play = useCallback((track?: Track, withCrossfade: boolean = false) => {
+    const activeAudio = getActiveAudio();
+    const inactiveAudio = getInactiveAudio();
+
+    if (!activeAudio || !inactiveAudio) return;
 
     if (track) {
       // Play new track
@@ -297,43 +387,120 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
       const streamUrl = `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
 
-      audioRef.current.src = streamUrl;
-      audioRef.current.load();
+      if (withCrossfade && state.crossfade.enabled && state.isPlaying) {
+        // Crossfade: load next track on inactive audio and fade
+        logger.debug('[Player] Starting crossfade to:', track.title);
 
-      // Error handler for audio loading issues
-      audioRef.current.onerror = () => {
-        logger.error('[Player] Failed to load audio track:', track.title);
-      };
+        // Prepare next track on inactive audio
+        inactiveAudio.src = streamUrl;
+        inactiveAudio.volume = 0;
+        inactiveAudio.load();
 
-      audioRef.current.play().catch((error) => {
-        logger.error('[Player] Failed to play audio:', error.message);
-      });
+        // Error handler for audio loading issues
+        inactiveAudio.onerror = () => {
+          logger.error('[Player] Failed to load audio track:', track.title);
+          clearCrossfade();
+        };
 
-      setState(prev => ({
-        ...prev,
-        currentTrack: track,
-        isPlaying: true,
-        // Clear radio state when playing a track
-        currentRadioStation: null,
-        isRadioMode: false,
-        radioSignalStatus: null, // Clear signal status when exiting radio mode
-      }));
+        setState(prev => ({ ...prev, isCrossfading: true }));
 
-      // Start new play session for tracking
-      startPlaySession(track);
+        // Start playing the next track and perform crossfade
+        inactiveAudio.play().then(() => {
+          const fadeDuration = state.crossfade.duration * 1000; // Convert to ms
+          const fadeSteps = 50; // Number of volume steps
+          const fadeInterval = fadeDuration / fadeSteps;
+          const volumeStep = state.volume / fadeSteps;
+
+          let currentStep = 0;
+
+          crossfadeIntervalRef.current = window.setInterval(() => {
+            currentStep++;
+
+            // Fade out active, fade in inactive
+            const fadeOutVolume = Math.max(0, state.volume - (volumeStep * currentStep));
+            const fadeInVolume = Math.min(state.volume, volumeStep * currentStep);
+
+            activeAudio.volume = fadeOutVolume;
+            inactiveAudio.volume = fadeInVolume;
+
+            if (currentStep >= fadeSteps) {
+              // Crossfade complete
+              clearCrossfade();
+
+              // Stop the old audio
+              activeAudio.pause();
+              activeAudio.currentTime = 0;
+              activeAudio.src = '';
+
+              // Switch active audio
+              activeAudioRef.current = activeAudioRef.current === 'A' ? 'B' : 'A';
+
+              logger.debug('[Player] Crossfade complete, now using audio:', activeAudioRef.current);
+            }
+          }, fadeInterval);
+        }).catch((error) => {
+          logger.error('[Player] Failed to play audio for crossfade:', error.message);
+          clearCrossfade();
+        });
+
+        setState(prev => ({
+          ...prev,
+          currentTrack: track,
+          isPlaying: true,
+          currentRadioStation: null,
+          isRadioMode: false,
+          radioSignalStatus: null,
+        }));
+
+        // Start new play session for tracking
+        startPlaySession(track);
+      } else {
+        // Normal play (no crossfade)
+        clearCrossfade();
+
+        // Stop the other audio if playing
+        inactiveAudio.pause();
+        inactiveAudio.currentTime = 0;
+        inactiveAudio.src = '';
+
+        activeAudio.src = streamUrl;
+        activeAudio.volume = state.volume;
+        activeAudio.load();
+
+        // Error handler for audio loading issues
+        activeAudio.onerror = () => {
+          logger.error('[Player] Failed to load audio track:', track.title);
+        };
+
+        activeAudio.play().catch((error) => {
+          logger.error('[Player] Failed to play audio:', error.message);
+        });
+
+        setState(prev => ({
+          ...prev,
+          currentTrack: track,
+          isPlaying: true,
+          currentRadioStation: null,
+          isRadioMode: false,
+          radioSignalStatus: null,
+        }));
+
+        // Start new play session for tracking
+        startPlaySession(track);
+      }
     } else if (state.currentTrack && !state.isRadioMode) {
       // Resume current track (only if not in radio mode)
-      audioRef.current.play();
+      activeAudio.play();
     } else if (state.isRadioMode && state.currentRadioStation) {
       // Resume radio station
-      audioRef.current.play();
+      activeAudio.play();
     }
-  }, [streamTokenData?.token, state.currentTrack, state.isRadioMode, state.currentRadioStation, startPlaySession]);
+  }, [streamTokenData?.token, state.currentTrack, state.isRadioMode, state.currentRadioStation, state.crossfade, state.isPlaying, state.volume, startPlaySession, getActiveAudio, getInactiveAudio, clearCrossfade]);
 
   // ========== NIVEL 2: Depende de nivel 0 y 1 ==========
 
-  // Play next track in queue
-  const playNext = useCallback(() => {
+  // Play next track in queue (with optional crossfade)
+  const playNext = useCallback((useCrossfade: boolean = false) => {
     if (state.queue.length === 0) return;
 
     // End current session as skipped ONLY if there's an active session
@@ -357,7 +524,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
 
     setCurrentQueueIndex(nextIndex);
-    play(state.queue[nextIndex]);
+    play(state.queue[nextIndex], useCrossfade);
   }, [state.queue, state.isShuffle, state.repeatMode, currentQueueIndex, endPlaySession, play]);
 
   // Play previous track in queue
@@ -365,8 +532,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (state.queue.length === 0) return;
 
     // If more than 3 seconds played, restart current track
-    if (audioRef.current && audioRef.current.currentTime > 3) {
-      audioRef.current.currentTime = 0;
+    const activeAudio = activeAudioRef.current === 'A' ? audioRef.current : audioRefB.current;
+    if (activeAudio && activeAudio.currentTime > 3) {
+      activeAudio.currentTime = 0;
       return;
     }
 
@@ -405,28 +573,87 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [play]);
 
   // Handle track ended - needs to be updated when dependencies change
+  // Also handles crossfade timing detection
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const audioA = audioRef.current;
+    const audioB = audioRefB.current;
+    if (!audioA || !audioB) return;
 
     const handleEnded = () => {
+      // Only handle ended if not in crossfade mode (crossfade handles its own transition)
+      if (state.isCrossfading) return;
+
       // Record completed play (not skipped)
       endPlaySession(false);
 
       if (state.repeatMode === 'one') {
-        audio.play();
+        const activeAudio = activeAudioRef.current === 'A' ? audioA : audioB;
+        activeAudio.play();
       } else if (state.repeatMode === 'all' || currentQueueIndex < state.queue.length - 1) {
-        playNext();
+        playNext(false); // No crossfade since track already ended
       } else {
         setState(prev => ({ ...prev, isPlaying: false }));
       }
     };
 
-    audio.addEventListener('ended', handleEnded);
+    audioA.addEventListener('ended', handleEnded);
+    audioB.addEventListener('ended', handleEnded);
     return () => {
-      audio.removeEventListener('ended', handleEnded);
+      audioA.removeEventListener('ended', handleEnded);
+      audioB.removeEventListener('ended', handleEnded);
     };
-  }, [state.repeatMode, currentQueueIndex, state.queue.length, endPlaySession, playNext]);
+  }, [state.repeatMode, state.isCrossfading, currentQueueIndex, state.queue.length, endPlaySession, playNext]);
+
+  // Crossfade timing detection - start crossfade before track ends
+  const crossfadeStartedRef = useRef(false);
+
+  useEffect(() => {
+    const audioA = audioRef.current;
+    const audioB = audioRefB.current;
+    if (!audioA || !audioB) return;
+
+    const checkCrossfadeTiming = () => {
+      // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one
+      if (!state.crossfade.enabled || state.isCrossfading || state.isRadioMode || state.repeatMode === 'one') {
+        crossfadeStartedRef.current = false;
+        return;
+      }
+
+      // Check if there's a next track to play
+      const hasNextTrack = state.repeatMode === 'all' || currentQueueIndex < state.queue.length - 1;
+      if (!hasNextTrack) {
+        crossfadeStartedRef.current = false;
+        return;
+      }
+
+      const activeAudio = activeAudioRef.current === 'A' ? audioA : audioB;
+      const timeRemaining = activeAudio.duration - activeAudio.currentTime;
+      const crossfadeDuration = state.crossfade.duration;
+
+      // Start crossfade when time remaining equals crossfade duration
+      // Only if we haven't already started it for this track
+      if (timeRemaining <= crossfadeDuration && timeRemaining > 0 && !crossfadeStartedRef.current && activeAudio.duration > crossfadeDuration) {
+        crossfadeStartedRef.current = true;
+        logger.debug('[Player] Time to start crossfade, remaining:', timeRemaining);
+
+        // End current play session before crossfade
+        endPlaySession(false);
+
+        // Trigger crossfade to next track
+        playNext(true);
+      }
+    };
+
+    // Reset crossfade started flag when track changes
+    crossfadeStartedRef.current = false;
+
+    audioA.addEventListener('timeupdate', checkCrossfadeTiming);
+    audioB.addEventListener('timeupdate', checkCrossfadeTiming);
+    return () => {
+      audioA.removeEventListener('timeupdate', checkCrossfadeTiming);
+      audioB.removeEventListener('timeupdate', checkCrossfadeTiming);
+    };
+  }, [state.crossfade.enabled, state.crossfade.duration, state.isCrossfading, state.isRadioMode, state.repeatMode, currentQueueIndex, state.queue.length, endPlaySession, playNext]);
 
   // ========== NIVEL 3: Depende de nivel 2 ==========
 
@@ -448,19 +675,31 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ========== EFFECTS ==========
 
-  // Initialize audio element
+  // Initialize both audio elements for crossfade support
   useEffect(() => {
-    const audio = new Audio();
-    audio.volume = state.volume;
-    audioRef.current = audio;
+    // Create primary audio element (A)
+    const audioA = new Audio();
+    audioA.volume = state.volume;
+    audioRef.current = audioA;
 
-    // Event listeners
-    const handleTimeUpdate = () => {
-      setState(prev => ({ ...prev, currentTime: audio.currentTime }));
+    // Create secondary audio element (B) for crossfade
+    const audioB = new Audio();
+    audioB.volume = state.volume;
+    audioRefB.current = audioB;
+
+    // Event listeners - only track time/duration from active audio
+    const createTimeUpdateHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
+      // Only update time from the currently active audio
+      if (activeAudioRef.current === audioId) {
+        setState(prev => ({ ...prev, currentTime: audio.currentTime }));
+      }
     };
 
-    const handleLoadedMetadata = () => {
-      setState(prev => ({ ...prev, duration: audio.duration }));
+    const createLoadedMetadataHandler = (audio: HTMLAudioElement, audioId: 'A' | 'B') => () => {
+      // Only update duration from the currently active audio
+      if (activeAudioRef.current === audioId) {
+        setState(prev => ({ ...prev, duration: audio.duration }));
+      }
     };
 
     const handlePlay = () => {
@@ -468,7 +707,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     };
 
     const handlePause = () => {
-      setState(prev => ({ ...prev, isPlaying: false }));
+      // Only set isPlaying false if both audios are paused (to handle crossfade)
+      if (audioA.paused && audioB.paused) {
+        setState(prev => ({ ...prev, isPlaying: false }));
+      }
     };
 
     // Radio signal status handlers
@@ -505,25 +747,61 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       }));
     };
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('playing', handlePlaying); // Stream is playing
-    audio.addEventListener('waiting', handleWaiting); // Buffering
-    audio.addEventListener('stalled', handleStalled); // Network stalled
-    audio.addEventListener('error', handleError); // Load/playback error
+    const handleTimeUpdateA = createTimeUpdateHandler(audioA, 'A');
+    const handleTimeUpdateB = createTimeUpdateHandler(audioB, 'B');
+    const handleLoadedMetadataA = createLoadedMetadataHandler(audioA, 'A');
+    const handleLoadedMetadataB = createLoadedMetadataHandler(audioB, 'B');
+
+    // Add listeners to audio A
+    audioA.addEventListener('timeupdate', handleTimeUpdateA);
+    audioA.addEventListener('loadedmetadata', handleLoadedMetadataA);
+    audioA.addEventListener('play', handlePlay);
+    audioA.addEventListener('pause', handlePause);
+    audioA.addEventListener('playing', handlePlaying);
+    audioA.addEventListener('waiting', handleWaiting);
+    audioA.addEventListener('stalled', handleStalled);
+    audioA.addEventListener('error', handleError);
+
+    // Add listeners to audio B
+    audioB.addEventListener('timeupdate', handleTimeUpdateB);
+    audioB.addEventListener('loadedmetadata', handleLoadedMetadataB);
+    audioB.addEventListener('play', handlePlay);
+    audioB.addEventListener('pause', handlePause);
+    audioB.addEventListener('playing', handlePlaying);
+    audioB.addEventListener('waiting', handleWaiting);
+    audioB.addEventListener('stalled', handleStalled);
+    audioB.addEventListener('error', handleError);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('playing', handlePlaying);
-      audio.removeEventListener('waiting', handleWaiting);
-      audio.removeEventListener('stalled', handleStalled);
-      audio.removeEventListener('error', handleError);
-      audio.pause();
+      // Cleanup audio A
+      audioA.removeEventListener('timeupdate', handleTimeUpdateA);
+      audioA.removeEventListener('loadedmetadata', handleLoadedMetadataA);
+      audioA.removeEventListener('play', handlePlay);
+      audioA.removeEventListener('pause', handlePause);
+      audioA.removeEventListener('playing', handlePlaying);
+      audioA.removeEventListener('waiting', handleWaiting);
+      audioA.removeEventListener('stalled', handleStalled);
+      audioA.removeEventListener('error', handleError);
+      audioA.pause();
+
+      // Cleanup audio B
+      audioB.removeEventListener('timeupdate', handleTimeUpdateB);
+      audioB.removeEventListener('loadedmetadata', handleLoadedMetadataB);
+      audioB.removeEventListener('play', handlePlay);
+      audioB.removeEventListener('pause', handlePause);
+      audioB.removeEventListener('playing', handlePlaying);
+      audioB.removeEventListener('waiting', handleWaiting);
+      audioB.removeEventListener('stalled', handleStalled);
+      audioB.removeEventListener('error', handleError);
+      audioB.pause();
+
+      // Clear crossfade timers
+      if (crossfadeIntervalRef.current) {
+        clearInterval(crossfadeIntervalRef.current);
+      }
+      if (crossfadeTimeoutRef.current) {
+        clearTimeout(crossfadeTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -546,6 +824,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setVolume,
       toggleShuffle,
       toggleRepeat,
+      setCrossfadeEnabled,
+      setCrossfadeDuration,
     }),
     [
       state,
@@ -565,6 +845,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setVolume,
       toggleShuffle,
       toggleRepeat,
+      setCrossfadeEnabled,
+      setCrossfadeDuration,
     ]
   );
 

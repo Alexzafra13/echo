@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink } from 'lucide-react';
+import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music } from 'lucide-react';
 import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
 import { usePrivacySettings, useUpdatePrivacySettings } from '../../hooks';
+import { usePlayer } from '@features/player';
 import styles from './SettingsPage.module.css';
 
 /**
@@ -15,6 +16,7 @@ export function SettingsPage() {
   const { user } = useAuth();
   const { data: privacySettings, isLoading } = usePrivacySettings();
   const { mutate: updatePrivacy, isPending: isSaving, isSuccess } = useUpdatePrivacySettings();
+  const { crossfade, setCrossfadeEnabled, setCrossfadeDuration } = usePlayer();
 
   // Local state for form
   const [isPublicProfile, setIsPublicProfile] = useState(false);
@@ -303,6 +305,61 @@ export function SettingsPage() {
                       Español
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Playback Card - Crossfade settings */}
+              <div className={styles.settingsPage__card}>
+                <div className={styles.settingsPage__cardHeader}>
+                  <h2>
+                    <Music size={20} />
+                    Reproducción
+                  </h2>
+                </div>
+
+                <div className={styles.settingsPage__cardBody}>
+                  {/* Crossfade Toggle */}
+                  <div className={styles.settingsPage__toggleItem}>
+                    <div className={styles.settingsPage__toggleInfo}>
+                      <span className={styles.settingsPage__toggleLabel}>Fundido entre canciones</span>
+                      <p className={styles.settingsPage__toggleDescription}>
+                        Transición suave entre canciones con fundido de audio (crossfade)
+                      </p>
+                    </div>
+                    <label className={styles.settingsPage__toggle}>
+                      <input
+                        type="checkbox"
+                        className={styles.settingsPage__toggleInput}
+                        checked={crossfade.enabled}
+                        onChange={(e) => setCrossfadeEnabled(e.target.checked)}
+                      />
+                      <span className={styles.settingsPage__toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  {/* Crossfade Duration */}
+                  {crossfade.enabled && (
+                    <div className={styles.settingsPage__toggleItem}>
+                      <div className={styles.settingsPage__toggleInfo}>
+                        <span className={styles.settingsPage__toggleLabel}>Duración del fundido</span>
+                        <p className={styles.settingsPage__toggleDescription}>
+                          Tiempo en segundos para la transición entre canciones
+                        </p>
+                      </div>
+                      <div className={styles.settingsPage__sliderContainer}>
+                        <input
+                          type="range"
+                          className={styles.settingsPage__slider}
+                          min="1"
+                          max="12"
+                          step="1"
+                          value={crossfade.duration}
+                          onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
+                        />
+                        <span className={styles.settingsPage__sliderValue}>{crossfade.duration}s</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
