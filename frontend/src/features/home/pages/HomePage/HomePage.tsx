@@ -4,7 +4,7 @@ import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ShuffleCard } from '@shared/components/ShuffleCard';
 import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
-import type { Album } from '../../types';
+import type { Album, HeroItem } from '../../types';
 import styles from './HomePage.module.css';
 
 /**
@@ -59,83 +59,87 @@ export default function HomePage() {
   };
 
   // Create adaptive hero pool based on user activity
-  const featuredAlbumsPool = useMemo(() => {
+  // Now includes both albums and artist playlists
+  const featuredHeroPool = useMemo((): HeroItem[] => {
     if (!recentAlbums || recentAlbums.length === 0) return [];
 
-    const pool: Album[] = [];
+    const pool: HeroItem[] = [];
     const topPlayed = topPlayedAlbums || [];
     const recent = recentAlbums || [];
 
     // Filter albums with recent release dates (last 3 months)
     const newReleases = recent.filter(album => isRecentRelease(album, 90));
 
+    // Get artist playlists from Wave Mix (sorted by plays - first is most played)
+    const { artistPlaylists } = autoPlaylists ? categorizeAutoPlaylists(autoPlaylists) : { artistPlaylists: [] };
+
     // Determine user activity level
     const hasHighActivity = topPlayed.length >= 5; // Active user
     const hasLowActivity = topPlayed.length > 0 && topPlayed.length < 5; // Some activity
 
     if (hasHighActivity) {
-      // Active user: Mix of top played, new releases, and recent
-      // 3 top played + 1 new release + 2 recent = 6-8 albums
-      pool.push(...topPlayed.slice(0, 3));
+      // Active user: Mix of top played, new releases, artist playlists, and recent
+      // 3 top played + 1 new release + 2 artist playlists + 2 recent = 8 items
+      pool.push(...topPlayed.slice(0, 3).map(album => ({ type: 'album' as const, data: album })));
 
       if (newReleases.length > 0) {
-        pool.push(...randomSelect(newReleases, 1));
+        pool.push(...randomSelect(newReleases, 1).map(album => ({ type: 'album' as const, data: album })));
       }
 
-      // Add albums from Wave Mix if available (get album IDs from tracks)
-      const waveMixAlbumIds = new Set<string>();
-      if (autoPlaylists) {
-        const { waveMix } = categorizeAutoPlaylists(autoPlaylists);
-        if (waveMix?.tracks) {
-          waveMix.tracks.forEach(track => {
-            if (track.album?.id) waveMixAlbumIds.add(track.album.id);
-          });
+      // Add artist playlists: 1 most played + 1 less played (from the end)
+      if (artistPlaylists.length >= 2) {
+        // Most played artist (first in the sorted list)
+        pool.push({ type: 'playlist' as const, data: artistPlaylists[0] });
+        // Less played artist (random from the second half)
+        const lessPlayedArtists = artistPlaylists.slice(Math.floor(artistPlaylists.length / 2));
+        const randomLessPlayed = randomSelect(lessPlayedArtists, 1);
+        if (randomLessPlayed.length > 0) {
+          pool.push({ type: 'playlist' as const, data: randomLessPlayed[0] });
         }
+      } else if (artistPlaylists.length === 1) {
+        pool.push({ type: 'playlist' as const, data: artistPlaylists[0] });
       }
-      const waveMixAlbums = recent.filter(album => waveMixAlbumIds.has(album.id));
-      pool.push(...randomSelect(waveMixAlbums, 2));
 
       // Fill remaining with recent albums (avoid duplicates)
-      const existingIds = new Set(pool.map(a => a.id));
-      const remainingRecent = recent.filter(a => !existingIds.has(a.id));
-      pool.push(...randomSelect(remainingRecent, 2));
+      const existingAlbumIds = new Set(
+        pool.filter(item => item.type === 'album').map(item => item.data.id)
+      );
+      const remainingRecent = recent.filter(a => !existingAlbumIds.has(a.id));
+      pool.push(...randomSelect(remainingRecent, 2).map(album => ({ type: 'album' as const, data: album })));
 
     } else if (hasLowActivity) {
       // Low activity: More weight on new content
-      // 1 top played + 2 new releases + 1 wave mix + 4 recent = 6-8 albums
-      pool.push(...topPlayed.slice(0, 1));
-      pool.push(...randomSelect(newReleases, 2));
+      // 1 top played + 2 new releases + 1 artist playlist + 4 recent = 8 items
+      pool.push(...topPlayed.slice(0, 1).map(album => ({ type: 'album' as const, data: album })));
+      pool.push(...randomSelect(newReleases, 2).map(album => ({ type: 'album' as const, data: album })));
 
-      // Wave Mix album
-      const waveMixAlbumIds = new Set<string>();
-      if (autoPlaylists) {
-        const { waveMix } = categorizeAutoPlaylists(autoPlaylists);
-        if (waveMix?.tracks) {
-          waveMix.tracks.forEach(track => {
-            if (track.album?.id) waveMixAlbumIds.add(track.album.id);
-          });
-        }
+      // Add 1 artist playlist (random)
+      if (artistPlaylists.length > 0) {
+        const randomArtist = randomSelect(artistPlaylists, 1);
+        pool.push({ type: 'playlist' as const, data: randomArtist[0] });
       }
-      const waveMixAlbums = recent.filter(album => waveMixAlbumIds.has(album.id));
-      pool.push(...randomSelect(waveMixAlbums, 1));
 
       // Fill with recent albums
-      const existingIds = new Set(pool.map(a => a.id));
-      const remainingRecent = recent.filter(a => !existingIds.has(a.id));
-      pool.push(...randomSelect(remainingRecent, 4));
+      const existingAlbumIds = new Set(
+        pool.filter(item => item.type === 'album').map(item => item.data.id)
+      );
+      const remainingRecent = recent.filter(a => !existingAlbumIds.has(a.id));
+      pool.push(...randomSelect(remainingRecent, 4).map(album => ({ type: 'album' as const, data: album })));
 
     } else {
-      // New user: Show new releases and recent albums only
-      // 4 new releases + 4 recent = 6-8 albums
-      pool.push(...randomSelect(newReleases, 4));
+      // New user: Show new releases and recent albums only (no playlists yet)
+      // 4 new releases + 4 recent = 8 albums
+      pool.push(...randomSelect(newReleases, 4).map(album => ({ type: 'album' as const, data: album })));
 
-      const existingIds = new Set(pool.map(a => a.id));
-      const remainingRecent = recent.filter(a => !existingIds.has(a.id));
-      pool.push(...randomSelect(remainingRecent, 4));
+      const existingAlbumIds = new Set(
+        pool.filter(item => item.type === 'album').map(item => item.data.id)
+      );
+      const remainingRecent = recent.filter(a => !existingAlbumIds.has(a.id));
+      pool.push(...randomSelect(remainingRecent, 4).map(album => ({ type: 'album' as const, data: album })));
     }
 
-    // Remove duplicates and limit to 8 albums
-    const uniquePool = Array.from(new Map(pool.map(a => [a.id, a])).values());
+    // Remove duplicates and limit to 8 items
+    const uniquePool = Array.from(new Map(pool.map(item => [item.data.id, item])).values());
     return uniquePool.slice(0, 8);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recentAlbums, topPlayedAlbums, autoPlaylists, refreshKey]);
@@ -171,14 +175,14 @@ export default function HomePage() {
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
-    if (featuredAlbumsPool.length <= 1) return;
+    if (featuredHeroPool.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentHeroIndex((prev) => (prev + 1) % featuredAlbumsPool.length);
+      setCurrentHeroIndex((prev) => (prev + 1) % featuredHeroPool.length);
     }, 20000); // Change album every 20 seconds
 
     return () => clearInterval(interval);
-  }, [featuredAlbumsPool.length]);
+  }, [featuredHeroPool.length]);
 
   // Update isMobile state on window resize
   useEffect(() => {
@@ -192,19 +196,21 @@ export default function HomePage() {
 
   // Navigation handlers
   const handleNextHero = () => {
-    setCurrentHeroIndex((prev) => (prev + 1) % featuredAlbumsPool.length);
+    setCurrentHeroIndex((prev) => (prev + 1) % featuredHeroPool.length);
   };
 
   const handlePreviousHero = () => {
     setCurrentHeroIndex((prev) =>
-      prev === 0 ? featuredAlbumsPool.length - 1 : prev - 1
+      prev === 0 ? featuredHeroPool.length - 1 : prev - 1
     );
   };
 
-  // Current hero album (from pool or fallback to API featured)
-  const currentHeroAlbum = featuredAlbumsPool.length > 0
-    ? featuredAlbumsPool[currentHeroIndex]
-    : featuredAlbum;
+  // Current hero item (from pool or fallback to API featured album)
+  const currentHeroItem: HeroItem | null = featuredHeroPool.length > 0
+    ? featuredHeroPool[currentHeroIndex]
+    : featuredAlbum
+      ? { type: 'album', data: featuredAlbum }
+      : null;
 
   // Display albums based on calculated grid size (2 rows that fill the screen width)
   const displayedRecentAlbums = recentAlbums?.slice(0, neededAlbums) || [];
@@ -228,10 +234,10 @@ export default function HomePage() {
                 <div className={styles['hero__button--loading']} />
               </div>
             </div>
-          ) : currentHeroAlbum ? (
+          ) : currentHeroItem ? (
             <HeroSection
-              key={currentHeroAlbum.id}
-              album={currentHeroAlbum}
+              key={currentHeroItem.data.id}
+              item={currentHeroItem}
               onNext={handleNextHero}
               onPrevious={handlePreviousHero}
             />
