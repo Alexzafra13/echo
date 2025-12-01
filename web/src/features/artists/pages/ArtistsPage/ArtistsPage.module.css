@@ -124,6 +124,24 @@
   color: var(--color-text-primary);
 }
 
+/* ===== Search Responsive ===== */
+@media (max-width: 768px) {
+  .artistsPage__searchInput {
+    height: 36px;
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 0 12px 0 40px;
+  }
+
+  .artistsPage__searchIcon {
+    left: 12px;
+  }
+
+  .artistsPage__searchClearButton {
+    right: 8px;
+  }
+}
+
 .artistsPage__loading,
 .artistsPage__error,
 .artistsPage__empty {
