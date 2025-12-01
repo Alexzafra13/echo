@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music, ListMusic } from 'lucide-react';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
@@ -31,6 +31,15 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // Store the last valid query to use during closing animation
+  const lastValidQuery = useRef(query);
+  if (query.length >= 2) {
+    lastValidQuery.current = query;
+  }
+
+  // Use the appropriate query - current if valid, last valid if closing
+  const searchQuery = isClosing ? lastValidQuery.current : query;
+
   // Handle open/close transitions
   useEffect(() => {
     const shouldShow = isOpen && query.length >= 2;
@@ -50,10 +59,10 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
     }
   }, [isOpen, query, isVisible]);
 
-  // Fetch results from all sources
-  const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 5 });
-  const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(query);
-  const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(query, { take: 8 });
+  // Fetch results from all sources - use searchQuery to maintain results during close animation
+  const { data: artistData, isLoading: loadingArtists } = useArtistSearch(searchQuery, { take: 5 });
+  const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(searchQuery);
+  const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(searchQuery, { take: 8 });
   const { data: playlistsData, isLoading: loadingPlaylists } = usePlaylists({ take: 50 });
 
   // Extract artists array from paginated response
@@ -61,15 +70,16 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
 
   // Filter playlists by query
   const playlists = useMemo(() => {
-    if (!playlistsData?.items || query.length < 2) return [];
+    if (!playlistsData?.items || searchQuery.length < 2) return [];
     return playlistsData.items
       .filter((playlist) =>
-        playlist.name.toLowerCase().includes(query.toLowerCase())
+        playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
       .slice(0, 5);
-  }, [playlistsData?.items, query]);
+  }, [playlistsData?.items, searchQuery]);
 
-  const isLoading = loadingArtists || loadingAlbums || loadingTracks || loadingPlaylists;
+  // Don't show loading state when closing - just show the existing results
+  const isLoading = !isClosing && (loadingArtists || loadingAlbums || loadingTracks || loadingPlaylists);
   const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0 || playlists.length > 0;
 
   const handleNavigate = (path: string) => {
@@ -120,7 +130,7 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
           <div className={styles.searchPanel__results}>
             <div className={styles.searchPanel__header}>
               <h3 className={styles.searchPanel__title}>
-                Resultados para "{query}"
+                Resultados para "{searchQuery}"
               </h3>
             </div>
 
