@@ -2,7 +2,7 @@ import { useLocation } from 'wouter';
 import { Shuffle, Clock, Sparkles, Disc, RefreshCw } from 'lucide-react';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
-import { ShuffleCard } from '@shared/components/ShuffleCard';
+import { ActionCardsRow } from '@shared/components/ActionCardsRow';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridDimensions } from '@features/home/hooks';
 import { getCoverUrl } from '@shared/utils/cover.utils';
@@ -61,12 +61,8 @@ export default function ExplorePage() {
             </p>
           </div>
 
-          {/* Shuffle All Card */}
-          <ShuffleCard
-            title="Modo Aleatorio"
-            loadingTitle="Preparando..."
-            style={{ marginBottom: 32, marginLeft: 20 }}
-          />
+          {/* Action Cards Row */}
+          <ActionCardsRow />
 
           {/* Surprise Me Section */}
           <section className={styles.explorePage__section}>
