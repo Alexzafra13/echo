@@ -25,6 +25,12 @@ export interface TrackMetadata {
   channels?: number;
   codec?: string;
 
+  // ReplayGain / Normalización de audio
+  rgTrackGain?: number; // Ganancia para normalizar el track (en dB)
+  rgTrackPeak?: number; // Pico máximo del track (0-1)
+  rgAlbumGain?: number; // Ganancia para normalizar el álbum (en dB)
+  rgAlbumPeak?: number; // Pico máximo del álbum (0-1)
+
   // IDs externos
   musicBrainzTrackId?: string;
   musicBrainzAlbumId?: string;
@@ -62,6 +68,9 @@ export class MetadataExtractorService {
   private normalizeMetadata(metadata: any): TrackMetadata {
     const { common, format } = metadata;
 
+    // Extraer ReplayGain si existe
+    const replayGain = this.extractReplayGain(common);
+
     return {
       // Información básica
       title: common.title || undefined,
@@ -81,6 +90,12 @@ export class MetadataExtractorService {
       sampleRate: format.sampleRate || undefined,
       channels: format.numberOfChannels || undefined,
       codec: format.codec || undefined,
+
+      // ReplayGain / Normalización
+      rgTrackGain: replayGain.trackGain,
+      rgTrackPeak: replayGain.trackPeak,
+      rgAlbumGain: replayGain.albumGain,
+      rgAlbumPeak: replayGain.albumPeak,
 
       // MusicBrainz IDs
       musicBrainzTrackId:
@@ -104,6 +119,29 @@ export class MetadataExtractorService {
         (typeof common.lyrics?.[0] === 'string' ? common.lyrics[0] : undefined),
       compilation: common.compilation || false,
       coverArt: (common.picture?.length || 0) > 0,
+    };
+  }
+
+  /**
+   * Extrae valores de ReplayGain de los metadatos
+   * music-metadata proporciona estos valores en common.replaygain
+   */
+  private extractReplayGain(common: any): {
+    trackGain?: number;
+    trackPeak?: number;
+    albumGain?: number;
+    albumPeak?: number;
+  } {
+    const rg = common.replaygain;
+    if (!rg) return {};
+
+    return {
+      // Track gain/peak
+      trackGain: rg.track?.dB ?? undefined,
+      trackPeak: rg.track?.ratio ?? undefined,
+      // Album gain/peak
+      albumGain: rg.album?.dB ?? undefined,
+      albumPeak: rg.album?.ratio ?? undefined,
     };
   }
 

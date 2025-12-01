@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music } from 'lucide-react';
+import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music, Volume2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
@@ -16,7 +16,15 @@ export function SettingsPage() {
   const { user } = useAuth();
   const { data: privacySettings, isLoading } = usePrivacySettings();
   const { mutate: updatePrivacy, isPending: isSaving, isSuccess } = useUpdatePrivacySettings();
-  const { crossfade, setCrossfadeEnabled, setCrossfadeDuration } = usePlayer();
+  const {
+    crossfade,
+    setCrossfadeEnabled,
+    setCrossfadeDuration,
+    normalization,
+    setNormalizationEnabled,
+    setNormalizationTargetLufs,
+    setNormalizationPreventClipping,
+  } = usePlayer();
 
   // Local state for form
   const [isPublicProfile, setIsPublicProfile] = useState(false);
@@ -305,6 +313,78 @@ export function SettingsPage() {
                       Español
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Audio Normalization Card */}
+              <div className={styles.settingsPage__card}>
+                <div className={styles.settingsPage__cardHeader}>
+                  <h2>
+                    <Volume2 size={20} />
+                    Normalización de Audio
+                  </h2>
+                </div>
+
+                <div className={styles.settingsPage__cardBody}>
+                  {/* Normalization Toggle */}
+                  <div className={styles.settingsPage__toggleItem}>
+                    <div className={styles.settingsPage__toggleInfo}>
+                      <span className={styles.settingsPage__toggleLabel}>Normalizar volumen</span>
+                      <p className={styles.settingsPage__toggleDescription}>
+                        Iguala el volumen percibido entre canciones para evitar cambios bruscos
+                      </p>
+                    </div>
+                    <label className={styles.settingsPage__toggle}>
+                      <input
+                        type="checkbox"
+                        className={styles.settingsPage__toggleInput}
+                        checked={normalization.enabled}
+                        onChange={(e) => setNormalizationEnabled(e.target.checked)}
+                      />
+                      <span className={styles.settingsPage__toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  {/* Target LUFS */}
+                  {normalization.enabled && (
+                    <>
+                      <div className={styles.settingsPage__toggleItem}>
+                        <div className={styles.settingsPage__toggleInfo}>
+                          <span className={styles.settingsPage__toggleLabel}>Nivel de referencia</span>
+                          <p className={styles.settingsPage__toggleDescription}>
+                            -16 LUFS (Apple Music) es más conservador, -14 LUFS (Spotify) es más fuerte
+                          </p>
+                        </div>
+                        <select
+                          className={styles.settingsPage__select}
+                          value={normalization.targetLufs}
+                          onChange={(e) => setNormalizationTargetLufs(Number(e.target.value) as -14 | -16)}
+                        >
+                          <option value={-16}>-16 LUFS (Apple)</option>
+                          <option value={-14}>-14 LUFS (Spotify)</option>
+                        </select>
+                      </div>
+
+                      {/* Prevent Clipping */}
+                      <div className={styles.settingsPage__toggleItem}>
+                        <div className={styles.settingsPage__toggleInfo}>
+                          <span className={styles.settingsPage__toggleLabel}>Prevenir distorsión</span>
+                          <p className={styles.settingsPage__toggleDescription}>
+                            No aumenta el volumen más allá del límite seguro para evitar distorsión
+                          </p>
+                        </div>
+                        <label className={styles.settingsPage__toggle}>
+                          <input
+                            type="checkbox"
+                            className={styles.settingsPage__toggleInput}
+                            checked={normalization.preventClipping}
+                            onChange={(e) => setNormalizationPreventClipping(e.target.checked)}
+                          />
+                          <span className={styles.settingsPage__toggleSlider}></span>
+                        </label>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

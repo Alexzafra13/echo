@@ -23,6 +23,11 @@ export interface TrackProps {
   artistName?: string;
   albumArtistName?: string;
   compilation: boolean;
+  // ReplayGain / Normalización de audio
+  rgTrackGain?: number; // Ganancia para normalizar el track (en dB)
+  rgTrackPeak?: number; // Pico máximo del track (0-1)
+  rgAlbumGain?: number; // Ganancia para normalizar el álbum (en dB)
+  rgAlbumPeak?: number; // Pico máximo del álbum (0-1)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -145,6 +150,22 @@ export class Track {
 
   get compilation(): boolean {
     return this.props.compilation;
+  }
+
+  get rgTrackGain(): number | undefined {
+    return this.props.rgTrackGain;
+  }
+
+  get rgTrackPeak(): number | undefined {
+    return this.props.rgTrackPeak;
+  }
+
+  get rgAlbumGain(): number | undefined {
+    return this.props.rgAlbumGain;
+  }
+
+  get rgAlbumPeak(): number | undefined {
+    return this.props.rgAlbumPeak;
   }
 
   get createdAt(): Date {

@@ -32,6 +32,11 @@ export class TrackMapper {
       artistName: raw.artistName || undefined,
       albumArtistName: raw.albumArtistName || undefined,
       compilation: raw.compilation || false,
+      // ReplayGain / Normalización
+      rgTrackGain: raw.rgTrackGain ?? undefined,
+      rgTrackPeak: raw.rgTrackPeak ?? undefined,
+      rgAlbumGain: raw.rgAlbumGain ?? undefined,
+      rgAlbumPeak: raw.rgAlbumPeak ?? undefined,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });
