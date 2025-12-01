@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
-import { useClickOutside } from '../../hooks/useClickOutside';
+import { useClickOutside } from '@shared/hooks';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -17,7 +17,6 @@ interface MiniPlayerProps {
 export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   const [, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const { preference } = usePlayerPreference();
   const {
     currentTrack,
@@ -35,7 +34,10 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   } = usePlayer();
 
   // Cerrar menú al hacer click fuera
-  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
+  const { ref: menuRef } = useClickOutside<HTMLDivElement>(
+    () => setIsMenuOpen(false),
+    { enabled: isMenuOpen }
+  );
 
   // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {

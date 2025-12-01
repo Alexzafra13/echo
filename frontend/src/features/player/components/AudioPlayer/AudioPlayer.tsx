@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
@@ -6,7 +6,7 @@ import { QueueList } from '../QueueList/QueueList';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
 import { useScrollDetection } from '../../hooks/useScrollDetection';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
-import { useClickOutside } from '../../hooks/useClickOutside';
+import { useClickOutside } from '@shared/hooks';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
@@ -40,8 +40,6 @@ export function AudioPlayer() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('0, 0, 0');
-  const queueRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   // Detectar scroll para activar mini-player
   const isMiniMode = useScrollDetection(120);
@@ -51,6 +49,16 @@ export function AudioPlayer() {
 
   // Detectar si estamos en mobile (viewport <= 768px)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Cerrar dropdowns al hacer click fuera
+  const { ref: queueRef } = useClickOutside<HTMLDivElement>(
+    () => setIsQueueOpen(false),
+    { enabled: isQueueOpen }
+  );
+  const { ref: menuRef } = useClickOutside<HTMLDivElement>(
+    () => setIsMenuOpen(false),
+    { enabled: isMenuOpen }
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -70,10 +78,6 @@ export function AudioPlayer() {
     preference === 'footer' ? false :
     preference === 'sidebar' ? true :
     isMiniMode;
-
-  // Cerrar dropdowns al hacer click fuera
-  useClickOutside(queueRef, () => setIsQueueOpen(false), isQueueOpen);
-  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 
   // Controlar espaciador del footer según contenido, preferencia y scroll
   useEffect(() => {
