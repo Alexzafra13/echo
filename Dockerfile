@@ -27,8 +27,8 @@ RUN pnpm install --frozen-lockfile
 # Build Frontend
 WORKDIR /build/frontend
 COPY frontend/ ./
-# Verify proxy code exists before building
-RUN grep -q "getProxiedStreamUrl" src/features/player/context/PlayerContext.tsx && echo "✓ Proxy code found in source" || (echo "✗ Proxy code NOT found!" && exit 1)
+# Verify proxy code exists before building (checks utils and player directories)
+RUN grep -rq "getProxiedStreamUrl" src/features/player/ && echo "✓ Proxy code found in source" || (echo "✗ Proxy code NOT found!" && exit 1)
 RUN pnpm build
 # Verify built JS has proxy code
 RUN grep -q "radio/stream/proxy" dist/assets/*.js && echo "✓ Proxy code found in build" || echo "⚠ Proxy code not in build (might be minified differently)"
