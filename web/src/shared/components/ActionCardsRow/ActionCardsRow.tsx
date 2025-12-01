@@ -1,3 +1,4 @@
+import { useLocation } from 'wouter';
 import { Shuffle, Calendar, Users, RefreshCw } from 'lucide-react';
 import { ActionCard } from '../ActionCard';
 import { useShufflePlay } from '@shared/hooks';
@@ -14,17 +15,15 @@ export interface ActionCardsRowProps {
  * Responsive layout that adapts to all screen sizes consistently
  */
 export function ActionCardsRow({ className }: ActionCardsRowProps) {
+  const [, setLocation] = useLocation();
   const { shufflePlay, isLoading: shuffleLoading } = useShufflePlay();
 
-  // TODO: Implement daily recommendations hook
-  const handleDailyRecommendations = () => {
-    // Placeholder - will navigate to daily recommendations
-    console.log('Daily recommendations clicked');
+  const handleWaveMix = () => {
+    setLocation('/wave-mix');
   };
 
-  // TODO: Implement social features hook
+  // TODO: Implement social features
   const handleSocial = () => {
-    // Placeholder - will navigate to social features
     console.log('Social clicked');
   };
 
@@ -41,12 +40,12 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
         customGradient={['#1a1a2e', '#16213e']}
       />
 
-      {/* Daily Recommendations */}
+      {/* Wave Mix - Daily Recommendations */}
       <ActionCard
         icon={<Calendar size={22} />}
         title="Diario"
         loadingTitle="Cargando..."
-        onClick={handleDailyRecommendations}
+        onClick={handleWaveMix}
         customGradient={['#2d1f3d', '#1a1a2e']}
       />
 
