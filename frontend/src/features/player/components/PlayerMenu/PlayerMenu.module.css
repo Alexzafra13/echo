@@ -86,3 +86,64 @@
 .menuOption--active:hover {
   background: var(--primary-20);
 }
+
+.menuSeparator {
+  height: 1px;
+  background: var(--white-10);
+  margin: 4px 8px;
+}
+
+.menuOptionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menuOptionToggle:hover {
+  background: var(--white-10);
+  color: var(--text-primary);
+}
+
+.menuOptionToggle--active {
+  color: var(--color-primary-500);
+}
+
+.toggleIndicator {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--white-15);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.toggleIndicator::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  top: 2px;
+  left: 2px;
+  transition: all 0.2s ease;
+}
+
+.toggleIndicator--active {
+  background: rgba(255, 107, 107, 0.3);
+}
+
+.toggleIndicator--active::after {
+  background: var(--color-primary);
+  transform: translateX(14px);
+}
