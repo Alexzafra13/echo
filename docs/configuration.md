@@ -34,7 +34,7 @@ CORS_ORIGINS=https://music.tudominio.com
 | `DATA_PATH` | `/app/data` | Ruta datos internos |
 | `CORS_ORIGINS` | auto-detectado | Orígenes CORS permitidos |
 
-### Desarrollo (server/.env)
+### Desarrollo (api/.env)
 
 Se genera automáticamente con `pnpm quickstart`:
 

@@ -1,6 +1,6 @@
 {
-  "name": "echo-frontend",
-  "version": "1.0.0",
+  "name": "echo-web",
+  "version": "0.1.0",
   "type": "module",
   "description": "Echo Music Server - Frontend",
   "license": "ISC",

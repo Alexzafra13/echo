@@ -131,7 +131,7 @@ async function bootstrap() {
 
   // Serve Frontend Static Files (Production)
   // Similar to Jellyfin/Navidrome: single container serves both API and frontend
-  const frontendPath = join(__dirname, '..', '..', 'frontend', 'dist');
+  const frontendPath = join(__dirname, '..', '..', 'web', 'dist');
   const indexHtmlPath = join(frontendPath, 'index.html');
 
   if (existsSync(frontendPath) && existsSync(indexHtmlPath)) {
