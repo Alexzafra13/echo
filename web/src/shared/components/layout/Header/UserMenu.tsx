@@ -1,4 +1,5 @@
 import { useLocation } from 'wouter';
+import { Shield } from 'lucide-react';
 import { useClickOutside } from '@shared/hooks';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './Header.module.css';
@@ -123,6 +124,17 @@ export function UserMenu({
           >
             Settings
           </button>
+
+          {user?.isAdmin && (
+            <button
+              className={styles.header__userMenuItem}
+              onClick={(e) => handleNavigate(e, '/admin')}
+              role="menuitem"
+            >
+              <Shield size={16} />
+              Admin
+            </button>
+          )}
 
           <div className={styles.header__userDivider} />
 
