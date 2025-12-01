@@ -23,6 +23,9 @@ import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
+// Re-export proxy utility for backward compatibility and Docker build verification
+export { getProxiedStreamUrl } from '../utils/streamProxy';
+
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
 interface PlayerProviderProps {
