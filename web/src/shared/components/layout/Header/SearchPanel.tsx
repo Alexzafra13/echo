@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music, ListMusic } from 'lucide-react';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
@@ -28,6 +28,27 @@ interface SearchPanelProps {
 export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   const [, setLocation] = useLocation();
   const { playQueue } = usePlayer();
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Handle open/close transitions
+  useEffect(() => {
+    const shouldShow = isOpen && query.length >= 2;
+
+    if (shouldShow && !isVisible) {
+      // Opening
+      setIsClosing(false);
+      setIsVisible(true);
+    } else if (!shouldShow && isVisible) {
+      // Closing - animate out first
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setIsClosing(false);
+      }, 250); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, query, isVisible]);
 
   // Fetch results from all sources
   const { data: artistData, isLoading: loadingArtists } = useArtistSearch(query, { take: 5 });
@@ -85,10 +106,10 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
     }
   };
 
-  if (!isOpen || query.length < 2) return null;
+  if (!isVisible) return null;
 
   return (
-    <div className={styles.searchPanel}>
+    <div className={`${styles.searchPanel} ${isClosing ? styles['searchPanel--closing'] : ''}`}>
       <div className={styles.searchPanel__container}>
         {isLoading ? (
           <div className={styles.searchPanel__loading}>
