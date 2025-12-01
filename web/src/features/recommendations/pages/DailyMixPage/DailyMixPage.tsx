@@ -95,7 +95,6 @@ export function DailyMixPage() {
       <Sidebar />
 
       <main className={styles.dailyMixPage__main}>
-        <Header />
 
         <div className={styles.dailyMixPage__content}>
           {/* Hero Section */}

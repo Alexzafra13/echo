@@ -89,6 +89,24 @@
   background: var(--surface-hover);
 }
 
+/* ===== Search Responsive ===== */
+@media (max-width: 768px) {
+  .waveMixPage__searchInput {
+    height: 36px;
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 0 12px 0 40px;
+  }
+
+  .waveMixPage__searchIcon {
+    left: 12px;
+  }
+
+  .waveMixPage__searchClearButton {
+    right: 8px;
+  }
+}
+
 /* Hero Section */
 .waveMixPage__hero {
   margin-bottom: 3rem;
