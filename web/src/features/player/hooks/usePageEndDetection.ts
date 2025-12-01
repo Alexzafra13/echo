@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
  * @param threshold Píxeles desde el bottom para considerar "final de página" (default: 120px para el player height)
  * @returns boolean indicando si el mini-player debe estar activo
  */
-export function useScrollDetection(threshold: number = 120) {
+export function usePageEndDetection(threshold: number = 120) {
   const [isMiniMode, setIsMiniMode] = useState(false);
 
   useEffect(() => {
