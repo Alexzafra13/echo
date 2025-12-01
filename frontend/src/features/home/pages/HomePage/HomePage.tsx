@@ -37,6 +37,15 @@ export default function HomePage() {
   // Hero section rotation state
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
+  // Refresh key to force re-randomization on each page visit
+  const [refreshKey, setRefreshKey] = useState(() => Date.now());
+
+  // Re-randomize pool when component mounts (page visit)
+  useEffect(() => {
+    setRefreshKey(Date.now());
+    setCurrentHeroIndex(0); // Reset to first item
+  }, []);
+
   // Responsive state for mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -128,7 +137,8 @@ export default function HomePage() {
     // Remove duplicates and limit to 8 albums
     const uniquePool = Array.from(new Map(pool.map(a => [a.id, a])).values());
     return uniquePool.slice(0, 8);
-  }, [recentAlbums, topPlayedAlbums, autoPlaylists]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentAlbums, topPlayedAlbums, autoPlaylists, refreshKey]);
 
   // Prepare Wave Mix playlists for home page
   // Wave Mix (always) + enough artist and genre playlists to fill at least one row
@@ -156,7 +166,8 @@ export default function HomePage() {
     // Limit only on mobile (≤768px), otherwise show all
     // On mobile: limit to 1 row (~4 items), on desktop/tablet: show all
     return isMobile ? playlists.slice(0, neededPlaylists) : playlists;
-  }, [autoPlaylists, neededPlaylists, isMobile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlaylists, neededPlaylists, isMobile, refreshKey]);
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
