@@ -1,6 +1,6 @@
 {
-  "name": "echo-server-backend",
-  "version": "1.0.0",
+  "name": "echo-api",
+  "version": "0.1.0",
   "description": "Echo Music Server - Backend API",
   "main": "dist/src/main",
   "license": "ISC",

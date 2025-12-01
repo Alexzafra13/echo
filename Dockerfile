@@ -18,15 +18,15 @@ WORKDIR /build
 
 # Copy workspace configuration first (better cache)
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-COPY frontend/package.json ./frontend/
-COPY server/package.json ./server/
+COPY web/package.json ./web/
+COPY api/package.json ./api/
 
 # Install ALL dependencies (no cache to ensure fresh builds)
 RUN pnpm install --frozen-lockfile
 
 # Build Frontend
-WORKDIR /build/frontend
-COPY frontend/ ./
+WORKDIR /build/web
+COPY web/ ./
 # Verify proxy code exists before building (checks utils and player directories)
 RUN grep -rq "getProxiedStreamUrl" src/features/player/ && echo "✓ Proxy code found in source" || (echo "✗ Proxy code NOT found!" && exit 1)
 RUN pnpm build
@@ -34,8 +34,8 @@ RUN pnpm build
 RUN grep -q "radio/stream/proxy" dist/assets/*.js && echo "✓ Proxy code found in build" || echo "⚠ Proxy code not in build (might be minified differently)"
 
 # Build Backend
-WORKDIR /build/server
-COPY server/ ./
+WORKDIR /build/api
+COPY api/ ./
 RUN pnpm build
 
 # ----------------------------------------
@@ -50,14 +50,14 @@ WORKDIR /deps
 
 # Copy workspace config
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-COPY server/package.json ./server/
+COPY api/package.json ./api/
 
 # Install production dependencies with cache + deploy
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm --filter=echo-server-backend deploy --prod --legacy /prod
+    pnpm --filter=echo-api deploy --prod --legacy /prod
 
 # Copy drizzle config for runtime migrations
-COPY server/drizzle.config.ts /prod/drizzle.config.ts
+COPY api/drizzle.config.ts /prod/drizzle.config.ts
 
 # ----------------------------------------
 # Stage 3: Minimal Production Runtime
@@ -94,16 +94,16 @@ COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
 # Copy Drizzle config, schema and migrations for runtime
 COPY --from=deps --chown=echoapp:nodejs /prod/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder --chown=echoapp:nodejs /build/server/src/infrastructure/database/schema ./src/infrastructure/database/schema
-COPY --from=builder --chown=echoapp:nodejs /build/server/drizzle ./drizzle
+COPY --from=builder --chown=echoapp:nodejs /build/api/src/infrastructure/database/schema ./src/infrastructure/database/schema
+COPY --from=builder --chown=echoapp:nodejs /build/api/drizzle ./drizzle
 
 # Copy built application files
-COPY --from=builder --chown=echoapp:nodejs /build/server/dist ./dist
-COPY --from=builder --chown=echoapp:nodejs /build/frontend/dist ./frontend/dist
+COPY --from=builder --chown=echoapp:nodejs /build/api/dist ./dist
+COPY --from=builder --chown=echoapp:nodejs /build/web/dist ./web/dist
 
 # Copy scripts
-COPY --chown=echoapp:nodejs server/scripts/docker-entrypoint.sh /usr/local/bin/
-COPY --chown=echoapp:nodejs server/scripts/reset-admin-password.js ./scripts/
+COPY --chown=echoapp:nodejs api/scripts/docker-entrypoint.sh /usr/local/bin/
+COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 
 # Fix line endings and permissions
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
