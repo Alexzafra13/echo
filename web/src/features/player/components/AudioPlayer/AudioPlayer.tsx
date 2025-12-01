@@ -4,9 +4,9 @@ import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, 
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
-import { useScrollDetection } from '../../hooks/useScrollDetection';
+import { usePageEndDetection } from '../../hooks/usePageEndDetection';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
-import { useClickOutside } from '../../hooks/useClickOutside';
+import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
@@ -43,8 +43,8 @@ export function AudioPlayer() {
   const queueRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Detectar scroll para activar mini-player
-  const isMiniMode = useScrollDetection(120);
+  // Detectar cuando el usuario llega al final de la página para activar mini-player
+  const isMiniMode = usePageEndDetection(120);
 
   // Sistema de preferencias
   const { preference } = usePlayerPreference();
@@ -72,8 +72,8 @@ export function AudioPlayer() {
     isMiniMode;
 
   // Cerrar dropdowns al hacer click fuera
-  useClickOutside(queueRef, () => setIsQueueOpen(false), isQueueOpen);
-  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
+  useClickOutsideRef(queueRef, () => setIsQueueOpen(false), isQueueOpen);
+  useClickOutsideRef(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 
   // Controlar espaciador del footer según contenido, preferencia y scroll
   useEffect(() => {
