@@ -6,23 +6,25 @@
  */
 
 import { useRef, useCallback } from 'react';
-import { recordPlay, recordSkip, type PlayContext } from '@shared/services/play-tracking.service';
+import { recordPlay, recordSkip, type PlayContext, type SourceType } from '@shared/services/play-tracking.service';
 import { logger } from '@shared/utils/logger';
 import type { Track } from '../types';
+import type { AudioElements } from './useAudioElements';
 
 interface PlaySession {
   trackId: string;
   startTime: number;
   playContext: PlayContext;
   sourceId?: string;
-  sourceType?: import('@shared/services/play-tracking.service').SourceType;
+  sourceType?: SourceType;
 }
 
 interface UsePlayTrackingParams {
+  audioElements: AudioElements;
   isShuffle: boolean;
 }
 
-export function usePlayTracking({ isShuffle }: UsePlayTrackingParams) {
+export function usePlayTracking({ audioElements, isShuffle }: UsePlayTrackingParams) {
   const playSessionRef = useRef<PlaySession | null>(null);
 
   /**
@@ -53,17 +55,24 @@ export function usePlayTracking({ isShuffle }: UsePlayTrackingParams) {
   }, [getPlayContext]);
 
   /**
+   * Set source information for current session
+   */
+  const setSessionSource = useCallback((sourceId: string, sourceType: SourceType) => {
+    if (playSessionRef.current) {
+      playSessionRef.current.sourceId = sourceId;
+      playSessionRef.current.sourceType = sourceType;
+    }
+  }, []);
+
+  /**
    * End current play session and record to backend
    */
-  const endPlaySession = useCallback(async (
-    audioElement: HTMLAudioElement | null,
-    skipped: boolean = false
-  ) => {
-    if (!playSessionRef.current || !audioElement) return;
+  const endPlaySession = useCallback(async (skipped: boolean = false) => {
+    if (!playSessionRef.current) return;
 
     const session = playSessionRef.current;
-    const duration = audioElement.duration || 0;
-    const currentTime = audioElement.currentTime || 0;
+    const duration = audioElements.getDuration();
+    const currentTime = audioElements.getCurrentTime();
 
     // Calculate completion rate
     const completionRate = duration > 0 ? currentTime / duration : 0;
@@ -99,11 +108,30 @@ export function usePlayTracking({ isShuffle }: UsePlayTrackingParams) {
 
     // Clear session
     playSessionRef.current = null;
+  }, [audioElements]);
+
+  /**
+   * Check if there's an active play session
+   */
+  const hasActiveSession = useCallback((): boolean => {
+    return playSessionRef.current !== null;
+  }, []);
+
+  /**
+   * Get current session track ID
+   */
+  const getCurrentSessionTrackId = useCallback((): string | null => {
+    return playSessionRef.current?.trackId || null;
   }, []);
 
   return {
     startPlaySession,
     endPlaySession,
+    setSessionSource,
+    hasActiveSession,
+    getCurrentSessionTrackId,
     playSessionRef,
   };
 }
+
+export type PlayTracking = ReturnType<typeof usePlayTracking>;
