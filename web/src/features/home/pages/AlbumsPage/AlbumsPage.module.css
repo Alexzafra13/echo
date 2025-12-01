@@ -272,6 +272,24 @@
   color: var(--color-text-primary);
 }
 
+/* ===== Search Responsive ===== */
+@media (max-width: 768px) {
+  .albumsPage__searchInput {
+    height: 36px;
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 0 12px 0 40px;
+  }
+
+  .albumsPage__searchIcon {
+    left: 12px;
+  }
+
+  .albumsPage__searchClearButton {
+    right: 8px;
+  }
+}
+
 /* ===== Filter/Sort Selector Styles ===== */
 .albumsPage__filterWrapper {
   display: flex;

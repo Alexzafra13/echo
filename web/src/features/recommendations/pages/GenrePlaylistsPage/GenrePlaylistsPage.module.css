@@ -108,6 +108,24 @@
   background: var(--surface-hover);
 }
 
+/* ===== Search Responsive ===== */
+@media (max-width: 768px) {
+  .genrePlaylistsPage__searchInput {
+    height: 36px;
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 0 12px 0 40px;
+  }
+
+  .genrePlaylistsPage__searchIcon {
+    left: 12px;
+  }
+
+  .genrePlaylistsPage__searchClearButton {
+    right: 8px;
+  }
+}
+
 /* Hero Section */
 .genrePlaylistsPage__hero {
   margin-bottom: 3rem;

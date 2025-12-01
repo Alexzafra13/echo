@@ -166,8 +166,8 @@
     max-width: 100%;
   }
 
-  /* Only show first 5 items in bottom nav */
-  .sidebar__navItem:nth-child(n+6) {
+  /* Only show first 6 items in bottom nav */
+  .sidebar__navItem:nth-child(n+7) {
     display: none;
   }
 

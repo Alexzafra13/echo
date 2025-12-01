@@ -91,6 +91,24 @@
   background: var(--surface-hover);
 }
 
+/* ===== Search Responsive ===== */
+@media (max-width: 768px) {
+  .playlistsPage__searchInput {
+    height: 36px;
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 0 12px 0 40px;
+  }
+
+  .playlistsPage__searchIcon {
+    left: 12px;
+  }
+
+  .playlistsPage__searchClearButton {
+    right: 8px;
+  }
+}
+
 /* Header Section */
 .playlistsPage__header {
   display: flex;
