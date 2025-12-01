@@ -6,7 +6,7 @@ on:
       - 'Dockerfile'
       - 'docker-compose*.yml'
       - '.dockerignore'
-      - 'server/scripts/docker-entrypoint.sh'
+      - 'api/scripts/docker-entrypoint.sh'
       - '.github/workflows/docker-*.yml'
 
 jobs:

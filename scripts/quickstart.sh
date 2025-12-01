@@ -82,7 +82,7 @@ echo ""
 
 # Generar .env y crear carpetas
 echo -e "${BLUE}[4/5]${NC} Configurando entorno..."
-cd server
+cd api
 node scripts/generate-env.js
 mkdir -p uploads/covers uploads/metadata
 echo -e "  ${GREEN}✓${NC} Carpetas uploads creadas"
@@ -91,7 +91,7 @@ echo ""
 
 # Migraciones (Drizzle)
 echo -e "${BLUE}[5/5]${NC} Aplicando schema a la base de datos..."
-cd server
+cd api
 pnpm db:push
 cd ..
 echo -e "  ${GREEN}✓${NC} Base de datos lista"

@@ -12,17 +12,17 @@
   "scripts": {
     "quickstart": "bash scripts/quickstart.sh",
     "setup": "bash scripts/quickstart.sh",
-    "dev": "pnpm --filter echo-server-backend dev",
-    "dev:all": "concurrently -n server,client -c blue,magenta \"pnpm --filter echo-server-backend dev\" \"pnpm --filter echo-frontend dev\"",
-    "build": "pnpm --filter echo-frontend build && pnpm --filter echo-server-backend build",
+    "dev": "pnpm --filter echo-api dev",
+    "dev:all": "concurrently -n server,client -c blue,magenta \"pnpm --filter echo-api dev\" \"pnpm --filter echo-web dev\"",
+    "build": "pnpm --filter echo-web build && pnpm --filter echo-api build",
     "docker:dev": "docker compose -f docker-compose.dev.yml up -d",
     "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "db:reset": "pnpm --filter echo-server-backend db:reset",
-    "db:migrate": "pnpm --filter echo-server-backend db:migrate",
+    "db:reset": "pnpm --filter echo-api db:reset",
+    "db:migrate": "pnpm --filter echo-api db:migrate",
     "clean": "pnpm -r exec rm -rf node_modules dist"
   },
   "devDependencies": {
