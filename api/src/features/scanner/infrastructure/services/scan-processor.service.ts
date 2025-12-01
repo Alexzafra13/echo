@@ -706,6 +706,12 @@ export class ScanProcessorService implements OnModuleInit {
             ? metadata.comment
             : null,
         lyrics: metadata.lyrics,
+        // ReplayGain / Normalización de audio
+        rgTrackGain: metadata.rgTrackGain ?? null,
+        rgTrackPeak: metadata.rgTrackPeak ?? null,
+        rgAlbumGain: metadata.rgAlbumGain ?? null,
+        rgAlbumPeak: metadata.rgAlbumPeak ?? null,
+        // MusicBrainz IDs
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: mbzAlbumId,
         mbzArtistId: mbzArtistId,
