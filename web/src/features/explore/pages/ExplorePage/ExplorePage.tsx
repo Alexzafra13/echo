@@ -50,6 +50,7 @@ export default function ExplorePage() {
       <Sidebar />
 
       <main className={styles.explorePage__main}>
+        <Header disableSearch />
 
         <div className={styles.explorePage__content}>
           {/* Page Header */}
