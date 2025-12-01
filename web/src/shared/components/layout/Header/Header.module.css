@@ -29,11 +29,14 @@
   /* Transparent background by default - becomes glassmorphic on scroll or alwaysGlass */
   background: transparent;
   border-bottom: 1px solid transparent;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Glassmorphism effect when scrolled or alwaysGlass (modifier) */
-.header--scrolled {
+/* Glass effect layer - animated with opacity for smooth transition */
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     to bottom,
     rgba(10, 14, 39, 0.25),
@@ -41,12 +44,24 @@
   );
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Glassmorphism effect when scrolled or alwaysGlass (modifier) */
+.header--scrolled {
   border-bottom: 1px solid var(--header-border-scrolled);
   box-shadow: var(--header-shadow-scrolled);
 }
 
+.header--scrolled::before {
+  opacity: 1;
+}
+
 /* Light theme glassmorphism override */
-[data-theme='light'] .header--scrolled {
+[data-theme='light'] .header::before {
   background: linear-gradient(
     to bottom,
     rgba(250, 250, 249, 0.30),
@@ -423,7 +438,11 @@
     padding: 8px 16px;
     gap: 8px;
     height: 52px; /* iOS standard header height */
-    /* Glass effect siempre activo en móvil */
+    border-bottom: 1px solid var(--white-10);
+  }
+
+  /* Glass effect siempre activo en móvil - override pseudo-element */
+  .header::before {
     background: linear-gradient(
       to bottom,
       rgba(10, 14, 39, 0.60),
@@ -431,21 +450,16 @@
     );
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--white-10);
+    opacity: 1; /* Always visible on mobile */
   }
 
   /* Light theme en móvil */
-  [data-theme='light'] .header {
+  [data-theme='light'] .header::before {
     background: linear-gradient(
       to bottom,
       rgba(250, 250, 249, 0.60),
       var(--white-70)
     );
-  }
-
-  .header--scrolled {
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
 
   .header__leftSection {
