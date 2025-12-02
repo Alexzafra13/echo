@@ -116,14 +116,14 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     }
 
     // Calcular la ganancia base
-    // rgTrackGain ya está calculado para un target específico (normalmente -18 LUFS para RG2)
-    // Ajustamos al target del usuario
+    // rgTrackGain ya está calculado para -16 LUFS por el backend (LufsAnalyzerService)
+    // Si el usuario elige un target diferente, ajustamos
     let gainDb = rgTrackGain;
 
-    // Ajuste si el usuario tiene un target diferente al de ReplayGain (que usa -18 LUFS)
-    // RG2 reference: -18 LUFS, Spotify: -14 LUFS, Apple: -16 LUFS
-    const RG_REFERENCE = -18;
-    gainDb = rgTrackGain + (settings.targetLufs - RG_REFERENCE);
+    // Ajuste si el usuario tiene un target diferente al usado en el análisis
+    // Backend usa -16 LUFS (Apple style), usuario puede elegir -14 (Spotify style)
+    const ANALYSIS_TARGET_LUFS = -16;
+    gainDb = rgTrackGain + (settings.targetLufs - ANALYSIS_TARGET_LUFS);
 
     let wasLimited = false;
 
