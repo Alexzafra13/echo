@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 /**
  * Resultado del análisis de loudness
@@ -47,12 +47,22 @@ export class LufsAnalyzerService {
       // Usar loudnorm en modo de análisis (print_format=json)
       // -nostdin: evita bloqueo esperando entrada
       // -hide_banner: menos output
-      const command = `ffmpeg -nostdin -hide_banner -i "${filePath}" -af loudnorm=print_format=json -f null -`;
-
-      const { stderr } = await execAsync(command, {
-        timeout: 60000, // 60 segundos máximo
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      });
+      // Usamos execFile con array de argumentos para evitar command injection
+      const { stderr } = await execFileAsync(
+        'ffmpeg',
+        [
+          '-nostdin',
+          '-hide_banner',
+          '-i', filePath,
+          '-af', 'loudnorm=print_format=json',
+          '-f', 'null',
+          '-',
+        ],
+        {
+          timeout: 60000, // 60 segundos máximo
+          maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+        },
+      );
 
       // FFmpeg escribe el resultado en stderr
       const result = this.parseFFmpegOutput(stderr);
@@ -131,7 +141,7 @@ export class LufsAnalyzerService {
    */
   async isFFmpegAvailable(): Promise<boolean> {
     try {
-      await execAsync('ffmpeg -version');
+      await execFileAsync('ffmpeg', ['-version']);
       return true;
     } catch {
       return false;
