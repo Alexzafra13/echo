@@ -25,6 +25,9 @@ function convertToPlayerTrack(track: import('@features/home/types').Track): Trac
     coverImage: track.albumId ? `/api/images/albums/${track.albumId}/cover` : undefined,
     trackNumber: track.trackNumber,
     discNumber: track.discNumber,
+    // Audio normalization data (LUFS)
+    rgTrackGain: track.rgTrackGain,
+    rgTrackPeak: track.rgTrackPeak,
   };
 }
 

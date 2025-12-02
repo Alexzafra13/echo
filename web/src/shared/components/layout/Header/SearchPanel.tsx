@@ -100,6 +100,9 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
       duration: t.duration,
       trackNumber: t.trackNumber,
       path: t.path,
+      // Audio normalization data (LUFS)
+      rgTrackGain: t.rgTrackGain,
+      rgTrackPeak: t.rgTrackPeak,
     }));
 
     // Play all tracks starting from the clicked one
