@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
@@ -12,8 +13,9 @@ import { LufsAnalyzerService } from './lufs-analyzer.service';
 const LUFS_QUEUE = 'lufs-analysis-queue';
 const LUFS_JOB = 'analyze-track';
 
-// Number of parallel FFmpeg processes
-const CONCURRENCY = 4;
+// Default concurrency - conservative for home servers
+// Can be overridden with LUFS_CONCURRENCY env var
+const DEFAULT_CONCURRENCY = 2;
 
 interface LufsAnalysisJob {
   trackId: string;
@@ -50,14 +52,21 @@ export class LufsAnalysisQueueService implements OnModuleInit {
   private totalToProcess = 0;
   private sessionStartedAt: Date | null = null;
   private averageProcessingTime = 4000; // FFmpeg analysis ~4 seconds per track
+  private readonly concurrency: number;
 
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly lufsAnalyzer: LufsAnalyzerService,
+    private readonly configService: ConfigService,
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
-  ) {}
+  ) {
+    // Read concurrency from env, default to 2 for home servers
+    // LUFS_CONCURRENCY=1 for Raspberry Pi / low-end NAS
+    // LUFS_CONCURRENCY=4 for powerful servers
+    this.concurrency = this.configService.get<number>('LUFS_CONCURRENCY', DEFAULT_CONCURRENCY);
+  }
 
   async onModuleInit() {
     // Register the job processor with concurrency for parallel processing
@@ -66,10 +75,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       async (job) => {
         return this.processLufsJob(job.data as LufsAnalysisJob);
       },
-      { concurrency: CONCURRENCY },
+      { concurrency: this.concurrency },
     );
 
-    this.logger.info(`LufsAnalysisQueueService initialized (concurrency: ${CONCURRENCY})`);
+    this.logger.info(`LufsAnalysisQueueService initialized (concurrency: ${this.concurrency})`);
   }
 
   /**
@@ -120,7 +129,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     this.sessionStartedAt = new Date();
 
     this.logger.info(
-      `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${CONCURRENCY} parallel workers)`
+      `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${this.concurrency} parallel workers)`
     );
 
     // Enqueue ALL tracks at once - BullMQ will handle parallelism
@@ -150,13 +159,13 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     }
 
     const estimatedTime = this.formatDuration(
-      (pendingTracks.length / CONCURRENCY) * this.averageProcessingTime
+      (pendingTracks.length / this.concurrency) * this.averageProcessingTime
     );
 
     return {
       started: true,
       pending: pendingTracks.length,
-      message: `LUFS analysis started. Processing ${pendingTracks.length} tracks with ${CONCURRENCY} workers. ETA: ~${estimatedTime}`,
+      message: `LUFS analysis started. Processing ${pendingTracks.length} tracks with ${this.concurrency} workers. ETA: ~${estimatedTime}`,
     };
   }
 
@@ -182,7 +191,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     // Calculate estimated time remaining (with parallel processing)
     let estimatedTimeRemaining: string | null = null;
     if (this.isRunning && pendingTracks > 0) {
-      const totalMs = (pendingTracks / CONCURRENCY) * this.averageProcessingTime;
+      const totalMs = (pendingTracks / this.concurrency) * this.averageProcessingTime;
       estimatedTimeRemaining = this.formatDuration(totalMs);
     }
 
