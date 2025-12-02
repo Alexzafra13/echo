@@ -67,6 +67,7 @@ export const tracks = pgTable(
     rgAlbumPeak: real('rg_album_peak'),
     rgTrackGain: real('rg_track_gain'),
     rgTrackPeak: real('rg_track_peak'),
+    lufsAnalyzedAt: timestamp('lufs_analyzed_at'), // null = pendiente, fecha = ya analizado
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
