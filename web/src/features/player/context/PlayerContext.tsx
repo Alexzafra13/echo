@@ -191,7 +191,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Play a track with optional crossfade
    */
-  const playTrack = useCallback((track: Track, withCrossfade: boolean = false) => {
+  const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
     const streamUrl = getStreamUrl(track);
     if (!streamUrl) return;
 
@@ -202,7 +202,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     // Initialize and resume AudioContext (required after user interaction)
     // This is the first point where we have a user gesture, so we can safely create AudioContext
-    normalization.resumeAudioContext();
+    // MUST await to ensure AudioContext is ready before connecting
+    await normalization.resumeAudioContext();
 
     // Connect audio elements to Web Audio API (only happens once, after user gesture)
     connectAudioToNormalization();
