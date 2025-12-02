@@ -78,9 +78,11 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
   registerProcessor(
     queueName: string,
     processor: (job: any) => Promise<any>,
+    options?: { concurrency?: number },
   ) {
     const worker = new Worker(queueName, processor, {
       connection: this.redisConnection,
+      concurrency: options?.concurrency ?? 1, // Default 1, can be increased for parallel processing
     });
 
     worker.on('completed', (job) => {

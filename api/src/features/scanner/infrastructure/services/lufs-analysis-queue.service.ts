@@ -5,13 +5,15 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
 import { eq, isNull, sql } from 'drizzle-orm';
 import { LufsAnalyzerService } from './lufs-analyzer.service';
-import { ScannerGateway } from '../gateways/scanner.gateway';
 
 /**
  * Queue names for LUFS analysis processing
  */
 const LUFS_QUEUE = 'lufs-analysis-queue';
 const LUFS_JOB = 'analyze-track';
+
+// Number of parallel FFmpeg processes
+const CONCURRENCY = 4;
 
 interface LufsAnalysisJob {
   trackId: string;
@@ -32,41 +34,42 @@ export interface LufsQueueStats {
  * LufsAnalysisQueueService
  *
  * Handles background LUFS analysis for tracks without ReplayGain data.
- * Uses BullMQ for reliable job processing.
+ * Uses BullMQ for reliable job processing with parallel workers.
  *
  * Flow:
  * 1. After scan completes, startLufsAnalysisQueue() is called
- * 2. Service counts pending tracks (rgTrackGain IS NULL)
- * 3. Worker processes ONE track at a time with FFmpeg
- * 4. After processing, checks if more tracks pending
- * 5. If yes, enqueues next job
- * 6. If no, queue completes
+ * 2. Service enqueues ALL pending tracks at once
+ * 3. BullMQ processes them in parallel (CONCURRENCY workers)
+ * 4. Much faster than sequential processing
  */
 @Injectable()
 export class LufsAnalysisQueueService implements OnModuleInit {
   // Session stats
   private isRunning = false;
   private processedInSession = 0;
-  private currentTrack: string | null = null;
+  private totalToProcess = 0;
   private sessionStartedAt: Date | null = null;
-  private averageProcessingTime = 3000; // FFmpeg analysis ~3 seconds per track
+  private averageProcessingTime = 4000; // FFmpeg analysis ~4 seconds per track
 
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly lufsAnalyzer: LufsAnalyzerService,
-    private readonly scannerGateway: ScannerGateway,
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
   ) {}
 
   async onModuleInit() {
-    // Register the job processor
-    this.bullmq.registerProcessor(LUFS_QUEUE, async (job) => {
-      return this.processLufsJob(job.data as LufsAnalysisJob);
-    });
+    // Register the job processor with concurrency for parallel processing
+    this.bullmq.registerProcessor(
+      LUFS_QUEUE,
+      async (job) => {
+        return this.processLufsJob(job.data as LufsAnalysisJob);
+      },
+      { concurrency: CONCURRENCY },
+    );
 
-    this.logger.info('LufsAnalysisQueueService initialized');
+    this.logger.info(`LufsAnalysisQueueService initialized (concurrency: ${CONCURRENCY})`);
   }
 
   /**
@@ -92,9 +95,17 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       };
     }
 
-    const stats = await this.getQueueStats();
+    // Get all pending tracks
+    const pendingTracks = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        path: tracks.path,
+      })
+      .from(tracks)
+      .where(isNull(tracks.rgTrackGain));
 
-    if (stats.pendingTracks === 0) {
+    if (pendingTracks.length === 0) {
       return {
         started: false,
         pending: 0,
@@ -105,18 +116,47 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     // Initialize session
     this.isRunning = true;
     this.processedInSession = 0;
+    this.totalToProcess = pendingTracks.length;
     this.sessionStartedAt = new Date();
-    this.currentTrack = null;
 
-    this.logger.info(`🎚️ Starting LUFS analysis queue: ${stats.pendingTracks} tracks`);
+    this.logger.info(
+      `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${CONCURRENCY} parallel workers)`
+    );
 
-    // Enqueue first job immediately
-    await this.enqueueNextTrack();
+    // Enqueue ALL tracks at once - BullMQ will handle parallelism
+    const jobs = pendingTracks.map((track) => ({
+      name: LUFS_JOB,
+      data: {
+        trackId: track.id,
+        trackTitle: track.title,
+        filePath: track.path,
+      } as LufsAnalysisJob,
+      opts: {
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }));
+
+    // Add jobs in batches to avoid memory issues with large libraries
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
+      const batch = jobs.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map((job) =>
+          this.bullmq.addJob(LUFS_QUEUE, job.name, job.data, job.opts),
+        ),
+      );
+    }
+
+    const estimatedTime = this.formatDuration(
+      (pendingTracks.length / CONCURRENCY) * this.averageProcessingTime
+    );
 
     return {
       started: true,
-      pending: stats.pendingTracks,
-      message: `LUFS analysis started. Processing ${stats.pendingTracks} tracks in background.`,
+      pending: pendingTracks.length,
+      message: `LUFS analysis started. Processing ${pendingTracks.length} tracks with ${CONCURRENCY} workers. ETA: ~${estimatedTime}`,
     };
   }
 
@@ -125,7 +165,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
    */
   async stopLufsAnalysisQueue(): Promise<void> {
     this.isRunning = false;
-    this.currentTrack = null;
     this.logger.info('⏹️ LUFS analysis queue stopped');
   }
 
@@ -140,10 +179,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
     const pendingTracks = pendingResult[0]?.count ?? 0;
 
-    // Calculate estimated time remaining
+    // Calculate estimated time remaining (with parallel processing)
     let estimatedTimeRemaining: string | null = null;
     if (this.isRunning && pendingTracks > 0) {
-      const totalMs = pendingTracks * this.averageProcessingTime;
+      const totalMs = (pendingTracks / CONCURRENCY) * this.averageProcessingTime;
       estimatedTimeRemaining = this.formatDuration(totalMs);
     }
 
@@ -151,7 +190,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       isRunning: this.isRunning,
       pendingTracks,
       processedInSession: this.processedInSession,
-      currentTrack: this.currentTrack,
+      currentTrack: null, // With parallel processing, multiple tracks are being processed
       startedAt: this.sessionStartedAt,
       estimatedTimeRemaining,
     };
@@ -161,17 +200,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
    * Process a single LUFS analysis job
    */
   private async processLufsJob(job: LufsAnalysisJob): Promise<void> {
-    if (!this.isRunning) {
-      this.logger.debug('Queue stopped, skipping job');
-      return;
-    }
-
     const startTime = Date.now();
-    this.currentTrack = job.trackTitle;
 
     try {
-      this.logger.debug(`🎚️ Analyzing: ${job.trackTitle}`);
-
       const result = await this.lufsAnalyzer.analyzeFile(job.filePath);
 
       if (result) {
@@ -181,7 +212,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           .set({
             rgTrackGain: result.trackGain,
             rgTrackPeak: result.trackPeak,
-            rgAlbumGain: result.trackGain, // Use track values for album too
+            rgAlbumGain: result.trackGain,
             rgAlbumPeak: result.trackPeak,
             updatedAt: new Date(),
           })
@@ -191,7 +222,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           `✅ ${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}`
         );
       } else {
-        // Set to 0 to mark as "analyzed but no data" and avoid re-processing
+        // Set to 0 to mark as "analyzed but no data"
         await this.drizzle.db
           .update(tracks)
           .set({
@@ -211,15 +242,34 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       // Update average processing time
       const processingTime = Date.now() - startTime;
       this.averageProcessingTime = Math.round(
-        (this.averageProcessingTime + processingTime) / 2
+        (this.averageProcessingTime * 0.9) + (processingTime * 0.1)
       );
+
+      // Log progress every 100 tracks
+      if (this.processedInSession % 100 === 0) {
+        const stats = await this.getQueueStats();
+        this.logger.info(
+          `📊 LUFS progress: ${this.processedInSession}/${this.totalToProcess} (${stats.pendingTracks} remaining, ETA: ${stats.estimatedTimeRemaining})`
+        );
+      }
+
+      // Check if queue is complete
+      if (this.processedInSession >= this.totalToProcess) {
+        this.isRunning = false;
+        const duration = this.sessionStartedAt
+          ? Date.now() - this.sessionStartedAt.getTime()
+          : 0;
+        this.logger.info(
+          `🎉 LUFS analysis completed! Processed ${this.processedInSession} tracks in ${this.formatDuration(duration)}`
+        );
+      }
 
     } catch (error) {
       this.logger.error(
         `❌ Error analyzing ${job.trackTitle}: ${(error as Error).message}`
       );
 
-      // Mark as processed to avoid infinite retry
+      // Mark as processed to avoid re-processing
       await this.drizzle.db
         .update(tracks)
         .set({
@@ -228,60 +278,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           updatedAt: new Date(),
         })
         .where(eq(tracks.id, job.trackId));
+
+      this.processedInSession++;
     }
-
-    this.currentTrack = null;
-
-    // Enqueue next track
-    await this.enqueueNextTrack();
-  }
-
-  /**
-   * Find and enqueue the next pending track
-   */
-  private async enqueueNextTrack(): Promise<void> {
-    if (!this.isRunning) {
-      return;
-    }
-
-    const nextTrack = await this.drizzle.db
-      .select({
-        id: tracks.id,
-        title: tracks.title,
-        path: tracks.path,
-      })
-      .from(tracks)
-      .where(isNull(tracks.rgTrackGain))
-      .limit(1);
-
-    if (nextTrack[0]) {
-      await this.bullmq.addJob(
-        LUFS_QUEUE,
-        LUFS_JOB,
-        {
-          trackId: nextTrack[0].id,
-          trackTitle: nextTrack[0].title,
-          filePath: nextTrack[0].path,
-        } as LufsAnalysisJob,
-        {
-          attempts: 1,
-          removeOnComplete: true,
-          removeOnFail: true,
-        }
-      );
-      return;
-    }
-
-    // No more tracks - queue complete
-    this.isRunning = false;
-
-    const duration = this.sessionStartedAt
-      ? Date.now() - this.sessionStartedAt.getTime()
-      : 0;
-
-    this.logger.info(
-      `🎉 LUFS analysis completed! Processed ${this.processedInSession} tracks in ${this.formatDuration(duration)}`
-    );
   }
 
   /**
