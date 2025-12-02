@@ -326,6 +326,15 @@ export function SettingsPage() {
                 </div>
 
                 <div className={styles.settingsPage__cardBody}>
+                  {/* Info note */}
+                  <div className={styles.settingsPage__infoNote}>
+                    <Music size={16} />
+                    <span>
+                      El análisis de volumen se realiza automáticamente al importar música.
+                      El servidor detecta tu hardware y ajusta la velocidad de procesamiento.
+                    </span>
+                  </div>
+
                   {/* Normalization Toggle */}
                   <div className={styles.settingsPage__toggleItem}>
                     <div className={styles.settingsPage__toggleInfo}>
