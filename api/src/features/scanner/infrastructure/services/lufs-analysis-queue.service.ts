@@ -6,6 +6,7 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
 import { eq, isNull, sql } from 'drizzle-orm';
 import { LufsAnalyzerService } from './lufs-analyzer.service';
+import * as os from 'os';
 
 /**
  * Queue names for LUFS analysis processing
@@ -13,9 +14,27 @@ import { LufsAnalyzerService } from './lufs-analyzer.service';
 const LUFS_QUEUE = 'lufs-analysis-queue';
 const LUFS_JOB = 'analyze-track';
 
-// Default concurrency - conservative for home servers
-// Can be overridden with LUFS_CONCURRENCY env var
-const DEFAULT_CONCURRENCY = 2;
+/**
+ * Auto-detect optimal concurrency based on system resources
+ * - Uses half the CPU cores (leave room for other processes)
+ * - Minimum 1, maximum 8
+ * - Can be overridden with LUFS_CONCURRENCY env var
+ */
+function getOptimalConcurrency(): number {
+  const cpuCores = os.cpus().length;
+  const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
+
+  // Use half the cores, minimum 1
+  let concurrency = Math.max(1, Math.floor(cpuCores / 2));
+
+  // Each FFmpeg process uses ~150MB, limit based on available memory
+  // Reserve 1GB for system, use 150MB per worker
+  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.15));
+  concurrency = Math.min(concurrency, maxByMemory);
+
+  // Cap at 8 to avoid overwhelming the system
+  return Math.min(concurrency, 8);
+}
 
 interface LufsAnalysisJob {
   trackId: string;
@@ -62,10 +81,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
   ) {
-    // Read concurrency from env, default to 2 for home servers
-    // LUFS_CONCURRENCY=1 for Raspberry Pi / low-end NAS
-    // LUFS_CONCURRENCY=4 for powerful servers
-    this.concurrency = this.configService.get<number>('LUFS_CONCURRENCY', DEFAULT_CONCURRENCY);
+    // Read concurrency from env, or auto-detect based on hardware
+    const envConcurrency = this.configService.get<number>('LUFS_CONCURRENCY');
+    this.concurrency = envConcurrency ?? getOptimalConcurrency();
   }
 
   async onModuleInit() {
@@ -78,7 +96,11 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       { concurrency: this.concurrency },
     );
 
-    this.logger.info(`LufsAnalysisQueueService initialized (concurrency: ${this.concurrency})`);
+    const cpuCores = os.cpus().length;
+    const totalMemoryGB = (os.totalmem() / (1024 * 1024 * 1024)).toFixed(1);
+    this.logger.info(
+      `LufsAnalysisQueueService initialized: ${this.concurrency} workers (detected: ${cpuCores} cores, ${totalMemoryGB}GB RAM)`
+    );
   }
 
   /**
