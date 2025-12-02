@@ -170,9 +170,16 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   }, [calculateGain, settings.enabled]);
 
   /**
-   * Resume AudioContext si está suspendido (requerido tras interacción del usuario)
+   * Initialize and resume AudioContext (requerido tras interacción del usuario)
+   * This is the safe entry point to call after a user gesture
    */
   const resumeAudioContext = useCallback(async () => {
+    // Initialize AudioContext if not exists (safe after user gesture)
+    if (!audioContextRef.current) {
+      initAudioContext();
+    }
+
+    // Resume if suspended
     if (audioContextRef.current?.state === 'suspended') {
       try {
         await audioContextRef.current.resume();
@@ -181,7 +188,7 @@ export function useAudioNormalization(settings: NormalizationSettings) {
         logger.error('[AudioNormalization] Failed to resume AudioContext:', error);
       }
     }
-  }, []);
+  }, [initAudioContext]);
 
   // Cleanup on unmount
   useEffect(() => {
