@@ -46,10 +46,10 @@ export function useAudioNormalization(settings: NormalizationSettings) {
       gainNodeRef.current = audioContextRef.current.createGain();
       gainNodeRef.current.connect(audioContextRef.current.destination);
 
-      logger.debug('[AudioNormalization] AudioContext initialized');
+      console.log('[AudioNormalization] ✅ AudioContext initialized, state:', audioContextRef.current.state);
       return audioContextRef.current;
     } catch (error) {
-      logger.error('[AudioNormalization] Failed to create AudioContext:', error);
+      console.error('[AudioNormalization] ❌ Failed to create AudioContext:', error);
       return null;
     }
   }, []);
@@ -89,10 +89,10 @@ export function useAudioNormalization(settings: NormalizationSettings) {
       sourceRef.current = source;
       connectedRef.current = audioElement;
 
-      logger.debug(`[AudioNormalization] Audio ${audioId} connected to gain node`);
+      console.log(`[AudioNormalization] ✅ Audio ${audioId} connected to gain node`);
     } catch (error) {
       // El elemento podría ya estar conectado a otro contexto
-      logger.warn(`[AudioNormalization] Could not connect audio ${audioId}:`, error);
+      console.error(`[AudioNormalization] ❌ Could not connect audio ${audioId}:`, error);
     }
   }, [initAudioContext]);
 
@@ -154,7 +154,10 @@ export function useAudioNormalization(settings: NormalizationSettings) {
    * Aplica la ganancia calculada al GainNode
    */
   const applyGain = useCallback((track: Track | null) => {
-    if (!gainNodeRef.current) return;
+    if (!gainNodeRef.current) {
+      console.warn('[AudioNormalization] ⚠️ applyGain: GainNode is null, normalization disabled');
+      return;
+    }
 
     const { gainDb, gainLinear, wasLimited } = calculateGain(track);
 
@@ -162,12 +165,11 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     const currentTime = audioContextRef.current?.currentTime ?? 0;
     gainNodeRef.current.gain.setTargetAtTime(gainLinear, currentTime, 0.015);
 
-    if (settings.enabled && track?.rgTrackGain !== undefined) {
-      logger.debug(
-        `[AudioNormalization] Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited by peak]' : ''}`,
-      );
-    }
-  }, [calculateGain, settings.enabled]);
+    console.log(
+      `[AudioNormalization] 🎚️ Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited by peak]' : ''}`,
+      { track: track?.title, rgTrackGain: track?.rgTrackGain, rgTrackPeak: track?.rgTrackPeak, settings }
+    );
+  }, [calculateGain, settings]);
 
   /**
    * Initialize and resume AudioContext (requerido tras interacción del usuario)
