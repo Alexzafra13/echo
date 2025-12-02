@@ -113,10 +113,31 @@ export class LufsAnalyzerService {
   ): { inputLufs: number; inputPeak: number } | null {
     try {
       // El output de loudnorm está en formato JSON al final del stderr
-      // Buscar el bloque JSON
-      const jsonMatch = output.match(/\{[\s\S]*"input_i"[\s\S]*\}/);
+      // Aparece después de [Parsed_loudnorm...] con formato:
+      // {
+      //     "input_i" : "-5.02",
+      //     "input_tp" : "1.31",
+      //     ...
+      // }
+
+      // Buscar el bloque JSON que empieza con "input_i" (específico de loudnorm)
+      // Usamos regex no-greedy y anclamos al inicio del JSON de loudnorm
+      const jsonMatch = output.match(/\{\s*"input_i"\s*:\s*"[^"]+"\s*,[\s\S]*?"target_offset"\s*:\s*"[^"]+"\s*\}/);
       if (!jsonMatch) {
-        return null;
+        // Fallback: buscar cualquier JSON que contenga input_i cerca del final
+        const lines = output.split('\n');
+        const lastLines = lines.slice(-20).join('\n');
+        const fallbackMatch = lastLines.match(/\{[^{}]*"input_i"[^{}]*\}/);
+        if (!fallbackMatch) {
+          return null;
+        }
+        const data = JSON.parse(fallbackMatch[0]);
+        const inputLufs = parseFloat(data.input_i);
+        const inputPeak = parseFloat(data.input_tp);
+        if (isNaN(inputLufs) || isNaN(inputPeak)) {
+          return null;
+        }
+        return { inputLufs, inputPeak };
       }
 
       const data = JSON.parse(jsonMatch[0]);
