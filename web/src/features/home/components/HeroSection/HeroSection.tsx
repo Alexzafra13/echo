@@ -71,6 +71,9 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
       albumName: album.title,
       duration: track.duration || 0,
       coverImage: album.coverImage,
+      // Audio normalization data (LUFS)
+      rgTrackGain: track.rgTrackGain,
+      rgTrackPeak: track.rgTrackPeak,
     }));
   };
 
@@ -87,6 +90,9 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
         albumName: st.track!.albumName,
         duration: st.track!.duration || 0,
         coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
+        // Audio normalization data (LUFS)
+        rgTrackGain: (st.track as any)?.rgTrackGain,
+        rgTrackPeak: (st.track as any)?.rgTrackPeak,
       }));
   };
 
