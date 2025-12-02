@@ -1,8 +1,8 @@
 import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { eq, and, or, isNull, sql, count, sum, gte, notInArray } from 'drizzle-orm';
+import { eq, and, or, isNull, sql, count, sum, gte, notInArray, desc } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { artists, albums, tracks, genres, trackGenres } from '@infrastructure/database/schema';
+import { artists, albums, tracks, genres, trackGenres, libraryScans } from '@infrastructure/database/schema';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import {
   IScannerRepository,
@@ -39,6 +39,7 @@ class ScanProgress {
   filesScanned = 0;
   totalFiles = 0;
   tracksCreated = 0;
+  tracksSkipped = 0; // Files not modified since last scan
   albumsCreated = 0;
   artistsCreated = 0;
   coversExtracted = 0;
@@ -150,6 +151,21 @@ export class ScanProcessorService implements OnModuleInit {
         status: 'running',
       } as any);
 
+      // 1.5 Obtener timestamp del último scan completado (para scan incremental)
+      const lastCompletedScan = await this.drizzle.db
+        .select({ finishedAt: libraryScans.finishedAt })
+        .from(libraryScans)
+        .where(eq(libraryScans.status, 'completed'))
+        .orderBy(desc(libraryScans.finishedAt))
+        .limit(1);
+
+      const lastScanTime = lastCompletedScan[0]?.finishedAt ?? null;
+      if (lastScanTime) {
+        this.logger.info(`⚡ Scan incremental: solo archivos modificados desde ${lastScanTime.toISOString()}`);
+      } else {
+        this.logger.info(`📁 Scan completo: primera vez o sin scans previos`);
+      }
+
       // Emitir evento: scan iniciado
       this.emitProgress(scanId, tracker, ScanStatus.SCANNING, 'Buscando archivos...');
 
@@ -161,19 +177,20 @@ export class ScanProcessorService implements OnModuleInit {
       // Emitir evento: archivos encontrados
       this.emitProgress(scanId, tracker, ScanStatus.SCANNING, `Encontrados ${files.length} archivos`);
 
-      // 3. Procesar cada archivo
+      // 3. Procesar cada archivo (con verificación de mtime para scan incremental)
       let tracksAdded = 0;
       let tracksUpdated = 0;
       let tracksDeleted = 0;
 
       for (const filePath of files) {
         try {
-          const result = await this.processFile(filePath, tracker);
+          const result = await this.processFile(filePath, tracker, lastScanTime);
           if (result === 'added') {
             tracksAdded++;
             tracker.tracksCreated++;
           }
           if (result === 'updated') tracksUpdated++;
+          if (result === 'skipped') tracker.tracksSkipped++;
 
           tracker.filesScanned++;
 
@@ -240,6 +257,7 @@ export class ScanProcessorService implements OnModuleInit {
             totalFiles: tracker.totalFiles,
             filesScanned: tracker.filesScanned,
             tracksCreated: tracker.tracksCreated,
+            tracksSkipped: tracker.tracksSkipped,
             albumsCreated: tracker.albumsCreated,
             artistsCreated: tracker.artistsCreated,
             coversExtracted: tracker.coversExtracted,
@@ -257,6 +275,7 @@ export class ScanProcessorService implements OnModuleInit {
         scanId,
         totalFiles: tracker.totalFiles,
         tracksCreated: tracker.tracksCreated,
+        tracksSkipped: tracker.tracksSkipped,
         albumsCreated: tracker.albumsCreated,
         artistsCreated: tracker.artistsCreated,
         coversExtracted: tracker.coversExtracted,
@@ -266,7 +285,7 @@ export class ScanProcessorService implements OnModuleInit {
       });
 
       this.logger.info(
-        `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted}`,
+        `✅ Escaneo completado: +${tracksAdded} ~${tracksUpdated} -${tracksDeleted} ⏭️${tracker.tracksSkipped} saltados`,
       );
     } catch (error) {
       this.logger.error(`❌ Error en escaneo ${scanId}:`, error);
@@ -554,13 +573,41 @@ export class ScanProcessorService implements OnModuleInit {
    *
    * @param filePath - Ruta del archivo de música
    * @param tracker - (Opcional) Tracker para actualizar contadores
-   * @returns 'added' si se creó, 'updated' si se actualizó, 'skipped' si hubo error
+   * @param lastScanTime - (Opcional) Fecha del último scan para skip de archivos no modificados
+   * @returns 'added' si se creó, 'updated' si se actualizó, 'skipped' si no cambió o error
    */
   private async processFile(
     filePath: string,
     tracker?: ScanProgress,
+    lastScanTime?: Date | null,
   ): Promise<'added' | 'updated' | 'skipped'> {
     try {
+      // ============================================================
+      // 0. VERIFICAR SI ARCHIVO CAMBIÓ (Scan Incremental)
+      // ============================================================
+      if (lastScanTime) {
+        const stats = await this.fileScanner.getFileStats(filePath);
+        if (stats) {
+          const fileMtime = stats.mtime;
+
+          // Si el archivo no fue modificado desde el último scan...
+          if (fileMtime <= lastScanTime) {
+            // Verificar si el track ya existe en BD
+            const existingTrack = await this.drizzle.db
+              .select({ id: tracks.id })
+              .from(tracks)
+              .where(eq(tracks.path, filePath))
+              .limit(1);
+
+            // Si existe y no cambió, saltar
+            if (existingTrack.length > 0) {
+              return 'skipped';
+            }
+            // Si no existe (archivo viejo nunca escaneado), procesar
+          }
+        }
+      }
+
       // ============================================================
       // 1. EXTRAER METADATOS
       // ============================================================

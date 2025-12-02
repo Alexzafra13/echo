@@ -126,7 +126,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       };
     }
 
-    // Get all pending tracks
+    // Get all pending tracks (lufsAnalyzedAt = null means never analyzed)
     const pendingTracks = await this.drizzle.db
       .select({
         id: tracks.id,
@@ -134,7 +134,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         path: tracks.path,
       })
       .from(tracks)
-      .where(isNull(tracks.rgTrackGain));
+      .where(isNull(tracks.lufsAnalyzedAt));
 
     if (pendingTracks.length === 0) {
       return {
@@ -206,7 +206,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     const pendingResult = await this.drizzle.db
       .select({ count: sql<number>`count(*)::int` })
       .from(tracks)
-      .where(isNull(tracks.rgTrackGain));
+      .where(isNull(tracks.lufsAnalyzedAt));
 
     const pendingTracks = pendingResult[0]?.count ?? 0;
 
@@ -229,15 +229,21 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
   /**
    * Process a single LUFS analysis job
+   *
+   * Logic:
+   * - Always set lufsAnalyzedAt to mark as processed (won't retry)
+   * - If analysis succeeds: save gain/peak values
+   * - If analysis fails: leave gain/peak as null (distinguishable from 0dB real gain)
    */
   private async processLufsJob(job: LufsAnalysisJob): Promise<void> {
     const startTime = Date.now();
+    const now = new Date();
 
     try {
       const result = await this.lufsAnalyzer.analyzeFile(job.filePath);
 
       if (result) {
-        // Update track with LUFS data
+        // Success: save LUFS data + mark as analyzed
         await this.drizzle.db
           .update(tracks)
           .set({
@@ -245,7 +251,8 @@ export class LufsAnalysisQueueService implements OnModuleInit {
             rgTrackPeak: result.trackPeak,
             rgAlbumGain: result.trackGain,
             rgAlbumPeak: result.trackPeak,
-            updatedAt: new Date(),
+            lufsAnalyzedAt: now,
+            updatedAt: now,
           })
           .where(eq(tracks.id, job.trackId));
 
@@ -253,19 +260,17 @@ export class LufsAnalysisQueueService implements OnModuleInit {
           `✅ ${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}`
         );
       } else {
-        // Set to 0 to mark as "analyzed but no data"
+        // Analysis returned no data: mark as analyzed but leave values null
+        // This distinguishes "couldn't analyze" from "0dB real gain"
         await this.drizzle.db
           .update(tracks)
           .set({
-            rgTrackGain: 0,
-            rgTrackPeak: 1,
-            rgAlbumGain: 0,
-            rgAlbumPeak: 1,
-            updatedAt: new Date(),
+            lufsAnalyzedAt: now,
+            updatedAt: now,
           })
           .where(eq(tracks.id, job.trackId));
 
-        this.logger.warn(`⚠️ ${job.trackTitle}: analysis failed, set to neutral gain`);
+        this.logger.warn(`⚠️ ${job.trackTitle}: analysis failed, marked as analyzed (no gain data)`);
       }
 
       this.processedInSession++;
@@ -300,13 +305,13 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         `❌ Error analyzing ${job.trackTitle}: ${(error as Error).message}`
       );
 
-      // Mark as processed to avoid re-processing
+      // Mark as analyzed to avoid re-processing on next scan
+      // Leave gain/peak null to indicate no data available
       await this.drizzle.db
         .update(tracks)
         .set({
-          rgTrackGain: 0,
-          rgTrackPeak: 1,
-          updatedAt: new Date(),
+          lufsAnalyzedAt: now,
+          updatedAt: now,
         })
         .where(eq(tracks.id, job.trackId));
 
