@@ -144,6 +144,41 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
             </div>
           </div>
 
+          {/* Audio normalization info */}
+          <div className={styles.trackInfoModal__section}>
+            <h4 className={styles.trackInfoModal__sectionTitle}>Normalización de audio</h4>
+            <div className={styles.trackInfoModal__infoGrid}>
+              <div className={styles.trackInfoModal__infoRow}>
+                <span className={styles.trackInfoModal__infoLabel}>Estado:</span>
+                <span className={styles.trackInfoModal__infoValue}>
+                  {track.rgTrackGain !== undefined && track.rgTrackGain !== null ? (
+                    <span className={styles.trackInfoModal__normalized}>Analizada</span>
+                  ) : (
+                    <span className={styles.trackInfoModal__pending}>Pendiente</span>
+                  )}
+                </span>
+              </div>
+              {track.rgTrackGain !== undefined && track.rgTrackGain !== null && (
+                <>
+                  <div className={styles.trackInfoModal__infoRow}>
+                    <span className={styles.trackInfoModal__infoLabel}>Ganancia:</span>
+                    <span className={styles.trackInfoModal__infoValue}>
+                      {track.rgTrackGain > 0 ? '+' : ''}{track.rgTrackGain.toFixed(2)} dB
+                    </span>
+                  </div>
+                  {track.rgTrackPeak !== undefined && track.rgTrackPeak !== null && (
+                    <div className={styles.trackInfoModal__infoRow}>
+                      <span className={styles.trackInfoModal__infoLabel}>Pico máximo:</span>
+                      <span className={styles.trackInfoModal__infoValue}>
+                        {(track.rgTrackPeak * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Lyrics if available */}
           {track.lyrics && (
             <div className={styles.trackInfoModal__section}>
