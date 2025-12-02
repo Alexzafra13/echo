@@ -106,6 +106,11 @@ export class ScanCompletedDto {
 
   @IsNumber()
   @Min(0)
+  @IsOptional()
+  tracksSkipped?: number; // Archivos no modificados (scan incremental)
+
+  @IsNumber()
+  @Min(0)
   albumsCreated!: number;
 
   @IsNumber()
