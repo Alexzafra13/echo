@@ -69,8 +69,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== AUDIO NORMALIZATION ==========
   const normalization = useAudioNormalization(normalizationSettings);
 
-  // Connect audio elements to Web Audio API for normalization
-  useEffect(() => {
+  // Track if audio elements have been connected to Web Audio API
+  const audioConnectedRef = useRef(false);
+
+  /**
+   * Connect audio elements to Web Audio API for normalization
+   * Must be called after user gesture (click/tap on play)
+   */
+  const connectAudioToNormalization = useCallback(() => {
+    if (audioConnectedRef.current) return;
+
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
 
@@ -80,6 +88,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (audioB) {
       normalization.connectAudioElement(audioB, 'B');
     }
+
+    audioConnectedRef.current = true;
+    logger.debug('[Player] Audio elements connected to normalization');
   }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
@@ -189,8 +200,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       radio.stopRadio();
     }
 
-    // Resume AudioContext if suspended (required after user interaction)
+    // Initialize and resume AudioContext (required after user interaction)
+    // This is the first point where we have a user gesture, so we can safely create AudioContext
     normalization.resumeAudioContext();
+
+    // Connect audio elements to Web Audio API (only happens once, after user gesture)
+    connectAudioToNormalization();
 
     // Apply audio normalization for the new track
     normalization.applyGain(track);
@@ -223,7 +238,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
 
     crossfade.resetCrossfadeFlag();
-  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
+  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization, connectAudioToNormalization]);
 
   /**
    * Play - either a new track or resume current playback
@@ -232,13 +247,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (track) {
       playTrack(track, withCrossfade);
     } else if (currentTrack && !radio.isRadioMode) {
-      // Resume current track
+      // Resume current track - ensure AudioContext is resumed after user gesture
+      normalization.resumeAudioContext();
       audioElements.playActive();
     } else if (radio.isRadioMode && radio.currentStation) {
       // Resume radio
       radio.resumeRadio();
     }
-  }, [playTrack, currentTrack, radio, audioElements]);
+  }, [playTrack, currentTrack, radio, audioElements, normalization]);
 
   /**
    * Pause playback
