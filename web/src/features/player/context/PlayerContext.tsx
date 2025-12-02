@@ -130,9 +130,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   });
 
   // Sync radio metadata to radio state
+  // Note: Only depend on radioMetadata, not the entire radio object (which is recreated each render)
   useEffect(() => {
     radio.setMetadata(radioMetadata);
-  }, [radioMetadata, radio]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radioMetadata]);
 
   // Update radio signal status based on audio events
   useEffect(() => {
@@ -172,7 +174,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioB.removeEventListener('stalled', handleStalled);
       audioB.removeEventListener('error', handleError);
     };
-  }, [audioElements, radio]);
+    // Note: Only depend on audioElements refs, not the entire radio object
+    // radio.isRadioMode and radio.setSignalStatus are accessed inside handlers
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioElements.audioRefA, audioElements.audioRefB]);
 
   // ========== TRACK PLAYBACK ==========
 
