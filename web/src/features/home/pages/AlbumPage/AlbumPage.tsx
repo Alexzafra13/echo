@@ -124,6 +124,9 @@ export default function AlbumPage() {
       albumName: album?.title,
       duration: track.duration || 0,
       coverImage: album?.coverImage,
+      // Audio normalization data (LUFS)
+      rgTrackGain: track.rgTrackGain,
+      rgTrackPeak: track.rgTrackPeak,
     }));
   };
 
