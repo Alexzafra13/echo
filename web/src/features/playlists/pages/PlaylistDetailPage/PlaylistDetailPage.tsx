@@ -56,6 +56,9 @@ export default function PlaylistDetailPage() {
       duration: track.duration || 0,
       coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
       trackNumber: track.trackNumber,
+      // Audio normalization data (LUFS)
+      rgTrackGain: track.rgTrackGain,
+      rgTrackPeak: track.rgTrackPeak,
     }));
   };
 

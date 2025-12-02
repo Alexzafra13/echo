@@ -74,6 +74,9 @@ export function DailyMixPage() {
         albumId: st.track!.albumId,
         artistId: st.track!.artistId,
         duration: st.track!.duration || 0,
+        // Audio normalization data (LUFS)
+        rgTrackGain: (st.track as any)?.rgTrackGain,
+        rgTrackPeak: (st.track as any)?.rgTrackPeak,
       } as Track));
   };
 

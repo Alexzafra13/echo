@@ -43,6 +43,9 @@ export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/
           duration: track.duration || 0,
           coverImage: coverImage,
           trackNumber: track.trackNumber,
+          // Audio normalization data (LUFS)
+          rgTrackGain: track.rgTrackGain,
+          rgTrackPeak: track.rgTrackPeak,
         }));
         playQueue(tracksWithCover, 0);
       }
