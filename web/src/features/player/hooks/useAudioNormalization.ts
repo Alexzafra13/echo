@@ -192,6 +192,26 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     }
   }, [initAudioContext]);
 
+  // Handle visibility change to resume AudioContext on mobile
+  // When phone screen turns off, browser suspends AudioContext to save battery
+  // We need to resume it when the app comes back to foreground
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && audioContextRef.current?.state === 'suspended') {
+        audioContextRef.current.resume().then(() => {
+          logger.debug('[AudioNormalization] AudioContext resumed after visibility change');
+        }).catch((error) => {
+          logger.error('[AudioNormalization] Failed to resume AudioContext on visibility change:', error);
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
