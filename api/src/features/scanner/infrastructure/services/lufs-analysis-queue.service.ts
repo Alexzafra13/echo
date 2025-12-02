@@ -1,10 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
 import { eq, isNull, sql } from 'drizzle-orm';
 import { LufsAnalyzerService } from './lufs-analyzer.service';
+import * as os from 'os';
 
 /**
  * Queue names for LUFS analysis processing
@@ -12,8 +14,27 @@ import { LufsAnalyzerService } from './lufs-analyzer.service';
 const LUFS_QUEUE = 'lufs-analysis-queue';
 const LUFS_JOB = 'analyze-track';
 
-// Number of parallel FFmpeg processes
-const CONCURRENCY = 4;
+/**
+ * Auto-detect optimal concurrency based on system resources
+ * - Uses half the CPU cores (leave room for other processes)
+ * - Minimum 1, maximum 8
+ * - Can be overridden with LUFS_CONCURRENCY env var
+ */
+function getOptimalConcurrency(): number {
+  const cpuCores = os.cpus().length;
+  const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
+
+  // Use half the cores, minimum 1
+  let concurrency = Math.max(1, Math.floor(cpuCores / 2));
+
+  // Each FFmpeg process uses ~150MB, limit based on available memory
+  // Reserve 1GB for system, use 150MB per worker
+  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.15));
+  concurrency = Math.min(concurrency, maxByMemory);
+
+  // Cap at 8 to avoid overwhelming the system
+  return Math.min(concurrency, 8);
+}
 
 interface LufsAnalysisJob {
   trackId: string;
@@ -50,14 +71,20 @@ export class LufsAnalysisQueueService implements OnModuleInit {
   private totalToProcess = 0;
   private sessionStartedAt: Date | null = null;
   private averageProcessingTime = 4000; // FFmpeg analysis ~4 seconds per track
+  private readonly concurrency: number;
 
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly lufsAnalyzer: LufsAnalyzerService,
+    private readonly configService: ConfigService,
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
-  ) {}
+  ) {
+    // Read concurrency from env, or auto-detect based on hardware
+    const envConcurrency = this.configService.get<number>('LUFS_CONCURRENCY');
+    this.concurrency = envConcurrency ?? getOptimalConcurrency();
+  }
 
   async onModuleInit() {
     // Register the job processor with concurrency for parallel processing
@@ -66,10 +93,14 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       async (job) => {
         return this.processLufsJob(job.data as LufsAnalysisJob);
       },
-      { concurrency: CONCURRENCY },
+      { concurrency: this.concurrency },
     );
 
-    this.logger.info(`LufsAnalysisQueueService initialized (concurrency: ${CONCURRENCY})`);
+    const cpuCores = os.cpus().length;
+    const totalMemoryGB = (os.totalmem() / (1024 * 1024 * 1024)).toFixed(1);
+    this.logger.info(
+      `LufsAnalysisQueueService initialized: ${this.concurrency} workers (detected: ${cpuCores} cores, ${totalMemoryGB}GB RAM)`
+    );
   }
 
   /**
@@ -120,7 +151,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     this.sessionStartedAt = new Date();
 
     this.logger.info(
-      `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${CONCURRENCY} parallel workers)`
+      `🎚️ Starting LUFS analysis queue: ${pendingTracks.length} tracks (${this.concurrency} parallel workers)`
     );
 
     // Enqueue ALL tracks at once - BullMQ will handle parallelism
@@ -150,13 +181,13 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     }
 
     const estimatedTime = this.formatDuration(
-      (pendingTracks.length / CONCURRENCY) * this.averageProcessingTime
+      (pendingTracks.length / this.concurrency) * this.averageProcessingTime
     );
 
     return {
       started: true,
       pending: pendingTracks.length,
-      message: `LUFS analysis started. Processing ${pendingTracks.length} tracks with ${CONCURRENCY} workers. ETA: ~${estimatedTime}`,
+      message: `LUFS analysis started. Processing ${pendingTracks.length} tracks with ${this.concurrency} workers. ETA: ~${estimatedTime}`,
     };
   }
 
@@ -182,7 +213,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     // Calculate estimated time remaining (with parallel processing)
     let estimatedTimeRemaining: string | null = null;
     if (this.isRunning && pendingTracks > 0) {
-      const totalMs = (pendingTracks / CONCURRENCY) * this.averageProcessingTime;
+      const totalMs = (pendingTracks / this.concurrency) * this.averageProcessingTime;
       estimatedTimeRemaining = this.formatDuration(totalMs);
     }
 
