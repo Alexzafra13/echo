@@ -314,7 +314,7 @@
   .trackList__playButton {
     width: 28px; /* Reducido de 32px */
     height: 28px; /* Reducido de 32px */
-    display: flex; /* Always visible on mobile */
+    display: none; /* Hidden by default on mobile, show on hover/active */
   }
 
   .trackList__playButton svg {
@@ -323,7 +323,21 @@
   }
 
   .trackList__trackNumber {
-    display: none; /* Hide track number on mobile, show play button instead */
+    display: flex; /* Show track number on mobile */
+    font-size: 13px;
+  }
+
+  /* Show play button on hover/touch in mobile */
+  .trackList__track:hover .trackList__trackNumber,
+  .trackList__track:active .trackList__trackNumber,
+  .trackList__track--active .trackList__trackNumber {
+    display: none;
+  }
+
+  .trackList__track:hover .trackList__playButton,
+  .trackList__track:active .trackList__playButton,
+  .trackList__track--active .trackList__playButton {
+    display: flex;
   }
 }
 
@@ -374,5 +388,9 @@
   .trackList__playButton svg {
     width: 12px;
     height: 12px;
+  }
+
+  .trackList__trackNumber {
+    font-size: 12px; /* Más pequeño */
   }
 }

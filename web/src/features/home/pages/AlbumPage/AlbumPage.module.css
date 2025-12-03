@@ -244,12 +244,15 @@
     text-align: center;
     gap: 20px;
     padding: 20px;
+    background: transparent; /* Sin fondo translúcido en móvil */
+    backdrop-filter: none;
   }
 
   .albumPage__heroCover {
-    width: 200px;
-    height: 200px;
-    border-radius: 12px; /* iOS rounded */
+    width: 220px; /* Más grande en móvil */
+    height: 220px;
+    border-radius: 8px; /* Menos redondeado */
+    box-shadow: 0 12px 40px var(--black-50);
   }
 
   .albumPage__heroInfo {
@@ -258,7 +261,7 @@
   }
 
   .albumPage__heroTitle {
-    font-size: 32px;
+    font-size: 28px;
     -webkit-line-clamp: 3; /* Más líneas en móvil */
   }
 
@@ -269,14 +272,18 @@
 
   .albumPage__heroActions {
     justify-content: center;
-    margin-top: 12px;
-    gap: 10px;
+    margin-top: 16px;
+    gap: 12px;
+    width: 100%;
   }
 
-  /* Compact buttons on mobile */
+  /* Botones más cuadrados y prominentes en móvil */
   .albumPage__heroActions button {
-    padding: 10px 16px;
-    font-size: 14px;
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 6px; /* Más cuadrado */
+    flex: 1;
+    max-width: 160px;
   }
 
   .albumPage__trackSection {
@@ -306,13 +313,13 @@
   }
 
   .albumPage__heroCover {
-    width: 160px;
-    height: 160px;
-    border-radius: 10px;
+    width: 180px; /* Más grande que antes */
+    height: 180px;
+    border-radius: 6px; /* Más cuadrado */
   }
 
   .albumPage__heroTitle {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .albumPage__heroMeta {
@@ -320,13 +327,14 @@
   }
 
   .albumPage__heroActions {
-    gap: 8px;
+    gap: 10px;
   }
 
-  /* Even more compact buttons on small mobile */
+  /* Botones cuadrados en móvil pequeño */
   .albumPage__heroActions button {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 6px;
   }
 
   .albumPage__trackSection {
