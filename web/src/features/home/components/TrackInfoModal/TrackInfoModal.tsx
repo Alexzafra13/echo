@@ -161,32 +161,16 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
               {track.rgTrackGain !== undefined && track.rgTrackGain !== null && (
                 <>
                   <div className={styles.trackInfoModal__infoRow}>
-                    <span className={styles.trackInfoModal__infoLabel}>Ganancia (Track):</span>
+                    <span className={styles.trackInfoModal__infoLabel}>Ganancia:</span>
                     <span className={styles.trackInfoModal__infoValue}>
                       {track.rgTrackGain > 0 ? '+' : ''}{track.rgTrackGain.toFixed(2)} dB
                     </span>
                   </div>
                   {track.rgTrackPeak !== undefined && track.rgTrackPeak !== null && (
                     <div className={styles.trackInfoModal__infoRow}>
-                      <span className={styles.trackInfoModal__infoLabel}>True Peak (Track):</span>
+                      <span className={styles.trackInfoModal__infoLabel}>True Peak:</span>
                       <span className={styles.trackInfoModal__infoValue}>
                         {(20 * Math.log10(track.rgTrackPeak)).toFixed(1)} dBTP
-                      </span>
-                    </div>
-                  )}
-                  {track.rgAlbumGain !== undefined && track.rgAlbumGain !== null && (
-                    <div className={styles.trackInfoModal__infoRow}>
-                      <span className={styles.trackInfoModal__infoLabel}>Ganancia (Álbum):</span>
-                      <span className={styles.trackInfoModal__infoValue}>
-                        {track.rgAlbumGain > 0 ? '+' : ''}{track.rgAlbumGain.toFixed(2)} dB
-                      </span>
-                    </div>
-                  )}
-                  {track.rgAlbumPeak !== undefined && track.rgAlbumPeak !== null && (
-                    <div className={styles.trackInfoModal__infoRow}>
-                      <span className={styles.trackInfoModal__infoLabel}>True Peak (Álbum):</span>
-                      <span className={styles.trackInfoModal__infoValue}>
-                        {(20 * Math.log10(track.rgAlbumPeak)).toFixed(1)} dBTP
                       </span>
                     </div>
                   )}
