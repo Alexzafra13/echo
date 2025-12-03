@@ -25,6 +25,7 @@ import { IsString, IsIn } from 'class-validator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { SettingsService } from '../infrastructure/services/settings.service';
+import { EnrichmentQueueService } from '../infrastructure/services/enrichment-queue.service';
 import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
 import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
 
@@ -86,6 +87,7 @@ export class AdminSettingsController {
 
   constructor(
     private readonly settingsService: SettingsService,
+    private readonly enrichmentQueueService: EnrichmentQueueService,
     private readonly fanartAgent: FanartTvAgent,
     private readonly lastfmAgent: LastfmAgent,
   ) {}
@@ -292,18 +294,59 @@ export class AdminSettingsController {
 
   /**
    * Reload external metadata agents when their API keys are updated
+   * Also resets enrichment state for items that weren't enriched due to missing API keys
    */
   private async reloadAgentsIfNeeded(key: string): Promise<void> {
+    // Track which agents were enabled before reload
+    const fanartWasEnabled = this.fanartAgent.isEnabled();
+    const lastfmWasEnabled = this.lastfmAgent.isEnabled();
+
+    let agentBecameEnabled = false;
+
     if (key.includes('fanart')) {
       this.logger.log('Reloading Fanart.tv agent settings...');
       await this.fanartAgent.loadSettings();
-      this.logger.log(`Fanart.tv agent reloaded (enabled: ${this.fanartAgent.isEnabled()})`);
+      const fanartNowEnabled = this.fanartAgent.isEnabled();
+      this.logger.log(`Fanart.tv agent reloaded (enabled: ${fanartNowEnabled})`);
+
+      // Check if agent was just enabled (wasn't enabled before, now is)
+      if (!fanartWasEnabled && fanartNowEnabled) {
+        agentBecameEnabled = true;
+        this.logger.log('Fanart.tv agent was just enabled!');
+      }
     }
 
     if (key.includes('lastfm')) {
       this.logger.log('Reloading Last.fm agent settings...');
       await this.lastfmAgent.loadSettings();
-      this.logger.log(`Last.fm agent reloaded (enabled: ${this.lastfmAgent.isEnabled()})`);
+      const lastfmNowEnabled = this.lastfmAgent.isEnabled();
+      this.logger.log(`Last.fm agent reloaded (enabled: ${lastfmNowEnabled})`);
+
+      // Check if agent was just enabled
+      if (!lastfmWasEnabled && lastfmNowEnabled) {
+        agentBecameEnabled = true;
+        this.logger.log('Last.fm agent was just enabled!');
+      }
+    }
+
+    // If an agent was just enabled, reset enrichment state for items without external data
+    // This allows re-processing items that were skipped when no API keys were configured
+    if (agentBecameEnabled) {
+      this.logger.log('Agent enabled - resetting enrichment state for items without external data...');
+      try {
+        const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
+          resetArtists: true,
+          resetAlbums: true,
+          onlyWithoutExternalData: true, // Only reset items that have no external data
+        });
+        this.logger.log(
+          `Enrichment state reset: ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums ` +
+          `are now ready for re-processing`,
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to reset enrichment state: ${(error as Error).message}`);
+        // Don't throw - this is a nice-to-have, not critical
+      }
     }
   }
 
@@ -636,6 +679,149 @@ export class AdminSettingsController {
       };
     } catch (error) {
       this.logger.error(`Error reloading agents: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Reset enrichment state for items without external data
+   * POST /api/admin/settings/enrichment/reset
+   *
+   * Use this endpoint after configuring API keys to allow re-processing
+   * of items that were previously skipped due to missing API keys.
+   */
+  @Post('enrichment/reset')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset enrichment state',
+    description: 'Resets enrichment state for artists/albums that were marked as processed but have no external data. ' +
+      'Use this after configuring API keys to re-process items that were skipped.',
+  })
+  @ApiBody({
+    description: 'Reset options',
+    schema: {
+      type: 'object',
+      properties: {
+        resetArtists: { type: 'boolean', default: true, description: 'Reset artist enrichment state' },
+        resetAlbums: { type: 'boolean', default: true, description: 'Reset album enrichment state' },
+        onlyWithoutExternalData: {
+          type: 'boolean',
+          default: true,
+          description: 'Only reset items that have no external data (recommended)',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Enrichment state reset successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+        artistsReset: { type: 'number' },
+        albumsReset: { type: 'number' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async resetEnrichmentState(
+    @Body() options: {
+      resetArtists?: boolean;
+      resetAlbums?: boolean;
+      onlyWithoutExternalData?: boolean;
+    } = {},
+  ) {
+    try {
+      this.logger.log('Resetting enrichment state...');
+
+      const result = await this.enrichmentQueueService.resetEnrichmentState({
+        resetArtists: options.resetArtists ?? true,
+        resetAlbums: options.resetAlbums ?? true,
+        onlyWithoutExternalData: options.onlyWithoutExternalData ?? true,
+      });
+
+      const totalReset = result.artistsReset + result.albumsReset;
+
+      this.logger.log(
+        `Enrichment state reset: ${result.artistsReset} artists, ${result.albumsReset} albums`,
+      );
+
+      return {
+        success: true,
+        message: totalReset > 0
+          ? `Reset enrichment state for ${totalReset} items. They will be re-processed in the next enrichment run.`
+          : 'No items needed to be reset (all items either have external data or were never processed).',
+        artistsReset: result.artistsReset,
+        albumsReset: result.albumsReset,
+      };
+    } catch (error) {
+      this.logger.error(`Error resetting enrichment state: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Reset enrichment state and start enrichment queue
+   * POST /api/admin/settings/enrichment/reset-and-start
+   *
+   * Convenience endpoint that resets state and immediately starts the enrichment queue.
+   */
+  @Post('enrichment/reset-and-start')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset enrichment state and start queue',
+    description: 'Resets enrichment state for items without external data and starts the enrichment queue. ' +
+      'Useful after configuring API keys for the first time.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Enrichment reset and queue started',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+        artistsReset: { type: 'number' },
+        albumsReset: { type: 'number' },
+        queueStarted: { type: 'boolean' },
+        pendingItems: { type: 'number' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async resetAndStartEnrichment() {
+    try {
+      this.logger.log('Resetting enrichment state and starting queue...');
+
+      // First, reset enrichment state
+      const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
+        resetArtists: true,
+        resetAlbums: true,
+        onlyWithoutExternalData: true,
+      });
+
+      // Then, start the enrichment queue
+      const queueResult = await this.enrichmentQueueService.startEnrichmentQueue();
+
+      this.logger.log(
+        `Reset ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums. ` +
+        `Queue started: ${queueResult.started}, pending: ${queueResult.pending}`,
+      );
+
+      return {
+        success: true,
+        message: queueResult.started
+          ? `Reset ${resetResult.artistsReset + resetResult.albumsReset} items. Enrichment queue started with ${queueResult.pending} items.`
+          : `Reset ${resetResult.artistsReset + resetResult.albumsReset} items. ${queueResult.message}`,
+        artistsReset: resetResult.artistsReset,
+        albumsReset: resetResult.albumsReset,
+        queueStarted: queueResult.started,
+        pendingItems: queueResult.pending,
+      };
+    } catch (error) {
+      this.logger.error(`Error in reset and start: ${(error as Error).message}`, (error as Error).stack);
       throw error;
     }
   }
