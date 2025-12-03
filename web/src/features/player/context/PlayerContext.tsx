@@ -51,6 +51,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [userVolume, setUserVolumeState] = useState(0.7); // Volumen del usuario (para el slider)
 
   // Ref for playNext callback to avoid circular dependencies
   const playNextRef = useRef<(useCrossfade: boolean) => void>(() => {});
@@ -70,11 +71,17 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const normalization = useAudioNormalization(normalizationSettings);
 
   // Register audio elements with normalization hook (for volume-based normalization)
+  // Note: userVolume is accessed via ref to avoid re-running effect on volume changes
+  const userVolumeRef = useRef(userVolume);
+  userVolumeRef.current = userVolume;
+
   useEffect(() => {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
     if (audioA && audioB) {
       normalization.registerAudioElements(audioA, audioB);
+      // Sync initial volume with normalization hook
+      normalization.setUserVolume(userVolumeRef.current);
     }
   }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
 
@@ -266,6 +273,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Set volume (applies normalization gain automatically)
    */
   const setVolume = useCallback((volume: number) => {
+    // Update user volume state (for slider UI)
+    setUserVolumeState(volume);
     // Update normalization hook's user volume (it will apply effective volume to audio elements)
     normalization.setUserVolume(volume);
   }, [normalization]);
@@ -524,7 +533,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       currentTrack,
       queue: queue.queue,
       isPlaying,
-      volume: audioElements.volume,
+      volume: userVolume,
       currentTime,
       duration,
       isShuffle: queue.isShuffle,
@@ -586,7 +595,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       queue.toggleShuffle,
       queue.toggleRepeat,
       isPlaying,
-      audioElements.volume,
+      userVolume,
       currentTime,
       duration,
       crossfadeSettings,
