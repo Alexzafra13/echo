@@ -33,6 +33,14 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
   // Get unique formats from tracks
   const formats = [...new Set(tracks.map(t => t.suffix?.toUpperCase()).filter(Boolean))];
 
+  // Get album normalization data from first track that has it
+  const trackWithAlbumGain = tracks.find(t => t.rgAlbumGain !== undefined && t.rgAlbumGain !== null);
+  const albumGain = trackWithAlbumGain?.rgAlbumGain;
+  const albumPeak = trackWithAlbumGain?.rgAlbumPeak;
+
+  // Count analyzed tracks
+  const analyzedTracks = tracks.filter(t => t.rgTrackGain !== undefined && t.rgTrackGain !== null).length;
+
   return (
     <div className={styles.albumInfoModal} onClick={onClose}>
       <div className={styles.albumInfoModal__content} onClick={(e) => e.stopPropagation()}>
@@ -146,6 +154,41 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
                   <span className={styles.albumInfoModal__infoLabel}>Ubicación:</span>
                   <span className={styles.albumInfoModal__infoValue} title={album.path}>
                     {album.path}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Audio normalization info */}
+          <div className={styles.albumInfoModal__section}>
+            <h4 className={styles.albumInfoModal__sectionTitle}>Normalización de audio</h4>
+            <div className={styles.albumInfoModal__infoGrid}>
+              <div className={styles.albumInfoModal__infoRow}>
+                <span className={styles.albumInfoModal__infoLabel}>Estado:</span>
+                <span className={styles.albumInfoModal__infoValue}>
+                  {analyzedTracks === tracks.length ? (
+                    <span className={styles.albumInfoModal__normalized}>Analizado ({analyzedTracks}/{tracks.length})</span>
+                  ) : analyzedTracks > 0 ? (
+                    <span className={styles.albumInfoModal__partial}>Parcial ({analyzedTracks}/{tracks.length})</span>
+                  ) : (
+                    <span className={styles.albumInfoModal__pending}>Pendiente</span>
+                  )}
+                </span>
+              </div>
+              {albumGain !== undefined && albumGain !== null && (
+                <div className={styles.albumInfoModal__infoRow}>
+                  <span className={styles.albumInfoModal__infoLabel}>Ganancia:</span>
+                  <span className={styles.albumInfoModal__infoValue}>
+                    {albumGain > 0 ? '+' : ''}{albumGain.toFixed(2)} dB
+                  </span>
+                </div>
+              )}
+              {albumPeak !== undefined && albumPeak !== null && (
+                <div className={styles.albumInfoModal__infoRow}>
+                  <span className={styles.albumInfoModal__infoLabel}>True Peak:</span>
+                  <span className={styles.albumInfoModal__infoValue}>
+                    {(20 * Math.log10(albumPeak)).toFixed(1)} dBTP
                   </span>
                 </div>
               )}
