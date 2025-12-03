@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image } from 'lucide-react';
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image, Volume2 } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
@@ -24,8 +24,8 @@ export function ScannerPanel() {
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
   const { accessToken } = useAuthStore();
 
-  // WebSocket para progreso en tiempo real
-  const { progress, isCompleted, isConnected } = useScannerWebSocket(
+  // WebSocket para progreso en tiempo real (scan + LUFS)
+  const { progress, isCompleted, isConnected, lufsProgress } = useScannerWebSocket(
     currentScanId,
     accessToken
   );
@@ -228,6 +228,34 @@ export function ScannerPanel() {
             <div className={styles.errorBox}>
               <AlertCircle size={16} />
               <span>{latestScan.errorMessage}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* LUFS Analysis Status - Compact */}
+      {lufsProgress && (lufsProgress.isRunning || lufsProgress.pendingTracks > 0) && (
+        <div className={styles.lufsBar}>
+          <Volume2 size={14} className={lufsProgress.isRunning ? styles.lufsIconRunning : styles.lufsIcon} />
+          <span className={styles.lufsText}>
+            LUFS: {lufsProgress.processedInSession}/{lufsProgress.processedInSession + lufsProgress.pendingTracks}
+            {lufsProgress.processedInSession + lufsProgress.pendingTracks > 0 && (
+              <span className={styles.lufsPercent}>
+                ({Math.round((lufsProgress.processedInSession / (lufsProgress.processedInSession + lufsProgress.pendingTracks)) * 100)}%)
+              </span>
+            )}
+          </span>
+          {lufsProgress.estimatedTimeRemaining && (
+            <span className={styles.lufsEta}>~{lufsProgress.estimatedTimeRemaining}</span>
+          )}
+          {lufsProgress.isRunning && (
+            <div className={styles.lufsProgressInline}>
+              <div
+                className={styles.lufsProgressFill}
+                style={{
+                  width: `${Math.round((lufsProgress.processedInSession / (lufsProgress.processedInSession + lufsProgress.pendingTracks)) * 100)}%`
+                }}
+              />
             </div>
           )}
         </div>
