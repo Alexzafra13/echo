@@ -160,3 +160,23 @@ export class ResumeScanDto {
   @IsString()
   scanId!: string;
 }
+
+/**
+ * DTO para evento de progreso del análisis LUFS
+ */
+export class LufsProgressDto {
+  @IsBoolean()
+  isRunning!: boolean;
+
+  @IsNumber()
+  @Min(0)
+  pendingTracks!: number;
+
+  @IsNumber()
+  @Min(0)
+  processedInSession!: number;
+
+  @IsOptional()
+  @IsString()
+  estimatedTimeRemaining?: string | null;
+}

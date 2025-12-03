@@ -375,3 +375,64 @@
   color: var(--color-primary, #7c3aed);
   opacity: 0.8;
 }
+
+/* LUFS Analysis - Compact Bar */
+.lufsBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.lufsIcon {
+  color: var(--color-text-tertiary, #6b7280);
+  flex-shrink: 0;
+}
+
+.lufsIconRunning {
+  color: var(--color-primary, #7c3aed);
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lufsText {
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 500;
+}
+
+.lufsPercent {
+  color: var(--color-text-tertiary, #6b7280);
+  margin-left: 4px;
+}
+
+.lufsEta {
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.lufsProgressInline {
+  width: 60px;
+  height: 4px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lufsProgressFill {
+  height: 100%;
+  background: var(--color-primary, #7c3aed);
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}

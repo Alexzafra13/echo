@@ -84,3 +84,35 @@ export function useScannerHistory(page: number = 1, limit: number = 10) {
     staleTime: 30000, // Cache por 30 segundos
   });
 }
+
+/**
+ * Estado del análisis LUFS
+ */
+export interface LufsQueueStats {
+  isRunning: boolean;
+  pendingTracks: number;
+  processedInSession: number;
+  currentTrack: string | null;
+  startedAt: string | null;
+  estimatedTimeRemaining: string | null;
+}
+
+/**
+ * Hook para obtener el estado del análisis LUFS
+ */
+export function useLufsStatus(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['scanner', 'lufs-status'],
+    queryFn: async (): Promise<LufsQueueStats> => {
+      const response = await apiClient.get('/scanner/lufs-status');
+      return response.data;
+    },
+    enabled,
+    refetchInterval: (query) => {
+      // Si está running o hay pendientes, refrescar cada 5 segundos
+      const data = query.state.data;
+      return (data?.isRunning || (data?.pendingTracks ?? 0) > 0) ? 5000 : 30000;
+    },
+    staleTime: 5000,
+  });
+}
