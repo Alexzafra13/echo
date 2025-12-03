@@ -75,6 +75,37 @@
   }
 }
 
+/* Closing animations */
+.artistOptionsMenu__dropdown--closing[data-placement="bottom"] {
+  animation: scaleOutToTop 0.15s ease forwards;
+}
+
+.artistOptionsMenu__dropdown--closing[data-placement="top"] {
+  animation: scaleOutToBottom 0.15s ease forwards;
+}
+
+@keyframes scaleOutToTop {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-4px);
+  }
+}
+
+@keyframes scaleOutToBottom {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+}
+
 .artistOptionsMenu__option {
   display: flex;
   align-items: center;

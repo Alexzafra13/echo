@@ -73,6 +73,37 @@
   }
 }
 
+/* Closing animations */
+.albumOptionsMenu__dropdown--closing[data-placement="bottom"] {
+  animation: scaleOutToTop 0.15s ease forwards;
+}
+
+.albumOptionsMenu__dropdown--closing[data-placement="top"] {
+  animation: scaleOutToBottom 0.15s ease forwards;
+}
+
+@keyframes scaleOutToTop {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-4px);
+  }
+}
+
+@keyframes scaleOutToBottom {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+}
+
 /* Option */
 .albumOptionsMenu__option {
   width: 100%;

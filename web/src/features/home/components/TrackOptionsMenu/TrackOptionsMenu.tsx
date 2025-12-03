@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { MoreVertical, ListPlus, Plus, Disc, User, Info, Trash2 } from 'lucide-react';
 import { useDropdownPosition } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
@@ -30,17 +30,36 @@ export function TrackOptionsMenu({
   onRemoveFromPlaylist,
 }: TrackOptionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const lastPositionRef = useRef<ReturnType<typeof useDropdownPosition>>(null);
 
   // Calculate dropdown position with smart placement
   const position = useDropdownPosition({
-    isOpen,
+    isOpen: isOpen && !isClosing,
     triggerRef,
     offset: 4,
     align: 'right',
     maxHeight: 400,
   });
+
+  // Keep last valid position for closing animation
+  if (position) {
+    lastPositionRef.current = position;
+  }
+  const effectivePosition = isClosing ? lastPositionRef.current : position;
+
+  // Function to close with animation
+  const closeMenu = useCallback(() => {
+    if (!isOpen || isClosing) return;
+    setIsClosing(true);
+    // Wait for animation to complete before fully closing
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 150); // Match animation duration
+  }, [isOpen, isClosing]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -51,7 +70,7 @@ export function TrackOptionsMenu({
         triggerRef.current &&
         !triggerRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        closeMenu();
       }
     };
 
@@ -61,14 +80,14 @@ export function TrackOptionsMenu({
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [isOpen]);
+  }, [isOpen, closeMenu]);
 
   // Close menu on scroll
   useEffect(() => {
     if (!isOpen) return;
 
     const handleScroll = () => {
-      setIsOpen(false);
+      closeMenu();
     };
 
     // Listen to scroll on capture phase to catch all scroll events
@@ -76,19 +95,23 @@ export function TrackOptionsMenu({
     return () => {
       window.removeEventListener('scroll', handleScroll, true);
     };
-  }, [isOpen]);
+  }, [isOpen, closeMenu]);
 
   const handleOptionClick = (e: React.MouseEvent, callback?: (track: Track) => void) => {
     e.stopPropagation();
     if (callback) {
       callback(track);
     }
-    setIsOpen(false);
+    closeMenu();
   };
 
   const toggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      closeMenu();
+    } else {
+      setIsOpen(true);
+    }
   };
 
   return (
@@ -106,21 +129,21 @@ export function TrackOptionsMenu({
         </button>
       </div>
 
-      {isOpen && position && (
+      {isOpen && effectivePosition && (
         <Portal>
           <div
             ref={dropdownRef}
-            className={styles.trackOptionsMenu__dropdown}
+            className={`${styles.trackOptionsMenu__dropdown} ${isClosing ? styles['trackOptionsMenu__dropdown--closing'] : ''}`}
             style={{
               position: 'fixed',
-              top: position.top !== undefined ? `${position.top}px` : undefined,
-              bottom: position.bottom !== undefined ? `${position.bottom}px` : undefined,
-              right: position.right !== undefined ? `${position.right}px` : undefined,
-              left: position.left !== undefined ? `${position.left}px` : undefined,
-              maxHeight: `${position.maxHeight}px`,
-              pointerEvents: 'auto',
+              top: effectivePosition.top !== undefined ? `${effectivePosition.top}px` : undefined,
+              bottom: effectivePosition.bottom !== undefined ? `${effectivePosition.bottom}px` : undefined,
+              right: effectivePosition.right !== undefined ? `${effectivePosition.right}px` : undefined,
+              left: effectivePosition.left !== undefined ? `${effectivePosition.left}px` : undefined,
+              maxHeight: `${effectivePosition.maxHeight}px`,
+              pointerEvents: isClosing ? 'none' : 'auto',
             }}
-            data-placement={position.placement}
+            data-placement={effectivePosition.placement}
           >
             {onAddToPlaylist && (
               <button
