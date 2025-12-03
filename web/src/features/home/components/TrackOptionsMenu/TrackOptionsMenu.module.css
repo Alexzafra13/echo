@@ -45,14 +45,34 @@
   box-shadow: 0 8px 32px var(--black-40);
   border: 1px solid var(--white-10);
   padding: 4px;
-  animation: fadeIn 0.15s ease;
   /* Position, top, left/right, max-height set via inline styles */
 }
 
-@keyframes fadeIn {
+/* Animation when dropdown opens below (default) */
+.trackOptionsMenu__dropdown[data-placement="bottom"] {
+  animation: slideInFromTop 0.15s ease;
+}
+
+/* Animation when dropdown opens above */
+.trackOptionsMenu__dropdown[data-placement="top"] {
+  animation: slideInFromBottom 0.15s ease;
+}
+
+@keyframes slideInFromTop {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
