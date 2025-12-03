@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -6,6 +6,7 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
 import { eq, isNull, isNotNull, sql, and } from 'drizzle-orm';
 import { LufsAnalyzerService } from './lufs-analyzer.service';
+import { ScannerGateway } from '../gateways/scanner.gateway';
 import * as os from 'os';
 
 /**
@@ -78,6 +79,8 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly lufsAnalyzer: LufsAnalyzerService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => ScannerGateway))
+    private readonly scannerGateway: ScannerGateway,
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
   ) {
@@ -184,6 +187,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       (pendingTracks.length / this.concurrency) * this.averageProcessingTime
     );
 
+    // Emit initial progress via WebSocket
+    this.emitProgress();
+
     return {
       started: true,
       pending: pendingTracks.length,
@@ -280,6 +286,11 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         (this.averageProcessingTime * 0.9) + (processingTime * 0.1)
       );
 
+      // Emit WebSocket progress every 10 tracks (or on first track)
+      if (this.processedInSession === 1 || this.processedInSession % 10 === 0) {
+        this.emitProgress();
+      }
+
       // Log progress every 100 tracks
       if (this.processedInSession % 100 === 0) {
         const stats = await this.getQueueStats();
@@ -300,6 +311,9 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         // Calculate album gains after all tracks are processed
         await this.calculateAlbumGains();
         this.isRunning = false;
+
+        // Emit final progress (completed)
+        this.emitProgress();
       }
 
     } catch (error) {
@@ -319,6 +333,23 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
       this.processedInSession++;
     }
+  }
+
+  /**
+   * Emit current progress via WebSocket
+   */
+  private emitProgress(): void {
+    const pendingTracks = this.totalToProcess - this.processedInSession;
+    const estimatedTimeRemaining = this.isRunning && pendingTracks > 0
+      ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
+      : null;
+
+    this.scannerGateway.emitLufsProgress({
+      isRunning: this.isRunning,
+      pendingTracks,
+      processedInSession: this.processedInSession,
+      estimatedTimeRemaining,
+    });
   }
 
   /**

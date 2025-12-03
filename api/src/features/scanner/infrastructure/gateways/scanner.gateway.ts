@@ -20,6 +20,7 @@ import {
   PauseScanDto,
   CancelScanDto,
   ResumeScanDto,
+  LufsProgressDto,
 } from '../../presentation/dtos/scanner-events.dto';
 
 /**
@@ -85,6 +86,11 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   handleConnection(client: Socket) {
     const userId = client.data?.userId || 'anonymous';
     this.logger.log(`✅ Client connected to scanner namespace: ${client.id} (User: ${userId})`);
+
+    // Send current LUFS progress if there's an active analysis
+    if (this.lufsProgress) {
+      client.emit('lufs:progress', this.lufsProgress);
+    }
   }
 
   /**
@@ -221,6 +227,9 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     });
   }
 
+  // Store latest LUFS progress for late subscribers
+  private lufsProgress: LufsProgressDto | null = null;
+
   // ========== Métodos públicos para emitir eventos ==========
 
   /**
@@ -272,5 +281,27 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     this.server.emit('scan:completed', data);
 
     this.logger.log(`Emitted completed for scan ${data.scanId} (to room and broadcast)`);
+  }
+
+  /**
+   * Emitir progreso del análisis LUFS a todos los clientes
+   */
+  emitLufsProgress(data: LufsProgressDto): void {
+    // Store latest progress for late subscribers
+    this.lufsProgress = data.isRunning ? data : null;
+
+    // Broadcast to all clients
+    this.server.emit('lufs:progress', data);
+
+    this.logger.debug(
+      `Emitted LUFS progress: ${data.processedInSession}/${data.processedInSession + data.pendingTracks} tracks`
+    );
+  }
+
+  /**
+   * Obtener el estado actual de LUFS para nuevos suscriptores
+   */
+  getCurrentLufsProgress(): LufsProgressDto | null {
+    return this.lufsProgress;
   }
 }
