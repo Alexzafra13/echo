@@ -117,3 +117,11 @@
   background: var(--white-10);
   margin: 4px 0;
 }
+
+/* ===== Mobile: Always show trigger button ===== */
+@media (max-width: 768px) {
+  .trackOptionsMenu__trigger,
+  :global(.trackOptionsMenu__trigger) {
+    opacity: 1; /* Siempre visible en móvil - no hay hover en táctil */
+  }
+}
