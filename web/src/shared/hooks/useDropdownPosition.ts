@@ -47,8 +47,20 @@ export function useDropdownPosition({
       const spaceBelow = viewportHeight - rect.bottom - offset;
       const spaceAbove = rect.top - offset;
 
-      // Determine placement (prefer bottom, flip to top if not enough space)
-      const placement: 'bottom' | 'top' = spaceBelow >= 200 || spaceBelow > spaceAbove ? 'bottom' : 'top';
+      // Check if mobile (viewport width <= 768px)
+      const isMobile = viewportWidth <= 768;
+
+      // Determine placement:
+      // - Mobile: prefer top (opens upward) unless not enough space
+      // - Desktop: prefer bottom (opens downward) unless not enough space
+      let placement: 'bottom' | 'top';
+      if (isMobile) {
+        // Mobile: open upward by default
+        placement = spaceAbove >= 150 ? 'top' : 'bottom';
+      } else {
+        // Desktop: open downward by default
+        placement = spaceBelow >= 200 || spaceBelow > spaceAbove ? 'bottom' : 'top';
+      }
 
       // Calculate vertical position
       const top = placement === 'bottom' ? rect.bottom + offset : rect.top - offset;

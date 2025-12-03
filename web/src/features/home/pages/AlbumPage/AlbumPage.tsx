@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Play } from 'lucide-react';
+import { Play, Shuffle } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../components';
 import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSelectorModal';
@@ -134,6 +134,14 @@ export default function AlbumPage() {
     if (!tracks || tracks.length === 0) return;
     const playerTracks = convertToPlayerTracks(tracks);
     playQueue(playerTracks, 0);
+  };
+
+  const handleShufflePlay = () => {
+    if (!tracks || tracks.length === 0) return;
+    const playerTracks = convertToPlayerTracks(tracks);
+    // Shuffle the tracks array
+    const shuffledTracks = [...playerTracks].sort(() => Math.random() - 0.5);
+    playQueue(shuffledTracks, 0);
   };
 
   const handleTrackPlay = (track: any) => {
@@ -282,6 +290,14 @@ export default function AlbumPage() {
                   leftIcon={<Play size={20} fill="currentColor" />}
                 >
                   Reproducir
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={handleShufflePlay}
+                  leftIcon={<Shuffle size={20} />}
+                >
+                  Aleatorio
                 </Button>
                 <AlbumOptionsMenu
                   onShowInfo={handleShowAlbumInfo}
