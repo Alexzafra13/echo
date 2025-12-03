@@ -99,13 +99,18 @@ export function useAudioNormalization(settings: NormalizationSettings) {
 
     let wasLimited = false;
 
-    // Estilo Apple: si preventClipping está activado, limitar la ganancia positiva
-    if (settings.preventClipping && gainDb > 0 && rgTrackPeak !== undefined && rgTrackPeak !== null) {
-      // Calcular el headroom disponible basado en el peak
-      const headroomDb = rgTrackPeak > 0 ? -20 * Math.log10(rgTrackPeak) : 0;
+    // Apple Music style: garantizar True Peak ≤ -1 dBTP
+    // Esto previene clipping en codecs lossy como AAC
+    if (settings.preventClipping && rgTrackPeak !== undefined && rgTrackPeak !== null && rgTrackPeak > 0) {
+      // Calcular el headroom disponible hasta -1 dBTP (no hasta 0 dBFS)
+      // headroomTo0dB = -20 * log10(peak) → cuántos dB hasta 0 dBFS
+      // headroomToMinus1dB = headroomTo0dB - 1.0 → cuántos dB hasta -1 dBTP
+      const headroomTo0dB = -20 * Math.log10(rgTrackPeak);
+      const TRUE_PEAK_CEILING = -1.0; // Apple requiere True Peak ≤ -1 dBTP
+      const maxAllowedGain = headroomTo0dB + TRUE_PEAK_CEILING; // +(-1) = -1
 
-      if (gainDb > headroomDb) {
-        gainDb = Math.max(0, headroomDb - 0.5); // Dejar 0.5 dB de margen
+      if (gainDb > maxAllowedGain) {
+        gainDb = maxAllowedGain;
         wasLimited = true;
       }
     }
@@ -140,8 +145,12 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     // Apply effective volume to audio elements
     applyEffectiveVolume();
 
+    // Calcular True Peak final estimado para el log
+    const originalPeakdB = track?.rgTrackPeak ? -20 * Math.log10(track.rgTrackPeak) : 0;
+    const finalTruePeakdB = originalPeakdB + gainDb;
+
     console.log(
-      `[AudioNormalization] 🎚️ Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited]' : ''}`,
+      `[AudioNormalization] 🎚️ Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited by True Peak]' : ''} | True Peak: ${finalTruePeakdB.toFixed(1)} dBTP`,
       { track: track?.title, rgTrackGain: track?.rgTrackGain, rgTrackPeak: track?.rgTrackPeak, settings }
     );
   }, [calculateGain, applyEffectiveVolume, settings]);
