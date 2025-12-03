@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
-import { eq, isNull, sql } from 'drizzle-orm';
+import { eq, isNull, isNotNull, sql, and } from 'drizzle-orm';
 import { LufsAnalyzerService } from './lufs-analyzer.service';
 import * as os from 'os';
 
@@ -243,14 +243,13 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       const result = await this.lufsAnalyzer.analyzeFile(job.filePath);
 
       if (result) {
-        // Success: save LUFS data + mark as analyzed
+        // Success: save track LUFS data + mark as analyzed
+        // Note: Album gain/peak will be calculated later in calculateAlbumGains()
         await this.drizzle.db
           .update(tracks)
           .set({
             rgTrackGain: result.trackGain,
             rgTrackPeak: result.trackPeak,
-            rgAlbumGain: result.trackGain,
-            rgAlbumPeak: result.trackPeak,
             lufsAnalyzedAt: now,
             updatedAt: now,
           })
@@ -291,13 +290,16 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
       // Check if queue is complete
       if (this.processedInSession >= this.totalToProcess) {
-        this.isRunning = false;
         const duration = this.sessionStartedAt
           ? Date.now() - this.sessionStartedAt.getTime()
           : 0;
         this.logger.info(
-          `🎉 LUFS analysis completed! Processed ${this.processedInSession} tracks in ${this.formatDuration(duration)}`
+          `🎉 LUFS track analysis completed! Processed ${this.processedInSession} tracks in ${this.formatDuration(duration)}`
         );
+
+        // Calculate album gains after all tracks are processed
+        await this.calculateAlbumGains();
+        this.isRunning = false;
       }
 
     } catch (error) {
@@ -333,6 +335,73 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       return `${minutes}m ${seconds % 60}s`;
     } else {
       return `${seconds}s`;
+    }
+  }
+
+  /**
+   * Calculate album gain/peak values based on all tracks in each album
+   *
+   * Album gain is the average of all track gains in the album (weighted by track count)
+   * Album peak is the maximum peak across all tracks in the album
+   *
+   * This ensures consistent loudness when playing an album in order,
+   * preserving the intended dynamic range between tracks.
+   */
+  private async calculateAlbumGains(): Promise<void> {
+    this.logger.info('📀 Calculating album gains...');
+
+    try {
+      // Get aggregated album stats: average gain and max peak per album
+      const albumStats = await this.drizzle.db
+        .select({
+          albumId: tracks.albumId,
+          avgGain: sql<number>`AVG(${tracks.rgTrackGain})::real`,
+          maxPeak: sql<number>`MAX(${tracks.rgTrackPeak})::real`,
+          trackCount: sql<number>`COUNT(*)::int`,
+        })
+        .from(tracks)
+        .where(
+          and(
+            isNotNull(tracks.albumId),
+            isNotNull(tracks.rgTrackGain),
+            isNotNull(tracks.rgTrackPeak)
+          )
+        )
+        .groupBy(tracks.albumId);
+
+      if (albumStats.length === 0) {
+        this.logger.info('📀 No albums with analyzed tracks found');
+        return;
+      }
+
+      // Update each album's tracks with the calculated album gain/peak
+      let updatedAlbums = 0;
+      const now = new Date();
+
+      for (const album of albumStats) {
+        if (!album.albumId || album.avgGain === null || album.maxPeak === null) {
+          continue;
+        }
+
+        await this.drizzle.db
+          .update(tracks)
+          .set({
+            rgAlbumGain: album.avgGain,
+            rgAlbumPeak: album.maxPeak,
+            updatedAt: now,
+          })
+          .where(eq(tracks.albumId, album.albumId));
+
+        updatedAlbums++;
+      }
+
+      this.logger.info(
+        `📀 Album gains calculated! Updated ${updatedAlbums} albums`
+      );
+    } catch (error) {
+      this.logger.error(
+        `❌ Error calculating album gains: ${(error as Error).message}`
+      );
     }
   }
 }
