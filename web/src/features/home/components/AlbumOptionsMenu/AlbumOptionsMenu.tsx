@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { MoreHorizontal, Info, ListPlus, Download, Image } from 'lucide-react';
 import { useAuth, useDropdownPosition } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
@@ -23,18 +23,36 @@ export function AlbumOptionsMenu({
   onChangeCover,
 }: AlbumOptionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const lastPositionRef = useRef<ReturnType<typeof useDropdownPosition>>(null);
   const { user } = useAuth();
 
   // Calculate dropdown position with smart placement
   const position = useDropdownPosition({
-    isOpen,
+    isOpen: isOpen && !isClosing,
     triggerRef,
     offset: 8,
     align: 'right',
     maxHeight: 400,
   });
+
+  // Keep last valid position for closing animation
+  if (position) {
+    lastPositionRef.current = position;
+  }
+  const effectivePosition = isClosing ? lastPositionRef.current : position;
+
+  // Function to close with animation
+  const closeMenu = useCallback(() => {
+    if (!isOpen || isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 150);
+  }, [isOpen, isClosing]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -45,7 +63,7 @@ export function AlbumOptionsMenu({
         triggerRef.current &&
         !triggerRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        closeMenu();
       }
     };
 
@@ -55,33 +73,37 @@ export function AlbumOptionsMenu({
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [isOpen]);
+  }, [isOpen, closeMenu]);
 
   // Close menu on scroll
   useEffect(() => {
     if (!isOpen) return;
 
     const handleScroll = () => {
-      setIsOpen(false);
+      closeMenu();
     };
 
     window.addEventListener('scroll', handleScroll, true);
     return () => {
       window.removeEventListener('scroll', handleScroll, true);
     };
-  }, [isOpen]);
+  }, [isOpen, closeMenu]);
 
   const handleOptionClick = (e: React.MouseEvent, callback?: () => void) => {
     e.stopPropagation();
     if (callback) {
       callback();
     }
-    setIsOpen(false);
+    closeMenu();
   };
 
   const toggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      closeMenu();
+    } else {
+      setIsOpen(true);
+    }
   };
 
   return (
@@ -99,21 +121,21 @@ export function AlbumOptionsMenu({
         </button>
       </div>
 
-      {isOpen && position && (
+      {isOpen && effectivePosition && (
         <Portal>
           <div
             ref={dropdownRef}
-            className={styles.albumOptionsMenu__dropdown}
+            className={`${styles.albumOptionsMenu__dropdown} ${isClosing ? styles['albumOptionsMenu__dropdown--closing'] : ''}`}
             style={{
               position: 'fixed',
-              top: position.top !== undefined ? `${position.top}px` : undefined,
-              bottom: position.bottom !== undefined ? `${position.bottom}px` : undefined,
-              right: position.right !== undefined ? `${position.right}px` : undefined,
-              left: position.left !== undefined ? `${position.left}px` : undefined,
-              maxHeight: `${position.maxHeight}px`,
-              pointerEvents: 'auto',
+              top: effectivePosition.top !== undefined ? `${effectivePosition.top}px` : undefined,
+              bottom: effectivePosition.bottom !== undefined ? `${effectivePosition.bottom}px` : undefined,
+              right: effectivePosition.right !== undefined ? `${effectivePosition.right}px` : undefined,
+              left: effectivePosition.left !== undefined ? `${effectivePosition.left}px` : undefined,
+              maxHeight: `${effectivePosition.maxHeight}px`,
+              pointerEvents: isClosing ? 'none' : 'auto',
             }}
-            data-placement={position.placement}
+            data-placement={effectivePosition.placement}
           >
             {onShowInfo && (
               <button
