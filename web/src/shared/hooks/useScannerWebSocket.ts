@@ -129,10 +129,11 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
   }, []);
 
   // Usar el hook base de WebSocket
+  // Conectar siempre que haya token (para recibir eventos LUFS globales)
   const { isConnected, emit } = useWebSocketConnection({
     namespace: 'scanner',
     token,
-    enabled: !!scanId && !!token,
+    enabled: !!token,
     events,
     onConnect: handleConnect,
   });
