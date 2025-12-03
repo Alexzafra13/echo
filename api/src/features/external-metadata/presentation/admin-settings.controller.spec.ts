@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { AdminSettingsController } from './admin-settings.controller';
 import { SettingsService } from '../infrastructure/services/settings.service';
+import { EnrichmentQueueService } from '../infrastructure/services/enrichment-queue.service';
 import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
 import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
 
@@ -34,6 +35,13 @@ describe('AdminSettingsController', () => {
       validateApiKey: jest.fn(),
     };
 
+    // Create mock enrichment queue service
+    const mockEnrichmentQueueService = {
+      resetEnrichmentState: jest.fn().mockResolvedValue({ artistsReset: 0, albumsReset: 0 }),
+      startEnrichmentQueue: jest.fn().mockResolvedValue({ started: false, pending: 0, message: 'No items pending' }),
+      getQueueStats: jest.fn().mockResolvedValue({ isRunning: false, totalPending: 0 }),
+    };
+
     // Create mock agents
     const mockFanartAgent = {
       loadSettings: jest.fn(),
@@ -51,6 +59,10 @@ describe('AdminSettingsController', () => {
         {
           provide: SettingsService,
           useValue: mockSettingsService,
+        },
+        {
+          provide: EnrichmentQueueService,
+          useValue: mockEnrichmentQueueService,
         },
         {
           provide: FanartTvAgent,
