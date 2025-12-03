@@ -420,10 +420,14 @@ export class EnrichmentQueueService implements OnModuleInit {
 
     if (resetArtists) {
       // Reset artists that were marked as searched but have no external bio/images
+      // Check ALL external fields: bio, profile, background, banner, logo
       const artistConditions = onlyWithoutExternalData
         ? sql`${artists.mbidSearchedAt} IS NOT NULL
               AND ${artists.biography} IS NULL
-              AND ${artists.externalProfilePath} IS NULL`
+              AND ${artists.externalProfilePath} IS NULL
+              AND ${artists.externalBackgroundPath} IS NULL
+              AND ${artists.externalBannerPath} IS NULL
+              AND ${artists.externalLogoPath} IS NULL`
         : sql`${artists.mbidSearchedAt} IS NOT NULL`;
 
       const result = await this.drizzle.db
