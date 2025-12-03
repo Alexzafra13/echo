@@ -394,4 +394,69 @@ export class EnrichmentQueueService implements OnModuleInit {
       return `${seconds}s`;
     }
   }
+
+  /**
+   * Reset enrichment state for items that were marked as processed
+   * but didn't actually get enriched (e.g., when no API keys were configured)
+   *
+   * This allows re-processing items once API keys are configured.
+   *
+   * @param options Configuration for reset
+   * @returns Count of reset items
+   */
+  async resetEnrichmentState(options: {
+    resetArtists?: boolean;
+    resetAlbums?: boolean;
+    onlyWithoutExternalData?: boolean; // Only reset items that have no external data
+  } = {}): Promise<{ artistsReset: number; albumsReset: number }> {
+    const {
+      resetArtists = true,
+      resetAlbums = true,
+      onlyWithoutExternalData = true, // By default, only reset items without actual data
+    } = options;
+
+    let artistsReset = 0;
+    let albumsReset = 0;
+
+    if (resetArtists) {
+      // Reset artists that were marked as searched but have no external bio/images
+      const artistConditions = onlyWithoutExternalData
+        ? sql`${artists.mbidSearchedAt} IS NOT NULL
+              AND ${artists.biography} IS NULL
+              AND ${artists.externalProfilePath} IS NULL`
+        : sql`${artists.mbidSearchedAt} IS NOT NULL`;
+
+      const result = await this.drizzle.db
+        .update(artists)
+        .set({
+          mbidSearchedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(artistConditions);
+
+      artistsReset = result.rowCount ?? 0;
+      this.logger.log(`Reset enrichment state for ${artistsReset} artists`);
+    }
+
+    if (resetAlbums) {
+      // Reset albums that were marked as processed but have no external cover
+      const albumConditions = onlyWithoutExternalData
+        ? sql`${albums.externalInfoUpdatedAt} IS NOT NULL
+              AND ${albums.externalCoverPath} IS NULL`
+        : sql`${albums.externalInfoUpdatedAt} IS NOT NULL`;
+
+      const result = await this.drizzle.db
+        .update(albums)
+        .set({
+          externalInfoUpdatedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(albumConditions);
+
+      albumsReset = result.rowCount ?? 0;
+      this.logger.log(`Reset enrichment state for ${albumsReset} albums`);
+    }
+
+    return { artistsReset, albumsReset };
+  }
 }

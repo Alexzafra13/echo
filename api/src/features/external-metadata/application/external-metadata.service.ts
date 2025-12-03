@@ -64,6 +64,23 @@ export class ExternalMetadataService {
     let bioUpdated = false;
     let imagesUpdated = false;
 
+    // Check if any enrichment agents are available
+    // If no agents are enabled, we should NOT mark as processed
+    // This allows re-processing once API keys are configured
+    const bioAgents = this.agentRegistry.getAgentsFor<IArtistBioRetriever>('IArtistBioRetriever');
+    const imageAgents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
+    const hasEnrichmentAgents = bioAgents.length > 0 || imageAgents.length > 0;
+
+    if (!hasEnrichmentAgents) {
+      this.logger.warn(
+        `No enrichment agents available for artist ${artistId}. ` +
+        `Configure API keys (Last.fm, Fanart.tv) to enable metadata enrichment.`
+      );
+      // Return early WITHOUT marking as processed
+      // This ensures items will be reconsidered once agents are configured
+      return { bioUpdated: false, imagesUpdated: false, errors: ['No enrichment agents configured'] };
+    }
+
     try {
       // Get artist from database
       const artistResult = await this.drizzle.db
@@ -409,6 +426,22 @@ export class ExternalMetadataService {
     const startTime = Date.now();
     const errors: string[] = [];
     let coverUpdated = false;
+
+    // Check if any cover retrieval agents are available
+    // Note: Cover Art Archive (via MusicBrainz) doesn't require API keys
+    // but Fanart.tv does. We check for any enabled agents.
+    const coverAgents = this.agentRegistry.getAgentsFor<IAlbumCoverRetriever>('IAlbumCoverRetriever');
+    const hasEnrichmentAgents = coverAgents.length > 0;
+
+    if (!hasEnrichmentAgents) {
+      this.logger.warn(
+        `No cover retrieval agents available for album ${albumId}. ` +
+        `This may indicate a configuration issue.`
+      );
+      // Return early WITHOUT marking as processed
+      // This ensures items will be reconsidered once agents are available
+      return { coverUpdated: false, errors: ['No cover retrieval agents configured'] };
+    }
 
     try {
       // Get album from database
