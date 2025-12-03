@@ -69,28 +69,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== AUDIO NORMALIZATION ==========
   const normalization = useAudioNormalization(normalizationSettings);
 
-  // Track if audio elements have been connected to Web Audio API
-  const audioConnectedRef = useRef(false);
-
-  /**
-   * Connect audio elements to Web Audio API for normalization
-   * Must be called after user gesture (click/tap on play)
-   */
-  const connectAudioToNormalization = useCallback(() => {
-    if (audioConnectedRef.current) return;
-
+  // Register audio elements with normalization hook (for volume-based normalization)
+  useEffect(() => {
     const audioA = audioElements.audioRefA.current;
     const audioB = audioElements.audioRefB.current;
-
-    if (audioA) {
-      normalization.connectAudioElement(audioA, 'A');
+    if (audioA && audioB) {
+      normalization.registerAudioElements(audioA, audioB);
     }
-    if (audioB) {
-      normalization.connectAudioElement(audioB, 'B');
-    }
-
-    audioConnectedRef.current = true;
-    logger.debug('[Player] Audio elements connected to normalization');
   }, [audioElements.audioRefA, audioElements.audioRefB, normalization]);
 
   // ========== QUEUE MANAGEMENT ==========
@@ -205,15 +190,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       radio.stopRadio();
     }
 
-    // Initialize and resume AudioContext (required after user interaction)
-    // This is the first point where we have a user gesture, so we can safely create AudioContext
-    // MUST await to ensure AudioContext is ready before connecting
-    await normalization.resumeAudioContext();
-
-    // Connect audio elements to Web Audio API (only happens once, after user gesture)
-    connectAudioToNormalization();
-
-    // Apply audio normalization for the new track
+    // Apply audio normalization for the new track (adjusts volume directly)
     normalization.applyGain(track);
 
     if (withCrossfade && crossfadeSettings.enabled && isPlaying) {
@@ -244,7 +221,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
 
     crossfade.resetCrossfadeFlag();
-  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization, connectAudioToNormalization]);
+  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
 
   /**
    * Play - either a new track or resume current playback
@@ -253,14 +230,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (track) {
       playTrack(track, withCrossfade);
     } else if (currentTrack && !radio.isRadioMode) {
-      // Resume current track - ensure AudioContext is resumed after user gesture
-      normalization.resumeAudioContext();
+      // Resume current track
       audioElements.playActive();
     } else if (radio.isRadioMode && radio.currentStation) {
       // Resume radio
       radio.resumeRadio();
     }
-  }, [playTrack, currentTrack, radio, audioElements, normalization]);
+  }, [playTrack, currentTrack, radio, audioElements]);
 
   /**
    * Pause playback
@@ -287,11 +263,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [audioElements]);
 
   /**
-   * Set volume
+   * Set volume (applies normalization gain automatically)
    */
   const setVolume = useCallback((volume: number) => {
-    audioElements.setVolume(volume);
-  }, [audioElements]);
+    // Update normalization hook's user volume (it will apply effective volume to audio elements)
+    normalization.setUserVolume(volume);
+  }, [normalization]);
 
   /**
    * Toggle play/pause

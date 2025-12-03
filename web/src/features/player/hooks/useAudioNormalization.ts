@@ -1,100 +1,72 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import type { NormalizationSettings } from '../types';
 import type { Track } from '@shared/types/track.types';
-import { logger } from '@shared/utils/logger';
 
 /**
  * Resultado del cálculo de ganancia
  */
 interface GainCalculation {
   gainDb: number; // Ganancia a aplicar en dB
-  gainLinear: number; // Ganancia en escala lineal (para Web Audio API)
+  gainLinear: number; // Ganancia en escala lineal
   wasLimited: boolean; // Si se limitó por peak
 }
 
 /**
- * Hook para normalización de audio usando Web Audio API
+ * Hook para normalización de audio usando ajuste de volumen directo
  *
  * Implementa normalización estilo Apple Music:
- * - Usa GainNode para ajustar el volumen basándose en ReplayGain
+ * - Ajusta el volumen del elemento de audio directamente
  * - Respeta los peaks para evitar clipping (si preventClipping está activado)
- * - NO usa limitador/compresor (a diferencia de Spotify)
+ * - NO usa Web Audio API (compatible con reproducción en segundo plano móvil)
  *
  * Arquitectura:
- * HTMLAudioElement → MediaElementSourceNode → GainNode → AudioContext.destination
+ * HTMLAudioElement.volume = userVolume * normalizationGain
  */
 export function useAudioNormalization(settings: NormalizationSettings) {
-  // Web Audio API refs
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const sourceNodeARef = useRef<MediaElementAudioSourceNode | null>(null);
-  const sourceNodeBRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const connectedAudioARef = useRef<HTMLAudioElement | null>(null);
-  const connectedAudioBRef = useRef<HTMLAudioElement | null>(null);
+  // Store current normalization gain (linear scale)
+  const currentGainRef = useRef<number>(1);
+
+  // Store reference to audio elements for volume adjustment
+  const audioElementsRef = useRef<{
+    audioA: HTMLAudioElement | null;
+    audioB: HTMLAudioElement | null;
+    userVolume: number;
+  }>({
+    audioA: null,
+    audioB: null,
+    userVolume: 0.7,
+  });
 
   /**
-   * Inicializa el AudioContext (debe llamarse tras interacción del usuario)
+   * Register audio elements for volume-based normalization
    */
-  const initAudioContext = useCallback(() => {
-    if (audioContextRef.current) return audioContextRef.current;
-
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContextClass();
-
-      // Crear GainNode
-      gainNodeRef.current = audioContextRef.current.createGain();
-      gainNodeRef.current.connect(audioContextRef.current.destination);
-
-      console.log('[AudioNormalization] ✅ AudioContext initialized, state:', audioContextRef.current.state);
-      return audioContextRef.current;
-    } catch (error) {
-      console.error('[AudioNormalization] ❌ Failed to create AudioContext:', error);
-      return null;
-    }
+  const registerAudioElements = useCallback((
+    audioA: HTMLAudioElement | null,
+    audioB: HTMLAudioElement | null
+  ) => {
+    audioElementsRef.current.audioA = audioA;
+    audioElementsRef.current.audioB = audioB;
   }, []);
 
   /**
-   * Conecta un elemento de audio al grafo de Web Audio API
+   * Update user volume (called when user changes volume slider)
    */
-  const connectAudioElement = useCallback((
-    audioElement: HTMLAudioElement,
-    audioId: 'A' | 'B'
-  ) => {
-    const ctx = initAudioContext();
-    if (!ctx || !gainNodeRef.current) return;
+  const setUserVolume = useCallback((volume: number) => {
+    audioElementsRef.current.userVolume = volume;
+    // Re-apply the effective volume
+    applyEffectiveVolume();
+  }, []);
 
-    // Verificar si ya está conectado
-    const connectedRef = audioId === 'A' ? connectedAudioARef : connectedAudioBRef;
-    const sourceRef = audioId === 'A' ? sourceNodeARef : sourceNodeBRef;
+  /**
+   * Apply effective volume (userVolume * normalizationGain) to audio elements
+   */
+  const applyEffectiveVolume = useCallback(() => {
+    const { audioA, audioB, userVolume } = audioElementsRef.current;
+    const effectiveVolume = Math.min(1, userVolume * currentGainRef.current);
 
-    if (connectedRef.current === audioElement) {
-      return; // Ya conectado
-    }
-
-    // Desconectar el anterior si existe
-    if (sourceRef.current) {
-      try {
-        sourceRef.current.disconnect();
-      } catch {
-        // Ignorar error si ya estaba desconectado
-      }
-    }
-
-    try {
-      // Crear MediaElementSourceNode
-      const source = ctx.createMediaElementSource(audioElement);
-      source.connect(gainNodeRef.current);
-
-      sourceRef.current = source;
-      connectedRef.current = audioElement;
-
-      console.log(`[AudioNormalization] ✅ Audio ${audioId} connected to gain node`);
-    } catch (error) {
-      // El elemento podría ya estar conectado a otro contexto
-      console.error(`[AudioNormalization] ❌ Could not connect audio ${audioId}:`, error);
-    }
-  }, [initAudioContext]);
+    if (audioA) audioA.volume = effectiveVolume;
+    if (audioB) audioB.volume = effectiveVolume;
+  }, []);
 
   /**
    * Calcula la ganancia a aplicar para un track
@@ -130,14 +102,20 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     // Estilo Apple: si preventClipping está activado, limitar la ganancia positiva
     if (settings.preventClipping && gainDb > 0 && rgTrackPeak !== undefined && rgTrackPeak !== null) {
       // Calcular el headroom disponible basado en el peak
-      // Si peak = 0.9, headroom = -20 * log10(0.9) = ~0.92 dB
-      // Si peak = 1.0, headroom = 0 dB (no podemos subir)
       const headroomDb = rgTrackPeak > 0 ? -20 * Math.log10(rgTrackPeak) : 0;
 
       if (gainDb > headroomDb) {
         gainDb = Math.max(0, headroomDb - 0.5); // Dejar 0.5 dB de margen
         wasLimited = true;
       }
+    }
+
+    // For volume-based normalization, we can't boost beyond 1.0
+    // So limit positive gain to 0 dB (no boost)
+    // This means quiet tracks won't be boosted, but loud tracks will still be reduced
+    if (gainDb > 0) {
+      gainDb = 0;
+      wasLimited = true;
     }
 
     // Convertir dB a escala lineal: linear = 10^(dB/20)
@@ -151,80 +129,54 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   }, [settings.enabled, settings.targetLufs, settings.preventClipping]);
 
   /**
-   * Aplica la ganancia calculada al GainNode
+   * Aplica la ganancia calculada ajustando el volumen del elemento de audio
    */
   const applyGain = useCallback((track: Track | null) => {
-    if (!gainNodeRef.current) {
-      console.warn('[AudioNormalization] ⚠️ applyGain: GainNode is null, normalization disabled');
-      return;
-    }
-
     const { gainDb, gainLinear, wasLimited } = calculateGain(track);
 
-    // Aplicar ganancia suavemente para evitar clicks
-    const currentTime = audioContextRef.current?.currentTime ?? 0;
-    gainNodeRef.current.gain.setTargetAtTime(gainLinear, currentTime, 0.015);
+    // Store the current gain
+    currentGainRef.current = gainLinear;
+
+    // Apply effective volume to audio elements
+    applyEffectiveVolume();
 
     console.log(
-      `[AudioNormalization] 🎚️ Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited by peak]' : ''}`,
+      `[AudioNormalization] 🎚️ Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited]' : ''}`,
       { track: track?.title, rgTrackGain: track?.rgTrackGain, rgTrackPeak: track?.rgTrackPeak, settings }
     );
-  }, [calculateGain, settings]);
+  }, [calculateGain, applyEffectiveVolume, settings]);
 
   /**
-   * Initialize and resume AudioContext (requerido tras interacción del usuario)
-   * This is the safe entry point to call after a user gesture
+   * Get current normalization gain (for external use if needed)
    */
-  const resumeAudioContext = useCallback(async () => {
-    // Initialize AudioContext if not exists (safe after user gesture)
-    if (!audioContextRef.current) {
-      initAudioContext();
-    }
-
-    // Resume if suspended
-    if (audioContextRef.current?.state === 'suspended') {
-      try {
-        await audioContextRef.current.resume();
-        logger.debug('[AudioNormalization] AudioContext resumed');
-      } catch (error) {
-        logger.error('[AudioNormalization] Failed to resume AudioContext:', error);
-      }
-    }
-  }, [initAudioContext]);
-
-  // Handle visibility change to resume AudioContext on mobile
-  // When phone screen turns off, browser suspends AudioContext to save battery
-  // We need to resume it when the app comes back to foreground
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume().then(() => {
-          logger.debug('[AudioNormalization] AudioContext resumed after visibility change');
-        }).catch((error) => {
-          logger.error('[AudioNormalization] Failed to resume AudioContext on visibility change:', error);
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+  const getCurrentGain = useCallback(() => {
+    return currentGainRef.current;
   }, []);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
-      }
-    };
+  // Legacy methods for compatibility (no-ops now)
+  const resumeAudioContext = useCallback(async () => {
+    // No-op: We no longer use AudioContext
+  }, []);
+
+  const initAudioContext = useCallback(() => {
+    // No-op: We no longer use AudioContext
+    return null;
+  }, []);
+
+  const connectAudioElement = useCallback((_audioElement: HTMLAudioElement, _audioId: 'A' | 'B') => {
+    // No-op: We no longer connect to Web Audio API
   }, []);
 
   return {
-    connectAudioElement,
+    // New volume-based API
+    registerAudioElements,
+    setUserVolume,
     applyGain,
     calculateGain,
+    getCurrentGain,
+
+    // Legacy API (for compatibility, now no-ops)
+    connectAudioElement,
     resumeAudioContext,
     initAudioContext,
   };
