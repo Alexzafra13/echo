@@ -22,6 +22,7 @@ import {
   GetScanStatusUseCase,
   GetScansHistoryUseCase,
 } from '../../domain/use-cases';
+import { LufsAnalysisQueueService, LufsQueueStats } from '../../infrastructure/services/lufs-analysis-queue.service';
 import {
   StartScanRequestDto,
   StartScanResponseDto,
@@ -52,6 +53,7 @@ export class ScannerController {
     private readonly startScanUseCase: StartScanUseCase,
     private readonly getScanStatusUseCase: GetScanStatusUseCase,
     private readonly getScansHistoryUseCase: GetScansHistoryUseCase,
+    private readonly lufsQueueService: LufsAnalysisQueueService,
   ) {}
 
   /**
@@ -78,6 +80,19 @@ export class ScannerController {
     });
 
     return result as StartScanResponseDto;
+  }
+
+  /**
+   * GET /scanner/lufs-status - Obtiene el estado del análisis LUFS
+   */
+  @Get('lufs-status')
+  @ApiOperation({ summary: 'Obtiene el estado del análisis LUFS en segundo plano' })
+  @ApiResponse({
+    status: 200,
+    description: 'Estado del análisis LUFS',
+  })
+  async getLufsStatus(): Promise<LufsQueueStats> {
+    return this.lufsQueueService.getQueueStats();
   }
 
   /**

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image } from 'lucide-react';
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image, Volume2 } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
-import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
+import { useScannerHistory, useStartScan, useLufsStatus } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
 import { useAuthStore } from '@shared/store';
 import { formatDateShort } from '@shared/utils/format';
@@ -29,6 +29,9 @@ export function ScannerPanel() {
     currentScanId,
     accessToken
   );
+
+  // Estado del análisis LUFS
+  const { data: lufsStatus } = useLufsStatus();
 
   // Cuando se inicia un scan, guardar el ID para WebSocket
   useEffect(() => {
@@ -228,6 +231,43 @@ export function ScannerPanel() {
             <div className={styles.errorBox}>
               <AlertCircle size={16} />
               <span>{latestScan.errorMessage}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* LUFS Analysis Status */}
+      {lufsStatus && (lufsStatus.isRunning || lufsStatus.pendingTracks > 0) && (
+        <div className={styles.lufsCard}>
+          <div className={styles.lufsHeader}>
+            <Volume2 size={18} className={lufsStatus.isRunning ? styles.lufsIconRunning : styles.lufsIcon} />
+            <div className={styles.lufsInfo}>
+              <h4 className={styles.lufsTitle}>
+                {lufsStatus.isRunning ? 'Analizando LUFS...' : 'Análisis LUFS pendiente'}
+              </h4>
+              {lufsStatus.estimatedTimeRemaining && (
+                <span className={styles.lufsEta}>ETA: ~{lufsStatus.estimatedTimeRemaining}</span>
+              )}
+            </div>
+          </div>
+          <div className={styles.lufsStats}>
+            <div className={styles.lufsStat}>
+              <span className={styles.lufsStatValue}>{lufsStatus.processedInSession}</span>
+              <span className={styles.lufsStatLabel}>Procesados</span>
+            </div>
+            <div className={styles.lufsStat}>
+              <span className={styles.lufsStatValue}>{lufsStatus.pendingTracks}</span>
+              <span className={styles.lufsStatLabel}>Pendientes</span>
+            </div>
+          </div>
+          {lufsStatus.isRunning && lufsStatus.processedInSession > 0 && (
+            <div className={styles.lufsProgress}>
+              <div
+                className={styles.lufsProgressFill}
+                style={{
+                  width: `${Math.round((lufsStatus.processedInSession / (lufsStatus.processedInSession + lufsStatus.pendingTracks)) * 100)}%`
+                }}
+              />
             </div>
           )}
         </div>
