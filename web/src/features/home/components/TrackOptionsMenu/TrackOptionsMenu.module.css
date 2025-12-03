@@ -50,33 +50,35 @@
 
 /* Animation when dropdown opens below (default) */
 .trackOptionsMenu__dropdown[data-placement="bottom"] {
-  animation: slideInFromTop 0.15s ease;
+  transform-origin: top right;
+  animation: scaleInFromTop 0.15s ease;
 }
 
 /* Animation when dropdown opens above */
 .trackOptionsMenu__dropdown[data-placement="top"] {
-  animation: slideInFromBottom 0.15s ease;
+  transform-origin: bottom right;
+  animation: scaleInFromBottom 0.15s ease;
 }
 
-@keyframes slideInFromTop {
+@keyframes scaleInFromTop {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: scale(0.9) translateY(-4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 
-@keyframes slideInFromBottom {
+@keyframes scaleInFromBottom {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: scale(0.9) translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 

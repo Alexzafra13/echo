@@ -57,6 +57,20 @@ export function AlbumOptionsMenu({
     }
   }, [isOpen]);
 
+  // Close menu on scroll
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isOpen]);
+
   const handleOptionClick = (e: React.MouseEvent, callback?: () => void) => {
     e.stopPropagation();
     if (callback) {
@@ -92,7 +106,8 @@ export function AlbumOptionsMenu({
             className={styles.albumOptionsMenu__dropdown}
             style={{
               position: 'fixed',
-              top: `${position.top}px`,
+              top: position.top !== undefined ? `${position.top}px` : undefined,
+              bottom: position.bottom !== undefined ? `${position.bottom}px` : undefined,
               right: position.right !== undefined ? `${position.right}px` : undefined,
               left: position.left !== undefined ? `${position.left}px` : undefined,
               maxHeight: `${position.maxHeight}px`,
