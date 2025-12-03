@@ -57,6 +57,16 @@ export interface ScanCompleted {
 }
 
 /**
+ * Progreso del análisis LUFS
+ */
+export interface LufsProgress {
+  isRunning: boolean;
+  pendingTracks: number;
+  processedInSession: number;
+  estimatedTimeRemaining: string | null;
+}
+
+/**
  * Hook para conectarse a los eventos de scanner via WebSocket
  *
  * @param scanId - ID del scan a monitorear
@@ -80,6 +90,7 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [errors, setErrors] = useState<ScanError[]>([]);
   const [completed, setCompleted] = useState<ScanCompleted | null>(null);
+  const [lufsProgress, setLufsProgress] = useState<LufsProgress | null>(null);
 
   // Handlers para eventos
   const handleProgress = useCallback((data: ScanProgress) => {
@@ -97,14 +108,19 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
     );
   }, []);
 
+  const handleLufsProgress = useCallback((data: LufsProgress) => {
+    setLufsProgress(data);
+  }, []);
+
   // Eventos a registrar
   const events = useMemo(
     () => [
       { event: 'scan:progress', handler: handleProgress },
       { event: 'scan:error', handler: handleError },
       { event: 'scan:completed', handler: handleCompleted },
+      { event: 'lufs:progress', handler: handleLufsProgress },
     ],
-    [handleProgress, handleError, handleCompleted]
+    [handleProgress, handleError, handleCompleted, handleLufsProgress]
   );
 
   // Callback cuando se conecta: suscribirse al scan
@@ -168,6 +184,7 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
     progress,
     errors,
     completed,
+    lufsProgress,
     isConnected,
     isCompleted: completed !== null,
     pauseScan,
