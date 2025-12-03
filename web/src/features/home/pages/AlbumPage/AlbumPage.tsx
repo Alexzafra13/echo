@@ -3,9 +3,10 @@ import { useParams, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Play, Shuffle } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
-import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal } from '../../components';
+import { Sidebar, TrackList, AlbumOptionsMenu, AlbumInfoModal, AlbumCard } from '../../components';
 import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSelectorModal';
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
+import { useArtistAlbums } from '@features/artists/hooks';
 import { usePlayer, Track } from '@features/player';
 import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
@@ -35,6 +36,15 @@ export default function AlbumPage() {
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
   const { data: tracks, isLoading: loadingTracks } = useAlbumTracks(id!);
+
+  // Fetch other albums from the same artist
+  const { data: artistAlbumsData } = useArtistAlbums(album?.artistId);
+
+  // Filter out the current album from artist's discography
+  const moreFromArtist = useMemo(() => {
+    if (!artistAlbumsData?.albums || !id) return [];
+    return artistAlbumsData.albums.filter(a => a.id !== id);
+  }, [artistAlbumsData?.albums, id]);
 
   // Fetch artist images metadata for tag-based cache busting on artist avatar
   const { data: artistImages } = useArtistImages(album?.artistId);
@@ -323,6 +333,26 @@ export default function AlbumPage() {
               </div>
             )}
           </div>
+
+          {/* More from this artist */}
+          {moreFromArtist.length > 0 && (
+            <div className={styles.albumPage__moreFromArtist}>
+              <h2 className={styles.albumPage__moreFromArtistTitle}>
+                Más de {album.artist}
+              </h2>
+              <div className={styles.albumPage__moreFromArtistGrid}>
+                {moreFromArtist.map((otherAlbum) => (
+                  <AlbumCard
+                    key={otherAlbum.id}
+                    cover={otherAlbum.coverImage}
+                    title={otherAlbum.title}
+                    artist={otherAlbum.artist}
+                    onClick={() => setLocation(`/albums/${otherAlbum.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
