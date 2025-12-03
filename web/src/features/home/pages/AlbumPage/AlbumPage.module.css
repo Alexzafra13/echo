@@ -144,9 +144,10 @@
 .albumPage__heroActions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-top: 16px;
   position: relative; /* Establish positioning context for dropdown */
+  flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
 .albumPage__heroMoreButton {
@@ -269,6 +270,13 @@
   .albumPage__heroActions {
     justify-content: center;
     margin-top: 12px;
+    gap: 10px;
+  }
+
+  /* Compact buttons on mobile */
+  .albumPage__heroActions button {
+    padding: 10px 16px;
+    font-size: 14px;
   }
 
   .albumPage__trackSection {
@@ -309,6 +317,16 @@
 
   .albumPage__heroMeta {
     font-size: 12px;
+  }
+
+  .albumPage__heroActions {
+    gap: 8px;
+  }
+
+  /* Even more compact buttons on small mobile */
+  .albumPage__heroActions button {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 
   .albumPage__trackSection {

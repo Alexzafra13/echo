@@ -271,7 +271,7 @@
   }
 
   .trackList__track {
-    grid-template-columns: 40px 1fr 56px; /* Más compacto: play button más pequeño */
+    grid-template-columns: 40px 1fr auto 40px; /* 4 columnas: play | info | duración | menú */
     gap: 10px; /* Reducido de 14px */
     padding: 8px 12px; /* Reducido de 12px 16px */
     border-radius: 8px; /* iOS rounded */
@@ -308,6 +308,7 @@
 
   .trackList__trackDuration {
     font-size: 12px; /* Reducido de 13px */
+    text-align: right;
   }
 
   .trackList__playButton {
@@ -333,7 +334,7 @@
   }
 
   .trackList__track {
-    grid-template-columns: 36px 1fr 52px; /* Aún más compacto */
+    grid-template-columns: 36px 1fr auto 36px; /* 4 columnas: play | info | duración | menú */
     gap: 8px; /* Reducido */
     padding: 6px 10px; /* Más compacto */
   }
@@ -362,6 +363,7 @@
 
   .trackList__trackDuration {
     font-size: 11px; /* Más pequeño */
+    text-align: right;
   }
 
   .trackList__playButton {
