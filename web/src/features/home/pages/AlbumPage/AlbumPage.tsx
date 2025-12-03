@@ -42,9 +42,9 @@ export default function AlbumPage() {
 
   // Filter out the current album from artist's discography
   const moreFromArtist = useMemo(() => {
-    if (!artistAlbumsData?.albums || !id) return [];
-    return artistAlbumsData.albums.filter(a => a.id !== id);
-  }, [artistAlbumsData?.albums, id]);
+    if (!artistAlbumsData?.data || !id) return [];
+    return artistAlbumsData.data.filter(a => a.id !== id);
+  }, [artistAlbumsData?.data, id]);
 
   // Fetch artist images metadata for tag-based cache busting on artist avatar
   const { data: artistImages } = useArtistImages(album?.artistId);
