@@ -234,3 +234,19 @@
     font-size: 12px;
   }
 }
+
+/* Normalization status badges */
+.albumInfoModal__normalized {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.albumInfoModal__partial {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.albumInfoModal__pending {
+  color: var(--color-text-tertiary, #6b7280);
+  font-weight: 500;
+}
