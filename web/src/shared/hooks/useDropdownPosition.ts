@@ -1,8 +1,9 @@
 import { useState, useEffect, RefObject } from 'react';
 
 interface DropdownPosition {
-  top: number;
-  left: number;
+  top?: number;
+  bottom?: number;
+  left?: number;
   right?: number;
   maxHeight: number;
   placement: 'bottom' | 'top';
@@ -62,9 +63,6 @@ export function useDropdownPosition({
         placement = spaceBelow >= 200 || spaceBelow > spaceAbove ? 'bottom' : 'top';
       }
 
-      // Calculate vertical position
-      const top = placement === 'bottom' ? rect.bottom + offset : rect.top - offset;
-
       // Calculate max height based on available space
       const availableSpace = placement === 'bottom' ? spaceBelow : spaceAbove;
       const calculatedMaxHeight = Math.min(maxHeight, Math.max(100, availableSpace));
@@ -81,25 +79,36 @@ export function useDropdownPosition({
         left = rect.left;
       }
 
-      setPosition({
-        top: placement === 'bottom' ? top : top - calculatedMaxHeight,
-        left: left!,
-        right,
-        maxHeight: calculatedMaxHeight,
-        placement,
-      });
+      // Calculate vertical position
+      // When placement is 'bottom': use top (dropdown below trigger)
+      // When placement is 'top': use bottom (dropdown above trigger, anchored to bottom)
+      if (placement === 'bottom') {
+        setPosition({
+          top: rect.bottom + offset,
+          left,
+          right,
+          maxHeight: calculatedMaxHeight,
+          placement,
+        });
+      } else {
+        // Use bottom to anchor dropdown above trigger
+        setPosition({
+          bottom: viewportHeight - rect.top + offset,
+          left,
+          right,
+          maxHeight: calculatedMaxHeight,
+          placement,
+        });
+      }
     };
 
     calculatePosition();
 
-    // Recalculate on scroll or resize
-    const handleUpdate = () => calculatePosition();
-    window.addEventListener('scroll', handleUpdate, true);
-    window.addEventListener('resize', handleUpdate);
+    // Only recalculate on resize (scroll is handled by component closing the dropdown)
+    window.addEventListener('resize', calculatePosition);
 
     return () => {
-      window.removeEventListener('scroll', handleUpdate, true);
-      window.removeEventListener('resize', handleUpdate);
+      window.removeEventListener('resize', calculatePosition);
     };
   }, [isOpen, triggerRef, offset, align, maxHeight]);
 
