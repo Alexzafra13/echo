@@ -413,7 +413,7 @@ export function AudioPlayer() {
             onClick={toggleMute}
             title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
-            {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            {volume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
           </button>
           <input
             type="range"
