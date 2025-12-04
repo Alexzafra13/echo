@@ -360,9 +360,12 @@
   color: var(--text-secondary);
   cursor: pointer;
   padding: var(--space-2);
+  min-width: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: all var(--transition-base);
   border-radius: var(--radius-full);
 }
@@ -456,10 +459,12 @@
   color: var(--text-secondary);
   cursor: pointer;
   padding: var(--space-2);
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  flex-shrink: 0;
   transition: all var(--transition-base);
   border-radius: var(--radius-md);
 }
