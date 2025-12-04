@@ -775,11 +775,6 @@
   }
 }
 
-/* Swipe animation state for track info */
-.trackInfo--swiping {
-  pointer-events: none;
-}
-
 @media (max-width: 480px) {
   .player {
     bottom: calc(50px + env(safe-area-inset-bottom, 0) + 10px);
