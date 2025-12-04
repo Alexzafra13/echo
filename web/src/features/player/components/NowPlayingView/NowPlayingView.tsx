@@ -66,8 +66,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     isDragging.current = false;
   }, [dragOffset, onClose]);
 
-  if (!isOpen) return null;
-
+  // Don't render content if not open (but keep the container for animation)
   const { title, artist, cover, albumName } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
@@ -91,18 +90,25 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     seek(percent * duration);
   };
 
+  // Calculate styles for drag interaction
+  const dragStyles: React.CSSProperties = {
+    '--dominant-color': dominantColor,
+  } as React.CSSProperties;
+
+  // Only override transform when actively dragging down
+  if (isOpen && dragOffset > 0) {
+    dragStyles.transform = `translateY(${dragOffset}px)`;
+    dragStyles.transition = 'none';
+    dragStyles.opacity = 1 - dragOffset / 400;
+  }
+
   return (
     <div
       className={`${styles.nowPlaying} ${isOpen ? styles['nowPlaying--open'] : ''}`}
-      style={{
-        '--dominant-color': dominantColor,
-        transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
-        transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
-        opacity: dragOffset > 0 ? 1 - dragOffset / 400 : 1,
-      } as React.CSSProperties}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      style={dragStyles}
+      onTouchStart={isOpen ? handleTouchStart : undefined}
+      onTouchMove={isOpen ? handleTouchMove : undefined}
+      onTouchEnd={isOpen ? handleTouchEnd : undefined}
     >
       {/* Background gradient */}
       <div className={styles.nowPlaying__background} />
