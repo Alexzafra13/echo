@@ -34,7 +34,16 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   } = usePlayer();
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [queueHeight, setQueueHeight] = useState(50); // Percentage of screen height
   const queueRef = useRef<HTMLDivElement>(null);
+
+  // Reset queue state when NowPlayingView closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsQueueOpen(false);
+      setQueueHeight(50);
+    }
+  }, [isOpen]);
 
   // Block body scroll when open
   useEffect(() => {
@@ -55,19 +64,23 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     }
   }, [isOpen]);
 
-  // Swipe down to close
+  // Swipe down to close (main view)
   const touchStartY = useRef<number>(0);
   const touchCurrentY = useRef<number>(0);
   const [dragOffset, setDragOffset] = useState(0);
   const isDragging = useRef(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Don't start drag if queue is open
+    if (isQueueOpen) return;
     touchStartY.current = e.touches[0].clientY;
     touchCurrentY.current = e.touches[0].clientY;
     isDragging.current = false;
-  }, []);
+  }, [isQueueOpen]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Don't drag if queue is open
+    if (isQueueOpen) return;
     const deltaY = e.touches[0].clientY - touchStartY.current;
     touchCurrentY.current = e.touches[0].clientY;
 
@@ -76,15 +89,55 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       isDragging.current = true;
       setDragOffset(Math.min(deltaY, 300));
     }
-  }, []);
+  }, [isQueueOpen]);
 
   const handleTouchEnd = useCallback(() => {
+    // Don't close if queue is open
+    if (isQueueOpen) return;
     if (dragOffset > 150) {
       onClose();
     }
     setDragOffset(0);
     isDragging.current = false;
-  }, [dragOffset, onClose]);
+  }, [dragOffset, onClose, isQueueOpen]);
+
+  // Queue panel gesture handling
+  const queueTouchStartY = useRef<number>(0);
+  const [queueDragOffset, setQueueDragOffset] = useState(0);
+  const isQueueDragging = useRef(false);
+
+  const handleQueueTouchStart = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+    queueTouchStartY.current = e.touches[0].clientY;
+    isQueueDragging.current = false;
+  }, []);
+
+  const handleQueueTouchMove = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+    const deltaY = e.touches[0].clientY - queueTouchStartY.current;
+
+    // Dragging down (positive delta) - to close or shrink
+    if (deltaY > 0) {
+      isQueueDragging.current = true;
+      setQueueDragOffset(deltaY);
+    }
+    // Dragging up (negative delta) - to expand
+    else if (deltaY < 0) {
+      isQueueDragging.current = true;
+      const newHeight = Math.min(90, queueHeight + Math.abs(deltaY) / 5);
+      setQueueHeight(newHeight);
+    }
+  }, [queueHeight]);
+
+  const handleQueueTouchEnd = useCallback(() => {
+    if (queueDragOffset > 100) {
+      // Close queue panel
+      setIsQueueOpen(false);
+      setQueueHeight(50);
+    }
+    setQueueDragOffset(0);
+    isQueueDragging.current = false;
+  }, [queueDragOffset]);
 
   // Don't render content if not open (but keep the container for animation)
   const { title, artist, cover, albumName } = getPlayerDisplayInfo(
@@ -119,7 +172,6 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   if (isOpen && dragOffset > 0) {
     dragStyles.transform = `translateY(${dragOffset}px)`;
     dragStyles.transition = 'none';
-    dragStyles.opacity = 1 - dragOffset / 400;
   }
 
   // Use portal to render outside the player (which has transform that breaks fixed positioning)
@@ -252,7 +304,19 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
 
       {/* Queue Panel */}
       {isQueueOpen && (
-        <div className={styles.nowPlaying__queuePanel} ref={queueRef}>
+        <div
+          className={styles.nowPlaying__queuePanel}
+          ref={queueRef}
+          style={{
+            height: `${queueHeight}vh`,
+            transform: queueDragOffset > 0 ? `translateY(${queueDragOffset}px)` : undefined,
+            transition: isQueueDragging.current ? 'none' : 'height 0.2s ease, transform 0.3s ease',
+          }}
+          onTouchStart={handleQueueTouchStart}
+          onTouchMove={handleQueueTouchMove}
+          onTouchEnd={handleQueueTouchEnd}
+        >
+          <div className={styles.nowPlaying__queueHandle} />
           <QueueList onClose={() => setIsQueueOpen(false)} />
         </div>
       )}
