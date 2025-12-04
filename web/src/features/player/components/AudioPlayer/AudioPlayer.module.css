@@ -342,7 +342,7 @@
 .volumeControl {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   justify-content: flex-end;
   grid-column: 3; /* Tercera columna */
   grid-row: 1; /* Primera fila */
@@ -359,9 +359,7 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: var(--space-2);
-  min-width: 40px;
-  min-height: 40px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -458,8 +456,7 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: var(--space-2);
-  min-height: 40px;
+  padding: 6px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -491,12 +488,13 @@
 .expandButton {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: var(--space-2);
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: all var(--transition-base);
   border-radius: var(--radius-full);
 }
