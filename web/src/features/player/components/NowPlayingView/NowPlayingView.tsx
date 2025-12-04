@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
@@ -15,6 +16,7 @@ interface NowPlayingViewProps {
 }
 
 export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingViewProps) {
+  const [, setLocation] = useLocation();
   const {
     currentTrack,
     currentRadioStation,
@@ -32,6 +34,24 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     toggleShuffle,
     toggleRepeat,
   } = usePlayer();
+
+  // Navigation handlers
+  const albumId = currentTrack?.albumId;
+  const artistId = currentTrack?.artistId;
+
+  const handleGoToAlbum = useCallback(() => {
+    if (!isRadioMode && albumId) {
+      onClose();
+      setLocation(`/album/${albumId}`);
+    }
+  }, [isRadioMode, albumId, onClose, setLocation]);
+
+  const handleGoToArtist = useCallback(() => {
+    if (!isRadioMode && artistId) {
+      onClose();
+      setLocation(`/artist/${artistId}`);
+    }
+  }, [isRadioMode, artistId, onClose, setLocation]);
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [queueState, setQueueState] = useState<'half' | 'full'>('half'); // 'half' = 50%, 'full' = 90%
@@ -226,8 +246,12 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         <div className={styles.nowPlaying__headerSpacer} />
       </div>
 
-      {/* Cover */}
-      <div className={styles.nowPlaying__coverContainer}>
+      {/* Cover - clickable to go to album */}
+      <div
+        className={`${styles.nowPlaying__coverContainer} ${!isRadioMode && albumId ? styles['nowPlaying__coverContainer--clickable'] : ''}`}
+        onClick={!isRadioMode && albumId ? handleGoToAlbum : undefined}
+        title={!isRadioMode && albumId ? `Ir al álbum: ${albumName}` : undefined}
+      >
         <img
           src={isRadioMode ? cover : getCoverUrl(cover)}
           alt={title}
@@ -239,7 +263,12 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       {/* Track Info */}
       <div className={styles.nowPlaying__info}>
         <h1 className={styles.nowPlaying__title}>{title}</h1>
-        <p className={styles.nowPlaying__artist}>{artist}</p>
+        <p
+          className={`${styles.nowPlaying__artist} ${!isRadioMode && artistId ? styles['nowPlaying__artist--clickable'] : ''}`}
+          onClick={!isRadioMode && artistId ? handleGoToArtist : undefined}
+        >
+          {artist}
+        </p>
       </div>
 
       {/* Progress Bar */}
