@@ -396,7 +396,7 @@ export function AudioPlayer() {
               onClick={toggleQueue}
               title="Lista de reproducción"
             >
-              <ListMusic size={20} />
+              <ListMusic size={22} />
               {queue.length > 0 && (
                 <span className={styles.queueButton__count}>{queue.length}</span>
               )}
