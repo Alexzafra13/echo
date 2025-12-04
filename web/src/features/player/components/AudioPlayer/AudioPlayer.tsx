@@ -4,6 +4,7 @@ import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, 
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
+import { NowPlayingView } from '../NowPlayingView';
 import { usePageEndDetection } from '../../hooks/usePageEndDetection';
 import { usePlayerPreference } from '../../hooks/usePlayerPreference';
 import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
@@ -39,6 +40,7 @@ export function AudioPlayer() {
   const [, setLocation] = useLocation();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('0, 0, 0');
   const queueRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -230,6 +232,13 @@ export function AudioPlayer() {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
+  // Abrir NowPlayingView al hacer clic en trackInfo (solo mobile)
+  const handleTrackInfoClick = () => {
+    if (isMobile) {
+      setIsNowPlayingOpen(true);
+    }
+  };
+
   // Calculate swipe styles for mobile (separate animations for cover and text)
   const coverSwipeStyles = isMobile && !isRadioMode ? {
     opacity: swipeDirection ? 0 : 1, // Only fade when changing tracks, not during swipe
@@ -256,11 +265,14 @@ export function AudioPlayer() {
     >
 
       {/* Track/Radio info - Left side */}
-      <div className={styles.trackInfo}>
+      <div
+        className={`${styles.trackInfo} ${isMobile ? styles['trackInfo--clickable'] : ''}`}
+        onClick={handleTrackInfoClick}
+      >
         <div
-          className={`${styles.trackCoverContainer} ${canNavigateToAlbum ? styles['trackCoverContainer--clickable'] : ''}`}
-          onClick={canNavigateToAlbum ? handleGoToAlbum : undefined}
-          title={canNavigateToAlbum ? `Ir al álbum: ${albumName || title}` : undefined}
+          className={`${styles.trackCoverContainer} ${canNavigateToAlbum && !isMobile ? styles['trackCoverContainer--clickable'] : ''}`}
+          onClick={canNavigateToAlbum && !isMobile ? handleGoToAlbum : undefined}
+          title={canNavigateToAlbum && !isMobile ? `Ir al álbum: ${albumName || title}` : undefined}
           style={coverSwipeStyles}
         >
           {isRadioMode && (
@@ -278,12 +290,12 @@ export function AudioPlayer() {
         <div className={styles.trackDetails} style={textSwipeStyles}>
           <div className={styles.trackTitle}>{title}</div>
           <div className={styles.trackArtist}>{artist}</div>
-          {/* Album name - clickable link to album */}
+          {/* Album name - clickable link to album (solo desktop) */}
           {canNavigateToAlbum && albumName && (
             <div
               className={styles.trackAlbum}
-              onClick={handleGoToAlbum}
-              title={`Ir al álbum: ${albumName}`}
+              onClick={!isMobile ? handleGoToAlbum : undefined}
+              title={!isMobile ? `Ir al álbum: ${albumName}` : undefined}
             >
               {albumName}
             </div>
@@ -445,6 +457,13 @@ export function AudioPlayer() {
           <span className={styles.timeLabel}>{formatDuration(duration)}</span>
         </div>
       )}
+
+      {/* NowPlayingView - Vista completa en pantalla (mobile) */}
+      <NowPlayingView
+        isOpen={isNowPlayingOpen}
+        onClose={() => setIsNowPlayingOpen(false)}
+        dominantColor={dominantColor}
+      />
     </div>
   );
 }
