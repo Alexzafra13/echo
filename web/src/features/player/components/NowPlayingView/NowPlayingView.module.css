@@ -10,6 +10,8 @@
   padding: 20px;
   padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
   overflow: hidden;
+  overflow-y: auto;
+  background: rgb(12, 12, 12); /* Solid base background */
   transform: translateY(100%);
   opacity: 0;
   visibility: hidden;
@@ -29,16 +31,17 @@
               visibility 0s linear 0s;
 }
 
-/* Background with gradient from dominant color */
+/* Background with gradient from dominant color - fully opaque */
 .nowPlaying__background {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(var(--dominant-color), 0.8) 0%,
-    rgba(var(--dominant-color), 0.4) 30%,
-    rgba(10, 10, 10, 0.98) 70%,
-    rgba(10, 10, 10, 1) 100%
+    rgb(var(--dominant-color)) 0%,
+    rgb(var(--dominant-color)) 15%,
+    rgba(var(--dominant-color), 0.6) 40%,
+    rgb(18, 18, 18) 65%,
+    rgb(12, 12, 12) 100%
   );
   z-index: -1;
 }
