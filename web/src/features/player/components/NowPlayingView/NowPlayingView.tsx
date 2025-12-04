@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'wouter';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown, Volume2, VolumeX, X } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
@@ -406,23 +406,39 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         </div>
       )}
 
-      {/* Queue Panel - Bottom Sheet with 3 states */}
+      {/* Queue Panel - Bottom Sheet (mobile) / Side Panel (desktop) */}
       {isQueueOpen && (
         <div
           className={`${styles.nowPlaying__queuePanel} ${queueState === 'full' ? styles['nowPlaying__queuePanel--full'] : ''}`}
           ref={queueRef}
-          style={{
+          style={!isDesktop ? {
             height: queueState === 'full' ? '90vh' : '50vh',
             transform: queueDragOffset > 0 ? `translateY(${queueDragOffset}px)` : undefined,
             transition: isQueueDragging.current
               ? 'none'
               : 'height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease',
-          }}
-          onTouchStart={handleQueueTouchStart}
-          onTouchMove={handleQueueTouchMove}
-          onTouchEnd={handleQueueTouchEnd}
+          } : undefined}
+          onTouchStart={!isDesktop ? handleQueueTouchStart : undefined}
+          onTouchMove={!isDesktop ? handleQueueTouchMove : undefined}
+          onTouchEnd={!isDesktop ? handleQueueTouchEnd : undefined}
         >
+          {/* Mobile: drag handle */}
           <div className={styles.nowPlaying__queueHandle} />
+
+          {/* Desktop: header with close button */}
+          {isDesktop && (
+            <div className={styles.nowPlaying__queueHeader}>
+              <h3 className={styles.nowPlaying__queueTitle}>Cola de reproducción</h3>
+              <button
+                className={styles.nowPlaying__queueClose}
+                onClick={() => setIsQueueOpen(false)}
+                title="Cerrar cola"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          )}
+
           <div className={styles.nowPlaying__queueContent} ref={queueContentRef}>
             <QueueList onClose={() => setIsQueueOpen(false)} />
           </div>

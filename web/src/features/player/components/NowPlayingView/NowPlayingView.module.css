@@ -369,6 +369,19 @@
   background: var(--white-50);
 }
 
+/* Queue header - hidden on mobile */
+.nowPlaying__queueHeader {
+  display: none;
+}
+
+.nowPlaying__queueTitle {
+  display: none;
+}
+
+.nowPlaying__queueClose {
+  display: none;
+}
+
 /* Content wrapper for scrolling */
 .nowPlaying__queueContent {
   flex: 1;
@@ -584,17 +597,83 @@
   }
 
   .nowPlaying__queuePanel {
-    max-width: 800px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 20px;
-    bottom: 20px;
-    animation: slideUpDesktop 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    /* Side panel from right on desktop */
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 380px;
+    max-width: 90vw;
+    height: 100vh;
+    border-radius: 20px 0 0 20px;
+    border-top: none;
+    border-left: 1px solid var(--white-10);
+    animation: slideInRight 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    transform: none;
+  }
+
+  .nowPlaying__queuePanel--full {
+    width: 450px;
+    border-radius: 20px 0 0 20px;
+  }
+
+  .nowPlaying__queueHandle {
+    display: none; /* No drag handle on desktop */
+  }
+
+  .nowPlaying__queueHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--white-08);
+    flex-shrink: 0;
+  }
+
+  .nowPlaying__queueTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .nowPlaying__queueClose {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: all 0.2s ease;
+  }
+
+  .nowPlaying__queueClose:hover {
+    color: var(--text-primary);
+    background: var(--white-10);
+  }
+
+  .nowPlaying__queueContent {
+    padding-top: 0;
   }
 
   .nowPlaying__actions {
     bottom: 40px;
     right: calc(50% - 380px);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
