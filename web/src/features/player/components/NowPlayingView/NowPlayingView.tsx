@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
@@ -35,6 +35,25 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const queueRef = useRef<HTMLDivElement>(null);
+
+  // Block body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   // Swipe down to close
   const touchStartY = useRef<number>(0);
