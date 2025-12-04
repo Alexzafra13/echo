@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'wouter';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown, Volume2, VolumeX, X } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
@@ -59,6 +59,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   }, [isRadioMode, onClose, setLocation]);
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isQueueClosing, setIsQueueClosing] = useState(false); // For slide-out animation
   const [queueState, setQueueState] = useState<'half' | 'full'>('half'); // 'half' = 50%, 'full' = 90%
   const [queueDragOffset, setQueueDragOffset] = useState(0);
   const queueRef = useRef<HTMLDivElement>(null);
@@ -85,14 +86,35 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     setVolume(volume === 0 ? 0.7 : 0);
   };
 
+  // Open queue by default on desktop when NowPlayingView opens
+  useEffect(() => {
+    if (isOpen && isDesktop && !isRadioMode) {
+      setIsQueueOpen(true);
+    }
+  }, [isOpen, isDesktop, isRadioMode]);
+
   // Reset queue state when NowPlayingView closes
   useEffect(() => {
     if (!isOpen) {
       setIsQueueOpen(false);
+      setIsQueueClosing(false);
       setQueueState('half');
       setQueueDragOffset(0);
     }
   }, [isOpen]);
+
+  // Handle queue close with animation on desktop
+  const handleCloseQueue = useCallback(() => {
+    if (isDesktop) {
+      setIsQueueClosing(true);
+      setTimeout(() => {
+        setIsQueueOpen(false);
+        setIsQueueClosing(false);
+      }, 300); // Match animation duration
+    } else {
+      setIsQueueOpen(false);
+    }
+  }, [isDesktop]);
 
   // Block body scroll when open
   useEffect(() => {
@@ -394,8 +416,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       {!isRadioMode && (
         <div className={styles.nowPlaying__actions}>
           <button
-            className={`${styles.nowPlaying__actionBtn} ${isQueueOpen ? styles['nowPlaying__actionBtn--active'] : ''}`}
-            onClick={() => setIsQueueOpen(!isQueueOpen)}
+            className={`${styles.nowPlaying__actionBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__actionBtn--active'] : ''}`}
+            onClick={() => isQueueOpen ? handleCloseQueue() : setIsQueueOpen(true)}
             title="Cola de reproducción"
           >
             <ListMusic size={24} />
@@ -406,25 +428,41 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         </div>
       )}
 
-      {/* Queue Panel - Bottom Sheet with 3 states */}
-      {isQueueOpen && (
+      {/* Queue Panel - Bottom Sheet (mobile) / Side Panel (desktop) */}
+      {(isQueueOpen || isQueueClosing) && (
         <div
-          className={`${styles.nowPlaying__queuePanel} ${queueState === 'full' ? styles['nowPlaying__queuePanel--full'] : ''}`}
+          className={`${styles.nowPlaying__queuePanel} ${queueState === 'full' ? styles['nowPlaying__queuePanel--full'] : ''} ${isQueueClosing ? styles['nowPlaying__queuePanel--closing'] : ''}`}
           ref={queueRef}
-          style={{
+          style={!isDesktop ? {
             height: queueState === 'full' ? '90vh' : '50vh',
             transform: queueDragOffset > 0 ? `translateY(${queueDragOffset}px)` : undefined,
             transition: isQueueDragging.current
               ? 'none'
               : 'height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease',
-          }}
-          onTouchStart={handleQueueTouchStart}
-          onTouchMove={handleQueueTouchMove}
-          onTouchEnd={handleQueueTouchEnd}
+          } : undefined}
+          onTouchStart={!isDesktop ? handleQueueTouchStart : undefined}
+          onTouchMove={!isDesktop ? handleQueueTouchMove : undefined}
+          onTouchEnd={!isDesktop ? handleQueueTouchEnd : undefined}
         >
+          {/* Mobile: drag handle */}
           <div className={styles.nowPlaying__queueHandle} />
+
+          {/* Desktop: header with close button */}
+          {isDesktop && (
+            <div className={styles.nowPlaying__queueHeader}>
+              <h3 className={styles.nowPlaying__queueTitle}>Cola de reproducción</h3>
+              <button
+                className={styles.nowPlaying__queueClose}
+                onClick={handleCloseQueue}
+                title="Cerrar cola"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          )}
+
           <div className={styles.nowPlaying__queueContent} ref={queueContentRef}>
-            <QueueList onClose={() => setIsQueueOpen(false)} />
+            <QueueList onClose={handleCloseQueue} />
           </div>
         </div>
       )}
