@@ -673,6 +673,14 @@
     overflow: hidden; /* Clip text animation */
   }
 
+  .trackInfo--clickable {
+    cursor: pointer;
+  }
+
+  .trackInfo--clickable:active {
+    opacity: 0.7;
+  }
+
   .trackCoverContainer {
     width: 44px;
     height: 44px;
