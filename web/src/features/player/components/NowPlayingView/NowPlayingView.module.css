@@ -335,9 +335,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-full);
+  gap: 6px;
+  border-radius: var(--radius-md);
   transition: all 0.2s ease;
-  position: relative;
 }
 
 .nowPlaying__actionBtn:hover {
@@ -349,21 +349,11 @@
   color: var(--color-primary-500);
 }
 
-.nowPlaying__badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  background: var(--white-80);
-  color: var(--bg-base);
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.nowPlaying__actionCount {
+  font-size: 15px;
+  font-weight: 500;
+  color: inherit;
+  line-height: 1;
 }
 
 /* Volume Control - Desktop */
@@ -626,9 +616,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-full);
+    gap: 6px;
+    border-radius: var(--radius-md);
     transition: all 0.2s ease;
-    position: relative;
     flex-shrink: 0;
   }
 
@@ -641,21 +631,11 @@
     color: var(--color-primary-500);
   }
 
-  .nowPlaying__volumeQueueBadge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    min-width: 14px;
-    height: 14px;
-    padding: 0 3px;
-    background: var(--white-80);
-    color: var(--bg-base);
-    font-size: 9px;
-    font-weight: 700;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .nowPlaying__volumeQueueCount {
+    font-size: 15px;
+    font-weight: 500;
+    color: inherit;
+    line-height: 1;
   }
 
   .nowPlaying__volumeSlider {

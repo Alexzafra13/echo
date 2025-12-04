@@ -459,15 +459,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   transition: all var(--transition-base);
-  border-radius: var(--radius-full);
-  position: relative;
+  border-radius: var(--radius-md);
 }
 
 .queueButton:hover {
   color: var(--text-primary);
   background: var(--white-10);
-  transform: scale(1.05);
 }
 
 .queueButton--active {
@@ -475,21 +474,11 @@
   background: var(--primary-15);
 }
 
-.queueButton__badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  background: var(--white-80);
-  color: var(--bg-base);
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.queueButton__count {
+  font-size: 13px;
+  font-weight: 500;
+  color: inherit;
+  line-height: 1;
 }
 
 /* ===== Expand Button (Desktop) ===== */
