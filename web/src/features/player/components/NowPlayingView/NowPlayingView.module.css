@@ -328,6 +328,17 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+/* Reset QueueList styles when inside this panel */
+.nowPlaying__queuePanel > div {
+  position: static !important;
+  width: 100% !important;
+  max-height: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
 .nowPlaying__queuePanel::before {
   content: '';
   display: block;
