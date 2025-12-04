@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'wouter';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
@@ -24,6 +24,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     isPlaying,
     currentTime,
     duration,
+    volume,
     isShuffle,
     repeatMode,
     queue,
@@ -31,6 +32,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     playNext,
     playPrevious,
     seek,
+    setVolume,
     toggleShuffle,
     toggleRepeat,
   } = usePlayer();
@@ -64,6 +66,24 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   const isQueueDragging = useRef(false);
   const queueTouchStartY = useRef<number>(0);
   const lastQueueScrollTop = useRef<number>(0);
+
+  // Detect desktop
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth > 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Volume handlers
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVolume(parseFloat(e.target.value));
+  };
+
+  const toggleMute = () => {
+    setVolume(volume === 0 ? 0.7 : 0);
+  };
 
   // Reset queue state when NowPlayingView closes
   useEffect(() => {
@@ -346,6 +366,29 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
           </button>
         )}
       </div>
+
+      {/* Volume Control - Desktop style like Apple Music */}
+      {isDesktop && (
+        <div className={styles.nowPlaying__volume}>
+          <button
+            className={styles.nowPlaying__volumeBtn}
+            onClick={toggleMute}
+            title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
+          >
+            {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={handleVolumeChange}
+            className={styles.nowPlaying__volumeSlider}
+            style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
+          />
+        </div>
+      )}
 
       {/* Bottom Actions */}
       {!isRadioMode && (

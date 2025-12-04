@@ -325,6 +325,11 @@
   justify-content: center;
 }
 
+/* Volume Control - Desktop */
+.nowPlaying__volume {
+  display: none; /* Hidden on mobile by default */
+}
+
 /* Queue Panel - Bottom Sheet */
 .nowPlaying__queuePanel {
   position: fixed;
@@ -397,19 +402,20 @@
 /* ===== Desktop Styles ===== */
 @media (min-width: 769px) {
   .nowPlaying {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(20px);
-    padding: 40px;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(30px);
+    padding: 60px 40px;
     justify-content: center;
+    gap: 8px;
   }
 
   .nowPlaying__background {
-    max-width: 600px;
-    max-height: 90vh;
+    max-width: 800px;
+    max-height: 95vh;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    border-radius: 16px;
+    border-radius: 24px;
     inset: auto;
     width: 100%;
     height: auto;
@@ -421,7 +427,8 @@
   }
 
   .nowPlaying__header {
-    max-width: 600px;
+    max-width: 800px;
+    margin-bottom: 32px;
   }
 
   .nowPlaying__closeBtn svg {
@@ -429,37 +436,165 @@
   }
 
   .nowPlaying__coverContainer {
-    max-width: 400px;
+    width: min(50vw, 420px);
+    max-width: 420px;
+    margin-bottom: 36px;
+    border-radius: 12px;
+    box-shadow: 0 30px 80px var(--black-70);
+  }
+
+  .nowPlaying__info {
+    max-width: 800px;
+    margin-bottom: 28px;
   }
 
   .nowPlaying__title {
-    font-size: 28px;
+    font-size: 32px;
+    margin-bottom: 10px;
   }
 
   .nowPlaying__artist {
-    font-size: 18px;
+    font-size: 20px;
+  }
+
+  .nowPlaying__artist--clickable:hover {
+    color: var(--color-primary-500);
+    text-decoration: underline;
   }
 
   .nowPlaying__progress {
-    max-width: 600px;
+    max-width: 800px;
+    margin-bottom: 28px;
+  }
+
+  .nowPlaying__progressBar {
+    height: 6px;
   }
 
   .nowPlaying__progressHandle {
     opacity: 1;
+    width: 18px;
+    height: 18px;
+  }
+
+  .nowPlaying__controls {
+    gap: 32px;
+    margin-bottom: 40px;
+  }
+
+  .nowPlaying__playBtn {
+    width: 80px;
+    height: 80px;
+  }
+
+  .nowPlaying__playBtn svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Volume Control - Apple Music style */
+  .nowPlaying__volume {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 24px;
+  }
+
+  .nowPlaying__volumeBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .nowPlaying__volumeBtn:hover {
+    color: var(--text-primary);
+    background: var(--white-10);
+  }
+
+  .nowPlaying__volumeSlider {
+    flex: 1;
+    height: 6px;
+    background: transparent;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+
+  .nowPlaying__volumeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--text-primary);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--black-40);
+    margin-top: -6px;
+    transition: transform 0.15s ease;
+  }
+
+  .nowPlaying__volumeSlider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  .nowPlaying__volumeSlider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--text-primary);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px var(--black-40);
+  }
+
+  .nowPlaying__volumeSlider::-webkit-slider-runnable-track {
+    background: linear-gradient(
+      to right,
+      var(--white-50) 0%,
+      var(--white-50) var(--volume-percent, 70%),
+      var(--white-15) var(--volume-percent, 70%),
+      var(--white-15) 100%
+    );
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .nowPlaying__volumeSlider::-moz-range-track {
+    background: var(--white-15);
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .nowPlaying__volumeSlider::-moz-range-progress {
+    background: var(--white-50);
+    height: 6px;
+    border-radius: 3px;
   }
 
   .nowPlaying__queuePanel {
-    max-width: 600px;
+    max-width: 800px;
     left: 50%;
     transform: translateX(-50%);
-    border-radius: 16px;
+    border-radius: 20px;
     bottom: 20px;
     animation: slideUpDesktop 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   .nowPlaying__actions {
     bottom: 40px;
-    right: calc(50% - 280px);
+    right: calc(50% - 380px);
   }
 }
 
