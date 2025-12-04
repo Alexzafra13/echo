@@ -230,14 +230,19 @@ export function AudioPlayer() {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
-  // Calculate swipe styles for track info animation (only on mobile)
-  const trackInfoSwipeStyles = isMobile && !isRadioMode ? {
+  // Calculate swipe styles for mobile (separate animations for cover and text)
+  const coverSwipeStyles = isMobile && !isRadioMode ? {
+    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 400,
+    transition: swipeDirection || swipeOffset === 0 ? 'opacity 0.2s ease-out' : 'none',
+  } as React.CSSProperties : undefined;
+
+  const textSwipeStyles = isMobile && !isRadioMode ? {
     transform: swipeDirection
-      ? `translateX(${swipeDirection === 'left' ? '-100%' : '100%'})`
+      ? `translateX(${swipeDirection === 'left' ? '-120%' : '120%'})`
       : swipeOffset !== 0
-        ? `translateX(${swipeOffset}px)`
+        ? `translateX(${swipeOffset * 1.2}px)`
         : undefined,
-    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 300,
+    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 250,
     transition: swipeDirection || swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : 'none',
   } as React.CSSProperties : undefined;
 
@@ -251,14 +256,12 @@ export function AudioPlayer() {
     >
 
       {/* Track/Radio info - Left side */}
-      <div
-        className={`${styles.trackInfo} ${swipeDirection ? styles['trackInfo--swiping'] : ''}`}
-        style={trackInfoSwipeStyles}
-      >
+      <div className={styles.trackInfo}>
         <div
           className={`${styles.trackCoverContainer} ${canNavigateToAlbum ? styles['trackCoverContainer--clickable'] : ''}`}
           onClick={canNavigateToAlbum ? handleGoToAlbum : undefined}
           title={canNavigateToAlbum ? `Ir al álbum: ${albumName || title}` : undefined}
+          style={coverSwipeStyles}
         >
           {isRadioMode && (
             <div className={styles.trackCoverFallback}>
@@ -272,7 +275,7 @@ export function AudioPlayer() {
             onError={handleImageError}
           />
         </div>
-        <div className={styles.trackDetails}>
+        <div className={styles.trackDetails} style={textSwipeStyles}>
           <div className={styles.trackTitle}>{title}</div>
           <div className={styles.trackArtist}>{artist}</div>
           {/* Album name - clickable link to album */}
