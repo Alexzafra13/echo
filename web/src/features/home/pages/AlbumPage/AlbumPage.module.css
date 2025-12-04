@@ -282,8 +282,8 @@
   }
 
   .albumPage__heroCover {
-    width: 280px;
-    height: 280px;
+    width: 320px;
+    height: 320px;
     border-radius: 8px;
     box-shadow: 0 12px 40px var(--black-50);
   }
@@ -361,8 +361,8 @@
   }
 
   .albumPage__heroCover {
-    width: 240px;
-    height: 240px;
+    width: 280px;
+    height: 280px;
     border-radius: 6px;
   }
 

@@ -230,30 +230,31 @@ export function AudioPlayer() {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
-  // Calculate swipe styles for animation
-  const swipeStyles = isMobile && !isRadioMode ? {
-    '--player-color': dominantColor,
-    '--swipe-offset': `${swipeOffset}px`,
+  // Calculate swipe styles for track info animation (only on mobile)
+  const trackInfoSwipeStyles = isMobile && !isRadioMode ? {
     transform: swipeDirection
       ? `translateX(${swipeDirection === 'left' ? '-100%' : '100%'})`
       : swipeOffset !== 0
         ? `translateX(${swipeOffset}px)`
         : undefined,
-    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 200,
+    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 300,
     transition: swipeDirection || swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : 'none',
-  } as React.CSSProperties : { '--player-color': dominantColor } as React.CSSProperties;
+  } as React.CSSProperties : undefined;
 
   return (
     <div
-      className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''} ${swipeDirection ? styles['player--swiping'] : ''}`}
-      style={swipeStyles}
+      className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''}`}
+      style={{ '--player-color': dominantColor } as React.CSSProperties}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
 
       {/* Track/Radio info - Left side */}
-      <div className={styles.trackInfo}>
+      <div
+        className={`${styles.trackInfo} ${swipeDirection ? styles['trackInfo--swiping'] : ''}`}
+        style={trackInfoSwipeStyles}
+      >
         <div
           className={`${styles.trackCoverContainer} ${canNavigateToAlbum ? styles['trackCoverContainer--clickable'] : ''}`}
           onClick={canNavigateToAlbum ? handleGoToAlbum : undefined}
