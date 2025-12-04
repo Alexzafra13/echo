@@ -3,11 +3,9 @@
 /* Block: albumPage */
 .albumPage {
   display: flex;
-  height: 100vh; /* Fixed height to enable scroll in content */
   min-height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
   background-image: var(--gradient-textured);
-  overflow: hidden; /* Prevent page-level scroll, let content scroll */
 }
 
 .albumPage__main {
@@ -16,8 +14,7 @@
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
-  height: 100%; /* Take full height from parent */
-  overflow: hidden; /* Contain scroll within content */
+  /* No overflow-x to allow sticky header to work */
 }
 
 .albumPage__content {
@@ -182,7 +179,6 @@
 .albumPage__moreFromArtist {
   margin-top: 48px;
   padding: 0 32px;
-  padding-bottom: 40px; /* Ensure section is visible above player */
 }
 
 .albumPage__moreFromArtistTitle {
