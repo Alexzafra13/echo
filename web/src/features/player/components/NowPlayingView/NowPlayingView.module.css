@@ -15,21 +15,17 @@
   overflow-y: auto;
   background: rgb(12, 12, 12); /* Solid base background */
   transform: translateY(100%);
-  opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-              opacity 0.35s ease,
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               visibility 0s linear 0.35s;
 }
 
 .nowPlaying--open {
   transform: translateY(0) !important;
-  opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-              opacity 0.35s ease,
               visibility 0s linear 0s;
 }
 
@@ -316,20 +312,32 @@
   bottom: 0;
   left: 0;
   right: 0;
-  max-height: 60vh;
+  height: 50vh;
+  max-height: 90vh;
   background: rgba(20, 20, 20, 0.98);
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--white-10);
   border-radius: 20px 20px 0 0;
-  overflow: hidden;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   z-index: 10001;
   padding-bottom: env(safe-area-inset-bottom, 0);
+  touch-action: none;
+}
+
+/* Drag handle for queue panel */
+.nowPlaying__queueHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--white-30);
+  border-radius: 2px;
+  margin: 10px auto;
+  flex-shrink: 0;
 }
 
 /* Reset QueueList styles when inside this panel */
-.nowPlaying__queuePanel > div {
+.nowPlaying__queuePanel > div:last-child {
   position: static !important;
   width: 100% !important;
   max-height: none !important;
@@ -337,16 +345,8 @@
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-}
-
-.nowPlaying__queuePanel::before {
-  content: '';
-  display: block;
-  width: 36px;
-  height: 4px;
-  background: var(--white-30);
-  border-radius: 2px;
-  margin: 8px auto 0;
+  flex: 1;
+  overflow-y: auto;
 }
 
 @keyframes slideUp {
