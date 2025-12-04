@@ -477,20 +477,19 @@
 
 .queueButton__badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  background: var(--color-primary-500);
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
+  top: 0;
+  right: 0;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  background: var(--white-80);
+  color: var(--bg-base);
+  font-size: 9px;
+  font-weight: 700;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px var(--black-30);
 }
 
 /* ===== Expand Button (Desktop) ===== */
