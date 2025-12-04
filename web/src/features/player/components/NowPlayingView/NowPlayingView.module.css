@@ -38,8 +38,9 @@
   background: linear-gradient(
     180deg,
     rgb(var(--dominant-color)) 0%,
-    rgba(var(--dominant-color), 0.7) 30%,
-    rgb(18, 18, 18) 70%,
+    rgb(var(--dominant-color)) 15%,
+    rgba(var(--dominant-color), 0.6) 40%,
+    rgb(18, 18, 18) 65%,
     rgb(12, 12, 12) 100%
   );
   z-index: -1;
