@@ -493,6 +493,31 @@
   box-shadow: 0 2px 4px var(--black-30);
 }
 
+/* ===== Expand Button (Desktop) ===== */
+
+.expandButton {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.expandButton:hover {
+  color: var(--text-primary);
+  background: var(--white-10);
+  transform: scale(1.05);
+}
+
+.expandButton:active {
+  transform: scale(0.95);
+}
+
 /* ===== Live Indicator (Radio) ===== */
 
 .liveIndicator {
