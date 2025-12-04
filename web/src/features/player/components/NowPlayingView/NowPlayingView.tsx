@@ -35,29 +35,26 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     toggleRepeat,
   } = usePlayer();
 
-  // Navigation handlers
-  const albumId = currentTrack?.albumId;
-  const artistId = currentTrack?.artistId;
-
-  const handleGoToAlbum = useCallback((e: React.MouseEvent) => {
+  // Navigation handlers - will use displayAlbumId and displayArtistId from getPlayerDisplayInfo
+  const handleGoToAlbum = useCallback((e: React.MouseEvent, albumIdParam?: string) => {
     e.stopPropagation();
-    if (!isRadioMode && albumId) {
+    if (!isRadioMode && albumIdParam) {
       onClose();
       setTimeout(() => {
-        setLocation(`/album/${albumId}`);
+        setLocation(`/album/${albumIdParam}`);
       }, 50);
     }
-  }, [isRadioMode, albumId, onClose, setLocation]);
+  }, [isRadioMode, onClose, setLocation]);
 
-  const handleGoToArtist = useCallback((e: React.MouseEvent) => {
+  const handleGoToArtist = useCallback((e: React.MouseEvent, artistIdParam?: string) => {
     e.stopPropagation();
-    if (!isRadioMode && artistId) {
+    if (!isRadioMode && artistIdParam) {
       onClose();
       setTimeout(() => {
-        setLocation(`/artist/${artistId}`);
+        setLocation(`/artist/${artistIdParam}`);
       }, 50);
     }
-  }, [isRadioMode, artistId, onClose, setLocation]);
+  }, [isRadioMode, onClose, setLocation]);
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [queueState, setQueueState] = useState<'half' | 'full'>('half'); // 'half' = 50%, 'full' = 90%
@@ -194,8 +191,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     isQueueDragging.current = false;
   }, [queueDragOffset, queueState]);
 
-  // Don't render content if not open (but keep the container for animation)
-  const { title, artist, cover, albumName } = getPlayerDisplayInfo(
+  // Get display info including artistId
+  const { title, artist, cover, albumName, artistId: displayArtistId, albumId: displayAlbumId } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
@@ -254,9 +251,9 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
 
       {/* Cover - clickable to go to album */}
       <div
-        className={`${styles.nowPlaying__coverContainer} ${!isRadioMode && albumId ? styles['nowPlaying__coverContainer--clickable'] : ''}`}
-        onClick={!isRadioMode && albumId ? handleGoToAlbum : undefined}
-        title={!isRadioMode && albumId ? `Ir al álbum: ${albumName}` : undefined}
+        className={`${styles.nowPlaying__coverContainer} ${!isRadioMode && displayAlbumId ? styles['nowPlaying__coverContainer--clickable'] : ''}`}
+        onClick={!isRadioMode && displayAlbumId ? (e) => handleGoToAlbum(e, displayAlbumId) : undefined}
+        title={!isRadioMode && displayAlbumId ? `Ir al álbum: ${albumName}` : undefined}
       >
         <img
           src={isRadioMode ? cover : getCoverUrl(cover)}
@@ -270,8 +267,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       <div className={styles.nowPlaying__info}>
         <h1 className={styles.nowPlaying__title}>{title}</h1>
         <p
-          className={`${styles.nowPlaying__artist} ${!isRadioMode && artistId ? styles['nowPlaying__artist--clickable'] : ''}`}
-          onClick={!isRadioMode && artistId ? handleGoToArtist : undefined}
+          className={`${styles.nowPlaying__artist} ${!isRadioMode && displayArtistId ? styles['nowPlaying__artist--clickable'] : ''}`}
+          onClick={!isRadioMode && displayArtistId ? (e) => handleGoToArtist(e, displayArtistId) : undefined}
         >
           {artist}
         </p>
