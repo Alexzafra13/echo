@@ -39,17 +39,23 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   const albumId = currentTrack?.albumId;
   const artistId = currentTrack?.artistId;
 
-  const handleGoToAlbum = useCallback(() => {
+  const handleGoToAlbum = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!isRadioMode && albumId) {
       onClose();
-      setLocation(`/album/${albumId}`);
+      setTimeout(() => {
+        setLocation(`/album/${albumId}`);
+      }, 50);
     }
   }, [isRadioMode, albumId, onClose, setLocation]);
 
-  const handleGoToArtist = useCallback(() => {
+  const handleGoToArtist = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!isRadioMode && artistId) {
       onClose();
-      setLocation(`/artist/${artistId}`);
+      setTimeout(() => {
+        setLocation(`/artist/${artistId}`);
+      }, 50);
     }
   }, [isRadioMode, artistId, onClose, setLocation]);
 
@@ -367,10 +373,10 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
           ref={queueRef}
           style={{
             height: queueState === 'full' ? '90vh' : '50vh',
-            transform: queueDragOffset !== 0
-              ? `translateY(${queueDragOffset > 0 ? queueDragOffset : 0}px)`
-              : undefined,
-            transition: isQueueDragging.current ? 'none' : 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1), transform 0.3s ease',
+            transform: queueDragOffset > 0 ? `translateY(${queueDragOffset}px)` : undefined,
+            transition: isQueueDragging.current
+              ? 'none'
+              : 'height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease',
           }}
           onTouchStart={handleQueueTouchStart}
           onTouchMove={handleQueueTouchMove}
