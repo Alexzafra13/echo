@@ -232,8 +232,8 @@ export function AudioPlayer() {
 
   // Calculate swipe styles for mobile (separate animations for cover and text)
   const coverSwipeStyles = isMobile && !isRadioMode ? {
-    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 400,
-    transition: swipeDirection || swipeOffset === 0 ? 'opacity 0.2s ease-out' : 'none',
+    opacity: swipeDirection ? 0 : 1, // Only fade when changing tracks, not during swipe
+    transition: 'opacity 0.2s ease-out',
   } as React.CSSProperties : undefined;
 
   const textSwipeStyles = isMobile && !isRadioMode ? {
