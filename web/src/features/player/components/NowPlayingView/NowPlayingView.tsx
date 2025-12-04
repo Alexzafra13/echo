@@ -172,7 +172,6 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   if (isOpen && dragOffset > 0) {
     dragStyles.transform = `translateY(${dragOffset}px)`;
     dragStyles.transition = 'none';
-    dragStyles.opacity = 1 - dragOffset / 400;
   }
 
   // Use portal to render outside the player (which has transform that breaks fixed positioning)

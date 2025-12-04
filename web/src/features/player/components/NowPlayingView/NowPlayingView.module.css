@@ -15,21 +15,17 @@
   overflow-y: auto;
   background: rgb(12, 12, 12); /* Solid base background */
   transform: translateY(100%);
-  opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-              opacity 0.35s ease,
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               visibility 0s linear 0.35s;
 }
 
 .nowPlaying--open {
   transform: translateY(0) !important;
-  opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-              opacity 0.35s ease,
               visibility 0s linear 0s;
 }
 
