@@ -21,8 +21,7 @@
 }
 
 .menuButton:hover {
-  opacity: 1;
-  background: var(--white-12);
+  background: var(--white-10);
   color: var(--text-primary);
 }
 

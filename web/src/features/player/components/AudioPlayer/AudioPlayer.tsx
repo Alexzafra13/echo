@@ -396,7 +396,7 @@ export function AudioPlayer() {
               onClick={toggleQueue}
               title="Lista de reproducción"
             >
-              <ListMusic size={24} />
+              <ListMusic size={22} />
               {queue.length > 0 && (
                 <span className={styles.queueButton__count}>{queue.length}</span>
               )}
@@ -413,7 +413,7 @@ export function AudioPlayer() {
             onClick={toggleMute}
             title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
-            {volume === 0 ? <VolumeX size={24} /> : <Volume2 size={24} />}
+            {volume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
           </button>
           <input
             type="range"
@@ -434,7 +434,7 @@ export function AudioPlayer() {
             onClick={() => setIsNowPlayingOpen(true)}
             title="Expandir reproductor"
           >
-            <Maximize2 size={20} />
+            <Maximize2 size={22} />
           </button>
         )}
 
@@ -444,7 +444,7 @@ export function AudioPlayer() {
           onToggle={() => setIsMenuOpen(!isMenuOpen)}
           onClose={() => setIsMenuOpen(false)}
           menuRef={menuRef}
-          size={20}
+          size={22}
         />
       </div>
 
