@@ -670,17 +670,23 @@
     gap: 12px;
     min-width: 0;
     padding: 0;
+    overflow: hidden; /* Clip text animation */
   }
 
   .trackCoverContainer {
     width: 44px;
     height: 44px;
     border-radius: 8px;
+    z-index: 2; /* Cover stays above text */
+    position: relative;
+    flex-shrink: 0;
   }
 
   .trackDetails {
     flex: 1;
     min-width: 0;
+    z-index: 1; /* Text goes behind cover */
+    position: relative;
   }
 
   .trackTitle {
