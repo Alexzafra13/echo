@@ -306,14 +306,13 @@
   justify-content: center;
 }
 
-/* Queue Panel */
+/* Queue Panel - Bottom Sheet */
 .nowPlaying__queuePanel {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: 50vh;
-  max-height: 90vh;
   background: rgba(20, 20, 20, 0.98);
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--white-10);
@@ -323,7 +322,10 @@
   animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   z-index: 10001;
   padding-bottom: env(safe-area-inset-bottom, 0);
-  touch-action: none;
+}
+
+.nowPlaying__queuePanel--full {
+  border-radius: 0;
 }
 
 /* Drag handle for queue panel */
@@ -332,12 +334,26 @@
   height: 4px;
   background: var(--white-30);
   border-radius: 2px;
-  margin: 10px auto;
+  margin: 12px auto;
   flex-shrink: 0;
+  cursor: grab;
+}
+
+.nowPlaying__queueHandle:active {
+  cursor: grabbing;
+  background: var(--white-50);
+}
+
+/* Content wrapper for scrolling */
+.nowPlaying__queueContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Reset QueueList styles when inside this panel */
-.nowPlaying__queuePanel > div:last-child {
+.nowPlaying__queueContent > div {
   position: static !important;
   width: 100% !important;
   max-height: none !important;
@@ -345,8 +361,6 @@
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  flex: 1;
-  overflow-y: auto;
 }
 
 @keyframes slideUp {

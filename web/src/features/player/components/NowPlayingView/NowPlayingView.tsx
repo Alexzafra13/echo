@@ -34,14 +34,20 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
   } = usePlayer();
 
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [queueHeight, setQueueHeight] = useState(50); // Percentage of screen height
+  const [queueState, setQueueState] = useState<'half' | 'full'>('half'); // 'half' = 50%, 'full' = 90%
+  const [queueDragOffset, setQueueDragOffset] = useState(0);
   const queueRef = useRef<HTMLDivElement>(null);
+  const queueContentRef = useRef<HTMLDivElement>(null);
+  const isQueueDragging = useRef(false);
+  const queueTouchStartY = useRef<number>(0);
+  const lastQueueScrollTop = useRef<number>(0);
 
   // Reset queue state when NowPlayingView closes
   useEffect(() => {
     if (!isOpen) {
       setIsQueueOpen(false);
-      setQueueHeight(50);
+      setQueueState('half');
+      setQueueDragOffset(0);
     }
   }, [isOpen]);
 
@@ -101,43 +107,66 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     isDragging.current = false;
   }, [dragOffset, onClose, isQueueOpen]);
 
-  // Queue panel gesture handling
-  const queueTouchStartY = useRef<number>(0);
-  const [queueDragOffset, setQueueDragOffset] = useState(0);
-  const isQueueDragging = useRef(false);
-
+  // Queue panel gesture handling - 3 state behavior like Spotify
   const handleQueueTouchStart = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
     queueTouchStartY.current = e.touches[0].clientY;
+    lastQueueScrollTop.current = queueContentRef.current?.scrollTop || 0;
     isQueueDragging.current = false;
   }, []);
 
   const handleQueueTouchMove = useCallback((e: React.TouchEvent) => {
     e.stopPropagation();
     const deltaY = e.touches[0].clientY - queueTouchStartY.current;
+    const scrollTop = queueContentRef.current?.scrollTop || 0;
+    const isAtTop = scrollTop <= 0;
 
-    // Dragging down (positive delta) - to close or shrink
+    // Dragging down (positive delta)
     if (deltaY > 0) {
-      isQueueDragging.current = true;
-      setQueueDragOffset(deltaY);
+      if (queueState === 'full' && isAtTop) {
+        // At full height and at top of content - allow dragging to shrink
+        isQueueDragging.current = true;
+        setQueueDragOffset(deltaY);
+        e.preventDefault();
+      } else if (queueState === 'half' && isAtTop) {
+        // At half height and at top - allow dragging to close
+        isQueueDragging.current = true;
+        setQueueDragOffset(deltaY);
+        e.preventDefault();
+      }
+      // Otherwise, let the content scroll naturally
     }
-    // Dragging up (negative delta) - to expand
+    // Dragging up (negative delta)
     else if (deltaY < 0) {
-      isQueueDragging.current = true;
-      const newHeight = Math.min(90, queueHeight + Math.abs(deltaY) / 5);
-      setQueueHeight(newHeight);
+      if (queueState === 'half') {
+        // At half height - expand to full before allowing scroll
+        isQueueDragging.current = true;
+        // Use negative dragOffset to indicate upward drag for expansion
+        setQueueDragOffset(deltaY);
+        e.preventDefault();
+      }
+      // At full height - let content scroll naturally
     }
-  }, [queueHeight]);
+  }, [queueState]);
 
   const handleQueueTouchEnd = useCallback(() => {
     if (queueDragOffset > 100) {
-      // Close queue panel
-      setIsQueueOpen(false);
-      setQueueHeight(50);
+      // Dragged down significantly
+      if (queueState === 'full') {
+        // Shrink to half
+        setQueueState('half');
+      } else {
+        // Close
+        setIsQueueOpen(false);
+        setQueueState('half');
+      }
+    } else if (queueDragOffset < -50) {
+      // Dragged up - expand to full
+      setQueueState('full');
     }
     setQueueDragOffset(0);
     isQueueDragging.current = false;
-  }, [queueDragOffset]);
+  }, [queueDragOffset, queueState]);
 
   // Don't render content if not open (but keep the container for animation)
   const { title, artist, cover, albumName } = getPlayerDisplayInfo(
@@ -302,22 +331,26 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         </div>
       )}
 
-      {/* Queue Panel */}
+      {/* Queue Panel - Bottom Sheet with 3 states */}
       {isQueueOpen && (
         <div
-          className={styles.nowPlaying__queuePanel}
+          className={`${styles.nowPlaying__queuePanel} ${queueState === 'full' ? styles['nowPlaying__queuePanel--full'] : ''}`}
           ref={queueRef}
           style={{
-            height: `${queueHeight}vh`,
-            transform: queueDragOffset > 0 ? `translateY(${queueDragOffset}px)` : undefined,
-            transition: isQueueDragging.current ? 'none' : 'height 0.2s ease, transform 0.3s ease',
+            height: queueState === 'full' ? '90vh' : '50vh',
+            transform: queueDragOffset !== 0
+              ? `translateY(${queueDragOffset > 0 ? queueDragOffset : 0}px)`
+              : undefined,
+            transition: isQueueDragging.current ? 'none' : 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1), transform 0.3s ease',
           }}
           onTouchStart={handleQueueTouchStart}
           onTouchMove={handleQueueTouchMove}
           onTouchEnd={handleQueueTouchEnd}
         >
           <div className={styles.nowPlaying__queueHandle} />
-          <QueueList onClose={() => setIsQueueOpen(false)} />
+          <div className={styles.nowPlaying__queueContent} ref={queueContentRef}>
+            <QueueList onClose={() => setIsQueueOpen(false)} />
+          </div>
         </div>
       )}
 
