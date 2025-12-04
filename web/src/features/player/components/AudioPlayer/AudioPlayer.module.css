@@ -357,7 +357,7 @@
 .volumeButton {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: var(--space-2);
   display: flex;
@@ -453,13 +453,13 @@
 .queueButton {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   transition: all var(--transition-base);
   border-radius: var(--radius-md);
 }
