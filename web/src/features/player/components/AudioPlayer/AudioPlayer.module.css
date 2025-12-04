@@ -698,15 +698,17 @@
   }
 
   .trackArtist {
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none; /* Hide artist on mobile, show album instead */
   }
 
   .trackAlbum {
-    font-size: 11px;
-    margin-top: 1px;
+    display: block !important; /* Always show album on mobile */
+    font-size: 12px;
+    margin-top: 0;
+    color: var(--text-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .trackMetadata {
