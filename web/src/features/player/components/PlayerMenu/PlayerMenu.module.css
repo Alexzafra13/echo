@@ -8,17 +8,16 @@
 }
 
 .menuButton {
-  background: var(--white-08);
+  background: transparent;
   border: none;
   color: var(--text-secondary);
   padding: 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  opacity: 0.7;
 }
 
 .menuButton:hover {
