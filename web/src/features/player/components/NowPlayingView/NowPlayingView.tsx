@@ -288,21 +288,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         <div className={styles.nowPlaying__headerTitle}>
           {albumName || 'Reproduciendo'}
         </div>
-        {/* Queue button in header on desktop, spacer on mobile */}
-        {isDesktop && !isRadioMode ? (
-          <button
-            className={`${styles.nowPlaying__headerQueueBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__headerQueueBtn--active'] : ''}`}
-            onClick={() => isQueueOpen ? handleCloseQueue() : setIsQueueOpen(true)}
-            title="Cola de reproducción"
-          >
-            <ListMusic size={22} />
-            {queue.length > 0 && (
-              <span className={styles.nowPlaying__headerQueueBadge}>{queue.length}</span>
-            )}
-          </button>
-        ) : (
-          <div className={styles.nowPlaying__headerSpacer} />
-        )}
+        <div className={styles.nowPlaying__headerSpacer} />
       </div>
 
       {/* Cover - clickable to go to album */}
@@ -403,26 +389,41 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         )}
       </div>
 
-      {/* Volume Control - Desktop style like Apple Music */}
+      {/* Volume Control + Queue Button - Desktop style like Apple Music */}
       {isDesktop && (
-        <div className={styles.nowPlaying__volume}>
-          <button
-            className={styles.nowPlaying__volumeBtn}
-            onClick={toggleMute}
-            title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
-          >
-            {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </button>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            onChange={handleVolumeChange}
-            className={styles.nowPlaying__volumeSlider}
-            style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
-          />
+        <div className={styles.nowPlaying__volumeRow}>
+          <div className={styles.nowPlaying__volume}>
+            <button
+              className={styles.nowPlaying__volumeBtn}
+              onClick={toggleMute}
+              title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
+            >
+              {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className={styles.nowPlaying__volumeSlider}
+              style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
+            />
+          </div>
+          {/* Queue button next to volume */}
+          {!isRadioMode && (
+            <button
+              className={`${styles.nowPlaying__volumeQueueBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__volumeQueueBtn--active'] : ''}`}
+              onClick={() => isQueueOpen ? handleCloseQueue() : setIsQueueOpen(true)}
+              title="Cola de reproducción"
+            >
+              <ListMusic size={22} />
+              {queue.length > 0 && (
+                <span className={styles.nowPlaying__volumeQueueBadge}>{queue.length}</span>
+              )}
+            </button>
+          )}
         </div>
       )}
 

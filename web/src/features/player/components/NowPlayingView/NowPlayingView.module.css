@@ -501,8 +501,8 @@
   }
 
   .nowPlaying__coverContainer {
-    width: min(45vw, 480px);
-    max-width: 480px;
+    width: min(55vw, 560px);
+    max-width: 560px;
     margin-bottom: 44px;
     border-radius: 12px;
     box-shadow: 0 40px 100px var(--black-70);
@@ -571,15 +571,25 @@
     height: 40px;
   }
 
+  /* Volume Row - Container for volume + queue button */
+  .nowPlaying__volumeRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 24px;
+  }
+
   /* Volume Control - Apple Music style */
   .nowPlaying__volume {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
-    width: 100%;
+    flex: 1;
     max-width: 400px;
-    margin-bottom: 24px;
   }
 
   .nowPlaying__volumeBtn {
@@ -596,9 +606,56 @@
     flex-shrink: 0;
   }
 
+  .nowPlaying__volumeBtn svg {
+    width: 24px;
+    height: 24px;
+  }
+
   .nowPlaying__volumeBtn:hover {
     color: var(--text-primary);
     background: var(--white-10);
+  }
+
+  /* Queue button next to volume */
+  .nowPlaying__volumeQueueBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: all 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .nowPlaying__volumeQueueBtn:hover {
+    color: var(--text-primary);
+    background: var(--white-10);
+  }
+
+  .nowPlaying__volumeQueueBtn--active {
+    color: var(--color-primary-500);
+  }
+
+  .nowPlaying__volumeQueueBadge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--color-primary-500);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .nowPlaying__volumeSlider {
