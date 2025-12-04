@@ -398,7 +398,7 @@ export function AudioPlayer() {
             >
               <ListMusic size={20} />
               {queue.length > 0 && (
-                <span className={styles.queueButton__badge}>{queue.length}</span>
+                <span className={styles.queueButton__count}>{queue.length}</span>
               )}
             </button>
 

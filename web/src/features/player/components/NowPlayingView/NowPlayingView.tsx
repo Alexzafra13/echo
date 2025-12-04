@@ -420,7 +420,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
             >
               <ListMusic size={22} />
               {queue.length > 0 && (
-                <span className={styles.nowPlaying__volumeQueueBadge}>{queue.length}</span>
+                <span className={styles.nowPlaying__volumeQueueCount}>{queue.length}</span>
               )}
             </button>
           )}
@@ -437,7 +437,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
           >
             <ListMusic size={24} />
             {queue.length > 0 && (
-              <span className={styles.nowPlaying__badge}>{queue.length}</span>
+              <span className={styles.nowPlaying__actionCount}>{queue.length}</span>
             )}
           </button>
         </div>
