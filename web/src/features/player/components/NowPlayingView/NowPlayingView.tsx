@@ -53,7 +53,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     if (!isRadioMode && artistIdParam) {
       onClose();
       setTimeout(() => {
-        setLocation(`/artist/${artistIdParam}`);
+        setLocation(`/artists/${artistIdParam}`);
       }, 50);
     }
   }, [isRadioMode, onClose, setLocation]);
@@ -288,7 +288,21 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         <div className={styles.nowPlaying__headerTitle}>
           {albumName || 'Reproduciendo'}
         </div>
-        <div className={styles.nowPlaying__headerSpacer} />
+        {/* Queue button in header on desktop, spacer on mobile */}
+        {isDesktop && !isRadioMode ? (
+          <button
+            className={`${styles.nowPlaying__headerQueueBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__headerQueueBtn--active'] : ''}`}
+            onClick={() => isQueueOpen ? handleCloseQueue() : setIsQueueOpen(true)}
+            title="Cola de reproducción"
+          >
+            <ListMusic size={22} />
+            {queue.length > 0 && (
+              <span className={styles.nowPlaying__headerQueueBadge}>{queue.length}</span>
+            )}
+          </button>
+        ) : (
+          <div className={styles.nowPlaying__headerSpacer} />
+        )}
       </div>
 
       {/* Cover - clickable to go to album */}
@@ -412,8 +426,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         </div>
       )}
 
-      {/* Bottom Actions */}
-      {!isRadioMode && (
+      {/* Bottom Actions - only on mobile */}
+      {!isRadioMode && !isDesktop && (
         <div className={styles.nowPlaying__actions}>
           <button
             className={`${styles.nowPlaying__actionBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__actionBtn--active'] : ''}`}
