@@ -434,7 +434,7 @@ export function AudioPlayer() {
             onClick={() => setIsNowPlayingOpen(true)}
             title="Expandir reproductor"
           >
-            <Maximize2 size={18} />
+            <Maximize2 size={20} />
           </button>
         )}
 
@@ -444,7 +444,7 @@ export function AudioPlayer() {
           onToggle={() => setIsMenuOpen(!isMenuOpen)}
           onClose={() => setIsMenuOpen(false)}
           menuRef={menuRef}
-          size={16}
+          size={20}
         />
       </div>
 
