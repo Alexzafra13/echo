@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
@@ -102,7 +103,8 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     dragStyles.opacity = 1 - dragOffset / 400;
   }
 
-  return (
+  // Use portal to render outside the player (which has transform that breaks fixed positioning)
+  return createPortal(
     <div
       className={`${styles.nowPlaying} ${isOpen ? styles['nowPlaying--open'] : ''}`}
       style={dragStyles}
@@ -238,6 +240,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
 
       {/* Drag indicator */}
       <div className={styles.nowPlaying__dragIndicator} />
-    </div>
+    </div>,
+    document.body
   );
 }
