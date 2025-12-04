@@ -282,9 +282,9 @@
   }
 
   .albumPage__heroCover {
-    width: 220px; /* Más grande en móvil */
-    height: 220px;
-    border-radius: 8px; /* Menos redondeado */
+    width: 280px;
+    height: 280px;
+    border-radius: 8px;
     box-shadow: 0 12px 40px var(--black-50);
   }
 
@@ -325,7 +325,7 @@
 
   .albumPage__moreFromArtist {
     margin-top: 32px;
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
   .albumPage__moreFromArtistTitle {
@@ -334,7 +334,7 @@
   }
 
   .albumPage__moreFromArtistGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 16px;
   }
 
@@ -361,9 +361,9 @@
   }
 
   .albumPage__heroCover {
-    width: 180px; /* Más grande que antes */
-    height: 180px;
-    border-radius: 6px; /* Más cuadrado */
+    width: 240px;
+    height: 240px;
+    border-radius: 6px;
   }
 
   .albumPage__heroTitle {
@@ -391,7 +391,7 @@
 
   .albumPage__moreFromArtist {
     margin-top: 28px;
-    padding: 0 16px;
+    padding: 0 8px;
   }
 
   .albumPage__moreFromArtistTitle {
@@ -400,8 +400,8 @@
   }
 
   .albumPage__moreFromArtistGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
   }
 
   .albumPage__backButton {
