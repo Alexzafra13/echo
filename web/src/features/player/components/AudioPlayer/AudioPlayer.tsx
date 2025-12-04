@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { QueueList } from '../QueueList/QueueList';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
@@ -426,6 +426,17 @@ export function AudioPlayer() {
             style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
           />
         </div>
+
+        {/* Botón expandir NowPlayingView (solo desktop) */}
+        {!isMobile && (
+          <button
+            className={styles.expandButton}
+            onClick={() => setIsNowPlayingOpen(true)}
+            title="Expandir reproductor"
+          >
+            <Maximize2 size={18} />
+          </button>
+        )}
 
         {/* Menú de opciones junto al volumen */}
         <PlayerMenu
