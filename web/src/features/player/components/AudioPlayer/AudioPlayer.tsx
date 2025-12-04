@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
@@ -42,6 +42,13 @@ export function AudioPlayer() {
   const [dominantColor, setDominantColor] = useState<string>('0, 0, 0');
   const queueRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Swipe gesture state for mobile
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const isSwiping = useRef(false);
 
   // Detectar cuando el usuario llega al final de la página para activar mini-player
   const isMiniMode = usePageEndDetection(120);
@@ -122,6 +129,65 @@ export function AudioPlayer() {
     }
   }, [currentTrack, currentRadioStation, isRadioMode]);
 
+  // Swipe gesture handlers for mobile
+  const SWIPE_THRESHOLD = 60; // Minimum distance to trigger swipe action
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!isMobile || isRadioMode) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isSwiping.current = false;
+  }, [isMobile, isRadioMode]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isMobile || isRadioMode) return;
+
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+
+    // Only swipe horizontally if movement is more horizontal than vertical
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      isSwiping.current = true;
+      // Limit the offset for visual feedback
+      const limitedOffset = Math.max(-100, Math.min(100, deltaX));
+      setSwipeOffset(limitedOffset);
+    }
+  }, [isMobile, isRadioMode]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isMobile || isRadioMode || !isSwiping.current) {
+      setSwipeOffset(0);
+      return;
+    }
+
+    const deltaX = swipeOffset;
+
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
+      if (deltaX < 0) {
+        // Swipe left → next track
+        setSwipeDirection('left');
+        setTimeout(() => {
+          playNext();
+          setSwipeDirection(null);
+          setSwipeOffset(0);
+        }, 200);
+      } else {
+        // Swipe right → previous track
+        setSwipeDirection('right');
+        setTimeout(() => {
+          playPrevious();
+          setSwipeDirection(null);
+          setSwipeOffset(0);
+        }, 200);
+      }
+    } else {
+      // Reset if swipe was too short
+      setSwipeOffset(0);
+    }
+
+    isSwiping.current = false;
+  }, [isMobile, isRadioMode, swipeOffset, playNext, playPrevious]);
+
   // No mostrar si no hay ni track ni radio
   if (!currentTrack && !currentRadioStation) {
     return null;
@@ -164,10 +230,26 @@ export function AudioPlayer() {
 
   const canNavigateToAlbum = !isRadioMode && albumId;
 
+  // Calculate swipe styles for animation
+  const swipeStyles = isMobile && !isRadioMode ? {
+    '--player-color': dominantColor,
+    '--swipe-offset': `${swipeOffset}px`,
+    transform: swipeDirection
+      ? `translateX(${swipeDirection === 'left' ? '-100%' : '100%'})`
+      : swipeOffset !== 0
+        ? `translateX(${swipeOffset}px)`
+        : undefined,
+    opacity: swipeDirection ? 0 : 1 - Math.abs(swipeOffset) / 200,
+    transition: swipeDirection || swipeOffset === 0 ? 'transform 0.2s ease-out, opacity 0.2s ease-out' : 'none',
+  } as React.CSSProperties : { '--player-color': dominantColor } as React.CSSProperties;
+
   return (
     <div
-      className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''}`}
-      style={{ '--player-color': dominantColor } as React.CSSProperties}
+      className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''} ${swipeDirection ? styles['player--swiping'] : ''}`}
+      style={swipeStyles}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
 
       {/* Track/Radio info - Left side */}
