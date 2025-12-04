@@ -10,6 +10,7 @@ export interface PlayerDisplayInfo {
   cover: string;
   albumId?: string;
   albumName?: string;
+  artistId?: string;
 }
 
 /**
@@ -44,9 +45,10 @@ export function getPlayerDisplayInfo(
 
   return {
     title: currentTrack?.title || '',
-    artist: currentTrack?.artist || '',
+    artist: currentTrack?.artist || currentTrack?.artistName || '',
     cover: currentTrack?.coverImage || '/images/covers/placeholder.jpg',
     albumId: currentTrack?.albumId || currentTrack?.album?.id,
-    albumName: currentTrack?.albumName || currentTrack?.album?.title
+    albumName: currentTrack?.albumName || currentTrack?.album?.title,
+    artistId: currentTrack?.artistId
   };
 }
