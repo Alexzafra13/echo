@@ -10,9 +10,10 @@ interface PlayerMenuProps {
   onClose: () => void;
   menuRef: React.RefObject<HTMLDivElement>;
   size?: number;
+  strokeWidth?: number;
 }
 
-export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16 }: PlayerMenuProps) {
+export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, strokeWidth = 2 }: PlayerMenuProps) {
   const { preference, setPreference } = usePlayerPreference();
   const { crossfade, setCrossfadeEnabled } = usePlayer();
 
@@ -32,7 +33,7 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16 }: Pl
         onClick={onToggle}
         title="Opciones del reproductor"
       >
-        <MoreVertical size={size} />
+        <MoreVertical size={size} strokeWidth={strokeWidth} />
       </button>
 
       {isOpen && (
