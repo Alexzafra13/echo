@@ -1,0 +1,237 @@
+import { useState, useRef, useCallback } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown } from 'lucide-react';
+import { usePlayer } from '../../context/PlayerContext';
+import { QueueList } from '../QueueList/QueueList';
+import { getPlayerDisplayInfo } from '../../utils/player.utils';
+import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { formatDuration } from '@shared/utils/format';
+import styles from './NowPlayingView.module.css';
+
+interface NowPlayingViewProps {
+  isOpen: boolean;
+  onClose: () => void;
+  dominantColor: string;
+}
+
+export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingViewProps) {
+  const {
+    currentTrack,
+    currentRadioStation,
+    isRadioMode,
+    isPlaying,
+    currentTime,
+    duration,
+    isShuffle,
+    repeatMode,
+    queue,
+    togglePlayPause,
+    playNext,
+    playPrevious,
+    seek,
+    toggleShuffle,
+    toggleRepeat,
+  } = usePlayer();
+
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const queueRef = useRef<HTMLDivElement>(null);
+
+  // Swipe down to close
+  const touchStartY = useRef<number>(0);
+  const touchCurrentY = useRef<number>(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const isDragging = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchCurrentY.current = e.touches[0].clientY;
+    isDragging.current = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    touchCurrentY.current = e.touches[0].clientY;
+
+    // Only allow dragging down
+    if (deltaY > 0) {
+      isDragging.current = true;
+      setDragOffset(Math.min(deltaY, 300));
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (dragOffset > 150) {
+      onClose();
+    }
+    setDragOffset(0);
+    isDragging.current = false;
+  }, [dragOffset, onClose]);
+
+  if (!isOpen) return null;
+
+  const { title, artist, cover, albumName } = getPlayerDisplayInfo(
+    isRadioMode,
+    currentRadioStation,
+    currentTrack
+  );
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percent = x / rect.width;
+    seek(percent * duration);
+  };
+
+  const handleProgressTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, x / rect.width));
+    seek(percent * duration);
+  };
+
+  return (
+    <div
+      className={`${styles.nowPlaying} ${isOpen ? styles['nowPlaying--open'] : ''}`}
+      style={{
+        '--dominant-color': dominantColor,
+        transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
+        transition: isDragging.current ? 'none' : 'transform 0.3s ease-out',
+        opacity: dragOffset > 0 ? 1 - dragOffset / 400 : 1,
+      } as React.CSSProperties}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Background gradient */}
+      <div className={styles.nowPlaying__background} />
+
+      {/* Header */}
+      <div className={styles.nowPlaying__header}>
+        <button className={styles.nowPlaying__closeBtn} onClick={onClose} title="Cerrar">
+          <ChevronDown size={28} />
+        </button>
+        <div className={styles.nowPlaying__headerTitle}>
+          {albumName || 'Reproduciendo'}
+        </div>
+        <div className={styles.nowPlaying__headerSpacer} />
+      </div>
+
+      {/* Cover */}
+      <div className={styles.nowPlaying__coverContainer}>
+        <img
+          src={isRadioMode ? cover : getCoverUrl(cover)}
+          alt={title}
+          className={styles.nowPlaying__cover}
+          onError={handleImageError}
+        />
+      </div>
+
+      {/* Track Info */}
+      <div className={styles.nowPlaying__info}>
+        <h1 className={styles.nowPlaying__title}>{title}</h1>
+        <p className={styles.nowPlaying__artist}>{artist}</p>
+      </div>
+
+      {/* Progress Bar */}
+      {!isRadioMode && (
+        <div className={styles.nowPlaying__progress}>
+          <div
+            className={styles.nowPlaying__progressBar}
+            onClick={handleProgressClick}
+            onTouchMove={handleProgressTouch}
+          >
+            <div
+              className={styles.nowPlaying__progressFill}
+              style={{ width: `${progressPercent}%` }}
+            />
+            <div
+              className={styles.nowPlaying__progressHandle}
+              style={{ left: `${progressPercent}%` }}
+            />
+          </div>
+          <div className={styles.nowPlaying__time}>
+            <span>{formatDuration(currentTime)}</span>
+            <span>{formatDuration(duration)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Controls */}
+      <div className={styles.nowPlaying__controls}>
+        {!isRadioMode && (
+          <button
+            className={`${styles.nowPlaying__controlBtn} ${styles['nowPlaying__controlBtn--small']} ${isShuffle ? styles['nowPlaying__controlBtn--active'] : ''}`}
+            onClick={toggleShuffle}
+            title="Aleatorio"
+          >
+            <Shuffle size={22} />
+          </button>
+        )}
+
+        <button
+          className={styles.nowPlaying__controlBtn}
+          onClick={playPrevious}
+          title="Anterior"
+          disabled={isRadioMode}
+        >
+          <SkipBack size={32} fill="currentColor" />
+        </button>
+
+        <button
+          className={`${styles.nowPlaying__controlBtn} ${styles.nowPlaying__playBtn}`}
+          onClick={togglePlayPause}
+          title={isPlaying ? 'Pausar' : 'Reproducir'}
+        >
+          {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
+        </button>
+
+        <button
+          className={styles.nowPlaying__controlBtn}
+          onClick={playNext}
+          title="Siguiente"
+          disabled={isRadioMode}
+        >
+          <SkipForward size={32} fill="currentColor" />
+        </button>
+
+        {!isRadioMode && (
+          <button
+            className={`${styles.nowPlaying__controlBtn} ${styles['nowPlaying__controlBtn--small']} ${repeatMode !== 'off' ? styles['nowPlaying__controlBtn--active'] : ''}`}
+            onClick={toggleRepeat}
+            title={`Repetir: ${repeatMode}`}
+          >
+            {repeatMode === 'one' ? <Repeat1 size={22} /> : <Repeat size={22} />}
+          </button>
+        )}
+      </div>
+
+      {/* Bottom Actions */}
+      {!isRadioMode && (
+        <div className={styles.nowPlaying__actions}>
+          <button
+            className={`${styles.nowPlaying__actionBtn} ${isQueueOpen ? styles['nowPlaying__actionBtn--active'] : ''}`}
+            onClick={() => setIsQueueOpen(!isQueueOpen)}
+            title="Cola de reproducción"
+          >
+            <ListMusic size={24} />
+            {queue.length > 0 && (
+              <span className={styles.nowPlaying__badge}>{queue.length}</span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Queue Panel */}
+      {isQueueOpen && (
+        <div className={styles.nowPlaying__queuePanel} ref={queueRef}>
+          <QueueList onClose={() => setIsQueueOpen(false)} />
+        </div>
+      )}
+
+      {/* Drag indicator */}
+      <div className={styles.nowPlaying__dragIndicator} />
+    </div>
+  );
+}
