@@ -396,7 +396,7 @@ export function AudioPlayer() {
               onClick={toggleQueue}
               title="Lista de reproducción"
             >
-              <ListMusic size={22} />
+              <ListMusic size={24} />
               {queue.length > 0 && (
                 <span className={styles.queueButton__count}>{queue.length}</span>
               )}
@@ -413,7 +413,7 @@ export function AudioPlayer() {
             onClick={toggleMute}
             title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
-            {volume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
+            {volume === 0 ? <VolumeX size={24} /> : <Volume2 size={24} />}
           </button>
           <input
             type="range"
