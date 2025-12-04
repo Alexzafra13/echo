@@ -282,9 +282,9 @@
   }
 
   .albumPage__heroCover {
-    width: 220px; /* Más grande en móvil */
-    height: 220px;
-    border-radius: 8px; /* Menos redondeado */
+    width: 280px;
+    height: 280px;
+    border-radius: 8px;
     box-shadow: 0 12px 40px var(--black-50);
   }
 
@@ -361,9 +361,9 @@
   }
 
   .albumPage__heroCover {
-    width: 180px; /* Más grande que antes */
-    height: 180px;
-    border-radius: 6px; /* Más cuadrado */
+    width: 240px;
+    height: 240px;
+    border-radius: 6px;
   }
 
   .albumPage__heroTitle {
