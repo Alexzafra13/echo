@@ -262,6 +262,21 @@
   background: var(--error-10);
 }
 
+/* Item de solicitud de amistad */
+.notifications__item--friendRequest {
+  background: rgba(59, 130, 246, 0.05);
+  cursor: pointer;
+}
+
+.notifications__item--friendRequest:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.notifications__itemIcon--friendRequest {
+  color: var(--color-info, #3b82f6);
+  background: rgba(59, 130, 246, 0.15);
+}
+
 /* Icon del item */
 .notifications__itemIcon {
   flex-shrink: 0;
