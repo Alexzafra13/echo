@@ -831,7 +831,7 @@
 }
 
 /* ===== Desktop with limited height (1080p and similar) ===== */
-@media (min-width: 769px) and (max-height: 900px) {
+@media (min-width: 769px) and (max-height: 1000px) {
   .nowPlaying {
     padding: 20px 40px;
     gap: 4px;
