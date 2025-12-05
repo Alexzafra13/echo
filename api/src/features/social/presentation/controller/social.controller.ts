@@ -9,7 +9,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@features/auth/infrastructure/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import {
   SendFriendRequestUseCase,
   AcceptFriendRequestUseCase,
