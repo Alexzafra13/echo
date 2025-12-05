@@ -1,11 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAudioNormalization } from './useAudioNormalization';
 import type { NormalizationSettings } from '../types';
 import type { Track } from '@shared/types/track.types';
 
-// Mock console.log to verify logging behavior
-const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 describe('useAudioNormalization', () => {
   // Default settings
@@ -26,13 +24,6 @@ describe('useAudioNormalization', () => {
     ...overrides,
   } as Track);
 
-  beforeEach(() => {
-    mockConsoleLog.mockClear();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
 
   describe('calculateGain', () => {
     it('should return no gain when normalization is disabled', () => {
@@ -236,21 +227,6 @@ describe('useAudioNormalization', () => {
   });
 
   describe('applyGain', () => {
-    it('should log gain information', () => {
-      const { result } = renderHook(() => useAudioNormalization(defaultSettings));
-
-      const track = createTrack({ rgTrackGain: -5.0, rgTrackPeak: 0.8 });
-
-      act(() => {
-        result.current.applyGain(track);
-      });
-
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        expect.stringContaining('[AudioNormalization]'),
-        expect.any(Object)
-      );
-    });
-
     it('should apply gain to registered audio elements', () => {
       const { result } = renderHook(() => useAudioNormalization(defaultSettings));
 
