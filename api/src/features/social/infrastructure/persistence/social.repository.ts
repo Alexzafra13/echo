@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, or, desc, sql, ilike, ne } from 'drizzle-orm';
+import { eq, and, or, desc, sql, ilike, ne, inArray } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
   friendships,
@@ -10,7 +10,6 @@ import {
   artists,
   playlists,
   userStarred,
-  playHistory,
 } from '@infrastructure/database/schema';
 import { ISocialRepository } from '../../domain/ports';
 import {
@@ -159,7 +158,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         isPublicProfile: users.isPublicProfile,
       })
       .from(users)
-      .where(sql`${users.id} IN ${friendIds}`);
+      .where(inArray(users.id, friendIds));
 
     const userMap = new Map(friendUsers.map(u => [u.id, u]));
 
@@ -304,7 +303,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
       .leftJoin(tracks, eq(tracks.id, playQueues.currentTrackId))
       .leftJoin(albums, eq(albums.id, tracks.albumId))
       .leftJoin(artists, eq(artists.id, tracks.artistId))
-      .where(sql`${users.id} IN ${friendIds}`);
+      .where(inArray(users.id, friendIds));
 
     return results.map(r => ({
       id: r.userId,
@@ -398,28 +397,8 @@ export class DrizzleSocialRepository implements ISocialRepository {
 
     const friendIds = friendResults.map(f => f.friendId);
 
-    // Get recent likes from friends
-    const likesQuery = this.drizzle.db
-      .select({
-        oderId: sql<number>`1`,
-        oderId2: userStarred.starredAt,
-        oderId3: sql<string>`${userStarred.starredId}`,
-        oderId4: sql<string>`${userStarred.starredType}`,
-        oderId5: sql<string>`${userStarred.userId}`,
-        oderId6: sql<Date>`${userStarred.starredAt}`,
-      })
-      .from(userStarred)
-      .where(
-        and(
-          sql`${userStarred.userId} IN ${friendIds}`,
-          eq(userStarred.sentiment, 'like'),
-        ),
-      )
-      .orderBy(desc(userStarred.starredAt))
-      .limit(limit);
-
     // Get recent playlists from friends
-    const playlistsQuery = this.drizzle.db
+    const playlistResults = await this.drizzle.db
       .select({
         id: playlists.id,
         userId: playlists.ownerId,
@@ -429,33 +408,30 @@ export class DrizzleSocialRepository implements ISocialRepository {
       .from(playlists)
       .where(
         and(
-          sql`${playlists.ownerId} IN ${friendIds}`,
+          inArray(playlists.ownerId, friendIds),
           eq(playlists.public, true),
         ),
       )
       .orderBy(desc(playlists.createdAt))
       .limit(limit);
 
-    const [likesResults, playlistResults] = await Promise.all([
-      this.drizzle.db
-        .select({
-          oderId: sql<number>`1`.as('order_id'),
-          oderId2: userStarred.starredAt,
-          oderId3: userStarred.starredId,
-          oderId4: userStarred.starredType,
-          oderId5: userStarred.userId,
-        })
-        .from(userStarred)
-        .where(
-          and(
-            sql`${userStarred.userId} IN ${friendIds}`,
-            eq(userStarred.sentiment, 'like'),
-          ),
-        )
-        .orderBy(desc(userStarred.starredAt))
-        .limit(limit),
-      playlistsQuery,
-    ]);
+    // Get recent likes from friends
+    const likesResults = await this.drizzle.db
+      .select({
+        oderId2: userStarred.starredAt,
+        oderId3: userStarred.starredId,
+        oderId4: userStarred.starredType,
+        oderId5: userStarred.userId,
+      })
+      .from(userStarred)
+      .where(
+        and(
+          inArray(userStarred.userId, friendIds),
+          eq(userStarred.sentiment, 'like'),
+        ),
+      )
+      .orderBy(desc(userStarred.starredAt))
+      .limit(limit);
 
     // Get user info for all activities
     const allUserIds = [
@@ -465,6 +441,8 @@ export class DrizzleSocialRepository implements ISocialRepository {
       ]),
     ];
 
+    if (allUserIds.length === 0) return [];
+
     const userInfos = await this.drizzle.db
       .select({
         id: users.id,
@@ -473,7 +451,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         avatarPath: users.avatarPath,
       })
       .from(users)
-      .where(sql`${users.id} IN ${allUserIds}`);
+      .where(inArray(users.id, allUserIds));
 
     const userMap = new Map(userInfos.map(u => [u.id, u]));
 
@@ -499,7 +477,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
       }
     }
 
-    // Add like activities (simplified - would need to fetch target names)
+    // Add like activities
     for (const l of likesResults) {
       const user = userMap.get(l.oderId5);
       if (user) {
@@ -512,7 +490,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
           actionType: `liked_${l.oderId4}` as ActivityItem['actionType'],
           targetType: l.oderId4,
           targetId: l.oderId3,
-          targetName: '', // Would need to fetch from respective table
+          targetName: '',
           createdAt: l.oderId2,
         });
       }
@@ -561,31 +539,31 @@ export class DrizzleSocialRepository implements ISocialRepository {
       )
       .limit(limit);
 
+    if (results.length === 0) {
+      return [];
+    }
+
     // Get friendship status for each user
     const userIds = results.map(u => u.id);
-    const friendshipResults = userIds.length > 0
-      ? await this.drizzle.db
-          .select({
-            requesterId: friendships.requesterId,
-            addresseeId: friendships.addresseeId,
-            status: friendships.status,
-          })
-          .from(friendships)
-          .where(
-            and(
-              or(
-                and(
-                  eq(friendships.requesterId, currentUserId),
-                  sql`${friendships.addresseeId} IN ${userIds}`,
-                ),
-                and(
-                  eq(friendships.addresseeId, currentUserId),
-                  sql`${friendships.requesterId} IN ${userIds}`,
-                ),
-              ),
-            ),
-          )
-      : [];
+    const friendshipResults = await this.drizzle.db
+      .select({
+        requesterId: friendships.requesterId,
+        addresseeId: friendships.addresseeId,
+        status: friendships.status,
+      })
+      .from(friendships)
+      .where(
+        or(
+          and(
+            eq(friendships.requesterId, currentUserId),
+            inArray(friendships.addresseeId, userIds),
+          ),
+          and(
+            eq(friendships.addresseeId, currentUserId),
+            inArray(friendships.requesterId, userIds),
+          ),
+        ),
+      );
 
     const friendshipMap = new Map<string, FriendshipStatus>();
     for (const f of friendshipResults) {
