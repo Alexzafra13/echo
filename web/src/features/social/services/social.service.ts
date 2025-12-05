@@ -1,4 +1,4 @@
-import { apiClient } from '@shared/services/api-client';
+import { apiClient } from '@shared/services/api';
 
 // ============================================
 // Types
