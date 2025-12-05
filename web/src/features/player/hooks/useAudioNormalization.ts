@@ -65,16 +65,18 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     const { audioA, audioB, userVolume } = audioElementsRef.current;
     const effectiveVolume = Math.min(1, userVolume * currentGainRef.current);
 
+    if (audioA) audioA.volume = effectiveVolume;
+    if (audioB) audioB.volume = effectiveVolume;
+
     console.log('[AudioNormalization] applyEffectiveVolume:', {
       hasAudioA: !!audioA,
       hasAudioB: !!audioB,
       userVolume,
       gainLinear: currentGainRef.current,
       effectiveVolume,
+      actualVolumeA: audioA?.volume,
+      actualVolumeB: audioB?.volume,
     });
-
-    if (audioA) audioA.volume = effectiveVolume;
-    if (audioB) audioB.volume = effectiveVolume;
   }, []);
 
   /**
