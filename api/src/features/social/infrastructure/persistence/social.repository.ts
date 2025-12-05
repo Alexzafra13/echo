@@ -296,7 +296,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         trackTitle: tracks.title,
         albumId: albums.id,
         albumName: albums.name,
-        albumCoverPath: albums.coverPath,
+        albumCoverPath: albums.coverArtPath,
         artistName: artists.name,
       })
       .from(users)
@@ -339,7 +339,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         trackTitle: tracks.title,
         albumId: albums.id,
         albumName: albums.name,
-        albumCoverPath: albums.coverPath,
+        albumCoverPath: albums.coverArtPath,
         artistName: artists.name,
       })
       .from(playQueues)
