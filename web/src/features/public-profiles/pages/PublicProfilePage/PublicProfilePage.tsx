@@ -1,11 +1,14 @@
 import { useParams } from 'wouter';
 import { Link } from 'wouter';
-import { Lock, Music, Disc, User as UserIcon, ListMusic, Calendar } from 'lucide-react';
+import { Lock, Music, Disc, User as UserIcon, ListMusic, Calendar, UserPlus, UserCheck, Clock, Users, Play, X, Check } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
+import { Button } from '@shared/components/ui';
 import { usePublicProfile } from '../../hooks';
+import { useSendFriendRequest, useAcceptFriendRequest, useRemoveFriendship } from '@features/social/hooks';
 import { formatDate, formatDuration } from '@shared/utils/format';
+import { useQueryClient } from '@tanstack/react-query';
 import styles from './PublicProfilePage.module.css';
 
 /**
@@ -16,10 +19,40 @@ export function PublicProfilePage() {
   const params = useParams<{ userId: string }>();
   const userId = params.userId || '';
   const { data: profile, isLoading, error } = usePublicProfile(userId);
+  const queryClient = useQueryClient();
+
+  const sendRequestMutation = useSendFriendRequest();
+  const acceptRequestMutation = useAcceptFriendRequest();
+  const removeRequestMutation = useRemoveFriendship();
 
   const getUserInitials = (name?: string, username?: string) => {
     const displayName = name || username || 'U';
     return displayName.slice(0, 2).toUpperCase();
+  };
+
+  const handleSendRequest = async () => {
+    await sendRequestMutation.mutateAsync(userId);
+    queryClient.invalidateQueries({ queryKey: ['public-profile', userId] });
+  };
+
+  const handleAcceptRequest = async () => {
+    if (profile?.social.friendshipId) {
+      await acceptRequestMutation.mutateAsync(profile.social.friendshipId);
+      queryClient.invalidateQueries({ queryKey: ['public-profile', userId] });
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (profile?.social.friendshipId) {
+      await removeRequestMutation.mutateAsync(profile.social.friendshipId);
+      queryClient.invalidateQueries({ queryKey: ['public-profile', userId] });
+    }
+  };
+
+  const formatPlayCount = (count: number): string => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
   };
 
   if (isLoading) {
@@ -58,7 +91,7 @@ export function PublicProfilePage() {
     );
   }
 
-  const { user, topTracks, topArtists, topAlbums, playlists, settings } = profile;
+  const { user, topTracks, topArtists, topAlbums, playlists, settings, social } = profile;
 
   // If profile is private, show minimal info
   if (!user.isPublicProfile) {
@@ -135,12 +168,119 @@ export function PublicProfilePage() {
               {user.bio && (
                 <p className={styles.publicProfilePage__bio}>{user.bio}</p>
               )}
-              <div className={styles.publicProfilePage__memberSince}>
-                <Calendar size={14} />
-                Miembro desde {formatDate(user.memberSince)}
+
+              {/* Stats */}
+              <div className={styles.publicProfilePage__stats}>
+                <div className={styles.publicProfilePage__stat}>
+                  <Play size={16} />
+                  <span className={styles.publicProfilePage__statValue}>
+                    {formatPlayCount(social.stats.totalPlays)}
+                  </span>
+                  <span className={styles.publicProfilePage__statLabel}>reproducciones</span>
+                </div>
+                <div className={styles.publicProfilePage__stat}>
+                  <Users size={16} />
+                  <span className={styles.publicProfilePage__statValue}>
+                    {social.stats.friendCount}
+                  </span>
+                  <span className={styles.publicProfilePage__statLabel}>amigos</span>
+                </div>
+                <div className={styles.publicProfilePage__stat}>
+                  <Calendar size={16} />
+                  <span className={styles.publicProfilePage__statLabel}>
+                    Miembro desde {formatDate(user.memberSince)}
+                  </span>
+                </div>
               </div>
+
+              {/* Friend Button */}
+              {social.friendshipStatus !== 'self' && (
+                <div className={styles.publicProfilePage__friendAction}>
+                  {social.friendshipStatus === 'none' && (
+                    <Button
+                      variant="primary"
+                      onClick={handleSendRequest}
+                      disabled={sendRequestMutation.isPending}
+                    >
+                      <UserPlus size={18} />
+                      Añadir amigo
+                    </Button>
+                  )}
+                  {social.friendshipStatus === 'pending_sent' && (
+                    <Button
+                      variant="secondary"
+                      onClick={handleCancelRequest}
+                      disabled={removeRequestMutation.isPending}
+                    >
+                      <Clock size={18} />
+                      Solicitud enviada
+                    </Button>
+                  )}
+                  {social.friendshipStatus === 'pending_received' && (
+                    <div className={styles.publicProfilePage__friendActions}>
+                      <Button
+                        variant="primary"
+                        onClick={handleAcceptRequest}
+                        disabled={acceptRequestMutation.isPending}
+                      >
+                        <Check size={18} />
+                        Aceptar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={handleCancelRequest}
+                        disabled={removeRequestMutation.isPending}
+                      >
+                        <X size={18} />
+                      </Button>
+                    </div>
+                  )}
+                  {social.friendshipStatus === 'accepted' && (
+                    <Button variant="secondary" disabled>
+                      <UserCheck size={18} />
+                      Amigos
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Listening Now - Only for friends */}
+          {social.listeningNow && (
+            <div className={styles.publicProfilePage__listeningNow}>
+              <div className={styles.publicProfilePage__listeningNowHeader}>
+                <Play size={16} className={styles.publicProfilePage__listeningNowPulse} />
+                <span>Escuchando ahora</span>
+              </div>
+              <Link
+                href={social.listeningNow.albumId ? `/album/${social.listeningNow.albumId}` : '#'}
+                className={styles.publicProfilePage__listeningNowTrack}
+              >
+                {social.listeningNow.coverUrl ? (
+                  <img
+                    src={social.listeningNow.coverUrl}
+                    alt={social.listeningNow.trackTitle}
+                    className={styles.publicProfilePage__listeningNowCover}
+                  />
+                ) : (
+                  <div className={styles.publicProfilePage__listeningNowCoverPlaceholder}>
+                    <Music size={24} />
+                  </div>
+                )}
+                <div className={styles.publicProfilePage__listeningNowInfo}>
+                  <span className={styles.publicProfilePage__listeningNowTitle}>
+                    {social.listeningNow.trackTitle}
+                  </span>
+                  {social.listeningNow.artistName && (
+                    <span className={styles.publicProfilePage__listeningNowArtist}>
+                      {social.listeningNow.artistName}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </div>
+          )}
 
           {/* Top Artists */}
           {settings.showTopArtists && topArtists && topArtists.length > 0 && (

@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { eq, desc, and, inArray } from 'drizzle-orm';
+import { eq, desc, and, inArray, or, sql, sum } from 'drizzle-orm';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
@@ -9,6 +9,8 @@ import {
   albums,
   playlists,
   playlistTracks,
+  friendships,
+  playQueues,
 } from '@infrastructure/database/schema';
 import { NotFoundError } from '@shared/errors';
 import {
@@ -18,6 +20,9 @@ import {
   TopArtist,
   TopAlbum,
   PublicPlaylist,
+  FriendshipStatus,
+  ProfileStats,
+  ListeningNow,
 } from './get-public-profile.dto';
 
 @Injectable()
@@ -45,7 +50,26 @@ export class GetPublicProfileUseCase {
       createdAt: user.createdAt,
     };
 
-    // If profile is private, return minimal info
+    // 2. Get social data (always fetched)
+    const [friendshipData, stats] = await Promise.all([
+      this.getFriendshipStatus(input.userId, input.requesterId),
+      this.getProfileStats(input.userId),
+    ]);
+
+    // 3. Get listening now only if they are friends
+    let listeningNow: ListeningNow | undefined;
+    if (friendshipData.status === 'accepted') {
+      listeningNow = await this.getListeningNow(input.userId);
+    }
+
+    const social = {
+      friendshipStatus: friendshipData.status,
+      friendshipId: friendshipData.friendshipId,
+      stats,
+      listeningNow,
+    };
+
+    // If profile is private, return minimal info with social data
     if (!user.isPublicProfile) {
       return {
         user: publicUser,
@@ -55,6 +79,7 @@ export class GetPublicProfileUseCase {
           showTopAlbums: false,
           showPlaylists: false,
         },
+        social,
       };
     }
 
@@ -67,6 +92,7 @@ export class GetPublicProfileUseCase {
         showTopAlbums: user.showTopAlbums,
         showPlaylists: user.showPlaylists,
       },
+      social,
     };
 
     // Fetch top tracks if enabled
@@ -90,6 +116,126 @@ export class GetPublicProfileUseCase {
     }
 
     return result;
+  }
+
+  private async getFriendshipStatus(
+    userId: string,
+    requesterId?: string,
+  ): Promise<{ status: FriendshipStatus; friendshipId?: string }> {
+    // If no requester or same user, return appropriate status
+    if (!requesterId) {
+      return { status: 'none' };
+    }
+    if (requesterId === userId) {
+      return { status: 'self' };
+    }
+
+    // Check for existing friendship
+    const friendship = await this.drizzle.db
+      .select({
+        id: friendships.id,
+        requesterId: friendships.requesterId,
+        addresseeId: friendships.addresseeId,
+        status: friendships.status,
+      })
+      .from(friendships)
+      .where(
+        or(
+          and(
+            eq(friendships.requesterId, requesterId),
+            eq(friendships.addresseeId, userId),
+          ),
+          and(
+            eq(friendships.requesterId, userId),
+            eq(friendships.addresseeId, requesterId),
+          ),
+        ),
+      )
+      .limit(1);
+
+    if (friendship.length === 0) {
+      return { status: 'none' };
+    }
+
+    const f = friendship[0];
+    if (f.status === 'accepted') {
+      return { status: 'accepted', friendshipId: f.id };
+    }
+
+    // Pending - determine direction
+    if (f.requesterId === requesterId) {
+      return { status: 'pending_sent', friendshipId: f.id };
+    } else {
+      return { status: 'pending_received', friendshipId: f.id };
+    }
+  }
+
+  private async getProfileStats(userId: string): Promise<ProfileStats> {
+    // Get total plays
+    const playsResult = await this.drizzle.db
+      .select({
+        total: sum(userPlayStats.playCount),
+      })
+      .from(userPlayStats)
+      .where(
+        and(
+          eq(userPlayStats.userId, userId),
+          eq(userPlayStats.itemType, 'track'),
+        ),
+      );
+
+    const totalPlays = Number(playsResult[0]?.total) || 0;
+
+    // Get friend count (accepted friendships)
+    const friendsResult = await this.drizzle.db
+      .select({
+        count: sql<number>`count(*)`,
+      })
+      .from(friendships)
+      .where(
+        and(
+          eq(friendships.status, 'accepted'),
+          or(
+            eq(friendships.requesterId, userId),
+            eq(friendships.addresseeId, userId),
+          ),
+        ),
+      );
+
+    const friendCount = Number(friendsResult[0]?.count) || 0;
+
+    return { totalPlays, friendCount };
+  }
+
+  private async getListeningNow(userId: string): Promise<ListeningNow | undefined> {
+    // Get current playing track from play_queues
+    const result = await this.drizzle.db
+      .select({
+        trackId: playQueues.currentTrackId,
+        isPlaying: playQueues.isPlaying,
+        trackTitle: tracks.title,
+        artistName: tracks.artistName,
+        albumId: tracks.albumId,
+        coverArtPath: albums.coverArtPath,
+      })
+      .from(playQueues)
+      .innerJoin(tracks, eq(tracks.id, playQueues.currentTrackId))
+      .leftJoin(albums, eq(albums.id, tracks.albumId))
+      .where(eq(playQueues.userId, userId))
+      .limit(1);
+
+    const r = result[0];
+    if (!r || !r.isPlaying || !r.trackId) {
+      return undefined;
+    }
+
+    return {
+      trackId: r.trackId,
+      trackTitle: r.trackTitle,
+      artistName: r.artistName ?? undefined,
+      albumId: r.albumId ?? undefined,
+      coverArtPath: r.coverArtPath ?? undefined,
+    };
   }
 
   private async getTopTracks(userId: string, limit = 10): Promise<TopTrack[]> {
