@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Users, UserPlus, Music, Activity, Search, X, Check, Clock } from 'lucide-react';
+import { Users, UserPlus, Music, Activity, Search, X, Check, Clock, Send, CheckCircle } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
@@ -22,17 +22,29 @@ export default function SocialPage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { data: overview, isLoading } = useSocialOverview();
-  const { data: searchResults } = useSearchUsers(searchQuery, showSearch && searchQuery.length >= 2);
+  const { data: searchResults, refetch: refetchSearch } = useSearchUsers(searchQuery, showSearch && searchQuery.length >= 2);
 
   const sendRequestMutation = useSendFriendRequest();
   const acceptRequestMutation = useAcceptFriendRequest();
   const removeFriendshipMutation = useRemoveFriendship();
 
-  const handleSendRequest = async (userId: string) => {
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const handleSendRequest = async (userId: string, userName: string) => {
     try {
       await sendRequestMutation.mutateAsync(userId);
+      setSuccessMessage(`Solicitud enviada a ${userName}`);
+      // Refetch search to update the status
+      refetchSearch();
     } catch (error: any) {
       console.error('Error sending friend request:', error);
     }
@@ -157,14 +169,18 @@ export default function SocialPage() {
                           </span>
                         </div>
                         {user.friendshipStatus === 'accepted' ? (
-                          <span className={styles.searchResult__status}>Amigos</span>
+                          <span className={styles.searchResult__status}>
+                            <Check size={14} /> Amigos
+                          </span>
                         ) : user.friendshipStatus === 'pending' ? (
-                          <span className={styles.searchResult__status}>Pendiente</span>
+                          <span className={styles.searchResult__statusPending}>
+                            <Clock size={14} /> Pendiente
+                          </span>
                         ) : (
                           <Button
                             variant="secondary"
                             size="small"
-                            onClick={() => handleSendRequest(user.id)}
+                            onClick={() => handleSendRequest(user.id, user.name || user.username)}
                             disabled={sendRequestMutation.isPending}
                           >
                             <UserPlus size={16} />
@@ -178,6 +194,14 @@ export default function SocialPage() {
                 {searchQuery.length >= 2 && searchResults?.length === 0 && (
                   <div className={styles.socialPage__searchEmpty}>
                     No se encontraron usuarios
+                  </div>
+                )}
+
+                {/* Success message */}
+                {successMessage && (
+                  <div className={styles.socialPage__successMessage}>
+                    <CheckCircle size={18} />
+                    {successMessage}
                   </div>
                 )}
               </div>
@@ -243,12 +267,12 @@ export default function SocialPage() {
                 )}
               </section>
 
-              {/* Pending Requests Section */}
-              {overview?.pendingRequests && overview.pendingRequests.count > 0 && (
+              {/* Pending Requests Section - Received */}
+              {overview?.pendingRequests && overview.pendingRequests.received.length > 0 && (
                 <section className={styles.section}>
                   <h2 className={styles.section__title}>
                     <Clock size={20} />
-                    Solicitudes pendientes ({overview.pendingRequests.count})
+                    Solicitudes recibidas ({overview.pendingRequests.received.length})
                   </h2>
                   <div className={styles.requestsList}>
                     {overview.pendingRequests.received.map((request) => (
@@ -285,6 +309,45 @@ export default function SocialPage() {
                             <X size={16} />
                           </Button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Pending Requests Section - Sent */}
+              {overview?.pendingRequests && overview.pendingRequests.sent.length > 0 && (
+                <section className={styles.section}>
+                  <h2 className={styles.section__title}>
+                    <Send size={20} />
+                    Solicitudes enviadas ({overview.pendingRequests.sent.length})
+                  </h2>
+                  <div className={styles.requestsList}>
+                    {overview.pendingRequests.sent.map((request) => (
+                      <div key={request.friendshipId} className={styles.requestCard}>
+                        <img
+                          src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
+                          alt={request.username}
+                          className={styles.requestCard__avatar}
+                          onError={handleAvatarError}
+                        />
+                        <div className={styles.requestCard__info}>
+                          <span className={styles.requestCard__name}>
+                            {request.name || request.username}
+                          </span>
+                          <span className={styles.requestCard__textSent}>
+                            Esperando respuesta...
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="small"
+                          onClick={() => handleRejectRequest(request.friendshipId)}
+                          disabled={removeFriendshipMutation.isPending}
+                          title="Cancelar solicitud"
+                        >
+                          <X size={16} />
+                        </Button>
                       </div>
                     ))}
                   </div>

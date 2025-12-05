@@ -7,6 +7,7 @@ import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { LufsProgressIndicator } from '@shared/components/LufsProgressIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
+import { SocialNotifications } from './SocialNotifications';
 import { SearchPanel } from './SearchPanel';
 import { UserMenu } from './UserMenu';
 import styles from './Header.module.css';
@@ -163,6 +164,9 @@ export function Header({
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
+
+        {/* Social notifications (all users) */}
+        <SocialNotifications />
 
         {/* System health indicator (solo admin) */}
         <SystemHealthIndicator />
