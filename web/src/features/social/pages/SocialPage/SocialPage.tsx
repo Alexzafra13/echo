@@ -179,7 +179,7 @@ export default function SocialPage() {
                         ) : (
                           <Button
                             variant="secondary"
-                            size="small"
+                            size="sm"
                             onClick={() => handleSendRequest(user.id, user.name || user.username)}
                             disabled={sendRequestMutation.isPending}
                           >
@@ -294,7 +294,7 @@ export default function SocialPage() {
                         <div className={styles.requestCard__actions}>
                           <Button
                             variant="primary"
-                            size="small"
+                            size="sm"
                             onClick={() => handleAcceptRequest(request.friendshipId)}
                             disabled={acceptRequestMutation.isPending}
                           >
@@ -302,7 +302,7 @@ export default function SocialPage() {
                           </Button>
                           <Button
                             variant="ghost"
-                            size="small"
+                            size="sm"
                             onClick={() => handleRejectRequest(request.friendshipId)}
                             disabled={removeFriendshipMutation.isPending}
                           >
@@ -341,7 +341,7 @@ export default function SocialPage() {
                         </div>
                         <Button
                           variant="ghost"
-                          size="small"
+                          size="sm"
                           onClick={() => handleRejectRequest(request.friendshipId)}
                           disabled={removeFriendshipMutation.isPending}
                           title="Cancelar solicitud"
