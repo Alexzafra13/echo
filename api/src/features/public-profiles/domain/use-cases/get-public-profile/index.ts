@@ -7,4 +7,7 @@ export type {
   TopArtist,
   TopAlbum,
   PublicPlaylist,
+  FriendshipStatus,
+  ProfileStats,
+  ListeningNow,
 } from './get-public-profile.dto';
