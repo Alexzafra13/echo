@@ -15,6 +15,7 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { usePublicProfile } from '../../hooks';
+import { useProfileListeningSSE } from '../../hooks/useProfileListeningSSE';
 import {
   useSendFriendRequest,
   useAcceptFriendRequest,
@@ -331,6 +332,9 @@ export function PublicProfilePage() {
   const userId = params.userId || '';
   const { data: profile, isLoading, error } = usePublicProfile(userId);
   const queryClient = useQueryClient();
+
+  // Enable real-time SSE updates for this profile's "listening now" state
+  useProfileListeningSSE(userId);
 
   // Mutations
   const sendRequestMutation = useSendFriendRequest();
