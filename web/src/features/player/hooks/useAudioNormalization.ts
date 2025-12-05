@@ -44,7 +44,6 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     audioA: HTMLAudioElement | null,
     audioB: HTMLAudioElement | null
   ) => {
-    console.log('[AudioNormalization] registerAudioElements called:', { audioA: !!audioA, audioB: !!audioB });
     audioElementsRef.current.audioA = audioA;
     audioElementsRef.current.audioB = audioB;
   }, []);
@@ -67,16 +66,6 @@ export function useAudioNormalization(settings: NormalizationSettings) {
 
     if (audioA) audioA.volume = effectiveVolume;
     if (audioB) audioB.volume = effectiveVolume;
-
-    console.log('[AudioNormalization] applyEffectiveVolume:', {
-      hasAudioA: !!audioA,
-      hasAudioB: !!audioB,
-      userVolume,
-      gainLinear: currentGainRef.current,
-      effectiveVolume,
-      actualVolumeA: audioA?.volume,
-      actualVolumeB: audioB?.volume,
-    });
   }, []);
 
   /**
@@ -148,23 +137,14 @@ export function useAudioNormalization(settings: NormalizationSettings) {
    * Aplica la ganancia calculada ajustando el volumen del elemento de audio
    */
   const applyGain = useCallback((track: Track | null) => {
-    const { gainDb, gainLinear, wasLimited } = calculateGain(track);
+    const { gainLinear } = calculateGain(track);
 
     // Store the current gain
     currentGainRef.current = gainLinear;
 
     // Apply effective volume to audio elements
     applyEffectiveVolume();
-
-    // Calcular True Peak final estimado para el log
-    const originalPeakdB = track?.rgTrackPeak ? -20 * Math.log10(track.rgTrackPeak) : 0;
-    const finalTruePeakdB = originalPeakdB + gainDb;
-
-    console.log(
-      `[AudioNormalization] 🎚️ Applied gain: ${gainDb.toFixed(2)} dB (linear: ${gainLinear.toFixed(3)})${wasLimited ? ' [limited by True Peak]' : ''} | True Peak: ${finalTruePeakdB.toFixed(1)} dBTP`,
-      { track: track?.title, rgTrackGain: track?.rgTrackGain, rgTrackPeak: track?.rgTrackPeak, settings }
-    );
-  }, [calculateGain, applyEffectiveVolume, settings]);
+  }, [calculateGain, applyEffectiveVolume]);
 
   /**
    * Get current normalization gain (for external use if needed)
