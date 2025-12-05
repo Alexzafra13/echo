@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PLAY_TRACKING_REPOSITORY } from './domain/ports';
 import { DrizzlePlayTrackingRepository } from './infrastructure/persistence/play-tracking.repository';
 import { CachedPlayTrackingRepository } from './infrastructure/persistence/cached-play-tracking.repository';
@@ -13,6 +13,7 @@ import {
   UpdatePlaybackStateUseCase,
 } from './domain/use-cases';
 import { PlayTrackingController } from './presentation/controller/play-tracking.controller';
+import { SocialModule } from '../social/social.module';
 
 /**
  * PlayTrackingModule
@@ -22,6 +23,7 @@ import { PlayTrackingController } from './presentation/controller/play-tracking.
  * DrizzleService is also provided globally via DrizzleModule.
  */
 @Module({
+  imports: [forwardRef(() => SocialModule)],
   controllers: [PlayTrackingController],
   providers: [
     DrizzlePlayTrackingRepository, // Base repository

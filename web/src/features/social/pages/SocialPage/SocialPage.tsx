@@ -12,6 +12,7 @@ import {
   useRemoveFriendship,
   useSearchUsers,
 } from '../../hooks';
+import { useListeningNowSSE } from '../../hooks/useListeningNowSSE';
 import styles from './SocialPage.module.css';
 
 /**
@@ -26,6 +27,9 @@ export default function SocialPage() {
 
   const { data: overview, isLoading } = useSocialOverview();
   const { data: searchResults, refetch: refetchSearch } = useSearchUsers(searchQuery, showSearch && searchQuery.length >= 2);
+
+  // Enable real-time SSE updates for "listening now"
+  useListeningNowSSE();
 
   const sendRequestMutation = useSendFriendRequest();
   const acceptRequestMutation = useAcceptFriendRequest();
