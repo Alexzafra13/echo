@@ -35,7 +35,8 @@ export function useSocialOverview() {
   return useQuery<SocialOverview>({
     queryKey: socialKeys.overview(),
     queryFn: getSocialOverview,
-    staleTime: 30000, // 30 seconds
+    staleTime: 15000, // 15 seconds
+    refetchInterval: 20000, // Auto-refresh every 20 seconds for "listening now"
   });
 }
 
@@ -68,8 +69,8 @@ export function useListeningFriends() {
   return useQuery<ListeningUser[]>({
     queryKey: socialKeys.listening(),
     queryFn: getListeningFriends,
-    staleTime: 10000, // 10 seconds - refresh more often
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    staleTime: 5000, // 5 seconds - refresh more often for real-time feel
+    refetchInterval: 15000, // Auto-refresh every 15 seconds
   });
 }
 
