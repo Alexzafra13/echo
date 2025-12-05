@@ -1,6 +1,6 @@
 export interface GetPublicProfileInput {
   userId: string;
-  requesterId?: string; // ID of user making the request (for future features like follow)
+  requesterId?: string; // ID of user making the request
 }
 
 export interface PublicProfileUser {
@@ -53,6 +53,22 @@ export interface PublicPlaylist {
   albumIds: string[];
 }
 
+// Social features
+export type FriendshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'self';
+
+export interface ProfileStats {
+  totalPlays: number;
+  friendCount: number;
+}
+
+export interface ListeningNow {
+  trackId: string;
+  trackTitle: string;
+  artistName?: string;
+  albumId?: string;
+  coverArtPath?: string;
+}
+
 export interface GetPublicProfileOutput {
   user: PublicProfileUser;
   // Only included if user has public profile AND has enabled each section
@@ -66,5 +82,12 @@ export interface GetPublicProfileOutput {
     showTopArtists: boolean;
     showTopAlbums: boolean;
     showPlaylists: boolean;
+  };
+  // Social features
+  social: {
+    friendshipStatus: FriendshipStatus;
+    friendshipId?: string; // For accepting/rejecting requests
+    stats: ProfileStats;
+    listeningNow?: ListeningNow; // Only if friends
   };
 }

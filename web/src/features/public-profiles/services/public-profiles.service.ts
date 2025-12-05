@@ -56,6 +56,29 @@ export interface PrivacySettingsVisibility {
   showPlaylists: boolean;
 }
 
+// Social types
+export type FriendshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'self';
+
+export interface ProfileStats {
+  totalPlays: number;
+  friendCount: number;
+}
+
+export interface ListeningNow {
+  trackId: string;
+  trackTitle: string;
+  artistName?: string;
+  albumId?: string;
+  coverUrl?: string;
+}
+
+export interface ProfileSocial {
+  friendshipStatus: FriendshipStatus;
+  friendshipId?: string;
+  stats: ProfileStats;
+  listeningNow?: ListeningNow;
+}
+
 export interface PublicProfile {
   user: PublicUser;
   topTracks?: TopTrack[];
@@ -63,6 +86,7 @@ export interface PublicProfile {
   topAlbums?: TopAlbum[];
   playlists?: PublicPlaylist[];
   settings: PrivacySettingsVisibility;
+  social: ProfileSocial;
 }
 
 export const publicProfilesService = {
