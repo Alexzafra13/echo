@@ -109,6 +109,8 @@ export function useSendFriendRequest() {
       queryClient.invalidateQueries({ queryKey: socialKeys.overview() });
       queryClient.invalidateQueries({ queryKey: socialKeys.pendingRequests() });
       queryClient.invalidateQueries({ queryKey: socialKeys.friends() });
+      // Also invalidate search results to update friendship status
+      queryClient.invalidateQueries({ queryKey: socialKeys.all });
     },
   });
 }
