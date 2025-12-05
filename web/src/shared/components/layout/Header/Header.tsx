@@ -5,6 +5,7 @@ import { useAuth, useTheme, useScrollDetection, useClickOutside } from '@shared/
 import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
+import { LufsProgressIndicator } from '@shared/components/LufsProgressIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchPanel } from './SearchPanel';
 import { UserMenu } from './UserMenu';
@@ -159,6 +160,9 @@ export function Header({
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
+
+        {/* LUFS analysis progress (global, solo visible cuando hay análisis) */}
+        <LufsProgressIndicator />
 
         {/* System health indicator (solo admin) */}
         <SystemHealthIndicator />

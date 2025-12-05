@@ -1,0 +1,58 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.icon {
+  color: var(--color-text-tertiary, #6b7280);
+  flex-shrink: 0;
+}
+
+.iconRunning {
+  color: var(--color-primary, #7c3aed);
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.text {
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 500;
+}
+
+.percent {
+  color: var(--color-text-tertiary, #6b7280);
+  margin-left: 4px;
+}
+
+.eta {
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 11px;
+}
+
+.progressBar {
+  width: 40px;
+  height: 3px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary, #7c3aed);
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}
