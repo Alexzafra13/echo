@@ -44,6 +44,7 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     audioA: HTMLAudioElement | null,
     audioB: HTMLAudioElement | null
   ) => {
+    console.log('[AudioNormalization] registerAudioElements called:', { audioA: !!audioA, audioB: !!audioB });
     audioElementsRef.current.audioA = audioA;
     audioElementsRef.current.audioB = audioB;
   }, []);
@@ -63,6 +64,14 @@ export function useAudioNormalization(settings: NormalizationSettings) {
   const applyEffectiveVolume = useCallback(() => {
     const { audioA, audioB, userVolume } = audioElementsRef.current;
     const effectiveVolume = Math.min(1, userVolume * currentGainRef.current);
+
+    console.log('[AudioNormalization] applyEffectiveVolume:', {
+      hasAudioA: !!audioA,
+      hasAudioB: !!audioB,
+      userVolume,
+      gainLinear: currentGainRef.current,
+      effectiveVolume,
+    });
 
     if (audioA) audioA.volume = effectiveVolume;
     if (audioB) audioB.volume = effectiveVolume;
