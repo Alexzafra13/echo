@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { GetPublicProfileOutput } from '../../domain/use-cases/get-public-profile';
+import { GetPublicProfileOutput, FriendshipStatus } from '../../domain/use-cases/get-public-profile';
 
 class TopTrackDto {
   @Expose() id!: string;
@@ -57,6 +57,26 @@ class PrivacySettingsDto {
   @Expose() showPlaylists!: boolean;
 }
 
+class ProfileStatsDto {
+  @Expose() totalPlays!: number;
+  @Expose() friendCount!: number;
+}
+
+class ListeningNowDto {
+  @Expose() trackId!: string;
+  @Expose() trackTitle!: string;
+  @Expose() artistName?: string;
+  @Expose() albumId?: string;
+  @Expose() coverUrl?: string;
+}
+
+class SocialDto {
+  @Expose() friendshipStatus!: FriendshipStatus;
+  @Expose() friendshipId?: string;
+  @Expose() @Type(() => ProfileStatsDto) stats!: ProfileStatsDto;
+  @Expose() @Type(() => ListeningNowDto) listeningNow?: ListeningNowDto;
+}
+
 export class PublicProfileResponseDto {
   @Expose()
   @Type(() => PublicUserDto)
@@ -82,6 +102,10 @@ export class PublicProfileResponseDto {
   @Type(() => PrivacySettingsDto)
   settings!: PrivacySettingsDto;
 
+  @Expose()
+  @Type(() => SocialDto)
+  social!: SocialDto;
+
   static fromDomain(data: GetPublicProfileOutput): PublicProfileResponseDto {
     const dto = new PublicProfileResponseDto();
 
@@ -96,6 +120,24 @@ export class PublicProfileResponseDto {
     };
 
     dto.settings = data.settings;
+
+    // Social data
+    dto.social = {
+      friendshipStatus: data.social.friendshipStatus,
+      friendshipId: data.social.friendshipId,
+      stats: data.social.stats,
+      listeningNow: data.social.listeningNow
+        ? {
+            trackId: data.social.listeningNow.trackId,
+            trackTitle: data.social.listeningNow.trackTitle,
+            artistName: data.social.listeningNow.artistName,
+            albumId: data.social.listeningNow.albumId,
+            coverUrl: data.social.listeningNow.albumId
+              ? `/api/albums/${data.social.listeningNow.albumId}/cover`
+              : undefined,
+          }
+        : undefined,
+    };
 
     if (data.topTracks) {
       dto.topTracks = data.topTracks.map((t) => ({
