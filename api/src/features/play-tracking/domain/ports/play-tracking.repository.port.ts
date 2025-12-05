@@ -37,4 +37,7 @@ export interface IPlayTrackingRepository {
 
   // Analytics
   getListeningTimeByDay(userId: string, days?: number): Promise<{ date: string; minutes: number }[]>;
+
+  // Playback state (for social "listening now" feature)
+  updatePlaybackState(userId: string, isPlaying: boolean, currentTrackId: string | null): Promise<void>;
 }

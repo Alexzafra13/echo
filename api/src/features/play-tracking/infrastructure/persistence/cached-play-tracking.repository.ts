@@ -289,6 +289,15 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     return this.baseRepository.getTrackPlayHistory(trackId, limit);
   }
 
+  async updatePlaybackState(
+    userId: string,
+    isPlaying: boolean,
+    currentTrackId: string | null,
+  ): Promise<void> {
+    // Pass-through - no caching needed for real-time playback state
+    return this.baseRepository.updatePlaybackState(userId, isPlaying, currentTrackId);
+  }
+
   // ===================================
   // CACHE INVALIDATION
   // ===================================

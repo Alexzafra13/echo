@@ -23,6 +23,7 @@ import { useCrossfadeLogic } from '../hooks/useCrossfadeLogic';
 import { useRadioPlayback } from '../hooks/useRadioPlayback';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
+import { updatePlaybackState } from '@shared/services/play-tracking.service';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
@@ -470,6 +471,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }, [isPlaying]);
+
+  // ========== SOCIAL "LISTENING NOW" SYNC ==========
+  // Update playback state in backend for friends to see
+  useEffect(() => {
+    // Only sync for track playback (not radio)
+    if (radio.isRadioMode) return;
+
+    // Send playback state to backend
+    updatePlaybackState({
+      isPlaying,
+      currentTrackId: isPlaying && currentTrack ? currentTrack.id : null,
+    });
+  }, [isPlaying, currentTrack, radio.isRadioMode]);
 
   // ========== RADIO OPERATIONS ==========
 
