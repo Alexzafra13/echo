@@ -94,7 +94,7 @@ export class LufsAnalyzerService {
         inputLufs: result.inputLufs,
         inputPeak: result.inputPeak,
         trackGain,
-        trackPeak: Math.min(trackPeak, 1), // Clamp a 1
+        trackPeak, // No clamp: True Peak puede ser > 1.0 (> 0 dBTP) en audio con clipping
       };
     } catch (error) {
       this.logger.error(
