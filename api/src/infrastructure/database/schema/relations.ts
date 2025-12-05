@@ -12,6 +12,7 @@ import { playQueues, playQueueTracks } from './play-queue';
 import { players, transcodings } from './player';
 import { radioStations } from './radio';
 import { shares, bookmarks } from './shares';
+import { friendships } from './social';
 
 // ============================================
 // User Relations
@@ -28,6 +29,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   playStats: many(userPlayStats),
   ratings: many(userRatings),
   starred: many(userStarred),
+  // Social: friendships where user is the requester
+  sentFriendRequests: many(friendships, { relationName: 'requester' }),
+  // Social: friendships where user is the addressee
+  receivedFriendRequests: many(friendships, { relationName: 'addressee' }),
 }));
 
 export const streamTokensRelations = relations(streamTokens, ({ one }) => ({
@@ -295,5 +300,21 @@ export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
   user: one(users, {
     fields: [bookmarks.userId],
     references: [users.id],
+  }),
+}));
+
+// ============================================
+// Friendship Relations
+// ============================================
+export const friendshipsRelations = relations(friendships, ({ one }) => ({
+  requester: one(users, {
+    fields: [friendships.requesterId],
+    references: [users.id],
+    relationName: 'requester',
+  }),
+  addressee: one(users, {
+    fields: [friendships.addresseeId],
+    references: [users.id],
+    relationName: 'addressee',
   }),
 }));
