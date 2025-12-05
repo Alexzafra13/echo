@@ -1,35 +1,348 @@
-import { useParams } from 'wouter';
-import { Link } from 'wouter';
-import { Lock, Music, Disc, User as UserIcon, ListMusic, Calendar, UserPlus, UserCheck, Clock, Users, Play, X, Check } from 'lucide-react';
+import { useMemo, CSSProperties } from 'react';
+import { useParams, Link } from 'wouter';
+import {
+  Lock,
+  Music,
+  Disc,
+  User as UserIcon,
+  UserPlus,
+  UserCheck,
+  Clock,
+  X,
+  Check,
+} from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
-import { Button } from '@shared/components/ui';
 import { usePublicProfile } from '../../hooks';
-import { useSendFriendRequest, useAcceptFriendRequest, useRemoveFriendship } from '@features/social/hooks';
-import { formatDate, formatDuration } from '@shared/utils/format';
+import {
+  useSendFriendRequest,
+  useAcceptFriendRequest,
+  useRemoveFriendship,
+} from '@features/social/hooks';
+import { formatDuration } from '@shared/utils/format';
 import { useQueryClient } from '@tanstack/react-query';
+import type {
+  FriendshipStatus,
+  TopArtist,
+  TopAlbum,
+  TopTrack,
+  PublicPlaylist,
+  ListeningNow,
+} from '../../services/public-profiles.service';
 import styles from './PublicProfilePage.module.css';
 
+// =============================================================================
+// Types
+// =============================================================================
+
+interface HeroColorStyle extends CSSProperties {
+  '--hero-color': string;
+}
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+const getUserInitials = (name?: string, username?: string): string => {
+  const displayName = name || username || 'U';
+  return displayName.slice(0, 2).toUpperCase();
+};
+
+const formatPlayCount = (count: number): string => {
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return count.toString();
+};
+
 /**
- * PublicProfilePage Component
- * Shows public profile of a user with top artists, albums, tracks, and playlists
+ * Extracts a dominant color from an image URL (simplified version)
+ * In production, you'd use a library like color-thief or vibrant.js
  */
+const getHeroColor = (coverUrl?: string): string => {
+  // Default colors for profiles without album art
+  const defaultColors = [
+    '#4a3470', // Purple
+    '#1e3a5f', // Blue
+    '#3d4f2f', // Green
+    '#5c3d2e', // Brown
+    '#4a4458', // Gray-purple
+  ];
+
+  if (!coverUrl) {
+    // Return a consistent color based on the URL hash (or random for new profiles)
+    return defaultColors[Math.floor(Math.random() * defaultColors.length)];
+  }
+
+  // For now, return a nice purple. In production, extract from image.
+  return '#4a3470';
+};
+
+// =============================================================================
+// Sub-components
+// =============================================================================
+
+interface AvatarProps {
+  avatarUrl?: string;
+  name?: string;
+  username?: string;
+}
+
+function Avatar({ avatarUrl, name, username }: AvatarProps) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name || username}
+        className={styles.publicProfilePage__avatar}
+      />
+    );
+  }
+
+  return (
+    <div className={styles.publicProfilePage__avatarPlaceholder}>
+      {getUserInitials(name, username)}
+    </div>
+  );
+}
+
+interface ListeningNowBadgeProps {
+  listeningNow: ListeningNow;
+}
+
+function ListeningNowBadge({ listeningNow }: ListeningNowBadgeProps) {
+  return (
+    <Link
+      href={listeningNow.albumId ? `/album/${listeningNow.albumId}` : '#'}
+      className={styles.publicProfilePage__listeningNow}
+    >
+      <div className={styles.publicProfilePage__listeningNowBars}>
+        <span className={styles.publicProfilePage__listeningNowBar} />
+        <span className={styles.publicProfilePage__listeningNowBar} />
+        <span className={styles.publicProfilePage__listeningNowBar} />
+        <span className={styles.publicProfilePage__listeningNowBar} />
+      </div>
+      <span className={styles.publicProfilePage__listeningNowTrack}>
+        {listeningNow.trackTitle}
+        {listeningNow.artistName && (
+          <span className={styles.publicProfilePage__listeningNowArtist}>
+            {' '}· {listeningNow.artistName}
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+}
+
+interface FriendButtonProps {
+  status: FriendshipStatus;
+  friendshipId?: string;
+  onSendRequest: () => void;
+  onAcceptRequest: () => void;
+  onCancelRequest: () => void;
+  isLoading: boolean;
+}
+
+function FriendButton({
+  status,
+  onSendRequest,
+  onAcceptRequest,
+  onCancelRequest,
+  isLoading,
+}: FriendButtonProps) {
+  if (status === 'self') return null;
+
+  switch (status) {
+    case 'none':
+      return (
+        <button
+          className={`${styles.publicProfilePage__friendBtn} ${styles['publicProfilePage__friendBtn--primary']}`}
+          onClick={onSendRequest}
+          disabled={isLoading}
+        >
+          <UserPlus size={18} />
+          Añadir amigo
+        </button>
+      );
+
+    case 'pending_sent':
+      return (
+        <button
+          className={`${styles.publicProfilePage__friendBtn} ${styles['publicProfilePage__friendBtn--pending']}`}
+          onClick={onCancelRequest}
+          disabled={isLoading}
+        >
+          <Clock size={18} />
+          Solicitud enviada
+        </button>
+      );
+
+    case 'pending_received':
+      return (
+        <div className={styles.publicProfilePage__friendActions}>
+          <button
+            className={`${styles.publicProfilePage__friendBtn} ${styles['publicProfilePage__friendBtn--primary']}`}
+            onClick={onAcceptRequest}
+            disabled={isLoading}
+          >
+            <Check size={18} />
+            Aceptar
+          </button>
+          <button
+            className={`${styles.publicProfilePage__iconBtn} ${styles['publicProfilePage__iconBtn--danger']}`}
+            onClick={onCancelRequest}
+            disabled={isLoading}
+            aria-label="Rechazar solicitud"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      );
+
+    case 'accepted':
+      return (
+        <button
+          className={`${styles.publicProfilePage__friendBtn} ${styles['publicProfilePage__friendBtn--accepted']}`}
+          disabled
+        >
+          <UserCheck size={18} />
+          Amigos
+        </button>
+      );
+
+    default:
+      return null;
+  }
+}
+
+interface ArtistCardProps {
+  artist: TopArtist;
+}
+
+function ArtistCard({ artist }: ArtistCardProps) {
+  return (
+    <Link href={`/artists/${artist.id}`} className={styles.publicProfilePage__artistCard}>
+      {artist.imageUrl ? (
+        <img
+          src={artist.imageUrl}
+          alt={artist.name}
+          className={styles.publicProfilePage__artistImage}
+        />
+      ) : (
+        <div className={styles.publicProfilePage__artistPlaceholder}>
+          <UserIcon size={40} />
+        </div>
+      )}
+      <h3 className={styles.publicProfilePage__artistName}>{artist.name}</h3>
+      <p className={styles.publicProfilePage__artistMeta}>Artista</p>
+    </Link>
+  );
+}
+
+interface AlbumCardProps {
+  album: TopAlbum;
+}
+
+function AlbumCard({ album }: AlbumCardProps) {
+  return (
+    <Link href={`/album/${album.id}`} className={styles.publicProfilePage__albumCard}>
+      {album.coverUrl ? (
+        <img
+          src={album.coverUrl}
+          alt={album.name}
+          className={styles.publicProfilePage__albumCover}
+        />
+      ) : (
+        <div className={styles.publicProfilePage__albumPlaceholder}>
+          <Disc size={48} />
+        </div>
+      )}
+      <h3 className={styles.publicProfilePage__albumName}>{album.name}</h3>
+      {album.artistName && (
+        <p className={styles.publicProfilePage__albumArtist}>{album.artistName}</p>
+      )}
+      <p className={styles.publicProfilePage__albumMeta}>
+        {album.playCount} reproducciones
+      </p>
+    </Link>
+  );
+}
+
+interface TrackItemProps {
+  track: TopTrack;
+  index: number;
+}
+
+function TrackItem({ track, index }: TrackItemProps) {
+  return (
+    <Link
+      href={track.albumId ? `/album/${track.albumId}` : '#'}
+      className={styles.publicProfilePage__trackItem}
+    >
+      <span className={styles.publicProfilePage__trackNumber}>{index + 1}</span>
+      {track.coverUrl ? (
+        <img
+          src={track.coverUrl}
+          alt={track.title}
+          className={styles.publicProfilePage__trackCover}
+        />
+      ) : (
+        <div className={styles.publicProfilePage__trackCoverPlaceholder}>
+          <Music size={18} />
+        </div>
+      )}
+      <div className={styles.publicProfilePage__trackInfo}>
+        <h3 className={styles.publicProfilePage__trackTitle}>{track.title}</h3>
+        {track.artistName && (
+          <p className={styles.publicProfilePage__trackArtist}>{track.artistName}</p>
+        )}
+      </div>
+      <span className={styles.publicProfilePage__trackPlays}>
+        {formatPlayCount(track.playCount)}
+      </span>
+    </Link>
+  );
+}
+
+interface PlaylistCardProps {
+  playlist: PublicPlaylist;
+}
+
+function PlaylistCard({ playlist }: PlaylistCardProps) {
+  return (
+    <Link href={`/playlists/${playlist.id}`} className={styles.publicProfilePage__playlistCard}>
+      <div className={styles.publicProfilePage__playlistCoverWrapper}>
+        <PlaylistCoverMosaic albumIds={playlist.albumIds} playlistName={playlist.name} />
+      </div>
+      <h3 className={styles.publicProfilePage__playlistName}>{playlist.name}</h3>
+      <p className={styles.publicProfilePage__playlistMeta}>
+        {playlist.songCount} canciones · {formatDuration(playlist.duration)}
+      </p>
+    </Link>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
 export function PublicProfilePage() {
   const params = useParams<{ userId: string }>();
   const userId = params.userId || '';
   const { data: profile, isLoading, error } = usePublicProfile(userId);
   const queryClient = useQueryClient();
 
+  // Mutations
   const sendRequestMutation = useSendFriendRequest();
   const acceptRequestMutation = useAcceptFriendRequest();
   const removeRequestMutation = useRemoveFriendship();
 
-  const getUserInitials = (name?: string, username?: string) => {
-    const displayName = name || username || 'U';
-    return displayName.slice(0, 2).toUpperCase();
-  };
+  const isActionLoading =
+    sendRequestMutation.isPending ||
+    acceptRequestMutation.isPending ||
+    removeRequestMutation.isPending;
 
+  // Handlers
   const handleSendRequest = async () => {
     await sendRequestMutation.mutateAsync(userId);
     queryClient.invalidateQueries({ queryKey: ['public-profile', userId] });
@@ -49,12 +362,13 @@ export function PublicProfilePage() {
     }
   };
 
-  const formatPlayCount = (count: number): string => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-    return count.toString();
-  };
+  // Compute hero color based on top album
+  const heroColor = useMemo(() => {
+    const topAlbumCover = profile?.topAlbums?.[0]?.coverUrl;
+    return getHeroColor(topAlbumCover);
+  }, [profile?.topAlbums]);
 
+  // Loading state
   if (isLoading) {
     return (
       <div className={styles.publicProfilePage}>
@@ -71,6 +385,7 @@ export function PublicProfilePage() {
     );
   }
 
+  // Error state
   if (error || !profile) {
     return (
       <div className={styles.publicProfilePage}>
@@ -93,7 +408,7 @@ export function PublicProfilePage() {
 
   const { user, topTracks, topArtists, topAlbums, playlists, settings, social } = profile;
 
-  // If profile is private, show minimal info
+  // Private profile view
   if (!user.isPublicProfile) {
     return (
       <div className={styles.publicProfilePage}>
@@ -101,30 +416,26 @@ export function PublicProfilePage() {
         <main className={styles.publicProfilePage__main}>
           <Header showBackButton disableSearch />
           <div className={styles.publicProfilePage__content}>
-            {/* Profile Header - Minimal */}
-            <div className={styles.publicProfilePage__profileHeader}>
-              {user.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.name || user.username}
-                  className={styles.publicProfilePage__avatar}
+            <div
+              className={styles.publicProfilePage__hero}
+              style={{ '--hero-color': heroColor } as HeroColorStyle}
+            >
+              <div className={styles.publicProfilePage__heroGradient} />
+              <div className={styles.publicProfilePage__heroContent}>
+                <Avatar
+                  avatarUrl={user.avatarUrl}
+                  name={user.name}
+                  username={user.username}
                 />
-              ) : (
-                <div className={styles.publicProfilePage__avatarPlaceholder}>
-                  {getUserInitials(user.name, user.username)}
+                <div className={styles.publicProfilePage__heroInfo}>
+                  <span className={styles.publicProfilePage__profileLabel}>Perfil</span>
+                  <h1 className={styles.publicProfilePage__name}>
+                    {user.name || user.username}
+                  </h1>
                 </div>
-              )}
-              <div className={styles.publicProfilePage__info}>
-                <h1 className={styles.publicProfilePage__name}>
-                  {user.name || user.username}
-                </h1>
-                {user.name && (
-                  <p className={styles.publicProfilePage__username}>@{user.username}</p>
-                )}
               </div>
             </div>
 
-            {/* Private Message */}
             <div className={styles.publicProfilePage__privateMessage}>
               <div className={styles.publicProfilePage__privateIcon}>
                 <Lock size={40} />
@@ -138,316 +449,155 @@ export function PublicProfilePage() {
     );
   }
 
+  // Public profile view
+  const hasContent =
+    (topArtists && topArtists.length > 0) ||
+    (topAlbums && topAlbums.length > 0) ||
+    (topTracks && topTracks.length > 0) ||
+    (playlists && playlists.length > 0);
+
   return (
     <div className={styles.publicProfilePage}>
       <Sidebar />
       <main className={styles.publicProfilePage__main}>
         <Header showBackButton disableSearch />
         <div className={styles.publicProfilePage__content}>
-          <div className={styles.publicProfilePage__contentInner}>
-          {/* Profile Header */}
-          <div className={styles.publicProfilePage__profileHeader}>
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.name || user.username}
-                className={styles.publicProfilePage__avatar}
+          {/* Hero Section */}
+          <div
+            className={styles.publicProfilePage__hero}
+            style={{ '--hero-color': heroColor } as HeroColorStyle}
+          >
+            <div className={styles.publicProfilePage__heroGradient} />
+            <div className={styles.publicProfilePage__heroContent}>
+              <Avatar
+                avatarUrl={user.avatarUrl}
+                name={user.name}
+                username={user.username}
               />
-            ) : (
-              <div className={styles.publicProfilePage__avatarPlaceholder}>
-                {getUserInitials(user.name, user.username)}
-              </div>
-            )}
-            <div className={styles.publicProfilePage__info}>
-              <h1 className={styles.publicProfilePage__name}>
-                {user.name || user.username}
-              </h1>
-              {user.name && (
-                <p className={styles.publicProfilePage__username}>@{user.username}</p>
-              )}
-              {user.bio && (
-                <p className={styles.publicProfilePage__bio}>{user.bio}</p>
-              )}
+              <div className={styles.publicProfilePage__heroInfo}>
+                <span className={styles.publicProfilePage__profileLabel}>Perfil</span>
+                <h1 className={styles.publicProfilePage__name}>
+                  {user.name || user.username}
+                </h1>
 
-              {/* Stats */}
-              <div className={styles.publicProfilePage__stats}>
-                <div className={styles.publicProfilePage__stat}>
-                  <Play size={16} />
-                  <span className={styles.publicProfilePage__statValue}>
-                    {formatPlayCount(social.stats.totalPlays)}
+                {/* Meta info */}
+                <div className={styles.publicProfilePage__meta}>
+                  {user.name && <span>@{user.username}</span>}
+                  {user.name && <span className={styles.publicProfilePage__metaDot} />}
+                  <span>
+                    <span className={styles.publicProfilePage__metaHighlight}>
+                      {formatPlayCount(social.stats.totalPlays)}
+                    </span>{' '}
+                    reproducciones
                   </span>
-                  <span className={styles.publicProfilePage__statLabel}>reproducciones</span>
-                </div>
-                <div className={styles.publicProfilePage__stat}>
-                  <Users size={16} />
-                  <span className={styles.publicProfilePage__statValue}>
-                    {social.stats.friendCount}
-                  </span>
-                  <span className={styles.publicProfilePage__statLabel}>amigos</span>
-                </div>
-                <div className={styles.publicProfilePage__stat}>
-                  <Calendar size={16} />
-                  <span className={styles.publicProfilePage__statLabel}>
-                    Miembro desde {formatDate(user.memberSince)}
+                  <span className={styles.publicProfilePage__metaDot} />
+                  <span>
+                    <span className={styles.publicProfilePage__metaHighlight}>
+                      {social.stats.friendCount}
+                    </span>{' '}
+                    amigos
                   </span>
                 </div>
-              </div>
 
-              {/* Friend Button */}
-              {social.friendshipStatus !== 'self' && (
-                <div className={styles.publicProfilePage__friendAction}>
-                  {social.friendshipStatus === 'none' && (
-                    <Button
-                      variant="primary"
-                      onClick={handleSendRequest}
-                      disabled={sendRequestMutation.isPending}
-                    >
-                      <UserPlus size={18} />
-                      Añadir amigo
-                    </Button>
-                  )}
-                  {social.friendshipStatus === 'pending_sent' && (
-                    <Button
-                      variant="secondary"
-                      onClick={handleCancelRequest}
-                      disabled={removeRequestMutation.isPending}
-                    >
-                      <Clock size={18} />
-                      Solicitud enviada
-                    </Button>
-                  )}
-                  {social.friendshipStatus === 'pending_received' && (
-                    <div className={styles.publicProfilePage__friendActions}>
-                      <Button
-                        variant="primary"
-                        onClick={handleAcceptRequest}
-                        disabled={acceptRequestMutation.isPending}
-                      >
-                        <Check size={18} />
-                        Aceptar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={handleCancelRequest}
-                        disabled={removeRequestMutation.isPending}
-                      >
-                        <X size={18} />
-                      </Button>
-                    </div>
-                  )}
-                  {social.friendshipStatus === 'accepted' && (
-                    <Button variant="secondary" disabled>
-                      <UserCheck size={18} />
-                      Amigos
-                    </Button>
-                  )}
-                </div>
-              )}
+                {/* Bio */}
+                {user.bio && (
+                  <p className={styles.publicProfilePage__bio}>{user.bio}</p>
+                )}
+
+                {/* Listening Now */}
+                {social.listeningNow && (
+                  <ListeningNowBadge listeningNow={social.listeningNow} />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Listening Now - Only for friends */}
-          {social.listeningNow && (
-            <div className={styles.publicProfilePage__listeningNow}>
-              <div className={styles.publicProfilePage__listeningNowHeader}>
-                <Play size={16} className={styles.publicProfilePage__listeningNowPulse} />
-                <span>Escuchando ahora</span>
-              </div>
-              <Link
-                href={social.listeningNow.albumId ? `/album/${social.listeningNow.albumId}` : '#'}
-                className={styles.publicProfilePage__listeningNowTrack}
-              >
-                {social.listeningNow.coverUrl ? (
-                  <img
-                    src={social.listeningNow.coverUrl}
-                    alt={social.listeningNow.trackTitle}
-                    className={styles.publicProfilePage__listeningNowCover}
-                  />
-                ) : (
-                  <div className={styles.publicProfilePage__listeningNowCoverPlaceholder}>
-                    <Music size={24} />
-                  </div>
-                )}
-                <div className={styles.publicProfilePage__listeningNowInfo}>
-                  <span className={styles.publicProfilePage__listeningNowTitle}>
-                    {social.listeningNow.trackTitle}
-                  </span>
-                  {social.listeningNow.artistName && (
-                    <span className={styles.publicProfilePage__listeningNowArtist}>
-                      {social.listeningNow.artistName}
-                    </span>
-                  )}
+          {/* Actions Bar */}
+          {social.friendshipStatus !== 'self' && (
+            <div className={styles.publicProfilePage__actions}>
+              <FriendButton
+                status={social.friendshipStatus}
+                friendshipId={social.friendshipId}
+                onSendRequest={handleSendRequest}
+                onAcceptRequest={handleAcceptRequest}
+                onCancelRequest={handleCancelRequest}
+                isLoading={isActionLoading}
+              />
+            </div>
+          )}
+
+          {/* Content Sections */}
+          <div className={styles.publicProfilePage__contentInner}>
+            {/* Top Artists */}
+            {settings.showTopArtists && topArtists && topArtists.length > 0 && (
+              <section className={styles.publicProfilePage__section}>
+                <div className={styles.publicProfilePage__sectionHeader}>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>
+                    Artistas más escuchados
+                  </h2>
                 </div>
-              </Link>
-            </div>
-          )}
+                <div className={styles.publicProfilePage__artistsGrid}>
+                  {topArtists.map((artist) => (
+                    <ArtistCard key={artist.id} artist={artist} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Top Artists */}
-          {settings.showTopArtists && topArtists && topArtists.length > 0 && (
-            <section className={styles.publicProfilePage__section}>
-              <div className={styles.publicProfilePage__sectionHeader}>
-                <h2 className={styles.publicProfilePage__sectionTitle}>
-                  <UserIcon size={22} />
-                  Artistas más escuchados
-                </h2>
-              </div>
-              <div className={styles.publicProfilePage__scrollContainer}>
-                {topArtists.map((artist) => (
-                  <Link
-                    key={artist.id}
-                    href={`/artists/${artist.id}`}
-                    className={styles.publicProfilePage__artistCard}
-                  >
-                    {artist.imageUrl ? (
-                      <img
-                        src={artist.imageUrl}
-                        alt={artist.name}
-                        className={styles.publicProfilePage__artistImage}
-                      />
-                    ) : (
-                      <div className={styles.publicProfilePage__artistPlaceholder}>
-                        <UserIcon size={40} />
-                      </div>
-                    )}
-                    <h3 className={styles.publicProfilePage__artistName}>{artist.name}</h3>
-                    <p className={styles.publicProfilePage__artistPlays}>
-                      {artist.playCount} reproducciones
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+            {/* Top Albums */}
+            {settings.showTopAlbums && topAlbums && topAlbums.length > 0 && (
+              <section className={styles.publicProfilePage__section}>
+                <div className={styles.publicProfilePage__sectionHeader}>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>
+                    Álbumes más escuchados
+                  </h2>
+                </div>
+                <div className={styles.publicProfilePage__albumsGrid}>
+                  {topAlbums.map((album) => (
+                    <AlbumCard key={album.id} album={album} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Top Albums */}
-          {settings.showTopAlbums && topAlbums && topAlbums.length > 0 && (
-            <section className={styles.publicProfilePage__section}>
-              <div className={styles.publicProfilePage__sectionHeader}>
-                <h2 className={styles.publicProfilePage__sectionTitle}>
-                  <Disc size={22} />
-                  Álbumes más escuchados
-                </h2>
-              </div>
-              <div className={styles.publicProfilePage__scrollContainer}>
-                {topAlbums.map((album) => (
-                  <Link
-                    key={album.id}
-                    href={`/album/${album.id}`}
-                    className={styles.publicProfilePage__albumCard}
-                  >
-                    {album.coverUrl ? (
-                      <img
-                        src={album.coverUrl}
-                        alt={album.name}
-                        className={styles.publicProfilePage__albumCover}
-                      />
-                    ) : (
-                      <div className={styles.publicProfilePage__albumPlaceholder}>
-                        <Disc size={48} />
-                      </div>
-                    )}
-                    <h3 className={styles.publicProfilePage__albumName}>{album.name}</h3>
-                    {album.artistName && (
-                      <p className={styles.publicProfilePage__albumArtist}>{album.artistName}</p>
-                    )}
-                    <p className={styles.publicProfilePage__albumPlays}>
-                      {album.playCount} reproducciones
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+            {/* Top Tracks */}
+            {settings.showTopTracks && topTracks && topTracks.length > 0 && (
+              <section className={styles.publicProfilePage__section}>
+                <div className={styles.publicProfilePage__sectionHeader}>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>
+                    Canciones más escuchadas
+                  </h2>
+                </div>
+                <div className={styles.publicProfilePage__trackList}>
+                  {topTracks.map((track, index) => (
+                    <TrackItem key={track.id} track={track} index={index} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Top Tracks */}
-          {settings.showTopTracks && topTracks && topTracks.length > 0 && (
-            <section className={styles.publicProfilePage__section}>
-              <div className={styles.publicProfilePage__sectionHeader}>
-                <h2 className={styles.publicProfilePage__sectionTitle}>
-                  <Music size={22} />
-                  Canciones más escuchadas
-                </h2>
-              </div>
-              <div className={styles.publicProfilePage__trackList}>
-                {topTracks.map((track, index) => (
-                  <Link
-                    key={track.id}
-                    href={track.albumId ? `/album/${track.albumId}` : '#'}
-                    className={styles.publicProfilePage__trackItem}
-                  >
-                    <span className={styles.publicProfilePage__trackNumber}>
-                      {index + 1}
-                    </span>
-                    {track.coverUrl ? (
-                      <img
-                        src={track.coverUrl}
-                        alt={track.title}
-                        className={styles.publicProfilePage__trackCover}
-                      />
-                    ) : (
-                      <div className={styles.publicProfilePage__trackCoverPlaceholder}>
-                        <Music size={20} />
-                      </div>
-                    )}
-                    <div className={styles.publicProfilePage__trackInfo}>
-                      <h3 className={styles.publicProfilePage__trackTitle}>{track.title}</h3>
-                      {track.artistName && (
-                        <p className={styles.publicProfilePage__trackArtist}>
-                          {track.artistName}
-                        </p>
-                      )}
-                    </div>
-                    <span className={styles.publicProfilePage__trackPlays}>
-                      {track.playCount} plays
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+            {/* Playlists */}
+            {settings.showPlaylists && playlists && playlists.length > 0 && (
+              <section className={styles.publicProfilePage__section}>
+                <div className={styles.publicProfilePage__sectionHeader}>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>
+                    Playlists públicas
+                  </h2>
+                </div>
+                <div className={styles.publicProfilePage__playlistGrid}>
+                  {playlists.map((playlist) => (
+                    <PlaylistCard key={playlist.id} playlist={playlist} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Public Playlists */}
-          {settings.showPlaylists && playlists && playlists.length > 0 && (
-            <section className={styles.publicProfilePage__section}>
-              <div className={styles.publicProfilePage__sectionHeader}>
-                <h2 className={styles.publicProfilePage__sectionTitle}>
-                  <ListMusic size={22} />
-                  Playlists
-                </h2>
+            {/* Empty State */}
+            {!hasContent && (
+              <div className={styles.publicProfilePage__empty}>
+                Este usuario aún no tiene actividad para mostrar.
               </div>
-              <div className={styles.publicProfilePage__playlistGrid}>
-                {playlists.map((playlist) => (
-                  <Link
-                    key={playlist.id}
-                    href={`/playlists/${playlist.id}`}
-                    className={styles.publicProfilePage__playlistCard}
-                  >
-                    <div className={styles.publicProfilePage__playlistCoverWrapper}>
-                      <PlaylistCoverMosaic
-                        albumIds={playlist.albumIds}
-                        playlistName={playlist.name}
-                      />
-                    </div>
-                    <div className={styles.publicProfilePage__playlistInfo}>
-                      <h3 className={styles.publicProfilePage__playlistName}>
-                        {playlist.name}
-                      </h3>
-                      <p className={styles.publicProfilePage__playlistMeta}>
-                        {playlist.songCount} canciones · {formatDuration(playlist.duration)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Empty state if no content */}
-          {!topArtists?.length && !topAlbums?.length && !topTracks?.length && !playlists?.length && (
-            <div className={styles.publicProfilePage__empty}>
-              Este usuario aún no tiene actividad para mostrar.
-            </div>
-          )}
+            )}
           </div>
         </div>
       </main>
