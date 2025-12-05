@@ -10,6 +10,7 @@ import {
   GetUserTopTracksUseCase,
   GetRecentlyPlayedUseCase,
   GetUserPlaySummaryUseCase,
+  UpdatePlaybackStateUseCase,
 } from './domain/use-cases';
 import { PlayTrackingController } from './presentation/controller/play-tracking.controller';
 
@@ -35,6 +36,7 @@ import { PlayTrackingController } from './presentation/controller/play-tracking.
     GetUserTopTracksUseCase,
     GetRecentlyPlayedUseCase,
     GetUserPlaySummaryUseCase,
+    UpdatePlaybackStateUseCase,
   ],
   exports: [PLAY_TRACKING_REPOSITORY, PlayStatsCalculatorService],
 })

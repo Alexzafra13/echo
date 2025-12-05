@@ -64,3 +64,17 @@ export class RecordSkipDto {
   @IsEnum(PlayContextDto)
   playContext!: PlayContextDto;
 }
+
+/**
+ * DTO for updating playback state (for social "listening now" feature)
+ */
+export class UpdatePlaybackStateDto {
+  @ApiProperty({ description: 'Whether the user is currently playing', example: true })
+  @IsOptional()
+  isPlaying?: boolean;
+
+  @ApiProperty({ description: 'Current track ID being played', example: '123e4567-e89b-12d3-a456-426614174000', required: false })
+  @IsOptional()
+  @IsString()
+  currentTrackId?: string | null;
+}

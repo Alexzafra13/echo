@@ -197,3 +197,25 @@ export async function getPlaySummary(): Promise<PlaySummary> {
   const response = await apiClient.get('/play-tracking/summary');
   return response.data;
 }
+
+/**
+ * Playback state data for social "listening now" feature
+ */
+export interface PlaybackStateData {
+  isPlaying: boolean;
+  currentTrackId?: string | null;
+}
+
+/**
+ * Update current playback state for social "listening now" feature
+ * Called when playback starts, pauses, or stops
+ */
+export async function updatePlaybackState(data: PlaybackStateData): Promise<void> {
+  try {
+    await apiClient.put('/play-tracking/playback-state', data);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[PlayTracking] Failed to update playback state:', error);
+    }
+  }
+}
