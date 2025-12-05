@@ -36,7 +36,7 @@ import {
 import { SocialMapper } from '../../infrastructure/mappers/social.mapper';
 
 interface RequestWithUser extends Request {
-  user: { userId: string };
+  user: { id: string };
 }
 
 @Controller('social')
@@ -59,7 +59,7 @@ export class SocialController {
 
   @Get()
   async getSocialOverview(@Request() req: RequestWithUser): Promise<SocialOverviewResponseDto> {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     const [friends, pendingRequests, listeningNow, recentActivity] = await Promise.all([
       this.getFriendsUseCase.execute(userId),
@@ -86,7 +86,7 @@ export class SocialController {
 
   @Get('friends')
   async getFriends(@Request() req: RequestWithUser): Promise<FriendResponseDto[]> {
-    const friends = await this.getFriendsUseCase.execute(req.user.userId);
+    const friends = await this.getFriendsUseCase.execute(req.user.id);
     return friends.map(SocialMapper.toFriendResponse);
   }
 
@@ -96,7 +96,7 @@ export class SocialController {
     @Body() dto: SendFriendRequestDto,
   ): Promise<FriendshipResponseDto> {
     const friendship = await this.sendFriendRequestUseCase.execute(
-      req.user.userId,
+      req.user.id,
       dto.addresseeId,
     );
     return SocialMapper.toFriendshipResponse(friendship);
@@ -109,7 +109,7 @@ export class SocialController {
   ): Promise<FriendshipResponseDto> {
     const friendship = await this.acceptFriendRequestUseCase.execute(
       params.friendshipId,
-      req.user.userId,
+      req.user.id,
     );
     return SocialMapper.toFriendshipResponse(friendship);
   }
@@ -119,7 +119,7 @@ export class SocialController {
     @Request() req: RequestWithUser,
     @Param() params: FriendshipIdParamDto,
   ): Promise<{ success: boolean }> {
-    await this.removeFriendshipUseCase.execute(params.friendshipId, req.user.userId);
+    await this.removeFriendshipUseCase.execute(params.friendshipId, req.user.id);
     return { success: true };
   }
 
@@ -129,7 +129,7 @@ export class SocialController {
 
   @Get('friends/pending')
   async getPendingRequests(@Request() req: RequestWithUser): Promise<PendingRequestsResponseDto> {
-    const result = await this.getPendingRequestsUseCase.execute(req.user.userId);
+    const result = await this.getPendingRequestsUseCase.execute(req.user.id);
     return {
       received: result.received.map(SocialMapper.toFriendResponse),
       sent: result.sent.map(SocialMapper.toFriendResponse),
@@ -143,7 +143,7 @@ export class SocialController {
 
   @Get('listening')
   async getListeningFriends(@Request() req: RequestWithUser): Promise<ListeningUserResponseDto[]> {
-    const users = await this.getListeningFriendsUseCase.execute(req.user.userId);
+    const users = await this.getListeningFriendsUseCase.execute(req.user.id);
     return users.map(SocialMapper.toListeningUserResponse);
   }
 
@@ -157,7 +157,7 @@ export class SocialController {
     @Query() query: ActivityQueryDto,
   ): Promise<ActivityItemResponseDto[]> {
     const activities = await this.getFriendsActivityUseCase.execute(
-      req.user.userId,
+      req.user.id,
       query.limit || 20,
     );
     return activities.map(SocialMapper.toActivityItemResponse);
@@ -174,7 +174,7 @@ export class SocialController {
   ): Promise<SearchUserResultDto[]> {
     const users = await this.searchUsersUseCase.execute(
       query.q,
-      req.user.userId,
+      req.user.id,
       query.limit || 10,
     );
     return users.map(SocialMapper.toSearchUserResult);
