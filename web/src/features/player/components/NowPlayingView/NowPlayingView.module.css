@@ -829,3 +829,168 @@
     height: 64px;
   }
 }
+
+/* ===== Desktop with limited height (1080p and similar) ===== */
+@media (min-width: 769px) and (max-height: 900px) {
+  .nowPlaying {
+    padding: 20px 40px;
+    gap: 4px;
+    overflow-y: hidden; /* No scroll - everything must fit */
+  }
+
+  .nowPlaying__header {
+    margin-bottom: 12px;
+  }
+
+  .nowPlaying__coverContainer {
+    width: min(45vh, 400px);
+    max-width: 400px;
+    margin-bottom: 16px;
+    box-shadow: 0 24px 60px var(--black-60);
+  }
+
+  .nowPlaying__info {
+    margin-bottom: 10px;
+  }
+
+  .nowPlaying__title {
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .nowPlaying__artist {
+    font-size: 20px;
+  }
+
+  .nowPlaying__progress {
+    margin-bottom: 8px;
+    max-width: 450px;
+  }
+
+  .nowPlaying__progressBar {
+    height: 4px;
+  }
+
+  .nowPlaying__progressHandle {
+    width: 14px;
+    height: 14px;
+  }
+
+  .nowPlaying__controls {
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .nowPlaying__controlBtn {
+    padding: 6px;
+  }
+
+  .nowPlaying__controlBtn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nowPlaying__controlBtn--small svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nowPlaying__playBtn {
+    width: 52px;
+    height: 52px;
+  }
+
+  .nowPlaying__playBtn svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .nowPlaying__volumeRow {
+    margin-bottom: 8px;
+    max-width: 450px; /* Same as progress bar */
+  }
+
+  .nowPlaying__volumeSlider {
+    height: 4px;
+  }
+
+  .nowPlaying__volumeSlider::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+  }
+
+  .nowPlaying__volumeSlider::-webkit-slider-runnable-track {
+    height: 4px;
+  }
+
+  .nowPlaying__volumeBtn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ===== Desktop with very limited height (smaller than 1080p) ===== */
+@media (min-width: 769px) and (max-height: 750px) {
+  .nowPlaying {
+    padding: 16px 32px;
+    gap: 4px;
+  }
+
+  .nowPlaying__header {
+    margin-bottom: 8px;
+  }
+
+  .nowPlaying__coverContainer {
+    width: min(40vh, 320px);
+    max-width: 320px;
+    margin-bottom: 12px;
+  }
+
+  .nowPlaying__info {
+    margin-bottom: 8px;
+  }
+
+  .nowPlaying__title {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+
+  .nowPlaying__artist {
+    font-size: 16px;
+  }
+
+  .nowPlaying__progress {
+    margin-bottom: 8px;
+    max-width: 400px;
+  }
+
+  .nowPlaying__controls {
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .nowPlaying__controlBtn {
+    padding: 6px;
+  }
+
+  .nowPlaying__controlBtn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nowPlaying__playBtn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .nowPlaying__playBtn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nowPlaying__volumeRow {
+    margin-bottom: 6px;
+    max-width: 350px;
+  }
+}
