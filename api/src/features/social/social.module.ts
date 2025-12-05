@@ -11,6 +11,7 @@ import {
   GetFriendsActivityUseCase,
   SearchUsersUseCase,
 } from './domain/use-cases';
+import { ListeningNowService } from './domain/services/listening-now.service';
 import { SocialController } from './presentation/controller/social.controller';
 
 /**
@@ -33,7 +34,8 @@ import { SocialController } from './presentation/controller/social.controller';
     GetListeningFriendsUseCase,
     GetFriendsActivityUseCase,
     SearchUsersUseCase,
+    ListeningNowService,
   ],
-  exports: [SOCIAL_REPOSITORY],
+  exports: [SOCIAL_REPOSITORY, ListeningNowService],
 })
 export class SocialModule {}
