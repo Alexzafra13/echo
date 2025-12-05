@@ -151,6 +151,9 @@ export function Header({
 
       {/* Right section - Theme toggle, notifications, user menu */}
       <div className={styles.header__rightSection}>
+        {/* LUFS analysis progress (global, solo visible cuando hay análisis) */}
+        <LufsProgressIndicator />
+
         {/* Theme toggle */}
         <button
           className={styles.header__themeToggle}
@@ -160,9 +163,6 @@ export function Header({
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
-
-        {/* LUFS analysis progress (global, solo visible cuando hay análisis) */}
-        <LufsProgressIndicator />
 
         {/* System health indicator (solo admin) */}
         <SystemHealthIndicator />
