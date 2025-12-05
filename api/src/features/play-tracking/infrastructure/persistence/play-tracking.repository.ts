@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, desc, and, gte, count, avg, sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { playHistory, userPlayStats, tracks } from '@infrastructure/database/schema';
+import { playHistory, userPlayStats, tracks, playQueues } from '@infrastructure/database/schema';
 import { IPlayTrackingRepository } from '../../domain/ports';
 import {
   PlayEvent,
@@ -437,5 +437,26 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
       date,
       minutes: Math.round(minutes * 10) / 10,
     }));
+  }
+
+  // ===================================
+  // PLAYBACK STATE (Social "Listening Now")
+  // ===================================
+
+  async updatePlaybackState(
+    userId: string,
+    isPlaying: boolean,
+    currentTrackId: string | null,
+  ): Promise<void> {
+    // Use upsert: insert if not exists, update if exists
+    await this.drizzle.db.execute(sql`
+      INSERT INTO play_queue (user_id, current_track_id, is_playing, updated_at)
+      VALUES (${userId}, ${currentTrackId}, ${isPlaying}, NOW())
+      ON CONFLICT (user_id)
+      DO UPDATE SET
+        current_track_id = ${currentTrackId},
+        is_playing = ${isPlaying},
+        updated_at = NOW()
+    `);
   }
 }

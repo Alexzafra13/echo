@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Put,
   Get,
   Body,
   Query,
@@ -26,8 +27,9 @@ import {
   GetUserTopTracksUseCase,
   GetRecentlyPlayedUseCase,
   GetUserPlaySummaryUseCase,
+  UpdatePlaybackStateUseCase,
 } from '../../domain/use-cases';
-import { RecordPlayDto, RecordSkipDto } from '../dtos/play-tracking.dto';
+import { RecordPlayDto, RecordSkipDto, UpdatePlaybackStateDto } from '../dtos/play-tracking.dto';
 import {
   PlayEventResponseDto,
   TopTrackResponseDto,
@@ -46,6 +48,7 @@ export class PlayTrackingController {
     private readonly getUserTopTracksUseCase: GetUserTopTracksUseCase,
     private readonly getRecentlyPlayedUseCase: GetRecentlyPlayedUseCase,
     private readonly getUserPlaySummaryUseCase: GetUserPlaySummaryUseCase,
+    private readonly updatePlaybackStateUseCase: UpdatePlaybackStateUseCase,
   ) {}
 
   /**
@@ -242,5 +245,32 @@ export class PlayTrackingController {
         createdAt: event.createdAt,
       })),
     };
+  }
+
+  /**
+   * PUT /play-tracking/playback-state
+   * Update current playback state (for social "listening now" feature)
+   */
+  @Put('playback-state')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Update playback state',
+    description: 'Update current playback state for the social "listening now" feature. Call this when playback starts, pauses, or stops.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Playback state updated successfully',
+  })
+  async updatePlaybackState(
+    @Body() dto: UpdatePlaybackStateDto,
+    @Req() req: RequestWithUser,
+  ): Promise<void> {
+    const userId = req.user.id;
+
+    await this.updatePlaybackStateUseCase.execute({
+      userId,
+      isPlaying: dto.isPlaying,
+      currentTrackId: dto.currentTrackId,
+    });
   }
 }
