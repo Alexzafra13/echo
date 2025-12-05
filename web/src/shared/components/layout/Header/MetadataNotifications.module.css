@@ -170,6 +170,7 @@
 /* Lista de notificaciones */
 .notifications__list {
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 450px;
 }
 
