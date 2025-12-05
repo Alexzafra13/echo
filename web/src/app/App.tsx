@@ -22,6 +22,7 @@ import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlayl
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
 import { ExplorePage } from '@features/explore/pages/ExplorePage';
 import { UnplayedAlbumsPage } from '@features/explore/pages/UnplayedAlbumsPage';
+import { SocialPage } from '@features/social';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { SetupGuard } from '@shared/components/SetupGuard';
@@ -180,6 +181,13 @@ function App() {
         <Route path="/explore">
           <ProtectedRoute>
             <ExplorePage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Social Route (Protected) */}
+        <Route path="/social">
+          <ProtectedRoute>
+            <SocialPage />
           </ProtectedRoute>
         </Route>
 

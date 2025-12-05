@@ -19,6 +19,7 @@ export * from './metadata';
 export * from './enrichment';
 export * from './settings';
 export * from './system';
+export * from './social';
 
 // Relations
 export * from './relations';
