@@ -8,8 +8,13 @@ import {
   Query,
   UseGuards,
   Request,
+  Sse,
+  Req,
 } from '@nestjs/common';
+import { FastifyRequest } from 'fastify';
+import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { Public } from '@shared/decorators/public.decorator';
 import {
   SendFriendRequestUseCase,
   AcceptFriendRequestUseCase,
@@ -34,6 +39,7 @@ import {
   SocialOverviewResponseDto,
 } from '../dtos/social.dto';
 import { SocialMapper } from '../../infrastructure/mappers/social.mapper';
+import { ListeningNowService, ListeningNowUpdate } from '../../domain/services/listening-now.service';
 
 interface RequestWithUser extends Request {
   user: { id: string };
@@ -51,6 +57,7 @@ export class SocialController {
     private readonly getListeningFriendsUseCase: GetListeningFriendsUseCase,
     private readonly getFriendsActivityUseCase: GetFriendsActivityUseCase,
     private readonly searchUsersUseCase: SearchUsersUseCase,
+    private readonly listeningNowService: ListeningNowService,
   ) {}
 
   // ============================================
@@ -178,5 +185,86 @@ export class SocialController {
       query.limit || 10,
     );
     return users.map(SocialMapper.toSearchUserResult);
+  }
+
+  // ============================================
+  // SSE: Real-time Listening Now Updates
+  // ============================================
+
+  /**
+   * GET /social/listening/stream
+   * Server-Sent Events endpoint for real-time "listening now" updates
+   * Streams updates when friends start/stop playing music
+   *
+   * Note: EventSource cannot send Authorization headers, so this endpoint
+   * is public but requires userId as query parameter. The userId is used
+   * to filter updates to only show the user's friends.
+   */
+  @Sse('listening/stream')
+  @Public()
+  streamListeningNow(
+    @Query('userId') userId: string,
+    @Req() request: FastifyRequest,
+  ): Observable<MessageEvent> {
+    return new Observable((subscriber) => {
+      // First, get the user's friend IDs
+      let friendIds: string[] = [];
+
+      // Fetch friend IDs immediately and refresh periodically
+      const refreshFriends = async () => {
+        try {
+          const friends = await this.getFriendsUseCase.execute(userId);
+          friendIds = friends.map(f => f.id);
+        } catch (error) {
+          // Ignore errors, keep using cached friendIds
+        }
+      };
+
+      // Initial fetch
+      refreshFriends();
+
+      // Refresh friend list every 5 minutes
+      const friendsRefreshInterval = setInterval(refreshFriends, 5 * 60 * 1000);
+
+      // Subscribe to listening now updates
+      const handleUpdate = (update: ListeningNowUpdate) => {
+        // Only forward updates from friends
+        if (friendIds.includes(update.userId)) {
+          subscriber.next({
+            type: 'listening-update',
+            data: {
+              userId: update.userId,
+              isPlaying: update.isPlaying,
+              currentTrackId: update.currentTrackId,
+              timestamp: update.timestamp.toISOString(),
+            },
+          } as MessageEvent);
+        }
+      };
+
+      const unsubscribe = this.listeningNowService.subscribe(handleUpdate);
+
+      // Send keepalive every 30 seconds
+      const keepaliveInterval = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: { timestamp: Date.now() },
+        } as MessageEvent);
+      }, 30000);
+
+      // Send initial "connected" event
+      subscriber.next({
+        type: 'connected',
+        data: { userId, timestamp: Date.now() },
+      } as MessageEvent);
+
+      // Cleanup on client disconnect
+      request.raw.on('close', () => {
+        unsubscribe();
+        clearInterval(keepaliveInterval);
+        clearInterval(friendsRefreshInterval);
+        subscriber.complete();
+      });
+    });
   }
 }

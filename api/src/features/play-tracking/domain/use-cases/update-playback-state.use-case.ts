@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '../ports';
+import { ListeningNowService } from '../../../social/domain/services/listening-now.service';
 
 export interface UpdatePlaybackStateInput {
   userId: string;
@@ -15,6 +16,7 @@ export class UpdatePlaybackStateUseCase {
     private readonly logger: PinoLogger,
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly repository: IPlayTrackingRepository,
+    private readonly listeningNowService: ListeningNowService,
   ) {}
 
   async execute(input: UpdatePlaybackStateInput): Promise<void> {
@@ -29,6 +31,15 @@ export class UpdatePlaybackStateUseCase {
       'Updating playback state',
     );
 
+    // Update database
     await this.repository.updatePlaybackState(userId, finalIsPlaying, finalTrackId);
+
+    // Emit SSE event for real-time updates to friends
+    this.listeningNowService.emitUpdate({
+      userId,
+      isPlaying: finalIsPlaying,
+      currentTrackId: finalTrackId,
+      timestamp: new Date(),
+    });
   }
 }

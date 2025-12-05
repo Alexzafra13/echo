@@ -30,13 +30,15 @@ export const socialKeys = {
 
 /**
  * Hook to get social overview (main page data)
+ * Note: Real-time updates are handled by SSE (useListeningNowSSE hook)
+ * Polling is now just a fallback, so intervals can be longer
  */
 export function useSocialOverview() {
   return useQuery<SocialOverview>({
     queryKey: socialKeys.overview(),
     queryFn: getSocialOverview,
-    staleTime: 15000, // 15 seconds
-    refetchInterval: 20000, // Auto-refresh every 20 seconds for "listening now"
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 60000, // Fallback polling every 60 seconds (SSE handles real-time)
   });
 }
 
@@ -64,13 +66,15 @@ export function usePendingRequests() {
 
 /**
  * Hook to get friends who are listening
+ * Note: Real-time updates are handled by SSE (useListeningNowSSE hook)
+ * Polling is now just a fallback
  */
 export function useListeningFriends() {
   return useQuery<ListeningUser[]>({
     queryKey: socialKeys.listening(),
     queryFn: getListeningFriends,
-    staleTime: 5000, // 5 seconds - refresh more often for real-time feel
-    refetchInterval: 15000, // Auto-refresh every 15 seconds
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 60000, // Fallback polling every 60 seconds (SSE handles real-time)
   });
 }
 
