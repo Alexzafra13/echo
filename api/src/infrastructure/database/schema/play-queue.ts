@@ -3,6 +3,7 @@ import {
   uuid,
   varchar,
   integer,
+  boolean,
   timestamp,
   bigint,
   index,
@@ -22,9 +23,15 @@ export const playQueues = pgTable(
     currentTrackId: uuid('current_track_id').references(() => tracks.id, { onDelete: 'set null' }),
     position: bigint('position', { mode: 'number' }).default(0).notNull(),
     changedBy: varchar('changed_by', { length: 255 }),
+    // Social feature: track if user is actively listening
+    isPlaying: boolean('is_playing').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
+  (table) => [
+    // Index for finding active listeners (social "listening now" feature)
+    index('idx_play_queue_is_playing').on(table.isPlaying, table.updatedAt),
+  ],
 );
 
 // ============================================

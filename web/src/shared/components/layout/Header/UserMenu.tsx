@@ -1,5 +1,5 @@
 import { useLocation } from 'wouter';
-import { Shield } from 'lucide-react';
+import { Shield, Users } from 'lucide-react';
 import { useClickOutside } from '@shared/hooks';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './Header.module.css';
@@ -123,6 +123,14 @@ export function UserMenu({
             role="menuitem"
           >
             Settings
+          </button>
+          <button
+            className={styles.header__userMenuItem}
+            onClick={(e) => handleNavigate(e, '/social')}
+            role="menuitem"
+          >
+            <Users size={16} />
+            Social
           </button>
 
           {user?.isAdmin && (
