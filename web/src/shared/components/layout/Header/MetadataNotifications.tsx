@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus } from 'lucide-react';
 import { useMetadataEnrichment } from '@shared/hooks';
+import { usePendingRequests } from '@features/social/hooks';
 import type { EnrichmentNotification } from '@shared/hooks';
 import styles from './MetadataNotifications.module.css';
 
@@ -17,27 +19,57 @@ interface SystemAlert {
   timestamp: string;
 }
 
+interface FriendRequestNotification {
+  id: string;
+  type: 'friend_request';
+  friendshipId: string;
+  userId: string;
+  username: string;
+  name: string | null;
+  timestamp: string;
+}
+
+type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNotification;
+
 /**
  * MetadataNotifications Component
- * Muestra notificaciones de enriquecimiento de metadatos + alertas críticas del sistema
- * Solo visible para usuarios admin
+ * Muestra notificaciones:
+ * - Para todos: solicitudes de amistad
+ * - Solo admin: alertas del sistema + enriquecimiento de metadatos
  */
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
+  const [, setLocation] = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Metadata enrichment notifications (admin only)
   const {
-    notifications,
-    unreadCount,
+    notifications: metadataNotifications,
+    unreadCount: metadataUnreadCount,
     markAsRead,
     markAllAsRead,
     clearAll,
   } = useMetadataEnrichment(token, isAdmin);
 
-  // Fetch alertas críticas del sistema
+  // Friend request notifications (all users)
+  const { data: pendingRequests } = usePendingRequests();
+
+  // Convert pending requests to notifications
+  const friendRequestNotifications: FriendRequestNotification[] =
+    pendingRequests?.received.map((request) => ({
+      id: `friend-request-${request.friendshipId}`,
+      type: 'friend_request' as const,
+      friendshipId: request.friendshipId,
+      userId: request.id,
+      username: request.username,
+      name: request.name,
+      timestamp: new Date().toISOString(), // TODO: use actual timestamp from backend
+    })) || [];
+
+  // Fetch alertas críticas del sistema (admin only)
   const fetchSystemAlerts = async () => {
     if (!token || !isAdmin) return;
 
@@ -102,7 +134,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     }
   };
 
-  // Fetch inicial y polling cada 60 segundos (no tan frecuente)
+  // Fetch inicial y polling cada 60 segundos (admin only)
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -117,12 +149,11 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        // Trigger closing animation
         setIsClosing(true);
         closeTimeoutRef.current = setTimeout(() => {
           setShowNotifications(false);
           setIsClosing(false);
-        }, 200); // Match animation duration
+        }, 200);
       }
     };
 
@@ -141,12 +172,14 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   /**
    * Obtener ícono según el tipo
    */
-  const getIcon = (item: EnrichmentNotification | SystemAlert) => {
+  const getIcon = (item: NotificationItem) => {
+    if ('type' in item && item.type === 'friend_request') {
+      return <UserPlus size={16} />;
+    }
     if ('entityType' in item) {
-      // Es EnrichmentNotification
       return item.entityType === 'artist' ? <Music size={16} /> : <Disc size={16} />;
-    } else {
-      // Es SystemAlert
+    }
+    if ('category' in item) {
       switch (item.category) {
         case 'storage':
           return <HardDrive size={16} />;
@@ -158,14 +191,20 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
           return <AlertTriangle size={16} />;
       }
     }
+    return <Bell size={16} />;
   };
 
   /**
    * Obtener título y mensaje según el tipo de notificación
    */
-  const getNotificationInfo = (item: EnrichmentNotification | SystemAlert) => {
+  const getNotificationInfo = (item: NotificationItem) => {
+    if ('type' in item && item.type === 'friend_request') {
+      return {
+        title: item.name || item.username,
+        message: 'te ha enviado una solicitud de amistad',
+      };
+    }
     if ('entityType' in item) {
-      // EnrichmentNotification
       const updates: string[] = [];
       if (item.bioUpdated) updates.push('biografía');
       if (item.imagesUpdated) updates.push('imágenes');
@@ -175,13 +214,14 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         title: item.entityName,
         message: `${updates.length > 0 ? updates.join(', ') : 'metadata'} actualizado`,
       };
-    } else {
-      // SystemAlert
+    }
+    if ('category' in item) {
       return {
         title: item.category.toUpperCase(),
         message: item.message,
       };
     }
+    return { title: '', message: '' };
   };
 
   /**
@@ -204,6 +244,23 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   };
 
   /**
+   * Manejar click en notificación
+   */
+  const handleNotificationClick = (item: NotificationItem) => {
+    if ('type' in item && item.type === 'friend_request') {
+      // Navigate to social page
+      setIsClosing(true);
+      closeTimeoutRef.current = setTimeout(() => {
+        setShowNotifications(false);
+        setIsClosing(false);
+        setLocation('/social');
+      }, 200);
+    } else if ('entityType' in item && 'read' in item && !item.read) {
+      markAsRead(item.id);
+    }
+  };
+
+  /**
    * Cerrar notificaciones con animación y limpiar
    */
   const handleClearAll = () => {
@@ -215,19 +272,17 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     }, 200);
   };
 
-  // Solo mostrar para admin (después de todos los hooks)
-  if (!isAdmin) {
-    return null;
-  }
-
-  // Combinar notificaciones: alertas del sistema primero, luego metadata
-  const allNotifications = [
-    ...systemAlerts,
-    ...notifications,
+  // Combinar notificaciones: solicitudes de amistad primero, luego alertas del sistema, luego metadata
+  const allNotifications: NotificationItem[] = [
+    ...friendRequestNotifications,
+    ...(isAdmin ? systemAlerts : []),
+    ...(isAdmin ? metadataNotifications : []),
   ];
 
   // Contar total de notificaciones importantes
-  const totalCount = systemAlerts.length + unreadCount;
+  const friendRequestCount = friendRequestNotifications.length;
+  const adminNotificationCount = isAdmin ? (systemAlerts.length + metadataUnreadCount) : 0;
+  const totalCount = friendRequestCount + adminNotificationCount;
 
   return (
     <div className={styles.notifications} ref={dropdownRef}>
@@ -236,14 +291,12 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         className={styles.notifications__button}
         onClick={() => {
           if (showNotifications) {
-            // Si está abierto, cerrar con animación
             setIsClosing(true);
             closeTimeoutRef.current = setTimeout(() => {
               setShowNotifications(false);
               setIsClosing(false);
             }, 200);
           } else {
-            // Si está cerrado, abrir
             setShowNotifications(true);
           }
         }}
@@ -262,9 +315,9 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
           {/* Header */}
           <div className={styles.notifications__header}>
             <h3 className={styles.notifications__title}>Notificaciones</h3>
-            {allNotifications.length > 0 && (
+            {allNotifications.length > 0 && isAdmin && (
               <div className={styles.notifications__actions}>
-                {unreadCount > 0 && (
+                {metadataUnreadCount > 0 && (
                   <button
                     className={styles.notifications__action}
                     onClick={markAllAsRead}
@@ -296,6 +349,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
             ) : (
               allNotifications.map((item) => {
                 const info = getNotificationInfo(item);
+                const isFriendRequest = 'type' in item && item.type === 'friend_request';
                 const isSystemAlert = 'category' in item;
                 const isUnread = 'read' in item ? !item.read : true;
 
@@ -305,14 +359,18 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                     className={`${styles.notifications__item} ${
                       isUnread ? styles['notifications__item--unread'] : ''
                     } ${
-                      isSystemAlert && item.type === 'error'
+                      isSystemAlert && 'type' in item && item.type === 'error'
                         ? styles['notifications__item--error']
                         : ''
+                    } ${
+                      isFriendRequest ? styles['notifications__item--friendRequest'] : ''
                     }`}
-                    onClick={() => !isSystemAlert && isUnread && markAsRead(item.id)}
+                    onClick={() => handleNotificationClick(item)}
                   >
                     {/* Icon */}
-                    <div className={styles.notifications__itemIcon}>
+                    <div className={`${styles.notifications__itemIcon} ${
+                      isFriendRequest ? styles['notifications__itemIcon--friendRequest'] : ''
+                    }`}>
                       {getIcon(item)}
                     </div>
 
