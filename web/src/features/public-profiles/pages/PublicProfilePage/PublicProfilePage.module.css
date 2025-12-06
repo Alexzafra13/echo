@@ -35,8 +35,8 @@
 /* Hero Section - Gradient Banner */
 .publicProfilePage__hero {
   position: relative;
-  padding: 120px 40px 40px;
-  min-height: 340px;
+  padding: 120px 40px 80px;
+  min-height: 420px;
 }
 
 .publicProfilePage__hero::before {
