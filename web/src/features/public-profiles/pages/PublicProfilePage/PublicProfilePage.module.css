@@ -145,9 +145,7 @@
   padding: 10px 14px;
   text-decoration: none;
   max-width: 280px;
-  align-self: flex-start;
-  margin-top: 40px;
-  margin-left: auto;
+  align-self: flex-end;
   flex-shrink: 0;
   opacity: 0;
   transform: translateX(20px);
