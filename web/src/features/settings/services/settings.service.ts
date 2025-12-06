@@ -20,7 +20,8 @@ export interface UpdatePrivacySettingsRequest {
 
 export type HomeSectionId =
   | 'recent-albums'
-  | 'wave-mix'
+  | 'artist-mix'
+  | 'genre-mix'
   | 'recently-played'
   | 'my-playlists'
   | 'top-played'

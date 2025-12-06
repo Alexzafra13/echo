@@ -12,7 +12,8 @@ import styles from './SettingsPage.module.css';
 // Section labels for display
 const SECTION_LABELS: Record<HomeSectionId, string> = {
   'recent-albums': 'Álbumes Añadidos',
-  'wave-mix': 'Wave Mix',
+  'artist-mix': 'Mix por Artista',
+  'genre-mix': 'Mix por Género',
   'recently-played': 'Escuchados Recientes',
   'my-playlists': 'Mis Playlists',
   'top-played': 'Más Escuchados',
