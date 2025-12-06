@@ -569,7 +569,8 @@ export default function SocialPage() {
                             </span>
                           </div>
                           <div className={styles.activityItem__content}>
-                            <span className={styles.activityItem__text}>
+                            {/* Line 1: User + action text */}
+                            <div className={styles.activityItem__actionLine}>
                               <span
                                 className={styles.activityItem__userLink}
                                 onClick={() => setLocation(`/user/${activity.user.id}`)}
@@ -578,57 +579,65 @@ export default function SocialPage() {
                               </span>
                               {' '}
                               {getActionText(activity.actionType)}
-                              {' '}
-                              {activity.actionType === 'became_friends' && activity.secondUser ? (
-                                <span
-                                  className={styles.activityItem__friendLink}
-                                  onClick={() => setLocation(`/user/${activity.secondUser!.id}`)}
-                                >
-                                  <img
-                                    src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
-                                    alt={activity.secondUser.username}
-                                    className={styles.activityItem__inlineAvatar}
-                                    onError={handleAvatarError}
-                                  />
-                                  <span>{activity.secondUser.name || activity.secondUser.username}</span>
-                                </span>
-                              ) : (
-                                <span
-                                  className={styles.activityItem__targetWrapper}
-                                  onClick={() => {
-                                    const url = getTargetUrl(activity.targetType, activity.targetId, activity.targetAlbumId);
-                                    if (url) setLocation(url);
-                                  }}
-                                >
-                                  {/* Mosaic cover for playlists with multiple albums */}
-                                  {activity.targetAlbumIds && activity.targetAlbumIds.length > 0 ? (
-                                    <span className={`${styles.activityItem__inlineMosaic} ${
-                                      activity.targetAlbumIds.length === 1 ? styles['activityItem__inlineMosaic--single'] :
-                                      activity.targetAlbumIds.length === 2 ? styles['activityItem__inlineMosaic--2'] :
-                                      activity.targetAlbumIds.length === 3 ? styles['activityItem__inlineMosaic--3'] :
-                                      styles['activityItem__inlineMosaic--4']
-                                    }`}>
-                                      {activity.targetAlbumIds.slice(0, 4).map((albumId) => (
-                                        <img
-                                          key={albumId}
-                                          src={`/api/albums/${albumId}/cover`}
-                                          alt=""
-                                          className={styles.activityItem__mosaicImg}
-                                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                        />
-                                      ))}
-                                    </span>
-                                  ) : activity.targetCoverUrl ? (
+                              {/* For became_friends, show friend inline */}
+                              {activity.actionType === 'became_friends' && activity.secondUser && (
+                                <>
+                                  {' '}
+                                  <span
+                                    className={styles.activityItem__friendLink}
+                                    onClick={() => setLocation(`/user/${activity.secondUser!.id}`)}
+                                  >
                                     <img
-                                      src={activity.targetCoverUrl}
-                                      alt={activity.targetName}
-                                      className={styles.activityItem__inlineCover}
+                                      src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
+                                      alt={activity.secondUser.username}
+                                      className={styles.activityItem__inlineAvatar}
+                                      onError={handleAvatarError}
                                     />
-                                  ) : null}
-                                  <span className={styles.activityItem__targetLink}>{activity.targetName}</span>
-                                </span>
+                                    <span>{activity.secondUser.name || activity.secondUser.username}</span>
+                                  </span>
+                                </>
                               )}
-                            </span>
+                            </div>
+
+                            {/* Line 2: Target with cover (for non-friend activities) */}
+                            {activity.actionType !== 'became_friends' && (
+                              <div
+                                className={styles.activityItem__targetRow}
+                                onClick={() => {
+                                  const url = getTargetUrl(activity.targetType, activity.targetId, activity.targetAlbumId);
+                                  if (url) setLocation(url);
+                                }}
+                              >
+                                {/* Mosaic cover for playlists with multiple albums */}
+                                {activity.targetAlbumIds && activity.targetAlbumIds.length > 0 ? (
+                                  <span className={`${styles.activityItem__inlineMosaic} ${
+                                    activity.targetAlbumIds.length === 1 ? styles['activityItem__inlineMosaic--single'] :
+                                    activity.targetAlbumIds.length === 2 ? styles['activityItem__inlineMosaic--2'] :
+                                    activity.targetAlbumIds.length === 3 ? styles['activityItem__inlineMosaic--3'] :
+                                    styles['activityItem__inlineMosaic--4']
+                                  }`}>
+                                    {activity.targetAlbumIds.slice(0, 4).map((albumId) => (
+                                      <img
+                                        key={albumId}
+                                        src={`/api/albums/${albumId}/cover`}
+                                        alt=""
+                                        className={styles.activityItem__mosaicImg}
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    ))}
+                                  </span>
+                                ) : activity.targetCoverUrl ? (
+                                  <img
+                                    src={activity.targetCoverUrl}
+                                    alt={activity.targetName}
+                                    className={styles.activityItem__inlineCover}
+                                  />
+                                ) : null}
+                                <span className={styles.activityItem__targetLink}>{activity.targetName}</span>
+                              </div>
+                            )}
+
+                            {/* Line 3: Timestamp */}
                             <span className={styles.activityItem__time}>
                               {formatTimeAgo(activity.createdAt)}
                             </span>
