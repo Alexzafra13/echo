@@ -511,6 +511,7 @@
 @media (max-width: 768px) {
   .panel {
     padding: 20px 16px;
+    border-radius: 12px;
   }
 
   .header {
@@ -528,12 +529,13 @@
   }
 
   .filters {
-    flex-direction: column;
+    flex-direction: row;
     align-items: stretch;
     gap: 8px;
   }
 
   .filterGroup {
+    flex: 1;
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
@@ -560,34 +562,50 @@
   }
 
   .table tbody {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .table tbody tr {
     display: flex;
     flex-direction: column;
-    background: var(--white-03);
-    border: 1px solid var(--white-08);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    gap: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 0;
+    margin-bottom: 0;
+    gap: 0;
+    overflow: hidden;
+    transition: all 0.2s ease;
   }
 
   .table tbody tr:hover {
-    background: var(--white-05);
-    border-color: var(--white-12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
   }
 
   .table tbody tr:last-child {
     margin-bottom: 0;
   }
 
+  /* Card Header - User Info */
+  .table td:first-child {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .table td:first-child::before {
+    display: none;
+  }
+
   .table td {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 12px 16px;
     border: none;
     gap: 12px;
   }
@@ -595,68 +613,100 @@
   .table td::before {
     content: attr(data-label);
     font-weight: 600;
-    font-size: 12px;
-    color: var(--color-text-secondary, #b8bcc8);
+    font-size: 11px;
+    color: var(--color-text-secondary, #9ca3af);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     flex-shrink: 0;
   }
 
-  .table td:first-child {
-    padding-top: 0;
+  .table td:last-child {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .table td:last-child {
-    padding-bottom: 0;
+  .table td:last-child::before {
+    display: none;
   }
 
   /* User info cell in card layout */
   .userInfo {
     flex: 1;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    gap: 14px;
   }
 
-  /* Actions in card layout */
+  .userAvatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .userName {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .userEmail {
+    font-size: 13px;
+    color: var(--color-text-secondary, #9ca3af);
+  }
+
+  /* Badges in card layout */
+  .badge {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* Actions in card layout - Full width grid */
   .actions {
     flex: 1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
   }
 
   .actionButton {
-    flex: 1;
-    min-width: calc(50% - 3px);
     justify-content: center;
-    font-size: 11px;
-    padding: 6px 8px;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    min-width: unset;
   }
 
   .pagination {
     flex-direction: column;
     gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
   }
 
   .paginationControls {
     width: 100%;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .paginationPages {
+    display: flex;
+    gap: 4px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    padding: 4px 0;
   }
 
   .paginationInfo,
   .paginationSize {
     font-size: 13px;
+    justify-content: center;
+    width: 100%;
   }
 
   .paginationButton {
-    min-width: 32px;
-    height: 32px;
-    font-size: 12px;
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
   }
 }
 
@@ -665,18 +715,48 @@
     padding: 16px 12px;
   }
 
+  .title {
+    font-size: 18px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+
+  .searchInput {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .filters {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .userInfo {
+    gap: 12px;
+  }
+
   .userAvatar {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .userName {
+    font-size: 15px;
   }
 
   .badge {
-    font-size: 11px;
-    padding: 3px 8px;
+    font-size: 10px;
+    padding: 4px 8px;
   }
 
   .actionButton {
-    width: 100%;
-    min-width: unset;
+    font-size: 11px;
+    padding: 10px 8px;
+  }
+
+  /* Stack actions for very small screens */
+  .actions {
+    grid-template-columns: 1fr;
   }
 }
