@@ -68,6 +68,10 @@ export interface ActivityItem {
   targetId: string;
   targetName: string;
   targetExtra?: string; // e.g., artist name for tracks
+  targetCoverPath?: string | null; // cover image for playlists/albums
+  secondUserId?: string; // for became_friends: the other user
+  secondUserName?: string | null;
+  secondUserAvatarPath?: string | null;
   createdAt: Date;
 }
 
@@ -76,4 +80,5 @@ export type ActivityType =
   | 'liked_track'
   | 'liked_album'
   | 'liked_artist'
-  | 'played_track';
+  | 'played_track'
+  | 'became_friends';
