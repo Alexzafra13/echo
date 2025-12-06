@@ -18,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { RequestWithUser } from '@shared/types/request.types';
+import { parsePaginationParams } from '@shared/utils';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import {
   CalculateTrackScoreUseCase,
@@ -243,11 +244,10 @@ export class RecommendationsController {
   @ApiOperation({ summary: 'Get paginated Wave Mix artist playlists' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix artist playlists retrieved successfully' })
   async getWaveMixArtistPlaylists(
-    @Req() req: RequestWithUser, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
+    @Req() req: RequestWithUser, @Query('skip') skip?: string, @Query('take') take?: string
   ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
     const userId = req.user.id;
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.min(50, Math.max(1, parseInt(take, 10) || 10));
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { maxTake: 50 });
 
     const result = await this.waveMixService.getArtistPlaylistsPaginated(userId, skipNum, takeNum);
 
@@ -265,11 +265,10 @@ export class RecommendationsController {
   @ApiOperation({ summary: 'Get paginated Wave Mix genre playlists' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix genre playlists retrieved successfully' })
   async getWaveMixGenrePlaylists(
-    @Req() req: RequestWithUser, @Query('skip') skip: string = '0', @Query('take') take: string = '10'
+    @Req() req: RequestWithUser, @Query('skip') skip?: string, @Query('take') take?: string
   ): Promise<{ playlists: AutoPlaylistDto[]; total: number; skip: number; take: number; hasMore: boolean }> {
     const userId = req.user.id;
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.min(50, Math.max(1, parseInt(take, 10) || 10));
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { maxTake: 50 });
 
     const result = await this.waveMixService.getGenrePlaylistsPaginated(userId, skipNum, takeNum);
 
