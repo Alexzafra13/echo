@@ -552,7 +552,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
         .where(
           and(
             inArray(playlistTracks.playlistId, playlistIdsNeedingCover),
-            eq(playlistTracks.trackOrder, 0),
+            eq(playlistTracks.trackOrder, 1),
           ),
         );
 
