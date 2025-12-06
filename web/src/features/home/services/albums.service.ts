@@ -1,4 +1,5 @@
 import { apiClient } from '@shared/services/api';
+import type { PaginatedResponse, SearchResponse, PaginationParams } from '@shared/types';
 import type {
   Album,
   Track,
@@ -51,20 +52,8 @@ export const albumsService = {
   /**
    * Get all albums with optional pagination
    */
-  getAll: async (params?: { skip?: number; take?: number }): Promise<{
-    data: Album[];
-    total: number;
-    skip: number;
-    take: number;
-    hasMore: boolean;
-  }> => {
-    const { data } = await apiClient.get<{
-      data: Album[];
-      total: number;
-      skip: number;
-      take: number;
-      hasMore: boolean;
-    }>('/albums', { params });
+  getAll: async (params?: PaginationParams): Promise<PaginatedResponse<Album>> => {
+    const { data } = await apiClient.get<PaginatedResponse<Album>>('/albums', { params });
     return data;
   },
 
@@ -72,14 +61,9 @@ export const albumsService = {
    * Search albums by query
    */
   search: async (query: string): Promise<Album[]> => {
-    const response = await apiClient.get<{
-      data: Album[];
-      total: number;
-      skip: number;
-      take: number;
-      query: string;
-      hasMore: boolean;
-    }>(`/albums/search/${encodeURIComponent(query)}`);
+    const response = await apiClient.get<SearchResponse<Album>>(
+      `/albums/search/${encodeURIComponent(query)}`
+    );
     return response.data.data; // Extract the albums array from the response
   },
 
