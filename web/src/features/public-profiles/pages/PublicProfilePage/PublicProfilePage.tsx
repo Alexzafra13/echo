@@ -478,6 +478,20 @@ export function PublicProfilePage() {
               </div>
             </div>
 
+            {/* Actions Bar - also show on private profiles */}
+            {social.friendshipStatus !== 'self' && (
+              <div className={styles.publicProfilePage__actions}>
+                <FriendButton
+                  status={social.friendshipStatus}
+                  friendshipId={social.friendshipId}
+                  onSendRequest={handleSendRequest}
+                  onAcceptRequest={handleAcceptRequest}
+                  onCancelRequest={handleCancelRequest}
+                  isLoading={isActionLoading}
+                />
+              </div>
+            )}
+
             <div className={styles.publicProfilePage__privateMessage}>
               <div className={styles.publicProfilePage__privateIcon}>
                 <Lock size={40} />

@@ -18,7 +18,6 @@
   flex: 1;
   padding: 24px 30px;
   padding-bottom: calc(120px + var(--player-bottom-spacer, 0px));
-  overflow-y: auto;
 }
 
 /* Header */
