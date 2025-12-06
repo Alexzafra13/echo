@@ -18,7 +18,7 @@
 
 .equalizer__bar {
   width: 3px;
-  background: #1ed760;
+  background: var(--color-primary);
   border-radius: 1px;
   animation: soundBars 0.8s ease-in-out infinite;
 }
