@@ -154,6 +154,102 @@
   }
 }
 
+/* ===== Home Section (My Playlists, Favorite Radios) ===== */
+.homeSection {
+  margin-bottom: 32px;
+}
+
+.homeSection__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.homeSection__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.homeSection__viewAll {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.homeSection__viewAll:hover {
+  color: var(--color-text-primary);
+  background: var(--white-05);
+}
+
+/* Playlists Grid */
+.playlistsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+/* Playlist Card */
+.playlistCard {
+  cursor: pointer;
+  border-radius: 8px;
+  background: var(--white-02);
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.playlistCard:hover {
+  background: var(--white-05);
+  transform: translateY(-2px);
+}
+
+.playlistCard__cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: var(--white-05);
+}
+
+.playlistCard__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.playlistCard__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlistCard__meta {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Radios Grid */
+.radiosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+}
+
 /* ===== Responsive Design ===== */
 
 /* Tablet */
@@ -212,6 +308,20 @@
     gap: 12px;
     padding: 0 16px;
   }
+
+  .homeSection__title {
+    font-size: 1.25rem;
+  }
+
+  .playlistsGrid,
+  .radiosGrid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .playlistCard {
+    padding: 10px;
+  }
 }
 
 /* Small Mobile */
@@ -240,6 +350,28 @@
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit consistente */
     gap: 10px;
     padding: 0 12px;
+  }
+
+  .homeSection__title {
+    font-size: 1.125rem;
+  }
+
+  .playlistsGrid,
+  .radiosGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .playlistCard {
+    padding: 8px;
+  }
+
+  .playlistCard__title {
+    font-size: 0.875rem;
+  }
+
+  .playlistCard__meta {
+    font-size: 0.75rem;
   }
 }
 
