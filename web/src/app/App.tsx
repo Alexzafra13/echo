@@ -20,8 +20,6 @@ import { PlaylistDetailPage as WavePlaylistDetailPage } from '@features/recommen
 import { DailyRedirect } from '@features/recommendations/pages/DailyRedirect';
 import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlaylistsPage';
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
-import { ExplorePage } from '@features/explore/pages/ExplorePage';
-import { UnplayedAlbumsPage } from '@features/explore/pages/UnplayedAlbumsPage';
 import { SocialPage } from '@features/social';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
@@ -169,18 +167,6 @@ function App() {
         <Route path="/daily">
           <ProtectedRoute>
             <DailyRedirect />
-          </ProtectedRoute>
-        </Route>
-
-        {/* Explore Routes (Protected) */}
-        <Route path="/explore/unplayed">
-          <ProtectedRoute>
-            <UnplayedAlbumsPage />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/explore">
-          <ProtectedRoute>
-            <ExplorePage />
           </ProtectedRoute>
         </Route>
 
