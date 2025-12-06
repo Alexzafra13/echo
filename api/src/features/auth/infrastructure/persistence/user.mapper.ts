@@ -11,7 +11,6 @@ export class UserMapper {
     { id: 'top-played' as const, enabled: false, order: 5 },
     { id: 'favorite-radios' as const, enabled: false, order: 6 },
     { id: 'surprise-me' as const, enabled: false, order: 7 },
-    { id: 'explore' as const, enabled: false, order: 8 },
   ];
 
   static toDomain(raw: UserDb): User {

@@ -404,9 +404,6 @@ export default function HomePage() {
             <AlbumGrid title="" albums={randomAlbums} />
           </section>
         );
-      case 'explore':
-        // Removed - redundant with Sorpréndeme and Explore page
-        return null;
       default:
         return null;
     }

@@ -11,7 +11,6 @@ const VALID_SECTION_IDS = [
   'top-played',
   'favorite-radios',
   'surprise-me',
-  'explore',
 ] as const;
 
 export class HomeSectionConfigDto {
@@ -53,7 +52,6 @@ export class UpdateHomePreferencesRequestDto {
       { id: 'top-played', enabled: false, order: 5 },
       { id: 'favorite-radios', enabled: false, order: 6 },
       { id: 'surprise-me', enabled: false, order: 7 },
-      { id: 'explore', enabled: false, order: 8 },
     ],
   })
   @IsArray()
