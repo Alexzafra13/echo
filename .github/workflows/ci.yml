@@ -40,6 +40,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate migrations are registered
+        run: ./api/scripts/check-migrations.sh
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

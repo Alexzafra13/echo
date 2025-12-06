@@ -541,11 +541,12 @@ export class WaveMixService {
     }
 
     // Generate fresh playlists
+    // Generate 12 playlists each to support 2 rows on large screens
     this.logger.info({ userId }, 'Generating fresh playlists');
     const [waveMix, artistPlaylists, genrePlaylists] = await Promise.all([
       this.generateWaveMix(userId),
-      this.generateArtistPlaylists(userId, 5), // Generate 5 artist playlists
-      this.generateGenrePlaylists(userId, 5),  // Generate 5 genre playlists
+      this.generateArtistPlaylists(userId, 12),
+      this.generateGenrePlaylists(userId, 12),
     ]);
 
     const playlists = [waveMix, ...artistPlaylists, ...genrePlaylists];
