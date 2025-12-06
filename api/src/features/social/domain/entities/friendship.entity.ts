@@ -69,6 +69,7 @@ export interface ActivityItem {
   targetName: string;
   targetExtra?: string; // e.g., artist name for tracks
   targetCoverPath?: string | null; // cover image for playlists/albums
+  targetAlbumId?: string; // for tracks: the album ID (to generate cover URL)
   secondUserId?: string; // for became_friends: the other user
   secondUserName?: string | null;
   secondUserAvatarPath?: string | null;
