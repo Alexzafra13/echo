@@ -70,6 +70,7 @@ export interface ActivityItem {
   targetExtra?: string; // e.g., artist name for tracks
   targetCoverPath?: string | null; // cover image for playlists/albums
   targetAlbumId?: string; // for tracks: the album ID (to generate cover URL)
+  targetAlbumIds?: string[]; // for playlists: up to 4 album IDs for mosaic cover
   secondUserId?: string; // for became_friends: the other user
   secondUserName?: string | null;
   secondUserAvatarPath?: string | null;
