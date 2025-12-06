@@ -36,15 +36,20 @@
 .publicProfilePage__hero {
   position: relative;
   padding: 120px 40px 40px;
-  background: linear-gradient(180deg, var(--hero-color, #4a3470) 0%, transparent 100%);
   min-height: 340px;
 }
 
-.publicProfilePage__heroGradient {
+.publicProfilePage__hero::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, var(--color-bg-primary, #0a0e27) 100%);
+  background: linear-gradient(180deg, var(--hero-color, #4a3470) 0%, transparent 100%);
+  opacity: 0.6;
   pointer-events: none;
+}
+
+.publicProfilePage__heroGradient {
+  display: none;
 }
 
 .publicProfilePage__heroContent {
