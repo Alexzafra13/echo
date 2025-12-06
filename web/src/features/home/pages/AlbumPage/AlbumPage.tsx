@@ -29,7 +29,7 @@ export default function AlbumPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
-  const { playQueue, currentTrack } = usePlayer();
+  const { playQueue, currentTrack, isShuffle, toggleShuffle } = usePlayer();
 
   // Real-time synchronization via WebSocket for album cover
   useAlbumMetadataSync(id);
@@ -150,9 +150,14 @@ export default function AlbumPage() {
   const handleShufflePlay = () => {
     if (!tracks || tracks.length === 0) return;
     const playerTracks = convertToPlayerTracks(tracks);
-    // Shuffle the tracks array
-    const shuffledTracks = [...playerTracks].sort(() => Math.random() - 0.5);
-    playQueue(shuffledTracks, 0);
+    // Activate shuffle mode if not already active
+    if (!isShuffle) {
+      toggleShuffle();
+    }
+    // Start from a random track - the player's shuffle logic will handle
+    // not repeating tracks until all have been played
+    const randomStartIndex = Math.floor(Math.random() * playerTracks.length);
+    playQueue(playerTracks, randomStartIndex);
   };
 
   const handleTrackPlay = (track: any) => {
