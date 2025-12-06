@@ -859,6 +859,17 @@
   color: var(--color-primary);
 }
 
+.activityItem__targetLink {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.activityItem__targetLink:hover {
+  color: var(--color-primary);
+}
+
 .activityItem__time {
   font-size: 12px;
   color: var(--color-text-tertiary);
@@ -882,6 +893,13 @@
   object-fit: cover;
   flex-shrink: 0;
   margin-left: auto;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activityItem__cover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .activityItem__friendLink {

@@ -121,6 +121,21 @@ export default function SocialPage() {
     }
   };
 
+  const getTargetUrl = (targetType: string, targetId: string) => {
+    switch (targetType) {
+      case 'playlist':
+        return `/playlist/${targetId}`;
+      case 'album':
+        return `/album/${targetId}`;
+      case 'track':
+        return `/track/${targetId}`;
+      case 'artist':
+        return `/artist/${targetId}`;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={styles.socialPage}>
       <Sidebar />
@@ -577,19 +592,31 @@ export default function SocialPage() {
                                   <span>{activity.secondUser.name || activity.secondUser.username}</span>
                                 </span>
                               ) : (
-                                <strong>{activity.targetName}</strong>
+                                <span
+                                  className={styles.activityItem__targetLink}
+                                  onClick={() => {
+                                    const url = getTargetUrl(activity.targetType, activity.targetId);
+                                    if (url) setLocation(url);
+                                  }}
+                                >
+                                  {activity.targetName}
+                                </span>
                               )}
                             </span>
                             <span className={styles.activityItem__time}>
                               {formatTimeAgo(activity.createdAt)}
                             </span>
                           </div>
-                          {/* Cover image for playlists */}
+                          {/* Cover image for playlists/tracks/albums */}
                           {activity.targetCoverUrl && (
                             <img
                               src={activity.targetCoverUrl}
                               alt={activity.targetName}
                               className={styles.activityItem__cover}
+                              onClick={() => {
+                                const url = getTargetUrl(activity.targetType, activity.targetId);
+                                if (url) setLocation(url);
+                              }}
                             />
                           )}
                         </div>
