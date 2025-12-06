@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Users, UserPlus, Music, Activity, Search, X, Check, Clock, Send, CheckCircle } from 'lucide-react';
+import { Users, UserPlus, Music, Activity, Search, X, Check, Clock, Send, CheckCircle, Headphones } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
@@ -13,6 +13,7 @@ import {
   useSearchUsers,
 } from '../../hooks';
 import { useListeningNowSSE } from '../../hooks/useListeningNowSSE';
+import { Equalizer } from '../../components/Equalizer';
 import styles from './SocialPage.module.css';
 
 /**
@@ -98,6 +99,21 @@ export default function SocialPage() {
         return 'escuchó';
       default:
         return actionType;
+    }
+  };
+
+  const getActionIcon = (actionType: string) => {
+    switch (actionType) {
+      case 'created_playlist':
+        return '📋';
+      case 'liked_track':
+      case 'liked_album':
+      case 'liked_artist':
+        return '❤️';
+      case 'played_track':
+        return '🎵';
+      default:
+        return '•';
     }
   };
 
@@ -214,235 +230,304 @@ export default function SocialPage() {
 
           {isLoading ? (
             <div className={styles.socialPage__loading}>
+              <div className={styles.socialPage__loadingSpinner} />
               <p>Cargando...</p>
             </div>
           ) : (
-            <div className={styles.socialPage__grid}>
-              {/* Listening Now Section */}
-              <section className={styles.section}>
-                <h2 className={styles.section__title}>
-                  <Music size={20} />
-                  Escuchando ahora
-                </h2>
+            <>
+              {/* Featured: Listening Now Section */}
+              <section className={styles.listeningSection}>
+                <div className={styles.listeningSection__header}>
+                  <h2 className={styles.listeningSection__title}>
+                    <Headphones size={22} />
+                    Escuchando ahora
+                  </h2>
+                  {overview?.listeningNow && overview.listeningNow.length > 0 && (
+                    <span className={styles.listeningSection__count}>
+                      {overview.listeningNow.length} {overview.listeningNow.length === 1 ? 'amigo' : 'amigos'}
+                    </span>
+                  )}
+                </div>
+
                 {overview?.listeningNow && overview.listeningNow.length > 0 ? (
-                  <div className={styles.listeningNow}>
+                  <div className={styles.listeningGrid}>
                     {overview.listeningNow.map((user) => (
                       <div
                         key={user.id}
                         className={styles.listeningCard}
                         onClick={() => setLocation(`/user/${user.id}`)}
                       >
-                        <img
-                          src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
-                          alt={user.username}
-                          className={styles.listeningCard__avatar}
-                          onError={handleAvatarError}
-                        />
-                        <div className={styles.listeningCard__info}>
-                          <span className={styles.listeningCard__name}>
-                            {user.name || user.username}
-                          </span>
-                          {user.currentTrack ? (
-                            <div className={styles.listeningCard__track}>
-                              <span className={styles.listeningCard__trackTitle}>
-                                {user.currentTrack.title}
-                              </span>
-                              <span className={styles.listeningCard__trackArtist}>
-                                {user.currentTrack.artistName}
+                        {/* Album Art Background */}
+                        {user.currentTrack?.coverUrl && (
+                          <div
+                            className={styles.listeningCard__bgBlur}
+                            style={{ backgroundImage: `url(${user.currentTrack.coverUrl})` }}
+                          />
+                        )}
+
+                        <div className={styles.listeningCard__content}>
+                          {/* Album Art or Avatar */}
+                          <div className={styles.listeningCard__coverWrapper}>
+                            {user.currentTrack?.coverUrl ? (
+                              <img
+                                src={user.currentTrack.coverUrl}
+                                alt={user.currentTrack.albumName}
+                                className={styles.listeningCard__cover}
+                              />
+                            ) : (
+                              <div className={styles.listeningCard__coverPlaceholder}>
+                                <Music size={24} />
+                              </div>
+                            )}
+                            {user.isPlaying && (
+                              <div className={styles.listeningCard__playingBadge}>
+                                <Equalizer size="sm" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* User Info */}
+                          <div className={styles.listeningCard__info}>
+                            <div className={styles.listeningCard__user}>
+                              <img
+                                src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
+                                alt={user.username}
+                                className={styles.listeningCard__avatar}
+                                onError={handleAvatarError}
+                              />
+                              <span className={styles.listeningCard__name}>
+                                {user.name || user.username}
                               </span>
                             </div>
-                          ) : (
-                            <span className={styles.listeningCard__offline}>
-                              Sin reproducir
-                            </span>
-                          )}
+
+                            {user.currentTrack ? (
+                              <div className={styles.listeningCard__track}>
+                                <span className={styles.listeningCard__trackTitle}>
+                                  {user.currentTrack.title}
+                                </span>
+                                <span className={styles.listeningCard__trackArtist}>
+                                  {user.currentTrack.artistName}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className={styles.listeningCard__offline}>
+                                Sin reproducir
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {user.isPlaying && user.currentTrack && (
-                          <div className={styles.listeningCard__indicator} />
-                        )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className={styles.section__empty}>
-                    <Music size={32} />
+                  <div className={styles.listeningSection__empty}>
+                    <div className={styles.listeningSection__emptyIcon}>
+                      <Headphones size={40} />
+                    </div>
                     <p>Ningún amigo está escuchando ahora</p>
+                    <span>Cuando tus amigos reproduzcan música, aparecerán aquí</span>
                   </div>
                 )}
               </section>
 
-              {/* Pending Requests Section - Received */}
-              {overview?.pendingRequests && overview.pendingRequests.received.length > 0 && (
-                <section className={styles.section}>
-                  <h2 className={styles.section__title}>
-                    <Clock size={20} />
-                    Solicitudes recibidas ({overview.pendingRequests.received.length})
-                  </h2>
-                  <div className={styles.requestsList}>
-                    {overview.pendingRequests.received.map((request) => (
-                      <div key={request.friendshipId} className={styles.requestCard}>
-                        <img
-                          src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
-                          alt={request.username}
-                          className={styles.requestCard__avatar}
-                          onError={handleAvatarError}
-                        />
-                        <div className={styles.requestCard__info}>
-                          <span className={styles.requestCard__name}>
-                            {request.name || request.username}
-                          </span>
-                          <span className={styles.requestCard__text}>
-                            quiere ser tu amigo
-                          </span>
+              {/* Main Grid */}
+              <div className={styles.socialPage__grid}>
+                {/* Pending Requests Section - Received */}
+                {overview?.pendingRequests && overview.pendingRequests.received.length > 0 && (
+                  <section className={styles.section}>
+                    <h2 className={styles.section__title}>
+                      <div className={styles.section__titleIcon}>
+                        <Clock size={18} />
+                      </div>
+                      Solicitudes recibidas
+                      <span className={styles.section__badge}>
+                        {overview.pendingRequests.received.length}
+                      </span>
+                    </h2>
+                    <div className={styles.requestsList}>
+                      {overview.pendingRequests.received.map((request) => (
+                        <div key={request.friendshipId} className={styles.requestCard}>
+                          <img
+                            src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
+                            alt={request.username}
+                            className={styles.requestCard__avatar}
+                            onError={handleAvatarError}
+                          />
+                          <div className={styles.requestCard__info}>
+                            <span className={styles.requestCard__name}>
+                              {request.name || request.username}
+                            </span>
+                            <span className={styles.requestCard__text}>
+                              quiere ser tu amigo
+                            </span>
+                          </div>
+                          <div className={styles.requestCard__actions}>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleAcceptRequest(request.friendshipId)}
+                              disabled={acceptRequestMutation.isPending}
+                            >
+                              <Check size={16} />
+                              Aceptar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRejectRequest(request.friendshipId)}
+                              disabled={removeFriendshipMutation.isPending}
+                            >
+                              <X size={16} />
+                            </Button>
+                          </div>
                         </div>
-                        <div className={styles.requestCard__actions}>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleAcceptRequest(request.friendshipId)}
-                            disabled={acceptRequestMutation.isPending}
-                          >
-                            <Check size={16} />
-                          </Button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Pending Requests Section - Sent */}
+                {overview?.pendingRequests && overview.pendingRequests.sent.length > 0 && (
+                  <section className={styles.section}>
+                    <h2 className={styles.section__title}>
+                      <div className={styles.section__titleIcon}>
+                        <Send size={18} />
+                      </div>
+                      Solicitudes enviadas
+                      <span className={styles.section__badge}>
+                        {overview.pendingRequests.sent.length}
+                      </span>
+                    </h2>
+                    <div className={styles.requestsList}>
+                      {overview.pendingRequests.sent.map((request) => (
+                        <div key={request.friendshipId} className={styles.requestCard}>
+                          <img
+                            src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
+                            alt={request.username}
+                            className={styles.requestCard__avatar}
+                            onError={handleAvatarError}
+                          />
+                          <div className={styles.requestCard__info}>
+                            <span className={styles.requestCard__name}>
+                              {request.name || request.username}
+                            </span>
+                            <span className={styles.requestCard__textSent}>
+                              Esperando respuesta...
+                            </span>
+                          </div>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRejectRequest(request.friendshipId)}
                             disabled={removeFriendshipMutation.isPending}
+                            title="Cancelar solicitud"
                           >
                             <X size={16} />
                           </Button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-              {/* Pending Requests Section - Sent */}
-              {overview?.pendingRequests && overview.pendingRequests.sent.length > 0 && (
+                {/* Friends Section */}
                 <section className={styles.section}>
                   <h2 className={styles.section__title}>
-                    <Send size={20} />
-                    Solicitudes enviadas ({overview.pendingRequests.sent.length})
+                    <div className={styles.section__titleIcon}>
+                      <Users size={18} />
+                    </div>
+                    Mis amigos
+                    <span className={styles.section__count}>
+                      {overview?.friends?.length || 0}
+                    </span>
                   </h2>
-                  <div className={styles.requestsList}>
-                    {overview.pendingRequests.sent.map((request) => (
-                      <div key={request.friendshipId} className={styles.requestCard}>
-                        <img
-                          src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
-                          alt={request.username}
-                          className={styles.requestCard__avatar}
-                          onError={handleAvatarError}
-                        />
-                        <div className={styles.requestCard__info}>
-                          <span className={styles.requestCard__name}>
-                            {request.name || request.username}
-                          </span>
-                          <span className={styles.requestCard__textSent}>
-                            Esperando respuesta...
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRejectRequest(request.friendshipId)}
-                          disabled={removeFriendshipMutation.isPending}
-                          title="Cancelar solicitud"
+                  {overview?.friends && overview.friends.length > 0 ? (
+                    <div className={styles.friendsList}>
+                      {overview.friends.map((friend) => (
+                        <div
+                          key={friend.id}
+                          className={styles.friendCard}
+                          onClick={() => setLocation(`/user/${friend.id}`)}
                         >
-                          <X size={16} />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Friends Section */}
-              <section className={styles.section}>
-                <h2 className={styles.section__title}>
-                  <Users size={20} />
-                  Mis amigos ({overview?.friends?.length || 0})
-                </h2>
-                {overview?.friends && overview.friends.length > 0 ? (
-                  <div className={styles.friendsList}>
-                    {overview.friends.map((friend) => (
-                      <div
-                        key={friend.id}
-                        className={styles.friendCard}
-                        onClick={() => setLocation(`/user/${friend.id}`)}
+                          <img
+                            src={friend.avatarUrl || getUserAvatarUrl(friend.id, false)}
+                            alt={friend.username}
+                            className={styles.friendCard__avatar}
+                            onError={handleAvatarError}
+                          />
+                          <div className={styles.friendCard__info}>
+                            <span className={styles.friendCard__name}>
+                              {friend.name || friend.username}
+                            </span>
+                            <span className={styles.friendCard__username}>
+                              @{friend.username}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.section__empty}>
+                      <Users size={32} />
+                      <p>Aún no tienes amigos</p>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowSearch(true)}
                       >
-                        <img
-                          src={friend.avatarUrl || getUserAvatarUrl(friend.id, false)}
-                          alt={friend.username}
-                          className={styles.friendCard__avatar}
-                          onError={handleAvatarError}
-                        />
-                        <div className={styles.friendCard__info}>
-                          <span className={styles.friendCard__name}>
-                            {friend.name || friend.username}
-                          </span>
-                          <span className={styles.friendCard__username}>
-                            @{friend.username}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.section__empty}>
-                    <Users size={32} />
-                    <p>Aún no tienes amigos</p>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowSearch(true)}
-                    >
-                      <UserPlus size={16} />
-                      Buscar usuarios
-                    </Button>
-                  </div>
-                )}
-              </section>
+                        <UserPlus size={16} />
+                        Buscar usuarios
+                      </Button>
+                    </div>
+                  )}
+                </section>
 
-              {/* Activity Feed Section */}
-              <section className={styles.section}>
-                <h2 className={styles.section__title}>
-                  <Activity size={20} />
-                  Actividad reciente
-                </h2>
-                {overview?.recentActivity && overview.recentActivity.length > 0 ? (
-                  <div className={styles.activityList}>
-                    {overview.recentActivity.map((activity) => (
-                      <div key={activity.id} className={styles.activityItem}>
-                        <img
-                          src={activity.user.avatarUrl || getUserAvatarUrl(activity.user.id, false)}
-                          alt={activity.user.username}
-                          className={styles.activityItem__avatar}
-                          onError={handleAvatarError}
-                        />
-                        <div className={styles.activityItem__content}>
-                          <span className={styles.activityItem__text}>
-                            <strong>{activity.user.name || activity.user.username}</strong>
-                            {' '}
-                            {getActionText(activity.actionType)}
-                            {' '}
-                            <strong>{activity.targetName}</strong>
-                          </span>
-                          <span className={styles.activityItem__time}>
-                            {formatTimeAgo(activity.createdAt)}
-                          </span>
+                {/* Activity Feed Section */}
+                <section className={styles.section}>
+                  <h2 className={styles.section__title}>
+                    <div className={styles.section__titleIcon}>
+                      <Activity size={18} />
+                    </div>
+                    Actividad reciente
+                  </h2>
+                  {overview?.recentActivity && overview.recentActivity.length > 0 ? (
+                    <div className={styles.activityList}>
+                      {overview.recentActivity.map((activity) => (
+                        <div key={activity.id} className={styles.activityItem}>
+                          <div className={styles.activityItem__avatarWrapper}>
+                            <img
+                              src={activity.user.avatarUrl || getUserAvatarUrl(activity.user.id, false)}
+                              alt={activity.user.username}
+                              className={styles.activityItem__avatar}
+                              onError={handleAvatarError}
+                            />
+                            <span className={styles.activityItem__icon}>
+                              {getActionIcon(activity.actionType)}
+                            </span>
+                          </div>
+                          <div className={styles.activityItem__content}>
+                            <span className={styles.activityItem__text}>
+                              <strong>{activity.user.name || activity.user.username}</strong>
+                              {' '}
+                              {getActionText(activity.actionType)}
+                              {' '}
+                              <strong>{activity.targetName}</strong>
+                            </span>
+                            <span className={styles.activityItem__time}>
+                              {formatTimeAgo(activity.createdAt)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.section__empty}>
-                    <Activity size={32} />
-                    <p>No hay actividad reciente</p>
-                  </div>
-                )}
-              </section>
-            </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.section__empty}>
+                      <Activity size={32} />
+                      <p>No hay actividad reciente</p>
+                    </div>
+                  )}
+                </section>
+              </div>
+            </>
           )}
         </div>
       </main>
