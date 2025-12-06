@@ -88,11 +88,14 @@ export class SocialMapper {
     let targetCoverUrl: string | null = null;
     if (activity.targetCoverPath) {
       if (activity.targetType === 'playlist') {
-        // For playlists: if targetAlbumId is set, use album cover; otherwise use playlist cover URL
-        if (activity.targetAlbumId) {
-          targetCoverUrl = getCoverUrl(activity.targetAlbumId, activity.targetCoverPath);
-        } else {
-          targetCoverUrl = getPlaylistCoverUrl(activity.targetId, activity.targetCoverPath);
+        // For playlists with multiple albums, frontend uses targetAlbumIds for mosaic
+        // Only set targetCoverUrl if no albumIds available (fallback)
+        if (!activity.targetAlbumIds || activity.targetAlbumIds.length === 0) {
+          if (activity.targetAlbumId) {
+            targetCoverUrl = getCoverUrl(activity.targetAlbumId, activity.targetCoverPath);
+          } else {
+            targetCoverUrl = getPlaylistCoverUrl(activity.targetId, activity.targetCoverPath);
+          }
         }
       } else if (activity.targetType === 'album') {
         targetCoverUrl = getCoverUrl(activity.targetId, activity.targetCoverPath);
@@ -117,6 +120,7 @@ export class SocialMapper {
       targetExtra: activity.targetExtra,
       targetCoverUrl,
       targetAlbumId: activity.targetAlbumId,
+      targetAlbumIds: activity.targetAlbumIds,
       createdAt: activity.createdAt,
     };
 
