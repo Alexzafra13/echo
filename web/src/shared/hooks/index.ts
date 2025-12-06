@@ -13,6 +13,8 @@ export type { ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidatio
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
 export { useDropdownPosition } from './useDropdownPosition';
+export { useDropdownMenu } from './useDropdownMenu';
+export type { UseDropdownMenuOptions, UseDropdownMenuReturn } from './useDropdownMenu';
 export { useFileUpload } from './useFileUpload';
 export type { FileUploadOptions, FileUploadState, FileUploadActions, UseFileUploadReturn } from './useFileUpload';
 export { useScrollDetection } from './useScrollDetection';

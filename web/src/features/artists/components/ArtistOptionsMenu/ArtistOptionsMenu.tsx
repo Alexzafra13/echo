@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { MoreVertical, ImageIcon, Frame, Move, Tag } from 'lucide-react';
-import { useDropdownPosition } from '@shared/hooks';
+import { useDropdownMenu } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import styles from './ArtistOptionsMenu.module.css';
 
@@ -24,88 +23,15 @@ export function ArtistOptionsMenu({
   onChangeLogo,
   hasBackground = false,
 }: ArtistOptionsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const lastPositionRef = useRef<ReturnType<typeof useDropdownPosition>>(null);
-
-  // Calculate dropdown position with smart placement
-  const position = useDropdownPosition({
-    isOpen: isOpen && !isClosing,
+  const {
+    isOpen,
+    isClosing,
     triggerRef,
-    offset: 8,
-    align: 'right',
-    maxHeight: 400,
-  });
-
-  // Keep last valid position for closing animation
-  if (position) {
-    lastPositionRef.current = position;
-  }
-  const effectivePosition = isClosing ? lastPositionRef.current : position;
-
-  // Function to close with animation
-  const closeMenu = useCallback(() => {
-    if (!isOpen || isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-    }, 150);
-  }, [isOpen, isClosing]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
-      ) {
-        closeMenu();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen, closeMenu]);
-
-  // Close menu on scroll
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleScroll = () => {
-      closeMenu();
-    };
-
-    window.addEventListener('scroll', handleScroll, true);
-    return () => {
-      window.removeEventListener('scroll', handleScroll, true);
-    };
-  }, [isOpen, closeMenu]);
-
-  const handleOptionClick = (e: React.MouseEvent, callback?: () => void) => {
-    e.stopPropagation();
-    if (callback) {
-      callback();
-    }
-    closeMenu();
-  };
-
-  const toggleMenu = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isOpen) {
-      closeMenu();
-    } else {
-      setIsOpen(true);
-    }
-  };
+    dropdownRef,
+    effectivePosition,
+    toggleMenu,
+    handleOptionClick,
+  } = useDropdownMenu({ offset: 8 });
 
   return (
     <>

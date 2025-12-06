@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { MoreVertical, ListPlus, Plus, Disc, User, Info, Trash2 } from 'lucide-react';
-import { useDropdownPosition } from '@shared/hooks';
+import { useDropdownMenu } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import type { Track } from '../../types';
 import styles from './TrackOptionsMenu.module.css';
@@ -29,90 +28,15 @@ export function TrackOptionsMenu({
   onShowInfo,
   onRemoveFromPlaylist,
 }: TrackOptionsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const lastPositionRef = useRef<ReturnType<typeof useDropdownPosition>>(null);
-
-  // Calculate dropdown position with smart placement
-  const position = useDropdownPosition({
-    isOpen: isOpen && !isClosing,
+  const {
+    isOpen,
+    isClosing,
     triggerRef,
-    offset: 4,
-    align: 'right',
-    maxHeight: 400,
-  });
-
-  // Keep last valid position for closing animation
-  if (position) {
-    lastPositionRef.current = position;
-  }
-  const effectivePosition = isClosing ? lastPositionRef.current : position;
-
-  // Function to close with animation
-  const closeMenu = useCallback(() => {
-    if (!isOpen || isClosing) return;
-    setIsClosing(true);
-    // Wait for animation to complete before fully closing
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-    }, 150); // Match animation duration
-  }, [isOpen, isClosing]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
-      ) {
-        closeMenu();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen, closeMenu]);
-
-  // Close menu on scroll
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleScroll = () => {
-      closeMenu();
-    };
-
-    // Listen to scroll on capture phase to catch all scroll events
-    window.addEventListener('scroll', handleScroll, true);
-    return () => {
-      window.removeEventListener('scroll', handleScroll, true);
-    };
-  }, [isOpen, closeMenu]);
-
-  const handleOptionClick = (e: React.MouseEvent, callback?: (track: Track) => void) => {
-    e.stopPropagation();
-    if (callback) {
-      callback(track);
-    }
-    closeMenu();
-  };
-
-  const toggleMenu = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isOpen) {
-      closeMenu();
-    } else {
-      setIsOpen(true);
-    }
-  };
+    dropdownRef,
+    effectivePosition,
+    toggleMenu,
+    handleOptionClick,
+  } = useDropdownMenu({ offset: 4 });
 
   return (
     <>
@@ -148,7 +72,7 @@ export function TrackOptionsMenu({
             {onAddToPlaylist && (
               <button
                 className={styles.trackOptionsMenu__option}
-                onClick={(e) => handleOptionClick(e, onAddToPlaylist)}
+                onClick={(e) => handleOptionClick(e, onAddToPlaylist, track)}
               >
                 <ListPlus size={16} />
                 <span>Agregar a playlist</span>
@@ -158,7 +82,7 @@ export function TrackOptionsMenu({
             {onAddToQueue && (
               <button
                 className={styles.trackOptionsMenu__option}
-                onClick={(e) => handleOptionClick(e, onAddToQueue)}
+                onClick={(e) => handleOptionClick(e, onAddToQueue, track)}
               >
                 <Plus size={16} />
                 <span>Agregar a la cola</span>
@@ -168,7 +92,7 @@ export function TrackOptionsMenu({
             {onRemoveFromPlaylist && (
               <button
                 className={`${styles.trackOptionsMenu__option} ${styles.trackOptionsMenu__optionDanger}`}
-                onClick={(e) => handleOptionClick(e, onRemoveFromPlaylist)}
+                onClick={(e) => handleOptionClick(e, onRemoveFromPlaylist, track)}
               >
                 <Trash2 size={16} />
                 <span>Quitar de la playlist</span>
@@ -180,7 +104,7 @@ export function TrackOptionsMenu({
             {onGoToAlbum && (
               <button
                 className={styles.trackOptionsMenu__option}
-                onClick={(e) => handleOptionClick(e, onGoToAlbum)}
+                onClick={(e) => handleOptionClick(e, onGoToAlbum, track)}
               >
                 <Disc size={16} />
                 <span>Ir al álbum</span>
@@ -190,7 +114,7 @@ export function TrackOptionsMenu({
             {onGoToArtist && (
               <button
                 className={styles.trackOptionsMenu__option}
-                onClick={(e) => handleOptionClick(e, onGoToArtist)}
+                onClick={(e) => handleOptionClick(e, onGoToArtist, track)}
               >
                 <User size={16} />
                 <span>Ir al artista</span>
@@ -202,7 +126,7 @@ export function TrackOptionsMenu({
                 <div className={styles.trackOptionsMenu__separator} />
                 <button
                   className={styles.trackOptionsMenu__option}
-                  onClick={(e) => handleOptionClick(e, onShowInfo)}
+                  onClick={(e) => handleOptionClick(e, onShowInfo, track)}
                 >
                   <Info size={16} />
                   <span>Ver información</span>

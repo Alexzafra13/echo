@@ -5,6 +5,7 @@ import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
+import { formatTimeAgo } from '@shared/utils/date.utils';
 import {
   useSocialOverview,
   useSendFriendRequest,
@@ -14,6 +15,7 @@ import {
 } from '../../hooks';
 import { useListeningNowSSE } from '../../hooks/useListeningNowSSE';
 import { Equalizer } from '../../components/Equalizer';
+import { getActionText, getActionIcon, getTargetUrl } from '../../utils/socialFormatters';
 import styles from './SocialPage.module.css';
 
 /**
@@ -68,72 +70,6 @@ export default function SocialPage() {
       await removeFriendshipMutation.mutateAsync(friendshipId);
     } catch (error: any) {
       console.error('Error rejecting friend request:', error);
-    }
-  };
-
-  const formatTimeAgo = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'ahora';
-    if (diffMins < 60) return `hace ${diffMins}m`;
-    if (diffHours < 24) return `hace ${diffHours}h`;
-    return `hace ${diffDays}d`;
-  };
-
-  const getActionText = (actionType: string) => {
-    switch (actionType) {
-      case 'created_playlist':
-        return 'creó la playlist';
-      case 'liked_track':
-        return 'le gustó';
-      case 'liked_album':
-        return 'le gustó el álbum';
-      case 'liked_artist':
-        return 'le gustó el artista';
-      case 'played_track':
-        return 'escuchó';
-      case 'became_friends':
-        return 'ahora es amigo de';
-      default:
-        return actionType;
-    }
-  };
-
-  const getActionIcon = (actionType: string) => {
-    switch (actionType) {
-      case 'created_playlist':
-        return '📋';
-      case 'liked_track':
-      case 'liked_album':
-      case 'liked_artist':
-        return '❤️';
-      case 'played_track':
-        return '🎵';
-      case 'became_friends':
-        return '🤝';
-      default:
-        return '•';
-    }
-  };
-
-  const getTargetUrl = (targetType: string, targetId: string, albumId?: string) => {
-    switch (targetType) {
-      case 'playlist':
-        return `/playlists/${targetId}`;
-      case 'album':
-        return `/album/${targetId}`;
-      case 'track':
-        // Tracks don't have their own page, navigate to album instead
-        return albumId ? `/album/${albumId}` : null;
-      case 'artist':
-        return `/artists/${targetId}`;
-      default:
-        return null;
     }
   };
 
