@@ -122,7 +122,6 @@
 }
 
 .statItem:hover .statItem__value {
-  transform: scale(1.1);
   color: var(--color-primary);
 }
 
@@ -809,9 +808,6 @@
   cursor: pointer;
 }
 
-.activityItem__avatarWrapper:hover .activityItem__avatar {
-  border-color: var(--color-primary);
-}
 
 .activityItem__avatar {
   width: 44px;
@@ -861,7 +857,6 @@
 
 .activityItem__userLink:hover {
   color: var(--color-primary);
-  text-decoration: underline;
 }
 
 .activityItem__time {
@@ -903,12 +898,13 @@
 }
 
 .activityItem__friendLink:hover span {
-  text-decoration: underline;
+  color: var(--color-primary);
 }
 
 .activityItem__friendLink span {
   font-weight: 600;
   color: var(--color-text-primary);
+  transition: color 0.2s ease;
 }
 
 .activityItem__inlineAvatar {
@@ -920,9 +916,6 @@
   transition: border-color 0.2s ease;
 }
 
-.activityItem__friendLink:hover .activityItem__inlineAvatar {
-  border-color: var(--color-primary);
-}
 
 /* ============================================
    Responsive
