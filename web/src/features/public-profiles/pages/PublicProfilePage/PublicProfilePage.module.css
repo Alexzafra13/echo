@@ -83,7 +83,6 @@
 
 /* Hero Info */
 .publicProfilePage__heroInfo {
-  flex: 1;
   min-width: 0;
   padding-bottom: 8px;
 }
@@ -146,6 +145,7 @@
   text-decoration: none;
   max-width: 280px;
   align-self: flex-end;
+  margin-left: 32px;
   flex-shrink: 0;
   opacity: 0;
   transform: translateX(20px);
