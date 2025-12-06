@@ -5,3 +5,5 @@ export * from './change-language.request.dto';
 export * from './user.response.dto';
 export * from './update-privacy-settings.request.dto';
 export * from './privacy-settings.response.dto';
+export * from './update-home-preferences.request.dto';
+export * from './home-preferences.response.dto';

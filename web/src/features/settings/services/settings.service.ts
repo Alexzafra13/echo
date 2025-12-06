@@ -18,6 +18,30 @@ export interface UpdatePrivacySettingsRequest {
   bio?: string | null;
 }
 
+export type HomeSectionId =
+  | 'recent-albums'
+  | 'wave-mix'
+  | 'recently-played'
+  | 'my-playlists'
+  | 'top-played'
+  | 'favorite-radios'
+  | 'surprise-me'
+  | 'explore';
+
+export interface HomeSectionConfig {
+  id: HomeSectionId;
+  enabled: boolean;
+  order: number;
+}
+
+export interface HomePreferences {
+  homeSections: HomeSectionConfig[];
+}
+
+export interface UpdateHomePreferencesRequest {
+  homeSections: HomeSectionConfig[];
+}
+
 export const settingsService = {
   async getPrivacySettings(): Promise<PrivacySettings> {
     const response = await apiClient.get<PrivacySettings>('/users/privacy');
@@ -35,5 +59,15 @@ export const settingsService = {
 
   async changeLanguage(language: 'es' | 'en'): Promise<void> {
     await apiClient.put('/users/language', { language });
+  },
+
+  async getHomePreferences(): Promise<HomePreferences> {
+    const response = await apiClient.get<HomePreferences>('/users/home-preferences');
+    return response.data;
+  },
+
+  async updateHomePreferences(data: UpdateHomePreferencesRequest): Promise<HomePreferences> {
+    const response = await apiClient.put<HomePreferences>('/users/home-preferences', data);
+    return response.data;
   },
 };

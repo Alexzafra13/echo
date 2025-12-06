@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ActionCardsRow } from '@shared/components/ActionCardsRow';
-import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect } from '../../hooks';
+import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect, useAlbumsRecentlyPlayed } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
+import { useHomePreferences } from '@features/settings/hooks';
+import type { HomeSectionId } from '@features/settings/services';
 import type { Album, HeroItem } from '../../types';
 import styles from './HomePage.module.css';
 
@@ -31,8 +33,24 @@ export default function HomePage() {
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
     Math.min(neededAlbums, 50) // Backend max is 50
   );
-  const { data: topPlayedAlbums, isLoading: loadingTopPlayed } = useTopPlayedAlbums(10);
+  const { data: topPlayedAlbums, isLoading: loadingTopPlayed } = useTopPlayedAlbums(Math.min(neededAlbums, 50));
+  const { data: recentlyPlayedAlbums } = useAlbumsRecentlyPlayed(Math.min(neededAlbums, 50));
   const { data: autoPlaylists } = useAutoPlaylists();
+  const { data: homePreferences } = useHomePreferences();
+
+  // Get enabled sections sorted by order
+  const enabledSections = useMemo(() => {
+    if (!homePreferences?.homeSections) {
+      // Default: recent-albums and wave-mix enabled
+      return [
+        { id: 'recent-albums' as HomeSectionId, order: 0 },
+        { id: 'wave-mix' as HomeSectionId, order: 1 },
+      ];
+    }
+    return homePreferences.homeSections
+      .filter(s => s.enabled)
+      .sort((a, b) => a.order - b.order);
+  }, [homePreferences]);
 
   // Hero section rotation state
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -214,6 +232,70 @@ export default function HomePage() {
 
   // Display albums based on calculated grid size (2 rows that fill the screen width)
   const displayedRecentAlbums = recentAlbums?.slice(0, neededAlbums) || [];
+  const displayedTopPlayedAlbums = topPlayedAlbums?.slice(0, neededAlbums) || [];
+  const displayedRecentlyPlayedAlbums = recentlyPlayedAlbums?.albums?.slice(0, neededAlbums) || [];
+
+  // Render a section by ID
+  const renderSection = (sectionId: HomeSectionId): ReactNode => {
+    switch (sectionId) {
+      case 'recent-albums':
+        if (displayedRecentAlbums.length === 0) return null;
+        return (
+          <AlbumGrid
+            key="recent-albums"
+            title="Recientemente Añadidos"
+            albums={displayedRecentAlbums}
+            showViewAll={true}
+            viewAllPath="/albums"
+          />
+        );
+      case 'wave-mix':
+        if (homePagePlaylists.length === 0) return null;
+        return (
+          <PlaylistGrid
+            key="wave-mix"
+            title="Wave Mix"
+            playlists={homePagePlaylists}
+            showViewAll={true}
+            viewAllPath="/wave-mix"
+          />
+        );
+      case 'recently-played':
+        if (displayedRecentlyPlayedAlbums.length === 0) return null;
+        return (
+          <AlbumGrid
+            key="recently-played"
+            title="Escuchados Recientemente"
+            albums={displayedRecentlyPlayedAlbums}
+            showViewAll={false}
+          />
+        );
+      case 'top-played':
+        if (displayedTopPlayedAlbums.length === 0) return null;
+        return (
+          <AlbumGrid
+            key="top-played"
+            title="Más Escuchados"
+            albums={displayedTopPlayedAlbums}
+            showViewAll={false}
+          />
+        );
+      case 'my-playlists':
+        // TODO: Implement my playlists section
+        return null;
+      case 'favorite-radios':
+        // TODO: Implement favorite radios section
+        return null;
+      case 'surprise-me':
+        // This is part of ActionCardsRow, not rendered separately
+        return null;
+      case 'explore':
+        // This is part of ActionCardsRow, not rendered separately
+        return null;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className={styles.homePage}>
@@ -250,7 +332,7 @@ export default function HomePage() {
           {/* Action Cards Row */}
           <ActionCardsRow />
 
-          {/* Recently Added Albums */}
+          {/* Dynamic Sections - rendered based on user preferences */}
           {loadingRecent ? (
             <div className={styles['albumGrid--loading']}>
               <div className={styles['albumGrid__sectionTitle--loading']} />
@@ -264,23 +346,9 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-          ) : displayedRecentAlbums && displayedRecentAlbums.length > 0 ? (
+          ) : enabledSections.length > 0 ? (
             <>
-              <AlbumGrid
-                title="Recientemente Añadidos"
-                albums={displayedRecentAlbums}
-                showViewAll={true}
-                viewAllPath="/albums"
-              />
-              {/* Wave Mix recommendations */}
-              {homePagePlaylists.length > 0 && (
-                <PlaylistGrid
-                  title="Wave Mix"
-                  playlists={homePagePlaylists}
-                  showViewAll={true}
-                  viewAllPath="/wave-mix"
-                />
-              )}
+              {enabledSections.map(section => renderSection(section.id))}
             </>
           ) : (
             <div className={styles.homePage__emptyState}>
