@@ -361,12 +361,13 @@
 
 .listeningCard__playingBadge {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  background: var(--color-primary);
-  border-radius: 8px;
-  padding: 4px 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  bottom: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #7c3aed 100%);
+  border-radius: 10px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--color-surface);
 }
 
 .listeningCard__info {
@@ -633,12 +634,10 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
-  border: 1px solid transparent;
 }
 
 .friendCard:hover {
-  background: var(--white-05);
-  border-color: var(--white-10);
+  background: var(--white-08);
   transform: translateY(-2px);
 }
 
@@ -649,11 +648,6 @@
   object-fit: cover;
   margin-bottom: 12px;
   border: 3px solid var(--white-10);
-  transition: border-color 0.2s ease;
-}
-
-.friendCard:hover .friendCard__avatar {
-  border-color: var(--color-primary);
 }
 
 .friendCard__info {

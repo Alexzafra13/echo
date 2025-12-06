@@ -24,6 +24,7 @@ import { useRadioPlayback } from '../hooks/useRadioPlayback';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import { updatePlaybackState } from '@shared/services/play-tracking.service';
+import { useAuthStore } from '@shared/store';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
@@ -474,11 +475,23 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========
   // Update playback state in backend for friends to see
+  // Use ref to track last update time for debouncing
+  const lastPlaybackSyncRef = useRef<number>(0);
+
   useEffect(() => {
     // Only sync for track playback (not radio)
     if (radio.isRadioMode) return;
 
-    // Send playback state to backend
+    // Check if user is authenticated before syncing
+    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    if (!isAuthenticated) return;
+
+    // Debounce: only sync if 500ms have passed since last sync
+    const now = Date.now();
+    if (now - lastPlaybackSyncRef.current < 500) return;
+    lastPlaybackSyncRef.current = now;
+
+    // Send playback state to backend (fire and forget, errors are handled silently)
     updatePlaybackState({
       isPlaying,
       currentTrackId: isPlaying && currentTrack ? currentTrack.id : null,
