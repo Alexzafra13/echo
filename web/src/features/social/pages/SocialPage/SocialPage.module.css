@@ -834,14 +834,19 @@
   margin-left: auto;
 }
 
-.activityItem__secondAvatar {
-  width: 36px;
-  height: 36px;
+.activityItem__friendLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.activityItem__inlineAvatar {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
-  margin-left: auto;
-  border: 2px solid var(--color-surface);
+  vertical-align: middle;
+  border: 1px solid var(--white-15);
 }
 
 /* ============================================
