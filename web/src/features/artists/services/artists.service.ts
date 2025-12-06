@@ -1,17 +1,7 @@
 import { apiClient } from '@shared/services/api';
+import type { PaginatedResponse, PaginationParams } from '@shared/types';
 import type { ArtistDetail, PaginatedArtists } from '../types';
 import type { Album } from '@features/home/types';
-
-/**
- * Paginated albums response for artist
- */
-interface PaginatedArtistAlbums {
-  data: Album[];
-  total: number;
-  skip: number;
-  take: number;
-  hasMore: boolean;
-}
 
 /**
  * Artists Service
@@ -21,10 +11,7 @@ export const artistsService = {
   /**
    * Get paginated list of all artists (sorted alphabetically)
    */
-  async getAll(params?: {
-    skip?: number;
-    take?: number;
-  }): Promise<PaginatedArtists> {
+  async getAll(params?: PaginationParams): Promise<PaginatedArtists> {
     const skip = params?.skip ?? 0;
     const take = params?.take ?? 100; // Get 100 by default for alphabetical list
 
@@ -46,10 +33,7 @@ export const artistsService = {
   /**
    * Search artists by name
    */
-  async search(query: string, params?: {
-    skip?: number;
-    take?: number;
-  }): Promise<PaginatedArtists> {
+  async search(query: string, params?: PaginationParams): Promise<PaginatedArtists> {
     if (!query || query.length < 2) {
       throw new Error('Search query must be at least 2 characters');
     }
@@ -67,14 +51,11 @@ export const artistsService = {
   /**
    * Get albums by artist ID
    */
-  async getAlbums(artistId: string, params?: {
-    skip?: number;
-    take?: number;
-  }): Promise<PaginatedArtistAlbums> {
+  async getAlbums(artistId: string, params?: PaginationParams): Promise<PaginatedResponse<Album>> {
     const skip = params?.skip ?? 0;
     const take = params?.take ?? 100;
 
-    const response = await apiClient.get<PaginatedArtistAlbums>(`/artists/${artistId}/albums`, {
+    const response = await apiClient.get<PaginatedResponse<Album>>(`/artists/${artistId}/albums`, {
       params: { skip, take },
     });
 
