@@ -36,14 +36,14 @@
 .publicProfilePage__hero {
   position: relative;
   padding: 120px 40px 40px;
-  background: linear-gradient(180deg, var(--hero-color, #4a3470) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(74, 52, 112, 0.7) 0%, transparent 100%);
   min-height: 340px;
 }
 
 .publicProfilePage__heroGradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, var(--color-bg-primary, #0a0e27) 100%);
+  background: linear-gradient(180deg, transparent 0%, transparent 100%);
   pointer-events: none;
 }
 
