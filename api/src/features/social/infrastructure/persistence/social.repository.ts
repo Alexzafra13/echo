@@ -532,35 +532,36 @@ export class DrizzleSocialRepository implements ISocialRepository {
       artistResults.forEach(a => targetNames.set(`artist-${a.id}`, a.name || 'Artista'));
     }
 
-    // Fetch first album cover for each playlist (for playlists without custom cover)
-    const playlistCovers = new Map<string, { albumId: string; coverPath: string }>();
+    // Fetch up to 4 unique album IDs for each playlist (for mosaic cover)
+    const playlistAlbumIds = new Map<string, string[]>();
     const playlistIdsNeedingCover = playlistResults
       .filter(p => !p.coverImageUrl)
       .map(p => p.id);
 
     if (playlistIdsNeedingCover.length > 0) {
-      // Get first track's album for each playlist
-      const firstTracks = await this.drizzle.db
+      // Get all tracks for playlists, ordered by trackOrder to get albums in order
+      const playlistTracksData = await this.drizzle.db
         .select({
           playlistId: playlistTracks.playlistId,
           albumId: tracks.albumId,
-          albumCoverPath: albums.coverArtPath,
+          trackOrder: playlistTracks.trackOrder,
         })
         .from(playlistTracks)
         .innerJoin(tracks, eq(tracks.id, playlistTracks.trackId))
-        .leftJoin(albums, eq(albums.id, tracks.albumId))
-        .where(
-          and(
-            inArray(playlistTracks.playlistId, playlistIdsNeedingCover),
-            eq(playlistTracks.trackOrder, 1),
-          ),
-        );
+        .where(inArray(playlistTracks.playlistId, playlistIdsNeedingCover))
+        .orderBy(playlistTracks.playlistId, playlistTracks.trackOrder);
 
-      firstTracks.forEach(t => {
-        if (t.albumId && t.albumCoverPath) {
-          playlistCovers.set(t.playlistId, { albumId: t.albumId, coverPath: t.albumCoverPath });
+      // Group by playlist and get up to 4 unique album IDs per playlist
+      for (const t of playlistTracksData) {
+        if (!t.albumId) continue;
+
+        const existing = playlistAlbumIds.get(t.playlistId) || [];
+        // Only add if unique and we have less than 4
+        if (!existing.includes(t.albumId) && existing.length < 4) {
+          existing.push(t.albumId);
+          playlistAlbumIds.set(t.playlistId, existing);
         }
-      });
+      }
     }
 
     // Build activity items
@@ -570,10 +571,8 @@ export class DrizzleSocialRepository implements ISocialRepository {
     for (const p of playlistResults) {
       const user = userMap.get(p.userId);
       if (user) {
-        // Use custom coverImageUrl if set, otherwise use first album's cover
-        const playlistCover = playlistCovers.get(p.id);
-        const coverPath = p.coverImageUrl || playlistCover?.coverPath || null;
-        const albumId = playlistCover?.albumId;
+        // Get album IDs for mosaic (up to 4 unique albums)
+        const albumIds = playlistAlbumIds.get(p.id) || [];
 
         activities.push({
           id: `playlist-${p.id}`,
@@ -585,8 +584,8 @@ export class DrizzleSocialRepository implements ISocialRepository {
           targetType: 'playlist',
           targetId: p.id,
           targetName: p.name,
-          targetCoverPath: coverPath,
-          targetAlbumId: albumId, // For cover URL generation when using album cover
+          targetCoverPath: p.coverImageUrl || null, // Custom cover if set
+          targetAlbumIds: albumIds, // For mosaic cover
           createdAt: p.createdAt,
         });
       }

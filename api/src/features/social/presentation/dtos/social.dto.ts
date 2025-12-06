@@ -92,6 +92,7 @@ export class ActivityItemResponseDto {
   targetExtra?: string;
   targetCoverUrl?: string | null;
   targetAlbumId?: string; // for tracks: the album ID for navigation
+  targetAlbumIds?: string[]; // for playlists: up to 4 album IDs for mosaic cover
   secondUser?: UserBasicResponseDto; // for became_friends: the other user
   createdAt!: Date;
 }

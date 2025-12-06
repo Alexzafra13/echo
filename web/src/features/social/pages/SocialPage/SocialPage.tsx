@@ -600,13 +600,31 @@ export default function SocialPage() {
                                     if (url) setLocation(url);
                                   }}
                                 >
-                                  {activity.targetCoverUrl && (
+                                  {/* Mosaic cover for playlists with multiple albums */}
+                                  {activity.targetAlbumIds && activity.targetAlbumIds.length > 0 ? (
+                                    <span className={`${styles.activityItem__inlineMosaic} ${
+                                      activity.targetAlbumIds.length === 1 ? styles['activityItem__inlineMosaic--single'] :
+                                      activity.targetAlbumIds.length === 2 ? styles['activityItem__inlineMosaic--2'] :
+                                      activity.targetAlbumIds.length === 3 ? styles['activityItem__inlineMosaic--3'] :
+                                      styles['activityItem__inlineMosaic--4']
+                                    }`}>
+                                      {activity.targetAlbumIds.slice(0, 4).map((albumId) => (
+                                        <img
+                                          key={albumId}
+                                          src={`/api/albums/${albumId}/cover`}
+                                          alt=""
+                                          className={styles.activityItem__mosaicImg}
+                                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                        />
+                                      ))}
+                                    </span>
+                                  ) : activity.targetCoverUrl ? (
                                     <img
                                       src={activity.targetCoverUrl}
                                       alt={activity.targetName}
                                       className={styles.activityItem__inlineCover}
                                     />
-                                  )}
+                                  ) : null}
                                   <span className={styles.activityItem__targetLink}>{activity.targetName}</span>
                                 </span>
                               )}
