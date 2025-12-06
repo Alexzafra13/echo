@@ -1,4 +1,5 @@
 import { User } from '../entities/user.entity';
+import { HomeSectionConfig } from '@infrastructure/database/schema/users';
 
 export interface UserUpdateableFields {
   username?: string;
@@ -21,6 +22,8 @@ export interface UserUpdateableFields {
   showTopAlbums?: boolean;
   showPlaylists?: boolean;
   bio?: string | null;
+  // Home page customization
+  homeSections?: HomeSectionConfig[];
 }
 
 export interface IUserRepository {

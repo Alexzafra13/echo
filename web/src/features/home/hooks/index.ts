@@ -6,6 +6,7 @@ export {
   useAlbums,
   useAlbumSearch,
   useAlbumTracks,
+  useAlbumsRecentlyPlayed,
 } from './useAlbums';
 
 export { useTrackSearch } from './useTracks';

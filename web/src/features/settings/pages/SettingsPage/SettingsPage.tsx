@@ -1,12 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music, Volume2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
-import { usePrivacySettings, useUpdatePrivacySettings } from '../../hooks';
+import { usePrivacySettings, useUpdatePrivacySettings, useHomePreferences, useUpdateHomePreferences } from '../../hooks';
 import { usePlayer } from '@features/player';
+import type { HomeSectionConfig, HomeSectionId } from '../../services';
 import styles from './SettingsPage.module.css';
+
+// Section labels for display
+const SECTION_LABELS: Record<HomeSectionId, string> = {
+  'recent-albums': 'Álbumes Añadidos',
+  'wave-mix': 'Wave Mix',
+  'recently-played': 'Escuchados Recientes',
+  'my-playlists': 'Mis Playlists',
+  'top-played': 'Más Escuchados',
+  'favorite-radios': 'Radios Favoritas',
+  'surprise-me': 'Sorpréndeme',
+  'explore': 'Explorar',
+};
 
 /**
  * SettingsPage Component
@@ -16,6 +29,8 @@ export function SettingsPage() {
   const { user } = useAuth();
   const { data: privacySettings, isLoading } = usePrivacySettings();
   const { mutate: updatePrivacy, isPending: isSaving, isSuccess } = useUpdatePrivacySettings();
+  const { data: homePreferences, isLoading: isLoadingHome } = useHomePreferences();
+  const { mutate: updateHome, isPending: isSavingHome, isSuccess: isSuccessHome } = useUpdateHomePreferences();
   const {
     crossfade,
     setCrossfadeEnabled,
@@ -26,7 +41,7 @@ export function SettingsPage() {
     setNormalizationPreventClipping,
   } = usePlayer();
 
-  // Local state for form
+  // Local state for privacy form
   const [isPublicProfile, setIsPublicProfile] = useState(false);
   const [showTopTracks, setShowTopTracks] = useState(true);
   const [showTopArtists, setShowTopArtists] = useState(true);
@@ -34,7 +49,10 @@ export function SettingsPage() {
   const [showPlaylists, setShowPlaylists] = useState(true);
   const [bio, setBio] = useState('');
 
-  // Sync with server data
+  // Local state for home sections
+  const [homeSections, setHomeSections] = useState<HomeSectionConfig[]>([]);
+
+  // Sync privacy settings with server data
   useEffect(() => {
     if (privacySettings) {
       setIsPublicProfile(privacySettings.isPublicProfile);
@@ -45,6 +63,51 @@ export function SettingsPage() {
       setBio(privacySettings.bio || '');
     }
   }, [privacySettings]);
+
+  // Sync home sections with server data
+  useEffect(() => {
+    if (homePreferences?.homeSections) {
+      // Sort by order for display
+      const sorted = [...homePreferences.homeSections].sort((a, b) => a.order - b.order);
+      setHomeSections(sorted);
+    }
+  }, [homePreferences]);
+
+  // Home section handlers
+  const toggleSection = useCallback((id: HomeSectionId) => {
+    setHomeSections(prev =>
+      prev.map(section =>
+        section.id === id ? { ...section, enabled: !section.enabled } : section
+      )
+    );
+  }, []);
+
+  const moveSection = useCallback((id: HomeSectionId, direction: 'up' | 'down') => {
+    setHomeSections(prev => {
+      const index = prev.findIndex(s => s.id === id);
+      if (index === -1) return prev;
+      if (direction === 'up' && index === 0) return prev;
+      if (direction === 'down' && index === prev.length - 1) return prev;
+
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      const newSections = [...prev];
+      // Swap positions
+      [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
+      // Update order values
+      return newSections.map((section, i) => ({ ...section, order: i }));
+    });
+  }, []);
+
+  const handleSaveHome = useCallback(() => {
+    updateHome({ homeSections });
+  }, [homeSections, updateHome]);
+
+  // Check if home sections have changed
+  const hasHomeChanges = homePreferences?.homeSections && (
+    JSON.stringify(homeSections) !== JSON.stringify(
+      [...homePreferences.homeSections].sort((a, b) => a.order - b.order)
+    )
+  );
 
   const handleSavePrivacy = () => {
     updatePrivacy({
@@ -86,10 +149,91 @@ export function SettingsPage() {
             </div>
           </div>
 
-          {isLoading ? (
+          {isLoading || isLoadingHome ? (
             <div className={styles.settingsPage__loading}>Cargando...</div>
           ) : (
             <>
+              {/* Home Page Personalization Card */}
+              <div className={styles.settingsPage__card}>
+                <div className={styles.settingsPage__cardHeader}>
+                  <h2>
+                    <Home size={20} />
+                    Personalizar Inicio
+                  </h2>
+                </div>
+
+                <div className={styles.settingsPage__cardBody}>
+                  <p className={styles.settingsPage__cardDescription}>
+                    Elige qué secciones mostrar en tu página de inicio y en qué orden.
+                    El Hero siempre se muestra primero.
+                  </p>
+
+                  <div className={styles.settingsPage__sectionsList}>
+                    {homeSections.map((section, index) => (
+                      <div key={section.id} className={styles.settingsPage__sectionItem}>
+                        <div className={styles.settingsPage__sectionHandle}>
+                          <GripVertical size={16} />
+                        </div>
+
+                        <div className={styles.settingsPage__sectionInfo}>
+                          <span className={styles.settingsPage__sectionLabel}>
+                            {SECTION_LABELS[section.id]}
+                          </span>
+                        </div>
+
+                        <div className={styles.settingsPage__sectionActions}>
+                          <button
+                            type="button"
+                            className={styles.settingsPage__moveButton}
+                            onClick={() => moveSection(section.id, 'up')}
+                            disabled={index === 0}
+                            aria-label="Mover arriba"
+                          >
+                            <ChevronUp size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.settingsPage__moveButton}
+                            onClick={() => moveSection(section.id, 'down')}
+                            disabled={index === homeSections.length - 1}
+                            aria-label="Mover abajo"
+                          >
+                            <ChevronDown size={18} />
+                          </button>
+                          <label className={styles.settingsPage__toggle}>
+                            <input
+                              type="checkbox"
+                              className={styles.settingsPage__toggleInput}
+                              checked={section.enabled}
+                              onChange={() => toggleSection(section.id)}
+                            />
+                            <span className={styles.settingsPage__toggleSlider}></span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Save button and success message */}
+                  {hasHomeChanges && (
+                    <button
+                      className={styles.settingsPage__saveButton}
+                      onClick={handleSaveHome}
+                      disabled={isSavingHome}
+                    >
+                      {isSavingHome ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  )}
+
+                  {isSuccessHome && !hasHomeChanges && (
+                    <div className={styles.settingsPage__success}>
+                      <Check size={18} />
+                      Configuración guardada
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Privacy Settings Card */}
               <div className={styles.settingsPage__card}>
                 <div className={styles.settingsPage__cardHeader}>

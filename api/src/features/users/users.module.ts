@@ -10,6 +10,7 @@ import {
   UploadAvatarUseCase,
   DeleteAvatarUseCase,
   UpdatePrivacySettingsUseCase,
+  UpdateHomePreferencesUseCase,
 } from './domain/use-cases';
 
 @Module({
@@ -26,6 +27,7 @@ import {
     UploadAvatarUseCase,
     DeleteAvatarUseCase,
     UpdatePrivacySettingsUseCase,
+    UpdateHomePreferencesUseCase,
   ],
 })
 export class UsersModule {}

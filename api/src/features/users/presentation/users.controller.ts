@@ -26,6 +26,7 @@ import {
   UploadAvatarUseCase,
   DeleteAvatarUseCase,
   UpdatePrivacySettingsUseCase,
+  UpdateHomePreferencesUseCase,
 } from '../domain/use-cases';
 import {
   ChangePasswordRequestDto,
@@ -35,6 +36,8 @@ import {
   UserResponseDto,
   UpdatePrivacySettingsRequestDto,
   PrivacySettingsResponseDto,
+  UpdateHomePreferencesRequestDto,
+  HomePreferencesResponseDto,
 } from './dtos';
 
 @ApiTags('users')
@@ -50,6 +53,7 @@ export class UsersController {
     private readonly uploadAvatarUseCase: UploadAvatarUseCase,
     private readonly deleteAvatarUseCase: DeleteAvatarUseCase,
     private readonly updatePrivacySettingsUseCase: UpdatePrivacySettingsUseCase,
+    private readonly updateHomePreferencesUseCase: UpdateHomePreferencesUseCase,
   ) {}
 
   @Put('password')
@@ -331,5 +335,61 @@ export class UsersController {
     });
 
     return PrivacySettingsResponseDto.fromDomain(result);
+  }
+
+  @Get('home-preferences')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener preferencias del home',
+    description: 'Obtiene la configuración de secciones del home del usuario actual'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuración del home',
+    type: HomePreferencesResponseDto
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  async getHomePreferences(
+    @CurrentUser() user: JwtUser,
+  ): Promise<HomePreferencesResponseDto> {
+    const result = await this.updateHomePreferencesUseCase.execute({
+      userId: user.id,
+    });
+    return HomePreferencesResponseDto.fromDomain(result);
+  }
+
+  @Put('home-preferences')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Actualizar preferencias del home',
+    description: 'Actualiza la configuración de secciones del home (orden, habilitadas/deshabilitadas)'
+  })
+  @ApiBody({ type: UpdateHomePreferencesRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuración del home actualizada',
+    type: HomePreferencesResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado'
+  })
+  async updateHomePreferences(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: UpdateHomePreferencesRequestDto,
+  ): Promise<HomePreferencesResponseDto> {
+    const result = await this.updateHomePreferencesUseCase.execute({
+      userId: user.id,
+      homeSections: dto.homeSections,
+    });
+
+    return HomePreferencesResponseDto.fromDomain(result);
   }
 }
