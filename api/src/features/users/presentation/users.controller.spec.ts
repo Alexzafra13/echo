@@ -6,6 +6,7 @@ import {
   ChangeThemeUseCase,
   ChangeLanguageUseCase,
   UpdatePrivacySettingsUseCase,
+  UpdateHomePreferencesUseCase,
 } from '../domain/use-cases';
 import { UploadAvatarUseCase } from '../domain/use-cases/upload-avatar/upload-avatar.use-case';
 import { DeleteAvatarUseCase } from '../domain/use-cases/delete-avatar/delete-avatar.use-case';
@@ -21,6 +22,7 @@ describe('UsersController', () => {
   let mockUploadAvatarUseCase: MockUseCase;
   let mockDeleteAvatarUseCase: MockUseCase;
   let mockUpdatePrivacySettingsUseCase: MockUseCase;
+  let mockUpdateHomePreferencesUseCase: MockUseCase;
 
   const mockUser = {
     id: 'user-123',
@@ -36,6 +38,7 @@ describe('UsersController', () => {
     mockUploadAvatarUseCase = createMockUseCase();
     mockDeleteAvatarUseCase = createMockUseCase();
     mockUpdatePrivacySettingsUseCase = createMockUseCase();
+    mockUpdateHomePreferencesUseCase = createMockUseCase();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
@@ -67,6 +70,10 @@ describe('UsersController', () => {
         {
           provide: UpdatePrivacySettingsUseCase,
           useValue: mockUpdatePrivacySettingsUseCase,
+        },
+        {
+          provide: UpdateHomePreferencesUseCase,
+          useValue: mockUpdateHomePreferencesUseCase,
         },
       ],
     })
