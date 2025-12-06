@@ -5,6 +5,7 @@ import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { getArtistImageTypeBasicConfig } from '../../config/artist-image-type.config';
 import {
   ApplyCustomArtistImageInput,
   ApplyCustomArtistImageOutput,
@@ -59,7 +60,7 @@ export class ApplyCustomArtistImageUseCase {
       `Applying custom ${customImage.imageType} image for artist: ${customImage.artist.name}`,
     );
 
-    const typeConfig = this.getTypeConfig(customImage.imageType);
+    const typeConfig = getArtistImageTypeBasicConfig(customImage.imageType);
 
     // Start a transaction to update both the artist and custom images
     await this.drizzle.db.transaction(async (tx) => {
@@ -118,55 +119,5 @@ export class ApplyCustomArtistImageUseCase {
       message: `Custom ${customImage.imageType} image applied successfully`,
       imageType: customImage.imageType,
     };
-  }
-
-  /**
-   * Get field names for each image type
-   */
-  private getTypeConfig(type: string): {
-    localPathField: string;
-    localUpdatedField: string;
-    externalPathField: string;
-    externalSourceField: string;
-    externalUpdatedField: string;
-  } {
-    const configs: Record<string, {
-      localPathField: string;
-      localUpdatedField: string;
-      externalPathField: string;
-      externalSourceField: string;
-      externalUpdatedField: string;
-    }> = {
-      profile: {
-        localPathField: 'profileImagePath',
-        localUpdatedField: 'profileImageUpdatedAt',
-        externalPathField: 'externalProfilePath',
-        externalSourceField: 'externalProfileSource',
-        externalUpdatedField: 'externalProfileUpdatedAt',
-      },
-      background: {
-        localPathField: 'backgroundImagePath',
-        localUpdatedField: 'backgroundUpdatedAt',
-        externalPathField: 'externalBackgroundPath',
-        externalSourceField: 'externalBackgroundSource',
-        externalUpdatedField: 'externalBackgroundUpdatedAt',
-      },
-      banner: {
-        localPathField: 'bannerImagePath',
-        localUpdatedField: 'bannerUpdatedAt',
-        externalPathField: 'externalBannerPath',
-        externalSourceField: 'externalBannerSource',
-        externalUpdatedField: 'externalBannerUpdatedAt',
-      },
-      logo: {
-        localPathField: 'logoImagePath',
-        localUpdatedField: 'logoUpdatedAt',
-        externalPathField: 'externalLogoPath',
-        externalSourceField: 'externalLogoSource',
-        externalUpdatedField: 'externalLogoUpdatedAt',
-      },
-    };
-
-    return configs[type] || configs.profile;
   }
 }

@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth }
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
+import { parsePaginationParams } from '@shared/utils';
 
 /**
  * ArtistsController - Controlador de artistas
@@ -76,11 +77,10 @@ export class ArtistsController {
   })
   async getArtistAlbums(
     @Param('id') artistId: string,
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '100',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ) {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 100);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { defaultTake: 100 });
 
     const result = await this.getArtistAlbumsUseCase.execute({
       artistId,
@@ -157,11 +157,10 @@ export class ArtistsController {
     type: GetArtistsResponseDto
   })
   async getArtists(
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '10',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<GetArtistsResponseDto> {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take);
 
     const result = await this.getArtistsUseCase.execute({
       skip: skipNum,
@@ -212,11 +211,10 @@ export class ArtistsController {
   })
   async searchArtists(
     @Param('query') query: string,
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '10',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<SearchArtistsResponseDto> {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take);
 
     const result = await this.searchArtistsUseCase.execute({
       query,

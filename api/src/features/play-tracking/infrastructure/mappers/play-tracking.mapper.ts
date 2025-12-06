@@ -1,7 +1,8 @@
 import { PlayEvent, PlayContext, SourceType } from '../../domain/entities/play-event.entity';
+import { PlayHistory } from '@infrastructure/database/schema/play-stats';
 
 export class PlayTrackingMapper {
-  static toPlayEventDomain(raw: any): PlayEvent {
+  static toPlayEventDomain(raw: PlayHistory): PlayEvent {
     return {
       id: raw.id,
       userId: raw.userId,
@@ -17,7 +18,7 @@ export class PlayTrackingMapper {
     };
   }
 
-  static toPlayEventDomainArray(raw: any[]): PlayEvent[] {
+  static toPlayEventDomainArray(raw: PlayHistory[]): PlayEvent[] {
     return raw.map(this.toPlayEventDomain);
   }
 }
