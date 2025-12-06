@@ -20,7 +20,7 @@
   width: 3px;
   background: var(--color-primary);
   border-radius: 1px;
-  animation: soundBars 0.8s ease-in-out infinite;
+  animation: equalizerPulse 0.8s ease-in-out infinite;
 }
 
 .equalizer__bar:nth-child(1) {
@@ -43,7 +43,7 @@
   animation-delay: 0.1s;
 }
 
-@keyframes soundBars {
+@keyframes equalizerPulse {
   0%, 100% {
     transform: scaleY(1);
   }
