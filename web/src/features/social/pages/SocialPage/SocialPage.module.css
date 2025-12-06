@@ -848,6 +848,29 @@
   font-weight: 600;
 }
 
+.activityItem__actionLine {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.activityItem__targetRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.activityItem__targetRow:hover .activityItem__targetLink {
+  color: var(--color-primary);
+}
+
+.activityItem__targetRow:hover .activityItem__inlineCover,
+.activityItem__targetRow:hover .activityItem__inlineMosaic {
+  transform: scale(1.03);
+}
+
 .activityItem__userLink {
   color: var(--color-text-primary);
   font-weight: 600;
