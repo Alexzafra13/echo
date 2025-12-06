@@ -3,7 +3,7 @@
 .socialPage {
   display: flex;
   min-height: 100vh;
-  background-color: var(--color-background);
+  background: var(--color-bg-primary, #0a0e27);
 }
 
 .socialPage__main {
