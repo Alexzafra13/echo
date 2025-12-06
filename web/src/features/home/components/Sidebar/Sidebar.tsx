@@ -6,7 +6,6 @@ import {
   ListMusic,
   Radio,
   Waves,
-  Compass,
   Users,
   Shield,
 } from 'lucide-react';
@@ -34,7 +33,6 @@ export function Sidebar() {
     { icon: ListMusic, label: 'Playlists', path: '/playlists' },
     { icon: Radio, label: 'Radio', path: '/radio' },
     { icon: Waves, label: 'Wave Mix', path: '/wave-mix' },
-    { icon: Compass, label: 'Explorar', path: '/explore' },
     { icon: Users, label: 'Social', path: '/social' },
   ];
 
