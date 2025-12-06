@@ -545,9 +545,10 @@ export function PublicProfilePage() {
                 {user.bio && (
                   <p className={styles.publicProfilePage__bio}>{user.bio}</p>
                 )}
+              </div>
 
-                {/* Listening Now */}
-                <ListeningNowBadge listeningNow={social.listeningNow ?? null} />
+              {/* Listening Now - positioned to the right */}
+              <ListeningNowBadge listeningNow={social.listeningNow ?? null} />
               </div>
             </div>
           </div>
