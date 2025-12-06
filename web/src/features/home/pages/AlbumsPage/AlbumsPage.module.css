@@ -3,7 +3,7 @@
 /* Block: albumsPage */
 .albumsPage {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--color-bg-primary, #0a0e27);
   background-image: var(--gradient-textured);
 }
@@ -14,14 +14,14 @@
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .albumsPage__content {
   flex: 1 1 0;
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
-  margin-top: -84px; /* Content starts behind header */
-  padding: 116px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* 84px + 32px for header + dynamic player spacer */
-  overflow-y: auto;
+  padding: 24px 40px calc(40px + var(--player-bottom-spacer, 0px)); /* dynamic player spacer */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
