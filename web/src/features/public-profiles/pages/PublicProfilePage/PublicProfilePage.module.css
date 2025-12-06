@@ -145,20 +145,20 @@
   padding: 12px 16px;
   margin-top: 20px;
   text-decoration: none;
-  transition: all 0.2s ease;
   max-width: 400px;
-  animation: listeningNowAppear 0.4s ease-out;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s ease;
 }
 
-@keyframes listeningNowAppear {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.publicProfilePage__listeningNow--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.publicProfilePage__listeningNow--hidden {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .publicProfilePage__listeningNow:hover {
