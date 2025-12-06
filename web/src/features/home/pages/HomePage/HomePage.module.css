@@ -192,6 +192,33 @@
   background-color: var(--surface-hover);
 }
 
+.homeSection__headerRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0 20px;
+}
+
+.homeSection__refreshButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.homeSection__refreshButton:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
 /* Playlists Grid */
 .playlistsGrid {
   display: grid;
