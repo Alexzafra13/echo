@@ -9,6 +9,7 @@ import {
   albums,
   artists,
   playlists,
+  playlistTracks,
   userStarred,
 } from '@infrastructure/database/schema';
 import { ISocialRepository } from '../../domain/ports';
@@ -531,6 +532,37 @@ export class DrizzleSocialRepository implements ISocialRepository {
       artistResults.forEach(a => targetNames.set(`artist-${a.id}`, a.name || 'Artista'));
     }
 
+    // Fetch first album cover for each playlist (for playlists without custom cover)
+    const playlistCovers = new Map<string, { albumId: string; coverPath: string }>();
+    const playlistIdsNeedingCover = playlistResults
+      .filter(p => !p.coverImageUrl)
+      .map(p => p.id);
+
+    if (playlistIdsNeedingCover.length > 0) {
+      // Get first track's album for each playlist
+      const firstTracks = await this.drizzle.db
+        .select({
+          playlistId: playlistTracks.playlistId,
+          albumId: tracks.albumId,
+          albumCoverPath: albums.coverArtPath,
+        })
+        .from(playlistTracks)
+        .innerJoin(tracks, eq(tracks.id, playlistTracks.trackId))
+        .leftJoin(albums, eq(albums.id, tracks.albumId))
+        .where(
+          and(
+            inArray(playlistTracks.playlistId, playlistIdsNeedingCover),
+            eq(playlistTracks.trackOrder, 0),
+          ),
+        );
+
+      firstTracks.forEach(t => {
+        if (t.albumId && t.albumCoverPath) {
+          playlistCovers.set(t.playlistId, { albumId: t.albumId, coverPath: t.albumCoverPath });
+        }
+      });
+    }
+
     // Build activity items
     const activities: ActivityItem[] = [];
 
@@ -538,6 +570,11 @@ export class DrizzleSocialRepository implements ISocialRepository {
     for (const p of playlistResults) {
       const user = userMap.get(p.userId);
       if (user) {
+        // Use custom coverImageUrl if set, otherwise use first album's cover
+        const playlistCover = playlistCovers.get(p.id);
+        const coverPath = p.coverImageUrl || playlistCover?.coverPath || null;
+        const albumId = playlistCover?.albumId;
+
         activities.push({
           id: `playlist-${p.id}`,
           userId: p.userId,
@@ -548,7 +585,8 @@ export class DrizzleSocialRepository implements ISocialRepository {
           targetType: 'playlist',
           targetId: p.id,
           targetName: p.name,
-          targetCoverPath: p.coverImageUrl,
+          targetCoverPath: coverPath,
+          targetAlbumId: albumId, // For cover URL generation when using album cover
           createdAt: p.createdAt,
         });
       }
