@@ -706,6 +706,25 @@
   color: var(--color-text-tertiary);
 }
 
+.activityItem__cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.activityItem__secondAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-left: auto;
+  border: 2px solid var(--color-surface);
+}
+
 /* ============================================
    Responsive
    ============================================ */

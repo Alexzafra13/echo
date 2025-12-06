@@ -55,6 +55,8 @@ export interface ActivityItem {
   targetId: string;
   targetName: string;
   targetExtra?: string;
+  targetCoverUrl?: string | null;
+  secondUser?: UserBasic; // for became_friends: the other user
   createdAt: string;
 }
 
