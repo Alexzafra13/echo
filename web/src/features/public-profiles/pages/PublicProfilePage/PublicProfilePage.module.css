@@ -59,8 +59,8 @@
 
 /* Avatar */
 .publicProfilePage__avatar {
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
@@ -68,15 +68,15 @@
 }
 
 .publicProfilePage__avatarPlaceholder {
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   background: var(--white-10);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
+  font-size: 5rem;
   font-weight: 600;
   color: var(--text-primary);
   text-transform: uppercase;
@@ -137,30 +137,84 @@
   line-height: 1.5;
 }
 
-/* Listening Now - Inline in hero */
+/* Listening Now - Full width card */
 .publicProfilePage__listeningNow {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.15);
-  border: 1px solid rgba(var(--color-primary-rgb, 249, 115, 22), 0.3);
-  border-radius: 20px;
-  padding: 6px 14px 6px 10px;
-  margin-top: 16px;
+  gap: 14px;
+  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 20px;
   text-decoration: none;
   transition: all 0.2s ease;
+  max-width: 400px;
 }
 
 .publicProfilePage__listeningNow:hover {
-  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.25);
-  border-color: rgba(var(--color-primary-rgb, 249, 115, 22), 0.5);
+  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.18);
+}
+
+.publicProfilePage__listeningNowCover {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.publicProfilePage__listeningNowCoverPlaceholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  background: var(--white-10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.publicProfilePage__listeningNowInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.publicProfilePage__listeningNowLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary);
+}
+
+.publicProfilePage__listeningNowTrack {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.publicProfilePage__listeningNowArtist {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .publicProfilePage__listeningNowBars {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 16px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .publicProfilePage__listeningNowBar {
@@ -176,38 +230,23 @@
 }
 
 .publicProfilePage__listeningNowBar:nth-child(2) {
-  height: 12px;
+  height: 14px;
   animation-delay: 0.2s;
 }
 
 .publicProfilePage__listeningNowBar:nth-child(3) {
-  height: 8px;
+  height: 10px;
   animation-delay: 0.4s;
 }
 
 .publicProfilePage__listeningNowBar:nth-child(4) {
-  height: 14px;
+  height: 16px;
   animation-delay: 0.1s;
 }
 
 @keyframes soundBars {
   0%, 100% { transform: scaleY(1); }
   50% { transform: scaleY(0.4); }
-}
-
-.publicProfilePage__listeningNowText {
-  font-size: 13px;
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
-.publicProfilePage__listeningNowTrack {
-  font-size: 13px;
-  color: var(--text-primary);
-}
-
-.publicProfilePage__listeningNowArtist {
-  color: var(--text-secondary);
 }
 
 /* Actions Bar */
@@ -661,9 +700,13 @@
 
   .publicProfilePage__avatar,
   .publicProfilePage__avatarPlaceholder {
-    width: 140px;
-    height: 140px;
-    font-size: 3rem;
+    width: 160px;
+    height: 160px;
+    font-size: 3.5rem;
+  }
+
+  .publicProfilePage__listeningNow {
+    max-width: 100%;
   }
 
   .publicProfilePage__heroInfo {
