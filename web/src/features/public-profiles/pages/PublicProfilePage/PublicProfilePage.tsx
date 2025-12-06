@@ -117,20 +117,36 @@ function ListeningNowBadge({ listeningNow }: ListeningNowBadgeProps) {
       href={listeningNow.albumId ? `/album/${listeningNow.albumId}` : '#'}
       className={styles.publicProfilePage__listeningNow}
     >
+      {listeningNow.coverUrl ? (
+        <img
+          src={listeningNow.coverUrl}
+          alt={listeningNow.trackTitle}
+          className={styles.publicProfilePage__listeningNowCover}
+        />
+      ) : (
+        <div className={styles.publicProfilePage__listeningNowCoverPlaceholder}>
+          <Music size={20} />
+        </div>
+      )}
+      <div className={styles.publicProfilePage__listeningNowInfo}>
+        <span className={styles.publicProfilePage__listeningNowLabel}>
+          Escuchando ahora
+        </span>
+        <span className={styles.publicProfilePage__listeningNowTrack}>
+          {listeningNow.trackTitle}
+        </span>
+        {listeningNow.artistName && (
+          <span className={styles.publicProfilePage__listeningNowArtist}>
+            {listeningNow.artistName}
+          </span>
+        )}
+      </div>
       <div className={styles.publicProfilePage__listeningNowBars}>
         <span className={styles.publicProfilePage__listeningNowBar} />
         <span className={styles.publicProfilePage__listeningNowBar} />
         <span className={styles.publicProfilePage__listeningNowBar} />
         <span className={styles.publicProfilePage__listeningNowBar} />
       </div>
-      <span className={styles.publicProfilePage__listeningNowTrack}>
-        {listeningNow.trackTitle}
-        {listeningNow.artistName && (
-          <span className={styles.publicProfilePage__listeningNowArtist}>
-            {' '}· {listeningNow.artistName}
-          </span>
-        )}
-      </span>
     </Link>
   );
 }
