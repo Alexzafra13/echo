@@ -188,22 +188,24 @@ export default function HomePage() {
     const { waveMix, artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
 
     // Artist Mix: Wave Mix (if exists) + artist playlists
+    // Use neededAlbums for responsive count (same as AlbumGrid - 2 rows)
     const artistMix = [];
     if (waveMix) {
       artistMix.push(waveMix);
     }
-    const randomArtists = randomSelect(artistPlaylists, isMobile ? neededPlaylists - 1 : 10);
+    const artistCount = neededAlbums - (waveMix ? 1 : 0);
+    const randomArtists = randomSelect(artistPlaylists, artistCount);
     artistMix.push(...randomArtists);
 
-    // Genre Mix: genre playlists only
-    const randomGenres = randomSelect(genrePlaylists, isMobile ? neededPlaylists : 10);
+    // Genre Mix: genre playlists only (same count as albums - 2 rows)
+    const randomGenres = randomSelect(genrePlaylists, neededAlbums);
 
     return {
-      artistMixPlaylists: isMobile ? artistMix.slice(0, neededPlaylists) : artistMix,
-      genreMixPlaylists: randomGenres,
+      artistMixPlaylists: artistMix.slice(0, neededAlbums),
+      genreMixPlaylists: randomGenres.slice(0, neededAlbums),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoPlaylists, neededPlaylists, isMobile, refreshKey]);
+  }, [autoPlaylists, neededAlbums, isMobile, refreshKey]);
 
   // Auto-rotate hero section every 20 seconds
   useEffect(() => {
