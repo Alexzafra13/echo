@@ -538,7 +538,10 @@ export default function SocialPage() {
                     <div className={styles.activityList}>
                       {overview.recentActivity.map((activity) => (
                         <div key={activity.id} className={styles.activityItem}>
-                          <div className={styles.activityItem__avatarWrapper}>
+                          <div
+                            className={styles.activityItem__avatarWrapper}
+                            onClick={() => setLocation(`/user/${activity.user.id}`)}
+                          >
                             <img
                               src={activity.user.avatarUrl || getUserAvatarUrl(activity.user.id, false)}
                               alt={activity.user.username}
@@ -551,19 +554,27 @@ export default function SocialPage() {
                           </div>
                           <div className={styles.activityItem__content}>
                             <span className={styles.activityItem__text}>
-                              <strong>{activity.user.name || activity.user.username}</strong>
+                              <span
+                                className={styles.activityItem__userLink}
+                                onClick={() => setLocation(`/user/${activity.user.id}`)}
+                              >
+                                {activity.user.name || activity.user.username}
+                              </span>
                               {' '}
                               {getActionText(activity.actionType)}
                               {' '}
                               {activity.actionType === 'became_friends' && activity.secondUser ? (
-                                <span className={styles.activityItem__friendLink}>
+                                <span
+                                  className={styles.activityItem__friendLink}
+                                  onClick={() => setLocation(`/user/${activity.secondUser!.id}`)}
+                                >
                                   <img
                                     src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
                                     alt={activity.secondUser.username}
                                     className={styles.activityItem__inlineAvatar}
                                     onError={handleAvatarError}
                                   />
-                                  <strong>{activity.secondUser.name || activity.secondUser.username}</strong>
+                                  <span>{activity.secondUser.name || activity.secondUser.username}</span>
                                 </span>
                               ) : (
                                 <strong>{activity.targetName}</strong>
