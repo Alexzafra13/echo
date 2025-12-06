@@ -97,6 +97,8 @@ export default function SocialPage() {
         return 'le gustó el artista';
       case 'played_track':
         return 'escuchó';
+      case 'became_friends':
+        return 'ahora es amigo de';
       default:
         return actionType;
     }
@@ -112,6 +114,8 @@ export default function SocialPage() {
         return '❤️';
       case 'played_track':
         return '🎵';
+      case 'became_friends':
+        return '🤝';
       default:
         return '•';
     }
@@ -501,12 +505,33 @@ export default function SocialPage() {
                               {' '}
                               {getActionText(activity.actionType)}
                               {' '}
-                              <strong>{activity.targetName}</strong>
+                              {activity.actionType === 'became_friends' && activity.secondUser ? (
+                                <strong>{activity.secondUser.name || activity.secondUser.username}</strong>
+                              ) : (
+                                <strong>{activity.targetName}</strong>
+                              )}
                             </span>
                             <span className={styles.activityItem__time}>
                               {formatTimeAgo(activity.createdAt)}
                             </span>
                           </div>
+                          {/* Cover image for playlists */}
+                          {activity.targetCoverUrl && (
+                            <img
+                              src={activity.targetCoverUrl}
+                              alt={activity.targetName}
+                              className={styles.activityItem__cover}
+                            />
+                          )}
+                          {/* Second user avatar for became_friends */}
+                          {activity.actionType === 'became_friends' && activity.secondUser && (
+                            <img
+                              src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
+                              alt={activity.secondUser.username}
+                              className={styles.activityItem__secondAvatar}
+                              onError={handleAvatarError}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>
