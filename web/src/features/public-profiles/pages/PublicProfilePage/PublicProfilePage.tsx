@@ -549,7 +549,6 @@ export function PublicProfilePage() {
 
               {/* Listening Now - positioned to the right */}
               <ListeningNowBadge listeningNow={social.listeningNow ?? null} />
-              </div>
             </div>
           </div>
 
