@@ -475,9 +475,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========
   // Update playback state in backend for friends to see
-  // Use ref to track last update time for debouncing
-  const lastPlaybackSyncRef = useRef<number>(0);
-
   useEffect(() => {
     // Only sync for track playback (not radio)
     if (radio.isRadioMode) return;
@@ -486,17 +483,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
     if (!isAuthenticated) return;
 
-    // Debounce: only sync if 500ms have passed since last sync
-    const now = Date.now();
-    if (now - lastPlaybackSyncRef.current < 500) return;
-    lastPlaybackSyncRef.current = now;
-
     // Send playback state to backend (fire and forget, errors are handled silently)
     updatePlaybackState({
       isPlaying,
       currentTrackId: isPlaying && currentTrack ? currentTrack.id : null,
     });
-  }, [isPlaying, currentTrack, radio.isRadioMode]);
+  }, [isPlaying, currentTrack?.id, radio.isRadioMode]);
 
   // ========== RADIO OPERATIONS ==========
 
