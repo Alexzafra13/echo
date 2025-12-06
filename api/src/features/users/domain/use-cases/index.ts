@@ -5,3 +5,4 @@ export { ChangeLanguageUseCase, type ChangeLanguageInput } from './change-langua
 export { UploadAvatarUseCase, type UploadAvatarInput, type UploadAvatarOutput } from './upload-avatar';
 export { DeleteAvatarUseCase, type DeleteAvatarInput } from './delete-avatar';
 export { UpdatePrivacySettingsUseCase, type UpdatePrivacySettingsInput, type UpdatePrivacySettingsOutput } from './update-privacy-settings';
+export { UpdateHomePreferencesUseCase, type UpdateHomePreferencesInput, type UpdateHomePreferencesOutput } from './update-home-preferences';

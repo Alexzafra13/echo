@@ -7,7 +7,22 @@ import {
   bigint,
   text,
   index,
+  jsonb,
 } from 'drizzle-orm/pg-core';
+
+// ============================================
+// Types
+// ============================================
+
+/** Configuration for a single home page section */
+export interface HomeSectionConfig {
+  /** Unique identifier for the section */
+  id: 'recent-albums' | 'wave-mix' | 'recently-played' | 'my-playlists' | 'top-played' | 'favorite-radios' | 'surprise-me' | 'explore';
+  /** Whether the section is visible */
+  enabled: boolean;
+  /** Display order (0 = first) */
+  order: number;
+}
 
 // ============================================
 // User
@@ -37,6 +52,17 @@ export const users = pgTable(
     showTopAlbums: boolean('show_top_albums').default(true).notNull(),
     showPlaylists: boolean('show_playlists').default(true).notNull(),
     bio: text('bio'),
+    // Home page customization
+    homeSections: jsonb('home_sections').$type<HomeSectionConfig[]>().default([
+      { id: 'recent-albums', enabled: true, order: 0 },
+      { id: 'wave-mix', enabled: true, order: 1 },
+      { id: 'recently-played', enabled: false, order: 2 },
+      { id: 'my-playlists', enabled: false, order: 3 },
+      { id: 'top-played', enabled: false, order: 4 },
+      { id: 'favorite-radios', enabled: false, order: 5 },
+      { id: 'surprise-me', enabled: false, order: 6 },
+      { id: 'explore', enabled: false, order: 7 },
+    ]).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
