@@ -1,5 +1,6 @@
 import { generateUuid } from '@shared/utils';
 import { DateUtil } from '@shared/utils/date.util';
+import { HomeSectionConfig } from '@infrastructure/database/schema/users';
 
 export interface UserProps {
   id: string;
@@ -24,6 +25,8 @@ export interface UserProps {
   showTopAlbums: boolean;
   showPlaylists: boolean;
   bio?: string;
+  // Home page customization
+  homeSections: HomeSectionConfig[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,7 +39,7 @@ export class User {
   }
 
   static create(
-    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt' | 'theme' | 'language' | 'lastLoginAt' | 'lastAccessAt' | 'isPublicProfile' | 'showTopTracks' | 'showTopArtists' | 'showTopAlbums' | 'showPlaylists'> & {
+    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt' | 'theme' | 'language' | 'lastLoginAt' | 'lastAccessAt' | 'isPublicProfile' | 'showTopTracks' | 'showTopArtists' | 'showTopAlbums' | 'showPlaylists' | 'homeSections'> & {
       theme?: string;
       language?: string;
       isPublicProfile?: boolean;
@@ -44,6 +47,7 @@ export class User {
       showTopArtists?: boolean;
       showTopAlbums?: boolean;
       showPlaylists?: boolean;
+      homeSections?: HomeSectionConfig[];
     },
   ): User {
     return new User({
@@ -58,6 +62,16 @@ export class User {
       showTopArtists: props.showTopArtists ?? true,
       showTopAlbums: props.showTopAlbums ?? true,
       showPlaylists: props.showPlaylists ?? true,
+      homeSections: props.homeSections ?? [
+        { id: 'recent-albums', enabled: true, order: 0 },
+        { id: 'wave-mix', enabled: true, order: 1 },
+        { id: 'recently-played', enabled: false, order: 2 },
+        { id: 'my-playlists', enabled: false, order: 3 },
+        { id: 'top-played', enabled: false, order: 4 },
+        { id: 'favorite-radios', enabled: false, order: 5 },
+        { id: 'surprise-me', enabled: false, order: 6 },
+        { id: 'explore', enabled: false, order: 7 },
+      ],
       createdAt: DateUtil.now(),
       updatedAt: DateUtil.now(),
     });
@@ -151,6 +165,10 @@ export class User {
 
   get bio(): string | undefined {
     return this.props.bio;
+  }
+
+  get homeSections(): HomeSectionConfig[] {
+    return this.props.homeSections;
   }
 
   get createdAt(): Date {

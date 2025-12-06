@@ -2,6 +2,17 @@ import { User as UserDb } from '@infrastructure/database/schema/users';
 import { User } from '../../domain/entities/user.entity';
 
 export class UserMapper {
+  private static readonly DEFAULT_HOME_SECTIONS = [
+    { id: 'recent-albums' as const, enabled: true, order: 0 },
+    { id: 'wave-mix' as const, enabled: true, order: 1 },
+    { id: 'recently-played' as const, enabled: false, order: 2 },
+    { id: 'my-playlists' as const, enabled: false, order: 3 },
+    { id: 'top-played' as const, enabled: false, order: 4 },
+    { id: 'favorite-radios' as const, enabled: false, order: 5 },
+    { id: 'surprise-me' as const, enabled: false, order: 6 },
+    { id: 'explore' as const, enabled: false, order: 7 },
+  ];
+
   static toDomain(raw: UserDb): User {
     return User.reconstruct({
       id: raw.id,
@@ -26,6 +37,8 @@ export class UserMapper {
       showTopAlbums: raw.showTopAlbums ?? true,
       showPlaylists: raw.showPlaylists ?? true,
       bio: raw.bio || undefined,
+      // Home page customization
+      homeSections: raw.homeSections ?? this.DEFAULT_HOME_SECTIONS,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });
@@ -56,6 +69,8 @@ export class UserMapper {
       show_top_albums: primitives.showTopAlbums,
       show_playlists: primitives.showPlaylists,
       bio: primitives.bio || null,
+      // Home page customization
+      home_sections: primitives.homeSections,
       created_at: primitives.createdAt,
       updated_at: primitives.updatedAt,
     };

@@ -414,6 +414,91 @@
   text-align: right;
 }
 
+/* Card Description */
+.settingsPage__cardDescription {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+/* Home Sections List */
+.settingsPage__sectionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--white-03);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settingsPage__sectionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--white-03);
+  transition: background 0.2s ease;
+}
+
+.settingsPage__sectionItem:hover {
+  background: var(--white-05);
+}
+
+.settingsPage__sectionHandle {
+  color: var(--text-tertiary);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.settingsPage__sectionHandle:active {
+  cursor: grabbing;
+}
+
+.settingsPage__sectionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.settingsPage__sectionLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settingsPage__sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settingsPage__moveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settingsPage__moveButton:hover:not(:disabled) {
+  background: var(--white-08);
+  border-color: var(--white-15);
+  color: var(--text-primary);
+}
+
+.settingsPage__moveButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .settingsPage__main {
