@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
-import { Play, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
+import { Play, Shuffle, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
@@ -21,7 +21,7 @@ import styles from './PlaylistDetailPage.module.css';
  */
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { playQueue, currentTrack } = usePlayer();
+  const { playQueue, currentTrack, isShuffle, toggleShuffle } = usePlayer();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
@@ -67,6 +67,20 @@ export default function PlaylistDetailPage() {
     if (tracks.length === 0) return;
     const playerTracks = convertToPlayerTracks(tracks);
     playQueue(playerTracks, 0);
+  };
+
+  const handleShufflePlay = () => {
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+    const playerTracks = convertToPlayerTracks(tracks);
+    // Activate shuffle mode if not already active
+    if (!isShuffle) {
+      toggleShuffle();
+    }
+    // Start from a random track - the player's shuffle logic will handle
+    // not repeating tracks until all have been played
+    const randomStartIndex = Math.floor(Math.random() * playerTracks.length);
+    playQueue(playerTracks, randomStartIndex);
   };
 
   const handleTrackPlay = (track: any) => {
@@ -207,6 +221,15 @@ export default function PlaylistDetailPage() {
                   disabled={!playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0}
                 >
                   Reproducir
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={handleShufflePlay}
+                  leftIcon={<Shuffle size={20} />}
+                  disabled={!playlistTracks || !playlistTracks.tracks || playlistTracks.tracks.length === 0}
+                >
+                  Aleatorio
                 </Button>
                 <button
                   className={styles.playlistDetailPage__heroActionButton}
