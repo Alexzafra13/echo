@@ -26,8 +26,7 @@ export type HomeSectionId =
   | 'my-playlists'
   | 'top-played'
   | 'favorite-radios'
-  | 'surprise-me'
-  | 'explore';
+  | 'surprise-me';
 
 export interface HomeSectionConfig {
   id: HomeSectionId;
