@@ -257,65 +257,56 @@ export default function SocialPage() {
                         className={styles.listeningCard}
                         onClick={() => setLocation(`/user/${user.id}`)}
                       >
-                        {/* Album Art Background */}
-                        {user.currentTrack?.coverUrl && (
-                          <div
-                            className={styles.listeningCard__bgBlur}
-                            style={{ backgroundImage: `url(${user.currentTrack.coverUrl})` }}
-                          />
-                        )}
+                        {/* User Avatar */}
+                        <img
+                          src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
+                          alt={user.username}
+                          className={styles.listeningCard__avatar}
+                          onError={handleAvatarError}
+                        />
 
-                        <div className={styles.listeningCard__content}>
-                          {/* Album Art or Avatar */}
-                          <div className={styles.listeningCard__coverWrapper}>
-                            {user.currentTrack?.coverUrl ? (
-                              <img
-                                src={user.currentTrack.coverUrl}
-                                alt={user.currentTrack.albumName}
-                                className={styles.listeningCard__cover}
-                              />
-                            ) : (
-                              <div className={styles.listeningCard__coverPlaceholder}>
-                                <Music size={24} />
-                              </div>
-                            )}
-                            {user.isPlaying && (
-                              <div className={styles.listeningCard__playingBadge}>
-                                <Equalizer size="sm" color="white" />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* User Info */}
-                          <div className={styles.listeningCard__info}>
-                            <div className={styles.listeningCard__user}>
-                              <img
-                                src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
-                                alt={user.username}
-                                className={styles.listeningCard__avatar}
-                                onError={handleAvatarError}
-                              />
-                              <span className={styles.listeningCard__name}>
-                                {user.name || user.username}
-                              </span>
+                        {/* Album Cover */}
+                        <div className={styles.listeningCard__coverWrapper}>
+                          {user.currentTrack?.coverUrl ? (
+                            <img
+                              src={user.currentTrack.coverUrl}
+                              alt={user.currentTrack.albumName}
+                              className={styles.listeningCard__cover}
+                            />
+                          ) : (
+                            <div className={styles.listeningCard__coverPlaceholder}>
+                              <Music size={20} />
                             </div>
-
-                            {user.currentTrack ? (
-                              <div className={styles.listeningCard__track}>
-                                <span className={styles.listeningCard__trackTitle}>
-                                  {user.currentTrack.title}
-                                </span>
-                                <span className={styles.listeningCard__trackArtist}>
-                                  {user.currentTrack.artistName}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className={styles.listeningCard__offline}>
-                                Sin reproducir
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
+
+                        {/* Info */}
+                        <div className={styles.listeningCard__info}>
+                          <span className={styles.listeningCard__name}>
+                            {user.name || user.username}
+                          </span>
+                          {user.currentTrack ? (
+                            <>
+                              <span className={styles.listeningCard__trackTitle}>
+                                {user.currentTrack.title}
+                              </span>
+                              <span className={styles.listeningCard__trackArtist}>
+                                {user.currentTrack.artistName}
+                              </span>
+                            </>
+                          ) : (
+                            <span className={styles.listeningCard__offline}>
+                              Sin reproducir
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Equalizer */}
+                        {user.isPlaying && (
+                          <div className={styles.listeningCard__equalizer}>
+                            <Equalizer size="sm" />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
