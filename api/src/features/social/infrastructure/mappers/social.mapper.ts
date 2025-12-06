@@ -111,6 +111,7 @@ export class SocialMapper {
       targetName: activity.targetName,
       targetExtra: activity.targetExtra,
       targetCoverUrl,
+      targetAlbumId: activity.targetAlbumId,
       createdAt: activity.createdAt,
     };
 
