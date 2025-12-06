@@ -88,7 +88,12 @@ export class SocialMapper {
     let targetCoverUrl: string | null = null;
     if (activity.targetCoverPath) {
       if (activity.targetType === 'playlist') {
-        targetCoverUrl = getPlaylistCoverUrl(activity.targetId, activity.targetCoverPath);
+        // For playlists: if targetAlbumId is set, use album cover; otherwise use playlist cover URL
+        if (activity.targetAlbumId) {
+          targetCoverUrl = getCoverUrl(activity.targetAlbumId, activity.targetCoverPath);
+        } else {
+          targetCoverUrl = getPlaylistCoverUrl(activity.targetId, activity.targetCoverPath);
+        }
       } else if (activity.targetType === 'album') {
         targetCoverUrl = getCoverUrl(activity.targetId, activity.targetCoverPath);
       } else if (activity.targetType === 'track' && activity.targetAlbumId) {
