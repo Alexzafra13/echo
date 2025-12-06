@@ -45,21 +45,36 @@ export function SystemHealthIndicator() {
   const containerRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Solo mostrar para admins
-  if (!user?.isAdmin) {
-    return null;
-  }
+  const isAdmin = user?.isAdmin ?? false;
+
+  const loadHealth = async () => {
+    try {
+      const response = await apiClient.get('/admin/dashboard/health');
+      setHealth(response.data.systemHealth);
+      setAlerts(response.data.activeAlerts);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Error loading system health:', err);
+      }
+      // Si falla, asumir estado degradado
+      setHealth(null);
+    }
+  };
 
   useEffect(() => {
+    if (!isAdmin) return;
+
     loadHealth();
 
     // Poll every 60 seconds
     const interval = setInterval(loadHealth, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAdmin]);
 
   // Cerrar tooltip al hacer click fuera
   useEffect(() => {
+    if (!isAdmin) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         // Trigger closing animation
@@ -81,21 +96,12 @@ export function SystemHealthIndicator() {
         clearTimeout(closeTimeoutRef.current);
       }
     };
-  }, [showTooltip]);
+  }, [showTooltip, isAdmin]);
 
-  const loadHealth = async () => {
-    try {
-      const response = await apiClient.get('/admin/dashboard/health');
-      setHealth(response.data.systemHealth);
-      setAlerts(response.data.activeAlerts);
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error('Error loading system health:', err);
-      }
-      // Si falla, asumir estado degradado
-      setHealth(null);
-    }
-  };
+  // Solo mostrar para admins
+  if (!isAdmin) {
+    return null;
+  }
 
   const getOverallStatus = (): OverallStatus => {
     // Mientras se carga, asumir healthy (evita parpadeo rojo)
