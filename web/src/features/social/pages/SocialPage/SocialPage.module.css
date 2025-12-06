@@ -859,15 +859,35 @@
   color: var(--color-primary);
 }
 
+.activityItem__targetWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.activityItem__targetWrapper:hover .activityItem__targetLink {
+  color: var(--color-primary);
+}
+
+.activityItem__targetWrapper:hover .activityItem__inlineCover {
+  transform: scale(1.05);
+}
+
 .activityItem__targetLink {
   color: var(--color-text-primary);
   font-weight: 600;
-  cursor: pointer;
   transition: color 0.2s ease;
 }
 
-.activityItem__targetLink:hover {
-  color: var(--color-primary);
+.activityItem__inlineCover {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--white-15);
+  transition: transform 0.2s ease;
 }
 
 .activityItem__time {
@@ -884,22 +904,6 @@
   height: 3px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
-}
-
-.activityItem__cover {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-  margin-left: auto;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.activityItem__cover:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .activityItem__friendLink {
@@ -1058,11 +1062,6 @@
   }
 
   .activityItem__avatar {
-    width: 38px;
-    height: 38px;
-  }
-
-  .activityItem__cover {
     width: 38px;
     height: 38px;
   }
