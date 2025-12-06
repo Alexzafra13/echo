@@ -40,6 +40,11 @@ export function useListeningNowSSE() {
       eventSource.onopen = () => {
         logger.debug('[SSE] Connected to listening-now stream');
         reconnectAttemptsRef.current = 0;
+
+        // Refetch data on connection to ensure we have the latest state
+        // This catches any updates that happened while connecting
+        queryClient.invalidateQueries({ queryKey: socialKeys.listening() });
+        queryClient.invalidateQueries({ queryKey: socialKeys.overview() });
       };
 
       // Handle listening updates
