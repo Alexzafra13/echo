@@ -200,37 +200,44 @@
   padding: 0 20px;
 }
 
-/* Playlist Card */
+/* Playlist Card - matches AlbumCard styling */
 .playlistCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   cursor: pointer;
-  border-radius: 8px;
-  background: var(--white-02);
-  padding: 12px;
-  transition: all 0.2s ease;
+  transition: transform 0.3s ease;
+  padding: 8px;
+  border-radius: 4px;
 }
 
 .playlistCard:hover {
-  background: var(--white-05);
-  transform: translateY(-2px);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .playlistCard__cover {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 12px;
-  background: var(--white-05);
+  box-shadow: 0 4px 12px var(--black-30);
+  transition: box-shadow 0.3s ease;
+  background: var(--bg-surface);
+}
+
+.playlistCard:hover .playlistCard__cover {
+  box-shadow: 0 8px 24px var(--black-50);
 }
 
 .playlistCard__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .playlistCard__title {
-  font-size: 0.9375rem;
+  font-size: 15px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -240,7 +247,7 @@
 }
 
 .playlistCard__meta {
-  font-size: 0.8125rem;
+  font-size: 13px;
   color: var(--color-text-secondary);
   margin: 0;
 }
@@ -254,6 +261,19 @@
 }
 
 /* ===== Responsive Design ===== */
+
+/* Tablet Large */
+@media (max-width: 1200px) {
+  .playlistsGrid,
+  .radiosGrid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .homeSection__title {
+    font-size: 22px;
+  }
+}
 
 /* Tablet */
 @media (max-width: 1024px) {
@@ -312,12 +332,17 @@
     padding: 0 16px;
   }
 
+  .homeSection {
+    margin-bottom: 32px;
+  }
+
   .homeSection__header {
     padding: 0 16px;
+    margin-bottom: 12px;
   }
 
   .homeSection__title {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .playlistsGrid,
@@ -328,7 +353,20 @@
   }
 
   .playlistCard {
-    padding: 10px;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .playlistCard__cover {
+    border-radius: 8px;
+  }
+
+  .playlistCard__title {
+    font-size: 14px;
+  }
+
+  .playlistCard__meta {
+    font-size: 12px;
   }
 }
 
@@ -362,10 +400,11 @@
 
   .homeSection__header {
     padding: 0 12px;
+    margin-bottom: 10px;
   }
 
   .homeSection__title {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .playlistsGrid,
@@ -375,16 +414,12 @@
     padding: 0 12px;
   }
 
-  .playlistCard {
-    padding: 8px;
-  }
-
   .playlistCard__title {
-    font-size: 0.875rem;
+    font-size: 13px;
   }
 
   .playlistCard__meta {
-    font-size: 0.75rem;
+    font-size: 11px;
   }
 }
 
