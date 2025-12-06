@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState, ReactNode } from 'react';
+import { useLocation } from 'wouter';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ActionCardsRow } from '@shared/components/ActionCardsRow';
 import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimensions, useAutoPlaylists, categorizeAutoPlaylists, randomSelect, useAlbumsRecentlyPlayed } from '../../hooks';
 import { useAutoRefreshOnScan } from '@shared/hooks';
 import { useHomePreferences } from '@features/settings/hooks';
+import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
+import { PlaylistCoverMosaic } from '@features/playlists/components';
+import { useFavoriteStations, useDeleteFavoriteStation } from '@features/radio/hooks';
+import { RadioStationCard } from '@features/radio/components/RadioStationCard/RadioStationCard';
+import { usePlayer } from '@features/player/context/PlayerContext';
 import type { HomeSectionId } from '@features/settings/services';
 import type { Album, HeroItem } from '../../types';
+import type { RadioStation } from '@features/radio/types';
 import styles from './HomePage.module.css';
 
 /**
@@ -37,6 +44,16 @@ export default function HomePage() {
   const { data: recentlyPlayedAlbums } = useAlbumsRecentlyPlayed(Math.min(neededAlbums, 50));
   const { data: autoPlaylists } = useAutoPlaylists();
   const { data: homePreferences } = useHomePreferences();
+
+  // User playlists for my-playlists section
+  const { data: userPlaylistsData } = usePlaylists({ take: neededPlaylists });
+  const userPlaylists = userPlaylistsData?.items || [];
+
+  // Favorite radio stations for favorite-radios section
+  const { data: favoriteStations = [] } = useFavoriteStations();
+  const deleteFavoriteMutation = useDeleteFavoriteStation();
+  const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
+  const [, setLocation] = useLocation();
 
   // Get enabled sections sorted by order
   const enabledSections = useMemo(() => {
@@ -289,11 +306,73 @@ export default function HomePage() {
           />
         );
       case 'my-playlists':
-        // TODO: Implement my playlists section
-        return null;
+        if (userPlaylists.length === 0) return null;
+        return (
+          <section key="my-playlists" className={styles.homeSection}>
+            <div className={styles.homeSection__header}>
+              <h2 className={styles.homeSection__title}>Mis Playlists</h2>
+              <button
+                className={styles.homeSection__viewAll}
+                onClick={() => setLocation('/playlists')}
+              >
+                Ver todo
+              </button>
+            </div>
+            <div className={styles.playlistsGrid}>
+              {userPlaylists.slice(0, neededPlaylists).map((playlist) => (
+                <div
+                  key={playlist.id}
+                  className={styles.playlistCard}
+                  onClick={() => setLocation(`/playlists/${playlist.id}`)}
+                >
+                  <div className={styles.playlistCard__cover}>
+                    <PlaylistCoverMosaic
+                      albumIds={playlist.albumIds || []}
+                      playlistName={playlist.name}
+                    />
+                  </div>
+                  <div className={styles.playlistCard__info}>
+                    <h3 className={styles.playlistCard__title}>{playlist.name}</h3>
+                    <p className={styles.playlistCard__meta}>
+                      {playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
       case 'favorite-radios':
-        // TODO: Implement favorite radios section
-        return null;
+        if (favoriteStations.length === 0) return null;
+        return (
+          <section key="favorite-radios" className={styles.homeSection}>
+            <div className={styles.homeSection__header}>
+              <h2 className={styles.homeSection__title}>Radios Favoritas</h2>
+              <button
+                className={styles.homeSection__viewAll}
+                onClick={() => setLocation('/radio')}
+              >
+                Ver todo
+              </button>
+            </div>
+            <div className={styles.radiosGrid}>
+              {favoriteStations
+                .filter((station: RadioStation) => station.id)
+                .slice(0, neededPlaylists)
+                .map((station: RadioStation) => (
+                  <RadioStationCard
+                    key={station.id}
+                    station={station}
+                    isFavorite={true}
+                    isPlaying={isRadioMode && isPlaying && currentRadioStation?.id === station.id}
+                    currentMetadata={currentRadioStation?.id === station.id ? radioMetadata : null}
+                    onPlay={() => playRadio(station)}
+                    onToggleFavorite={() => deleteFavoriteMutation.mutate(station.id!)}
+                  />
+                ))}
+            </div>
+          </section>
+        );
       case 'surprise-me':
         // This is part of ActionCardsRow, not rendered separately
         return null;
