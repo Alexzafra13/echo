@@ -196,12 +196,10 @@
 @media (max-width: 768px) {
   .artistsPage__main {
     margin-left: 0; /* No sidebar en mobile */
-    padding-top: 0;
   }
 
   .artistsPage__content {
-    margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + base padding + player spacer */
+    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .artistsPage__title {
