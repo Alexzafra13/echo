@@ -924,7 +924,6 @@
 
 .activityItem__coverWrapper:hover .activityItem__cover {
   transform: scale(1.05);
-  border-color: var(--color-primary);
 }
 
 .activityItem__cover {
