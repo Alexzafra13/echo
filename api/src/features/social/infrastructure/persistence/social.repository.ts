@@ -418,10 +418,10 @@ export class DrizzleSocialRepository implements ISocialRepository {
     // Get recent likes from friends
     const likesResults = await this.drizzle.db
       .select({
-        oderId2: userStarred.starredAt,
-        oderId3: userStarred.starredId,
-        oderId4: userStarred.starredType,
-        oderId5: userStarred.userId,
+        starredAt: userStarred.starredAt,
+        starredId: userStarred.starredId,
+        starredType: userStarred.starredType,
+        likedByUserId: userStarred.userId,
       })
       .from(userStarred)
       .where(
@@ -436,7 +436,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
     // Get user info for all activities
     const allUserIds = [
       ...new Set([
-        ...likesResults.map(l => l.oderId5),
+        ...likesResults.map(l => l.likedByUserId),
         ...playlistResults.map(p => p.userId),
       ]),
     ];
@@ -454,6 +454,40 @@ export class DrizzleSocialRepository implements ISocialRepository {
       .where(inArray(users.id, allUserIds));
 
     const userMap = new Map(userInfos.map(u => [u.id, u]));
+
+    // Get target names for likes (tracks, albums, artists)
+    const trackIds = likesResults.filter(l => l.starredType === 'track').map(l => l.starredId);
+    const albumIds = likesResults.filter(l => l.starredType === 'album').map(l => l.starredId);
+    const artistIds = likesResults.filter(l => l.starredType === 'artist').map(l => l.starredId);
+
+    const targetNames = new Map<string, string>();
+
+    // Fetch track names
+    if (trackIds.length > 0) {
+      const trackResults = await this.drizzle.db
+        .select({ id: tracks.id, title: tracks.title })
+        .from(tracks)
+        .where(inArray(tracks.id, trackIds));
+      trackResults.forEach(t => targetNames.set(`track-${t.id}`, t.title || 'Canción'));
+    }
+
+    // Fetch album names
+    if (albumIds.length > 0) {
+      const albumResults = await this.drizzle.db
+        .select({ id: albums.id, name: albums.name })
+        .from(albums)
+        .where(inArray(albums.id, albumIds));
+      albumResults.forEach(a => targetNames.set(`album-${a.id}`, a.name || 'Álbum'));
+    }
+
+    // Fetch artist names
+    if (artistIds.length > 0) {
+      const artistResults = await this.drizzle.db
+        .select({ id: artists.id, name: artists.name })
+        .from(artists)
+        .where(inArray(artists.id, artistIds));
+      artistResults.forEach(a => targetNames.set(`artist-${a.id}`, a.name || 'Artista'));
+    }
 
     // Build activity items
     const activities: ActivityItem[] = [];
@@ -479,19 +513,20 @@ export class DrizzleSocialRepository implements ISocialRepository {
 
     // Add like activities
     for (const l of likesResults) {
-      const user = userMap.get(l.oderId5);
+      const user = userMap.get(l.likedByUserId);
       if (user) {
+        const targetKey = `${l.starredType}-${l.starredId}`;
         activities.push({
-          id: `like-${l.oderId3}-${l.oderId4}`,
-          userId: l.oderId5,
+          id: `like-${l.starredId}-${l.starredType}`,
+          userId: l.likedByUserId,
           username: user.username,
           userName: user.name,
           userAvatarPath: user.avatarPath,
-          actionType: `liked_${l.oderId4}` as ActivityItem['actionType'],
-          targetType: l.oderId4,
-          targetId: l.oderId3,
-          targetName: '',
-          createdAt: l.oderId2,
+          actionType: `liked_${l.starredType}` as ActivityItem['actionType'],
+          targetType: l.starredType,
+          targetId: l.starredId,
+          targetName: targetNames.get(targetKey) || '',
+          createdAt: l.starredAt,
         });
       }
     }
