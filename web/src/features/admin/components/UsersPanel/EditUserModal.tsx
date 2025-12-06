@@ -94,7 +94,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
             </p>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles.checkboxWrapper}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -112,7 +112,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
             </p>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles.checkboxWrapper}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
