@@ -28,6 +28,16 @@ function getCoverUrl(albumId: string, coverPath: string | null): string | null {
   return `/api/albums/${albumId}/cover`;
 }
 
+/**
+ * Helper function to generate playlist cover URL
+ */
+function getPlaylistCoverUrl(playlistId: string, coverUrl: string | null): string | null {
+  if (!coverUrl) return null;
+  // If it's already a full URL, return as-is
+  if (coverUrl.startsWith('http')) return coverUrl;
+  return `/api/playlists/${playlistId}/cover`;
+}
+
 export class SocialMapper {
   static toFriendshipResponse(friendship: Friendship): FriendshipResponseDto {
     return {
@@ -74,7 +84,17 @@ export class SocialMapper {
   }
 
   static toActivityItemResponse(activity: ActivityItem): ActivityItemResponseDto {
-    return {
+    // Determine cover URL based on target type
+    let targetCoverUrl: string | null = null;
+    if (activity.targetCoverPath) {
+      if (activity.targetType === 'playlist') {
+        targetCoverUrl = getPlaylistCoverUrl(activity.targetId, activity.targetCoverPath);
+      } else if (activity.targetType === 'album') {
+        targetCoverUrl = getCoverUrl(activity.targetId, activity.targetCoverPath);
+      }
+    }
+
+    const result: ActivityItemResponseDto = {
       id: activity.id,
       user: {
         id: activity.userId,
@@ -87,8 +107,21 @@ export class SocialMapper {
       targetId: activity.targetId,
       targetName: activity.targetName,
       targetExtra: activity.targetExtra,
+      targetCoverUrl,
       createdAt: activity.createdAt,
     };
+
+    // Add second user for became_friends activities
+    if (activity.actionType === 'became_friends' && activity.secondUserId) {
+      result.secondUser = {
+        id: activity.secondUserId,
+        username: activity.targetName, // targetName stores second user's username
+        name: activity.secondUserName || null,
+        avatarUrl: getAvatarUrl(activity.secondUserId, activity.secondUserAvatarPath || null),
+      };
+    }
+
+    return result;
   }
 
   static toSearchUserResult(user: {

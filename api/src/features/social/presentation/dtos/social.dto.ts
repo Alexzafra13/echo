@@ -90,6 +90,8 @@ export class ActivityItemResponseDto {
   targetId!: string;
   targetName!: string;
   targetExtra?: string;
+  targetCoverUrl?: string | null;
+  secondUser?: UserBasicResponseDto; // for became_friends: the other user
   createdAt!: Date;
 }
 

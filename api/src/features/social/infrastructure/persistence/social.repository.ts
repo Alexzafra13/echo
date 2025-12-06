@@ -397,12 +397,13 @@ export class DrizzleSocialRepository implements ISocialRepository {
 
     const friendIds = friendResults.map(f => f.friendId);
 
-    // Get recent playlists from friends
+    // Get recent playlists from friends (with cover)
     const playlistResults = await this.drizzle.db
       .select({
         id: playlists.id,
         userId: playlists.ownerId,
         name: playlists.name,
+        coverImageUrl: playlists.coverImageUrl,
         createdAt: playlists.createdAt,
       })
       .from(playlists)
@@ -413,6 +414,28 @@ export class DrizzleSocialRepository implements ISocialRepository {
         ),
       )
       .orderBy(desc(playlists.createdAt))
+      .limit(limit);
+
+    // Get recent friendships (became_friends)
+    // Only include friendships where at least one user is a friend of the current user
+    const friendshipResults = await this.drizzle.db
+      .select({
+        id: friendships.id,
+        requesterId: friendships.requesterId,
+        addresseeId: friendships.addresseeId,
+        updatedAt: friendships.updatedAt,
+      })
+      .from(friendships)
+      .where(
+        and(
+          eq(friendships.status, 'accepted'),
+          or(
+            inArray(friendships.requesterId, friendIds),
+            inArray(friendships.addresseeId, friendIds),
+          ),
+        ),
+      )
+      .orderBy(desc(friendships.updatedAt))
       .limit(limit);
 
     // Get recent likes from friends
@@ -433,11 +456,13 @@ export class DrizzleSocialRepository implements ISocialRepository {
       .orderBy(desc(userStarred.starredAt))
       .limit(limit);
 
-    // Get user info for all activities
+    // Get user info for all activities (including both users in friendships)
     const allUserIds = [
       ...new Set([
         ...likesResults.map(l => l.likedByUserId),
         ...playlistResults.map(p => p.userId),
+        ...friendshipResults.map(f => f.requesterId),
+        ...friendshipResults.map(f => f.addresseeId),
       ]),
     ];
 
@@ -492,7 +517,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
     // Build activity items
     const activities: ActivityItem[] = [];
 
-    // Add playlist activities
+    // Add playlist activities (with cover)
     for (const p of playlistResults) {
       const user = userMap.get(p.userId);
       if (user) {
@@ -506,6 +531,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
           targetType: 'playlist',
           targetId: p.id,
           targetName: p.name,
+          targetCoverPath: p.coverImageUrl,
           createdAt: p.createdAt,
         });
       }
@@ -527,6 +553,29 @@ export class DrizzleSocialRepository implements ISocialRepository {
           targetId: l.starredId,
           targetName: targetNames.get(targetKey) || '',
           createdAt: l.starredAt,
+        });
+      }
+    }
+
+    // Add became_friends activities
+    for (const f of friendshipResults) {
+      const requester = userMap.get(f.requesterId);
+      const addressee = userMap.get(f.addresseeId);
+      if (requester && addressee) {
+        activities.push({
+          id: `friendship-${f.id}`,
+          userId: f.requesterId,
+          username: requester.username,
+          userName: requester.name,
+          userAvatarPath: requester.avatarPath,
+          actionType: 'became_friends',
+          targetType: 'user',
+          targetId: f.addresseeId,
+          targetName: addressee.username,
+          secondUserId: f.addresseeId,
+          secondUserName: addressee.name,
+          secondUserAvatarPath: addressee.avatarPath,
+          createdAt: f.updatedAt,
         });
       }
     }
