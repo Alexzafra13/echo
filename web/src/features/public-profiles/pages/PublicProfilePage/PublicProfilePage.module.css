@@ -7,7 +7,7 @@
 .publicProfilePage {
   display: flex;
   min-height: 100vh;
-  background: var(--color-bg-primary, #0a0e27);
+  background-color: var(--color-background);
 }
 
 .publicProfilePage__main {
