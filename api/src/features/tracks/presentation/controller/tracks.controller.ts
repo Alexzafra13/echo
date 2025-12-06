@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/com
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase } from '../../domain/use-cases';
 import { TrackResponseDto, GetTracksResponseDto, SearchTracksResponseDto, ShuffledTracksResponseDto } from '../dtos';
+import { parsePaginationParams } from '@shared/utils';
 
 /**
  * TracksController - Controlador de tracks
@@ -68,12 +69,11 @@ export class TracksController {
   })
   async getShuffledTracks(
     @Query('seed') seed?: string,
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '50',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<ShuffledTracksResponseDto> {
     const seedNum = seed ? parseFloat(seed) : undefined;
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 50);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { defaultTake: 50 });
 
     const result = await this.getShuffledTracksUseCase.execute({
       seed: seedNum,
@@ -147,11 +147,10 @@ export class TracksController {
     type: GetTracksResponseDto
   })
   async getTracks(
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '10',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<GetTracksResponseDto> {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take);
 
     const result = await this.getTracksUseCase.execute({
       skip: skipNum,
@@ -206,11 +205,10 @@ export class TracksController {
   })
   async searchTracks(
     @Param('query') query: string,
-    @Query('skip') skip: string = '0',
-    @Query('take') take: string = '10',
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
   ): Promise<SearchTracksResponseDto> {
-    const skipNum = Math.max(0, parseInt(skip, 10) || 0);
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take);
 
     const result = await this.searchTracksUseCase.execute({
       query,

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists } from '@infrastructure/database/schema';
@@ -7,6 +7,7 @@ import { ImageDownloadService } from '@features/external-metadata/infrastructure
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { getArtistImageTypeConfig } from '../../config/artist-image-type.config';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -67,7 +68,7 @@ export class ApplyArtistAvatarUseCase {
     const basePath = await this.storage.getArtistMetadataPath(input.artistId);
 
     // Determine filename and fields based on type
-    const typeConfig = this.getTypeConfig(input.type);
+    const typeConfig = getArtistImageTypeConfig(input.type);
     const filename = typeConfig.filename;
     const imagePath = path.join(basePath, filename);
 
@@ -161,72 +162,5 @@ export class ApplyArtistAvatarUseCase {
       message: `${input.type} image successfully applied from ${input.provider}`,
       imagePath,
     };
-  }
-
-  /**
-   * Get configuration for each image type (V2 schema fields)
-   */
-  private getTypeConfig(type: string): {
-    filename: string;
-    localPathField: string;
-    localUpdatedField: string;
-    externalPathField: string;
-    externalSourceField: string;
-    externalUpdatedField: string;
-    oldPathField: string;
-  } {
-    const configs: Record<string, {
-      filename: string;
-      localPathField: string;
-      localUpdatedField: string;
-      externalPathField: string;
-      externalSourceField: string;
-      externalUpdatedField: string;
-      oldPathField: string;
-    }> = {
-      profile: {
-        filename: 'profile.jpg',
-        localPathField: 'profileImagePath',
-        localUpdatedField: 'profileImageUpdatedAt',
-        externalPathField: 'externalProfilePath',
-        externalSourceField: 'externalProfileSource',
-        externalUpdatedField: 'externalProfileUpdatedAt',
-        oldPathField: 'externalProfilePath',
-      },
-      background: {
-        filename: 'background.jpg',
-        localPathField: 'backgroundImagePath',
-        localUpdatedField: 'backgroundUpdatedAt',
-        externalPathField: 'externalBackgroundPath',
-        externalSourceField: 'externalBackgroundSource',
-        externalUpdatedField: 'externalBackgroundUpdatedAt',
-        oldPathField: 'externalBackgroundPath',
-      },
-      banner: {
-        filename: 'banner.png',
-        localPathField: 'bannerImagePath',
-        localUpdatedField: 'bannerUpdatedAt',
-        externalPathField: 'externalBannerPath',
-        externalSourceField: 'externalBannerSource',
-        externalUpdatedField: 'externalBannerUpdatedAt',
-        oldPathField: 'externalBannerPath',
-      },
-      logo: {
-        filename: 'logo.png',
-        localPathField: 'logoImagePath',
-        localUpdatedField: 'logoUpdatedAt',
-        externalPathField: 'externalLogoPath',
-        externalSourceField: 'externalLogoSource',
-        externalUpdatedField: 'externalLogoUpdatedAt',
-        oldPathField: 'externalLogoPath',
-      },
-    };
-
-    const config = configs[type];
-    if (!config) {
-      throw new BadRequestException(`Invalid image type: ${type}`);
-    }
-
-    return config;
   }
 }
