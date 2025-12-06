@@ -142,8 +142,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: rgba(30, 215, 96, 0.15);
-  border: 1px solid rgba(30, 215, 96, 0.3);
+  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.15);
+  border: 1px solid rgba(var(--color-primary-rgb, 249, 115, 22), 0.3);
   border-radius: 20px;
   padding: 6px 14px 6px 10px;
   margin-top: 16px;
@@ -152,8 +152,8 @@
 }
 
 .publicProfilePage__listeningNow:hover {
-  background: rgba(30, 215, 96, 0.25);
-  border-color: rgba(30, 215, 96, 0.5);
+  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.25);
+  border-color: rgba(var(--color-primary-rgb, 249, 115, 22), 0.5);
 }
 
 .publicProfilePage__listeningNowBars {
@@ -165,7 +165,7 @@
 
 .publicProfilePage__listeningNowBar {
   width: 3px;
-  background: #1ed760;
+  background: var(--color-primary);
   border-radius: 1px;
   animation: soundBars 0.8s ease-in-out infinite;
 }
@@ -197,7 +197,7 @@
 
 .publicProfilePage__listeningNowText {
   font-size: 13px;
-  color: #1ed760;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
