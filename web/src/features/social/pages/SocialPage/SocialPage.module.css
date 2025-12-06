@@ -882,8 +882,8 @@
 }
 
 .activityItem__inlineCover {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 6px;
   object-fit: cover;
   border: 1px solid var(--white-15);
@@ -892,8 +892,8 @@
 
 /* Inline Mosaic for playlists with multiple albums */
 .activityItem__inlineMosaic {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 6px;
   overflow: hidden;
   display: inline-grid;
