@@ -788,8 +788,7 @@
 .activityItem {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
   background: var(--color-background);
@@ -807,7 +806,6 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  flex: 1;
   min-width: 0;
 }
 
