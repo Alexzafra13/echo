@@ -281,7 +281,7 @@ export default function SocialPage() {
                             )}
                             {user.isPlaying && (
                               <div className={styles.listeningCard__playingBadge}>
-                                <Equalizer size="sm" />
+                                <Equalizer size="sm" color="white" />
                               </div>
                             )}
                           </div>
