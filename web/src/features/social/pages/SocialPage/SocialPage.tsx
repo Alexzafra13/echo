@@ -240,76 +240,84 @@ export default function SocialPage() {
           ) : (
             <>
               {/* Stats Bar */}
-              <div className={styles.statsBar}>
-                <div className={styles.statItem}>
-                  <div className={styles.statItem__icon}>
-                    <Users size={20} />
-                  </div>
-                  <div className={styles.statItem__info}>
-                    <span className={styles.statItem__value}>{overview?.friends?.length || 0}</span>
-                    <span className={styles.statItem__label}>Amigos</span>
-                  </div>
-                </div>
-                <div className={styles.statItem}>
-                  <div className={styles.statItem__icon} data-active={overview?.pendingRequests?.received?.length > 0}>
-                    <Clock size={20} />
-                  </div>
-                  <div className={styles.statItem__info}>
-                    <span className={styles.statItem__value}>{overview?.pendingRequests?.received?.length || 0}</span>
-                    <span className={styles.statItem__label}>Pendientes</span>
-                  </div>
-                </div>
-                <div className={styles.statItem}>
-                  <div className={styles.statItem__icon} data-listening={overview?.listeningNow?.length > 0}>
-                    <Headphones size={20} />
-                  </div>
-                  <div className={styles.statItem__info}>
-                    <span className={styles.statItem__value}>{overview?.listeningNow?.length || 0}</span>
-                    <span className={styles.statItem__label}>Escuchando</span>
-                  </div>
-                </div>
-                <div className={styles.statItem}>
-                  <div className={styles.statItem__icon}>
-                    <Activity size={20} />
-                  </div>
-                  <div className={styles.statItem__info}>
-                    <span className={styles.statItem__value}>{overview?.recentActivity?.length || 0}</span>
-                    <span className={styles.statItem__label}>Actividad</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Featured: Listening Now Section */}
-              <section className={styles.listeningSection}>
-                <div className={styles.listeningSection__header}>
-                  <div className={styles.listeningSection__titleWrapper}>
-                    <div className={styles.listeningSection__iconPulse}>
-                      <Headphones size={24} />
+              {(() => {
+                // Only count users who are actually playing
+                const actuallyListening = overview?.listeningNow?.filter(u => u.isPlaying) || [];
+                return (
+                  <div className={styles.statsBar}>
+                    <div className={styles.statItem}>
+                      <div className={styles.statItem__icon}>
+                        <Users size={20} />
+                      </div>
+                      <div className={styles.statItem__info}>
+                        <span className={styles.statItem__value}>{overview?.friends?.length || 0}</span>
+                        <span className={styles.statItem__label}>Amigos</span>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className={styles.listeningSection__title}>
-                        Escuchando ahora
-                      </h2>
-                      <p className={styles.listeningSection__subtitle}>
-                        Música en vivo de tus amigos
-                      </p>
+                    <div className={styles.statItem}>
+                      <div className={styles.statItem__icon} data-active={overview?.pendingRequests?.received?.length > 0}>
+                        <Clock size={20} />
+                      </div>
+                      <div className={styles.statItem__info}>
+                        <span className={styles.statItem__value}>{overview?.pendingRequests?.received?.length || 0}</span>
+                        <span className={styles.statItem__label}>Pendientes</span>
+                      </div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statItem__icon} data-listening={actuallyListening.length > 0}>
+                        <Headphones size={20} />
+                      </div>
+                      <div className={styles.statItem__info}>
+                        <span className={styles.statItem__value}>{actuallyListening.length}</span>
+                        <span className={styles.statItem__label}>Escuchando</span>
+                      </div>
+                    </div>
+                    <div className={styles.statItem}>
+                      <div className={styles.statItem__icon}>
+                        <Activity size={20} />
+                      </div>
+                      <div className={styles.statItem__info}>
+                        <span className={styles.statItem__value}>{overview?.recentActivity?.length || 0}</span>
+                        <span className={styles.statItem__label}>Actividad</span>
+                      </div>
                     </div>
                   </div>
-                  {overview?.listeningNow && overview.listeningNow.length > 0 && (
-                    <span className={styles.listeningSection__count}>
-                      {overview.listeningNow.length} {overview.listeningNow.length === 1 ? 'amigo' : 'amigos'}
-                    </span>
-                  )}
-                </div>
+                );
+              })()}
 
-                {overview?.listeningNow && overview.listeningNow.length > 0 ? (
-                  <div className={styles.listeningGrid}>
-                    {overview.listeningNow.map((user) => (
-                      <div
-                        key={user.id}
-                        className={styles.listeningCard}
-                        onClick={() => setLocation(`/user/${user.id}`)}
-                      >
+              {/* Featured: Listening Now Section - Only show if someone is actually playing */}
+              {(() => {
+                const actuallyListening = overview?.listeningNow?.filter(u => u.isPlaying) || [];
+                if (actuallyListening.length === 0) return null;
+
+                return (
+                  <section className={styles.listeningSection}>
+                    <div className={styles.listeningSection__header}>
+                      <div className={styles.listeningSection__titleWrapper}>
+                        <div className={styles.listeningSection__iconPulse}>
+                          <Headphones size={24} />
+                        </div>
+                        <div>
+                          <h2 className={styles.listeningSection__title}>
+                            Escuchando ahora
+                          </h2>
+                          <p className={styles.listeningSection__subtitle}>
+                            Música en vivo de tus amigos
+                          </p>
+                        </div>
+                      </div>
+                      <span className={styles.listeningSection__count}>
+                        {actuallyListening.length} {actuallyListening.length === 1 ? 'amigo' : 'amigos'}
+                      </span>
+                    </div>
+
+                    <div className={styles.listeningGrid}>
+                      {actuallyListening.map((user) => (
+                        <div
+                          key={user.id}
+                          className={styles.listeningCard}
+                          onClick={() => setLocation(`/user/${user.id}`)}
+                        >
                         {/* User Avatar */}
                         <img
                           src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
@@ -362,17 +370,10 @@ export default function SocialPage() {
                         )}
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className={styles.listeningSection__empty}>
-                    <div className={styles.listeningSection__emptyIcon}>
-                      <Headphones size={40} />
                     </div>
-                    <p>Ningún amigo está escuchando ahora</p>
-                    <span>Cuando tus amigos reproduzcan música, aparecerán aquí</span>
-                  </div>
-                )}
-              </section>
+                  </section>
+                );
+              })()}
 
               {/* Main Grid */}
               <div className={styles.socialPage__grid}>
@@ -555,7 +556,15 @@ export default function SocialPage() {
                               {getActionText(activity.actionType)}
                               {' '}
                               {activity.actionType === 'became_friends' && activity.secondUser ? (
-                                <strong>{activity.secondUser.name || activity.secondUser.username}</strong>
+                                <span className={styles.activityItem__friendLink}>
+                                  <img
+                                    src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
+                                    alt={activity.secondUser.username}
+                                    className={styles.activityItem__inlineAvatar}
+                                    onError={handleAvatarError}
+                                  />
+                                  <strong>{activity.secondUser.name || activity.secondUser.username}</strong>
+                                </span>
                               ) : (
                                 <strong>{activity.targetName}</strong>
                               )}
@@ -570,15 +579,6 @@ export default function SocialPage() {
                               src={activity.targetCoverUrl}
                               alt={activity.targetName}
                               className={styles.activityItem__cover}
-                            />
-                          )}
-                          {/* Second user avatar for became_friends */}
-                          {activity.actionType === 'became_friends' && activity.secondUser && (
-                            <img
-                              src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
-                              alt={activity.secondUser.username}
-                              className={styles.activityItem__secondAvatar}
-                              onError={handleAvatarError}
                             />
                           )}
                         </div>
