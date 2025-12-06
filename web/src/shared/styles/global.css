@@ -197,6 +197,111 @@ textarea:focus-visible {
 
 /* ===== Utility Classes ===== */
 
+/* Text truncation - single line with ellipsis */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Multi-line text truncation (2 lines) */
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Multi-line text truncation (3 lines) */
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card hover shadow effect */
+.card-shadow {
+  box-shadow: 0 4px 12px var(--black-30);
+  transition: box-shadow var(--transition-slow);
+}
+
+.card-shadow:hover {
+  box-shadow: 0 8px 24px var(--black-50);
+}
+
+/* Image cover container - 1:1 aspect ratio */
+.cover-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.cover-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.cover-container:hover img {
+  transform: scale(1.03);
+}
+
+/* Overlay for cards */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+  transition: background var(--transition-base);
+}
+
+.card-overlay:hover,
+*:hover > .card-overlay {
+  background: var(--black-20);
+}
+
+/* Floating action button (play buttons, favorite buttons) */
+.floating-action-btn {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.4);
+}
+
+.floating-action-btn:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(237, 104, 66, 0.5);
+}
+
+.floating-action-btn:active {
+  transform: scale(1.05);
+}
+
+/* Show floating button on parent hover */
+*:hover > .floating-action-btn,
+.floating-action-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
