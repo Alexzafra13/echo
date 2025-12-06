@@ -861,9 +861,9 @@
 
 .activityItem__targetWrapper {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  vertical-align: middle;
+  vertical-align: top;
   cursor: pointer;
 }
 
@@ -897,7 +897,7 @@
   border-radius: 6px;
   overflow: hidden;
   display: inline-grid;
-  vertical-align: middle;
+  vertical-align: top;
   border: 1px solid var(--white-15);
   background: var(--white-05);
   transition: transform 0.2s ease;
