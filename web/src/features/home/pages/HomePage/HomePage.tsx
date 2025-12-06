@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { useLocation } from 'wouter';
+import { RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
 import { ActionCardsRow } from '@shared/components/ActionCardsRow';
@@ -11,6 +13,8 @@ import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { useFavoriteStations, useDeleteFavoriteStation } from '@features/radio/hooks';
 import { RadioStationCard } from '@features/radio/components/RadioStationCard/RadioStationCard';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { useRandomAlbums } from '@features/explore/hooks';
+import { toAlbum } from '@features/explore/utils/transform';
 import type { HomeSectionId } from '@features/settings/services';
 import type { Album, HeroItem } from '../../types';
 import type { RadioStation } from '@features/radio/types';
@@ -54,6 +58,14 @@ export default function HomePage() {
   const deleteFavoriteMutation = useDeleteFavoriteStation();
   const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
   const [, setLocation] = useLocation();
+
+  // Random albums for surprise-me section
+  const queryClient = useQueryClient();
+  const { data: randomAlbumsData } = useRandomAlbums(neededAlbums);
+  const randomAlbums = randomAlbumsData?.albums?.map(toAlbum) || [];
+  const handleRefreshRandom = () => {
+    queryClient.invalidateQueries({ queryKey: ['explore', 'random-albums'] });
+  };
 
   // Get enabled sections sorted by order
   const enabledSections = useMemo(() => {
@@ -376,10 +388,24 @@ export default function HomePage() {
           </section>
         );
       case 'surprise-me':
-        // This is part of ActionCardsRow, not rendered separately
-        return null;
+        if (randomAlbums.length === 0) return null;
+        return (
+          <section key="surprise-me" className={styles.homeSection}>
+            <div className={styles.homeSection__headerRow}>
+              <h2 className={styles.homeSection__title}>Sorpréndeme</h2>
+              <button
+                className={styles.homeSection__refreshButton}
+                onClick={handleRefreshRandom}
+                title="Obtener otros aleatorios"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+            <AlbumGrid title="" albums={randomAlbums} />
+          </section>
+        );
       case 'explore':
-        // This is part of ActionCardsRow, not rendered separately
+        // Removed - redundant with Sorpréndeme and Explore page
         return null;
       default:
         return null;
