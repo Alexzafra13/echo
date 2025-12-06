@@ -7,7 +7,8 @@ import { UpdateHomePreferencesInput, UpdateHomePreferencesOutput } from './updat
 // Valid section IDs
 const VALID_SECTION_IDS: HomeSectionConfig['id'][] = [
   'recent-albums',
-  'wave-mix',
+  'artist-mix',
+  'genre-mix',
   'recently-played',
   'my-playlists',
   'top-played',
@@ -81,13 +82,14 @@ export class UpdateHomePreferencesUseCase {
   private getDefaultSections(): HomeSectionConfig[] {
     return [
       { id: 'recent-albums', enabled: true, order: 0 },
-      { id: 'wave-mix', enabled: true, order: 1 },
-      { id: 'recently-played', enabled: false, order: 2 },
-      { id: 'my-playlists', enabled: false, order: 3 },
-      { id: 'top-played', enabled: false, order: 4 },
-      { id: 'favorite-radios', enabled: false, order: 5 },
-      { id: 'surprise-me', enabled: false, order: 6 },
-      { id: 'explore', enabled: false, order: 7 },
+      { id: 'artist-mix', enabled: true, order: 1 },
+      { id: 'genre-mix', enabled: false, order: 2 },
+      { id: 'recently-played', enabled: false, order: 3 },
+      { id: 'my-playlists', enabled: false, order: 4 },
+      { id: 'top-played', enabled: false, order: 5 },
+      { id: 'favorite-radios', enabled: false, order: 6 },
+      { id: 'surprise-me', enabled: false, order: 7 },
+      { id: 'explore', enabled: false, order: 8 },
     ];
   }
 }

@@ -41,10 +41,10 @@ export default function HomePage() {
   // Get enabled sections sorted by order
   const enabledSections = useMemo(() => {
     if (!homePreferences?.homeSections) {
-      // Default: recent-albums and wave-mix enabled
+      // Default: recent-albums and artist-mix enabled
       return [
         { id: 'recent-albums' as HomeSectionId, order: 0 },
-        { id: 'wave-mix' as HomeSectionId, order: 1 },
+        { id: 'artist-mix' as HomeSectionId, order: 1 },
       ];
     }
     return homePreferences.homeSections
@@ -162,32 +162,29 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recentAlbums, topPlayedAlbums, autoPlaylists, refreshKey]);
 
-  // Prepare Wave Mix playlists for home page
-  // Wave Mix (always) + enough artist and genre playlists to fill at least one row
-  const homePagePlaylists = useMemo(() => {
-    if (!autoPlaylists || autoPlaylists.length === 0) return [];
+  // Prepare separate playlists for artist-mix and genre-mix sections
+  const { artistMixPlaylists, genreMixPlaylists } = useMemo(() => {
+    if (!autoPlaylists || autoPlaylists.length === 0) {
+      return { artistMixPlaylists: [], genreMixPlaylists: [] };
+    }
 
     const { waveMix, artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
 
-    // Build playlist array: Wave Mix + random artists + random genres
-    const playlists = [];
-
-    // Always add Wave Mix first (if exists)
+    // Artist Mix: Wave Mix (if exists) + artist playlists
+    const artistMix = [];
     if (waveMix) {
-      playlists.push(waveMix);
+      artistMix.push(waveMix);
     }
+    const randomArtists = randomSelect(artistPlaylists, isMobile ? neededPlaylists - 1 : 10);
+    artistMix.push(...randomArtists);
 
-    // Add random artist playlists (take more to ensure we fill a row)
-    const randomArtists = randomSelect(artistPlaylists, 5);
-    playlists.push(...randomArtists);
+    // Genre Mix: genre playlists only
+    const randomGenres = randomSelect(genrePlaylists, isMobile ? neededPlaylists : 10);
 
-    // Add random genre playlists (take more to ensure we fill a row)
-    const randomGenres = randomSelect(genrePlaylists, 5);
-    playlists.push(...randomGenres);
-
-    // Limit only on mobile (≤768px), otherwise show all
-    // On mobile: limit to 1 row (~4 items), on desktop/tablet: show all
-    return isMobile ? playlists.slice(0, neededPlaylists) : playlists;
+    return {
+      artistMixPlaylists: isMobile ? artistMix.slice(0, neededPlaylists) : artistMix,
+      genreMixPlaylists: randomGenres,
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlaylists, neededPlaylists, isMobile, refreshKey]);
 
@@ -249,13 +246,24 @@ export default function HomePage() {
             viewAllPath="/albums"
           />
         );
-      case 'wave-mix':
-        if (homePagePlaylists.length === 0) return null;
+      case 'artist-mix':
+        if (artistMixPlaylists.length === 0) return null;
         return (
           <PlaylistGrid
-            key="wave-mix"
-            title="Wave Mix"
-            playlists={homePagePlaylists}
+            key="artist-mix"
+            title="Mix por Artista"
+            playlists={artistMixPlaylists}
+            showViewAll={true}
+            viewAllPath="/wave-mix"
+          />
+        );
+      case 'genre-mix':
+        if (genreMixPlaylists.length === 0) return null;
+        return (
+          <PlaylistGrid
+            key="genre-mix"
+            title="Mix por Género"
+            playlists={genreMixPlaylists}
             showViewAll={true}
             viewAllPath="/wave-mix"
           />
