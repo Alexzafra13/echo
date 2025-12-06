@@ -122,7 +122,7 @@ export default function SocialPage() {
       <Sidebar />
 
       <main className={styles.socialPage__main}>
-        <Header />
+        <Header disableSearch />
 
         <div className={styles.socialPage__content}>
           {/* Page Header */}
