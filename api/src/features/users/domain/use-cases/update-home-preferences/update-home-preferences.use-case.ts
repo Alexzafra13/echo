@@ -14,7 +14,6 @@ const VALID_SECTION_IDS: HomeSectionConfig['id'][] = [
   'top-played',
   'favorite-radios',
   'surprise-me',
-  'explore',
 ];
 
 @Injectable()
@@ -89,7 +88,6 @@ export class UpdateHomePreferencesUseCase {
       { id: 'top-played', enabled: false, order: 5 },
       { id: 'favorite-radios', enabled: false, order: 6 },
       { id: 'surprise-me', enabled: false, order: 7 },
-      { id: 'explore', enabled: false, order: 8 },
     ];
   }
 }
