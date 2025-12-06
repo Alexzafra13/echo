@@ -7,8 +7,14 @@ import { StorageService } from '@features/external-metadata/infrastructure/servi
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import * as path from 'path';
-import * as fs from 'fs/promises';
-import * as crypto from 'crypto';
+import {
+  validateFileUpload,
+  generateUniqueFilename,
+  normalizePathSeparators,
+  FILE_UPLOAD_CONFIGS,
+  ensureDirectory,
+  writeFileSafe,
+} from '@shared/utils';
 import {
   UploadCustomArtistImageInput,
   UploadCustomArtistImageOutput,
@@ -54,53 +60,31 @@ export class UploadCustomArtistImageUseCase {
       throw new BadRequestException(`Invalid image type: ${input.imageType}`);
     }
 
-    // Validate file
-    if (!input.file) {
-      throw new BadRequestException('No file provided');
-    }
+    // Validate file using shared utility
+    validateFileUpload(input.file, FILE_UPLOAD_CONFIGS.image);
 
-    // Validate MIME type
-    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedMimeTypes.includes(input.file.mimetype)) {
-      throw new BadRequestException('Invalid file type. Only JPEG, PNG, and WebP are allowed');
-    }
-
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (input.file.size > maxSize) {
-      throw new BadRequestException('File size exceeds 10MB limit');
-    }
-
-    this.logger.log(
-      `Uploading custom ${input.imageType} image for artist: ${artist.name}`,
-    );
+    this.logger.log(`Uploading custom ${input.imageType} image for artist: ${artist.name}`);
 
     // Get storage path for artist
     const basePath = await this.storage.getArtistMetadataPath(input.artistId);
     const customPath = path.join(basePath, 'custom', input.imageType);
 
     // Ensure custom directory exists
-    await fs.mkdir(customPath, { recursive: true });
+    await ensureDirectory(customPath);
 
-    // Generate unique filename
-    const fileHash = crypto.randomBytes(8).toString('hex');
-    const ext = path.extname(input.file.originalname);
-    const fileName = `${input.imageType}_${Date.now()}_${fileHash}${ext}`;
+    // Generate unique filename and save file
+    const fileName = generateUniqueFilename(input.file.originalname, input.imageType);
     const filePath = path.join(customPath, fileName);
 
-    // Write file to disk
     try {
-      await fs.writeFile(filePath, input.file.buffer);
+      await writeFileSafe(filePath, input.file.buffer);
       this.logger.log(`Custom image saved to: ${filePath}`);
-    } catch (error) {
-      this.logger.error(`Failed to save custom image: ${(error as Error).message}`);
+    } catch {
       throw new BadRequestException('Failed to save image file');
     }
 
-    // Create database record
-    // IMPORTANT: Normalize path separators to Unix-style (/) for cross-platform compatibility
-    // Windows path.relative() returns backslashes (\) which don't work on Unix systems
-    const relativePath = path.relative(basePath, filePath).replace(/\\/g, '/');
+    // Normalize path for cross-platform compatibility
+    const relativePath = normalizePathSeparators(path.relative(basePath, filePath));
 
     const customImageResult = await this.drizzle.db
       .insert(customArtistImages)
