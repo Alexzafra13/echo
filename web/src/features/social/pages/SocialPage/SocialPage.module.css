@@ -118,6 +118,12 @@
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.1;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.statItem:hover .statItem__value {
+  transform: scale(1.1);
+  color: var(--color-primary);
 }
 
 .statItem__label {
@@ -327,6 +333,18 @@
   border: 1px solid var(--white-08);
   position: relative;
   overflow: hidden;
+  animation: sectionFadeIn 0.4s ease-out;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .listeningSection::before {
@@ -411,14 +429,34 @@
   padding: 12px 16px;
   border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
   background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.08);
   max-width: 380px;
   flex: 1 1 300px;
+  animation: cardSlideIn 0.4s ease-out backwards;
+}
+
+.listeningCard:nth-child(1) { animation-delay: 0.05s; }
+.listeningCard:nth-child(2) { animation-delay: 0.1s; }
+.listeningCard:nth-child(3) { animation-delay: 0.15s; }
+.listeningCard:nth-child(4) { animation-delay: 0.2s; }
+.listeningCard:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 .listeningCard:hover {
   background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.14);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(var(--color-primary-rgb, 249, 115, 22), 0.15);
 }
 
 .listeningCard__avatar {
