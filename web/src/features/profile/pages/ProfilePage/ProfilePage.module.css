@@ -422,13 +422,10 @@
 @media (max-width: 768px) {
   .profilePage__main {
     margin-left: 0; /* No sidebar en mobile */
-    padding-top: 0;
   }
 
   .profilePage__content {
-    overflow-y: auto; /* Permitir scroll vertical */
-    margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
+    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .profilePage__header {

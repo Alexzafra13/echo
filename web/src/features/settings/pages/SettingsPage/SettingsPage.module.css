@@ -418,13 +418,10 @@
 @media (max-width: 768px) {
   .settingsPage__main {
     margin-left: 0;
-    padding-top: 0;
   }
 
   .settingsPage__content {
-    overflow-y: auto;
-    margin-top: 0;
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header {
@@ -453,7 +450,7 @@
 
 @media (max-width: 480px) {
   .settingsPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 12px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header h1 {
