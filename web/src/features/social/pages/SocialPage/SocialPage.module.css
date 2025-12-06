@@ -49,6 +49,84 @@
   margin: 0;
 }
 
+/* ============================================
+   Stats Bar
+   ============================================ */
+
+.statsBar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-surface);
+  border-radius: 14px;
+  border: 1px solid var(--white-08);
+  flex: 1;
+  min-width: 140px;
+  transition: all 0.2s ease;
+}
+
+.statItem:hover {
+  border-color: var(--white-15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.statItem__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--white-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.statItem__icon[data-active="true"] {
+  background: rgba(var(--color-warning-rgb, 245, 158, 11), 0.15);
+  color: var(--color-warning, #f59e0b);
+}
+
+.statItem__icon[data-listening="true"] {
+  background: rgba(var(--color-success-rgb, 34, 197, 94), 0.15);
+  color: var(--color-success, #22c55e);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.statItem__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statItem__value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+.statItem__label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Search */
 .socialPage__search {
   margin-top: 16px;
@@ -271,27 +349,51 @@
   z-index: 1;
 }
 
-.listeningSection__title {
+.listeningSection__titleWrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
+  gap: 14px;
+}
+
+.listeningSection__iconPulse {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, rgba(var(--color-primary-rgb, 99, 102, 241), 0.7) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 16px rgba(var(--color-primary-rgb, 99, 102, 241), 0.3);
+  animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(var(--color-primary-rgb, 99, 102, 241), 0.3); }
+  50% { box-shadow: 0 6px 24px rgba(var(--color-primary-rgb, 99, 102, 241), 0.5); }
+}
+
+.listeningSection__title {
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
 }
 
-.listeningSection__title svg {
-  color: var(--color-primary);
+.listeningSection__subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0 0;
 }
 
 .listeningSection__count {
   font-size: 13px;
-  font-weight: 500;
-  color: var(--color-primary);
-  padding: 6px 14px;
-  background: rgba(var(--color-primary-rgb, 99, 102, 241), 0.15);
+  font-weight: 600;
+  color: white;
+  padding: 8px 16px;
+  background: var(--color-primary);
   border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 99, 102, 241), 0.3);
 }
 
 .listeningGrid {
@@ -643,20 +745,24 @@
 .activityList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .activityItem {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border-radius: 12px;
-  transition: background 0.2s ease;
+  border-radius: 14px;
+  background: var(--color-background);
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
 .activityItem:hover {
-  background: var(--white-03);
+  background: var(--white-05);
+  border-color: var(--white-08);
+  transform: translateX(4px);
 }
 
 .activityItem__avatarWrapper {
@@ -665,21 +771,23 @@
 }
 
 .activityItem__avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--white-10);
 }
 
 .activityItem__icon {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  font-size: 14px;
+  bottom: -2px;
+  right: -2px;
+  font-size: 16px;
   background: var(--color-surface);
   border-radius: 50%;
-  padding: 2px;
+  padding: 3px;
   line-height: 1;
+  border: 2px solid var(--color-background);
 }
 
 .activityItem__content {
@@ -704,6 +812,17 @@
 .activityItem__time {
   font-size: 12px;
   color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activityItem__time::before {
+  content: '';
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
 }
 
 .activityItem__cover {
@@ -765,9 +884,52 @@
     font-size: 24px;
   }
 
+  .statsBar {
+    gap: 10px;
+  }
+
+  .statItem {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .statItem__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .statItem__value {
+    font-size: 20px;
+  }
+
   .listeningSection {
     padding: 18px;
     border-radius: 16px;
+  }
+
+  .listeningSection__titleWrapper {
+    gap: 12px;
+  }
+
+  .listeningSection__iconPulse {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .listeningSection__iconPulse svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .listeningSection__title {
+    font-size: 17px;
+  }
+
+  .listeningSection__subtitle {
+    font-size: 12px;
   }
 
   .listeningGrid {
@@ -798,6 +960,20 @@
 
   .requestCard__actions {
     flex-direction: column;
+  }
+
+  .activityItem {
+    padding: 12px;
+  }
+
+  .activityItem__avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .activityItem__cover {
+    width: 38px;
+    height: 38px;
   }
 }
 
@@ -861,4 +1037,27 @@
 
 :root[data-theme="light"] .listeningSection__emptyIcon {
   background: rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="light"] .statItem {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="light"] .statItem:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="light"] .statItem__icon {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="light"] .activityItem {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:root[data-theme="light"] .activityItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
 }

@@ -239,13 +239,62 @@ export default function SocialPage() {
             </div>
           ) : (
             <>
+              {/* Stats Bar */}
+              <div className={styles.statsBar}>
+                <div className={styles.statItem}>
+                  <div className={styles.statItem__icon}>
+                    <Users size={20} />
+                  </div>
+                  <div className={styles.statItem__info}>
+                    <span className={styles.statItem__value}>{overview?.friends?.length || 0}</span>
+                    <span className={styles.statItem__label}>Amigos</span>
+                  </div>
+                </div>
+                <div className={styles.statItem}>
+                  <div className={styles.statItem__icon} data-active={overview?.pendingRequests?.received?.length > 0}>
+                    <Clock size={20} />
+                  </div>
+                  <div className={styles.statItem__info}>
+                    <span className={styles.statItem__value}>{overview?.pendingRequests?.received?.length || 0}</span>
+                    <span className={styles.statItem__label}>Pendientes</span>
+                  </div>
+                </div>
+                <div className={styles.statItem}>
+                  <div className={styles.statItem__icon} data-listening={overview?.listeningNow?.length > 0}>
+                    <Headphones size={20} />
+                  </div>
+                  <div className={styles.statItem__info}>
+                    <span className={styles.statItem__value}>{overview?.listeningNow?.length || 0}</span>
+                    <span className={styles.statItem__label}>Escuchando</span>
+                  </div>
+                </div>
+                <div className={styles.statItem}>
+                  <div className={styles.statItem__icon}>
+                    <Activity size={20} />
+                  </div>
+                  <div className={styles.statItem__info}>
+                    <span className={styles.statItem__value}>{overview?.recentActivity?.length || 0}</span>
+                    <span className={styles.statItem__label}>Actividad</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Featured: Listening Now Section */}
               <section className={styles.listeningSection}>
                 <div className={styles.listeningSection__header}>
-                  <h2 className={styles.listeningSection__title}>
-                    <Headphones size={22} />
-                    Escuchando ahora
-                  </h2>
+                  <div className={styles.listeningSection__titleWrapper}>
+                    <div className={styles.listeningSection__iconPulse}>
+                      <Headphones size={24} />
+                    </div>
+                    <div>
+                      <h2 className={styles.listeningSection__title}>
+                        Escuchando ahora
+                      </h2>
+                      <p className={styles.listeningSection__subtitle}>
+                        Música en vivo de tus amigos
+                      </p>
+                    </div>
+                  </div>
                   {overview?.listeningNow && overview.listeningNow.length > 0 && (
                     <span className={styles.listeningSection__count}>
                       {overview.listeningNow.length} {overview.listeningNow.length === 1 ? 'amigo' : 'amigos'}
