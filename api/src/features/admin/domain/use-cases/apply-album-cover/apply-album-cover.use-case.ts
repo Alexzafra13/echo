@@ -8,6 +8,7 @@ import { StorageService } from '@features/external-metadata/infrastructure/servi
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
 import { ImageProcessingError } from '@shared/errors';
+import { safeDeleteFile, fileExists } from '@shared/utils';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -51,16 +52,7 @@ export class ApplyAlbumCoverUseCase {
     );
 
     // Delete old external cover if exists
-    if (album.externalCoverPath) {
-      try {
-        await fs.unlink(album.externalCoverPath);
-        this.logger.debug(`Deleted old cover: ${album.externalCoverPath}`);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to delete old cover: ${(error as Error).message}`,
-        );
-      }
-    }
+    await safeDeleteFile(album.externalCoverPath, 'old cover');
 
     // Always save to metadata storage (not music folder) for security
     // Music folder should remain read-only to prevent accidental modifications
@@ -93,12 +85,8 @@ export class ApplyAlbumCoverUseCase {
       const coverPath = path.join(targetFolder, finalFilename);
 
       // If a cover with these exact dimensions already exists, delete it
-      try {
-        await fs.access(coverPath);
-        await fs.unlink(coverPath);
-        this.logger.debug(`Deleted existing cover with same dimensions: ${coverPath}`);
-      } catch (error) {
-        // File doesn't exist, which is fine
+      if (await fileExists(coverPath)) {
+        await safeDeleteFile(coverPath, 'existing cover with same dimensions');
       }
 
       // Rename temp file to final name
@@ -109,11 +97,7 @@ export class ApplyAlbumCoverUseCase {
       finalCoverPath = coverPath;
     } catch (error) {
       // Clean up temp file on error
-      try {
-        await fs.unlink(tempPath);
-      } catch (cleanupError) {
-        // Ignore cleanup errors
-      }
+      await safeDeleteFile(tempPath, 'temp file cleanup');
 
       this.logger.error(
         `Failed to download or process cover: ${(error as Error).message}`,
