@@ -109,6 +109,8 @@
   padding: 24px;
   overflow-y: auto;
   flex: 1;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Animations */
@@ -136,23 +138,30 @@
 @media (max-width: 768px) {
   .modalOverlay {
     padding: 16px;
-    align-items: flex-end;
+    padding-top: max(16px, env(safe-area-inset-top, 16px));
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    align-items: center;
   }
 
   .modalContent {
     width: 100%;
     max-width: 100%;
-    max-height: 90vh;
-    border-radius: 20px 20px 0 0;
-    animation: slideUpMobile 0.3s ease-out;
+    max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    border-radius: 16px;
+    animation: slideUp 0.3s ease-out;
   }
 
   .modalHeader {
     padding: 16px 20px;
+    flex-shrink: 0;
   }
 
   .modalBody {
     padding: 20px;
+    padding-bottom: 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
   }
 
   .modalTitle {
@@ -173,13 +182,3 @@
   }
 }
 
-@keyframes slideUpMobile {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
