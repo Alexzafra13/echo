@@ -39,6 +39,10 @@ export function useProfileListeningSSE(targetUserId: string) {
       eventSource.onopen = () => {
         logger.debug('[SSE] Connected to profile listening stream');
         reconnectAttemptsRef.current = 0;
+
+        // Refetch profile data on connection to ensure we have the latest state
+        // This catches any updates that happened while connecting
+        queryClient.invalidateQueries({ queryKey: ['public-profile', targetUserId] });
       };
 
       // Handle listening updates
