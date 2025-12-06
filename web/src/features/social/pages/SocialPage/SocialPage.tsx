@@ -271,7 +271,7 @@ export default function SocialPage() {
                       </div>
                     </div>
                     <div className={styles.statItem}>
-                      <div className={styles.statItem__icon} data-active={overview?.pendingRequests?.received?.length > 0}>
+                      <div className={styles.statItem__icon} data-active={(overview?.pendingRequests?.received?.length ?? 0) > 0}>
                         <Clock size={20} />
                       </div>
                       <div className={styles.statItem__info}>
