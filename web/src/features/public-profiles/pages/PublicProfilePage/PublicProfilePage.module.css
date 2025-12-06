@@ -135,30 +135,33 @@
   line-height: 1.5;
 }
 
-/* Listening Now - Full width card */
+/* Listening Now - Positioned to the right */
 .publicProfilePage__listeningNow {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.1);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-top: 20px;
+  gap: 12px;
+  background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
   text-decoration: none;
-  max-width: 400px;
+  max-width: 280px;
+  align-self: flex-start;
+  margin-top: 40px;
+  margin-left: auto;
+  flex-shrink: 0;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateX(20px);
   transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s ease;
 }
 
 .publicProfilePage__listeningNow--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
 .publicProfilePage__listeningNow--hidden {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateX(20px);
 }
 
 .publicProfilePage__listeningNow:hover {
@@ -166,8 +169,8 @@
 }
 
 .publicProfilePage__listeningNowCover {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
@@ -175,8 +178,8 @@
 }
 
 .publicProfilePage__listeningNowCoverPlaceholder {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   border-radius: 6px;
   background: var(--white-10);
   display: flex;
@@ -195,7 +198,7 @@
 }
 
 .publicProfilePage__listeningNowLabel {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -203,7 +206,7 @@
 }
 
 .publicProfilePage__listeningNowTrack {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -212,7 +215,7 @@
 }
 
 .publicProfilePage__listeningNowArtist {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -713,6 +716,17 @@
 
   .publicProfilePage__listeningNow {
     max-width: 100%;
+    margin-left: 0;
+    margin-top: 16px;
+    transform: translateY(10px);
+  }
+
+  .publicProfilePage__listeningNow--visible {
+    transform: translateY(0);
+  }
+
+  .publicProfilePage__listeningNow--hidden {
+    transform: translateY(-10px);
   }
 
   .publicProfilePage__heroInfo {
