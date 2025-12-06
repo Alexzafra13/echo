@@ -7,6 +7,7 @@ import { Button } from '@shared/components/ui';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getAutoPlaylists, refreshWaveMix, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
+import { useGridDimensions } from '@features/home/hooks';
 import { logger } from '@shared/utils/logger';
 import styles from './WaveMixPage.module.css';
 
@@ -21,6 +22,12 @@ export function WaveMixPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Calculate items for 2 rows based on screen size (same as HomePage)
+  const { itemsPerPage: neededItems } = useGridDimensions({
+    maxRows: 2,
+    headerHeight: 450,
+  });
 
   const loadPlaylists = async () => {
     setIsLoading(true);
@@ -215,7 +222,7 @@ export function WaveMixPage() {
                     </button>
                   </div>
                   <div className={styles.waveMixPage__grid}>
-                    {artistPlaylists.map((playlist) => (
+                    {artistPlaylists.slice(0, neededItems).map((playlist) => (
                       <div
                         key={playlist.id}
                         className={styles.playlistCard}
@@ -257,7 +264,7 @@ export function WaveMixPage() {
                     </button>
                   </div>
                   <div className={styles.waveMixPage__grid}>
-                    {genrePlaylists.map((playlist) => (
+                    {genrePlaylists.slice(0, neededItems).map((playlist) => (
                       <div
                         key={playlist.id}
                         className={styles.playlistCard}
