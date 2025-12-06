@@ -495,7 +495,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
           id: tracks.id,
           title: tracks.title,
           albumId: tracks.albumId,
-          albumCoverPath: albums.coverPath,
+          albumCoverPath: albums.coverArtPath,
         })
         .from(tracks)
         .leftJoin(albums, eq(albums.id, tracks.albumId))
@@ -511,7 +511,7 @@ export class DrizzleSocialRepository implements ISocialRepository {
     // Fetch album names with covers
     if (albumIds.length > 0) {
       const albumResults = await this.drizzle.db
-        .select({ id: albums.id, name: albums.name, coverPath: albums.coverPath })
+        .select({ id: albums.id, name: albums.name, coverPath: albums.coverArtPath })
         .from(albums)
         .where(inArray(albums.id, albumIds));
       albumResults.forEach(a => {
