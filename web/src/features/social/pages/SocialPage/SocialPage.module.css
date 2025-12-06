@@ -296,7 +296,7 @@
 
 .listeningGrid {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 12px;
   position: relative;
   z-index: 1;
@@ -311,6 +311,8 @@
   cursor: pointer;
   transition: background 0.2s ease;
   background: rgba(var(--color-primary-rgb, 249, 115, 22), 0.08);
+  max-width: 380px;
+  flex: 1 1 300px;
 }
 
 .listeningCard:hover {
@@ -750,17 +752,12 @@
   }
 
   .listeningGrid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
-  .listeningCard__content {
-    padding: 14px;
-  }
-
-  .listeningCard__cover,
-  .listeningCard__coverPlaceholder {
-    width: 60px;
-    height: 60px;
+  .listeningCard {
+    max-width: 100%;
+    flex: none;
   }
 
   .friendsList {
