@@ -99,7 +99,7 @@ export function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
             />
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={styles.checkboxWrapper}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
