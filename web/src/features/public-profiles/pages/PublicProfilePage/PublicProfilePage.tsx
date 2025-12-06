@@ -1,4 +1,4 @@
-import { useMemo, CSSProperties } from 'react';
+import { useMemo, useState, useEffect, CSSProperties } from 'react';
 import { useParams, Link } from 'wouter';
 import {
   Lock,
@@ -108,19 +108,41 @@ function Avatar({ avatarUrl, name, username }: AvatarProps) {
 }
 
 interface ListeningNowBadgeProps {
-  listeningNow: ListeningNow;
+  listeningNow: ListeningNow | null;
 }
 
 function ListeningNowBadge({ listeningNow }: ListeningNowBadgeProps) {
+  const [displayData, setDisplayData] = useState<ListeningNow | null>(listeningNow);
+  const [isVisible, setIsVisible] = useState(!!listeningNow);
+
+  useEffect(() => {
+    if (listeningNow) {
+      // New data: show immediately
+      setDisplayData(listeningNow);
+      setIsVisible(true);
+    } else if (displayData) {
+      // Data removed: fade out first, then remove
+      setIsVisible(false);
+      const timer = setTimeout(() => setDisplayData(null), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [listeningNow]);
+
+  if (!displayData) return null;
+
+  const className = `${styles.publicProfilePage__listeningNow} ${
+    isVisible ? styles['publicProfilePage__listeningNow--visible'] : styles['publicProfilePage__listeningNow--hidden']
+  }`;
+
   return (
     <Link
-      href={listeningNow.albumId ? `/album/${listeningNow.albumId}` : '#'}
-      className={styles.publicProfilePage__listeningNow}
+      href={displayData.albumId ? `/album/${displayData.albumId}` : '#'}
+      className={className}
     >
-      {listeningNow.coverUrl ? (
+      {displayData.coverUrl ? (
         <img
-          src={listeningNow.coverUrl}
-          alt={listeningNow.trackTitle}
+          src={displayData.coverUrl}
+          alt={displayData.trackTitle}
           className={styles.publicProfilePage__listeningNowCover}
         />
       ) : (
@@ -133,11 +155,11 @@ function ListeningNowBadge({ listeningNow }: ListeningNowBadgeProps) {
           Escuchando ahora
         </span>
         <span className={styles.publicProfilePage__listeningNowTrack}>
-          {listeningNow.trackTitle}
+          {displayData.trackTitle}
         </span>
-        {listeningNow.artistName && (
+        {displayData.artistName && (
           <span className={styles.publicProfilePage__listeningNowArtist}>
-            {listeningNow.artistName}
+            {displayData.artistName}
           </span>
         )}
       </div>
@@ -525,9 +547,7 @@ export function PublicProfilePage() {
                 )}
 
                 {/* Listening Now */}
-                {social.listeningNow && (
-                  <ListeningNowBadge listeningNow={social.listeningNow} />
-                )}
+                <ListeningNowBadge listeningNow={social.listeningNow ?? null} />
               </div>
             </div>
           </div>
