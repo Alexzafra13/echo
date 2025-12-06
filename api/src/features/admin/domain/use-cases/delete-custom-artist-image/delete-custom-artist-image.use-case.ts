@@ -5,6 +5,7 @@ import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
+import { getArtistImageTypeBasicConfig } from '../../config/artist-image-type.config';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -76,7 +77,7 @@ export class DeleteCustomArtistImageUseCase {
 
     // If this was the active image, we need to update the artist record
     if (customImage.isActive) {
-      const typeConfig = this.getTypeConfig(customImage.imageType);
+      const typeConfig = getArtistImageTypeBasicConfig(customImage.imageType);
 
       await this.drizzle.db
         .update(artists)
@@ -106,37 +107,5 @@ export class DeleteCustomArtistImageUseCase {
       success: true,
       message: `Custom ${customImage.imageType} image deleted successfully`,
     };
-  }
-
-  /**
-   * Get field names for each image type
-   */
-  private getTypeConfig(type: string): {
-    localPathField: string;
-    localUpdatedField: string;
-  } {
-    const configs: Record<string, {
-      localPathField: string;
-      localUpdatedField: string;
-    }> = {
-      profile: {
-        localPathField: 'profileImagePath',
-        localUpdatedField: 'profileImageUpdatedAt',
-      },
-      background: {
-        localPathField: 'backgroundImagePath',
-        localUpdatedField: 'backgroundUpdatedAt',
-      },
-      banner: {
-        localPathField: 'bannerImagePath',
-        localUpdatedField: 'bannerUpdatedAt',
-      },
-      logo: {
-        localPathField: 'logoImagePath',
-        localUpdatedField: 'logoUpdatedAt',
-      },
-    };
-
-    return configs[type] || configs.profile;
   }
 }

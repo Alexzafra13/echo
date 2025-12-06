@@ -1,7 +1,13 @@
 import { Playlist, PlaylistTrack } from '../../domain/entities';
+import {
+  Playlist as PlaylistDb,
+  NewPlaylist,
+  PlaylistTrack as PlaylistTrackDb,
+  NewPlaylistTrack,
+} from '@infrastructure/database/schema/playlists';
 
 export class PlaylistMapper {
-  static toDomain(raw: any): Playlist {
+  static toDomain(raw: PlaylistDb): Playlist {
     return Playlist.fromPrimitives({
       id: raw.id,
       name: raw.name,
@@ -19,11 +25,11 @@ export class PlaylistMapper {
     });
   }
 
-  static toDomainArray(raws: any[]): Playlist[] {
+  static toDomainArray(raws: PlaylistDb[]): Playlist[] {
     return raws.map((raw) => this.toDomain(raw));
   }
 
-  static toPersistence(playlist: Playlist): any {
+  static toPersistence(playlist: Playlist): NewPlaylist {
     const props = playlist.toPrimitives();
     return {
       id: props.id,
@@ -42,7 +48,7 @@ export class PlaylistMapper {
     };
   }
 
-  static playlistTrackToDomain(raw: any): PlaylistTrack {
+  static playlistTrackToDomain(raw: PlaylistTrackDb): PlaylistTrack {
     return PlaylistTrack.fromPrimitives({
       id: raw.id,
       playlistId: raw.playlistId,
@@ -52,7 +58,7 @@ export class PlaylistMapper {
     });
   }
 
-  static playlistTrackToPersistence(playlistTrack: PlaylistTrack): any {
+  static playlistTrackToPersistence(playlistTrack: PlaylistTrack): NewPlaylistTrack {
     const props = playlistTrack.toPrimitives();
     return {
       id: props.id,
