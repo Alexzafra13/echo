@@ -91,6 +91,9 @@ export class SocialMapper {
         targetCoverUrl = getPlaylistCoverUrl(activity.targetId, activity.targetCoverPath);
       } else if (activity.targetType === 'album') {
         targetCoverUrl = getCoverUrl(activity.targetId, activity.targetCoverPath);
+      } else if (activity.targetType === 'track' && activity.targetAlbumId) {
+        // For tracks, use the album ID to generate cover URL
+        targetCoverUrl = getCoverUrl(activity.targetAlbumId, activity.targetCoverPath);
       }
     }
 
