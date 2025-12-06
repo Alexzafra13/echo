@@ -121,16 +121,17 @@ export default function SocialPage() {
     }
   };
 
-  const getTargetUrl = (targetType: string, targetId: string) => {
+  const getTargetUrl = (targetType: string, targetId: string, albumId?: string) => {
     switch (targetType) {
       case 'playlist':
-        return `/playlist/${targetId}`;
+        return `/playlists/${targetId}`;
       case 'album':
         return `/album/${targetId}`;
       case 'track':
-        return `/track/${targetId}`;
+        // Tracks don't have their own page, navigate to album instead
+        return albumId ? `/album/${albumId}` : null;
       case 'artist':
-        return `/artist/${targetId}`;
+        return `/artists/${targetId}`;
       default:
         return null;
     }
@@ -593,13 +594,20 @@ export default function SocialPage() {
                                 </span>
                               ) : (
                                 <span
-                                  className={styles.activityItem__targetLink}
+                                  className={styles.activityItem__targetWrapper}
                                   onClick={() => {
-                                    const url = getTargetUrl(activity.targetType, activity.targetId);
+                                    const url = getTargetUrl(activity.targetType, activity.targetId, activity.targetAlbumId);
                                     if (url) setLocation(url);
                                   }}
                                 >
-                                  {activity.targetName}
+                                  {activity.targetCoverUrl && (
+                                    <img
+                                      src={activity.targetCoverUrl}
+                                      alt={activity.targetName}
+                                      className={styles.activityItem__inlineCover}
+                                    />
+                                  )}
+                                  <span className={styles.activityItem__targetLink}>{activity.targetName}</span>
                                 </span>
                               )}
                             </span>
@@ -607,18 +615,6 @@ export default function SocialPage() {
                               {formatTimeAgo(activity.createdAt)}
                             </span>
                           </div>
-                          {/* Cover image for playlists/tracks/albums */}
-                          {activity.targetCoverUrl && (
-                            <img
-                              src={activity.targetCoverUrl}
-                              alt={activity.targetName}
-                              className={styles.activityItem__cover}
-                              onClick={() => {
-                                const url = getTargetUrl(activity.targetType, activity.targetId);
-                                if (url) setLocation(url);
-                              }}
-                            />
-                          )}
                         </div>
                       ))}
                     </div>

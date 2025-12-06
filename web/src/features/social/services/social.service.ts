@@ -56,6 +56,7 @@ export interface ActivityItem {
   targetName: string;
   targetExtra?: string;
   targetCoverUrl?: string | null;
+  targetAlbumId?: string; // for tracks: the album ID for navigation
   secondUser?: UserBasic; // for became_friends: the other user
   createdAt: string;
 }
