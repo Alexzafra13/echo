@@ -140,14 +140,11 @@
 @media (max-width: 768px) {
   .albumsPage__main {
     margin-left: 0; /* No sidebar en mobile */
-    padding-top: 0;
   }
 
   .albumsPage__content {
     overflow-x: hidden; /* Evitar desbordamiento horizontal */
-    overflow-y: auto; /* Permitir scroll vertical */
-    margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
+    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   /* Remove grid layout on mobile for natural content flow */
