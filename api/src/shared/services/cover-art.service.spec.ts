@@ -4,6 +4,7 @@ import { CoverArtService } from './cover-art.service';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { parseFile } from 'music-metadata';
+import * as path from 'path';
 
 // Mock modules
 jest.mock('fs/promises');
@@ -17,6 +18,9 @@ describe('CoverArtService', () => {
   let service: CoverArtService;
   let configService: ConfigService;
 
+  // Helper to create cross-platform paths
+  const p = (...segments: string[]) => path.join(...segments);
+
   const mockConfigService = {
     get: jest.fn(),
   };
@@ -26,7 +30,7 @@ describe('CoverArtService', () => {
 
     // Default config mock
     mockConfigService.get.mockImplementation((key: string, defaultValue?: string) => {
-      if (key === 'COVERS_PATH') return '/test/covers';
+      if (key === 'COVERS_PATH') return p('/test', 'covers');
       if (key === 'DATA_PATH') return undefined;
       if (key === 'UPLOAD_PATH') return defaultValue;
       return defaultValue;
@@ -51,7 +55,7 @@ describe('CoverArtService', () => {
   describe('initialization', () => {
     it('should use COVERS_PATH if provided', () => {
       mockConfigService.get.mockImplementation((key: string) => {
-        if (key === 'COVERS_PATH') return '/custom/covers';
+        if (key === 'COVERS_PATH') return p('/custom', 'covers');
         return undefined;
       });
 
@@ -103,18 +107,23 @@ describe('CoverArtService', () => {
       // Wait for async initialization
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(fs.mkdir).toHaveBeenCalledWith('/test/covers', { recursive: true });
+      expect(fs.mkdir).toHaveBeenCalledWith(p('/test', 'covers'), { recursive: true });
     });
   });
 
   describe('extractAndCacheCover', () => {
     it('should find and cache external cover first', async () => {
       const albumId = 'album-123';
-      const trackPath = '/music/album/track.mp3';
+      const trackPath = p('/music', 'album', 'track.mp3');
 
-      // External cover exists
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/music/album/cover.jpg' || p === '/test/covers';
+      // External cover exists - need to match how the service checks for cover.jpg
+      const expectedCoverPath = p('/music', 'album', 'cover.jpg');
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        // Normalize paths for comparison
+        const normalizedCheck = path.normalize(checkPath);
+        const normalizedExpected = path.normalize(expectedCoverPath);
+        const normalizedCovers = path.normalize(p('/test', 'covers'));
+        return normalizedCheck === normalizedExpected || normalizedCheck === normalizedCovers;
       });
       (fs.copyFile as jest.Mock).mockResolvedValue(undefined);
 
@@ -126,11 +135,11 @@ describe('CoverArtService', () => {
 
     it('should extract embedded cover if no external found', async () => {
       const albumId = 'album-456';
-      const trackPath = '/music/album/track.mp3';
+      const trackPath = p('/music', 'album', 'track.mp3');
 
-      // No external cover
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/test/covers';
+      // No external cover - only covers directory exists
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        return path.normalize(checkPath) === path.normalize(p('/test', 'covers'));
       });
 
       // Mock embedded cover
@@ -155,11 +164,11 @@ describe('CoverArtService', () => {
 
     it('should return undefined if no cover found', async () => {
       const albumId = 'album-789';
-      const trackPath = '/music/album/track.mp3';
+      const trackPath = p('/music', 'album', 'track.mp3');
 
       // No external cover
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        return path.normalize(checkPath) === path.normalize(p('/test', 'covers'));
       });
 
       // No embedded cover
@@ -174,7 +183,7 @@ describe('CoverArtService', () => {
 
     it('should handle errors gracefully', async () => {
       const albumId = 'album-error';
-      const trackPath = '/music/album/track.mp3';
+      const trackPath = p('/music', 'album', 'track.mp3');
 
       (existsSync as jest.Mock).mockImplementation(() => {
         throw new Error('Filesystem error');
@@ -192,7 +201,7 @@ describe('CoverArtService', () => {
 
       const result = service.getCoverPath('album-123.jpg');
 
-      expect(result).toBe('/test/covers/album-123.jpg');
+      expect(result).toBe(p('/test', 'covers', 'album-123.jpg'));
     });
 
     it('should return undefined if cover does not exist', () => {
@@ -239,7 +248,7 @@ describe('CoverArtService', () => {
 
       await service.deleteCover('album-123.jpg');
 
-      expect(fs.unlink).toHaveBeenCalledWith('/test/covers/album-123.jpg');
+      expect(fs.unlink).toHaveBeenCalledWith(p('/test', 'covers', 'album-123.jpg'));
     });
 
     it('should not throw if cover does not exist', async () => {
@@ -265,8 +274,8 @@ describe('CoverArtService', () => {
 
     it('should handle image/jpeg', async () => {
       // No external cover
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        return path.normalize(checkPath) === path.normalize(p('/test', 'covers'));
       });
       (parseFile as jest.Mock).mockResolvedValue({
         common: {
@@ -279,8 +288,8 @@ describe('CoverArtService', () => {
     });
 
     it('should handle image/png', async () => {
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        return path.normalize(checkPath) === path.normalize(p('/test', 'covers'));
       });
       (parseFile as jest.Mock).mockResolvedValue({
         common: {
@@ -293,8 +302,8 @@ describe('CoverArtService', () => {
     });
 
     it('should handle image/webp', async () => {
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        return path.normalize(checkPath) === path.normalize(p('/test', 'covers'));
       });
       (parseFile as jest.Mock).mockResolvedValue({
         common: {
@@ -307,8 +316,8 @@ describe('CoverArtService', () => {
     });
 
     it('should default to .jpg for unknown mime types', async () => {
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        return path.normalize(checkPath) === path.normalize(p('/test', 'covers'));
       });
       (parseFile as jest.Mock).mockResolvedValue({
         common: {
@@ -324,11 +333,14 @@ describe('CoverArtService', () => {
   describe('copyFileWithRetry', () => {
     it('should retry on EPERM errors', async () => {
       const albumId = 'retry-test';
-      const trackPath = '/music/album/track.mp3';
+      const trackPath = p('/music', 'album', 'track.mp3');
+      const expectedCoverPath = p('/music', 'album', 'cover.jpg');
 
       // External cover exists
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/music/album/cover.jpg' || p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        const normalizedCheck = path.normalize(checkPath);
+        return normalizedCheck === path.normalize(expectedCoverPath) ||
+               normalizedCheck === path.normalize(p('/test', 'covers'));
       });
 
       // Fail twice with EPERM, then succeed
@@ -351,10 +363,13 @@ describe('CoverArtService', () => {
 
     it('should throw after max retries', async () => {
       const albumId = 'fail-test';
-      const trackPath = '/music/album/track.mp3';
+      const trackPath = p('/music', 'album', 'track.mp3');
+      const expectedCoverPath = p('/music', 'album', 'cover.jpg');
 
-      (existsSync as jest.Mock).mockImplementation((p: string) => {
-        return p === '/music/album/cover.jpg' || p === '/test/covers';
+      (existsSync as jest.Mock).mockImplementation((checkPath: string) => {
+        const normalizedCheck = path.normalize(checkPath);
+        return normalizedCheck === path.normalize(expectedCoverPath) ||
+               normalizedCheck === path.normalize(p('/test', 'covers'));
       });
 
       // Always fail with EPERM
