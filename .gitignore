@@ -34,6 +34,16 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
 *.swo
 *~
 [._]*.s[a-v][a-z]
