@@ -4,10 +4,13 @@ import { WaveMixService } from './wave-mix.service';
 import { ScoringService } from './scoring.service';
 import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
-import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
+import {
+  PlaylistShuffleService,
+  PlaylistCoverService,
+  ArtistPlaylistService,
+  GenrePlaylistService,
+} from './playlists';
 
 /**
  * WaveMixService Unit Tests
@@ -21,19 +24,18 @@ describe('WaveMixService', () => {
   let mockScoringService: any;
   let mockPlayTrackingRepo: any;
   let mockDrizzle: any;
-  let mockExternalMetadata: any;
   let mockRedis: any;
-  let mockStorage: any;
-  let mockImageDownload: any;
+  let mockShuffleService: any;
+  let mockCoverService: any;
+  let mockArtistPlaylistService: any;
+  let mockGenrePlaylistService: any;
 
   // Mock data holders
   let mockTracksData: any[] = [];
-  let mockArtistData: any = null;
 
   beforeEach(async () => {
     // Reset mock data
     mockTracksData = [];
-    mockArtistData = null;
 
     mockLogger = {
       info: jest.fn(),
@@ -58,9 +60,7 @@ describe('WaveMixService', () => {
       from: jest.fn().mockImplementation(() => ({
         where: jest.fn().mockImplementation(() => Promise.resolve(mockTracksData)),
         leftJoin: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockImplementation(() =>
-          mockArtistData ? Promise.resolve([mockArtistData]) : Promise.resolve([])
-        ),
+        limit: jest.fn().mockImplementation(() => Promise.resolve([])),
       })),
     });
 
@@ -71,21 +71,41 @@ describe('WaveMixService', () => {
       },
     };
 
-    mockExternalMetadata = {
-      getArtistImages: jest.fn(),
-    };
-
     mockRedis = {
       get: jest.fn(),
       set: jest.fn(),
     };
 
-    mockStorage = {
-      exists: jest.fn(),
+    mockShuffleService = {
+      intelligentShuffle: jest.fn().mockImplementation((tracks) => tracks),
+      calculateMetadata: jest.fn().mockResolvedValue({
+        totalTracks: 0,
+        avgScore: 0,
+        topGenres: [],
+        topArtists: [],
+        temporalDistribution: {
+          lastWeek: 0,
+          lastMonth: 0,
+          lastYear: 0,
+          older: 0,
+        },
+      }),
     };
 
-    mockImageDownload = {
-      downloadAndSaveImage: jest.fn(),
+    mockCoverService = {
+      getRandomColor: jest.fn().mockReturnValue('#FF6B9D'),
+      getGenreColor: jest.fn().mockReturnValue('#8B5CF6'),
+      getArtistCoverImage: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockArtistPlaylistService = {
+      generatePlaylists: jest.fn().mockResolvedValue([]),
+      getPaginated: jest.fn().mockResolvedValue({ playlists: [], total: 0, hasMore: false }),
+    };
+
+    mockGenrePlaylistService = {
+      generatePlaylists: jest.fn().mockResolvedValue([]),
+      getPaginated: jest.fn().mockResolvedValue({ playlists: [], total: 0, hasMore: false }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -108,20 +128,24 @@ describe('WaveMixService', () => {
           useValue: mockDrizzle,
         },
         {
-          provide: ExternalMetadataService,
-          useValue: mockExternalMetadata,
-        },
-        {
           provide: RedisService,
           useValue: mockRedis,
         },
         {
-          provide: StorageService,
-          useValue: mockStorage,
+          provide: PlaylistShuffleService,
+          useValue: mockShuffleService,
         },
         {
-          provide: ImageDownloadService,
-          useValue: mockImageDownload,
+          provide: PlaylistCoverService,
+          useValue: mockCoverService,
+        },
+        {
+          provide: ArtistPlaylistService,
+          useValue: mockArtistPlaylistService,
+        },
+        {
+          provide: GenrePlaylistService,
+          useValue: mockGenrePlaylistService,
         },
       ],
     }).compile();
@@ -192,6 +216,8 @@ describe('WaveMixService', () => {
       expect(result.tracks.length).toBeGreaterThan(0);
       expect(result.metadata).toBeDefined();
       expect(result.coverColor).toBeDefined();
+      expect(mockShuffleService.intelligentShuffle).toHaveBeenCalled();
+      expect(mockShuffleService.calculateMetadata).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         { userId, topTracksCount: mockTopTracks.length },
         'User top tracks retrieved'
@@ -208,8 +234,8 @@ describe('WaveMixService', () => {
       const mockScoredTracks = [
         {
           trackId: 'track-1',
-          totalScore: 15, // Below default minScore of 20
-          breakdown: { frequency: 10, recency: 20, diversity: 15 },
+          totalScore: 5, // Below default minScore of 10
+          breakdown: { frequency: 5, recency: 5, diversity: 5 },
         },
       ];
 
@@ -227,10 +253,9 @@ describe('WaveMixService', () => {
       expect(result.tracks[0].trackId).toBe('track-1');
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId,
           tracksUsed: 1,
         }),
-        'Using all available tracks regardless of score'
+        'Using all available tracks'
       );
     });
   });
@@ -284,8 +309,8 @@ describe('WaveMixService', () => {
       const userId = 'user-123';
       mockRedis.get.mockResolvedValue(null);
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
-      mockPlayTrackingRepo.getUserTopArtists.mockResolvedValue([]);
-      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([]);
+      mockArtistPlaylistService.generatePlaylists.mockResolvedValue([]);
+      mockGenrePlaylistService.generatePlaylists.mockResolvedValue([]);
 
       // Act
       const result = await service.getAllAutoPlaylists(userId);
@@ -301,7 +326,7 @@ describe('WaveMixService', () => {
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         { userId },
-        'Skipping cache - playlists are empty (user building listening history)'
+        'Skipping cache - playlists are empty'
       );
     });
   });
@@ -311,8 +336,8 @@ describe('WaveMixService', () => {
       // Arrange
       const userId = 'user-123';
       mockPlayTrackingRepo.getUserTopTracks.mockResolvedValue([]);
-      mockPlayTrackingRepo.getUserTopArtists.mockResolvedValue([]);
-      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([]);
+      mockArtistPlaylistService.generatePlaylists.mockResolvedValue([]);
+      mockGenrePlaylistService.generatePlaylists.mockResolvedValue([]);
 
       // Act
       const result = await service.refreshAutoPlaylists(userId);
@@ -322,6 +347,70 @@ describe('WaveMixService', () => {
       expect(mockRedis.get).not.toHaveBeenCalled();
       // No debería cachear playlists vacías (usuario sin historial)
       expect(mockRedis.set).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('generateArtistPlaylists', () => {
+    it('debería delegar a ArtistPlaylistService', async () => {
+      // Arrange
+      const userId = 'user-123';
+      const mockPlaylists = [{ id: 'artist-mix-1', type: 'artist' }];
+      mockArtistPlaylistService.generatePlaylists.mockResolvedValue(mockPlaylists);
+
+      // Act
+      const result = await service.generateArtistPlaylists(userId, 5);
+
+      // Assert
+      expect(result).toEqual(mockPlaylists);
+      expect(mockArtistPlaylistService.generatePlaylists).toHaveBeenCalledWith(userId, 5);
+    });
+  });
+
+  describe('generateGenrePlaylists', () => {
+    it('debería delegar a GenrePlaylistService', async () => {
+      // Arrange
+      const userId = 'user-123';
+      const mockPlaylists = [{ id: 'genre-mix-1', type: 'genre' }];
+      mockGenrePlaylistService.generatePlaylists.mockResolvedValue(mockPlaylists);
+
+      // Act
+      const result = await service.generateGenrePlaylists(userId, 5);
+
+      // Assert
+      expect(result).toEqual(mockPlaylists);
+      expect(mockGenrePlaylistService.generatePlaylists).toHaveBeenCalledWith(userId, 5);
+    });
+  });
+
+  describe('getArtistPlaylistsPaginated', () => {
+    it('debería delegar a ArtistPlaylistService.getPaginated', async () => {
+      // Arrange
+      const userId = 'user-123';
+      const mockResult = { playlists: [], total: 10, hasMore: true };
+      mockArtistPlaylistService.getPaginated.mockResolvedValue(mockResult);
+
+      // Act
+      const result = await service.getArtistPlaylistsPaginated(userId, 0, 5);
+
+      // Assert
+      expect(result).toEqual(mockResult);
+      expect(mockArtistPlaylistService.getPaginated).toHaveBeenCalledWith(userId, 0, 5);
+    });
+  });
+
+  describe('getGenrePlaylistsPaginated', () => {
+    it('debería delegar a GenrePlaylistService.getPaginated', async () => {
+      // Arrange
+      const userId = 'user-123';
+      const mockResult = { playlists: [], total: 8, hasMore: false };
+      mockGenrePlaylistService.getPaginated.mockResolvedValue(mockResult);
+
+      // Act
+      const result = await service.getGenrePlaylistsPaginated(userId, 5, 5);
+
+      // Assert
+      expect(result).toEqual(mockResult);
+      expect(mockGenrePlaylistService.getPaginated).toHaveBeenCalledWith(userId, 5, 5);
     });
   });
 });
