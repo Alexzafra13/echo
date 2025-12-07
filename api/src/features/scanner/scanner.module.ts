@@ -29,6 +29,13 @@ import { ScanProcessorService } from './infrastructure/services/scan-processor.s
 import { FileWatcherService } from './infrastructure/services/file-watcher.service';
 import { LufsAnalyzerService } from './infrastructure/services/lufs-analyzer.service';
 import { LufsAnalysisQueueService } from './infrastructure/services/lufs-analysis-queue.service';
+import {
+  EntityCreationService,
+  LibraryStatsService,
+  LibraryCleanupService,
+  TrackGenreService,
+  TrackProcessingService,
+} from './infrastructure/services/scanning';
 import { CoverArtService } from '@shared/services';
 
 /**
@@ -66,14 +73,21 @@ import { CoverArtService } from '@shared/services';
     // Repository
     DrizzleScannerRepository,
 
-    // Services
+    // Core Services
     FileScannerService,
     MetadataExtractorService,
-    ScanProcessorService,
     FileWatcherService,
     LufsAnalyzerService,
     LufsAnalysisQueueService,
     CoverArtService,
+
+    // Scanning Services (SRP extraction)
+    EntityCreationService,
+    LibraryStatsService,
+    LibraryCleanupService,
+    TrackGenreService,
+    TrackProcessingService,
+    ScanProcessorService,
 
     // Gateways (WebSocket)
     ScannerGateway,
