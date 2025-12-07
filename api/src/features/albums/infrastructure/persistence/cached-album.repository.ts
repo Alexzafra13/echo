@@ -5,6 +5,7 @@ import { BaseCachedRepository } from '@shared/base';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { DrizzleAlbumRepository } from './album.repository';
+import { cacheConfig } from '@config/cache.config';
 
 /**
  * CachedAlbumRepository - Implements Cache-Aside pattern for Album entities.
@@ -29,10 +30,10 @@ export class CachedAlbumRepository
   extends BaseCachedRepository<Album, IAlbumRepository>
   implements IAlbumRepository
 {
-  // Additional TTLs for album-specific caches
-  private readonly RECENT_TTL = 300; // 5 minutes
-  private readonly MOST_PLAYED_TTL = 600; // 10 minutes
-  private readonly COUNT_TTL = 1800; // 30 minutes
+  // Additional TTLs for album-specific caches (from centralized config)
+  private readonly RECENT_TTL = cacheConfig.ttl.recent;
+  private readonly MOST_PLAYED_TTL = cacheConfig.ttl.mostPlayed;
+  private readonly COUNT_TTL = cacheConfig.ttl.count;
 
   constructor(
     baseRepository: DrizzleAlbumRepository,
@@ -48,8 +49,8 @@ export class CachedAlbumRepository
         keyPrefix: 'album:',
         searchKeyPrefix: 'albums:search:',
         listKeyPrefix: 'albums:',
-        entityTtl: parseInt(process.env.CACHE_ALBUM_TTL || '3600'),
-        searchTtl: 60,
+        entityTtl: cacheConfig.ttl.album,
+        searchTtl: cacheConfig.ttl.search,
       },
       Album.reconstruct,
     );

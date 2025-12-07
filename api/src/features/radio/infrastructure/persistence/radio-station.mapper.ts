@@ -1,3 +1,4 @@
+import { RadioStation as RadioStationDb } from '@infrastructure/database/schema/radio';
 import { RadioStation } from '../../domain/entities/radio-station.entity';
 
 /**
@@ -9,7 +10,7 @@ export class RadioStationMapper {
   /**
    * Convierte Drizzle RadioStation a Domain RadioStation
    */
-  static toDomain(raw: any): RadioStation {
+  static toDomain(raw: RadioStationDb): RadioStation {
     return RadioStation.reconstruct({
       id: raw.id,
       userId: raw.userId,
@@ -70,7 +71,7 @@ export class RadioStationMapper {
   /**
    * Convierte Array de Drizzle RadioStations a Domain RadioStations
    */
-  static toDomainArray(raw: any[]): RadioStation[] {
+  static toDomainArray(raw: RadioStationDb[]): RadioStation[] {
     return raw.map((station) => this.toDomain(station));
   }
 }
