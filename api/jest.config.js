@@ -62,7 +62,7 @@ module.exports = {
 
   // Transformar uuid y otros módulos ES
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)',
+    'node_modules/(?!(uuid|music-metadata|strtok3|token-types|peek-readable)/)',
   ],
 
   // Path aliases para los imports
