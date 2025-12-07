@@ -5,6 +5,7 @@ import { BaseCachedRepository } from '@shared/base';
 import { Track } from '../../domain/entities/track.entity';
 import { ITrackRepository } from '../../domain/ports/track-repository.port';
 import { DrizzleTrackRepository } from './track.repository';
+import { cacheConfig } from '@config/cache.config';
 
 /**
  * CachedTrackRepository - Implements Cache-Aside pattern for Track entities.
@@ -36,8 +37,8 @@ export class CachedTrackRepository
         keyPrefix: 'track:',
         searchKeyPrefix: 'tracks:search:',
         listKeyPrefix: 'tracks:',
-        entityTtl: parseInt(process.env.CACHE_TRACK_TTL || '3600'),
-        searchTtl: 60,
+        entityTtl: cacheConfig.ttl.track,
+        searchTtl: cacheConfig.ttl.search,
       },
       Track.reconstruct,
     );

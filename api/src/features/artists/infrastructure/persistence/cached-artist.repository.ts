@@ -4,6 +4,7 @@ import { BaseCachedRepository } from '@shared/base';
 import { Artist } from '../../domain/entities/artist.entity';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 import { DrizzleArtistRepository } from './artist.repository';
+import { cacheConfig } from '@config/cache.config';
 
 /**
  * CachedArtistRepository - Implements Cache-Aside pattern for Artist entities.
@@ -34,8 +35,8 @@ export class CachedArtistRepository
         keyPrefix: 'artist:',
         searchKeyPrefix: 'artists:search:',
         listKeyPrefix: 'artists:',
-        entityTtl: parseInt(process.env.CACHE_ARTIST_TTL || '7200'),
-        searchTtl: 60,
+        entityTtl: cacheConfig.ttl.artist,
+        searchTtl: cacheConfig.ttl.search,
       },
       Artist.reconstruct,
     );
