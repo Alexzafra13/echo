@@ -36,6 +36,15 @@ import { UploadCustomAlbumCoverUseCase } from './domain/use-cases/upload-custom-
 import { ListCustomAlbumCoversUseCase } from './domain/use-cases/list-custom-album-covers';
 import { DeleteCustomAlbumCoverUseCase } from './domain/use-cases/delete-custom-album-cover';
 import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-album-cover';
+import {
+  LibraryStatsService,
+  StorageBreakdownService,
+  SystemHealthService,
+  EnrichmentStatsService,
+  ActivityStatsService,
+  ScanStatsService,
+  AlertsService,
+} from './domain/services';
 
 @Module({
   imports: [AuthModule, ExternalMetadataModule, HealthModule],
@@ -51,6 +60,15 @@ import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-al
     CustomAlbumCoversController,
   ],
   providers: [
+    // Dashboard services
+    LibraryStatsService,
+    StorageBreakdownService,
+    SystemHealthService,
+    EnrichmentStatsService,
+    ActivityStatsService,
+    ScanStatsService,
+    AlertsService,
+    // Use cases
     CreateUserUseCase,
     ListUsersUseCase,
     UpdateUserUseCase,
