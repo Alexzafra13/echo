@@ -8,6 +8,7 @@ module.exports = function (api) {
         {
           alias: {
             '@': './src',
+            '@echo/shared': '../packages/shared/src',
           },
         },
       ],
