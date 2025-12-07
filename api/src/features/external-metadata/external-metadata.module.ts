@@ -41,6 +41,15 @@ import {
   ArtistEnrichmentService,
   AlbumEnrichmentService,
 } from './application/services';
+import {
+  ArtistBioEnrichmentService,
+  ArtistImageEnrichmentService,
+} from './application/services/artist';
+import {
+  ImageCacheService,
+  ArtistImageService,
+  AlbumCoverService,
+} from './application/services/images';
 
 // Presentation
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
@@ -118,6 +127,15 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     EnrichmentLogService,
     ArtistEnrichmentService,
     AlbumEnrichmentService,
+
+    // Artist enrichment services (SRP extraction)
+    ArtistBioEnrichmentService,
+    ArtistImageEnrichmentService,
+
+    // Image services (SRP extraction)
+    ImageCacheService,
+    ArtistImageService,
+    AlbumCoverService,
 
     // Application services - Facade & Images
     ExternalMetadataService,
