@@ -1,5 +1,6 @@
 import { ConflictError, ValidationError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
+import { LogService } from '@features/logs/application/log.service';
 import { CreateUserUseCase } from './create-user.use-case';
 import {
   MockUserRepository,
@@ -9,6 +10,27 @@ import {
   createMockPasswordService,
   createMockLogService,
 } from '@shared/testing/mock.types';
+
+// Helper to create mock user with all required fields
+const createMockUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'testuser',
+  passwordHash: '$2b$12$hashed',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'dark',
+  language: 'es',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -24,7 +46,7 @@ describe('CreateUserUseCase', () => {
     useCase = new CreateUserUseCase(
       mockUserRepository,
       mockPasswordService,
-      mockLogService,
+      mockLogService as unknown as LogService,
     );
   });
 
@@ -37,19 +59,14 @@ describe('CreateUserUseCase', () => {
         isAdmin: false,
       };
 
-      const mockCreatedUser = User.reconstruct({
+      const mockCreatedUser = User.reconstruct(createMockUserProps({
         id: 'user-123',
         username: 'juanperez',
         passwordHash: '$2b$12$hashed_temp_password',
         name: 'Juan Pérez',
-        isActive: true,
         isAdmin: false,
         mustChangePassword: true,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -75,19 +92,14 @@ describe('CreateUserUseCase', () => {
         isAdmin: true,
       };
 
-      const mockCreatedUser = User.reconstruct({
+      const mockCreatedUser = User.reconstruct(createMockUserProps({
         id: 'admin-123',
         username: 'admin',
         passwordHash: '$2b$12$hashed_temp_password',
         name: 'Admin User',
-        isActive: true,
         isAdmin: true,
         mustChangePassword: true,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -107,19 +119,13 @@ describe('CreateUserUseCase', () => {
         username: 'maria',
       };
 
-      const mockCreatedUser = User.reconstruct({
+      const mockCreatedUser = User.reconstruct(createMockUserProps({
         id: 'user-456',
         username: 'maria',
         passwordHash: '$2b$12$hashed_temp_password',
         name: undefined,
-        isActive: true,
-        isAdmin: false,
         mustChangePassword: true,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');
@@ -151,18 +157,10 @@ describe('CreateUserUseCase', () => {
         username: 'existente',
       };
 
-      const existingUser = User.reconstruct({
+      const existingUser = User.reconstruct(createMockUserProps({
         id: 'existing-123',
         username: 'existente',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findByUsername.mockResolvedValue(existingUser);
 
@@ -177,18 +175,12 @@ describe('CreateUserUseCase', () => {
         username: 'test',
       };
 
-      const mockCreatedUser = User.reconstruct({
+      const mockCreatedUser = User.reconstruct(createMockUserProps({
         id: 'user-999',
         username: 'test',
         passwordHash: '$2b$12$hashed_temp_password',
-        isActive: true,
-        isAdmin: false,
         mustChangePassword: true,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordService.hash.mockResolvedValue('$2b$12$hashed_temp_password');

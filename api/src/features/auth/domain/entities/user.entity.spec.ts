@@ -1,16 +1,24 @@
-import { User } from './user.entity';
+import { User, UserProps } from './user.entity';
+import { createMockUserProps } from '@shared/testing/mock.types';
 
 describe('User Entity', () => {
+  // Helper for User.create (only required fields for creation)
+  const createUserInput = (overrides = {}) => ({
+    username: 'testuser',
+    passwordHash: '$2b$12$hashed',
+    isActive: true,
+    isAdmin: false,
+    mustChangePassword: false,
+    ...overrides,
+  });
+
   describe('create', () => {
     it('debería crear un nuevo usuario', () => {
       // Act
-      const user = User.create({
+      const user = User.create(createUserInput({
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan García',
-        isActive: true,
-        isAdmin: false,
-      });
+      }));
 
       // Assert
       expect(user.id).toBeDefined();
@@ -25,19 +33,8 @@ describe('User Entity', () => {
 
     it('debería generar IDs únicos para diferentes usuarios', () => {
       // Act
-      const user1 = User.create({
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
-
-      const user2 = User.create({
-        username: 'maria',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
+      const user1 = User.create(createUserInput({ username: 'juan' }));
+      const user2 = User.create(createUserInput({ username: 'maria' }));
 
       // Assert
       expect(user1.id).not.toBe(user2.id);
@@ -45,12 +42,7 @@ describe('User Entity', () => {
 
     it('debería tener isAdmin en false por defecto', () => {
       // Act
-      const user = User.create({
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
+      const user = User.create(createUserInput({ username: 'juan' }));
 
       // Assert
       expect(user.isAdmin).toBe(false);
@@ -61,19 +53,15 @@ describe('User Entity', () => {
     it('debería reconstruir un usuario desde BD', () => {
       // Arrange
       const now = new Date();
-      const props = {
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        createdAt: now,
-        updatedAt: now,
-      };
 
       // Act
-      const user = User.reconstruct(props);
+      const user = User.reconstruct(createMockUserProps({
+        id: 'user-123',
+        username: 'juan',
+        name: 'Juan',
+        createdAt: now,
+        updatedAt: now,
+      }));
 
       // Assert
       expect(user.id).toBe('user-123');
@@ -88,16 +76,13 @@ describe('User Entity', () => {
       const updatedAt = new Date('2025-01-15');
 
       // Act
-      const user = User.reconstruct({
+      const user = User.reconstruct(createMockUserProps({
         id: 'user-123',
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
         createdAt,
         updatedAt,
-      });
+      }));
 
       // Assert
       expect(user.createdAt).toEqual(createdAt);
@@ -108,13 +93,10 @@ describe('User Entity', () => {
   describe('getters', () => {
     it('debería retornar todas las propiedades', () => {
       // Arrange
-      const user = User.create({
+      const user = User.create(createUserInput({
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-      });
+      }));
 
       // Assert
       expect(user.id).toBeDefined();
@@ -129,12 +111,7 @@ describe('User Entity', () => {
 
     it('debería retornar undefined para name si no existe', () => {
       // Arrange
-      const user = User.create({
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
+      const user = User.create(createUserInput({ username: 'juan' }));
 
       // Assert
       expect(user.name).toBeUndefined();
@@ -144,13 +121,10 @@ describe('User Entity', () => {
   describe('toPrimitives', () => {
     it('debería convertir a objeto primitivo', () => {
       // Arrange
-      const user = User.create({
+      const user = User.create(createUserInput({
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-      });
+      }));
 
       // Act
       const primitives = user.toPrimitives();
@@ -166,13 +140,10 @@ describe('User Entity', () => {
 
     it('debería retornar una copia, no referencia', () => {
       // Arrange
-      const user = User.create({
+      const user = User.create(createUserInput({
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-      });
+      }));
 
       // Act
       const primitives1 = user.toPrimitives();
@@ -185,13 +156,10 @@ describe('User Entity', () => {
 
     it('debería poder reconstruir desde toPrimitives', () => {
       // Arrange
-      const user1 = User.create({
+      const user1 = User.create(createUserInput({
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-      });
+      }));
 
       // Act
       const primitives = user1.toPrimitives();
@@ -207,12 +175,7 @@ describe('User Entity', () => {
   describe('immutability', () => {
     it('no debería permitir modificar propiedades directamente', () => {
       // Arrange
-      const user = User.create({
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        isActive: true,
-        isAdmin: false,
-      });
+      const user = User.create(createUserInput({ username: 'juan' }));
 
       // Act & Assert
       expect(() => {
