@@ -18,6 +18,7 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const { user } = useAuth();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const updateAvatarTimestamp = useAuthStore((state) => state.updateAvatarTimestamp);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -63,6 +64,8 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
 
     uploadAvatar(selectedFile, {
       onSuccess: () => {
+        // Actualizar el flag hasAvatar en el store para que Header y otros componentes lo vean
+        updateUser({ hasAvatar: true });
         // Actualizar timestamp global para que todos los componentes recarguen el avatar
         updateAvatarTimestamp();
         // Limpiar preview y archivo seleccionado
@@ -71,10 +74,8 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        // Recargar página para actualizar el estado global del usuario (hasAvatar flag)
-        setTimeout(() => {
-          window.location.reload();
-        }, 300);
+        // Cerrar modal
+        onClose();
       },
       onError: (error: any) => {
         setError(error.message || 'Error al subir la imagen');
@@ -85,14 +86,13 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const handleDelete = () => {
     deleteAvatar(undefined, {
       onSuccess: () => {
+        // Actualizar el flag hasAvatar en el store para que Header y otros componentes lo vean
+        updateUser({ hasAvatar: false });
         // Actualizar timestamp global para que todos los componentes recarguen el avatar
         updateAvatarTimestamp();
-        // Cerrar confirmación
+        // Cerrar confirmación y modal
         setShowDeleteConfirm(false);
-        // Recargar página para actualizar el estado global del usuario (hasAvatar flag)
-        setTimeout(() => {
-          window.location.reload();
-        }, 300);
+        onClose();
       },
       onError: (error: any) => {
         setError(error.message || 'Error al eliminar el avatar');
