@@ -1,5 +1,6 @@
 import { FilesystemService } from './filesystem.service';
 import * as fs from 'fs';
+import * as path from 'path';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -17,11 +18,14 @@ describe('FilesystemService', () => {
   let service: FilesystemService;
   const originalEnv = process.env;
 
+  // Helper to create cross-platform paths
+  const p = (...segments: string[]) => path.join(...segments);
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset environment
     process.env = { ...originalEnv };
-    process.env.DATA_PATH = '/test/data';
+    process.env.DATA_PATH = p('/test', 'data');
 
     // Default: directories exist
     (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -33,13 +37,13 @@ describe('FilesystemService', () => {
 
   describe('constructor', () => {
     it('should use DATA_PATH from environment', () => {
-      process.env.DATA_PATH = '/custom/data';
+      process.env.DATA_PATH = p('/custom', 'data');
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
       service = new FilesystemService();
 
-      expect(service.getUploadPath()).toBe('/custom/data/uploads');
-      expect(service.getCoversPath()).toBe('/custom/data/covers');
+      expect(service.getUploadPath()).toBe(p('/custom', 'data', 'uploads'));
+      expect(service.getCoversPath()).toBe(p('/custom', 'data', 'covers'));
     });
 
     it('should use default path when DATA_PATH is not set', () => {
@@ -48,8 +52,8 @@ describe('FilesystemService', () => {
 
       service = new FilesystemService();
 
-      expect(service.getUploadPath()).toBe('/app/data/uploads');
-      expect(service.getCoversPath()).toBe('/app/data/covers');
+      expect(service.getUploadPath()).toBe(p('/app', 'data', 'uploads'));
+      expect(service.getCoversPath()).toBe(p('/app', 'data', 'covers'));
     });
 
     it('should create directories if they do not exist', () => {
@@ -57,10 +61,10 @@ describe('FilesystemService', () => {
 
       service = new FilesystemService();
 
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/test/data/uploads', {
+      expect(fs.mkdirSync).toHaveBeenCalledWith(p('/test', 'data', 'uploads'), {
         recursive: true,
       });
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/test/data/covers', {
+      expect(fs.mkdirSync).toHaveBeenCalledWith(p('/test', 'data', 'covers'), {
         recursive: true,
       });
     });
@@ -214,7 +218,7 @@ describe('FilesystemService', () => {
     it('should return upload path', () => {
       service = new FilesystemService();
 
-      expect(service.getUploadPath()).toBe('/test/data/uploads');
+      expect(service.getUploadPath()).toBe(p('/test', 'data', 'uploads'));
     });
   });
 
@@ -222,7 +226,7 @@ describe('FilesystemService', () => {
     it('should return covers path', () => {
       service = new FilesystemService();
 
-      expect(service.getCoversPath()).toBe('/test/data/covers');
+      expect(service.getCoversPath()).toBe(p('/test', 'data', 'covers'));
     });
   });
 });
