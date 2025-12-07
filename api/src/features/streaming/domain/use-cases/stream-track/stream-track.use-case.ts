@@ -1,6 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
+import { getAudioMimeType } from '@shared/utils';
 import { StreamTrackInput, StreamTrackOutput } from './stream-track.dto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -57,8 +58,8 @@ export class StreamTrackUseCase {
       throw new NotFoundException(`Path is not a file: ${filePath}`);
     }
 
-    // 6. Detectar MIME type basado en extensión
-    const mimeType = this.getMimeType(filePath);
+    // 6. Detectar MIME type basado en extensión usando utilidad compartida
+    const mimeType = getAudioMimeType(path.extname(filePath));
 
     // 7. Obtener nombre del archivo
     const fileName = path.basename(filePath);
@@ -72,26 +73,5 @@ export class StreamTrackUseCase {
       mimeType,
       duration: track.duration,
     };
-  }
-
-  /**
-   * Detecta el MIME type basado en la extensión del archivo
-   */
-  private getMimeType(filePath: string): string {
-    const ext = path.extname(filePath).toLowerCase();
-
-    const mimeTypes: Record<string, string> = {
-      '.mp3': 'audio/mpeg',
-      '.flac': 'audio/flac',
-      '.ogg': 'audio/ogg',
-      '.oga': 'audio/ogg',
-      '.opus': 'audio/opus',
-      '.m4a': 'audio/mp4',
-      '.aac': 'audio/aac',
-      '.wav': 'audio/wav',
-      '.wma': 'audio/x-ms-wma',
-    };
-
-    return mimeTypes[ext] || 'audio/mpeg'; // Default to MP3
   }
 }

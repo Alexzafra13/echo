@@ -2,6 +2,7 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports';
 import { CoverArtService } from '@shared/services';
+import { getImageMimeType } from '@shared/utils';
 import { GetAlbumCoverInput, GetAlbumCoverOutput } from './get-album-cover.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -52,9 +53,8 @@ export class GetAlbumCoverUseCase {
       // 4. Leer archivo de cover
       const coverBuffer = await fs.readFile(coverPath);
 
-      // 5. Determinar MIME type desde la extensión
-      const ext = path.extname(coverPath).toLowerCase();
-      const mimeType = this.getMimeType(ext);
+      // 5. Determinar MIME type desde la extensión usando utilidad compartida
+      const mimeType = getImageMimeType(path.extname(coverPath));
 
       // 6. Retornar output
       return {
@@ -65,25 +65,9 @@ export class GetAlbumCoverUseCase {
     } catch (error) {
       this.logger.error(
         { albumId: input.albumId, coverPath, error: error instanceof Error ? error.message : error },
-        'Error reading cover art file'
+        'Error reading cover art file',
       );
       throw new NotFoundException('Could not read cover art file');
     }
-  }
-
-  /**
-   * Mapea extensión de archivo a MIME type
-   */
-  private getMimeType(ext: string): string {
-    const mimeTypes: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.bmp': 'image/bmp',
-    };
-
-    return mimeTypes[ext] || 'image/jpeg'; // Default a JPEG
   }
 }
