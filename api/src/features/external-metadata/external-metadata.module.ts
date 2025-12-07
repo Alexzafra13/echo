@@ -14,12 +14,20 @@ import { SettingsService } from './infrastructure/services/settings.service';
 import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
 import { CleanupService } from './infrastructure/services/cleanup.service';
+import {
+  OrphanedFileCleanerService,
+  StorageStatsService,
+} from './infrastructure/services/cleanup';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
 import {
   ConflictChangeApplierService,
   ConflictEnrichmentService,
 } from './infrastructure/services/conflicts';
 import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
+import {
+  MbidSearchExecutorService,
+  MbidConfidenceStrategyService,
+} from './infrastructure/services/mbid-search';
 import { MaintenanceSchedulerService } from './infrastructure/services/maintenance-scheduler.service';
 import { EnrichmentQueueService } from './infrastructure/services/enrichment-queue.service';
 
@@ -110,10 +118,14 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     StorageService,
     ImageDownloadService,
     CleanupService,
+    OrphanedFileCleanerService,
+    StorageStatsService,
     MetadataConflictService,
     ConflictChangeApplierService,
     ConflictEnrichmentService,
     MbidAutoSearchService,
+    MbidSearchExecutorService,
+    MbidConfidenceStrategyService,
     MaintenanceSchedulerService,
     EnrichmentQueueService,
 
