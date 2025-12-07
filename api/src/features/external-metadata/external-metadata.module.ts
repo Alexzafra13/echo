@@ -33,6 +33,7 @@ import { SettingsRepository } from './infrastructure/persistence/settings.reposi
 import { ExternalMetadataService } from './application/external-metadata.service';
 import { ImageService } from './application/services/image.service';
 import { LocalImageProvider } from './application/services/local-image-provider.service';
+import { ImageSearchOrchestratorService } from './application/services/image-search-orchestrator.service';
 
 // Presentation
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
@@ -108,6 +109,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     ExternalMetadataService,
     ImageService,
     LocalImageProvider,
+    ImageSearchOrchestratorService,
 
     // WebSocket gateway
     MetadataEnrichmentGateway,
@@ -125,6 +127,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     ExternalMetadataService,
     ImageService,
     LocalImageProvider,
+    ImageSearchOrchestratorService,
     AgentRegistryService,
     MetadataCacheService,
     MbidSearchCacheService,
