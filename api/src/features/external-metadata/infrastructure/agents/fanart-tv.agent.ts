@@ -5,6 +5,7 @@ import { RateLimiterService } from '../services/rate-limiter.service';
 import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
 import { ExternalApiError } from '@shared/errors';
+import { FanartImage, FanartImageArray, FanartArtistResponse } from './types';
 
 /**
  * Fanart.tv Agent
@@ -393,20 +394,20 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
    * @param images Array of image objects from Fanart.tv
    * @returns Array of image URLs sorted by popularity
    */
-  private getAllImages(images: any[] | undefined): string[] {
+  private getAllImages(images: FanartImageArray): string[] {
     if (!images || images.length === 0) {
       return [];
     }
 
     // Sort by likes (descending)
-    const sorted = [...images].sort((a, b) => {
+    const sorted = [...images].sort((a: FanartImage, b: FanartImage) => {
       const likesA = parseInt(a.likes || '0', 10);
       const likesB = parseInt(b.likes || '0', 10);
       return likesB - likesA;
     });
 
     // Return all URLs
-    return sorted.map(img => img.url).filter(url => !!url);
+    return sorted.map((img: FanartImage) => img.url).filter((url): url is string => !!url);
   }
 
   /**
@@ -416,13 +417,13 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
    * @param images Array of image objects from Fanart.tv
    * @returns URL of the best image or null
    */
-  private selectBestImage(images: any[] | undefined): string | null {
+  private selectBestImage(images: FanartImageArray): string | null {
     if (!images || images.length === 0) {
       return null;
     }
 
     // Sort by likes (descending)
-    const sorted = [...images].sort((a, b) => {
+    const sorted = [...images].sort((a: FanartImage, b: FanartImage) => {
       const likesA = parseInt(a.likes || '0', 10);
       const likesB = parseInt(b.likes || '0', 10);
       return likesB - likesA;

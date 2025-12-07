@@ -8,6 +8,16 @@ import {
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { fetchWithTimeout } from '@shared/utils';
 import { ExternalApiError } from '@shared/errors';
+import {
+  MBArtistResponse,
+  MBArtistSearchResponse,
+  MBReleaseGroupResponse,
+  MBReleaseGroupSearchResponse,
+  MBRecordingResponse,
+  MBRecordingSearchResponse,
+  MBRecordingRelease,
+  MBTag,
+} from './types';
 
 /**
  * MusicBrainz Agent
@@ -60,11 +70,11 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
-      const data = await response.json();
+      const data: MBArtistSearchResponse = await response.json();
 
       // Parse and map results
       const matches: MusicBrainzArtistMatch[] = (data.artists || []).map(
-        (artist: any) => ({
+        (artist: MBArtistResponse) => ({
           mbid: artist.id,
           name: artist.name,
           sortName: artist['sort-name'],
@@ -129,12 +139,12 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
-      const data = await response.json();
+      const data: MBReleaseGroupSearchResponse = await response.json();
 
       // Parse and map results
       const matches: MusicBrainzAlbumMatch[] = (
         data['release-groups'] || []
-      ).map((rg: any) => ({
+      ).map((rg: MBReleaseGroupResponse) => ({
         mbid: rg.id,
         title: rg.title,
         artistName: rg['artist-credit']?.[0]?.name || 'Unknown',
@@ -188,16 +198,16 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
-      const artist = await response.json();
+      const artist: MBArtistResponse = await response.json();
 
       // Parse tags (genres) - only include tags with at least 1 vote
       const tags = (artist.tags || [])
-        .filter((tag: any) => tag.count >= 1)
-        .map((tag: any) => ({
+        .filter((tag: MBTag) => tag.count >= 1)
+        .map((tag: MBTag) => ({
           name: tag.name,
           count: tag.count,
         }))
-        .sort((a: any, b: any) => b.count - a.count); // Sort by popularity
+        .sort((a: MBTag, b: MBTag) => b.count - a.count); // Sort by popularity
 
       return {
         mbid: artist.id,
@@ -252,16 +262,16 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
-      const rg = await response.json();
+      const rg: MBReleaseGroupResponse = await response.json();
 
       // Parse tags (genres) - only include tags with at least 1 vote
       const tags = (rg.tags || [])
-        .filter((tag: any) => tag.count >= 1)
-        .map((tag: any) => ({
+        .filter((tag: MBTag) => tag.count >= 1)
+        .map((tag: MBTag) => ({
           name: tag.name,
           count: tag.count,
         }))
-        .sort((a: any, b: any) => b.count - a.count); // Sort by popularity
+        .sort((a: MBTag, b: MBTag) => b.count - a.count); // Sort by popularity
 
       return {
         mbid: rg.id,
@@ -368,14 +378,14 @@ export class MusicBrainzAgent implements IMusicBrainzSearch {
         throw new ExternalApiError('MusicBrainz', response.status, response.statusText);
       }
 
-      const data = await response.json();
+      const data: MBRecordingSearchResponse = await response.json();
 
       // Parse and map results
       const matches: MusicBrainzRecordingMatch[] = (
         data.recordings || []
-      ).map((rec: any) => {
+      ).map((rec: MBRecordingResponse) => {
         // Extract releases information
-        const releases = (rec.releases || []).map((rel: any) => ({
+        const releases = (rec.releases || []).map((rel: MBRecordingRelease) => ({
           mbid: rel.id,
           title: rel.title,
           trackNumber: rel.media?.[0]?.track?.[0]?.number
