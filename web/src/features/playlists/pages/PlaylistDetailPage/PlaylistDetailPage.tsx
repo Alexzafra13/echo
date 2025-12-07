@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'wouter';
 import { Play, Shuffle, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
@@ -9,7 +9,7 @@ import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic, EditPlaylistModal } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
-import { extractDominantColor } from '@shared/utils/colorExtractor';
+import { useDominantColor } from '@shared/hooks';
 import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { useAuthStore } from '@shared/store';
@@ -24,7 +24,6 @@ export default function PlaylistDetailPage() {
   const { playQueue, currentTrack, isShuffle, toggleShuffle } = usePlayer();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
   const [showEditModal, setShowEditModal] = useState(false);
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
@@ -32,18 +31,15 @@ export default function PlaylistDetailPage() {
   const updatePlaylistMutation = useUpdatePlaylist();
   const removeTrackMutation = useRemoveTrackFromPlaylist();
 
-  // Extract dominant color from first album cover in playlist
-  useEffect(() => {
+  // Get cover URL from first album in playlist
+  const coverUrl = useMemo(() => {
     const tracks = playlistTracks?.tracks || [];
     const firstAlbumId = tracks.find((track) => track.albumId)?.albumId;
-
-    if (firstAlbumId) {
-      const coverUrl = `/api/albums/${firstAlbumId}/cover`;
-      extractDominantColor(coverUrl).then((color) => {
-        setDominantColor(color);
-      });
-    }
+    return firstAlbumId ? `/api/albums/${firstAlbumId}/cover` : undefined;
   }, [playlistTracks]);
+
+  // Extract dominant color from cover
+  const dominantColor = useDominantColor(coverUrl);
 
   // Convert API tracks to Player tracks
   const convertToPlayerTracks = (apiTracks: any[]): Track[] => {

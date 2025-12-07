@@ -66,12 +66,3 @@ export interface Track {
   updatedAt?: Date | string;
 }
 
-/**
- * Helper for formatear duración en minutos:segundos
- */
-export function formatDuration(seconds?: number): string {
-  if (!seconds) return '--:--';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}

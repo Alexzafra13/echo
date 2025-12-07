@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface GridDimensionsConfig {
   maxRows?: number; // Número máximo de filas a calcular
@@ -31,6 +31,10 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
     calculateDimensions(window.innerWidth, window.innerHeight, maxRows, containerPadding, headerHeight)
   );
 
+  // Ref para comparar valores sin incluir estado en dependencies
+  const dimensionsRef = useRef(dimensions);
+  dimensionsRef.current = dimensions;
+
   useEffect(() => {
     const handleResize = () => {
       const newDimensions = calculateDimensions(
@@ -43,8 +47,8 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
 
       // Solo actualizar si realmente cambiaron las dimensiones
       if (
-        newDimensions.columns !== dimensions.columns ||
-        newDimensions.rows !== dimensions.rows
+        newDimensions.columns !== dimensionsRef.current.columns ||
+        newDimensions.rows !== dimensionsRef.current.rows
       ) {
         setDimensions(newDimensions);
       }
@@ -52,7 +56,7 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [maxRows, containerPadding, headerHeight, dimensions.columns, dimensions.rows]);
+  }, [maxRows, containerPadding, headerHeight]);
 
   return dimensions;
 }

@@ -1,6 +1,6 @@
 // Import shared types for use in this file
-import type { Track, TrackAlbum } from '@shared/types/track.types';
-import type { RadioStation, RadioMetadata } from '@shared/types/radio.types';
+import type { Track, TrackAlbum } from '@shared/types';
+import type { RadioStation, RadioMetadata } from '@shared/types';
 
 // Re-export shared types for player usage
 export type { Track, TrackAlbum };

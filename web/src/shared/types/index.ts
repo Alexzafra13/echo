@@ -1,4 +1,5 @@
-export * from './auth.types';
-export * from './track.types';
-export * from './radio.types';
-export * from './api.types';
+/**
+ * Re-export types from @echo/shared
+ * This maintains backward compatibility with existing imports
+ */
+export * from '@echo/shared/types';

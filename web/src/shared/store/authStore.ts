@@ -1,15 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { User } from '@echo/shared/types';
 
-export interface User {
-  id: string;
-  username: string;
-  name?: string;
-  isAdmin: boolean;
-  hasAvatar?: boolean;
-  mustChangePassword?: boolean;
-  createdAt?: string;
-}
+// Re-export User type for backward compatibility
+export type { User } from '@echo/shared/types';
 
 interface AuthState {
   // State

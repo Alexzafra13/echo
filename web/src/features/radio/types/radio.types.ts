@@ -12,7 +12,7 @@ import type {
   RadioBrowserCountry,
   SaveApiStationDto,
   CreateCustomStationDto,
-} from '@shared/types/radio.types';
+} from '@shared/types';
 
 // Re-export for external use
 export type {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
@@ -11,7 +11,7 @@ import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
-import { extractDominantColor } from '@shared/utils/colorExtractor';
+import { useDominantColor } from '@shared/hooks';
 import styles from './AudioPlayer.module.css';
 
 export function AudioPlayer() {
@@ -41,9 +41,25 @@ export function AudioPlayer() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
-  const [dominantColor, setDominantColor] = useState<string>('0, 0, 0');
   const queueRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Calculate cover URL for color extraction
+  const playerCoverUrl = useMemo(() => {
+    if (isRadioMode) {
+      return currentRadioStation?.favicon || undefined;
+    }
+    if (currentTrack) {
+      const rawUrl = currentTrack.album?.cover ||
+                     currentTrack.coverImage ||
+                     (currentTrack.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : undefined);
+      return rawUrl ? getCoverUrl(rawUrl) : undefined;
+    }
+    return undefined;
+  }, [currentTrack, currentRadioStation, isRadioMode]);
+
+  // Extract dominant color from cover
+  const dominantColor = useDominantColor(playerCoverUrl, '0, 0, 0');
 
   // Swipe gesture state for mobile
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -106,30 +122,6 @@ export function AudioPlayer() {
       document.body.classList.remove('has-footer-player');
     };
   }, [currentTrack, currentRadioStation, isMiniMode, preference, isMobile]);
-
-  // Extraer color dominante del cover para gradient móvil
-  useEffect(() => {
-    let coverUrl: string | undefined;
-
-    if (isRadioMode) {
-      coverUrl = currentRadioStation?.favicon || undefined;
-    } else if (currentTrack) {
-      // Try multiple sources for the cover URL
-      coverUrl = currentTrack.album?.cover ||
-                 currentTrack.coverImage ||
-                 // If we have albumId, construct the URL
-                 (currentTrack.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : undefined);
-    }
-
-    if (coverUrl) {
-      const finalCoverUrl = isRadioMode ? coverUrl : getCoverUrl(coverUrl);
-      extractDominantColor(finalCoverUrl)
-        .then(color => setDominantColor(color))
-        .catch(() => setDominantColor('0, 0, 0'));
-    } else {
-      setDominantColor('0, 0, 0');
-    }
-  }, [currentTrack, currentRadioStation, isRadioMode]);
 
   // Swipe gesture handlers for mobile
   const SWIPE_THRESHOLD = 60; // Minimum distance to trigger swipe action

@@ -1,5 +1,5 @@
-import type { Track } from '@shared/types/track.types';
-import type { RadioStation } from '@shared/types/radio.types';
+import type { Track } from '@shared/types';
+import type { RadioStation } from '@shared/types';
 
 /**
  * Información de visualización para el reproductor

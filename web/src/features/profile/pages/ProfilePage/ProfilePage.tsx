@@ -8,7 +8,7 @@ import { useChangePassword, useUpdateProfile } from '../../hooks';
 // import { AvatarUpload } from '../../components/AvatarUpload'; // Available if needed
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
-import { formatDate } from '@shared/utils/format';
+import { formatDate } from '@shared/utils/date.utils';
 import styles from './ProfilePage.module.css';
 
 /**
