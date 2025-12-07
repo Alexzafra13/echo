@@ -1,101 +1,146 @@
 import { GetDashboardStatsUseCase } from './get-dashboard-stats.use-case';
+import { LibraryStatsService } from '../../services/library-stats.service';
+import { StorageBreakdownService } from '../../services/storage-breakdown.service';
+import { SystemHealthService } from '../../services/system-health.service';
+import { EnrichmentStatsService } from '../../services/enrichment-stats.service';
+import { ActivityStatsService } from '../../services/activity-stats.service';
+import { ScanStatsService } from '../../services/scan-stats.service';
+import { AlertsService } from '../../services/alerts.service';
 
 describe('GetDashboardStatsUseCase', () => {
   let useCase: GetDashboardStatsUseCase;
-  let mockDrizzle: any;
-  let mockHealthCheck: any;
-  let mockSettingsService: any;
-  let mockCache: any;
+  let mockLibraryStats: jest.Mocked<LibraryStatsService>;
+  let mockStorageBreakdown: jest.Mocked<StorageBreakdownService>;
+  let mockSystemHealth: jest.Mocked<SystemHealthService>;
+  let mockEnrichmentStats: jest.Mocked<EnrichmentStatsService>;
+  let mockActivityStats: jest.Mocked<ActivityStatsService>;
+  let mockScanStats: jest.Mocked<ScanStatsService>;
+  let mockAlerts: jest.Mocked<AlertsService>;
 
-  // Full cached response to avoid complex Drizzle mocking
-  const fullCachedResponse = {
-    'dashboard:library-stats': {
-      totalTracks: 1000,
-      totalAlbums: 100,
-      totalArtists: 50,
-      totalGenres: 20,
-      totalDuration: 360000,
-      totalStorage: 5000000000,
-      tracksAddedToday: 5,
-      albumsAddedToday: 1,
-      artistsAddedToday: 1,
-    },
-    'dashboard:storage-breakdown': {
-      music: 4000000000,
-      metadata: 500000000,
-      avatars: 10000000,
-      total: 4510000000,
-    },
-    'dashboard:enrichment-stats': {
-      today: { total: 10, successful: 8, failed: 2, byProvider: { lastfm: 5, fanart: 3 } },
-      week: { total: 50, successful: 45, failed: 5, byProvider: { lastfm: 25, fanart: 20 } },
-      month: { total: 200, successful: 180, failed: 20, byProvider: { lastfm: 100, fanart: 80 } },
-      allTime: { total: 1000, successful: 900, failed: 100, byProvider: { lastfm: 500, fanart: 400 } },
-    },
-    'dashboard:activity-stats': {
-      totalUsers: 10,
-      activeUsersLast24h: 3,
-      activeUsersLast7d: 7,
-    },
-    'dashboard:activity-timeline': [
-      { date: '2024-01-15', scans: 1, enrichments: 10, errors: 0 },
-      { date: '2024-01-14', scans: 0, enrichments: 5, errors: 1 },
-      { date: '2024-01-13', scans: 2, enrichments: 15, errors: 0 },
-      { date: '2024-01-12', scans: 0, enrichments: 8, errors: 0 },
-      { date: '2024-01-11', scans: 1, enrichments: 12, errors: 2 },
-      { date: '2024-01-10', scans: 0, enrichments: 6, errors: 0 },
-      { date: '2024-01-09', scans: 1, enrichments: 9, errors: 1 },
-    ],
-    'dashboard:recent-activities': [
-      { id: '1', type: 'scan', action: 'Library scan', details: '100 tracks added', timestamp: '2024-01-15T10:00:00Z', status: 'success' },
-      { id: '2', type: 'enrichment', action: 'Artist enriched', details: 'Avatar for Beatles', timestamp: '2024-01-15T09:30:00Z', status: 'success' },
-    ],
+  const libraryStatsData = {
+    totalTracks: 1000,
+    totalAlbums: 100,
+    totalArtists: 50,
+    totalGenres: 20,
+    totalDuration: 360000,
+    totalStorage: 5000000000,
+    tracksAddedToday: 5,
+    albumsAddedToday: 1,
+    artistsAddedToday: 1,
   };
+
+  const storageBreakdownData = {
+    music: 4000000000,
+    metadata: 500000000,
+    avatars: 10000000,
+    total: 4510000000,
+  };
+
+  const systemHealthData = {
+    database: 'healthy' as const,
+    redis: 'healthy' as const,
+    fileSystem: 'healthy' as const,
+    metadataApis: {
+      musicbrainz: 'healthy' as const,
+      lastfm: 'healthy' as const,
+      fanart: 'down' as const,
+    },
+  };
+
+  const enrichmentStatsData = {
+    today: { total: 10, successful: 8, failed: 2, byProvider: { lastfm: 5, fanart: 3 } },
+    week: { total: 50, successful: 45, failed: 5, byProvider: { lastfm: 25, fanart: 20 } },
+    month: { total: 200, successful: 180, failed: 20, byProvider: { lastfm: 100, fanart: 80 } },
+    allTime: { total: 1000, successful: 900, failed: 100, byProvider: { lastfm: 500, fanart: 400 } },
+  };
+
+  const activityStatsData = {
+    totalUsers: 10,
+    activeUsersLast24h: 3,
+    activeUsersLast7d: 7,
+  };
+
+  const scanStatsData = {
+    currentScan: {
+      isRunning: false,
+      currentPath: null,
+      progress: 0,
+      processedFiles: 0,
+      totalFiles: 0,
+    },
+    lastScan: {
+      startedAt: null,
+      finishedAt: null,
+      tracksAdded: 0,
+      tracksUpdated: 0,
+      tracksRemoved: 0,
+      errors: 0,
+    },
+  };
+
+  const activeAlertsData = {
+    orphanedFiles: 0,
+    pendingConflicts: 0,
+    storageWarning: false,
+    scanErrors: 0,
+  };
+
+  const activityTimelineData = [
+    { date: '2024-01-15', scans: 1, enrichments: 10, errors: 0 },
+    { date: '2024-01-14', scans: 0, enrichments: 5, errors: 1 },
+    { date: '2024-01-13', scans: 2, enrichments: 15, errors: 0 },
+    { date: '2024-01-12', scans: 0, enrichments: 8, errors: 0 },
+    { date: '2024-01-11', scans: 1, enrichments: 12, errors: 2 },
+    { date: '2024-01-10', scans: 0, enrichments: 6, errors: 0 },
+    { date: '2024-01-09', scans: 1, enrichments: 9, errors: 1 },
+  ];
+
+  const recentActivitiesData = [
+    { id: '1', type: 'scan', action: 'Library scan', details: '100 tracks added', timestamp: '2024-01-15T10:00:00Z', status: 'success' },
+    { id: '2', type: 'enrichment', action: 'Artist enriched', details: 'Avatar for Beatles', timestamp: '2024-01-15T09:30:00Z', status: 'success' },
+  ];
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Minimal Drizzle mock - only used for health check
-    mockDrizzle = {
-      db: {
-        execute: jest.fn().mockResolvedValue([{ '1': 1 }]),
-        select: jest.fn().mockReturnValue({
-          from: jest.fn().mockReturnValue({
-            orderBy: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue([]),
-            }),
-            where: jest.fn().mockReturnValue({
-              orderBy: jest.fn().mockReturnValue({
-                limit: jest.fn().mockResolvedValue([]),
-              }),
-            }),
-          }),
-        }),
-      },
-    };
+    mockLibraryStats = {
+      get: jest.fn().mockResolvedValue(libraryStatsData),
+    } as any;
 
-    mockHealthCheck = {
-      check: jest.fn().mockResolvedValue({
-        status: 'healthy',
-        services: { database: 'ok', cache: 'ok' },
-      }),
-    };
+    mockStorageBreakdown = {
+      get: jest.fn().mockResolvedValue(storageBreakdownData),
+    } as any;
 
-    mockSettingsService = {
-      getString: jest.fn().mockResolvedValue(''),
-    };
+    mockSystemHealth = {
+      check: jest.fn().mockResolvedValue(systemHealthData),
+    } as any;
 
-    // Cache returns all cached values
-    mockCache = {
-      get: jest.fn().mockImplementation((key: string) => fullCachedResponse[key] || null),
-      set: jest.fn().mockResolvedValue(undefined),
-    };
+    mockEnrichmentStats = {
+      get: jest.fn().mockResolvedValue(enrichmentStatsData),
+    } as any;
+
+    mockActivityStats = {
+      getStats: jest.fn().mockResolvedValue(activityStatsData),
+      getTimeline: jest.fn().mockResolvedValue(activityTimelineData),
+      getRecentActivities: jest.fn().mockResolvedValue(recentActivitiesData),
+    } as any;
+
+    mockScanStats = {
+      get: jest.fn().mockResolvedValue(scanStatsData),
+    } as any;
+
+    mockAlerts = {
+      get: jest.fn().mockResolvedValue(activeAlertsData),
+    } as any;
 
     useCase = new GetDashboardStatsUseCase(
-      mockDrizzle,
-      mockHealthCheck,
-      mockSettingsService,
-      mockCache,
+      mockLibraryStats,
+      mockStorageBreakdown,
+      mockSystemHealth,
+      mockEnrichmentStats,
+      mockActivityStats,
+      mockScanStats,
+      mockAlerts,
     );
   });
 
@@ -114,133 +159,147 @@ describe('GetDashboardStatsUseCase', () => {
       expect(result).toHaveProperty('recentActivities');
     });
 
-    it('should use cached library stats', async () => {
-      const result = await useCase.execute({});
+    it('should call all services', async () => {
+      await useCase.execute({});
 
-      expect(result.libraryStats).toEqual(fullCachedResponse['dashboard:library-stats']);
-      expect(mockCache.get).toHaveBeenCalledWith('dashboard:library-stats');
+      expect(mockLibraryStats.get).toHaveBeenCalledTimes(1);
+      expect(mockStorageBreakdown.get).toHaveBeenCalledTimes(1);
+      expect(mockSystemHealth.check).toHaveBeenCalledTimes(1);
+      expect(mockEnrichmentStats.get).toHaveBeenCalledTimes(1);
+      expect(mockActivityStats.getStats).toHaveBeenCalledTimes(1);
+      expect(mockActivityStats.getTimeline).toHaveBeenCalledTimes(1);
+      expect(mockActivityStats.getRecentActivities).toHaveBeenCalledTimes(1);
+      expect(mockScanStats.get).toHaveBeenCalledTimes(1);
+      expect(mockAlerts.get).toHaveBeenCalledTimes(1);
     });
 
-    it('should use cached storage breakdown', async () => {
-      const result = await useCase.execute({});
+    it('should pass storage breakdown to systemHealth.check', async () => {
+      await useCase.execute({});
 
-      expect(result.storageBreakdown).toEqual(fullCachedResponse['dashboard:storage-breakdown']);
+      expect(mockSystemHealth.check).toHaveBeenCalledWith(storageBreakdownData);
     });
 
-    it('should use cached enrichment stats', async () => {
-      const result = await useCase.execute({});
+    it('should pass storage breakdown to alerts.get', async () => {
+      await useCase.execute({});
 
-      expect(result.enrichmentStats).toEqual(fullCachedResponse['dashboard:enrichment-stats']);
+      expect(mockAlerts.get).toHaveBeenCalledWith(storageBreakdownData);
     });
 
-    it('should use cached activity stats', async () => {
-      const result = await useCase.execute({});
+    it('should get storage breakdown first before parallel calls', async () => {
+      const callOrder: string[] = [];
 
-      expect(result.activityStats).toEqual(fullCachedResponse['dashboard:activity-stats']);
-    });
-
-    it('should use cached activity timeline', async () => {
-      const result = await useCase.execute({});
-
-      expect(result.activityTimeline).toEqual(fullCachedResponse['dashboard:activity-timeline']);
-    });
-  });
-
-  describe('systemHealth', () => {
-    it('should report healthy database when query succeeds', async () => {
-      const result = await useCase.execute({});
-
-      expect(result.systemHealth.database).toBe('healthy');
-    });
-
-    it('should report down database when query fails', async () => {
-      mockDrizzle.db.execute.mockRejectedValue(new Error('Connection failed'));
-
-      const result = await useCase.execute({});
-
-      expect(result.systemHealth.database).toBe('down');
-    });
-
-    it('should report healthy redis from health check', async () => {
-      const result = await useCase.execute({});
-
-      expect(result.systemHealth.redis).toBe('healthy');
-    });
-
-    it('should report down redis when cache check fails', async () => {
-      mockHealthCheck.check.mockResolvedValue({
-        services: { cache: 'error' },
+      mockStorageBreakdown.get = jest.fn().mockImplementation(async () => {
+        callOrder.push('storageBreakdown');
+        return storageBreakdownData;
       });
 
-      const result = await useCase.execute({});
-
-      expect(result.systemHealth.redis).toBe('down');
-    });
-
-    it('should report musicbrainz as always healthy', async () => {
-      const result = await useCase.execute({});
-
-      expect(result.systemHealth.metadataApis.musicbrainz).toBe('healthy');
-    });
-
-    it('should report lastfm as healthy when API key configured', async () => {
-      mockSettingsService.getString.mockImplementation((key: string) => {
-        if (key === 'metadata.lastfm.api_key') return 'test-key';
-        return '';
+      mockSystemHealth.check = jest.fn().mockImplementation(async () => {
+        callOrder.push('systemHealth');
+        return systemHealthData;
       });
 
-      const result = await useCase.execute({});
+      await useCase.execute({});
 
-      expect(result.systemHealth.metadataApis.lastfm).toBe('healthy');
+      // storageBreakdown should be called before systemHealth
+      expect(callOrder.indexOf('storageBreakdown')).toBeLessThan(
+        callOrder.indexOf('systemHealth'),
+      );
     });
 
-    it('should report lastfm as down when no API key', async () => {
+    it('should return library stats from service', async () => {
       const result = await useCase.execute({});
 
-      expect(result.systemHealth.metadataApis.lastfm).toBe('down');
+      expect(result.libraryStats).toEqual(libraryStatsData);
     });
 
-    it('should report fanart as healthy when API key configured', async () => {
-      mockSettingsService.getString.mockImplementation((key: string) => {
-        if (key === 'metadata.fanart.api_key') return 'test-key';
-        return '';
-      });
-
+    it('should return storage breakdown from service', async () => {
       const result = await useCase.execute({});
 
-      expect(result.systemHealth.metadataApis.fanart).toBe('healthy');
-    });
-  });
-
-  describe('scanStats', () => {
-    it('should report scanner not running when no active scans', async () => {
-      const result = await useCase.execute({});
-
-      expect(result.scanStats.currentScan.isRunning).toBe(false);
+      expect(result.storageBreakdown).toEqual(storageBreakdownData);
     });
 
-    it('should return null for lastScan dates when no scans', async () => {
+    it('should return system health from service', async () => {
       const result = await useCase.execute({});
 
-      expect(result.scanStats.lastScan.startedAt).toBeNull();
-      expect(result.scanStats.lastScan.finishedAt).toBeNull();
-    });
-  });
-
-  describe('activeAlerts', () => {
-    it('should return alert structure', async () => {
-      const result = await useCase.execute({});
-
-      expect(result.activeAlerts).toHaveProperty('orphanedFiles');
-      expect(result.activeAlerts).toHaveProperty('pendingConflicts');
-      expect(result.activeAlerts).toHaveProperty('storageWarning');
-      expect(result.activeAlerts).toHaveProperty('scanErrors');
+      expect(result.systemHealth).toEqual(systemHealthData);
     });
 
-    it('should return boolean storageWarning', async () => {
+    it('should return enrichment stats from service', async () => {
       const result = await useCase.execute({});
 
-      expect(typeof result.activeAlerts.storageWarning).toBe('boolean');
+      expect(result.enrichmentStats).toEqual(enrichmentStatsData);
+    });
+
+    it('should return activity stats from service', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.activityStats).toEqual(activityStatsData);
+    });
+
+    it('should return scan stats from service', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.scanStats).toEqual(scanStatsData);
+    });
+
+    it('should return active alerts from service', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.activeAlerts).toEqual(activeAlertsData);
+    });
+
+    it('should return activity timeline from service', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.activityTimeline).toEqual(activityTimelineData);
+    });
+
+    it('should return recent activities from service', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.recentActivities).toEqual(recentActivitiesData);
+    });
+
+    it('should throw error when library stats service fails', async () => {
+      mockLibraryStats.get.mockRejectedValue(new Error('Database error'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Database error');
+    });
+
+    it('should throw error when storage breakdown service fails', async () => {
+      mockStorageBreakdown.get.mockRejectedValue(new Error('Storage error'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Storage error');
+    });
+
+    it('should throw error when system health service fails', async () => {
+      mockSystemHealth.check.mockRejectedValue(new Error('Health check failed'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Health check failed');
+    });
+
+    it('should throw error when enrichment stats service fails', async () => {
+      mockEnrichmentStats.get.mockRejectedValue(new Error('Enrichment error'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Enrichment error');
+    });
+
+    it('should throw error when activity stats service fails', async () => {
+      mockActivityStats.getStats.mockRejectedValue(new Error('Activity error'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Activity error');
+    });
+
+    it('should throw error when scan stats service fails', async () => {
+      mockScanStats.get.mockRejectedValue(new Error('Scan error'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Scan error');
+    });
+
+    it('should throw error when alerts service fails', async () => {
+      mockAlerts.get.mockRejectedValue(new Error('Alerts error'));
+
+      await expect(useCase.execute({})).rejects.toThrow('Alerts error');
     });
   });
 
@@ -257,6 +316,25 @@ describe('GetDashboardStatsUseCase', () => {
       expect(result.libraryStats).toHaveProperty('tracksAddedToday');
       expect(result.libraryStats).toHaveProperty('albumsAddedToday');
       expect(result.libraryStats).toHaveProperty('artistsAddedToday');
+    });
+  });
+
+  describe('systemHealth structure', () => {
+    it('should have all required fields', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.systemHealth).toHaveProperty('database');
+      expect(result.systemHealth).toHaveProperty('redis');
+      expect(result.systemHealth).toHaveProperty('fileSystem');
+      expect(result.systemHealth).toHaveProperty('metadataApis');
+    });
+
+    it('should have metadata API statuses', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.systemHealth.metadataApis).toHaveProperty('musicbrainz');
+      expect(result.systemHealth.metadataApis).toHaveProperty('lastfm');
+      expect(result.systemHealth.metadataApis).toHaveProperty('fanart');
     });
   });
 
@@ -280,6 +358,41 @@ describe('GetDashboardStatsUseCase', () => {
         expect(stats).toHaveProperty('failed');
         expect(stats).toHaveProperty('byProvider');
       });
+    });
+  });
+
+  describe('scanStats structure', () => {
+    it('should have current scan info', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.scanStats).toHaveProperty('currentScan');
+      expect(result.scanStats.currentScan).toHaveProperty('isRunning');
+      expect(result.scanStats.currentScan).toHaveProperty('progress');
+    });
+
+    it('should have last scan info', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.scanStats).toHaveProperty('lastScan');
+      expect(result.scanStats.lastScan).toHaveProperty('startedAt');
+      expect(result.scanStats.lastScan).toHaveProperty('finishedAt');
+    });
+  });
+
+  describe('activeAlerts structure', () => {
+    it('should have all alert types', async () => {
+      const result = await useCase.execute({});
+
+      expect(result.activeAlerts).toHaveProperty('orphanedFiles');
+      expect(result.activeAlerts).toHaveProperty('pendingConflicts');
+      expect(result.activeAlerts).toHaveProperty('storageWarning');
+      expect(result.activeAlerts).toHaveProperty('scanErrors');
+    });
+
+    it('should return boolean storageWarning', async () => {
+      const result = await useCase.execute({});
+
+      expect(typeof result.activeAlerts.storageWarning).toBe('boolean');
     });
   });
 
