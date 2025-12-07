@@ -4,9 +4,7 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@echo/shared": ["../packages/shared/src"],
-      "@echo/shared/*": ["../packages/shared/src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

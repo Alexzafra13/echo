@@ -12,10 +12,10 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "eas-build-pre-install": "cd .. && corepack enable && pnpm install"
+    "eas-build-pre-install": "node scripts/sync-shared-types.js && npm install",
+    "sync-types": "node scripts/sync-shared-types.js"
   },
   "dependencies": {
-    "@echo/shared": "workspace:*",
     "@babel/runtime": "^7.26.0",
     "expo-dev-client": "~5.0.12",
     "@expo/metro-runtime": "~5.0.4",
