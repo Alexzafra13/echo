@@ -30,9 +30,7 @@
       },
       "package": "com.echo.app"
     },
-    "plugins": [
-      "expo-router"
-    ],
+    "plugins": [],
     "web": {
       "bundler": "metro",
       "output": "static",

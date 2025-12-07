@@ -7,7 +7,10 @@
   "build": {
     "base": {
       "node": "20.18.0",
-      "pnpm": "9.15.0"
+      "pnpm": "9.15.0",
+      "install": {
+        "command": "cd .. && pnpm install"
+      }
     },
     "development": {
       "extends": "base",
