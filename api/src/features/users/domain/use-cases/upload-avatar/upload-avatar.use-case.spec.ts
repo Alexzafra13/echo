@@ -187,7 +187,7 @@ describe('UploadAvatarUseCase', () => {
           userId: 'user-123',
           file: largeFile as any,
         }),
-      ).rejects.toThrow('File size exceeds maximum allowed size of 5MB');
+      ).rejects.toThrow('File size exceeds 5MB limit');
 
       expect(mockStorageService.saveImage).not.toHaveBeenCalled();
     });
