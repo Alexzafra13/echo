@@ -8,6 +8,12 @@ import { ScoringService } from './domain/services/scoring.service';
 import { WaveMixService } from './domain/services/wave-mix.service';
 import { SmartPlaylistService } from './domain/services/smart-playlist.service';
 import {
+  PlaylistShuffleService,
+  PlaylistCoverService,
+  ArtistPlaylistService,
+  GenrePlaylistService,
+} from './domain/services/playlists';
+import {
   CalculateTrackScoreUseCase,
   GenerateWaveMixUseCase,
   GenerateDailyMixUseCase,
@@ -25,10 +31,17 @@ import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-schedule
   imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule, TracksModule],
   controllers: [RecommendationsController],
   providers: [
+    // Core Services
     ScoringService,
     WaveMixService,
     SmartPlaylistService,
     WaveMixSchedulerService,
+
+    // Playlist Services (SRP extraction)
+    PlaylistShuffleService,
+    PlaylistCoverService,
+    ArtistPlaylistService,
+    GenrePlaylistService,
     CalculateTrackScoreUseCase,
     GenerateWaveMixUseCase,
     {
