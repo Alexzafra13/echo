@@ -42,7 +42,7 @@ module.exports = {
 
   // Transformar uuid y otros módulos ES
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)',
+    'node_modules/(?!(uuid|music-metadata|strtok3|token-types|peek-readable)/)',
   ],
 
   // Path aliases para los imports
@@ -52,6 +52,8 @@ module.exports = {
     '^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/src/features/$1',
     '^test/(.*)$': '<rootDir>/test/$1',
+    // Mock para music-metadata (módulo ES puro)
+    '^music-metadata$': '<rootDir>/test/__mocks__/music-metadata.ts',
   },
 
   // 4 workers = 4 BDs en paralelo (evita race conditions)
