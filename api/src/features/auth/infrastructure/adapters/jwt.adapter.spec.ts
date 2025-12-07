@@ -1,7 +1,8 @@
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../../domain/entities/user.entity';
+import { User, UserProps } from '../../domain/entities/user.entity';
 import { JwtAdapter } from './jwt.adapter';
 import { SecuritySecretsService } from '@config/security-secrets.service';
+import { createMockUserProps } from '@shared/testing/mock.types';
 
 interface MockJwtService {
   sign: jest.Mock;
@@ -12,6 +13,11 @@ interface MockSecretsService {
   jwtSecret: string;
   jwtRefreshSecret: string;
 }
+
+// Helper para crear mock de usuario
+const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+  return User.reconstruct(createMockUserProps(overrides));
+};
 
 describe('JwtAdapter', () => {
   let adapter: JwtAdapter;
@@ -38,15 +44,10 @@ describe('JwtAdapter', () => {
   describe('generateAccessToken', () => {
     it('debería generar access token válido', async () => {
       // Arrange
-      const user = User.reconstruct({
+      const user = createMockUser({
         id: 'user-123',
         username: 'juan',
-        passwordHash: 'hash',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockJwtService.sign.mockReturnValue('access_token_123');
@@ -63,15 +64,10 @@ describe('JwtAdapter', () => {
   describe('generateRefreshToken', () => {
     it('debería generar refresh token válido', async () => {
       // Arrange
-      const user = User.reconstruct({
+      const user = createMockUser({
         id: 'user-123',
         username: 'juan',
-        passwordHash: 'hash',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockJwtService.sign.mockReturnValue('refresh_token_123');

@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
+import { LogService } from '@features/logs/application/log.service';
 import { DeleteUserUseCase } from './delete-user.use-case';
 import {
   MockUserRepository,
@@ -7,6 +8,27 @@ import {
   createMockUserRepository,
   createMockLogService,
 } from '@shared/testing/mock.types';
+
+// Helper to create mock user with all required fields
+const createMockUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'testuser',
+  passwordHash: '$2b$12$hashed',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'dark',
+  language: 'es',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -17,25 +39,17 @@ describe('DeleteUserUseCase', () => {
     mockUserRepository = createMockUserRepository();
     mockLogService = createMockLogService();
 
-    useCase = new DeleteUserUseCase(mockUserRepository, mockLogService);
+    useCase = new DeleteUserUseCase(mockUserRepository, mockLogService as unknown as LogService);
   });
 
   describe('execute', () => {
     it('debería desactivar un usuario normal correctamente', async () => {
       // Arrange
-      const userToDelete = User.reconstruct({
+      const userToDelete = User.reconstruct(createMockUserProps({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findById.mockResolvedValue(userToDelete);
       mockUserRepository.findAll.mockResolvedValue([userToDelete]);
@@ -61,61 +75,35 @@ describe('DeleteUserUseCase', () => {
 
     it('debería permitir desactivar un admin si hay más admins', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct({
+      const systemAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-000',
         username: 'admin0',
-        passwordHash: '$2b$12$hashed',
         name: 'System Admin',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2020-01-01'), // Oldest admin
-        updatedAt: new Date(),
-      });
+      }));
 
-      const adminToDelete = User.reconstruct({
+      const adminToDelete = User.reconstruct(createMockUserProps({
         id: 'admin-123',
         username: 'admin1',
-        passwordHash: '$2b$12$hashed',
         name: 'Admin One',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2021-01-01'), // Newer than system admin
-        updatedAt: new Date(),
-      });
+      }));
 
-      const otherAdmin = User.reconstruct({
+      const otherAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-456',
         username: 'admin2',
-        passwordHash: '$2b$12$hashed',
         name: 'Admin Two',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2022-01-01'), // Newest
-        updatedAt: new Date(),
-      });
+      }));
 
-      const regularUser = User.reconstruct({
+      const regularUser = User.reconstruct(createMockUserProps({
         id: 'user-789',
         username: 'user1',
-        passwordHash: '$2b$12$hashed',
         name: 'User One',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
       mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, otherAdmin, regularUser]);
@@ -141,61 +129,34 @@ describe('DeleteUserUseCase', () => {
 
     it('debería lanzar error si intenta desactivar el último admin', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct({
+      const systemAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-000',
         username: 'admin0',
-        passwordHash: '$2b$12$hashed',
         name: 'System Admin',
         isActive: false, // Inactive - oldest admin
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2020-01-01'), // Oldest admin
-        updatedAt: new Date(),
-      });
+      }));
 
-      const lastAdmin = User.reconstruct({
+      const lastAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-123',
         username: 'admin',
-        passwordHash: '$2b$12$hashed',
         name: 'Last Admin',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2021-01-01'), // Newer than system admin
-        updatedAt: new Date(),
-      });
+      }));
 
-      const regularUser1 = User.reconstruct({
+      const regularUser1 = User.reconstruct(createMockUserProps({
         id: 'user-456',
         username: 'user1',
-        passwordHash: '$2b$12$hashed',
         name: 'User One',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
-      const regularUser2 = User.reconstruct({
+      const regularUser2 = User.reconstruct(createMockUserProps({
         id: 'user-789',
         username: 'user2',
-        passwordHash: '$2b$12$hashed',
         name: 'User Two',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findById.mockResolvedValue(lastAdmin);
       // System admin exists but is inactive, lastAdmin is the only active admin
@@ -232,19 +193,11 @@ describe('DeleteUserUseCase', () => {
 
     it('debería hacer soft delete (no eliminar físicamente)', async () => {
       // Arrange
-      const userToDelete = User.reconstruct({
+      const userToDelete = User.reconstruct(createMockUserProps({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findById.mockResolvedValue(userToDelete);
       mockUserRepository.findAll.mockResolvedValue([userToDelete]);
@@ -270,33 +223,19 @@ describe('DeleteUserUseCase', () => {
 
     it('debería desactivar usuarios normales sin verificar límite de admins activos', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct({
+      const systemAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-000',
         username: 'admin0',
-        passwordHash: '$2b$12$hashed',
         name: 'System Admin',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2020-01-01'),
-        updatedAt: new Date(),
-      });
+      }));
 
-      const regularUser = User.reconstruct({
+      const regularUser = User.reconstruct(createMockUserProps({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findById.mockResolvedValue(regularUser);
       // findAll is called to check system admin, but admin count check is skipped for non-admins
@@ -324,48 +263,32 @@ describe('DeleteUserUseCase', () => {
 
     it('debería contar solo admins activos al verificar el último admin', async () => {
       // Arrange
-      const systemAdmin = User.reconstruct({
+      const systemAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-000',
         username: 'admin0',
-        passwordHash: '$2b$12$hashed',
         name: 'System Admin',
         isActive: false, // Inactive
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2020-01-01'), // Oldest
-        updatedAt: new Date(),
-      });
+      }));
 
-      const adminToDelete = User.reconstruct({
+      const adminToDelete = User.reconstruct(createMockUserProps({
         id: 'admin-123',
         username: 'admin1',
-        passwordHash: '$2b$12$hashed',
         name: 'Admin One',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2021-01-01'), // Newer than system admin
-        updatedAt: new Date(),
-      });
+      }));
 
       // Este admin ya está inactivo, no debería contar
-      const inactiveAdmin = User.reconstruct({
+      const inactiveAdmin = User.reconstruct(createMockUserProps({
         id: 'admin-456',
         username: 'admin2',
-        passwordHash: '$2b$12$hashed',
         name: 'Admin Two',
         isActive: false,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
         createdAt: new Date('2022-01-01'),
-        updatedAt: new Date(),
-      });
+      }));
 
       mockUserRepository.findById.mockResolvedValue(adminToDelete);
       mockUserRepository.findAll.mockResolvedValue([systemAdmin, adminToDelete, inactiveAdmin]);

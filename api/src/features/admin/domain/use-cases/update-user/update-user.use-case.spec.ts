@@ -1,10 +1,16 @@
 import { ConflictError, NotFoundError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { UpdateUserUseCase } from './update-user.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
+  createMockUserProps,
 } from '@shared/testing/mock.types';
+
+// Helper para crear mock de usuario
+const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+  return User.reconstruct(createMockUserProps(overrides));
+};
 
 describe('UpdateUserUseCase', () => {
   let useCase: UpdateUserUseCase;
@@ -19,18 +25,10 @@ describe('UpdateUserUseCase', () => {
   describe('execute', () => {
     it('debería actualizar el nombre del usuario correctamente', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       const updatedUser = User.reconstruct({
@@ -61,18 +59,10 @@ describe('UpdateUserUseCase', () => {
 
     it('debería actualizar el rol de admin del usuario', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       const updatedUser = User.reconstruct({
@@ -101,18 +91,10 @@ describe('UpdateUserUseCase', () => {
 
     it('debería actualizar el estado activo del usuario', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       const updatedUser = User.reconstruct({
@@ -141,18 +123,10 @@ describe('UpdateUserUseCase', () => {
 
     it('debería actualizar múltiples campos a la vez', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       const updatedUser = User.reconstruct({
@@ -199,32 +173,16 @@ describe('UpdateUserUseCase', () => {
 
     it('debería lanzar error si el username ya existe en otro usuario', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
-      const otherUser = User.reconstruct({
+      const otherUser = createMockUser({
         id: 'user-456',
         username: 'maria',
-        passwordHash: '$2b$12$hashed',
         name: 'María García',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
@@ -243,18 +201,10 @@ describe('UpdateUserUseCase', () => {
 
     it('debería permitir actualizar con el mismo username del usuario', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);

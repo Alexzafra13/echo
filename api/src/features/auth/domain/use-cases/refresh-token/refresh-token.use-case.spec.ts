@@ -1,12 +1,18 @@
 import { UnauthorizedError } from '@shared/errors';
-import { User } from '../../entities/user.entity';
+import { User, UserProps } from '../../entities/user.entity';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 import {
   MockUserRepository,
   MockTokenService,
   createMockUserRepository,
   createMockTokenService,
+  createMockUserProps,
 } from '@shared/testing/mock.types';
+
+// Helper para crear mock de usuario
+const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+  return User.reconstruct(createMockUserProps(overrides));
+};
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
@@ -31,18 +37,10 @@ describe('RefreshTokenUseCase', () => {
         username: 'juan',
       });
 
-      const mockUser = User.reconstruct({
+      const mockUser = createMockUser({
         id: 'user-123',
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
@@ -124,18 +122,11 @@ describe('RefreshTokenUseCase', () => {
         username: 'juan',
       });
 
-      const inactiveUser = User.reconstruct({
+      const inactiveUser = createMockUser({
         id: 'user-123',
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
         isActive: false,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(inactiveUser);
@@ -174,18 +165,11 @@ describe('RefreshTokenUseCase', () => {
         username: 'admin',
       });
 
-      const adminUser = User.reconstruct({
+      const adminUser = createMockUser({
         id: 'admin-123',
         username: 'admin',
-        passwordHash: '$2b$12$hashed',
         name: 'Admin',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(adminUser);
@@ -209,18 +193,10 @@ describe('RefreshTokenUseCase', () => {
         username: 'juan',
       });
 
-      const mockUser = User.reconstruct({
+      const mockUser = createMockUser({
         id: 'user-123',
         username: 'juan',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);

@@ -1,5 +1,6 @@
 import { NotFoundError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
+import { LogService } from '@features/logs/application/log.service';
 import { ResetUserPasswordUseCase } from './reset-user-password.use-case';
 import {
   MockUserRepository,
@@ -8,7 +9,13 @@ import {
   createMockUserRepository,
   createMockPasswordService,
   createMockLogService,
+  createMockUserProps,
 } from '@shared/testing/mock.types';
+
+// Helper para crear mock de usuario
+const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+  return User.reconstruct(createMockUserProps(overrides));
+};
 
 describe('ResetUserPasswordUseCase', () => {
   let useCase: ResetUserPasswordUseCase;
@@ -24,25 +31,18 @@ describe('ResetUserPasswordUseCase', () => {
     useCase = new ResetUserPasswordUseCase(
       mockUserRepository,
       mockPasswordService,
-      mockLogService,
+      mockLogService as unknown as LogService,
     );
   });
 
   describe('execute', () => {
     it('debería resetear la contraseña del usuario correctamente', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
         passwordHash: '$2b$12$old_hashed_password',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
@@ -73,18 +73,10 @@ describe('ResetUserPasswordUseCase', () => {
 
     it('debería generar una contraseña temporal alfanumérica de 8 caracteres', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
@@ -106,18 +98,10 @@ describe('ResetUserPasswordUseCase', () => {
 
     it('debería marcar mustChangePassword como true', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
@@ -140,18 +124,11 @@ describe('ResetUserPasswordUseCase', () => {
 
     it('debería funcionar para usuarios admin', async () => {
       // Arrange
-      const adminUser = User.reconstruct({
+      const adminUser = createMockUser({
         id: 'admin-123',
         username: 'admin',
-        passwordHash: '$2b$12$hashed',
         name: 'Admin User',
-        isActive: true,
         isAdmin: true,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(adminUser);
@@ -192,18 +169,11 @@ describe('ResetUserPasswordUseCase', () => {
 
     it('debería hashear la contraseña temporal antes de guardarla', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
         passwordHash: '$2b$12$old_hash',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       let capturedPlainPassword: string | undefined;
@@ -234,18 +204,10 @@ describe('ResetUserPasswordUseCase', () => {
 
     it('debería generar contraseñas diferentes en cada ejecución', async () => {
       // Arrange
-      const existingUser = User.reconstruct({
+      const existingUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(existingUser);
@@ -270,18 +232,11 @@ describe('ResetUserPasswordUseCase', () => {
 
     it('debería funcionar para usuarios inactivos', async () => {
       // Arrange
-      const inactiveUser = User.reconstruct({
+      const inactiveUser = createMockUser({
         id: 'user-123',
         username: 'juanperez',
-        passwordHash: '$2b$12$hashed',
         name: 'Juan Pérez',
         isActive: false,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(inactiveUser);
