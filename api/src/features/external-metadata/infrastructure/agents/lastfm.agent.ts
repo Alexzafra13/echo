@@ -5,9 +5,15 @@ import { RateLimiterService } from '../services/rate-limiter.service';
 import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
 import { ExternalApiError } from '@shared/errors';
+import {
+  LastFMArtistResponse,
+  LastFMArtistInfoResponse,
+  LastFMTag,
+  LastFMImage,
+} from './types';
 
 /**
- * Artist genre tag from Last.fm
+ * Artist genre tag from Last.fm (exported for external use)
  */
 export interface LastfmTag {
   name: string;
@@ -146,8 +152,8 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
 
       // Parse and filter tags
       const parsedTags: LastfmTag[] = tagArray
-        .filter((t: any) => t.name && typeof t.name === 'string')
-        .map((t: any) => ({
+        .filter((t: LastFMTag) => t.name && typeof t.name === 'string')
+        .map((t: LastFMTag) => ({
           name: t.name.trim(),
           count: parseInt(t.count || '0', 10),
         }))
@@ -217,9 +223,9 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
       }
 
       // Last.fm provides images in sizes: small, medium, large, extralarge, mega
-      const images = artistInfo.image;
+      const images: LastFMImage[] = artistInfo.image;
       const getImageUrl = (size: string): string | null => {
-        const img = images.find((i: any) => i.size === size);
+        const img = images.find((i: LastFMImage) => i.size === size);
         const url = img && img['#text'] ? img['#text'] : null;
         // Filter out placeholder images (empty or default star image)
         if (!url || url.includes('2a96cbd8b46e442fc41c2b86b821562f')) {
@@ -270,7 +276,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     mbid: string | null,
     name: string,
     lang?: string
-  ): Promise<any | null> {
+  ): Promise<LastFMArtistResponse | null> {
     await this.rateLimiter.waitForRateLimit(this.name);
 
     const params = new URLSearchParams({
@@ -306,7 +312,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
       throw new ExternalApiError('Last.fm', response.status, response.statusText);
     }
 
-    const data = await response.json();
+    const data: LastFMArtistInfoResponse = await response.json();
 
     if (data.error) {
       this.logger.debug(`Last.fm error for ${name}: ${data.message}`);
