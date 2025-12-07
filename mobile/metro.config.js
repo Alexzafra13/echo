@@ -9,13 +9,9 @@ const config = getDefaultConfig(projectRoot);
 // Watch all files in the monorepo
 config.watchFolders = [monorepoRoot];
 
-// Let Metro know where to resolve packages
+// Let Metro know where to resolve packages (root has all hoisted deps)
 config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
-
-// Force resolving nested modules to the root node_modules
-config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;
