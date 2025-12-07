@@ -10,6 +10,9 @@ describe('FileScannerService', () => {
   let service: FileScannerService;
   let mockLogger: any;
 
+  // Helper to create cross-platform paths
+  const p = (...segments: string[]) => path.join(...segments);
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -40,7 +43,7 @@ describe('FileScannerService', () => {
 
       const result = await service.scanDirectory('/music', false);
 
-      expect(result).toEqual(['/music/song.mp3']);
+      expect(result).toEqual([p('/music', 'song.mp3')]);
     });
 
     it('should find all supported audio formats', async () => {
@@ -61,9 +64,9 @@ describe('FileScannerService', () => {
       const result = await service.scanDirectory('/music', false);
 
       expect(result).toHaveLength(9);
-      expect(result).toContain('/music/track.mp3');
-      expect(result).toContain('/music/track.flac');
-      expect(result).toContain('/music/track.opus');
+      expect(result).toContain(p('/music', 'track.mp3'));
+      expect(result).toContain(p('/music', 'track.flac'));
+      expect(result).toContain(p('/music', 'track.opus'));
     });
 
     it('should scan recursively by default', async () => {
@@ -78,8 +81,8 @@ describe('FileScannerService', () => {
 
       const result = await service.scanDirectory('/music');
 
-      expect(result).toContain('/music/song.mp3');
-      expect(result).toContain('/music/subdir/nested.flac');
+      expect(result).toContain(p('/music', 'song.mp3'));
+      expect(result).toContain(p('/music', 'subdir', 'nested.flac'));
     });
 
     it('should not scan subdirectories when recursive is false', async () => {
@@ -90,7 +93,7 @@ describe('FileScannerService', () => {
 
       const result = await service.scanDirectory('/music', false);
 
-      expect(result).toEqual(['/music/song.mp3']);
+      expect(result).toEqual([p('/music', 'song.mp3')]);
       expect(mockFs.readdir).toHaveBeenCalledTimes(1);
     });
 
@@ -142,8 +145,8 @@ describe('FileScannerService', () => {
 
       const result = await service.scanDirectory('/music');
 
-      expect(result).toContain('/music/song.mp3');
-      expect(result).toContain('/music/accessible/other.flac');
+      expect(result).toContain(p('/music', 'song.mp3'));
+      expect(result).toContain(p('/music', 'accessible', 'other.flac'));
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
@@ -164,7 +167,7 @@ describe('FileScannerService', () => {
 
       const result = await service.scanDirectory('/music');
 
-      expect(result).toContain('/music/level1/level2/level3/deep.mp3');
+      expect(result).toContain(p('/music', 'level1', 'level2', 'level3', 'deep.mp3'));
     });
   });
 
