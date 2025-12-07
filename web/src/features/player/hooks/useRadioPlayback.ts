@@ -11,7 +11,7 @@ import { useState, useCallback } from 'react';
 import { logger } from '@shared/utils/logger';
 import { getProxiedStreamUrl } from '../utils/streamProxy';
 import type { AudioElements } from './useAudioElements';
-import type { RadioStation, RadioMetadata, RadioBrowserStation } from '@shared/types/radio.types';
+import type { RadioStation, RadioMetadata, RadioBrowserStation } from '@shared/types';
 
 export type RadioSignalStatus = 'good' | 'weak' | 'error' | null;
 

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import type { Track } from '../../types';
-import { formatDuration, formatFileSize, formatBitrate, formatDate } from '@shared/utils/format';
+import { formatDuration, formatFileSize, formatBitrate } from '@shared/utils/format';
+import { formatDate } from '@shared/utils/date.utils';
 import { getCoverUrl } from '@shared/utils/cover.utils';
 import styles from './TrackInfoModal.module.css';
 

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { getCoverUrl } from '@shared/utils/cover.utils';
-import { formatDuration, formatFileSize, formatDate } from '@shared/utils/format';
+import { formatDuration, formatFileSize } from '@shared/utils/format';
+import { formatDate } from '@shared/utils/date.utils';
 import styles from './AlbumInfoModal.module.css';
 
 interface AlbumInfoModalProps {

@@ -10,7 +10,7 @@ import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
 import type { Artist } from '@features/artists/types';
 import type { Album } from '@features/home/types';
-import type { Track } from '@shared/types/track.types';
+import type { Track } from '@shared/types';
 import type { Playlist } from '@features/playlists/types';
 import styles from './SearchPanel.module.css';
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePlayer } from '@features/player';
 import { tracksService } from '@features/home/services/tracks.service';
-import type { Track } from '@shared/types/track.types';
+import type { Track } from '@shared/types';
 
 const BATCH_SIZE = 50;
 const PREFETCH_THRESHOLD = 10;

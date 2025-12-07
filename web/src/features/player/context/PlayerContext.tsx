@@ -25,7 +25,7 @@ import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import { updatePlaybackState } from '@shared/services/play-tracking.service';
 import { useAuthStore } from '@shared/store';
-import type { RadioBrowserStation } from '@shared/types/radio.types';
+import type { RadioBrowserStation } from '@shared/types';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 

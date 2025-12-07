@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import type { NormalizationSettings } from '../types';
-import type { Track } from '@shared/types/track.types';
+import type { Track } from '@shared/types';
 
 /**
  * Resultado del cálculo de ganancia
