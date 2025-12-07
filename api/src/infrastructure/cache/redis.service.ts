@@ -39,12 +39,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.redis.quit();
   }
 
-  async get(key: string): Promise<any> {
+  async get<T = any>(key: string): Promise<T | null> {
     const data = await this.redis.get(key);
-    return data ? JSON.parse(data) : null;
+    return data ? (JSON.parse(data) as T) : null;
   }
 
-  async set(key: string, value: any, ttl?: number): Promise<void> {
+  async set<T = any>(key: string, value: T, ttl?: number): Promise<void> {
     const serialized = JSON.stringify(value);
     if (ttl) {
       await this.redis.setex(key, ttl, serialized);
