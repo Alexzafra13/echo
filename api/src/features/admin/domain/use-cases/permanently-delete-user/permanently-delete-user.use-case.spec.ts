@@ -1,9 +1,10 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { PermanentlyDeleteUserUseCase } from './permanently-delete-user.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
+  createMockUserProps,
 } from '@shared/testing/mock.types';
 
 describe('PermanentlyDeleteUserUseCase', () => {
@@ -11,21 +12,8 @@ describe('PermanentlyDeleteUserUseCase', () => {
   let mockUserRepository: MockUserRepository;
 
   // Helper para crear mock de usuario
-  const createMockUser = (overrides = {}): User => {
-    return User.reconstruct({
-      id: 'user-123',
-      username: 'testuser',
-      passwordHash: '$2b$12$hashed',
-      name: 'Test User',
-      isActive: true,
-      isAdmin: false,
-      mustChangePassword: false,
-      theme: 'dark',
-      language: 'es',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...overrides,
-    });
+  const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+    return User.reconstruct(createMockUserProps({ name: 'Test User', ...overrides }));
   };
 
   beforeEach(() => {

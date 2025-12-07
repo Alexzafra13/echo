@@ -18,14 +18,14 @@ describe('AddTrackToPlaylistUseCase', () => {
   const createMockPlaylist = () => Playlist.fromPrimitives({
     id: 'playlist-123',
     name: 'Test Playlist',
-    description: null,
-    coverImageUrl: null,
+    description: undefined,
+    coverImageUrl: undefined,
     duration: 180,
     size: Number(1000000),
     ownerId: 'user-123',
     public: false,
     songCount: 1,
-    path: null,
+    path: undefined,
     sync: false,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -37,14 +37,12 @@ describe('AddTrackToPlaylistUseCase', () => {
     duration: 200,
     size: Number(2000000),
     trackNumber: 1,
-    filePath: '/music/test.mp3',
-    coverPath: null,
+    discNumber: 1,
+    path: '/music/test.mp3',
     year: 2024,
     artistId: 'artist-123',
     albumId: 'album-123',
-    genre: null,
-    format: 'mp3',
-    bitrate: 320,
+    compilation: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -270,8 +268,8 @@ describe('AddTrackToPlaylistUseCase', () => {
       expect(updateCall[0]).toBe('playlist-123');
 
       const updatedPlaylist = updateCall[1];
-      expect(updatedPlaylist.duration).toBe(originalDuration + mockTrack.duration);
-      expect(updatedPlaylist.size).toBe(originalSize + mockTrack.size);
+      expect(updatedPlaylist.duration).toBe(originalDuration + (mockTrack.duration ?? 0));
+      expect(updatedPlaylist.size).toBe(originalSize + (mockTrack.size ?? 0));
       expect(updatedPlaylist.songCount).toBe(originalSongCount + 1);
     });
   });

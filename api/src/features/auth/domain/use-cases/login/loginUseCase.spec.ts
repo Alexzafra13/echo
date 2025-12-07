@@ -1,9 +1,10 @@
 import { UnauthorizedError, ValidationError } from '@shared/errors';
-import { User } from '../../entities/user.entity';
+import { User, UserProps } from '../../entities/user.entity';
 import { LoginUseCase } from './login.use-case';
 import { IUserRepository } from '../../ports/user-repository.port';
 import { IPasswordService } from '../../ports/password-service.port';
 import { ITokenService } from '../../ports/token-service.port';
+import { createMockUserProps } from '@shared/testing/mock.types';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
@@ -12,21 +13,13 @@ describe('LoginUseCase', () => {
   let mockPasswordService: jest.Mocked<IPasswordService>;
 
   // Helper para crear mock de usuario con valores por defecto
-  const createMockUser = (overrides = {}): User => {
-    return User.reconstruct({
-      id: 'user-123',
+  const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+    return User.reconstruct(createMockUserProps({
       username: 'juan',
       passwordHash: '$2b$12$hashed_password',
       name: 'Juan',
-      isActive: true,
-      isAdmin: false,
-      mustChangePassword: false,
-      theme: 'dark',
-      language: 'es',
-      createdAt: new Date(),
-      updatedAt: new Date(),
       ...overrides,
-    });
+    }));
   };
 
   beforeEach(() => {
