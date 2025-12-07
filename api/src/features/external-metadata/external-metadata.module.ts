@@ -15,6 +15,10 @@ import { StorageService } from './infrastructure/services/storage.service';
 import { ImageDownloadService } from './infrastructure/services/image-download.service';
 import { CleanupService } from './infrastructure/services/cleanup.service';
 import { MetadataConflictService } from './infrastructure/services/metadata-conflict.service';
+import {
+  ConflictChangeApplierService,
+  ConflictEnrichmentService,
+} from './infrastructure/services/conflicts';
 import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
 import { MaintenanceSchedulerService } from './infrastructure/services/maintenance-scheduler.service';
 import { EnrichmentQueueService } from './infrastructure/services/enrichment-queue.service';
@@ -107,6 +111,8 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     ImageDownloadService,
     CleanupService,
     MetadataConflictService,
+    ConflictChangeApplierService,
+    ConflictEnrichmentService,
     MbidAutoSearchService,
     MaintenanceSchedulerService,
     EnrichmentQueueService,
