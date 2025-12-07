@@ -33,6 +33,11 @@
     "plugins": [
       "expo-router"
     ],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./src/assets/icon.png"
+    },
     "experiments": {
       "typedRoutes": true
     }
