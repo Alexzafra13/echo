@@ -1,7 +1,11 @@
+import {
+  UserStarred as UserStarredDb,
+  UserRating as UserRatingDb,
+} from '@infrastructure/database/schema/play-stats';
 import { UserStarred, UserRating, Sentiment, ItemType } from '../../domain/entities/user-interaction.entity';
 
 export class UserInteractionsMapper {
-  static toUserStarredDomain(raw: any): UserStarred {
+  static toUserStarredDomain(raw: UserStarredDb): UserStarred {
     return {
       userId: raw.userId,
       starredId: raw.starredId,
@@ -13,7 +17,7 @@ export class UserInteractionsMapper {
     };
   }
 
-  static toUserRatingDomain(raw: any): UserRating {
+  static toUserRatingDomain(raw: UserRatingDb): UserRating {
     return {
       userId: raw.userId,
       itemId: raw.itemId,
@@ -24,11 +28,11 @@ export class UserInteractionsMapper {
     };
   }
 
-  static toUserStarredDomainArray(raw: any[]): UserStarred[] {
+  static toUserStarredDomainArray(raw: UserStarredDb[]): UserStarred[] {
     return raw.map(this.toUserStarredDomain);
   }
 
-  static toUserRatingDomainArray(raw: any[]): UserRating[] {
+  static toUserRatingDomainArray(raw: UserRatingDb[]): UserRating[] {
     return raw.map(this.toUserRatingDomain);
   }
 }

@@ -11,6 +11,7 @@ import {
   TrackPlaySummary,
 } from '../../domain/entities/play-event.entity';
 import { DrizzlePlayTrackingRepository } from './play-tracking.repository';
+import { cacheConfig } from '@config/cache.config';
 
 /**
  * CachedPlayTrackingRepository - Decorator Pattern with Redis Cache
@@ -28,9 +29,10 @@ import { DrizzlePlayTrackingRepository } from './play-tracking.repository';
  */
 @Injectable()
 export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
-  private readonly STATS_TTL = parseInt(process.env.CACHE_PLAY_STATS_TTL || '600'); // 10 minutes
-  private readonly TOP_ITEMS_TTL = parseInt(process.env.CACHE_TOP_ITEMS_TTL || '900'); // 15 minutes
-  private readonly RECENT_TTL = parseInt(process.env.CACHE_RECENT_PLAYS_TTL || '300'); // 5 minutes
+  // TTLs from centralized config
+  private readonly STATS_TTL = cacheConfig.ttl.playStats;
+  private readonly TOP_ITEMS_TTL = cacheConfig.ttl.topItems;
+  private readonly RECENT_TTL = cacheConfig.ttl.recent;
 
   private readonly KEY_PREFIX = 'play-tracking:';
 
