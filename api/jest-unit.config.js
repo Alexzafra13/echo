@@ -54,7 +54,7 @@ module.exports = {
 
   // Transformar uuid y otros módulos ES
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)',
+    'node_modules/(?!(uuid|music-metadata|strtok3|token-types|peek-readable)/)',
   ],
 
   // Path aliases para los imports
@@ -66,6 +66,8 @@ module.exports = {
     '^test/(.*)$': '<rootDir>/../test/$1',
     // Prisma 7: generated client is in src/generated/prisma
     '^(\\.\\./)+generated/prisma$': '<rootDir>/generated/prisma',
+    // Mock para music-metadata (módulo ES puro)
+    '^music-metadata$': '<rootDir>/../test/__mocks__/music-metadata.ts',
   },
 
   // Más workers porque los unit tests son rápidos (solo mocks)
