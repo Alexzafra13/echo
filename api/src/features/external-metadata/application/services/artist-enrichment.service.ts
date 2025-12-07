@@ -1,19 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import * as path from 'path';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists } from '@infrastructure/database/schema';
 import { IArtistBioRetriever, IArtistImageRetriever, MusicBrainzArtistMatch } from '../../domain/interfaces';
-import { ArtistBio, ArtistImages } from '../../domain/entities';
 import { AgentRegistryService } from '../../infrastructure/services/agent-registry.service';
-import { MetadataCacheService } from '../../infrastructure/services/metadata-cache.service';
-import { StorageService } from '../../infrastructure/services/storage.service';
-import { ImageDownloadService } from '../../infrastructure/services/image-download.service';
 import { MetadataConflictService, ConflictPriority } from '../../infrastructure/services/metadata-conflict.service';
 import { NotFoundError } from '@shared/errors';
 import { MbidSearchService } from './mbid-search.service';
 import { GenreEnrichmentService } from './genre-enrichment.service';
 import { EnrichmentLogService } from './enrichment-log.service';
+import { ArtistBioEnrichmentService } from './artist/artist-bio-enrichment.service';
+import { ArtistImageEnrichmentService } from './artist/artist-image-enrichment.service';
 
 export interface ArtistEnrichmentResult {
   bioUpdated: boolean;
@@ -23,7 +20,7 @@ export interface ArtistEnrichmentResult {
 
 /**
  * Service for enriching artist metadata
- * Handles biography, images, MBID search, and genre enrichment
+ * Orchestrates biography, images, MBID search, and genre enrichment
  */
 @Injectable()
 export class ArtistEnrichmentService {
@@ -32,13 +29,12 @@ export class ArtistEnrichmentService {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
-    private readonly cache: MetadataCacheService,
-    private readonly storage: StorageService,
-    private readonly imageDownload: ImageDownloadService,
     private readonly conflictService: MetadataConflictService,
     private readonly mbidSearch: MbidSearchService,
     private readonly genreEnrichment: GenreEnrichmentService,
     private readonly enrichmentLog: EnrichmentLogService,
+    private readonly bioEnrichment: ArtistBioEnrichmentService,
+    private readonly imageEnrichment: ArtistImageEnrichmentService,
   ) {}
 
   /**
@@ -51,11 +47,7 @@ export class ArtistEnrichmentService {
     let imagesUpdated = false;
 
     // Check if any enrichment agents are available
-    const bioAgents = this.agentRegistry.getAgentsFor<IArtistBioRetriever>('IArtistBioRetriever');
-    const imageAgents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
-    const hasEnrichmentAgents = bioAgents.length > 0 || imageAgents.length > 0;
-
-    if (!hasEnrichmentAgents) {
+    if (!this.hasEnrichmentAgents()) {
       this.logger.warn(
         `No enrichment agents available for artist ${artistId}. ` +
         `Configure API keys (Last.fm, Fanart.tv) to enable metadata enrichment.`
@@ -65,13 +57,7 @@ export class ArtistEnrichmentService {
 
     try {
       // Get artist from database
-      const artistResult = await this.drizzle.db
-        .select()
-        .from(artists)
-        .where(eq(artists.id, artistId))
-        .limit(1);
-      const artist = artistResult[0];
-
+      const artist = await this.getArtist(artistId);
       if (!artist) {
         throw new NotFoundError('Artist', artistId);
       }
@@ -79,39 +65,28 @@ export class ArtistEnrichmentService {
       this.logger.log(`Enriching artist: ${artist.name} (ID: ${artistId})`);
 
       // Step 1: Handle MBID search if missing
-      if (!artist.mbzArtistId) {
-        await this.handleMbidSearch(artistId, artist.name, errors);
-        // Refresh artist data after potential MBID update
-        const refreshed = await this.drizzle.db
-          .select()
-          .from(artists)
-          .where(eq(artists.id, artistId))
-          .limit(1);
-        if (refreshed[0]?.mbzArtistId) {
-          artist.mbzArtistId = refreshed[0].mbzArtistId;
-        }
-      }
+      const mbzArtistId = await this.ensureMbid(artistId, artist, errors);
 
       // Step 2: Enrich genres
-      try {
-        const genresAdded = await this.genreEnrichment.enrichArtistGenres(
-          artistId,
-          artist.mbzArtistId || '',
-          artist.name
-        );
-        if (genresAdded > 0) {
-          this.logger.log(`Added ${genresAdded} genres for artist: ${artist.name}`);
-        }
-      } catch (error) {
-        this.logger.warn(`Error enriching genres for "${artist.name}": ${(error as Error).message}`);
-        errors.push(`Genre enrichment failed: ${(error as Error).message}`);
-      }
+      await this.enrichGenres(artistId, mbzArtistId, artist.name, errors);
 
       // Step 3: Enrich biography
-      bioUpdated = await this.enrichBiography(artistId, artist, forceRefresh, startTime, errors);
+      const bioResult = await this.bioEnrichment.enrichBiography(
+        artistId,
+        { ...artist, mbzArtistId },
+        forceRefresh,
+        startTime
+      );
+      bioUpdated = bioResult.updated;
 
       // Step 4: Enrich images
-      imagesUpdated = await this.enrichImages(artistId, artist, forceRefresh, startTime, errors);
+      const imageResult = await this.imageEnrichment.enrichImages(
+        artistId,
+        { ...artist, mbzArtistId },
+        forceRefresh,
+        startTime
+      );
+      imagesUpdated = imageResult.updated;
 
       // Log partial success if errors occurred
       if (errors.length > 0 && (bioUpdated || imagesUpdated)) {
@@ -134,28 +109,55 @@ export class ArtistEnrichmentService {
       this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
       errors.push((error as Error).message);
 
-      // Log the error
-      try {
-        const artistResult = await this.drizzle.db
-          .select({ name: artists.name })
-          .from(artists)
-          .where(eq(artists.id, artistId))
-          .limit(1);
-        await this.enrichmentLog.logError(
-          artistId,
-          'artist',
-          artistResult[0]?.name || 'Unknown',
-          'multiple',
-          'mixed',
-          (error as Error).message,
-          Date.now() - startTime
-        );
-      } catch {
-        // Ignore logging errors
-      }
+      await this.logEnrichmentError(artistId, error as Error, startTime);
 
       return { bioUpdated, imagesUpdated, errors };
     }
+  }
+
+  /**
+   * Check if enrichment agents are available
+   */
+  private hasEnrichmentAgents(): boolean {
+    const bioAgents = this.agentRegistry.getAgentsFor<IArtistBioRetriever>('IArtistBioRetriever');
+    const imageAgents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
+    return bioAgents.length > 0 || imageAgents.length > 0;
+  }
+
+  /**
+   * Get artist from database
+   */
+  private async getArtist(artistId: string): Promise<any | null> {
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(eq(artists.id, artistId))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  /**
+   * Ensure artist has MBID, search if missing
+   */
+  private async ensureMbid(
+    artistId: string,
+    artist: any,
+    errors: string[]
+  ): Promise<string | null> {
+    if (artist.mbzArtistId) {
+      return artist.mbzArtistId;
+    }
+
+    await this.handleMbidSearch(artistId, artist.name, errors);
+
+    // Refresh artist data after potential MBID update
+    const refreshed = await this.drizzle.db
+      .select({ mbzArtistId: artists.mbzArtistId })
+      .from(artists)
+      .where(eq(artists.id, artistId))
+      .limit(1);
+
+    return refreshed[0]?.mbzArtistId || null;
   }
 
   /**
@@ -170,20 +172,8 @@ export class ArtistEnrichmentService {
         const topMatch = mbMatches[0];
 
         if (topMatch.score >= 90) {
-          // Auto-apply high confidence match
-          await this.drizzle.db
-            .update(artists)
-            .set({
-              mbzArtistId: topMatch.mbid,
-              mbidSearchedAt: new Date(),
-              updatedAt: new Date(),
-            })
-            .where(eq(artists.id, artistId));
-          this.logger.log(
-            `Auto-applied MBID for "${artistName}": ${topMatch.mbid} (score: ${topMatch.score})`
-          );
+          await this.autoApplyMbid(artistId, artistName, topMatch);
         } else if (topMatch.score >= 70) {
-          // Create conflict for manual review
           await this.createMbidConflict(artistId, artistName, mbMatches);
           await this.markMbidSearched(artistId);
         } else {
@@ -201,6 +191,27 @@ export class ArtistEnrichmentService {
       errors.push(`MBID search failed: ${(error as Error).message}`);
       await this.markMbidSearched(artistId);
     }
+  }
+
+  /**
+   * Auto-apply high confidence MBID match
+   */
+  private async autoApplyMbid(
+    artistId: string,
+    artistName: string,
+    match: MusicBrainzArtistMatch
+  ): Promise<void> {
+    await this.drizzle.db
+      .update(artists)
+      .set({
+        mbzArtistId: match.mbid,
+        mbidSearchedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(artists.id, artistId));
+    this.logger.log(
+      `Auto-applied MBID for "${artistName}": ${match.mbid} (score: ${match.score})`
+    );
   }
 
   /**
@@ -237,340 +248,27 @@ export class ArtistEnrichmentService {
   }
 
   /**
-   * Enrich artist biography
+   * Enrich artist genres
    */
-  private async enrichBiography(
+  private async enrichGenres(
     artistId: string,
-    artist: any,
-    forceRefresh: boolean,
-    startTime: number,
-    errors: string[]
-  ): Promise<boolean> {
-    const bio = await this.getArtistBio(artist.mbzArtistId, artist.name, forceRefresh, artistId);
-    if (!bio) return false;
-
-    const hasExistingBio = !!artist.biography;
-    const isMusicBrainzSource = bio.source === 'musicbrainz';
-
-    if (!hasExistingBio || forceRefresh) {
-      await this.drizzle.db
-        .update(artists)
-        .set({
-          biography: bio.content,
-          biographySource: bio.source,
-          updatedAt: new Date(),
-        })
-        .where(eq(artists.id, artistId));
-
-      await this.enrichmentLog.logSuccess(
-        artistId,
-        'artist',
-        artist.name,
-        bio.source,
-        'biography',
-        ['biography', 'biographySource'],
-        Date.now() - startTime
-      );
-
-      this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
-      return true;
-    } else {
-      // Create conflict if content is different
-      const currentBio = artist.biography || '';
-      const suggestedBio = bio.content || '';
-
-      if (currentBio.trim() !== suggestedBio.trim()) {
-        await this.conflictService.createConflict({
-          entityId: artistId,
-          entityType: 'artist',
-          field: 'biography',
-          currentValue: currentBio.substring(0, 200) + '...',
-          suggestedValue: suggestedBio.substring(0, 200) + '...',
-          source: bio.source as any,
-          priority: isMusicBrainzSource ? ConflictPriority.HIGH : ConflictPriority.MEDIUM,
-          metadata: {
-            artistName: artist.name,
-            currentSource: artist.biographySource,
-            fullBioLength: bio.content.length,
-          },
-        });
-        this.logger.log(
-          `Created conflict for artist "${artist.name}": existing bio vs ${bio.source} suggestion`
-        );
-      }
-      return false;
-    }
-  }
-
-  /**
-   * Enrich artist images
-   */
-  private async enrichImages(
-    artistId: string,
-    artist: any,
-    forceRefresh: boolean,
-    startTime: number,
-    errors: string[]
-  ): Promise<boolean> {
-    const needsImages =
-      forceRefresh ||
-      !artist.externalProfilePath ||
-      !artist.externalBackgroundPath ||
-      !artist.externalBannerPath ||
-      !artist.externalLogoPath;
-
-    if (!needsImages) return false;
-
-    const images = await this.getArtistImages(artist.mbzArtistId, artist.name, forceRefresh, artistId);
-    if (!images) return false;
-
-    const localPaths = await this.downloadArtistImages(artistId, images);
-
-    const updateData: any = {};
-    const now = new Date();
-
-    if (forceRefresh || !artist.externalProfilePath) {
-      if (localPaths.profileUrl) {
-        updateData.externalProfilePath = localPaths.profileUrl;
-        updateData.externalProfileSource = images.source;
-        updateData.externalProfileUpdatedAt = now;
-      }
-    }
-    if (forceRefresh || !artist.externalBackgroundPath) {
-      if (localPaths.backgroundUrl) {
-        updateData.externalBackgroundPath = localPaths.backgroundUrl;
-        updateData.externalBackgroundSource = images.source;
-        updateData.externalBackgroundUpdatedAt = now;
-      }
-    }
-    if (forceRefresh || !artist.externalBannerPath) {
-      if (localPaths.bannerUrl) {
-        updateData.externalBannerPath = localPaths.bannerUrl;
-        updateData.externalBannerSource = images.source;
-        updateData.externalBannerUpdatedAt = now;
-      }
-    }
-    if (forceRefresh || !artist.externalLogoPath) {
-      if (localPaths.logoUrl) {
-        updateData.externalLogoPath = localPaths.logoUrl;
-        updateData.externalLogoSource = images.source;
-        updateData.externalLogoUpdatedAt = now;
-      }
-    }
-
-    updateData.metadataStorageSize = localPaths.totalSize;
-
-    if (Object.keys(updateData).length > 0) {
-      await this.drizzle.db
-        .update(artists)
-        .set({ ...updateData, updatedAt: new Date() })
-        .where(eq(artists.id, artistId));
-
-      await this.enrichmentLog.logSuccess(
-        artistId,
-        'artist',
-        artist.name,
-        images.source,
-        'images',
-        Object.keys(updateData).filter(key => key.includes('Path') || key === 'metadataStorageSize'),
-        Date.now() - startTime,
-        `/api/images/artists/${artistId}/profile`
-      );
-
-      this.logger.log(`Updated images for: ${artist.name} (${localPaths.totalSize} bytes)`);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Get artist biography using agent chain
-   */
-  private async getArtistBio(
     mbzArtistId: string | null,
-    name: string,
-    forceRefresh: boolean,
-    artistId?: string
-  ): Promise<ArtistBio | null> {
-    // Check cache first
-    if (!forceRefresh && artistId) {
-      const cached = await this.cache.get('artist', artistId, 'bio');
-      if (cached) {
-        return new ArtistBio(cached.content, cached.summary, cached.url, cached.source);
+    artistName: string,
+    errors: string[]
+  ): Promise<void> {
+    try {
+      const genresAdded = await this.genreEnrichment.enrichArtistGenres(
+        artistId,
+        mbzArtistId || '',
+        artistName
+      );
+      if (genresAdded > 0) {
+        this.logger.log(`Added ${genresAdded} genres for artist: ${artistName}`);
       }
+    } catch (error) {
+      this.logger.warn(`Error enriching genres for "${artistName}": ${(error as Error).message}`);
+      errors.push(`Genre enrichment failed: ${(error as Error).message}`);
     }
-
-    const agents = this.agentRegistry.getAgentsFor<IArtistBioRetriever>('IArtistBioRetriever');
-
-    for (const agent of agents) {
-      try {
-        this.logger.debug(`Trying agent "${agent.name}" for bio: ${name}`);
-        const bio = await agent.getArtistBio(mbzArtistId, name);
-
-        if (bio && bio.hasContent()) {
-          if (artistId) {
-            await this.cache.set('artist', artistId, 'bio', {
-              content: bio.content,
-              summary: bio.summary,
-              url: bio.url,
-              source: bio.source,
-            });
-          }
-          return bio;
-        }
-      } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for bio ${name}: ${(error as Error).message}`);
-      }
-    }
-
-    this.logger.debug(`No biography found for: ${name}`);
-    return null;
-  }
-
-  /**
-   * Get artist images using agent chain
-   */
-  private async getArtistImages(
-    mbzArtistId: string | null,
-    name: string,
-    forceRefresh: boolean,
-    artistId?: string
-  ): Promise<ArtistImages | null> {
-    // Check cache first
-    if (!forceRefresh && artistId) {
-      const cached = await this.cache.get('artist', artistId, 'images');
-      if (cached) {
-        return new ArtistImages(
-          cached.smallUrl,
-          cached.mediumUrl,
-          cached.largeUrl,
-          cached.backgroundUrl,
-          cached.bannerUrl,
-          cached.logoUrl,
-          cached.source
-        );
-      }
-    }
-
-    const agents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>('IArtistImageRetriever');
-    let mergedImages: ArtistImages | null = null;
-
-    for (const agent of agents) {
-      try {
-        this.logger.debug(`Trying agent "${agent.name}" for images: ${name}`);
-        const images = await agent.getArtistImages(mbzArtistId, name);
-
-        if (images) {
-          if (!mergedImages) {
-            mergedImages = images;
-          } else {
-            mergedImages = new ArtistImages(
-              mergedImages.smallUrl || images.smallUrl,
-              mergedImages.mediumUrl || images.mediumUrl,
-              mergedImages.largeUrl || images.largeUrl,
-              mergedImages.backgroundUrl || images.backgroundUrl,
-              mergedImages.bannerUrl || images.bannerUrl,
-              mergedImages.logoUrl || images.logoUrl,
-              `${mergedImages.source},${images.source}`
-            );
-          }
-
-          if (mergedImages.hasHeroAssets() && mergedImages.getBestProfileUrl()) {
-            break;
-          }
-        }
-      } catch (error) {
-        this.logger.warn(`Agent "${agent.name}" failed for images ${name}: ${(error as Error).message}`);
-      }
-    }
-
-    if (mergedImages && artistId) {
-      await this.cache.set('artist', artistId, 'images', {
-        smallUrl: mergedImages.smallUrl,
-        mediumUrl: mergedImages.mediumUrl,
-        largeUrl: mergedImages.largeUrl,
-        backgroundUrl: mergedImages.backgroundUrl,
-        bannerUrl: mergedImages.bannerUrl,
-        logoUrl: mergedImages.logoUrl,
-        source: mergedImages.source,
-      });
-    }
-
-    return mergedImages;
-  }
-
-  /**
-   * Download artist images and save locally
-   */
-  private async downloadArtistImages(
-    artistId: string,
-    images: ArtistImages
-  ): Promise<{
-    profileUrl: string | null;
-    backgroundUrl: string | null;
-    bannerUrl: string | null;
-    logoUrl: string | null;
-    totalSize: number;
-  }> {
-    const basePath = await this.storage.getArtistMetadataPath(artistId);
-    let totalSize = 0;
-
-    const result = {
-      profileUrl: null as string | null,
-      backgroundUrl: null as string | null,
-      bannerUrl: null as string | null,
-      logoUrl: null as string | null,
-      totalSize: 0,
-    };
-
-    const profileUrl = images.largeUrl || images.mediumUrl || images.smallUrl;
-    if (profileUrl) {
-      try {
-        const filePath = path.join(basePath, 'profile.jpg');
-        await this.imageDownload.downloadAndSave(profileUrl, filePath);
-        result.profileUrl = 'profile.jpg';
-        totalSize += await this.storage.getFileSize(filePath);
-      } catch (error) {
-        this.logger.warn(`Failed to download profile image: ${(error as Error).message}`);
-      }
-    }
-
-    if (images.backgroundUrl) {
-      try {
-        const filePath = path.join(basePath, 'background.jpg');
-        await this.imageDownload.downloadAndSave(images.backgroundUrl, filePath);
-        result.backgroundUrl = 'background.jpg';
-        totalSize += await this.storage.getFileSize(filePath);
-      } catch (error) {
-        this.logger.warn(`Failed to download background image: ${(error as Error).message}`);
-      }
-    }
-
-    if (images.bannerUrl) {
-      try {
-        const filePath = path.join(basePath, 'banner.png');
-        await this.imageDownload.downloadAndSave(images.bannerUrl, filePath);
-        result.bannerUrl = 'banner.png';
-        totalSize += await this.storage.getFileSize(filePath);
-      } catch (error) {
-        this.logger.warn(`Failed to download banner image: ${(error as Error).message}`);
-      }
-    }
-
-    if (images.logoUrl) {
-      try {
-        const filePath = path.join(basePath, 'logo.png');
-        await this.imageDownload.downloadAndSave(images.logoUrl, filePath);
-        result.logoUrl = 'logo.png';
-        totalSize += await this.storage.getFileSize(filePath);
-      } catch (error) {
-        this.logger.warn(`Failed to download logo image: ${(error as Error).message}`);
-      }
-    }
-
-    result.totalSize = totalSize;
-    return result;
   }
 
   /**
@@ -599,6 +297,30 @@ export class ArtistEnrichmentService {
         .set({ mbidSearchedAt: new Date(), updatedAt: new Date() })
         .where(eq(artists.id, artistId));
       this.logger.debug(`Marked artist "${artistName}" as processed (mbidSearchedAt)`);
+    }
+  }
+
+  /**
+   * Log enrichment error
+   */
+  private async logEnrichmentError(artistId: string, error: Error, startTime: number): Promise<void> {
+    try {
+      const artistResult = await this.drizzle.db
+        .select({ name: artists.name })
+        .from(artists)
+        .where(eq(artists.id, artistId))
+        .limit(1);
+      await this.enrichmentLog.logError(
+        artistId,
+        'artist',
+        artistResult[0]?.name || 'Unknown',
+        'multiple',
+        'mixed',
+        error.message,
+        Date.now() - startTime
+      );
+    } catch {
+      // Ignore logging errors
     }
   }
 }
