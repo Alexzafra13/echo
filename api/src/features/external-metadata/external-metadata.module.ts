@@ -24,6 +24,10 @@ import {
   ConflictEnrichmentService,
 } from './infrastructure/services/conflicts';
 import { MbidAutoSearchService } from './infrastructure/services/mbid-auto-search.service';
+import {
+  MbidSearchExecutorService,
+  MbidConfidenceStrategyService,
+} from './infrastructure/services/mbid-search';
 import { MaintenanceSchedulerService } from './infrastructure/services/maintenance-scheduler.service';
 import { EnrichmentQueueService } from './infrastructure/services/enrichment-queue.service';
 
@@ -120,6 +124,8 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     ConflictChangeApplierService,
     ConflictEnrichmentService,
     MbidAutoSearchService,
+    MbidSearchExecutorService,
+    MbidConfidenceStrategyService,
     MaintenanceSchedulerService,
     EnrichmentQueueService,
 
