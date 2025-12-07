@@ -12,14 +12,14 @@ describe('CreatePlaylistUseCase', () => {
     return Playlist.fromPrimitives({
       id: 'playlist-123',
       name: 'Test Playlist',
-      description: null,
-      coverImageUrl: null,
+      description: undefined,
+      coverImageUrl: undefined,
       duration: 0,
       size: Number(0),
       ownerId: 'user-123',
       public: false,
       songCount: 0,
-      path: null,
+      path: undefined,
       sync: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -219,9 +219,9 @@ describe('CreatePlaylistUseCase', () => {
       const result = await useCase.execute(input);
 
       // Assert
-      expect(result.description).toBeNull();
-      expect(result.coverImageUrl).toBeNull();
-      expect(result.path).toBeNull();
+      expect(result.description).toBeUndefined();
+      expect(result.coverImageUrl).toBeUndefined();
+      expect(result.path).toBeUndefined();
     });
 
     it('should initialize playlist with zero tracks and duration', async () => {

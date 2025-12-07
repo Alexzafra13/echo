@@ -11,6 +11,14 @@ import { PermanentlyDeleteUserUseCase } from '../domain/use-cases/permanently-de
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
+import { JwtUser } from '@shared/types/request.types';
+
+// Mock current admin user
+const mockCurrentUser: JwtUser = {
+  id: 'admin-999',
+  username: 'adminuser',
+  isAdmin: true,
+};
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -89,13 +97,14 @@ describe('AdminController', () => {
       mockCreateUserUseCase.execute.mockResolvedValue(useCaseResponse);
 
       // Act
-      const result = await controller.createUser(dto);
+      const result = await controller.createUser(dto, mockCurrentUser);
 
       // Assert
       expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith({
         username: 'newuser',
         name: 'New User',
         isAdmin: false,
+        adminId: mockCurrentUser.id,
       });
       expect(result).toEqual(useCaseResponse);
       expect(result.temporaryPassword).toBe('123456');
@@ -122,7 +131,7 @@ describe('AdminController', () => {
       mockCreateUserUseCase.execute.mockResolvedValue(useCaseResponse);
 
       // Act
-      const result = await controller.createUser(dto);
+      const result = await controller.createUser(dto, mockCurrentUser);
 
       // Assert
       expect(result.user.isAdmin).toBe(true);
@@ -140,7 +149,7 @@ describe('AdminController', () => {
       );
 
       // Act & Assert
-      await expect(controller.createUser(dto)).rejects.toThrow(
+      await expect(controller.createUser(dto, mockCurrentUser)).rejects.toThrow(
         'Username already exists'
       );
     });
@@ -396,11 +405,12 @@ describe('AdminController', () => {
       });
 
       // Act
-      await controller.deleteUser(userId);
+      await controller.deleteUser(userId, mockCurrentUser);
 
       // Assert
       expect(mockDeleteUserUseCase.execute).toHaveBeenCalledWith({
         userId,
+        adminId: mockCurrentUser.id,
       });
     });
 
@@ -413,7 +423,7 @@ describe('AdminController', () => {
       );
 
       // Act & Assert
-      await expect(controller.deleteUser(userId)).rejects.toThrow(
+      await expect(controller.deleteUser(userId, mockCurrentUser)).rejects.toThrow(
         'Cannot delete the last admin user'
       );
     });
@@ -427,7 +437,7 @@ describe('AdminController', () => {
       );
 
       // Act & Assert
-      await expect(controller.deleteUser(userId)).rejects.toThrow(
+      await expect(controller.deleteUser(userId, mockCurrentUser)).rejects.toThrow(
         'User not found'
       );
     });
@@ -445,11 +455,12 @@ describe('AdminController', () => {
       mockResetUserPasswordUseCase.execute.mockResolvedValue(useCaseResponse);
 
       // Act
-      const result = await controller.resetUserPassword(userId);
+      const result = await controller.resetUserPassword(userId, mockCurrentUser);
 
       // Assert
       expect(mockResetUserPasswordUseCase.execute).toHaveBeenCalledWith({
         userId,
+        adminId: mockCurrentUser.id,
       });
       expect(result.temporaryPassword).toBe('A7h4Km2p');
       expect(result.temporaryPassword).toMatch(/^[A-Za-z0-9]{8}$/);
@@ -466,7 +477,7 @@ describe('AdminController', () => {
       mockResetUserPasswordUseCase.execute.mockResolvedValue(useCaseResponse);
 
       // Act
-      const result = await controller.resetUserPassword(userId);
+      const result = await controller.resetUserPassword(userId, mockCurrentUser);
 
       // Assert
       expect(result.temporaryPassword).toHaveLength(8);
@@ -482,7 +493,7 @@ describe('AdminController', () => {
       );
 
       // Act & Assert
-      await expect(controller.resetUserPassword(userId)).rejects.toThrow(
+      await expect(controller.resetUserPassword(userId, mockCurrentUser)).rejects.toThrow(
         'User not found'
       );
     });
