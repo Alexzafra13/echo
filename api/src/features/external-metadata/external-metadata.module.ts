@@ -34,6 +34,13 @@ import { ExternalMetadataService } from './application/external-metadata.service
 import { ImageService } from './application/services/image.service';
 import { LocalImageProvider } from './application/services/local-image-provider.service';
 import { ImageSearchOrchestratorService } from './application/services/image-search-orchestrator.service';
+import {
+  MbidSearchService,
+  GenreEnrichmentService,
+  EnrichmentLogService,
+  ArtistEnrichmentService,
+  AlbumEnrichmentService,
+} from './application/services';
 
 // Presentation
 import { ExternalMetadataController } from './presentation/external-metadata.controller';
@@ -105,7 +112,14 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     MusicBrainzAgent,
     WikipediaAgent,
 
-    // Application services
+    // Application services - Enrichment
+    MbidSearchService,
+    GenreEnrichmentService,
+    EnrichmentLogService,
+    ArtistEnrichmentService,
+    AlbumEnrichmentService,
+
+    // Application services - Facade & Images
     ExternalMetadataService,
     ImageService,
     LocalImageProvider,
