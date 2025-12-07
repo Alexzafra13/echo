@@ -4,4 +4,4 @@
  */
 
 export type { Track, TrackAlbum } from '@shared/types/track.types';
-export { formatDuration } from '@shared/types/track.types';
+export { formatDuration } from '@shared/utils/format';
