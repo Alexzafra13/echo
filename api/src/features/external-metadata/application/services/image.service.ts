@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../infrastructure/services/storage.service';
+import { getMimeType } from '@shared/utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createHash } from 'crypto';
@@ -188,7 +189,7 @@ export class ImageService {
         const stats = await fs.stat(localPath);
         const result: ImageResult = {
           filePath: localPath,
-          mimeType: this.getMimeType(localPath),
+          mimeType: getMimeType(path.extname(localPath)),
           size: stats.size,
           lastModified: stats.mtime,
           source: 'local',
@@ -219,7 +220,7 @@ export class ImageService {
         const stats = await fs.stat(fullPath);
         const result: ImageResult = {
           filePath: fullPath,
-          mimeType: this.getMimeType(fullPath),
+          mimeType: getMimeType(path.extname(fullPath)),
           size: stats.size,
           lastModified: stats.mtime,
           source: 'external',
@@ -685,8 +686,8 @@ export class ImageService {
         throw new NotFoundException(`Path ${filePath} is not a file`);
       }
 
-      // Detectar MIME type por extensión
-      const mimeType = this.getMimeType(filePath);
+      // Detectar MIME type por extensión usando utilidad compartida
+      const mimeType = getMimeType(path.extname(filePath));
 
       return {
         filePath,
@@ -702,25 +703,6 @@ export class ImageService {
       }
       throw error;
     }
-  }
-
-  /**
-   * Detecta el MIME type a partir de la extensión del archivo
-   */
-  private getMimeType(filePath: string): string {
-    const ext = path.extname(filePath).toLowerCase();
-
-    const mimeTypes: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.bmp': 'image/bmp',
-      '.svg': 'image/svg+xml',
-    };
-
-    return mimeTypes[ext] || 'application/octet-stream';
   }
 
   /**
