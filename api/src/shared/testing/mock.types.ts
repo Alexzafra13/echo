@@ -1,10 +1,39 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Socket } from 'socket.io';
+import { UserProps } from '@features/auth/domain/entities/user.entity';
 
 /**
  * Mock types for testing - provides type-safe mocks for common interfaces
  */
+
+/**
+ * Creates a complete UserProps object with sensible defaults.
+ * Use this helper to create User entities in tests without specifying all fields.
+ *
+ * @example
+ * const user = User.reconstruct(createMockUserProps({ username: 'john' }));
+ * const admin = User.reconstruct(createMockUserProps({ isAdmin: true }));
+ */
+export const createMockUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'testuser',
+  passwordHash: '$2b$12$hashed',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'dark',
+  language: 'es',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 // Generic mock function type
 export type MockFn<T = unknown> = jest.Mock<T>;

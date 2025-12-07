@@ -1,7 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ListUsersUseCase } from './list-users.use-case';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
+import { createMockUserProps } from '@shared/testing/mock.types';
+
+// Helper para crear mock de usuario
+const createMockUser = (overrides: Partial<UserProps> = {}): User => {
+  return User.reconstruct(createMockUserProps(overrides));
+};
 
 describe('ListUsersUseCase', () => {
   let useCase: ListUsersUseCase;
@@ -31,29 +37,20 @@ describe('ListUsersUseCase', () => {
     it('debería listar usuarios con paginación por defecto', async () => {
       // Arrange
       const mockUsers = [
-        User.reconstruct({
+        createMockUser({
           id: '1',
           username: 'user1',
           name: 'User One',
-          password: 'hashed_password',
-          isAdmin: false,
-          isActive: true,
-          mustChangePassword: false,
           theme: 'light',
-          language: 'es',
           lastLoginAt: new Date('2025-10-20'),
           createdAt: new Date('2025-10-01'),
           updatedAt: new Date('2025-10-01'),
         }),
-        User.reconstruct({
+        createMockUser({
           id: '2',
           username: 'user2',
           name: 'User Two',
-          password: 'hashed_password',
           isAdmin: true,
-          isActive: true,
-          mustChangePassword: false,
-          theme: 'dark',
           language: 'en',
           lastLoginAt: new Date('2025-10-21'),
           createdAt: new Date('2025-10-02'),
@@ -89,17 +86,12 @@ describe('ListUsersUseCase', () => {
     it('debería respetar parámetros de paginación personalizados', async () => {
       // Arrange
       const mockUsers = [
-        User.reconstruct({
+        createMockUser({
           id: '3',
           username: 'user3',
           name: 'User Three',
-          password: 'hashed_password',
-          isAdmin: false,
-          isActive: true,
-          mustChangePassword: false,
           theme: 'light',
-          language: 'es',
-          lastLoginAt: null,
+          lastLoginAt: undefined,
           createdAt: new Date('2025-10-03'),
           updatedAt: new Date('2025-10-03'),
         }),
@@ -133,16 +125,12 @@ describe('ListUsersUseCase', () => {
     it('debería mapear correctamente usuarios sin lastLoginAt', async () => {
       // Arrange
       const mockUsers = [
-        User.reconstruct({
+        createMockUser({
           id: '4',
           username: 'user4',
           name: 'User Four',
-          password: 'hashed_password',
-          isAdmin: false,
-          isActive: true,
           mustChangePassword: true,
           theme: 'light',
-          language: 'es',
           lastLoginAt: undefined,
           createdAt: new Date('2025-10-04'),
           updatedAt: new Date('2025-10-04'),
