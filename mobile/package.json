@@ -1,5 +1,5 @@
 {
-  "name": "@echo/mobile",
+  "name": "echo-mobile",
   "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
@@ -11,19 +11,17 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit",
-    "eas-build-pre-install": "node scripts/sync-shared-types.js && npm install",
-    "sync-types": "node scripts/sync-shared-types.js"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@babel/runtime": "^7.26.0",
-    "expo-dev-client": "~5.0.12",
     "@expo/metro-runtime": "~5.0.4",
     "@react-native-async-storage/async-storage": "2.1.2",
     "axios": "^1.6.7",
     "expo": "~54.0.0",
     "expo-av": "~15.0.2",
     "expo-constants": "~17.0.5",
+    "expo-dev-client": "~5.0.12",
     "expo-image": "~2.0.4",
     "expo-linear-gradient": "~14.0.2",
     "expo-linking": "~7.0.4",
