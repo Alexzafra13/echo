@@ -189,6 +189,27 @@ export class DrizzleAlbumRepository
     );
   }
 
+  async findByArtistName(skip: number, take: number): Promise<Album[]> {
+    const result = await this.drizzle.db
+      .select({
+        album: albums,
+        artistName: artists.name,
+        artistOrderName: artists.orderArtistName,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(artists.orderArtistName, albums.orderAlbumName)
+      .offset(skip)
+      .limit(take);
+
+    return result.map((r) =>
+      AlbumMapper.toDomain({
+        ...r.album,
+        artist: r.artistName ? { name: r.artistName } : undefined,
+      }),
+    );
+  }
+
   async findRecentlyPlayed(userId: string, take: number): Promise<Album[]> {
     const recentAlbumIds = await this.drizzle.db.execute<{
       albumId: string;

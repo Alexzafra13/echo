@@ -71,6 +71,15 @@ export interface IAlbumRepository {
   findAlphabetically(skip: number, take: number): Promise<Album[]>;
 
   /**
+   * Obtiene álbumes ordenados por nombre de artista
+   * Ignora artículos ("The", "A", etc.) y acentos en el nombre del artista
+   * @param skip - Cuántos registros saltar
+   * @param take - Cuántos registros traer
+   * @returns Array de álbumes ordenados por nombre de artista, luego por nombre de álbum
+   */
+  findByArtistName(skip: number, take: number): Promise<Album[]>;
+
+  /**
    * Obtiene álbumes reproducidos recientemente por un usuario
    * @param userId - ID del usuario
    * @param take - Cuántos registros traer

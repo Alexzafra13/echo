@@ -4,6 +4,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetTopPlayedAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from '../../domain/use-cases';
 import { GetAlbumsAlphabeticallyUseCase } from '../../domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
+import { GetAlbumsByArtistUseCase } from '../../domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from '../../domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
 import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
@@ -40,6 +41,7 @@ export class AlbumsController {
     private readonly getAlbumTracksUseCase: GetAlbumTracksUseCase,
     private readonly getAlbumCoverUseCase: GetAlbumCoverUseCase,
     private readonly getAlbumsAlphabeticallyUseCase: GetAlbumsAlphabeticallyUseCase,
+    private readonly getAlbumsByArtistUseCase: GetAlbumsByArtistUseCase,
     private readonly getRecentlyPlayedAlbumsUseCase: GetRecentlyPlayedAlbumsUseCase,
     private readonly getFavoriteAlbumsUseCase: GetFavoriteAlbumsUseCase,
   ) {}
@@ -161,6 +163,62 @@ export class AlbumsController {
     @Query() query: AlbumsPaginationQueryDto,
   ) {
     const result = await this.getAlbumsAlphabeticallyUseCase.execute({
+      page: query.page || 1,
+      limit: query.limit || 20,
+    });
+
+    return {
+      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
+  }
+
+  /**
+   * GET /albums/by-artist
+   * Obtener álbumes ordenados por nombre de artista
+   * Requiere autenticación
+   *
+   * Query params:
+   * - page: número de página (default: 1)
+   * - limit: álbumes por página (default: 20, máximo: 100)
+   */
+  @Get('by-artist')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Obtener álbumes ordenados por artista',
+    description: 'Retorna álbumes ordenados por nombre de artista (ignora artículos como "The", "A", etc. y acentos)'
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número de página (empieza en 1)',
+    example: 1
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Álbumes por página (1-100)',
+    example: 20
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de álbumes ordenados por artista obtenida exitosamente'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado o token inválido'
+  })
+  async getAlbumsByArtist(
+    @Query() query: AlbumsPaginationQueryDto,
+  ) {
+    const result = await this.getAlbumsByArtistUseCase.execute({
       page: query.page || 1,
       limit: query.limit || 20,
     });

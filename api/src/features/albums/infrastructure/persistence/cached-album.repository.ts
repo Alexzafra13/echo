@@ -149,6 +149,14 @@ export class CachedAlbumRepository
   }
 
   /**
+   * Find albums sorted by artist name.
+   * Not cached - fast with database index.
+   */
+  async findByArtistName(skip: number, take: number): Promise<Album[]> {
+    return this.baseRepository.findByArtistName(skip, take);
+  }
+
+  /**
    * Find recently played albums for a user.
    * Not cached - user-specific and changes frequently.
    */

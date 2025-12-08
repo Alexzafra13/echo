@@ -7,6 +7,7 @@ import {
   useRecentAlbums,
   useTopPlayedAlbums,
   useAlbumsAlphabetically,
+  useAlbumsByArtist,
   useAlbumsRecentlyPlayed,
   useAlbumsFavorites,
 } from '../../hooks/useAlbums';
@@ -31,6 +32,7 @@ export default function AlbumsPage() {
   // Fetch data based on selected sort option
   const recentQuery = useRecentAlbums(itemsPerPage);
   const alphabeticalQuery = useAlbumsAlphabetically({ page, limit: itemsPerPage });
+  const byArtistQuery = useAlbumsByArtist({ page, limit: itemsPerPage });
   const recentlyPlayedQuery = useAlbumsRecentlyPlayed(itemsPerPage);
   const topPlayedQuery = useTopPlayedAlbums(itemsPerPage);
   const favoritesQuery = useAlbumsFavorites({ page, limit: itemsPerPage });
@@ -45,6 +47,11 @@ export default function AlbumsPage() {
       activeQuery = alphabeticalQuery;
       allAlbums = alphabeticalQuery.data?.albums || [];
       totalPages = alphabeticalQuery.data?.totalPages || 1;
+      break;
+    case 'artist':
+      activeQuery = byArtistQuery;
+      allAlbums = byArtistQuery.data?.albums || [];
+      totalPages = byArtistQuery.data?.totalPages || 1;
       break;
     case 'recently-played':
       activeQuery = recentlyPlayedQuery;
@@ -144,6 +151,7 @@ export default function AlbumsPage() {
             >
               <option value="recent">Añadidos recientemente</option>
               <option value="alphabetical">Por nombre (A-Z)</option>
+              <option value="artist">Por artista (A-Z)</option>
               <option value="recently-played">Reproducidos recientemente</option>
               <option value="top-played">Los más reproducidos</option>
               <option value="favorites">Mis favoritos</option>
