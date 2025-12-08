@@ -21,3 +21,6 @@ export { GetAlbumTracksUseCase, type GetAlbumTracksInput, type GetAlbumTracksOut
 
 // Obtener cover art de un álbum
 export { GetAlbumCoverUseCase, type GetAlbumCoverInput, type GetAlbumCoverOutput } from './get-album-cover';
+
+// Obtener álbumes ordenados por artista
+export { GetAlbumsByArtistUseCase, type GetAlbumsByArtistInput, type GetAlbumsByArtistOutput } from './get-albums-by-artist/get-albums-by-artist.use-case';

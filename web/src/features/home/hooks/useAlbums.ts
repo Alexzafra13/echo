@@ -96,6 +96,17 @@ export function useAlbumsAlphabetically(params?: { page?: number; limit?: number
 }
 
 /**
+ * Hook to fetch albums sorted by artist name
+ */
+export function useAlbumsByArtist(params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['albums', 'by-artist', params],
+    queryFn: () => albumsService.getByArtist(params),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+}
+
+/**
  * Hook to fetch recently played albums for the authenticated user
  */
 export function useAlbumsRecentlyPlayed(limit?: number) {

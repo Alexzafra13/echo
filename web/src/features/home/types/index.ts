@@ -7,6 +7,7 @@ export type {
   HeroItem,
   AlbumSortOption,
   AlbumsAlphabeticalResponse,
+  AlbumsByArtistResponse,
   AlbumsRecentlyPlayedResponse,
   AlbumsFavoritesResponse,
 } from './album.types';
