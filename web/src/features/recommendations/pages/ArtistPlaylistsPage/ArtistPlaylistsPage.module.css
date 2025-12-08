@@ -365,7 +365,7 @@
   }
 
   .artistPlaylistsPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
   .artistPlaylistsPage__heroTitle {
@@ -373,6 +373,23 @@
   }
 
   .artistPlaylistsPage__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit para mostrar 2+ columnas */
+    gap: 10px;
+  }
+
+  .playlistCard {
+    padding: 0.75rem;
+  }
+
+  .playlistCard__name {
+    font-size: 14px;
+  }
+
+  .playlistCard__description {
+    font-size: 12px;
+  }
+
+  .playlistCard__meta {
+    font-size: 11px;
   }
 }
