@@ -4,6 +4,7 @@ import { TracksModule } from '@features/tracks/tracks.module';
 import { AlbumsController } from './presentation/controller/albums.controller';
 import { GetAlbumUseCase, GetAlbumsUseCase, SearchAlbumsUseCase, GetRecentAlbumsUseCase, GetTopPlayedAlbumsUseCase, GetFeaturedAlbumUseCase, GetAlbumTracksUseCase, GetAlbumCoverUseCase } from './domain/use-cases';
 import { GetAlbumsAlphabeticallyUseCase } from './domain/use-cases/get-albums-alphabetically/get-albums-alphabetically.use-case';
+import { GetAlbumsByArtistUseCase } from './domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from './domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
 import { GetFavoriteAlbumsUseCase } from './domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
 import { DrizzleAlbumRepository } from './infrastructure/persistence/album.repository';
@@ -49,6 +50,7 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
     GetAlbumTracksUseCase,
     GetAlbumCoverUseCase,
     GetAlbumsAlphabeticallyUseCase,
+    GetAlbumsByArtistUseCase,
     GetRecentlyPlayedAlbumsUseCase,
     GetFavoriteAlbumsUseCase,
 

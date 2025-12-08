@@ -79,12 +79,23 @@ export interface HeroAlbumData {
 /**
  * Album sort/filter options
  */
-export type AlbumSortOption = 'recent' | 'alphabetical' | 'recently-played' | 'top-played' | 'favorites';
+export type AlbumSortOption = 'recent' | 'alphabetical' | 'artist' | 'recently-played' | 'top-played' | 'favorites';
 
 /**
  * Response type for alphabetically sorted albums
  */
 export interface AlbumsAlphabeticalResponse {
+  albums: Album[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * Response type for albums sorted by artist
+ */
+export interface AlbumsByArtistResponse {
   albums: Album[];
   total: number;
   page: number;
