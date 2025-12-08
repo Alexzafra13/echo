@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
-import { Play } from 'lucide-react';
+import { Play, Shuffle } from 'lucide-react';
 import { z } from 'zod';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
@@ -95,6 +95,20 @@ export function PlaylistDetailPage() {
     setShuffle(false);
     const tracks = convertToPlayerTracks(playlist);
     playQueue(tracks);
+  };
+
+  const handleShufflePlay = () => {
+    if (!playlist || playlist.tracks.length === 0) return;
+    const tracks = convertToPlayerTracks(playlist);
+    // Enable shuffle mode
+    setShuffle(true);
+    // Shuffle the tracks array using Fisher-Yates algorithm
+    const shuffledTracks = [...tracks];
+    for (let i = shuffledTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+    }
+    playQueue(shuffledTracks, 0);
   };
 
   const handlePlayTrack = (track: HomeTrack) => {
@@ -245,10 +259,17 @@ export function PlaylistDetailPage() {
               variant="primary"
               onClick={handlePlayAll}
               disabled={tracks.length === 0}
-              className={styles.playButton}
             >
               <Play size={20} fill="currentColor" />
-              Reproducir todo
+              Reproducir
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleShufflePlay}
+              disabled={tracks.length === 0}
+            >
+              <Shuffle size={20} />
+              Aleatorio
             </Button>
           </div>
 
