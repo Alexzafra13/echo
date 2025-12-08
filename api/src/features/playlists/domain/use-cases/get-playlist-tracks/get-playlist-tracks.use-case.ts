@@ -42,6 +42,11 @@ export class GetPlaylistTracksUseCase {
       artistName: track.artistName,
       albumName: track.albumName,
       playlistOrder: (track as any).playlistOrder,
+      // Audio normalization data (LUFS/ReplayGain)
+      rgTrackGain: track.rgTrackGain,
+      rgTrackPeak: track.rgTrackPeak,
+      rgAlbumGain: track.rgAlbumGain,
+      rgAlbumPeak: track.rgAlbumPeak,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     }));

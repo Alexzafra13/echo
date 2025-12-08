@@ -129,6 +129,11 @@ export class RecommendationsController {
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
+                // Audio normalization data (LUFS/ReplayGain)
+                rgTrackGain: track.rgTrackGain,
+                rgTrackPeak: track.rgTrackPeak,
+                rgAlbumGain: track.rgAlbumGain,
+                rgAlbumPeak: track.rgAlbumPeak,
               }
             : undefined,
         };
@@ -189,6 +194,11 @@ export class RecommendationsController {
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
+                // Audio normalization data (LUFS/ReplayGain)
+                rgTrackGain: track.rgTrackGain,
+                rgTrackPeak: track.rgTrackPeak,
+                rgAlbumGain: track.rgAlbumGain,
+                rgAlbumPeak: track.rgAlbumPeak,
               }
             : undefined,
         };
@@ -304,6 +314,11 @@ export class RecommendationsController {
         duration: primitives.duration,
         albumId: primitives.albumId,
         artistId: primitives.artistId,
+        // Audio normalization data (LUFS/ReplayGain)
+        rgTrackGain: primitives.rgTrackGain,
+        rgTrackPeak: primitives.rgTrackPeak,
+        rgAlbumGain: primitives.rgAlbumGain,
+        rgAlbumPeak: primitives.rgAlbumPeak,
       };
     });
 
@@ -341,6 +356,11 @@ export class RecommendationsController {
                 duration: track.duration || undefined,
                 albumId: track.albumId || undefined,
                 artistId: track.artistId || undefined,
+                // Audio normalization data (LUFS/ReplayGain)
+                rgTrackGain: track.rgTrackGain,
+                rgTrackPeak: track.rgTrackPeak,
+                rgAlbumGain: track.rgAlbumGain,
+                rgAlbumPeak: track.rgAlbumPeak,
               }
             : undefined,
         };
