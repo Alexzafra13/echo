@@ -362,12 +362,18 @@
   }
 
   .playlistDetailPage__heroActions {
-    gap: 10px;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
   }
 
-  .playlistDetailPage__heroActions button,
-  .playlistDetailPage__heroActions > * {
-    flex-shrink: 0;
+  /* Botones más prominentes en móvil */
+  .playlistDetailPage__heroActions button {
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 6px;
+    flex: 1;
+    max-width: 160px;
   }
 
   .playlistDetailPage__heroActionButton {
@@ -405,7 +411,14 @@
   }
 
   .playlistDetailPage__heroActions {
-    gap: 8px;
+    gap: 10px;
+  }
+
+  /* Botones en móvil pequeño */
+  .playlistDetailPage__heroActions button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 6px;
   }
 
   .playlistDetailPage__heroActionButton,
