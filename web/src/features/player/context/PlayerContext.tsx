@@ -356,6 +356,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Play a queue of tracks starting at index
    */
   const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
+    // Reset shuffle mode when playing a new queue (album, playlist, etc.)
+    queue.setShuffle(false);
     queue.setQueue(tracks, startIndex);
     if (tracks[startIndex]) {
       playTrack(tracks[startIndex], false);
