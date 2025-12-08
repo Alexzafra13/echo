@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Shuffle, Calendar, Users, RefreshCw } from 'lucide-react';
 import { ActionCard } from '../ActionCard';
 import { useShufflePlay } from '@shared/hooks';
+import { useRandomAlbums } from '@features/explore/hooks';
 import styles from './ActionCardsRow.module.css';
 
 export interface ActionCardsRowProps {
@@ -17,6 +19,17 @@ export interface ActionCardsRowProps {
 export function ActionCardsRow({ className }: ActionCardsRowProps) {
   const [, setLocation] = useLocation();
   const { shufflePlay, isLoading: shuffleLoading } = useShufflePlay();
+
+  // Get random albums for background cover decoration
+  const { data: randomAlbumsData } = useRandomAlbums(3);
+
+  // Pick a random album cover for the shuffle button
+  const shuffleCoverUrl = useMemo(() => {
+    const albums = randomAlbumsData?.albums || [];
+    if (albums.length === 0) return undefined;
+    const randomAlbum = albums[Math.floor(Math.random() * albums.length)];
+    return randomAlbum?.id ? `/api/albums/${randomAlbum.id}/cover` : undefined;
+  }, [randomAlbumsData]);
 
   const handleDaily = () => {
     setLocation('/daily');
@@ -38,6 +51,7 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
         onClick={shufflePlay}
         isLoading={shuffleLoading}
         customGradient={['#1a1a2e', '#16213e']}
+        backgroundCoverUrl={shuffleCoverUrl}
       />
 
       {/* Wave Mix - Daily Recommendations */}

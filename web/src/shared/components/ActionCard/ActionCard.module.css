@@ -46,11 +46,42 @@
   cursor: not-allowed;
 }
 
+/* Background cover image with diagonal fade */
+.actionCard__backgroundCover {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+  /* Diagonal gradient mask: from right (visible) to left (transparent) */
+  mask-image: linear-gradient(
+    -60deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.5) 30%,
+    rgba(0, 0, 0, 0.2) 50%,
+    transparent 70%
+  );
+  -webkit-mask-image: linear-gradient(
+    -60deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.5) 30%,
+    rgba(0, 0, 0, 0.2) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
 .actionCard__content {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .actionCard__icon {
