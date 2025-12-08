@@ -171,8 +171,9 @@
 .playlistDetailPage__heroActions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .playlistDetailPage__heroActionButton {
@@ -360,8 +361,24 @@
     font-size: 32px;
   }
 
+  .playlistDetailPage__heroActions {
+    gap: 10px;
+  }
+
+  .playlistDetailPage__heroActions button,
+  .playlistDetailPage__heroActions > * {
+    flex-shrink: 0;
+  }
+
   .playlistDetailPage__heroActionButton {
+    width: 40px;
+    height: 40px;
     border-radius: 20px; /* iOS rounded button */
+  }
+
+  .playlistDetailPage__heroMoreButton {
+    width: 40px;
+    height: 40px;
   }
 
   .playlistDetailPage__trackSection {
@@ -385,6 +402,16 @@
 
   .playlistDetailPage__heroTitle {
     font-size: 28px;
+  }
+
+  .playlistDetailPage__heroActions {
+    gap: 8px;
+  }
+
+  .playlistDetailPage__heroActionButton,
+  .playlistDetailPage__heroMoreButton {
+    width: 36px;
+    height: 36px;
   }
 }
 
