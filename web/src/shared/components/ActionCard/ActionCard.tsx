@@ -22,6 +22,8 @@ export interface ActionCardProps {
   useGradient?: boolean;
   /** Custom gradient colors [from, to] */
   customGradient?: [string, string];
+  /** Background cover image URL (appears faded on the right) */
+  backgroundCoverUrl?: string;
   /** Additional CSS class */
   className?: string;
 }
@@ -41,6 +43,7 @@ export function ActionCard({
   disabled = false,
   useGradient = true,
   customGradient,
+  backgroundCoverUrl,
   className,
 }: ActionCardProps) {
   // Generate gradient on mount
@@ -65,6 +68,13 @@ export function ActionCard({
       disabled={isLoading || disabled}
       style={gradientStyle}
     >
+      {/* Background cover image with diagonal fade */}
+      {backgroundCoverUrl && (
+        <div
+          className={styles.actionCard__backgroundCover}
+          style={{ backgroundImage: `url(${backgroundCoverUrl})` }}
+        />
+      )}
       <div className={styles.actionCard__content}>
         <div className={styles.actionCard__icon}>
           {displayIcon}
