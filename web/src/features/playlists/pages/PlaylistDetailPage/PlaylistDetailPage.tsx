@@ -21,7 +21,7 @@ import styles from './PlaylistDetailPage.module.css';
  */
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { playQueue, currentTrack, isShuffle, toggleShuffle } = usePlayer();
+  const { playQueue, currentTrack, setShuffle } = usePlayer();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
@@ -65,6 +65,8 @@ export default function PlaylistDetailPage() {
   const handlePlayAll = () => {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
+    // Disable shuffle mode for ordered playback
+    setShuffle(false);
     const playerTracks = convertToPlayerTracks(tracks);
     playQueue(playerTracks, 0);
   };
@@ -73,12 +75,9 @@ export default function PlaylistDetailPage() {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
     const playerTracks = convertToPlayerTracks(tracks);
-    // Activate shuffle mode if not already active
-    if (!isShuffle) {
-      toggleShuffle();
-    }
+    // Enable shuffle mode
+    setShuffle(true);
     // Shuffle the tracks array using Fisher-Yates algorithm
-    // This ensures true random order - navigation will advance sequentially through shuffled queue
     const shuffledTracks = [...playerTracks];
     for (let i = shuffledTracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
