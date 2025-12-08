@@ -354,25 +354,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   /**
    * Play a queue of tracks starting at index
-   * If shuffle mode is active, shuffles the tracks before playing
+   * Does NOT auto-shuffle - caller is responsible for shuffle state and track order
    */
   const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
-    let tracksToPlay = tracks;
-    let newStartIndex = startIndex;
-
-    // If shuffle is active, shuffle the tracks (Fisher-Yates algorithm)
-    if (queue.isShuffle && tracks.length > 1) {
-      tracksToPlay = [...tracks];
-      for (let i = tracksToPlay.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [tracksToPlay[i], tracksToPlay[j]] = [tracksToPlay[j], tracksToPlay[i]];
-      }
-      newStartIndex = 0; // Start from beginning of shuffled queue
-    }
-
-    queue.setQueue(tracksToPlay, newStartIndex);
-    if (tracksToPlay[newStartIndex]) {
-      playTrack(tracksToPlay[newStartIndex], false);
+    queue.setQueue(tracks, startIndex);
+    if (tracks[startIndex]) {
+      playTrack(tracks[startIndex], false);
     }
   }, [queue, playTrack]);
 
@@ -607,6 +594,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       seek,
       setVolume,
       toggleShuffle: queue.toggleShuffle,
+      setShuffle: queue.setShuffle,
       toggleRepeat: queue.toggleRepeat,
 
       // Crossfade controls
