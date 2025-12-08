@@ -29,7 +29,7 @@ export default function AlbumPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
-  const { playQueue, currentTrack, isShuffle, toggleShuffle, setShuffle } = usePlayer();
+  const { playQueue, currentTrack, setShuffle } = usePlayer();
 
   // Real-time synchronization via WebSocket for album cover
   useAlbumMetadataSync(id);
