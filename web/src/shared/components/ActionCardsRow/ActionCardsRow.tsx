@@ -4,6 +4,7 @@ import { Shuffle, Calendar, Users, RefreshCw } from 'lucide-react';
 import { ActionCard } from '../ActionCard';
 import { useShufflePlay } from '@shared/hooks';
 import { useRandomAlbums } from '@features/explore/hooks';
+import { useAutoPlaylists } from '@features/home/hooks';
 import styles from './ActionCardsRow.module.css';
 
 export interface ActionCardsRowProps {
@@ -23,6 +24,9 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
   // Get random albums for background cover decoration
   const { data: randomAlbumsData } = useRandomAlbums(3);
 
+  // Get auto playlists for Wave Mix cover decoration
+  const { data: autoPlaylists } = useAutoPlaylists();
+
   // Pick a random album cover for the shuffle button
   const shuffleCoverUrl = useMemo(() => {
     const albums = randomAlbumsData?.albums || [];
@@ -30,6 +34,24 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
     const randomAlbum = albums[Math.floor(Math.random() * albums.length)];
     return randomAlbum?.id ? `/api/albums/${randomAlbum.id}/cover` : undefined;
   }, [randomAlbumsData]);
+
+  // Pick a random album cover from Wave Mix tracks
+  const waveMixCoverUrl = useMemo(() => {
+    if (!autoPlaylists || autoPlaylists.length === 0) return undefined;
+    // Collect unique album IDs from all playlists
+    const albumIds = new Set<string>();
+    for (const playlist of autoPlaylists) {
+      for (const scoredTrack of playlist.tracks || []) {
+        if (scoredTrack.track?.albumId) {
+          albumIds.add(scoredTrack.track.albumId);
+        }
+      }
+    }
+    const albumIdArray = Array.from(albumIds);
+    if (albumIdArray.length === 0) return undefined;
+    const randomAlbumId = albumIdArray[Math.floor(Math.random() * albumIdArray.length)];
+    return `/api/albums/${randomAlbumId}/cover`;
+  }, [autoPlaylists]);
 
   const handleDaily = () => {
     setLocation('/daily');
@@ -60,6 +82,7 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
         title="Wavemix"
         onClick={handleDaily}
         customGradient={['#2d1f3d', '#1a1a2e']}
+        backgroundCoverUrl={waveMixCoverUrl}
       />
 
       {/* Social Features */}
