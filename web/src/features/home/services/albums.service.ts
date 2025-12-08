@@ -4,6 +4,7 @@ import type {
   Album,
   Track,
   AlbumsAlphabeticalResponse,
+  AlbumsByArtistResponse,
   AlbumsRecentlyPlayedResponse,
   AlbumsFavoritesResponse
 } from '../types';
@@ -80,6 +81,16 @@ export const albumsService = {
    */
   getAlphabetically: async (params?: { page?: number; limit?: number }): Promise<AlbumsAlphabeticalResponse> => {
     const { data } = await apiClient.get<AlbumsAlphabeticalResponse>('/albums/alphabetical', {
+      params,
+    });
+    return data;
+  },
+
+  /**
+   * Get albums sorted by artist name
+   */
+  getByArtist: async (params?: { page?: number; limit?: number }): Promise<AlbumsByArtistResponse> => {
+    const { data } = await apiClient.get<AlbumsByArtistResponse>('/albums/by-artist', {
       params,
     });
     return data;
