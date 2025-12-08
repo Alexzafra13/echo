@@ -354,6 +354,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   /**
    * Play a queue of tracks starting at index
+   * Does NOT auto-shuffle - caller is responsible for shuffle state and track order
    */
   const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
     queue.setQueue(tracks, startIndex);
@@ -593,6 +594,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       seek,
       setVolume,
       toggleShuffle: queue.toggleShuffle,
+      setShuffle: queue.setShuffle,
       toggleRepeat: queue.toggleRepeat,
 
       // Crossfade controls

@@ -65,6 +65,7 @@ export interface PlayerContextValue extends PlayerState {
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
   toggleShuffle: () => void;
+  setShuffle: (enabled: boolean) => void;
   toggleRepeat: () => void;
 
   // Crossfade controls

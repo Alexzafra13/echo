@@ -29,7 +29,7 @@ export default function AlbumPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
-  const { playQueue, currentTrack, isShuffle, toggleShuffle } = usePlayer();
+  const { playQueue, currentTrack, isShuffle, toggleShuffle, setShuffle } = usePlayer();
 
   // Real-time synchronization via WebSocket for album cover
   useAlbumMetadataSync(id);
@@ -143,6 +143,8 @@ export default function AlbumPage() {
 
   const handlePlayAll = () => {
     if (!tracks || tracks.length === 0) return;
+    // Disable shuffle mode for ordered playback
+    setShuffle(false);
     const playerTracks = convertToPlayerTracks(tracks);
     playQueue(playerTracks, 0);
   };
@@ -150,10 +152,8 @@ export default function AlbumPage() {
   const handleShufflePlay = () => {
     if (!tracks || tracks.length === 0) return;
     const playerTracks = convertToPlayerTracks(tracks);
-    // Activate shuffle mode if not already active
-    if (!isShuffle) {
-      toggleShuffle();
-    }
+    // Enable shuffle mode
+    setShuffle(true);
     // Shuffle the tracks array using Fisher-Yates algorithm
     // This ensures true random order - navigation will advance sequentially through shuffled queue
     const shuffledTracks = [...playerTracks];
