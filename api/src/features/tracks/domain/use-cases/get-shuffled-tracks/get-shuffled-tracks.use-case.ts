@@ -44,6 +44,11 @@ export class GetShuffledTracksUseCase {
       artistName: track.artistName,
       albumArtistName: track.albumArtistName,
       compilation: track.compilation,
+      // Audio normalization data (LUFS/ReplayGain)
+      rgTrackGain: track.rgTrackGain,
+      rgTrackPeak: track.rgTrackPeak,
+      rgAlbumGain: track.rgAlbumGain,
+      rgAlbumPeak: track.rgAlbumPeak,
       createdAt: track.createdAt,
       updatedAt: track.updatedAt,
     }));
