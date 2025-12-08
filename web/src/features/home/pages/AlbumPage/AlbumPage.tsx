@@ -154,10 +154,14 @@ export default function AlbumPage() {
     if (!isShuffle) {
       toggleShuffle();
     }
-    // Start from a random track - the player's shuffle logic will handle
-    // not repeating tracks until all have been played
-    const randomStartIndex = Math.floor(Math.random() * playerTracks.length);
-    playQueue(playerTracks, randomStartIndex);
+    // Shuffle the tracks array using Fisher-Yates algorithm
+    // This ensures true random order - navigation will advance sequentially through shuffled queue
+    const shuffledTracks = [...playerTracks];
+    for (let i = shuffledTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+    }
+    playQueue(shuffledTracks, 0);
   };
 
   const handleTrackPlay = (track: any) => {
