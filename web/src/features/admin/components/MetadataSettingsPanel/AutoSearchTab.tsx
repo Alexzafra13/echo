@@ -115,19 +115,19 @@ export function AutoSearchTab() {
   return (
     <div className={styles.providersTab}>
       {/* Header */}
-      <div className={styles.section}>
+      <div className={styles.section} style={{ marginBottom: '1.5rem' }}>
         <div className={styles.sectionHeader}>
           <Search size={20} />
           <h3 className={styles.sectionTitle}>Auto-búsqueda de MusicBrainz IDs</h3>
         </div>
-        <p className={styles.sectionDescription}>
+        <p className={styles.sectionDescription} style={{ marginTop: '0.75rem', lineHeight: '1.6' }}>
           Busca automáticamente MusicBrainz IDs durante el escaneo de biblioteca cuando las etiquetas no los contienen.
           Similar a cómo funciona MusicBrainz Picard.
         </p>
       </div>
 
       {/* Enable/Disable Toggle */}
-      <div className={styles.section}>
+      <div className={styles.section} style={{ marginBottom: '1.5rem' }}>
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
             <label className={styles.settingLabel}>
@@ -139,7 +139,7 @@ export function AutoSearchTab() {
               />
               <span>Habilitar auto-búsqueda durante el scan</span>
             </label>
-            <p className={styles.settingDescription}>
+            <p className={styles.settingDescription} style={{ marginTop: '0.5rem', lineHeight: '1.6' }}>
               Cuando está habilitado, el scanner buscará automáticamente MusicBrainz IDs para artistas, álbumes y tracks
               que no los tengan en sus etiquetas ID3.
             </p>
@@ -149,13 +149,13 @@ export function AutoSearchTab() {
 
       {/* Confidence Threshold */}
       {config.enabled && (
-        <div className={styles.section}>
+        <div className={styles.section} style={{ marginBottom: '1.5rem' }}>
           <div className={styles.settingRow}>
             <div className={styles.settingInfo}>
               <label className={styles.settingLabel}>
                 Umbral de confianza para auto-aplicación
               </label>
-              <p className={styles.settingDescription}>
+              <p className={styles.settingDescription} style={{ marginTop: '0.5rem', lineHeight: '1.6' }}>
                 Score mínimo (0-100) para aplicar MBID automáticamente sin confirmación.
               </p>
             </div>
@@ -195,32 +195,38 @@ export function AutoSearchTab() {
             </div>
 
             {/* Threshold explanation */}
-            <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div className={styles.thresholdBox} style={{
                 background: 'rgba(16, 185, 129, 0.08)',
                 border: '1px solid rgba(16, 185, 129, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '200px',
               }}>
                 <span style={{ color: '#10b981', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
                 <span style={{ fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
-                  <strong>Score ≥{config.confidenceThreshold}:</strong> Auto-aplicado automáticamente
+                  <strong>Score ≥{config.confidenceThreshold}:</strong> Auto-aplicado
                 </span>
               </div>
               <div className={styles.thresholdBox} style={{
                 background: 'rgba(251, 191, 36, 0.08)',
                 border: '1px solid rgba(251, 191, 36, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '200px',
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
                 <span style={{ fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
-                  <strong>Score 75-{config.confidenceThreshold - 1}:</strong> Crea conflicto para revisión manual
+                  <strong>Score 75-{config.confidenceThreshold - 1}:</strong> Revisión manual
                 </span>
               </div>
               <div className={styles.thresholdBox} style={{
                 background: 'rgba(107, 114, 128, 0.08)',
                 border: '1px solid rgba(107, 114, 128, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '200px',
               }}>
                 <span style={{ color: '#6b7280', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
                 <span style={{ fontSize: '0.875rem', color: 'var(--color-text-primary)' }}>
-                  <strong>Score &lt;75:</strong> Ignorado (baja confianza)
+                  <strong>Score &lt;75:</strong> Ignorado
                 </span>
               </div>
             </div>
