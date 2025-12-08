@@ -61,7 +61,7 @@ const AutoPlaylistSchema = z.object({
 export function PlaylistDetailPage() {
   const [_match, _params] = useRoute('/wave-mix/:id');
   const [, setLocation] = useLocation();
-  const { playQueue, currentTrack } = usePlayer();
+  const { playQueue, currentTrack, setShuffle } = usePlayer();
   const [playlist, setPlaylist] = useState<AutoPlaylist | null>(null);
 
   // For artist playlists, get artist images for the background
@@ -91,6 +91,8 @@ export function PlaylistDetailPage() {
 
   const handlePlayAll = () => {
     if (!playlist || playlist.tracks.length === 0) return;
+    // Disable shuffle mode for ordered playback
+    setShuffle(false);
     const tracks = convertToPlayerTracks(playlist);
     playQueue(tracks);
   };
