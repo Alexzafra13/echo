@@ -31,14 +31,14 @@ export function ConfirmDialog({
 
         <div className={styles.actions}>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={onCancel}
             disabled={isLoading}
           >
             Cancelar
           </Button>
           <Button
-            variant="primary"
+            variant="secondary"
             onClick={onConfirm}
             disabled={isLoading}
           >
