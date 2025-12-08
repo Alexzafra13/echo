@@ -18,6 +18,11 @@ export interface TrackItem {
   artistName?: string;
   albumName?: string;
   playlistOrder?: number;
+  // Audio normalization data (LUFS/ReplayGain)
+  rgTrackGain?: number;
+  rgTrackPeak?: number;
+  rgAlbumGain?: number;
+  rgAlbumPeak?: number;
   createdAt: Date;
   updatedAt: Date;
 }
