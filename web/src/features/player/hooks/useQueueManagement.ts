@@ -93,18 +93,20 @@ export function useQueueManagement() {
   }, []);
 
   /**
-   * Get the next track index based on shuffle/repeat settings
+   * Get the next track index based on repeat settings
    * Returns -1 if no next track is available
+   *
+   * Note: When shuffle mode is enabled, the queue is already randomized by the backend
+   * using a deterministic seed. We just need to advance sequentially through the
+   * pre-shuffled queue. This avoids double-randomization which would cause tracks
+   * to repeat or be skipped.
    */
   const getNextIndex = useCallback((): number => {
-    const { queue, currentIndex, isShuffle, repeatMode } = state;
+    const { queue, currentIndex, repeatMode } = state;
 
     if (queue.length === 0) return -1;
 
-    if (isShuffle) {
-      return Math.floor(Math.random() * queue.length);
-    }
-
+    // Always advance sequentially - shuffle is handled by queue order, not navigation
     const nextIndex = currentIndex + 1;
     if (nextIndex >= queue.length) {
       if (repeatMode === 'all') {
@@ -166,11 +168,13 @@ export function useQueueManagement() {
 
   /**
    * Check if there's a next track available
+   * Note: In shuffle mode, useShufflePlay handles auto-loading more tracks.
+   * The queue is navigated sequentially regardless of shuffle state.
    */
   const hasNext = useCallback((): boolean => {
     const { queue, currentIndex, repeatMode } = state;
     if (queue.length === 0) return false;
-    if (repeatMode === 'all' || state.isShuffle) return queue.length > 0;
+    if (repeatMode === 'all') return queue.length > 0;
     return currentIndex < queue.length - 1;
   }, [state]);
 
