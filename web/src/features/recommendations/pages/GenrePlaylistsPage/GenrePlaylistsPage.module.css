@@ -386,7 +386,7 @@
   }
 
   .genrePlaylistsPage__grid {
-    grid-template-columns: repeat(2, 1fr); /* Exactamente 2 columnas en móvil pequeño */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit consistente con HomePage */
     gap: 10px;
   }
 
