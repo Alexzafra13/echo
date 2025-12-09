@@ -1,45 +1,20 @@
 import { useEffect, useState, useRef } from 'react';
 import { Activity, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { apiClient } from '@shared/services/api';
 import { useAuth } from '@shared/hooks/useAuth';
+import { useSystemHealthSSE } from '@shared/hooks/useSystemHealthSSE';
 import styles from './SystemHealthIndicator.module.css';
-
-interface SystemHealth {
-  database: 'healthy' | 'degraded' | 'down';
-  redis: 'healthy' | 'degraded' | 'down';
-  scanner: 'idle' | 'running' | 'error';
-  metadataApis: {
-    lastfm: 'healthy' | 'degraded' | 'down';
-    fanart: 'healthy' | 'degraded' | 'down';
-    musicbrainz: 'healthy' | 'degraded' | 'down';
-  };
-  storage: 'healthy' | 'warning' | 'critical';
-}
-
-interface ActiveAlerts {
-  orphanedFiles: number;
-  pendingConflicts: number;
-  storageWarning: boolean;
-  storageDetails?: {
-    currentMB: number;
-    limitMB: number;
-    percentUsed: number;
-  };
-  scanErrors: number;
-}
 
 type OverallStatus = 'healthy' | 'warning' | 'critical';
 
 /**
  * SystemHealthIndicator Component
  * Muestra un indicador de estado del sistema en el header (estilo Navidrome)
+ * Usa SSE para actualizaciones en tiempo real
  */
 export function SystemHealthIndicator() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [, setLocation] = useLocation();
-  const [health, setHealth] = useState<SystemHealth | null>(null);
-  const [alerts, setAlerts] = useState<ActiveAlerts | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,29 +22,8 @@ export function SystemHealthIndicator() {
 
   const isAdmin = user?.isAdmin ?? false;
 
-  const loadHealth = async () => {
-    try {
-      const response = await apiClient.get('/admin/dashboard/health');
-      setHealth(response.data.systemHealth);
-      setAlerts(response.data.activeAlerts);
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error('Error loading system health:', err);
-      }
-      // Si falla, asumir estado degradado
-      setHealth(null);
-    }
-  };
-
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    loadHealth();
-
-    // Poll every 60 seconds
-    const interval = setInterval(loadHealth, 60000);
-    return () => clearInterval(interval);
-  }, [isAdmin]);
+  // Use SSE for real-time health updates
+  const { systemHealth: health, activeAlerts: alerts } = useSystemHealthSSE(token, isAdmin);
 
   // Cerrar tooltip al hacer click fuera
   useEffect(() => {
@@ -77,7 +31,6 @@ export function SystemHealthIndicator() {
 
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        // Trigger closing animation
         setIsClosing(true);
         closeTimeoutRef.current = setTimeout(() => {
           setShowTooltip(false);
@@ -122,7 +75,7 @@ export function SystemHealthIndicator() {
       health.redis === 'degraded' ||
       health.storage === 'warning' ||
       health.scanner === 'running' ||
-      (alerts && (alerts.orphanedFiles > 0 || alerts.pendingConflicts > 0 || alerts.scanErrors > 0))
+      (alerts && alerts.scanErrors > 0)
     ) {
       return 'warning';
     }
@@ -167,14 +120,12 @@ export function SystemHealthIndicator() {
 
   const handleToggleTooltip = () => {
     if (showTooltip) {
-      // Si está abierto, cerrar con animación
       setIsClosing(true);
       closeTimeoutRef.current = setTimeout(() => {
         setShowTooltip(false);
         setIsClosing(false);
       }, 200);
     } else {
-      // Si está cerrado, abrir
       setShowTooltip(true);
     }
   };
@@ -234,30 +185,23 @@ export function SystemHealthIndicator() {
               </span>
             </div>
 
-            {alerts && (alerts.orphanedFiles > 0 || alerts.pendingConflicts > 0 || alerts.storageWarning || alerts.scanErrors > 0) && (
+            {alerts && (alerts.scanErrors > 0 || alerts.missingFiles > 0 || alerts.storageDetails) && (
               <>
                 <div className={styles.tooltipDivider} />
                 <div className={styles.tooltipAlerts}>
-                  {alerts.orphanedFiles > 0 && (
+                  {alerts.storageDetails && (
                     <div className={styles.tooltipAlert}>
-                      • {alerts.orphanedFiles} archivos huérfanos
-                    </div>
-                  )}
-                  {alerts.pendingConflicts > 0 && (
-                    <div className={styles.tooltipAlert}>
-                      • {alerts.pendingConflicts} conflictos pendientes
-                    </div>
-                  )}
-                  {alerts.storageWarning && (
-                    <div className={styles.tooltipAlert}>
-                      • {alerts.storageDetails
-                          ? `Metadata al ${alerts.storageDetails.percentUsed}% (${alerts.storageDetails.currentMB}MB / ${alerts.storageDetails.limitMB}MB)`
-                          : 'Almacenamiento cerca del límite'}
+                      • Metadata al {alerts.storageDetails.percentUsed}% ({alerts.storageDetails.currentMB}MB / {alerts.storageDetails.limitMB}MB)
                     </div>
                   )}
                   {alerts.scanErrors > 0 && (
                     <div className={styles.tooltipAlert}>
                       • {alerts.scanErrors} errores de escaneo
+                    </div>
+                  )}
+                  {alerts.missingFiles > 0 && (
+                    <div className={styles.tooltipAlert}>
+                      • {alerts.missingFiles} archivos desaparecidos
                     </div>
                   )}
                 </div>
