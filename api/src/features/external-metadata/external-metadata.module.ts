@@ -2,8 +2,8 @@ import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 
-// Domain
-// (Interfaces and entities are imported as needed, no providers for them)
+// Domain - Services
+import { MetadataEventsService } from './domain/services/metadata-events.service';
 
 // Infrastructure - Services
 import { AgentRegistryService } from './infrastructure/services/agent-registry.service';
@@ -109,6 +109,9 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     QueueModule, // For BullMQ enrichment queue
   ],
   providers: [
+    // Domain services
+    MetadataEventsService,
+
     // Core services
     AgentRegistryService,
     MetadataCacheService,
@@ -187,6 +190,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     MetadataConflictService,
     MbidAutoSearchService,
     MetadataEnrichmentGateway,
+    MetadataEventsService,
     EnrichmentQueueService,
   ],
 })

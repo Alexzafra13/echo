@@ -7,11 +7,17 @@ import {
   HttpStatus,
   Logger,
   UseGuards,
+  Sse,
+  Req,
 } from '@nestjs/common';
+import { FastifyRequest } from 'fastify';
+import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ExternalMetadataService } from '../application/external-metadata.service';
 import { MetadataEnrichmentGateway } from './metadata-enrichment.gateway';
+import { MetadataEventsService, MetadataEventType } from '../domain/services/metadata-events.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { Public } from '@shared/decorators/public.decorator';
 
 /**
  * External Metadata Controller
@@ -32,7 +38,8 @@ export class ExternalMetadataController {
 
   constructor(
     private readonly metadataService: ExternalMetadataService,
-    private readonly gateway: MetadataEnrichmentGateway
+    private readonly gateway: MetadataEnrichmentGateway,
+    private readonly metadataEventsService: MetadataEventsService,
   ) {}
 
   /**
@@ -201,5 +208,68 @@ export class ExternalMetadataController {
         duration: Date.now() - startTime,
       };
     }
+  }
+
+  // ============================================
+  // SSE: Real-time Metadata Updates
+  // ============================================
+
+  /**
+   * GET /metadata/stream
+   * Server-Sent Events endpoint for real-time metadata updates
+   * Streams updates when artist images or album covers are updated
+   *
+   * Note: EventSource cannot send Authorization headers, so this endpoint
+   * is public. All metadata updates are broadcasted to all connected clients.
+   *
+   * Events:
+   * - artist:images:updated - When artist images are updated
+   * - album:cover:updated - When album cover is updated
+   * - metadata:cache:invalidate - When metadata cache needs refresh
+   * - enrichment:* - Enrichment progress events
+   * - queue:* - Queue status events
+   */
+  @Sse('stream')
+  @Public()
+  @ApiOperation({
+    summary: 'SSE stream for real-time metadata updates',
+    description: 'Subscribe to real-time metadata update events via Server-Sent Events',
+  })
+  streamMetadataUpdates(@Req() request: FastifyRequest): Observable<MessageEvent> {
+    return new Observable((subscriber) => {
+      this.logger.log('Client connected to metadata SSE stream');
+
+      // Subscribe to metadata events
+      const handleEvent = (event: { type: MetadataEventType; data: Record<string, unknown> }) => {
+        subscriber.next({
+          type: event.type,
+          data: event.data,
+        } as MessageEvent);
+      };
+
+      const unsubscribe = this.metadataEventsService.subscribe(handleEvent);
+
+      // Send keepalive every 30 seconds to prevent connection timeout
+      const keepaliveInterval = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: { timestamp: Date.now() },
+        } as MessageEvent);
+      }, 30000);
+
+      // Send initial "connected" event
+      subscriber.next({
+        type: 'connected',
+        data: { timestamp: Date.now() },
+      } as MessageEvent);
+
+      // Cleanup on client disconnect
+      request.raw.on('close', () => {
+        this.logger.log('Client disconnected from metadata SSE stream');
+        unsubscribe();
+        clearInterval(keepaliveInterval);
+        subscriber.complete();
+      });
+    });
   }
 }

@@ -32,6 +32,10 @@ export interface CacheInvalidationEvent {
 /**
  * useMetadataWebSocket
  *
+ * @deprecated This hook is deprecated. Use `useMetadataSSE` instead for better
+ * performance and reduced overhead. SSE is more efficient for unidirectional
+ * (server -> client) real-time updates.
+ *
  * Base hook for connecting to the metadata WebSocket namespace.
  * Automatically connects when user is authenticated and disconnects on unmount.
  *
@@ -39,21 +43,22 @@ export interface CacheInvalidationEvent {
  *
  * @example
  * ```tsx
- * const socket = useMetadataWebSocket();
+ * // DEPRECATED - use useMetadataSSE instead
+ * import { useMetadataSSE } from './useMetadataSSE';
  *
- * useEffect(() => {
- *   if (!socket) return;
- *
- *   const handleUpdate = (data: ArtistImagesUpdatedEvent) => {
- *     console.log('Artist updated:', data);
- *   };
- *
- *   socket.on('artist:images:updated', handleUpdate);
- *   return () => { socket.off('artist:images:updated', handleUpdate); };
- * }, [socket]);
+ * useMetadataSSE({
+ *   onArtistImagesUpdated: (data) => console.log('Artist updated:', data),
+ * });
  * ```
  */
 export function useMetadataWebSocket(): Socket | null {
+  // Deprecation warning in development
+  if (import.meta.env.DEV) {
+    console.warn(
+      '[useMetadataWebSocket] This hook is deprecated. ' +
+      'Use useMetadataSSE instead for better performance.'
+    );
+  }
   const { token, isAuthenticated } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
 

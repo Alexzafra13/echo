@@ -5,12 +5,17 @@ import {
   OnGatewayDisconnect,
   OnGatewayInit,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, Optional } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { MetadataEventsService } from '../domain/services/metadata-events.service';
 
 /**
  * Metadata Enrichment WebSocket Gateway
  * Provides real-time updates during metadata enrichment process
+ *
+ * @deprecated This gateway is being replaced by SSE (Server-Sent Events).
+ * Use GET /metadata/stream for SSE-based real-time updates instead.
+ * This gateway remains for backward compatibility during transition.
  *
  * Events emitted to clients:
  * - enrichment:started - Enrichment process started
@@ -35,8 +40,12 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
 
   private readonly logger = new Logger(MetadataEnrichmentGateway.name);
 
+  constructor(
+    @Optional() private readonly metadataEventsService?: MetadataEventsService,
+  ) {}
+
   afterInit(server: Server) {
-    this.logger.log('🔌 MetadataEnrichmentGateway initialized');
+    this.logger.log('🔌 MetadataEnrichmentGateway initialized (deprecated - use SSE instead)');
   }
 
   handleConnection(client: Socket) {
@@ -56,10 +65,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     entityName: string;
     total: number;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('enrichment:started', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitEnrichmentStarted(data);
     this.logger.debug(`Enrichment started: ${data.entityType} ${data.entityName}`);
   }
 
@@ -75,11 +87,14 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     step: string;
     details?: string;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('enrichment:progress', {
       ...data,
       percentage: Math.round((data.current / data.total) * 100),
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitEnrichmentProgress(data);
     this.logger.debug(
       `Enrichment progress: ${data.entityName} - ${data.step} (${data.current}/${data.total})`
     );
@@ -97,10 +112,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     coverUpdated?: boolean;
     duration: number;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('enrichment:completed', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitEnrichmentCompleted(data);
     this.logger.log(
       `Enrichment completed: ${data.entityName} in ${data.duration}ms ` +
       `(bio: ${data.bioUpdated}, images: ${data.imagesUpdated}, cover: ${data.coverUpdated})`
@@ -116,10 +134,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     entityName: string;
     error: string;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('enrichment:error', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitEnrichmentError(data);
     this.logger.error(`Enrichment error: ${data.entityName} - ${data.error}`);
   }
 
@@ -130,10 +151,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     entityType: 'artist' | 'album';
     total: number;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('batch:enrichment:started', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitBatchEnrichmentStarted(data);
     this.logger.log(`Batch enrichment started: ${data.total} ${data.entityType}s`);
   }
 
@@ -146,11 +170,14 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     total: number;
     currentEntity: string;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('batch:enrichment:progress', {
       ...data,
       percentage: Math.round((data.current / data.total) * 100),
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitBatchEnrichmentProgress(data);
     this.logger.debug(
       `Batch progress: ${data.current}/${data.total} - ${data.currentEntity}`
     );
@@ -166,10 +193,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     failed: number;
     duration: number;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('batch:enrichment:completed', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitBatchEnrichmentCompleted(data);
     this.logger.log(
       `Batch enrichment completed: ${data.successful}/${data.total} successful ` +
       `(${data.failed} failed) in ${data.duration}ms`
@@ -191,14 +221,16 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       timestamp: new Date().toISOString(),
     };
 
-    // Emit to all clients
+    // Emit via WebSocket (deprecated) - to all clients
     this.server.emit('artist:images:updated', payload);
-
     // Emit to specific artist room (if clients are subscribed)
     this.server.to(`artist:${data.artistId}`).emit('artist:images:updated', payload);
 
+    // Emit via SSE service
+    this.metadataEventsService?.emitArtistImagesUpdated(data);
+
     this.logger.log(
-      `Artist images updated: ${data.artistName} (${data.imageType}) - notified via WebSocket`
+      `Artist images updated: ${data.artistName} (${data.imageType}) - notified via WebSocket & SSE`
     );
   }
 
@@ -217,17 +249,18 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       timestamp: new Date().toISOString(),
     };
 
-    // Emit to all clients
+    // Emit via WebSocket (deprecated) - to all clients
     this.server.emit('album:cover:updated', payload);
-
     // Emit to specific album room (if clients are subscribed)
     this.server.to(`album:${data.albumId}`).emit('album:cover:updated', payload);
-
     // Also emit to artist room (album cover affects artist detail page)
     this.server.to(`artist:${data.artistId}`).emit('album:cover:updated', payload);
 
+    // Emit via SSE service
+    this.metadataEventsService?.emitAlbumCoverUpdated(data);
+
     this.logger.log(
-      `Album cover updated: ${data.albumName} - notified via WebSocket`
+      `Album cover updated: ${data.albumName} - notified via WebSocket & SSE`
     );
   }
 
@@ -245,7 +278,11 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       timestamp: new Date().toISOString(),
     };
 
+    // Emit via WebSocket (deprecated)
     this.server.emit('metadata:cache:invalidate', payload);
+
+    // Emit via SSE service
+    this.metadataEventsService?.emitCacheInvalidation(data);
 
     this.logger.debug(
       `Cache invalidation: ${data.entityType}:${data.entityId} - ${data.reason}`
@@ -264,10 +301,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     pendingArtists: number;
     pendingAlbums: number;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('queue:started', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitQueueStarted(data);
     this.logger.log(`Queue started: ${data.totalPending} items pending`);
   }
 
@@ -275,10 +315,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
    * Emit enrichment queue stopped event
    */
   emitQueueStopped(data: { processedInSession: number }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('queue:stopped', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitQueueStopped(data);
     this.logger.log(`Queue stopped: ${data.processedInSession} items processed`);
   }
 
@@ -292,10 +335,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     totalPending: number;
     estimatedTimeRemaining: string | null;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('queue:item:completed', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitQueueItemCompleted(data);
     this.logger.debug(`Queue item completed: ${data.entityName}`);
   }
 
@@ -307,10 +353,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     entityName: string;
     error: string;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('queue:item:error', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitQueueItemError(data);
     this.logger.error(`Queue item error: ${data.entityName} - ${data.error}`);
   }
 
@@ -321,10 +370,13 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     processedInSession: number;
     duration: string;
   }) {
+    // Emit via WebSocket (deprecated)
     this.server.emit('queue:completed', {
       ...data,
       timestamp: new Date().toISOString(),
     });
+    // Emit via SSE service
+    this.metadataEventsService?.emitQueueCompleted(data);
     this.logger.log(`Queue completed: ${data.processedInSession} items in ${data.duration}`);
   }
 }
