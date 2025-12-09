@@ -290,14 +290,42 @@ export class StreamingController implements OnModuleDestroy {
 
     const { filePath, fileName, fileSize, mimeType } = metadata;
 
-    // 2. Headers para descarga
-    res.header('Content-Type', mimeType);
-    res.header('Content-Length', fileSize.toString());
-    res.header('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.header('Cache-Control', 'public, max-age=31536000');
+    // 2. Encode filename for Content-Disposition (handle UTF-8 characters)
+    const encodedFileName = encodeURIComponent(fileName).replace(/['()]/g, escape);
 
-    // 3. Stream del archivo
+    // 3. Headers para descarga usando res.raw.writeHead (requerido para pipe)
+    res.raw.writeHead(HttpStatus.OK, {
+      'Content-Type': mimeType,
+      'Content-Length': fileSize.toString(),
+      'Content-Disposition': `attachment; filename="${fileName}"; filename*=UTF-8''${encodedFileName}`,
+      'Cache-Control': 'public, max-age=31536000',
+    });
+
+    // 4. Stream del archivo
     const stream = fs.createReadStream(filePath);
+
+    // Track stream for cleanup
+    this.activeStreams.add(stream);
+
+    // Cleanup on finish/close/error
+    const cleanup = () => {
+      this.activeStreams.delete(stream);
+    };
+
+    stream.on('error', (error) => {
+      cleanup();
+      this.logger.error(
+        { error: error instanceof Error ? error.message : error, trackId },
+        'Error reading file (download)'
+      );
+      if (!res.raw.destroyed) {
+        res.raw.destroy();
+      }
+    });
+
+    stream.on('close', cleanup);
+    stream.on('end', cleanup);
+
     stream.pipe(res.raw);
   }
 }
