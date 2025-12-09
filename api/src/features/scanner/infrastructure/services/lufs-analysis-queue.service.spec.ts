@@ -4,7 +4,7 @@ import { LufsAnalysisQueueService, LufsQueueStats } from './lufs-analysis-queue.
 import { LufsAnalyzerService, LufsAnalysisResult } from './lufs-analyzer.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
-import { ScannerGateway } from '../gateways/scanner.gateway';
+import { ScannerEventsService } from '../../domain/services/scanner-events.service';
 import { getLoggerToken } from 'nestjs-pino';
 
 describe('LufsAnalysisQueueService', () => {
@@ -12,7 +12,7 @@ describe('LufsAnalysisQueueService', () => {
   let mockDrizzle: any;
   let mockBullmq: any;
   let mockLufsAnalyzer: any;
-  let mockScannerGateway: any;
+  let mockScannerEventsService: any;
   let mockConfigService: any;
   let mockLogger: any;
 
@@ -68,8 +68,8 @@ describe('LufsAnalysisQueueService', () => {
       } as LufsAnalysisResult),
     };
 
-    // Mock scanner gateway
-    mockScannerGateway = {
+    // Mock scanner events service
+    mockScannerEventsService = {
       emitLufsProgress: jest.fn(),
     };
 
@@ -94,8 +94,8 @@ describe('LufsAnalysisQueueService', () => {
           useValue: mockLufsAnalyzer,
         },
         {
-          provide: ScannerGateway,
-          useValue: mockScannerGateway,
+          provide: ScannerEventsService,
+          useValue: mockScannerEventsService,
         },
         {
           provide: ConfigService,
@@ -200,7 +200,7 @@ describe('LufsAnalysisQueueService', () => {
       expect(mockBullmq.addJob).toHaveBeenCalledTimes(3);
     });
 
-    it('should emit initial progress via WebSocket', async () => {
+    it('should emit initial progress via SSE', async () => {
       // Arrange
       const mockSelectResult = {
         from: jest.fn().mockReturnThis(),
@@ -212,7 +212,7 @@ describe('LufsAnalysisQueueService', () => {
       await service.startLufsAnalysisQueue();
 
       // Assert
-      expect(mockScannerGateway.emitLufsProgress).toHaveBeenCalledWith(
+      expect(mockScannerEventsService.emitLufsProgress).toHaveBeenCalledWith(
         expect.objectContaining({
           isRunning: true,
           pendingTracks: expect.any(Number),
@@ -420,7 +420,7 @@ describe('LufsAnalysisQueueService', () => {
       expect(mockDrizzle.db.update).toHaveBeenCalled();
     });
 
-    it('should emit WebSocket progress periodically', async () => {
+    it('should emit SSE progress periodically', async () => {
       // Arrange
       const mockUpdateResult = {
         set: jest.fn().mockReturnThis(),
@@ -440,7 +440,7 @@ describe('LufsAnalysisQueueService', () => {
       await jobProcessor(mockJob);
 
       // Assert - First job should emit progress
-      expect(mockScannerGateway.emitLufsProgress).toHaveBeenCalled();
+      expect(mockScannerEventsService.emitLufsProgress).toHaveBeenCalled();
     });
   });
 
@@ -519,7 +519,7 @@ describe('LufsAnalysisQueueService', () => {
           { provide: DrizzleService, useValue: mockDrizzle },
           { provide: BullmqService, useValue: mockBullmq },
           { provide: LufsAnalyzerService, useValue: mockLufsAnalyzer },
-          { provide: ScannerGateway, useValue: mockScannerGateway },
+          { provide: ScannerGateway, useValue: mockScannerEventsService },
           { provide: ConfigService, useValue: mockConfigService },
           {
             provide: getLoggerToken(LufsAnalysisQueueService.name),
