@@ -56,8 +56,8 @@ COPY api/package.json ./api/
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm --filter=echo-api deploy --prod --legacy /prod
 
-# Copy drizzle config for runtime migrations
-COPY api/drizzle.config.ts /prod/drizzle.config.ts
+# Copy drizzle config (JS version for production - TS doesn't work without tsx)
+COPY api/drizzle.config.js /prod/drizzle.config.js
 
 # ----------------------------------------
 # Stage 3: Minimal Production Runtime
@@ -93,8 +93,8 @@ WORKDIR /app
 # Copy production node_modules from deps stage
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
-# Copy Drizzle config, schema and migrations for runtime
-COPY --from=deps --chown=echoapp:nodejs /prod/drizzle.config.ts ./drizzle.config.ts
+# Copy Drizzle config (JS), schema and migrations for runtime
+COPY --from=deps --chown=echoapp:nodejs /prod/drizzle.config.js ./drizzle.config.js
 COPY --from=builder --chown=echoapp:nodejs /build/api/src/infrastructure/database/schema ./src/infrastructure/database/schema
 COPY --from=builder --chown=echoapp:nodejs /build/api/drizzle ./drizzle
 
