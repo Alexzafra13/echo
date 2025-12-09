@@ -86,10 +86,12 @@ echo "🔄 Running database migrations..."
 # Use drizzle-kit migrate to apply migration files
 # This is safer for production as it applies versioned migrations
 # and maintains a history of applied changes
-if npx drizzle-kit migrate --config=drizzle.config.ts; then
+# Note: Uses .js config because tsx/ts-node aren't available in production
+if npx drizzle-kit migrate --config=drizzle.config.js 2>&1; then
   echo "✅ Database migrations applied!"
 else
-  echo "⚠️  Migration failed, but continuing..."
+  echo "❌ Migration failed! Check database connection and schema."
+  echo "   The application will still start, but may not work correctly."
 fi
 
 # ============================================
