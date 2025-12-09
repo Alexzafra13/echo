@@ -97,6 +97,10 @@ export class TrackResponseDto {
   @Expose()
   rgAlbumPeak?: number;
 
+  @ApiProperty({ example: false, description: 'Whether the file is missing from disk' })
+  @Expose()
+  isMissing!: boolean;
+
   @ApiProperty()
   @Expose()
   createdAt!: Date;
@@ -134,6 +138,8 @@ export class TrackResponseDto {
     dto.rgTrackPeak = data.rgTrackPeak;
     dto.rgAlbumGain = data.rgAlbumGain;
     dto.rgAlbumPeak = data.rgAlbumPeak;
+    // Missing file status
+    dto.isMissing = data.missingAt !== undefined && data.missingAt !== null;
     dto.createdAt = data.createdAt;
     dto.updatedAt = data.updatedAt;
     return dto;
