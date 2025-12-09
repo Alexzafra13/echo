@@ -27,8 +27,7 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      // Note: WebSocket connections go directly to backend (http://localhost:3000)
-      // via websocket.service.ts to avoid Vite proxy issues with Socket.IO
+      // Note: SSE connections use the /api proxy above (e.g., /api/scanner/stream)
     },
   },
 });

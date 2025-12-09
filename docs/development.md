@@ -111,7 +111,7 @@ echo/
 - **Estado:** Zustand
 - **Data fetching:** TanStack Query
 - **Rutas:** Wouter
-- **WebSocket:** Socket.io
+- **Realtime:** SSE (EventSource nativo)
 
 ## Producción local
 
