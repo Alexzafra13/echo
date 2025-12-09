@@ -68,10 +68,10 @@ export class SystemHealthEventsService implements OnModuleInit, OnModuleDestroy 
 
   private async checkHealth() {
     try {
-      const storageBreakdown = await this.storageBreakdownService.calculate();
+      const storageBreakdown = await this.storageBreakdownService.get();
       const [systemHealth, activeAlerts] = await Promise.all([
         this.systemHealthService.check(storageBreakdown),
-        this.alertsService.getActiveAlerts(),
+        this.alertsService.get(storageBreakdown),
       ]);
 
       const changedFields = this.detectChanges(systemHealth, activeAlerts);
@@ -155,10 +155,10 @@ export class SystemHealthEventsService implements OnModuleInit, OnModuleDestroy 
    * Get current health status (for initial SSE connection)
    */
   async getCurrentHealth(): Promise<{ systemHealth: SystemHealth; activeAlerts: ActiveAlerts }> {
-    const storageBreakdown = await this.storageBreakdownService.calculate();
+    const storageBreakdown = await this.storageBreakdownService.get();
     const [systemHealth, activeAlerts] = await Promise.all([
       this.systemHealthService.check(storageBreakdown),
-      this.alertsService.getActiveAlerts(),
+      this.alertsService.get(storageBreakdown),
     ]);
     return { systemHealth, activeAlerts };
   }
