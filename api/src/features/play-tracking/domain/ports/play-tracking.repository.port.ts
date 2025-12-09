@@ -32,6 +32,9 @@ export interface IPlayTrackingRepository {
   getUserTopAlbums(userId: string, limit?: number, days?: number): Promise<{ albumId: string; playCount: number }[]>;
   getUserTopArtists(userId: string, limit?: number, days?: number): Promise<{ artistId: string; playCount: number }[]>;
 
+  // Get play count for a specific item
+  getItemPlayCount(userId: string, itemId: string, itemType: 'track' | 'album' | 'artist'): Promise<{ playCount: number; lastPlayedAt: Date | null } | null>;
+
   // Get recently played
   getRecentlyPlayed(userId: string, limit?: number): Promise<string[]>; // Returns track IDs
 

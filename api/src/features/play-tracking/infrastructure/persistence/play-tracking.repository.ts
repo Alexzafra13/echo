@@ -390,6 +390,36 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     }));
   }
 
+  async getItemPlayCount(
+    userId: string,
+    itemId: string,
+    itemType: 'track' | 'album' | 'artist',
+  ): Promise<{ playCount: number; lastPlayedAt: Date | null } | null> {
+    const result = await this.drizzle.db
+      .select({
+        playCount: userPlayStats.playCount,
+        lastPlayedAt: userPlayStats.lastPlayedAt,
+      })
+      .from(userPlayStats)
+      .where(
+        and(
+          eq(userPlayStats.userId, userId),
+          eq(userPlayStats.itemId, itemId),
+          eq(userPlayStats.itemType, itemType),
+        ),
+      )
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return {
+      playCount: Number(result[0].playCount),
+      lastPlayedAt: result[0].lastPlayedAt,
+    };
+  }
+
   async getRecentlyPlayed(userId: string, limit: number = 20): Promise<string[]> {
     const history = await this.drizzle.db.execute<{ trackId: string }>(sql`
       SELECT DISTINCT ON (track_id) track_id as "trackId"
