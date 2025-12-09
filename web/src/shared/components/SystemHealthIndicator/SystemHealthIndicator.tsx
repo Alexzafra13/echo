@@ -25,11 +25,11 @@ export function SystemHealthIndicator() {
   // Use SSE for real-time health updates
   const { systemHealth: health, activeAlerts: alerts } = useSystemHealthSSE(token, isAdmin);
 
-  // Cerrar tooltip al hacer click fuera
+  // Cerrar tooltip al hacer click/tap fuera
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !showTooltip) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsClosing(true);
         closeTimeoutRef.current = setTimeout(() => {
@@ -39,12 +39,16 @@ export function SystemHealthIndicator() {
       }
     };
 
-    if (showTooltip) {
+    // Usar timeout para evitar que el evento de apertura cierre inmediatamente
+    const timeoutId = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
-    }
+      document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    }, 10);
 
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
       }
