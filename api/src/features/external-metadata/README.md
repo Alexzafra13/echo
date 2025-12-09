@@ -59,9 +59,8 @@ The External Metadata feature implements a pluggable agent system inspired by Na
 ├── application/               # Use cases
 │   └── external-metadata.service.ts
 │
-└── presentation/              # HTTP & WebSocket
-    ├── external-metadata.controller.ts
-    └── metadata-enrichment.gateway.ts
+└── presentation/              # HTTP & SSE
+    └── external-metadata.controller.ts
 ```
 
 ### Design Patterns
@@ -115,28 +114,40 @@ POST /api/metadata/artists/:id/enrich?forceRefresh=false
 POST /api/metadata/albums/:id/enrich?forceRefresh=false
 ```
 
-### WebSocket Real-time Updates
+### SSE Real-time Updates
 
-Connect to the WebSocket namespace:
+Connect to the SSE endpoint for real-time metadata updates:
+
 ```javascript
-const socket = io('http://localhost:3000/metadata');
+// Using EventSource API (native browser)
+const eventSource = new EventSource('/api/metadata/stream');
 
-// Listen for events
-socket.on('enrichment:started', (data) => {
-  console.log('Started:', data);
+eventSource.addEventListener('artist:images:updated', (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Artist images updated:', data.artistId);
 });
 
-socket.on('enrichment:progress', (data) => {
-  console.log('Progress:', data.percentage + '%');
+eventSource.addEventListener('album:cover:updated', (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Album cover updated:', data.albumId);
 });
 
-socket.on('enrichment:completed', (data) => {
-  console.log('Completed:', data);
+eventSource.addEventListener('enrichment:progress', (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Progress:', data.progress + '%');
 });
 
-socket.on('enrichment:error', (data) => {
-  console.error('Error:', data.error);
-});
+// Cleanup
+eventSource.close();
+```
+
+**React Hook (recommended):**
+```typescript
+import { useMetadataSSE } from '@shared/hooks/useMetadataSSE';
+
+function MyComponent() {
+  useMetadataSSE(); // Auto-invalidates React Query cache on updates
+}
 ```
 
 ## Database Changes
