@@ -17,6 +17,11 @@ export interface ISocialRepository {
   sendFriendRequest(requesterId: string, addresseeId: string): Promise<Friendship>;
 
   /**
+   * Create an already-accepted friendship between two users (used for auto-friending)
+   */
+  createAcceptedFriendship(userId1: string, userId2: string): Promise<Friendship>;
+
+  /**
    * Accept a friend request
    */
   acceptFriendRequest(friendshipId: string, userId: string): Promise<Friendship>;

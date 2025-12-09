@@ -5,6 +5,7 @@ import {
   PASSWORD_SERVICE,
   IPasswordService,
 } from '@features/auth/domain/ports';
+import { ISocialRepository, SOCIAL_REPOSITORY } from '@features/social/domain/ports';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { ConflictError, ValidationError } from '@shared/errors';
 import { PasswordUtil } from '@shared/utils/password.util';
@@ -18,6 +19,8 @@ export class CreateUserUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    @Inject(SOCIAL_REPOSITORY)
+    private readonly socialRepository: ISocialRepository,
     private readonly logService: LogService,
   ) {}
 
@@ -64,7 +67,12 @@ export class CreateUserUseCase {
       },
     );
 
-    // 7. Retornar credenciales
+    // 7. Auto-friend with system admin if created by system admin
+    if (input.adminId) {
+      await this.autoFriendWithSystemAdmin(input.adminId, savedUser.id);
+    }
+
+    // 8. Retornar credenciales
     return {
       user: {
         id: savedUser.id,
@@ -74,5 +82,43 @@ export class CreateUserUseCase {
       },
       temporaryPassword, // Admin debe enviar esto al usuario
     };
+  }
+
+  /**
+   * Auto-friend new user with system admin if created by system admin.
+   * The system admin is the oldest admin user (first admin created).
+   */
+  private async autoFriendWithSystemAdmin(creatorAdminId: string, newUserId: string): Promise<void> {
+    try {
+      // Get all users to find the system admin (oldest admin)
+      const allUsers = await this.userRepository.findAll(0, 1000);
+      const adminUsers = allUsers.filter(u => u.isAdmin);
+
+      if (adminUsers.length === 0) return;
+
+      // System admin is the oldest admin by createdAt
+      const systemAdmin = adminUsers.reduce((oldest, current) =>
+        current.createdAt < oldest.createdAt ? current : oldest
+      );
+
+      // Only auto-friend if the creator is the system admin
+      if (creatorAdminId !== systemAdmin.id) return;
+
+      // Create accepted friendship between system admin and new user
+      await this.socialRepository.createAcceptedFriendship(systemAdmin.id, newUserId);
+
+      this.logService.info(
+        LogCategory.AUTH,
+        `Auto-friended new user ${newUserId} with system admin`,
+        { systemAdminId: systemAdmin.id, newUserId },
+      );
+    } catch (error) {
+      // Don't fail user creation if auto-friend fails
+      this.logService.warning(
+        LogCategory.AUTH,
+        `Failed to auto-friend new user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { newUserId, creatorAdminId },
+      );
+    }
   }
 }
