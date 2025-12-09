@@ -131,7 +131,7 @@ export class ApplyAlbumCoverUseCase {
       this.logger.debug(`Invalidated Redis cache for key: ${artistCacheKey}`);
     }
 
-    // Get updated album data for WebSocket notification
+    // Get updated album data for SSE notification
     const finalAlbumResult = await this.drizzle.db
       .select({
         id: albums.id,
@@ -145,7 +145,7 @@ export class ApplyAlbumCoverUseCase {
 
     const finalAlbum = finalAlbumResult[0];
 
-    // Emit WebSocket event to notify all connected clients about the update
+    // Emit SSE event to notify all connected clients about the update
     if (finalAlbum && finalAlbum.artistId) {
       this.metadataEvents.emitAlbumCoverUpdated({
         albumId: input.albumId,

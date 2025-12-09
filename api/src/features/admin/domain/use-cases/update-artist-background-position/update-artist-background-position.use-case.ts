@@ -59,7 +59,7 @@ export class UpdateArtistBackgroundPositionUseCase {
     await this.redis.del(redisCacheKey);
     this.logger.debug(`Invalidated Redis cache for key: ${redisCacheKey}`);
 
-    // Emit WebSocket event to notify clients
+    // Emit SSE event to notify clients
     this.metadataEvents.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: artist.name,

@@ -41,7 +41,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
     ? album!.artistId
     : playlist?.metadata.artistId || '';
 
-  // Real-time synchronization via WebSocket for artist and album metadata
+  // Real-time synchronization via SSE for artist and album metadata
   useArtistMetadataSync(artistId);
   useAlbumMetadataSync(isAlbum ? album!.id : '', artistId);
 

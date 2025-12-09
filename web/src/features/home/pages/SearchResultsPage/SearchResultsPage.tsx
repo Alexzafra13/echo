@@ -24,7 +24,7 @@ export function SearchResultsPage() {
   const { data: albums = [], isLoading: loadingAlbums } = useAlbumSearch(query);
   const { data: tracks = [], isLoading: loadingTracks } = useTrackSearch(query, { take: 50 });
   
-  // Real-time synchronization via WebSocket for artist and album images
+  // Real-time synchronization via SSE for artist and album images
   useArtistMetadataSync();
   useAlbumMetadataSync();
 

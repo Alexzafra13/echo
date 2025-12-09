@@ -33,7 +33,7 @@ const LIBRARY_PATH_KEY = 'library.music.path';
  * This service coordinates the scanning workflow:
  * - Queues scan jobs via BullMQ
  * - Processes scans using specialized services
- * - Reports progress via WebSocket
+ * - Reports progress via SSE
  * - Triggers post-scan tasks (enrichment, LUFS analysis)
  *
  * Delegates to specialized services:
@@ -296,7 +296,7 @@ export class ScanProcessorService implements OnModuleInit {
   }
 
   /**
-   * Emit scan progress via WebSocket
+   * Emit scan progress via SSE
    */
   private emitProgress(
     scanId: string,

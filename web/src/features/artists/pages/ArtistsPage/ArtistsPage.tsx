@@ -16,7 +16,7 @@ export default function ArtistsPage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Real-time synchronization via WebSocket for artist images
+  // Real-time synchronization via SSE for artist images
   useArtistMetadataSync();
 
   // Fetch all artists (backend returns them sorted alphabetically by orderArtistName)
