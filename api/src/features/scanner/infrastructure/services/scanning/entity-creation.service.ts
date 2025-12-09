@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, albums } from '@infrastructure/database/schema';
 import { CoverArtService } from '@shared/services';
@@ -84,8 +84,9 @@ export class EntityCreationService {
   /**
    * Find or create an album atomically
    *
-   * Searches by name only to prevent album splitting when tracks have
-   * different artists due to collaborations (feat.).
+   * Searches by normalized name AND artist to:
+   * - Handle Unicode variations (different hyphens, quotes, etc.)
+   * - Prevent different artists' albums with same name from merging (e.g., "Greatest Hits")
    */
   async findOrCreateAlbum(
     albumName: string,
@@ -99,8 +100,9 @@ export class EntityCreationService {
     trackPath: string,
   ): Promise<AlbumResult> {
     const normalizedName = (albumName || 'Unknown Album').trim();
+    const orderName = normalizeForSorting(normalizedName);
 
-    // Search by name only
+    // Search by normalized name AND artist to prevent cross-artist merging
     const existingAlbum = await this.drizzle.db
       .select({
         id: albums.id,
@@ -111,7 +113,7 @@ export class EntityCreationService {
         mbzAlbumId: albums.mbzAlbumId,
       })
       .from(albums)
-      .where(eq(albums.name, normalizedName))
+      .where(and(eq(albums.orderAlbumName, orderName), eq(albums.artistId, artistId)))
       .limit(1);
 
     if (existingAlbum[0]) {
