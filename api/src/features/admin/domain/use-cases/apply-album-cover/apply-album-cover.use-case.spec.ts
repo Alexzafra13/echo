@@ -6,7 +6,7 @@ import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageDownloadService } from '@features/external-metadata/infrastructure/services/image-download.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/domain/services/metadata-events.service';
 import { ImageProcessingError } from '@shared/errors';
 import * as safeUtils from '@shared/utils';
 import * as fs from 'fs/promises';
@@ -25,7 +25,7 @@ describe('ApplyAlbumCoverUseCase', () => {
   let mockImageDownload: jest.Mocked<ImageDownloadService>;
   let mockStorage: jest.Mocked<StorageService>;
   let mockImageService: jest.Mocked<ImageService>;
-  let mockGateway: jest.Mocked<MetadataEnrichmentGateway>;
+  let mockMetadataEvents: jest.Mocked<MetadataEventsService>;
 
   const mockAlbum = {
     id: 'album-123',
@@ -77,7 +77,7 @@ describe('ApplyAlbumCoverUseCase', () => {
       invalidateAlbumCache: jest.fn(),
     } as any;
 
-    mockGateway = {
+    mockMetadataEvents = {
       emitAlbumCoverUpdated: jest.fn(),
     } as any;
 
@@ -92,7 +92,7 @@ describe('ApplyAlbumCoverUseCase', () => {
         { provide: ImageDownloadService, useValue: mockImageDownload },
         { provide: StorageService, useValue: mockStorage },
         { provide: ImageService, useValue: mockImageService },
-        { provide: MetadataEnrichmentGateway, useValue: mockGateway },
+        { provide: MetadataEventsService, useValue: mockMetadataEvents },
       ],
     }).compile();
 
@@ -170,10 +170,10 @@ describe('ApplyAlbumCoverUseCase', () => {
       expect(mockRedis.del).toHaveBeenCalledWith('artist:artist-456');
     });
 
-    it('should emit WebSocket event on success', async () => {
+    it('should emit SSE event on success', async () => {
       await useCase.execute(input);
 
-      expect(mockGateway.emitAlbumCoverUpdated).toHaveBeenCalledWith(
+      expect(mockMetadataEvents.emitAlbumCoverUpdated).toHaveBeenCalledWith(
         expect.objectContaining({
           albumId: 'album-123',
           albumName: 'Test Album',
