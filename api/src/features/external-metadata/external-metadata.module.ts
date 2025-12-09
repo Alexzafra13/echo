@@ -2,8 +2,8 @@ import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 
-// Domain
-// (Interfaces and entities are imported as needed, no providers for them)
+// Domain - Services
+import { MetadataEventsService } from './domain/services/metadata-events.service';
 
 // Infrastructure - Services
 import { AgentRegistryService } from './infrastructure/services/agent-registry.service';
@@ -71,7 +71,6 @@ import { MaintenanceController } from './presentation/maintenance.controller';
 import { MetadataConflictsController } from './presentation/metadata-conflicts.controller';
 import { MusicBrainzSearchController } from './presentation/musicbrainz-search.controller';
 import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
-import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // DrizzleService is provided globally via DrizzleModule
 
@@ -85,7 +84,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
  * - Album covers from Cover Art Archive
  * - Metadata caching to reduce API calls
  * - Rate limiting for API compliance
- * - WebSocket notifications for real-time progress
+ * - SSE (Server-Sent Events) for real-time progress
  * - Manual enrichment endpoints
  *
  * Configuration priority: Database (UI settings) > Environment variables (.env)
@@ -109,6 +108,9 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     QueueModule, // For BullMQ enrichment queue
   ],
   providers: [
+    // Domain services
+    MetadataEventsService,
+
     // Core services
     AgentRegistryService,
     MetadataCacheService,
@@ -160,9 +162,6 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     ImageService,
     LocalImageProvider,
     ImageSearchOrchestratorService,
-
-    // WebSocket gateway
-    MetadataEnrichmentGateway,
   ],
   controllers: [
     ExternalMetadataController,
@@ -186,7 +185,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     ImageDownloadService,
     MetadataConflictService,
     MbidAutoSearchService,
-    MetadataEnrichmentGateway,
+    MetadataEventsService,
     EnrichmentQueueService,
   ],
 })

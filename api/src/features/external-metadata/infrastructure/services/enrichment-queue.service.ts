@@ -4,7 +4,7 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { albums, artists } from '@infrastructure/database/schema';
 import { isNull, sql } from 'drizzle-orm';
 import { ExternalMetadataService } from '../../application/external-metadata.service';
-import { MetadataEnrichmentGateway } from '../../presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '../../domain/services/metadata-events.service';
 import { SettingsService } from './settings.service';
 
 /**
@@ -70,7 +70,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly externalMetadataService: ExternalMetadataService,
-    private readonly gateway: MetadataEnrichmentGateway,
+    private readonly metadataEvents: MetadataEventsService,
     private readonly settings: SettingsService,
   ) {}
 
@@ -126,7 +126,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     );
 
     // Emit start event
-    this.gateway.emitQueueStarted({
+    this.metadataEvents.emitQueueStarted({
       totalPending: stats.totalPending,
       pendingArtists: stats.pendingArtists,
       pendingAlbums: stats.pendingAlbums,
@@ -151,7 +151,7 @@ export class EnrichmentQueueService implements OnModuleInit {
 
     this.logger.log('⏹️ Enrichment queue stopped');
 
-    this.gateway.emitQueueStopped({
+    this.metadataEvents.emitQueueStopped({
       processedInSession: this.processedInSession,
     });
   }
@@ -226,7 +226,7 @@ export class EnrichmentQueueService implements OnModuleInit {
 
       // Emit progress
       const stats = await this.getQueueStats();
-      this.gateway.emitQueueItemCompleted({
+      this.metadataEvents.emitQueueItemCompleted({
         itemType: job.type,
         entityName: job.entityName,
         processedInSession: this.processedInSession,
@@ -244,7 +244,7 @@ export class EnrichmentQueueService implements OnModuleInit {
       );
 
       // Emit error but continue with queue
-      this.gateway.emitQueueItemError({
+      this.metadataEvents.emitQueueItemError({
         itemType: job.type,
         entityName: job.entityName,
         error: (error as Error).message,
@@ -301,7 +301,7 @@ export class EnrichmentQueueService implements OnModuleInit {
       `🎉 Enrichment queue completed! Processed ${this.processedInSession} items in ${this.formatDuration(duration)}`
     );
 
-    this.gateway.emitQueueCompleted({
+    this.metadataEvents.emitQueueCompleted({
       processedInSession: this.processedInSession,
       duration: this.formatDuration(duration),
     });

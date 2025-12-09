@@ -3,7 +3,7 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and } from 'drizzle-orm';
 import { albums, customAlbumCovers } from '@infrastructure/database/schema';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/domain/services/metadata-events.service';
 import {
   ApplyCustomAlbumCoverInput,
   ApplyCustomAlbumCoverOutput,
@@ -20,7 +20,7 @@ export class ApplyCustomAlbumCoverUseCase {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataEvents: MetadataEventsService,
   ) {}
 
   async execute(input: ApplyCustomAlbumCoverInput): Promise<ApplyCustomAlbumCoverOutput> {
@@ -85,7 +85,7 @@ export class ApplyCustomAlbumCoverUseCase {
 
     // Notify via WebSocket (if album has an artist)
     if (album.artistId) {
-      this.metadataGateway.emitAlbumCoverUpdated({
+      this.metadataEvents.emitAlbumCoverUpdated({
         albumId: input.albumId,
         albumName: album.name,
         artistId: album.artistId,

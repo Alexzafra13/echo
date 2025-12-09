@@ -8,8 +8,10 @@ export { useLufsProgress } from './useLufsProgress';
 export type { LufsProgress } from './useLufsProgress';
 export { useMetadataEnrichment } from './useMetadataEnrichment';
 export type { EnrichmentNotification, EnrichmentProgress } from './useMetadataEnrichment';
-export { useMetadataWebSocket } from './useMetadataWebSocket';
-export type { ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidationEvent } from './useMetadataWebSocket';
+// SSE-based metadata hooks (recommended)
+export { useMetadataSSE, useArtistMetadataSSE, useAlbumMetadataSSE } from './useMetadataSSE';
+export type { MetadataEventType, ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidationEvent, MetadataSSEHandlers } from './useMetadataSSE';
+// Convenience wrappers (use SSE internally)
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
 export { useDropdownPosition } from './useDropdownPosition';

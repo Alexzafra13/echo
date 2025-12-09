@@ -5,7 +5,7 @@ import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/domain/services/metadata-events.service';
 import * as path from 'path';
 import {
   validateFileUpload,
@@ -34,7 +34,7 @@ export class UploadCustomArtistImageUseCase {
     private readonly redis: RedisService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataEvents: MetadataEventsService,
   ) {}
 
   async execute(input: UploadCustomArtistImageInput): Promise<UploadCustomArtistImageOutput> {
