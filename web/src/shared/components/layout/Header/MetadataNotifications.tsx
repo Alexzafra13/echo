@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, FileX } from 'lucide-react';
-import { useMetadataEnrichment } from '@shared/hooks';
+import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
 import { useSystemHealthSSE } from '@shared/hooks/useSystemHealthSSE';
 import { usePendingRequests } from '@features/social/hooks';
 import type { EnrichmentNotification } from '@shared/hooks';
@@ -42,9 +42,12 @@ type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNoti
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
   const [, setLocation] = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Click outside handler with scroll support
+  const { ref: dropdownRef, isClosing, close } = useClickOutside<HTMLDivElement>(
+    () => setShowNotifications(false),
+    { enabled: showNotifications, animationDuration: 200 }
+  );
 
   // Metadata enrichment notifications (admin only)
   const {
@@ -138,30 +141,6 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     return alerts;
   }, [systemHealth, activeAlerts]);
 
-  // Cerrar dropdown al hacer click fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsClosing(true);
-        closeTimeoutRef.current = setTimeout(() => {
-          setShowNotifications(false);
-          setIsClosing(false);
-        }, 200);
-      }
-    };
-
-    if (showNotifications) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, [showNotifications]);
-
   /**
    * Obtener ícono según el tipo
    */
@@ -244,20 +223,11 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   const handleNotificationClick = (item: NotificationItem) => {
     if ('type' in item && item.type === 'friend_request') {
       // Navigate to social page
-      setIsClosing(true);
-      closeTimeoutRef.current = setTimeout(() => {
-        setShowNotifications(false);
-        setIsClosing(false);
-        setLocation('/social');
-      }, 200);
+      close(() => setLocation('/social'));
     } else if ('link' in item && item.link) {
       // Navigate to linked page (e.g., missing files)
-      setIsClosing(true);
-      closeTimeoutRef.current = setTimeout(() => {
-        setShowNotifications(false);
-        setIsClosing(false);
-        setLocation(item.link!);
-      }, 200);
+      const link = item.link;
+      close(() => setLocation(link));
     } else if ('entityType' in item && 'read' in item && !item.read) {
       markAsRead(item.id);
     }
@@ -268,11 +238,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
    */
   const handleClearAll = () => {
     clearAll();
-    setIsClosing(true);
-    closeTimeoutRef.current = setTimeout(() => {
-      setShowNotifications(false);
-      setIsClosing(false);
-    }, 200);
+    close();
   };
 
   // Combinar notificaciones: solicitudes de amistad primero, luego alertas del sistema, luego metadata
@@ -294,11 +260,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         className={styles.notifications__button}
         onClick={() => {
           if (showNotifications) {
-            setIsClosing(true);
-            closeTimeoutRef.current = setTimeout(() => {
-              setShowNotifications(false);
-              setIsClosing(false);
-            }, 200);
+            close();
           } else {
             setShowNotifications(true);
           }

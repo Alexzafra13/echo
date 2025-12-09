@@ -111,7 +111,7 @@ echo/
 - **Estado:** Zustand
 - **Data fetching:** TanStack Query
 - **Rutas:** Wouter
-- **Realtime:** SSE (Server-Sent Events)
+- **Realtime:** SSE (EventSource nativo)
 
 ## Producción local
 

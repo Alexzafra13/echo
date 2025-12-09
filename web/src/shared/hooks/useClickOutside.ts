@@ -5,6 +5,8 @@ export interface UseClickOutsideOptions {
   enabled?: boolean;
   /** Animation duration in ms before calling onClose (default: 0) */
   animationDuration?: number;
+  /** Close on scroll (default: true on mobile, false on desktop) */
+  closeOnScroll?: boolean | 'mobile-only';
 }
 
 export interface UseClickOutsideReturn<T extends HTMLElement> {
@@ -43,7 +45,7 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   onClose: () => void,
   options: UseClickOutsideOptions = {}
 ): UseClickOutsideReturn<T> {
-  const { enabled = true, animationDuration = 0 } = options;
+  const { enabled = true, animationDuration = 0, closeOnScroll = 'mobile-only' } = options;
 
   const ref = useRef<T>(null);
   const isClosingRef = useRef(false);
@@ -117,18 +119,36 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   useEffect(() => {
     if (!enabled) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         close();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    const handleScroll = () => {
+      close();
+    };
+
+    // Determine if we should listen for scroll
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const shouldCloseOnScroll = closeOnScroll === true || (closeOnScroll === 'mobile-only' && isMobile);
+
+    // Small delay to avoid immediate close from the opening tap
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside, { passive: true });
+      if (shouldCloseOnScroll) {
+        window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+      }
+    }, 10);
 
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, { capture: true });
     };
-  }, [enabled, close]);
+  }, [enabled, close, closeOnScroll]);
 
   // Cleanup on unmount
   useEffect(() => {

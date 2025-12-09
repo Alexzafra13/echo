@@ -27,7 +27,7 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      // Note: SSE streams are proxied through /api/* like regular requests
+      // Note: SSE connections use the /api proxy above (e.g., /api/scanner/stream)
     },
   },
 });
