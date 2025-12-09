@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, FileX } from 'lucide-react';
+import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, UserCheck, FileX } from 'lucide-react';
 import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
 import { useSystemHealthSSE } from '@shared/hooks/useSystemHealthSSE';
-import { usePendingRequests } from '@features/social/hooks';
+import { usePendingRequests, useSocialNotificationsSSE, SocialNotification } from '@features/social/hooks';
 import type { EnrichmentNotification } from '@shared/hooks';
 import styles from './MetadataNotifications.module.css';
 
@@ -31,17 +31,28 @@ interface FriendRequestNotification {
   timestamp: string;
 }
 
-type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNotification;
+interface FriendRequestAcceptedNotification {
+  id: string;
+  type: 'friend_request_accepted';
+  friendshipId: string;
+  userId: string;
+  username: string;
+  name: string | null;
+  timestamp: string;
+}
+
+type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNotification | FriendRequestAcceptedNotification;
 
 /**
  * MetadataNotifications Component
  * Muestra notificaciones:
- * - Para todos: solicitudes de amistad
+ * - Para todos: solicitudes de amistad (via SSE en tiempo real)
  * - Solo admin: alertas del sistema (via SSE) + enriquecimiento de metadatos
  */
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
   const [, setLocation] = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [acceptedNotifications, setAcceptedNotifications] = useState<FriendRequestAcceptedNotification[]>([]);
 
   // Click outside handler with scroll support
   const { ref: dropdownRef, isClosing, close } = useClickOutside<HTMLDivElement>(
@@ -61,8 +72,28 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   // System health via SSE (admin only)
   const { systemHealth, activeAlerts } = useSystemHealthSSE(token, isAdmin);
 
-  // Friend request notifications (all users)
+  // Friend request notifications (all users) - for initial data
   const { data: pendingRequests } = usePendingRequests();
+
+  // Real-time social notifications via SSE
+  const handleSocialNotification = useCallback((notification: SocialNotification) => {
+    if (notification.type === 'friend_request:accepted') {
+      // Add "friend request accepted" notification
+      const newNotification: FriendRequestAcceptedNotification = {
+        id: `accepted-${notification.data.friendshipId}-${Date.now()}`,
+        type: 'friend_request_accepted',
+        friendshipId: notification.data.friendshipId,
+        userId: notification.data.acceptedByUserId,
+        username: notification.data.acceptedByUsername,
+        name: notification.data.acceptedByName,
+        timestamp: notification.data.timestamp,
+      };
+      setAcceptedNotifications((prev) => [newNotification, ...prev].slice(0, 5));
+    }
+    // friend_request:received is handled by usePendingRequests invalidation (automatic via SSE hook)
+  }, []);
+
+  useSocialNotificationsSSE(handleSocialNotification);
 
   // Convert pending requests to notifications
   const friendRequestNotifications: FriendRequestNotification[] =
@@ -148,6 +179,9 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     if ('type' in item && item.type === 'friend_request') {
       return <UserPlus size={16} />;
     }
+    if ('type' in item && item.type === 'friend_request_accepted') {
+      return <UserCheck size={16} />;
+    }
     if ('entityType' in item) {
       return item.entityType === 'artist' ? <Music size={16} /> : <Disc size={16} />;
     }
@@ -176,6 +210,12 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       return {
         title: item.name || item.username,
         message: 'te ha enviado una solicitud de amistad',
+      };
+    }
+    if ('type' in item && item.type === 'friend_request_accepted') {
+      return {
+        title: item.name || item.username,
+        message: 'ha aceptado tu solicitud de amistad',
       };
     }
     if ('entityType' in item) {
@@ -221,9 +261,13 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
    * Manejar click en notificación
    */
   const handleNotificationClick = (item: NotificationItem) => {
-    if ('type' in item && item.type === 'friend_request') {
+    if ('type' in item && (item.type === 'friend_request' || item.type === 'friend_request_accepted')) {
       // Navigate to social page
       close(() => setLocation('/social'));
+      // Clear accepted notification if clicked
+      if (item.type === 'friend_request_accepted') {
+        setAcceptedNotifications((prev) => prev.filter((n) => n.id !== item.id));
+      }
     } else if ('link' in item && item.link) {
       // Navigate to linked page (e.g., missing files)
       const link = item.link;
@@ -241,17 +285,18 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     close();
   };
 
-  // Combinar notificaciones: solicitudes de amistad primero, luego alertas del sistema, luego metadata
+  // Combinar notificaciones: aceptadas primero, solicitudes, alertas del sistema, metadata
   const allNotifications: NotificationItem[] = [
+    ...acceptedNotifications,
     ...friendRequestNotifications,
     ...(isAdmin ? systemAlerts : []),
     ...(isAdmin ? metadataNotifications : []),
   ];
 
   // Contar total de notificaciones importantes
-  const friendRequestCount = friendRequestNotifications.length;
+  const socialNotificationCount = friendRequestNotifications.length + acceptedNotifications.length;
   const adminNotificationCount = isAdmin ? (systemAlerts.length + metadataUnreadCount) : 0;
-  const totalCount = friendRequestCount + adminNotificationCount;
+  const totalCount = socialNotificationCount + adminNotificationCount;
 
   return (
     <div className={styles.notifications} ref={dropdownRef}>
@@ -315,6 +360,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
               allNotifications.map((item) => {
                 const info = getNotificationInfo(item);
                 const isFriendRequest = 'type' in item && item.type === 'friend_request';
+                const isFriendAccepted = 'type' in item && item.type === 'friend_request_accepted';
+                const isSocialNotification = isFriendRequest || isFriendAccepted;
                 const isSystemAlert = 'category' in item;
                 const isUnread = 'read' in item ? !item.read : true;
 
@@ -328,13 +375,13 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
                         ? styles['notifications__item--error']
                         : ''
                     } ${
-                      isFriendRequest ? styles['notifications__item--friendRequest'] : ''
+                      isSocialNotification ? styles['notifications__item--friendRequest'] : ''
                     }`}
                     onClick={() => handleNotificationClick(item)}
                   >
                     {/* Icon */}
                     <div className={`${styles.notifications__itemIcon} ${
-                      isFriendRequest ? styles['notifications__itemIcon--friendRequest'] : ''
+                      isSocialNotification ? styles['notifications__itemIcon--friendRequest'] : ''
                     }`}>
                       {getIcon(item)}
                     </div>
