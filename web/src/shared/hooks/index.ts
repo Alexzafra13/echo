@@ -9,6 +9,8 @@ export type { EnrichmentNotification, EnrichmentProgress } from './useMetadataEn
 // SSE-based metadata hooks (recommended)
 export { useMetadataSSE, useArtistMetadataSSE, useAlbumMetadataSSE } from './useMetadataSSE';
 export type { MetadataEventType, ArtistImagesUpdatedEvent, AlbumCoverUpdatedEvent, CacheInvalidationEvent, MetadataSSEHandlers } from './useMetadataSSE';
+// System health SSE hook
+export { useSystemHealthSSE } from './useSystemHealthSSE';
 // Convenience wrappers (use SSE internally)
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
