@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useWebSocketConnection } from './useWebSocketConnection';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { logger } from '@shared/utils/logger';
 
 /**
  * Notificación de enriquecimiento de metadatos
@@ -31,37 +31,10 @@ export interface EnrichmentProgress {
   timestamp: string;
 }
 
-interface EnrichmentStartedData {
-  entityType: 'artist' | 'album';
-  entityId: string;
-  entityName: string;
-  total: number;
-  timestamp: string;
-}
-
-interface EnrichmentCompletedData {
-  entityType: 'artist' | 'album';
-  entityId: string;
-  entityName: string;
-  bioUpdated?: boolean;
-  imagesUpdated?: boolean;
-  coverUpdated?: boolean;
-  duration: number;
-  timestamp: string;
-}
-
-interface EnrichmentErrorData {
-  entityType: 'artist' | 'album';
-  entityId: string;
-  entityName: string;
-  error: string;
-  timestamp: string;
-}
-
 /**
- * Hook para conectarse a los eventos de metadata enrichment via WebSocket
+ * Hook para conectarse a los eventos de metadata enrichment via SSE
  *
- * @param token - JWT token para autenticación
+ * @param token - JWT token para autenticación (no usado con SSE público)
  * @param isAdmin - Si el usuario es admin (solo admins reciben notificaciones)
  * @returns Estado de enriquecimiento y notificaciones
  *
@@ -80,67 +53,159 @@ interface EnrichmentErrorData {
 export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
   const [notifications, setNotifications] = useState<EnrichmentNotification[]>([]);
   const [progress, setProgress] = useState<EnrichmentProgress | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Handlers para eventos
-  const handleStarted = useCallback((data: EnrichmentStartedData) => {
-    setProgress({
-      ...data,
-      current: 0,
-      step: 'Iniciando...',
-      percentage: 0,
-    });
-  }, []);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttemptsRef = useRef(0);
 
-  const handleProgress = useCallback((data: EnrichmentProgress) => {
-    setProgress(data);
-  }, []);
+  const connect = useCallback(() => {
+    if (!token || !isAdmin) return;
 
-  const handleCompleted = useCallback((data: EnrichmentCompletedData) => {
-    // Limpiar progreso
-    setProgress(null);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const url = `${apiUrl}/metadata/stream`;
 
-    // Agregar notificación si hubo actualizaciones
-    if (data.bioUpdated || data.imagesUpdated || data.coverUpdated) {
-      setNotifications((prev) => [
-        ...prev,
-        {
-          id: `${data.entityId}-${Date.now()}`,
-          entityType: data.entityType,
-          entityId: data.entityId,
-          entityName: data.entityName,
-          bioUpdated: data.bioUpdated,
-          imagesUpdated: data.imagesUpdated,
-          coverUpdated: data.coverUpdated,
-          timestamp: data.timestamp,
-          read: false,
-        },
-      ]);
+      const eventSource = new EventSource(url);
+
+      eventSource.onopen = () => {
+        logger.debug('[SSE] Connected to metadata enrichment stream');
+        setIsConnected(true);
+        reconnectAttemptsRef.current = 0;
+      };
+
+      eventSource.onmessage = (event: MessageEvent) => {
+        try {
+          const { type, data } = JSON.parse(event.data);
+
+          switch (type) {
+            case 'enrichment:started':
+              setProgress({
+                entityType: data.entityType,
+                entityId: data.entityId,
+                entityName: data.entityName,
+                current: 0,
+                total: data.total,
+                step: 'Iniciando...',
+                percentage: 0,
+                timestamp: data.timestamp,
+              });
+              break;
+
+            case 'enrichment:progress':
+              setProgress({
+                entityType: data.entityType,
+                entityId: data.entityId,
+                entityName: data.entityName,
+                current: data.current,
+                total: data.total,
+                step: data.step,
+                details: data.details,
+                percentage: Math.round((data.current / data.total) * 100),
+                timestamp: data.timestamp,
+              });
+              break;
+
+            case 'enrichment:completed':
+              setProgress(null);
+              // Agregar notificación si hubo actualizaciones
+              if (data.bioUpdated || data.imagesUpdated || data.coverUpdated) {
+                setNotifications((prev) => [
+                  ...prev,
+                  {
+                    id: `${data.entityId}-${Date.now()}`,
+                    entityType: data.entityType,
+                    entityId: data.entityId,
+                    entityName: data.entityName,
+                    bioUpdated: data.bioUpdated,
+                    imagesUpdated: data.imagesUpdated,
+                    coverUpdated: data.coverUpdated,
+                    timestamp: data.timestamp,
+                    read: false,
+                  },
+                ]);
+              }
+              break;
+
+            case 'enrichment:error':
+              logger.error(`Enrichment error: ${data.entityName} - ${data.error}`);
+              setProgress(null);
+              break;
+
+            case 'connected':
+            case 'keepalive':
+              // Ignore these events
+              break;
+
+            default:
+              // Ignore other events (queue events, etc.)
+              break;
+          }
+        } catch (err) {
+          logger.error('[SSE] Failed to parse enrichment event:', err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        logger.error('[SSE] Metadata enrichment connection error');
+        setIsConnected(false);
+        eventSource.close();
+
+        // Exponential backoff for reconnection (max 30 seconds)
+        const backoffDelay = Math.min(
+          1000 * Math.pow(2, reconnectAttemptsRef.current),
+          30000
+        );
+        reconnectAttemptsRef.current += 1;
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, backoffDelay);
+      };
+
+      eventSourceRef.current = eventSource;
+    } catch (err) {
+      logger.error('[SSE] Failed to create EventSource:', err);
     }
-  }, []);
+  }, [token, isAdmin]);
 
-  const handleError = useCallback((data: EnrichmentErrorData) => {
-    console.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
-    setProgress(null);
-  }, []);
+  useEffect(() => {
+    if (!token || !isAdmin) return;
 
-  // Eventos a registrar
-  const events = useMemo(
-    () => [
-      { event: 'enrichment:started', handler: handleStarted },
-      { event: 'enrichment:progress', handler: handleProgress },
-      { event: 'enrichment:completed', handler: handleCompleted },
-      { event: 'enrichment:error', handler: handleError },
-    ],
-    [handleStarted, handleProgress, handleCompleted, handleError]
-  );
+    connect();
 
-  // Usar el hook base de WebSocket
-  const { isConnected } = useWebSocketConnection({
-    namespace: 'metadata',
-    token,
-    enabled: !!token && isAdmin,
-    events,
-  });
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      setIsConnected(false);
+    };
+  }, [token, isAdmin, connect]);
+
+  // Handle page visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+          setIsConnected(false);
+        }
+      } else if (token && isAdmin) {
+        connect();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [token, isAdmin, connect]);
 
   /**
    * Marcar notificación como leída
