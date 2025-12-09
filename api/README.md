@@ -10,7 +10,7 @@ pnpm build        # Build
 pnpm start        # Ejecutar
 pnpm db:reset     # Reset BD
 pnpm db:migrate   # Migraciones
-pnpm db:studio    # Prisma Studio
+pnpm db:studio    # Drizzle Studio
 pnpm test         # Tests
 ```
 

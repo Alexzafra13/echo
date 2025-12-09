@@ -86,7 +86,7 @@ echo/
 ├── api/                      # NestJS + Fastify
 │   └── src/
 │       ├── features/         # Módulos por funcionalidad
-│       ├── infrastructure/   # DB, cache, websocket
+│       ├── infrastructure/   # DB, cache, queue
 │       └── shared/           # Guards, decorators, utils
 ├── nginx/                    # Config de ejemplo para producción
 ├── docs/                     # Documentación
