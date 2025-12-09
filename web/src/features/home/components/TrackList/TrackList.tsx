@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Play, Disc } from 'lucide-react';
+import { Play, Disc, Ghost } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
@@ -138,31 +138,53 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
   // Helper function to render a single track row
   const renderTrackRow = (track: Track, index: number) => {
     const isPlaying = currentTrackId === track.id;
+    const isMissingTrack = track.isMissing === true;
     const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
     // Use playlistOrder if available (for playlists), otherwise use trackNumber
     const displayNumber = track.playlistOrder !== undefined ? track.playlistOrder : (track.trackNumber || index + 1);
 
+    // Build class names
+    const trackClasses = [
+      styles.trackList__track,
+      isPlaying ? styles['trackList__track--active'] : '',
+      isMissingTrack ? styles['trackList__track--missing'] : '',
+    ].filter(Boolean).join(' ');
+
+    // Handle click - don't play if track is missing
+    const handleTrackClick = () => {
+      if (!isMissingTrack) {
+        handlePlay(track);
+      }
+    };
+
     return (
       <div
         key={track.id}
-        className={`${styles.trackList__track} ${isPlaying ? styles['trackList__track--active'] : ''}`}
-        onClick={() => handlePlay(track)}
+        className={trackClasses}
+        onClick={handleTrackClick}
+        title={isMissingTrack ? 'Archivo no disponible' : undefined}
       >
         {/* Track number / Play button container */}
         <div className={styles.trackList__numberCell}>
-          <span className={styles.trackList__trackNumber}>
-            {displayNumber}
-          </span>
-          <button
-            className={styles.trackList__playButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePlay(track);
-            }}
-            aria-label={`Play ${track.title}`}
-          >
-            <Play size={16} fill="currentColor" />
-          </button>
+          {isMissingTrack ? (
+            <Ghost size={16} className={styles.trackList__ghostIcon} />
+          ) : (
+            <>
+              <span className={styles.trackList__trackNumber}>
+                {displayNumber}
+              </span>
+              <button
+                className={styles.trackList__playButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlay(track);
+                }}
+                aria-label={`Play ${track.title}`}
+              >
+                <Play size={16} fill="currentColor" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Track info (cover + title + artist) */}
@@ -201,23 +223,25 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
         </span>
 
         {/* Rating (Like/Dislike + Stars) - Only render on desktop to avoid API rate limits */}
-        {!isMobile && (
+        {!isMobile && !isMissingTrack && (
           <div className={styles.trackList__trackRating}>
             <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
             <RatingStars itemId={track.id} itemType="track" size={14} />
           </div>
         )}
 
-        {/* Options Menu */}
-        <TrackOptionsMenu
-          track={track}
-          onAddToPlaylist={handleAddToPlaylist}
-          onAddToQueue={handleAddToQueue}
-          onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
-          onGoToArtist={handleGoToArtist}
-          onShowInfo={handleShowInfo}
-          onRemoveFromPlaylist={onRemoveFromPlaylist}
-        />
+        {/* Options Menu - hide for missing tracks */}
+        {!isMissingTrack && (
+          <TrackOptionsMenu
+            track={track}
+            onAddToPlaylist={handleAddToPlaylist}
+            onAddToQueue={handleAddToQueue}
+            onGoToAlbum={hideGoToAlbum ? undefined : handleGoToAlbum}
+            onGoToArtist={handleGoToArtist}
+            onShowInfo={handleShowInfo}
+            onRemoveFromPlaylist={onRemoveFromPlaylist}
+          />
+        )}
       </div>
     );
   };

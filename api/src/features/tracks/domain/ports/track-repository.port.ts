@@ -44,9 +44,10 @@ export interface ITrackRepository {
   /**
    * Obtiene tracks de un álbum específico
    * @param albumId - ID del álbum
+   * @param includeMissing - Incluir tracks con archivo desaparecido (default: true)
    * @returns Array de tracks del álbum ordenados por trackNumber
    */
-  findByAlbumId(albumId: string): Promise<Track[]>;
+  findByAlbumId(albumId: string, includeMissing?: boolean): Promise<Track[]>;
 
   /**
    * Obtiene tracks de un artista específico

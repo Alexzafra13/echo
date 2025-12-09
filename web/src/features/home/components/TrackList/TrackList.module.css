@@ -134,6 +134,35 @@
   display: flex;
 }
 
+/* Missing Track (ghost track) - Using BEM modifier syntax */
+.trackList__track--missing {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.trackList__track--missing:hover {
+  background: var(--white-03);
+}
+
+.trackList__track--missing .trackList__trackTitle {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.trackList__track--missing .trackList__trackArtist {
+  color: var(--color-text-tertiary);
+}
+
+.trackList__track--missing .trackList__trackCover {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+.trackList__ghostIcon {
+  color: var(--color-text-tertiary);
+}
+
 /* Number cell - contains both track number and play button */
 .trackList__numberCell {
   display: flex;
