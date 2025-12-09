@@ -17,6 +17,8 @@ interface ActiveAlerts {
   scanErrors: number;
   missingFiles: number;
   storageDetails?: {
+    currentMB: number;
+    limitMB: number;
     percentUsed: number;
   };
 }
