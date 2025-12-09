@@ -14,7 +14,6 @@ import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ExternalMetadataService } from '../application/external-metadata.service';
-import { MetadataEnrichmentGateway } from './metadata-enrichment.gateway';
 import { MetadataEventsService, MetadataEventType } from '../domain/services/metadata-events.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { Public } from '@shared/decorators/public.decorator';
@@ -38,7 +37,6 @@ export class ExternalMetadataController {
 
   constructor(
     private readonly metadataService: ExternalMetadataService,
-    private readonly gateway: MetadataEnrichmentGateway,
     private readonly metadataEventsService: MetadataEventsService,
   ) {}
 
@@ -77,7 +75,7 @@ export class ExternalMetadataController {
 
     try {
       // Emit start event
-      this.gateway.emitEnrichmentStarted({
+      this.metadataEventsService.emitEnrichmentStarted({
         entityType: 'artist',
         entityId: artistId,
         entityName: 'Artist', // Will be updated with actual name
@@ -89,7 +87,7 @@ export class ExternalMetadataController {
       const duration = Date.now() - startTime;
 
       // Emit completion event
-      this.gateway.emitEnrichmentCompleted({
+      this.metadataEventsService.emitEnrichmentCompleted({
         entityType: 'artist',
         entityId: artistId,
         entityName: 'Artist',
@@ -110,7 +108,7 @@ export class ExternalMetadataController {
       this.logger.error(`Error enriching artist ${artistId}: ${(error as Error).message}`, (error as Error).stack);
 
       // Emit error event
-      this.gateway.emitEnrichmentError({
+      this.metadataEventsService.emitEnrichmentError({
         entityType: 'artist',
         entityId: artistId,
         entityName: 'Artist',
@@ -162,7 +160,7 @@ export class ExternalMetadataController {
 
     try {
       // Emit start event
-      this.gateway.emitEnrichmentStarted({
+      this.metadataEventsService.emitEnrichmentStarted({
         entityType: 'album',
         entityId: albumId,
         entityName: 'Album',
@@ -174,7 +172,7 @@ export class ExternalMetadataController {
       const duration = Date.now() - startTime;
 
       // Emit completion event
-      this.gateway.emitEnrichmentCompleted({
+      this.metadataEventsService.emitEnrichmentCompleted({
         entityType: 'album',
         entityId: albumId,
         entityName: 'Album',
@@ -193,7 +191,7 @@ export class ExternalMetadataController {
       this.logger.error(`Error enriching album ${albumId}: ${(error as Error).message}`, (error as Error).stack);
 
       // Emit error event
-      this.gateway.emitEnrichmentError({
+      this.metadataEventsService.emitEnrichmentError({
         entityType: 'album',
         entityId: albumId,
         entityName: 'Album',

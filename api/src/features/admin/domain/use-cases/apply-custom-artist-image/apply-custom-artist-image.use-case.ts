@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/domain/services/metadata-events.service';
 import { getArtistImageTypeBasicConfig } from '../../config/artist-image-type.config';
 import {
   ApplyCustomArtistImageInput,
@@ -23,7 +23,7 @@ export class ApplyCustomArtistImageUseCase {
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageService: ImageService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataEvents: MetadataEventsService,
   ) {}
 
   async execute(input: ApplyCustomArtistImageInput): Promise<ApplyCustomArtistImageOutput> {
@@ -103,7 +103,7 @@ export class ApplyCustomArtistImageUseCase {
     await this.redis.del(`artist:${input.artistId}`);
 
     // Emit WebSocket event
-    this.metadataGateway.emitArtistImagesUpdated({
+    this.metadataEvents.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: customImage.artist.name,
       imageType: customImage.imageType as any,

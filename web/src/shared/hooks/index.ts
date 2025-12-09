@@ -14,8 +14,6 @@ export type { MetadataEventType, ArtistImagesUpdatedEvent, AlbumCoverUpdatedEven
 // Convenience wrappers (use SSE internally)
 export { useArtistMetadataSync } from './useArtistMetadataSync';
 export { useAlbumMetadataSync } from './useAlbumMetadataSync';
-// @deprecated - use useMetadataSSE instead
-export { useMetadataWebSocket } from './useMetadataWebSocket';
 export { useDropdownPosition } from './useDropdownPosition';
 export { useDropdownMenu } from './useDropdownMenu';
 export type { UseDropdownMenuOptions, UseDropdownMenuReturn } from './useDropdownMenu';

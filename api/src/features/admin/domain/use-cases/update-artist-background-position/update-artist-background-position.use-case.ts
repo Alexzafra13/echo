@@ -3,7 +3,7 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
+import { MetadataEventsService } from '@features/external-metadata/domain/services/metadata-events.service';
 import {
   UpdateArtistBackgroundPositionInput,
   UpdateArtistBackgroundPositionOutput,
@@ -20,7 +20,7 @@ export class UpdateArtistBackgroundPositionUseCase {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
-    private readonly metadataGateway: MetadataEnrichmentGateway,
+    private readonly metadataEvents: MetadataEventsService,
   ) {}
 
   async execute(
@@ -60,7 +60,7 @@ export class UpdateArtistBackgroundPositionUseCase {
     this.logger.debug(`Invalidated Redis cache for key: ${redisCacheKey}`);
 
     // Emit WebSocket event to notify clients
-    this.metadataGateway.emitArtistImagesUpdated({
+    this.metadataEvents.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: artist.name,
       imageType: 'background',
