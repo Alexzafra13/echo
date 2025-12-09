@@ -99,11 +99,9 @@ export function AlbumOptionsMenu({
                 <button
                   className={styles.albumOptionsMenu__option}
                   onClick={(e) => handleOptionClick(e, onDownload)}
-                  disabled
-                  title="Próximamente"
                 >
                   <Download size={16} />
-                  <span>Descargar (próximamente)</span>
+                  <span>Descargar álbum</span>
                 </button>
               </>
             )}
