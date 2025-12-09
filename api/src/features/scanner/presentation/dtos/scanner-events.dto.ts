@@ -180,3 +180,49 @@ export class LufsProgressDto {
   @IsString()
   estimatedTimeRemaining?: string | null;
 }
+
+/**
+ * Tipo de cambio en la biblioteca
+ */
+export enum LibraryChangeType {
+  TRACK_DELETED = 'track_deleted',
+  ALBUM_DELETED = 'album_deleted',
+  ARTIST_DELETED = 'artist_deleted',
+  TRACK_ADDED = 'track_added',
+  TRACK_UPDATED = 'track_updated',
+}
+
+/**
+ * DTO para evento de cambio en la biblioteca (archivos añadidos/eliminados)
+ */
+export class LibraryChangeDto {
+  @IsEnum(LibraryChangeType)
+  type!: LibraryChangeType;
+
+  @IsOptional()
+  @IsString()
+  trackId?: string;
+
+  @IsOptional()
+  @IsString()
+  trackTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  albumId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  albumDeleted?: boolean;
+
+  @IsOptional()
+  @IsString()
+  artistId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  artistDeleted?: boolean;
+
+  @IsString()
+  timestamp!: string;
+}

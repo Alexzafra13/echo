@@ -1,9 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, albums, tracks } from '@infrastructure/database/schema';
 import { FileScannerService } from '../file-scanner.service';
+
+export interface TrackDeletionResult {
+  trackDeleted: boolean;
+  trackId?: string;
+  trackTitle?: string;
+  albumId?: string;
+  albumDeleted: boolean;
+  artistId?: string;
+  artistDeleted: boolean;
+}
 
 /**
  * Service for cleaning up orphaned library records
@@ -17,6 +27,93 @@ export class LibraryCleanupService {
     @InjectPinoLogger(LibraryCleanupService.name)
     private readonly logger: PinoLogger,
   ) {}
+
+  /**
+   * Delete a single track by its file path
+   * Also cleans up orphaned album and artist if needed
+   *
+   * @param filePath - Path to the deleted file
+   * @returns Information about what was deleted
+   */
+  async deleteTrackByPath(filePath: string): Promise<TrackDeletionResult> {
+    const result: TrackDeletionResult = {
+      trackDeleted: false,
+      albumDeleted: false,
+      artistDeleted: false,
+    };
+
+    try {
+      // Find the track by path
+      const track = await this.drizzle.db
+        .select({
+          id: tracks.id,
+          title: tracks.title,
+          albumId: tracks.albumId,
+        })
+        .from(tracks)
+        .where(eq(tracks.path, filePath))
+        .limit(1);
+
+      if (!track[0]) {
+        this.logger.debug(`Track not found in DB for path: ${filePath}`);
+        return result;
+      }
+
+      result.trackId = track[0].id;
+      result.trackTitle = track[0].title;
+      result.albumId = track[0].albumId ?? undefined;
+
+      // Delete the track
+      await this.drizzle.db.delete(tracks).where(eq(tracks.id, track[0].id));
+      result.trackDeleted = true;
+      this.logger.info(`🗑️  Track eliminado: "${track[0].title}" (${filePath})`);
+
+      // Check if album is now orphaned
+      if (track[0].albumId) {
+        const albumTracks = await this.drizzle.db
+          .select({ id: tracks.id })
+          .from(tracks)
+          .where(eq(tracks.albumId, track[0].albumId))
+          .limit(1);
+
+        if (albumTracks.length === 0) {
+          // Get artist ID before deleting album
+          const album = await this.drizzle.db
+            .select({ artistId: albums.artistId })
+            .from(albums)
+            .where(eq(albums.id, track[0].albumId))
+            .limit(1);
+
+          result.artistId = album[0]?.artistId ?? undefined;
+
+          // Delete orphaned album
+          await this.drizzle.db.delete(albums).where(eq(albums.id, track[0].albumId));
+          result.albumDeleted = true;
+          this.logger.info(`🗑️  Álbum huérfano eliminado (ID: ${track[0].albumId})`);
+
+          // Check if artist is now orphaned
+          if (result.artistId) {
+            const artistAlbums = await this.drizzle.db
+              .select({ id: albums.id })
+              .from(albums)
+              .where(eq(albums.artistId, result.artistId))
+              .limit(1);
+
+            if (artistAlbums.length === 0) {
+              await this.drizzle.db.delete(artists).where(eq(artists.id, result.artistId));
+              result.artistDeleted = true;
+              this.logger.info(`🗑️  Artista huérfano eliminado (ID: ${result.artistId})`);
+            }
+          }
+        }
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error(`Error eliminando track por path ${filePath}:`, error);
+      return result;
+    }
+  }
 
   /**
    * Remove tracks from DB that no longer exist in the filesystem
