@@ -197,7 +197,7 @@
     width: 100%;
   }
 
-  .playlistDetailPage__actions button {
+  .playlistDetailPage__actions > button {
     padding: 12px 24px;
     font-size: 15px;
     border-radius: 6px;
@@ -271,7 +271,7 @@
     gap: 10px;
   }
 
-  .playlistDetailPage__actions button {
+  .playlistDetailPage__actions > button {
     padding: 10px 20px;
     font-size: 14px;
     border-radius: 6px;

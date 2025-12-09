@@ -367,8 +367,8 @@
     width: 100%;
   }
 
-  /* Botones más prominentes en móvil */
-  .playlistDetailPage__heroActions button {
+  /* Botones más prominentes en móvil - solo hijos directos */
+  .playlistDetailPage__heroActions > button {
     padding: 12px 24px;
     font-size: 15px;
     border-radius: 6px;
@@ -414,8 +414,8 @@
     gap: 10px;
   }
 
-  /* Botones en móvil pequeño */
-  .playlistDetailPage__heroActions button {
+  /* Botones en móvil pequeño - solo hijos directos */
+  .playlistDetailPage__heroActions > button {
     padding: 10px 20px;
     font-size: 14px;
     border-radius: 6px;
