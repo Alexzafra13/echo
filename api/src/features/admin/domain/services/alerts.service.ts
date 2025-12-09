@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { count, eq, gte, and, inArray } from 'drizzle-orm';
+import { count, eq, gte, and, inArray, isNotNull } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
   customArtistImages,
   customAlbumCovers,
   metadataConflicts,
   libraryScans,
+  tracks,
 } from '@infrastructure/database/schema';
 import { ActiveAlerts, StorageBreakdown } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
@@ -23,6 +24,7 @@ export class AlertsService {
       orphanedAlbumCoversResult,
       pendingConflictsResult,
       recentScanErrorsResult,
+      missingFilesResult,
     ] = await Promise.all([
       this.drizzle.db
         .select({ count: count() })
@@ -45,12 +47,17 @@ export class AlertsService {
             gte(libraryScans.startedAt, weekAgo),
           ),
         ),
+      this.drizzle.db
+        .select({ count: count() })
+        .from(tracks)
+        .where(isNotNull(tracks.missingAt)),
     ]);
 
     const orphanedArtistImages = orphanedArtistImagesResult[0]?.count ?? 0;
     const orphanedAlbumCovers = orphanedAlbumCoversResult[0]?.count ?? 0;
     const pendingConflicts = pendingConflictsResult[0]?.count ?? 0;
     const recentScanErrors = recentScanErrorsResult[0]?.count ?? 0;
+    const missingFiles = missingFilesResult[0]?.count ?? 0;
 
     const maxStorageBytes = this.MAX_STORAGE_MB * 1024 * 1024;
     const managedStorageBytes = storageBreakdown.metadata + storageBreakdown.avatars;
@@ -62,6 +69,7 @@ export class AlertsService {
     return {
       orphanedFiles: orphanedArtistImages + orphanedAlbumCovers,
       pendingConflicts,
+      missingFiles,
       storageWarning,
       storageDetails: storageWarning
         ? {

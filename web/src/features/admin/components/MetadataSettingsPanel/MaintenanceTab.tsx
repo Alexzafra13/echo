@@ -5,6 +5,7 @@ import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatBytes } from '@shared/utils/format';
 import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
+import { MissingFilesPanel } from '../MissingFilesPanel';
 import styles from './MaintenanceTab.module.css';
 
 interface StorageStats {
@@ -455,6 +456,9 @@ export function MaintenanceTab() {
           />
         )}
       </div>
+
+      {/* Missing Files Panel */}
+      <MissingFilesPanel />
 
       {/* Info Box */}
       <CollapsibleInfo title="Sobre la limpieza">
