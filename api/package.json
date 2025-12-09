@@ -42,11 +42,9 @@
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-fastify": "^11.1.6",
-    "@nestjs/platform-socket.io": "^11.1.8",
     "@nestjs/schedule": "^6.0.1",
     "@nestjs/swagger": "^11.2.1",
     "@nestjs/throttler": "^6.4.0",
-    "@nestjs/websockets": "^11.1.8",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.61.0",
     "cache-manager": "^7.2.4",
@@ -68,8 +66,7 @@
     "pino-http": "^11.0.0",
     "probe-image-size": "^7.2.3",
     "reflect-metadata": "~0.2.2",
-    "rxjs": "^7.8.2",
-    "socket.io": "^4.8.1"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",

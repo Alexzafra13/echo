@@ -1,6 +1,5 @@
 import { Volume2 } from 'lucide-react';
-import { useAuthStore } from '@shared/store';
-import { useLufsProgress } from '@shared/hooks/useLufsProgress';
+import { useLufsProgressSSE } from '@shared/hooks/useScannerSSE';
 import styles from './LufsProgressIndicator.module.css';
 
 /**
@@ -9,8 +8,7 @@ import styles from './LufsProgressIndicator.module.css';
  * Solo visible cuando hay un análisis en curso
  */
 export function LufsProgressIndicator() {
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const { lufsProgress } = useLufsProgress(accessToken);
+  const { lufsProgress } = useLufsProgressSSE();
 
   // Solo mostrar si hay análisis activo
   const isActive = lufsProgress && (lufsProgress.isRunning || lufsProgress.pendingTracks > 0);

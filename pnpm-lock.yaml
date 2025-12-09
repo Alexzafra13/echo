@@ -47,9 +47,6 @@ importers:
       '@nestjs/platform-fastify':
         specifier: ^11.1.6
         version: 11.1.8(@fastify/static@8.3.0)(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)
-      '@nestjs/platform-socket.io':
-        specifier: ^11.1.8
-        version: 11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.8)(rxjs@7.8.2)
       '@nestjs/schedule':
         specifier: ^6.0.1
         version: 6.0.1(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)
@@ -59,9 +56,6 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.4.0
         version: 6.4.0(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)(reflect-metadata@0.2.2)
-      '@nestjs/websockets':
-        specifier: ^11.1.8
-        version: 11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)(@nestjs/platform-socket.io@11.1.8)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -128,9 +122,6 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
-      socket.io:
-        specifier: ^4.8.1
-        version: 4.8.1
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.10
@@ -234,9 +225,6 @@ importers:
       recharts:
         specifier: ^3.4.1
         version: 3.4.1(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)(redux@5.0.1)
-      socket.io-client:
-        specifier: ^4.8.1
-        version: 4.8.1
       wouter:
         specifier: ^3.1.0
         version: 3.7.1(react@18.3.1)
@@ -3068,9 +3056,6 @@ packages:
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
 
-  engine.io-client@6.6.3:
-    resolution: {integrity: sha512-T0iLjnyNWahNyv/lcjS2y4oE358tVS/SYQNxYXGAJ9/GLgH4VCvOQ/mhTjqU88mLZCQgiG8RIegFHYCdVC+j5w==}
-
   engine.io-parser@5.2.3:
     resolution: {integrity: sha512-HqD3yTBfnBxIrbnM1DoD6Pcq8NECnh8d4As1Qgh0z5Gg3jRRIqijury0CL3ghu/edArpUYiYqQiDUQBIs4np3Q==}
     engines: {node: '>=10.0.0'}
@@ -5046,10 +5031,6 @@ packages:
   socket.io-adapter@2.5.5:
     resolution: {integrity: sha512-eLDQas5dzPgOWCk9GuuJC2lBqItuhKI4uxGgo9aIV7MYbk2h9Q6uULEh8WBzThoI7l+qU9Ast9fVUmkqPP9wYg==}
 
-  socket.io-client@4.8.1:
-    resolution: {integrity: sha512-hJVXfu3E28NmzGk8o1sHhN3om52tRvwYeidbj7xKy2eIIse5IoKX3USlS6Tqt3BHAtflLIkCQBkzVrEEfWUyYQ==}
-    engines: {node: '>=10.0.0'}
-
   socket.io-parser@4.2.4:
     resolution: {integrity: sha512-/GbIKmo8ioc+NIWIhwdecY0ge+qVBSMdgxGygevmdHj24bsfgtCmcUUcQ5ZzcylGFHsN3k4HB4Cgkl96KVnuew==}
     engines: {node: '>=10.0.0'}
@@ -5685,10 +5666,6 @@ packages:
 
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
-
-  xmlhttprequest-ssl@2.1.2:
-    resolution: {integrity: sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ==}
-    engines: {node: '>=0.4.0'}
 
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
@@ -7003,6 +6980,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   '@nestjs/schedule@6.0.1(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8)':
     dependencies:
@@ -7073,6 +7051,7 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@nestjs/platform-socket.io': 11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.8)(rxjs@7.8.2)
+    optional: true
 
   '@noble/hashes@1.8.0': {}
 
@@ -7282,7 +7261,8 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
-  '@socket.io/component-emitter@3.1.2': {}
+  '@socket.io/component-emitter@3.1.2':
+    optional: true
 
   '@standard-schema/spec@1.0.0': {}
 
@@ -7384,6 +7364,7 @@ snapshots:
   '@types/cors@2.8.19':
     dependencies:
       '@types/node': 24.9.1
+    optional: true
 
   '@types/d3-array@3.2.2': {}
 
@@ -7780,6 +7761,7 @@ snapshots:
     dependencies:
       mime-types: 2.1.35
       negotiator: 0.6.3
+    optional: true
 
   accepts@2.0.0:
     dependencies:
@@ -7972,7 +7954,8 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  base64id@2.0.0: {}
+  base64id@2.0.0:
+    optional: true
 
   baseline-browser-mapping@2.8.20: {}
 
@@ -8262,7 +8245,8 @@ snapshots:
   cookie-signature@1.2.2:
     optional: true
 
-  cookie@0.7.2: {}
+  cookie@0.7.2:
+    optional: true
 
   cookie@1.0.2: {}
 
@@ -8274,6 +8258,7 @@ snapshots:
     dependencies:
       object-assign: 4.1.1
       vary: 1.1.2
+    optional: true
 
   cosmiconfig@8.3.6(typescript@5.8.3):
     dependencies:
@@ -8381,6 +8366,7 @@ snapshots:
   debug@4.3.7:
     dependencies:
       ms: 2.1.3
+    optional: true
 
   debug@4.4.3:
     dependencies:
@@ -8546,19 +8532,8 @@ snapshots:
     dependencies:
       once: 1.4.0
 
-  engine.io-client@6.6.3:
-    dependencies:
-      '@socket.io/component-emitter': 3.1.2
-      debug: 4.3.7
-      engine.io-parser: 5.2.3
-      ws: 8.17.1
-      xmlhttprequest-ssl: 2.1.2
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  engine.io-parser@5.2.3: {}
+  engine.io-parser@5.2.3:
+    optional: true
 
   engine.io@6.6.4:
     dependencies:
@@ -8575,6 +8550,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   enhanced-resolve@5.18.3:
     dependencies:
@@ -10216,7 +10192,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  negotiator@0.6.3: {}
+  negotiator@0.6.3:
+    optional: true
 
   negotiator@1.0.0:
     optional: true
@@ -10273,9 +10250,11 @@ snapshots:
       tinyexec: 1.0.1
     optional: true
 
-  object-assign@4.1.1: {}
+  object-assign@4.1.1:
+    optional: true
 
-  object-hash@3.0.0: {}
+  object-hash@3.0.0:
+    optional: true
 
   object-inspect@1.13.4: {}
 
@@ -11033,17 +11012,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-
-  socket.io-client@4.8.1:
-    dependencies:
-      '@socket.io/component-emitter': 3.1.2
-      debug: 4.3.7
-      engine.io-client: 6.6.3
-      socket.io-parser: 4.2.4
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
+    optional: true
 
   socket.io-parser@4.2.4:
     dependencies:
@@ -11051,6 +11020,7 @@ snapshots:
       debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   socket.io@4.8.1:
     dependencies:
@@ -11065,6 +11035,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   sonic-boom@4.2.0:
     dependencies:
@@ -11450,7 +11421,8 @@ snapshots:
 
   validator@13.15.20: {}
 
-  vary@1.1.2: {}
+  vary@1.1.2:
+    optional: true
 
   victory-vendor@37.3.6:
     dependencies:
@@ -11669,15 +11641,14 @@ snapshots:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
 
-  ws@8.17.1: {}
+  ws@8.17.1:
+    optional: true
 
   ws@8.18.3: {}
 
   xml-name-validator@5.0.0: {}
 
   xmlchars@2.2.0: {}
-
-  xmlhttprequest-ssl@2.1.2: {}
 
   xtend@4.0.2: {}
 

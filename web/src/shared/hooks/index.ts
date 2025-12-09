@@ -1,11 +1,9 @@
 export { useAuth } from './useAuth';
 export { useAutoRefreshOnScan } from './useAutoRefreshOnScan';
 export { useTheme } from './useTheme';
-export { useWebSocketConnection } from './useWebSocketConnection';
-export type { WebSocketNamespace, WebSocketEventHandler, UseWebSocketConnectionOptions, UseWebSocketConnectionReturn } from './useWebSocketConnection';
-export { useScannerWebSocket } from './useScannerWebSocket';
-export { useLufsProgress } from './useLufsProgress';
-export type { LufsProgress } from './useLufsProgress';
+// Scanner SSE hooks (replaced WebSocket)
+export { useScannerSSE, useLufsProgressSSE } from './useScannerSSE';
+export type { ScanProgress, ScanError, ScanCompleted, LibraryChange, LufsProgress, ScanStatus } from './useScannerSSE';
 export { useMetadataEnrichment } from './useMetadataEnrichment';
 export type { EnrichmentNotification, EnrichmentProgress } from './useMetadataEnrichment';
 // SSE-based metadata hooks (recommended)

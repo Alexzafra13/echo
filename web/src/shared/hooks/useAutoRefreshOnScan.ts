@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@shared/store';
-import WebSocketService from '../services/websocket.service';
+import { useScannerSSE } from './useScannerSSE';
 
 /**
  * Hook para auto-refresh cuando se completa un scan
  *
- * Escucha eventos WebSocket de scan completado y automáticamente
+ * Escucha eventos SSE de scan completado y automáticamente
  * invalida las queries de React Query para refrescar los datos.
  *
  * Uso:
@@ -20,31 +19,14 @@ import WebSocketService from '../services/websocket.service';
  */
 export function useAutoRefreshOnScan() {
   const queryClient = useQueryClient();
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const { completed } = useScannerSSE();
 
   useEffect(() => {
-    // Solo conectar si el usuario está autenticado
-    if (!isAuthenticated || !accessToken) {
-      return;
+    if (completed) {
+      // Scan completed - invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['albums'] });
+      queryClient.invalidateQueries({ queryKey: ['artists'] });
+      queryClient.invalidateQueries({ queryKey: ['tracks'] });
     }
-
-    // Conectar al namespace de scanner
-    const wsService = WebSocketService;
-    const socket = wsService.connect('scanner', accessToken);
-
-    const handleScanCompleted = () => {
-      queryClient.refetchQueries({ queryKey: ['albums'] });
-      queryClient.refetchQueries({ queryKey: ['artists'] });
-      queryClient.refetchQueries({ queryKey: ['tracks'] });
-    };
-
-    // Suscribirse al evento
-    socket.on('scan:completed', handleScanCompleted);
-
-    // Cleanup
-    return () => {
-      socket.off('scan:completed', handleScanCompleted);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, accessToken]);
+  }, [completed, queryClient]);
 }

@@ -10,6 +10,9 @@ import {
   HttpStatus,
   UseGuards,
   Logger,
+  Sse,
+  Req,
+  MessageEvent,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,8 +21,11 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { Observable, Subject, filter, map, finalize, merge } from 'rxjs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
+import { Public } from '@shared/decorators/public.decorator';
 import {
   StartScanUseCase,
   GetScanStatusUseCase,
@@ -27,6 +33,7 @@ import {
 } from '../../domain/use-cases';
 import { LufsAnalysisQueueService, LufsQueueStats } from '../../infrastructure/services/lufs-analysis-queue.service';
 import { LibraryCleanupService, PurgeMode } from '../../infrastructure/services/scanning/library-cleanup.service';
+import { ScannerEventsService } from '../../domain/services/scanner-events.service';
 import {
   StartScanRequestDto,
   StartScanResponseDto,
@@ -61,6 +68,7 @@ export class ScannerController {
     private readonly getScansHistoryUseCase: GetScansHistoryUseCase,
     private readonly lufsQueueService: LufsAnalysisQueueService,
     private readonly libraryCleanup: LibraryCleanupService,
+    private readonly scannerEventsService: ScannerEventsService,
   ) {}
 
   /**
@@ -100,6 +108,82 @@ export class ScannerController {
   })
   async getLufsStatus(): Promise<LufsQueueStats> {
     return this.lufsQueueService.getQueueStats();
+  }
+
+  /**
+   * GET /scanner/stream - SSE endpoint for real-time scanner events
+   *
+   * Events emitted:
+   * - scan:progress - Scan progress updates
+   * - scan:error - Scan errors
+   * - scan:completed - Scan completion
+   * - lufs:progress - LUFS analysis progress
+   * - library:change - File watcher changes
+   */
+  @Sse('stream')
+  @Public()
+  @ApiOperation({ summary: 'Stream de eventos del scanner en tiempo real (SSE)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Stream SSE de eventos del scanner',
+  })
+  streamScannerEvents(@Req() request: FastifyRequest): Observable<MessageEvent> {
+    this.logger.log('New SSE client connected to scanner stream');
+
+    const subject = new Subject<MessageEvent>();
+
+    // Send current state to late subscribers
+    const currentLufs = this.scannerEventsService.getCurrentLufsProgress();
+    if (currentLufs) {
+      subject.next({ data: currentLufs, type: 'lufs:progress' } as MessageEvent);
+    }
+
+    // Send any active scan progress
+    const activeScans = this.scannerEventsService.getAllActiveScanProgress();
+    for (const scanProgress of activeScans) {
+      subject.next({ data: scanProgress, type: 'scan:progress' } as MessageEvent);
+    }
+
+    // Event handlers
+    const handleProgress = (data: any) => {
+      subject.next({ data, type: 'scan:progress' } as MessageEvent);
+    };
+
+    const handleError = (data: any) => {
+      subject.next({ data, type: 'scan:error' } as MessageEvent);
+    };
+
+    const handleCompleted = (data: any) => {
+      subject.next({ data, type: 'scan:completed' } as MessageEvent);
+    };
+
+    const handleLufsProgress = (data: any) => {
+      subject.next({ data, type: 'lufs:progress' } as MessageEvent);
+    };
+
+    const handleLibraryChange = (data: any) => {
+      subject.next({ data, type: 'library:change' } as MessageEvent);
+    };
+
+    // Subscribe to events
+    this.scannerEventsService.on('scan:progress', handleProgress);
+    this.scannerEventsService.on('scan:error', handleError);
+    this.scannerEventsService.on('scan:completed', handleCompleted);
+    this.scannerEventsService.on('lufs:progress', handleLufsProgress);
+    this.scannerEventsService.on('library:change', handleLibraryChange);
+
+    // Cleanup on disconnect
+    request.raw.on('close', () => {
+      this.logger.log('SSE client disconnected from scanner stream');
+      this.scannerEventsService.off('scan:progress', handleProgress);
+      this.scannerEventsService.off('scan:error', handleError);
+      this.scannerEventsService.off('scan:completed', handleCompleted);
+      this.scannerEventsService.off('lufs:progress', handleLufsProgress);
+      this.scannerEventsService.off('library:change', handleLibraryChange);
+      subject.complete();
+    });
+
+    return subject.asObservable();
   }
 
   /**

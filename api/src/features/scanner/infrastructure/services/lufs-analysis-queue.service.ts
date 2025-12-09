@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -6,7 +6,7 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { tracks } from '@infrastructure/database/schema';
 import { eq, isNull, isNotNull, sql, and } from 'drizzle-orm';
 import { LufsAnalyzerService } from './lufs-analyzer.service';
-import { ScannerGateway } from '../gateways/scanner.gateway';
+import { ScannerEventsService } from '../../domain/services/scanner-events.service';
 import * as os from 'os';
 
 /**
@@ -79,8 +79,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly lufsAnalyzer: LufsAnalyzerService,
     private readonly configService: ConfigService,
-    @Inject(forwardRef(() => ScannerGateway))
-    private readonly scannerGateway: ScannerGateway,
+    private readonly scannerEventsService: ScannerEventsService,
     @InjectPinoLogger(LufsAnalysisQueueService.name)
     private readonly logger: PinoLogger,
   ) {
@@ -336,7 +335,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
   }
 
   /**
-   * Emit current progress via WebSocket
+   * Emit current progress via SSE
    */
   private emitProgress(): void {
     const pendingTracks = this.totalToProcess - this.processedInSession;
@@ -344,7 +343,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
       : null;
 
-    this.scannerGateway.emitLufsProgress({
+    this.scannerEventsService.emitLufsProgress({
       isRunning: this.isRunning,
       pendingTracks,
       processedInSession: this.processedInSession,

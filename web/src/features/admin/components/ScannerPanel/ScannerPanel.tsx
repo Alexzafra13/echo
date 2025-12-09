@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image, Volume2 } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
-import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
-import { useAuthStore } from '@shared/store';
+import { useScannerSSE } from '@shared/hooks/useScannerSSE';
 import { formatDateShort } from '@shared/utils/format';
 import styles from './ScannerPanel.module.css';
 
@@ -22,15 +21,11 @@ export function ScannerPanel() {
 
   const { data: history, isLoading: historyLoading, refetch } = useScannerHistory();
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
-  const { accessToken } = useAuthStore();
 
-  // WebSocket para progreso en tiempo real (scan + LUFS)
-  const { progress, isCompleted, isConnected, lufsProgress } = useScannerWebSocket(
-    currentScanId,
-    accessToken
-  );
+  // SSE para progreso en tiempo real (scan + LUFS)
+  const { progress, isCompleted, isConnected, lufsProgress } = useScannerSSE(currentScanId);
 
-  // Cuando se inicia un scan, guardar el ID para WebSocket
+  // Cuando se inicia un scan, guardar el ID para SSE
   useEffect(() => {
     if (scanResponse?.id) {
       setCurrentScanId(scanResponse.id);
