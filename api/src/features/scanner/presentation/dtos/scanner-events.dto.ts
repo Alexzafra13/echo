@@ -185,7 +185,9 @@ export class LufsProgressDto {
  * Tipo de cambio en la biblioteca
  */
 export enum LibraryChangeType {
-  TRACK_DELETED = 'track_deleted',
+  TRACK_MISSING = 'track_missing',    // Archivo desaparecido (marcado)
+  TRACK_RECOVERED = 'track_recovered', // Archivo recuperado
+  TRACK_DELETED = 'track_deleted',     // Eliminado de la BD
   ALBUM_DELETED = 'album_deleted',
   ARTIST_DELETED = 'artist_deleted',
   TRACK_ADDED = 'track_added',
