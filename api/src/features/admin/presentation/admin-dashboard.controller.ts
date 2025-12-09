@@ -4,11 +4,18 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Sse,
+  Req,
+  MessageEvent,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
+import { Public } from '@shared/decorators/public.decorator';
 import { GetDashboardStatsUseCase } from '../domain/use-cases';
+import { SystemHealthEventsService, HealthChangeEvent } from '../domain/services';
 import { GetDashboardStatsResponseDto } from './dtos';
 
 @ApiTags('admin/dashboard')
@@ -18,6 +25,7 @@ import { GetDashboardStatsResponseDto } from './dtos';
 export class AdminDashboardController {
   constructor(
     private readonly getDashboardStatsUseCase: GetDashboardStatsUseCase,
+    private readonly systemHealthEventsService: SystemHealthEventsService,
   ) {}
 
   @Get('stats')
@@ -68,5 +76,55 @@ export class AdminDashboardController {
       systemHealth: result.systemHealth,
       activeAlerts: result.activeAlerts,
     };
+  }
+
+  @Sse('health/stream')
+  @Public()
+  @ApiOperation({
+    summary: 'Stream system health updates (SSE)',
+    description: 'Real-time Server-Sent Events stream for system health changes. Sends events when database, redis, storage, or scanner status changes.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'SSE stream established',
+  })
+  streamHealthUpdates(@Req() request: FastifyRequest): Observable<MessageEvent> {
+    return new Observable((subscriber) => {
+      // Send initial health state
+      this.systemHealthEventsService.getCurrentHealth().then((health) => {
+        subscriber.next({
+          type: 'health:initial',
+          data: {
+            ...health,
+            timestamp: new Date().toISOString(),
+          },
+        } as MessageEvent);
+      });
+
+      // Subscribe to health changes
+      const handleEvent = (event: HealthChangeEvent) => {
+        subscriber.next({
+          type: event.type,
+          data: event.data,
+        } as MessageEvent);
+      };
+
+      const unsubscribe = this.systemHealthEventsService.subscribe(handleEvent);
+
+      // Keepalive every 30 seconds
+      const keepaliveInterval = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: { timestamp: Date.now() },
+        } as MessageEvent);
+      }, 30000);
+
+      // Cleanup on disconnect
+      request.raw.on('close', () => {
+        unsubscribe();
+        clearInterval(keepaliveInterval);
+        subscriber.complete();
+      });
+    });
   }
 }

@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, FileX } from 'lucide-react';
 import { useMetadataEnrichment } from '@shared/hooks';
+import { useSystemHealthSSE } from '@shared/hooks/useSystemHealthSSE';
 import { usePendingRequests } from '@features/social/hooks';
 import type { EnrichmentNotification } from '@shared/hooks';
 import styles from './MetadataNotifications.module.css';
@@ -36,13 +37,12 @@ type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNoti
  * MetadataNotifications Component
  * Muestra notificaciones:
  * - Para todos: solicitudes de amistad
- * - Solo admin: alertas del sistema + enriquecimiento de metadatos
+ * - Solo admin: alertas del sistema (via SSE) + enriquecimiento de metadatos
  */
 export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsProps) {
   const [, setLocation] = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -54,6 +54,9 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     markAllAsRead,
     clearAll,
   } = useMetadataEnrichment(token, isAdmin);
+
+  // System health via SSE (admin only)
+  const { systemHealth, activeAlerts } = useSystemHealthSSE(token, isAdmin);
 
   // Friend request notifications (all users)
   const { data: pendingRequests } = usePendingRequests();
@@ -67,96 +70,73 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       userId: request.id,
       username: request.username,
       name: request.name,
-      timestamp: new Date().toISOString(), // TODO: use actual timestamp from backend
+      timestamp: new Date().toISOString(),
     })) || [];
 
-  // Fetch alertas críticas del sistema (admin only)
-  const fetchSystemAlerts = async () => {
-    if (!token || !isAdmin) return;
+  // Convert system health to alerts (computed from SSE data)
+  const systemAlerts = useMemo<SystemAlert[]>(() => {
+    if (!systemHealth || !activeAlerts) return [];
 
-    try {
-      const response = await fetch('/api/admin/dashboard/health', {
-        headers: { Authorization: `Bearer ${token}` },
+    const alerts: SystemAlert[] = [];
+    const now = new Date().toISOString();
+
+    // Solo storage CRÍTICO (>90%)
+    if (systemHealth.storage === 'critical' && activeAlerts.storageDetails) {
+      alerts.push({
+        id: 'storage-critical',
+        type: 'error',
+        category: 'storage',
+        message: `Almacenamiento crítico: ${activeAlerts.storageDetails.percentUsed}% usado`,
+        timestamp: now,
       });
-
-      if (!response.ok) return;
-
-      const data = await response.json();
-      const alerts: SystemAlert[] = [];
-
-      // Solo storage CRÍTICO (>90%)
-      if (data.systemHealth?.storage === 'critical' && data.activeAlerts?.storageDetails) {
-        alerts.push({
-          id: 'storage-critical',
-          type: 'error',
-          category: 'storage',
-          message: `Almacenamiento crítico: ${data.activeAlerts.storageDetails.percentUsed}% usado`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Database/Redis down (crítico)
-      if (data.systemHealth?.database === 'down') {
-        alerts.push({
-          id: 'db-down',
-          type: 'error',
-          category: 'database',
-          message: 'Base de datos no disponible',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      if (data.systemHealth?.redis === 'down') {
-        alerts.push({
-          id: 'redis-down',
-          type: 'error',
-          category: 'database',
-          message: 'Redis no disponible',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Muchos errores de escaneo (>20 errores)
-      if (data.activeAlerts?.scanErrors && data.activeAlerts.scanErrors > 20) {
-        alerts.push({
-          id: 'scan-errors',
-          type: 'warning',
-          category: 'scanner',
-          message: `${data.activeAlerts.scanErrors} errores de escaneo críticos`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Archivos desaparecidos
-      if (data.activeAlerts?.missingFiles && data.activeAlerts.missingFiles > 0) {
-        alerts.push({
-          id: 'missing-files',
-          type: 'warning',
-          category: 'missing',
-          message: `${data.activeAlerts.missingFiles} archivo${data.activeAlerts.missingFiles > 1 ? 's' : ''} desaparecido${data.activeAlerts.missingFiles > 1 ? 's' : ''}`,
-          timestamp: new Date().toISOString(),
-          link: '/admin?tab=maintenance',
-        });
-      }
-
-      setSystemAlerts(alerts);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Error fetching system alerts:', error);
-      }
     }
-  };
 
-  // Fetch inicial y polling cada 60 segundos (admin only)
-  useEffect(() => {
-    if (!isAdmin) return;
+    // Database/Redis down (crítico)
+    if (systemHealth.database === 'down') {
+      alerts.push({
+        id: 'db-down',
+        type: 'error',
+        category: 'database',
+        message: 'Base de datos no disponible',
+        timestamp: now,
+      });
+    }
 
-    fetchSystemAlerts();
-    const interval = setInterval(fetchSystemAlerts, 60000); // 60s
+    if (systemHealth.redis === 'down') {
+      alerts.push({
+        id: 'redis-down',
+        type: 'error',
+        category: 'database',
+        message: 'Redis no disponible',
+        timestamp: now,
+      });
+    }
 
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isAdmin]);
+    // Muchos errores de escaneo (>20 errores)
+    if (activeAlerts.scanErrors && activeAlerts.scanErrors > 20) {
+      alerts.push({
+        id: 'scan-errors',
+        type: 'warning',
+        category: 'scanner',
+        message: `${activeAlerts.scanErrors} errores de escaneo críticos`,
+        timestamp: now,
+      });
+    }
+
+    // Archivos desaparecidos
+    if (activeAlerts.missingFiles && activeAlerts.missingFiles > 0) {
+      alerts.push({
+        id: 'missing-files',
+        type: 'warning',
+        category: 'missing',
+        message: `${activeAlerts.missingFiles} archivo${activeAlerts.missingFiles > 1 ? 's' : ''} desaparecido${activeAlerts.missingFiles > 1 ? 's' : ''}`,
+        timestamp: now,
+        link: '/admin?tab=maintenance',
+      });
+    }
+
+    return alerts;
+  }, [systemHealth, activeAlerts]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
