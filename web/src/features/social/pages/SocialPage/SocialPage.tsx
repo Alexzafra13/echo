@@ -13,7 +13,7 @@ import {
   useRemoveFriendship,
   useSearchUsers,
 } from '../../hooks';
-import { useListeningNowSSE } from '../../hooks/useListeningNowSSE';
+import { useListeningNowSSE } from '../../hooks/useListeningSSE';
 import { Equalizer } from '../../components/Equalizer';
 import { getActionText, getActionIcon, getTargetUrl } from '../../utils/socialFormatters';
 import styles from './SocialPage.module.css';

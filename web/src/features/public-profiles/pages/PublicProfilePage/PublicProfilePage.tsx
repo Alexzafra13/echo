@@ -15,7 +15,7 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { usePublicProfile } from '../../hooks';
-import { useProfileListeningSSE } from '../../hooks/useProfileListeningSSE';
+import { useProfileListeningSSE } from '@features/social/hooks/useListeningSSE';
 import {
   useSendFriendRequest,
   useAcceptFriendRequest,
