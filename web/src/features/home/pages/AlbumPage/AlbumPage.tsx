@@ -8,6 +8,7 @@ import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSe
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { useArtistAlbums } from '@features/artists/hooks';
 import { usePlayer, Track } from '@features/player';
+import { useStreamToken } from '@features/player/hooks/useStreamToken';
 import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
@@ -30,6 +31,7 @@ export default function AlbumPage() {
   const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const { playQueue, currentTrack, setShuffle } = usePlayer();
+  const { data: streamTokenData } = useStreamToken();
 
   // Real-time synchronization via SSE for album cover
   useAlbumMetadataSync(id);
@@ -181,8 +183,23 @@ export default function AlbumPage() {
   };
 
   const handleDownloadAlbum = () => {
-    // TODO: Implement download album
-    logger.debug('Download album - to be implemented');
+    if (!id || !streamTokenData?.token) {
+      logger.error('Cannot download album: missing album ID or stream token');
+      return;
+    }
+
+    // Create download URL with stream token
+    const downloadUrl = `/api/albums/${id}/download?token=${streamTokenData.token}`;
+
+    // Create hidden anchor and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = ''; // Browser will use Content-Disposition filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    logger.debug('Album download initiated', { albumId: id });
   };
 
   const handleChangeCover = () => {
@@ -322,7 +339,7 @@ export default function AlbumPage() {
                 <AlbumOptionsMenu
                   onShowInfo={handleShowAlbumInfo}
                   onAddToPlaylist={handleAddAlbumToPlaylist}
-                  onDownload={handleDownloadAlbum}
+                  onDownload={streamTokenData?.token ? handleDownloadAlbum : undefined}
                   onChangeCover={handleChangeCover}
                 />
               </div>
