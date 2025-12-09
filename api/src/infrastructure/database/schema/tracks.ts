@@ -70,6 +70,7 @@ export const tracks = pgTable(
     lufsAnalyzedAt: timestamp('lufs_analyzed_at'), // null = pendiente, fecha = ya analizado
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    missingAt: timestamp('missing_at'), // null = presente, fecha = marcado como desaparecido
   },
   (table) => [
     index('idx_tracks_album').on(table.albumId),
@@ -80,6 +81,7 @@ export const tracks = pgTable(
     index('idx_tracks_mbid').on(table.mbzTrackId),
     index('idx_tracks_artist_mbid').on(table.mbzArtistId),
     index('idx_tracks_album_mbid').on(table.mbzAlbumId),
+    index('idx_tracks_missing').on(table.missingAt), // Para filtrar tracks desaparecidos
   ],
 );
 

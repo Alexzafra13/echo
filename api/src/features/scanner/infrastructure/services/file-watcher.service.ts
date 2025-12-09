@@ -149,21 +149,30 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Handles deleted files - removes track from DB and notifies clients
+   * Handles deleted files - marks as missing or deletes based on purge mode
    */
   private async handleFileDeleted(filePath: string): Promise<void> {
     if (!this.isSupportedFile(filePath)) {
       return;
     }
 
-    this.logger.log(`🗑️  File deleted detected: ${filePath}`);
+    this.logger.log(`👻 File deletion detected: ${filePath}`);
 
     try {
-      // Delete track from DB and cleanup orphans
-      const result = await this.libraryCleanup.deleteTrackByPath(filePath);
+      // Handle missing file (mark or delete based on settings)
+      const result = await this.libraryCleanup.handleMissingFile(filePath);
 
-      if (result.trackDeleted) {
-        // Notify all connected clients about the deletion
+      if (result.trackMarkedMissing) {
+        // Track was marked as missing (not deleted)
+        this.scannerGateway.emitLibraryChange({
+          type: LibraryChangeType.TRACK_MISSING,
+          trackId: result.trackId,
+          trackTitle: result.trackTitle,
+          albumId: result.albumId,
+          timestamp: new Date().toISOString(),
+        });
+      } else if (result.trackDeleted) {
+        // Track was deleted (purge mode = 'always')
         this.scannerGateway.emitLibraryChange({
           type: LibraryChangeType.TRACK_DELETED,
           trackId: result.trackId,
