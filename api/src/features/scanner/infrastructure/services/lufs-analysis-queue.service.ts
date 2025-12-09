@@ -186,7 +186,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       (pendingTracks.length / this.concurrency) * this.averageProcessingTime
     );
 
-    // Emit initial progress via WebSocket
+    // Emit initial progress via SSE
     this.emitProgress();
 
     return {
@@ -285,7 +285,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         (this.averageProcessingTime * 0.9) + (processingTime * 0.1)
       );
 
-      // Emit WebSocket progress every 10 tracks (or on first track)
+      // Emit SSE progress every 10 tracks (or on first track)
       if (this.processedInSession === 1 || this.processedInSession % 10 === 0) {
         this.emitProgress();
       }

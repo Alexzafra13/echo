@@ -102,7 +102,7 @@ export class ApplyCustomArtistImageUseCase {
     this.imageService.invalidateArtistCache(input.artistId);
     await this.redis.del(`artist:${input.artistId}`);
 
-    // Emit WebSocket event
+    // Emit SSE event
     this.metadataEvents.emitArtistImagesUpdated({
       artistId: input.artistId,
       artistName: customImage.artist.name,

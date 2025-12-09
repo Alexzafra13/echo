@@ -30,7 +30,7 @@ export default function ArtistDetailPage() {
   const [profileRenderKey, setProfileRenderKey] = useState(0);
   const { user } = useAuth();
 
-  // Real-time synchronization via WebSocket for artist images and album covers
+  // Real-time synchronization via SSE for artist images and album covers
   useArtistMetadataSync(id);
   useAlbumMetadataSync(undefined, id); // Sync albums for this artist
 
@@ -375,7 +375,7 @@ export default function ArtistDetailPage() {
           }
           onClose={() => setIsAvatarSelectorOpen(false)}
           onSuccess={() => {
-            // WebSocket will automatically sync the changes via useArtistMetadataSync
+            // SSE will automatically sync the changes via useArtistMetadataSync
             // No need for window.location.reload() - React Query handles it
             setIsAvatarSelectorOpen(false);
           }}
@@ -391,7 +391,7 @@ export default function ArtistDetailPage() {
           initialPosition={artist.backgroundPosition}
           onClose={() => setIsBackgroundPositionModalOpen(false)}
           onSuccess={() => {
-            // WebSocket will automatically sync the changes
+            // SSE will automatically sync the changes
             setIsBackgroundPositionModalOpen(false);
           }}
         />

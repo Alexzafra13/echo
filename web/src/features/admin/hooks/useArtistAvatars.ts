@@ -30,7 +30,7 @@ export function useApplyArtistAvatar() {
       artistAvatarsApi.applyAvatar(request),
     onSuccess: (_data, variables) => {
       // Invalidar queries relacionadas para refrescar las imágenes
-      // IMPORTANTE: WebSocket ya emitirá un evento que invalidará automáticamente,
+      // IMPORTANTE: SSE ya emitirá un evento que invalidará automáticamente,
       // pero hacemos invalidación local inmediata para feedback instantáneo
       queryClient.invalidateQueries({ queryKey: ['artists', variables.artistId] });
       queryClient.invalidateQueries({ queryKey: ['artist-images', variables.artistId] });

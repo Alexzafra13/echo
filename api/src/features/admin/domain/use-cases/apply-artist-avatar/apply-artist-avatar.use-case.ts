@@ -130,7 +130,7 @@ export class ApplyArtistAvatarUseCase {
     await this.redis.del(redisCacheKey);
     this.logger.debug(`Invalidated Redis cache for key: ${redisCacheKey}`);
 
-    // Get updated artist for WebSocket notification
+    // Get updated artist for SSE notification
     const finalArtistResult = await this.drizzle.db
       .select({
         externalProfileUpdatedAt: artists.externalProfileUpdatedAt,
@@ -144,7 +144,7 @@ export class ApplyArtistAvatarUseCase {
 
     const finalArtist = finalArtistResult[0];
 
-    // Emit WebSocket event
+    // Emit SSE event
     const updatedAt = (finalArtist?.[typeConfig.externalUpdatedField as keyof typeof finalArtist] as Date) || new Date();
     this.metadataEvents.emitArtistImagesUpdated({
       artistId: input.artistId,

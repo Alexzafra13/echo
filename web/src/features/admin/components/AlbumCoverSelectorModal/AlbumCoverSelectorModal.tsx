@@ -58,8 +58,8 @@ export function AlbumCoverSelectorModal({
       },
       {
         onSuccess: async () => {
-          // FALLBACK: Force manual refetch in case WebSocket fails
-          // This ensures the UI updates even if the WebSocket event doesn't arrive
+          // FALLBACK: Force manual refetch in case SSE fails
+          // This ensures the UI updates even if the SSE event doesn't arrive
 
           // Immediate refetch of album
           await queryClient.refetchQueries({

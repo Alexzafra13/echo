@@ -7,7 +7,7 @@ import { getArtistImageUrl } from '@features/home/hooks';
  * @param artistId - The artist ID
  * @param tag - Optional MD5 tag for cache validation (from useArtistImages metadata)
  *
- * Note: For list views without tag, WebSocket sync ensures cache invalidation
+ * Note: For list views without tag, SSE sync ensures cache invalidation
  * when images are updated. For detail views, use useArtistImages() to get tag.
  */
 export function getArtistAvatarUrl(artistId: string, tag?: string): string {

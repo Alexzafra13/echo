@@ -519,7 +519,7 @@ describe('LufsAnalysisQueueService', () => {
           { provide: DrizzleService, useValue: mockDrizzle },
           { provide: BullmqService, useValue: mockBullmq },
           { provide: LufsAnalyzerService, useValue: mockLufsAnalyzer },
-          { provide: ScannerGateway, useValue: mockScannerEventsService },
+          { provide: ScannerEventsService, useValue: mockScannerEventsService },
           { provide: ConfigService, useValue: mockConfigService },
           {
             provide: getLoggerToken(LufsAnalysisQueueService.name),

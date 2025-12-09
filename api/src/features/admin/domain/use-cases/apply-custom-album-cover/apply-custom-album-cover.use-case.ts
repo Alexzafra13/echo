@@ -83,7 +83,7 @@ export class ApplyCustomAlbumCoverUseCase {
     // Invalidate image cache
     this.imageService.invalidateAlbumCache(input.albumId);
 
-    // Notify via WebSocket (if album has an artist)
+    // Notify via SSE (if album has an artist)
     if (album.artistId) {
       this.metadataEvents.emitAlbumCoverUpdated({
         albumId: input.albumId,

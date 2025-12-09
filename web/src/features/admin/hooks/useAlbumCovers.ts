@@ -23,12 +23,12 @@ export function useApplyAlbumCover() {
       albumCoversApi.applyCover(request),
     onSuccess: (_data, variables) => {
       // Invalidar queries relacionadas para refrescar las imágenes
-      // IMPORTANTE: WebSocket ya emitirá un evento que invalidará automáticamente,
+      // IMPORTANTE: SSE ya emitirá un evento que invalidará automáticamente,
       // pero hacemos invalidación local inmediata para feedback instantáneo
       queryClient.invalidateQueries({ queryKey: ['albums', variables.albumId] });
       queryClient.invalidateQueries({ queryKey: ['albums'] }); // Lista de álbumes
       // También invalidar artista (los álbumes aparecen en páginas de artistas)
-      // El artistId se invalida automáticamente via WebSocket event
+      // El artistId se invalida automáticamente via SSE event
     },
   });
 }

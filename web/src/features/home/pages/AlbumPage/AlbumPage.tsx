@@ -31,7 +31,7 @@ export default function AlbumPage() {
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const { playQueue, currentTrack, setShuffle } = usePlayer();
 
-  // Real-time synchronization via WebSocket for album cover
+  // Real-time synchronization via SSE for album cover
   useAlbumMetadataSync(id);
 
   const { data: album, isLoading: loadingAlbum, error: albumError } = useAlbum(id!);
