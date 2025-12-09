@@ -4,7 +4,7 @@ import chokidar, { FSWatcher } from 'chokidar';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { LibraryCleanupService } from './scanning/library-cleanup.service';
-import { ScannerGateway } from '../gateways/scanner.gateway';
+import { ScannerEventsService } from '../../domain/services/scanner-events.service';
 import { LibraryChangeType } from '../../presentation/dtos/scanner-events.dto';
 import { stat } from 'fs/promises';
 
@@ -33,7 +33,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
     private readonly bullmq: BullmqService,
     private readonly settingsService: SettingsService,
     private readonly libraryCleanup: LibraryCleanupService,
-    private readonly scannerGateway: ScannerGateway,
+    private readonly scannerEventsService: ScannerEventsService,
   ) {}
 
   /**
@@ -164,7 +164,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
 
       if (result.trackMarkedMissing) {
         // Track was marked as missing (not deleted)
-        this.scannerGateway.emitLibraryChange({
+        this.scannerEventsService.emitLibraryChange({
           type: LibraryChangeType.TRACK_MISSING,
           trackId: result.trackId,
           trackTitle: result.trackTitle,
@@ -173,7 +173,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         });
       } else if (result.trackDeleted) {
         // Track was deleted (purge mode = 'always')
-        this.scannerGateway.emitLibraryChange({
+        this.scannerEventsService.emitLibraryChange({
           type: LibraryChangeType.TRACK_DELETED,
           trackId: result.trackId,
           trackTitle: result.trackTitle,

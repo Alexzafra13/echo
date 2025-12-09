@@ -11,7 +11,6 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
-import { WebSocketAdapter } from '@infrastructure/websocket';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -44,7 +43,7 @@ async function bootstrap() {
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // Allow inline styles and Google Fonts
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'], // Allow external images (radio logos, covers)
-        connectSrc: ["'self'", 'ws:', 'wss:', 'https://ipapi.co'], // WebSocket + geolocation API
+        connectSrc: ["'self'", 'https://ipapi.co'], // SSE + geolocation API
         fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], // Allow Google Fonts
         objectSrc: ["'none'"],
         mediaSrc: ["'self'", 'blob:', 'http:', 'https:'], // Allow blob URLs + external radio streams (HTTP and HTTPS)
@@ -55,9 +54,6 @@ async function bootstrap() {
     crossOriginEmbedderPolicy: false, // Disable for audio streaming
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow audio streaming across origins
   });
-
-  // WebSocket Adapter
-  app.useWebSocketAdapter(new WebSocketAdapter(app));
 
   // CORS
   app.enableCors({
@@ -219,7 +215,7 @@ Node.js: ${process.version}
 
 🎯 Features:
    Frontend: ${existsSync(frontendPath) ? '✅ Served (Jellyfin-style single container)' : '❌ Not found (API-only mode)'}
-   WebSocket: ✅ Enabled
+   Realtime: ✅ SSE (Server-Sent Events)
    Cache:    ${process.env.ENABLE_CACHE !== 'false' ? '✅ Redis' : '❌ Disabled'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

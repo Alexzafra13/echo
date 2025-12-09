@@ -1,6 +1,5 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Socket } from 'socket.io';
 import { UserProps } from '@features/auth/domain/entities/user.entity';
 
 /**
@@ -89,50 +88,6 @@ export function createMockExecutionContext(
   } as unknown as ExecutionContext;
 }
 
-/**
- * Mock WebSocket context for WS guard testing
- */
-export interface MockWsContextOptions {
-  client?: Partial<Socket>;
-  data?: Record<string, unknown>;
-}
-
-export function createMockWsContext(
-  options: MockWsContextOptions = {},
-): ExecutionContext {
-  const { client = {}, data = {} } = options;
-
-  const mockClient = {
-    id: 'test-socket-id',
-    handshake: {
-      auth: {},
-      headers: {},
-      query: {},
-    },
-    ...client,
-  };
-
-  return {
-    switchToWs: () => ({
-      getClient: <T = unknown>() => mockClient as T,
-      getData: <T = unknown>() => data as T,
-    }),
-    getType: <T extends string = string>() => 'ws' as T,
-    getHandler: () => () => {},
-    getClass: () => class {},
-    getArgs: <T extends unknown[] = unknown[]>() => [] as unknown as T,
-    getArgByIndex: <T = unknown>() => undefined as T,
-    switchToHttp: () => ({
-      getRequest: <T = unknown>() => ({}) as T,
-      getResponse: <T = unknown>() => ({}) as T,
-      getNext: <T = unknown>() => (() => {}) as T,
-    }),
-    switchToRpc: () => ({
-      getData: <T = unknown>() => ({}) as T,
-      getContext: <T = unknown>() => ({}) as T,
-    }),
-  } as unknown as ExecutionContext;
-}
 
 /**
  * Mock Reflector for decorator testing

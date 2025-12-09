@@ -1,12 +1,13 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { QueueModule } from '@infrastructure/queue/queue.module';
-import { WebSocketModule } from '@infrastructure/websocket';
 import { AlbumsModule } from '@features/albums/albums.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 
 // Presentation Layer
 import { ScannerController } from './presentation/controller/scanner.controller';
-import { ScannerGateway } from './infrastructure/gateways/scanner.gateway';
+
+// Domain Layer (Services)
+import { ScannerEventsService } from './domain/services/scanner-events.service';
 
 // Domain Layer (Use Cases)
 import {
@@ -59,7 +60,6 @@ import { CoverArtService } from '@shared/services';
 @Module({
   imports: [
     QueueModule, // Para BullMQ
-    WebSocketModule, // Para WebSocket
     forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
     ExternalMetadataModule, // Para auto-enriquecimiento de metadatos
   ],
@@ -89,8 +89,8 @@ import { CoverArtService } from '@shared/services';
     TrackProcessingService,
     ScanProcessorService,
 
-    // Gateways (WebSocket)
-    ScannerGateway,
+    // Event Service (replaces WebSocket gateway)
+    ScannerEventsService,
 
     // Port implementations
     {
@@ -102,6 +102,6 @@ import { CoverArtService } from '@shared/services';
       useClass: ScanProcessorService,
     },
   ],
-  exports: [SCANNER_REPOSITORY, ScannerGateway],
+  exports: [SCANNER_REPOSITORY, ScannerEventsService],
 })
 export class ScannerModule {}

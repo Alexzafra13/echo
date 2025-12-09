@@ -12,7 +12,6 @@ import { DrizzleModule } from './infrastructure/database/drizzle.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { FilesystemModule } from './infrastructure/filesystem/filesystem.module';
-import { WebSocketModule } from './infrastructure/websocket';
 
 // Features
 import { AuthModule } from './features/auth/auth.module';
@@ -93,7 +92,6 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
     CacheModule,
     QueueModule,
     FilesystemModule,
-    WebSocketModule,
     LogsModule,
 
     // Features

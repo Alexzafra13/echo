@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq, desc } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -10,7 +10,7 @@ import {
 } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
 import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
-import { ScannerGateway } from '../gateways/scanner.gateway';
+import { ScannerEventsService } from '../../domain/services/scanner-events.service';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
@@ -51,8 +51,7 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly lufsAnalysisQueue: LufsAnalysisQueueService,
-    @Inject(forwardRef(() => ScannerGateway))
-    private readonly scannerGateway: ScannerGateway,
+    private readonly scannerEventsService: ScannerEventsService,
     private readonly cachedAlbumRepository: CachedAlbumRepository,
     private readonly settingsService: SettingsService,
     private readonly enrichmentQueueService: EnrichmentQueueService,
@@ -179,7 +178,7 @@ export class ScanProcessorService implements OnModuleInit {
           }
         } catch (error) {
           tracker.errors++;
-          this.scannerGateway.emitError({
+          this.scannerEventsService.emitError({
             scanId,
             file: filePath,
             error: (error as Error).message,
@@ -238,7 +237,7 @@ export class ScanProcessorService implements OnModuleInit {
       );
 
       // Emit: completed
-      this.scannerGateway.emitCompleted({
+      this.scannerEventsService.emitCompleted({
         scanId,
         totalFiles: tracker.totalFiles,
         tracksCreated: tracker.tracksCreated,
@@ -306,7 +305,7 @@ export class ScanProcessorService implements OnModuleInit {
     message: string,
     currentFile?: string,
   ): void {
-    this.scannerGateway.emitProgress({
+    this.scannerEventsService.emitProgress({
       scanId,
       status,
       progress: tracker.progress,
@@ -332,7 +331,7 @@ export class ScanProcessorService implements OnModuleInit {
     this.logger.info(`🔍 Iniciando scan incremental de ${files.length} archivo(s)...`);
     this.logger.info(`📁 Fuente: ${source} | Timestamp: ${timestamp}`);
 
-    this.scannerGateway.emitProgress({
+    this.scannerEventsService.emitProgress({
       scanId,
       status: ScanStatus.SCANNING,
       progress: 0,
@@ -365,7 +364,7 @@ export class ScanProcessorService implements OnModuleInit {
           tracker.filesScanned++;
 
           if (tracker.filesScanned % 5 === 0 || tracker.filesScanned === tracker.totalFiles) {
-            this.scannerGateway.emitProgress({
+            this.scannerEventsService.emitProgress({
               scanId,
               status: ScanStatus.SCANNING,
               progress: tracker.progress,
@@ -394,7 +393,7 @@ export class ScanProcessorService implements OnModuleInit {
       await this.startLufsAnalysis();
 
       // Emit: completed
-      this.scannerGateway.emitCompleted({
+      this.scannerEventsService.emitCompleted({
         scanId,
         totalFiles: tracker.totalFiles,
         tracksCreated: tracker.tracksCreated,
@@ -417,7 +416,7 @@ export class ScanProcessorService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.error(`❌ Error en scan incremental:`, error);
-      this.scannerGateway.emitError({
+      this.scannerEventsService.emitError({
         scanId,
         file: 'incremental-scan',
         error: error instanceof Error ? error.message : 'Unknown error',
