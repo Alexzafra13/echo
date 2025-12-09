@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearch } from 'wouter';
 import { LayoutDashboard, Library, Music2, Wrench, Users, FileText } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { AdminSidebar } from '../../components/AdminSidebar';
@@ -19,14 +20,33 @@ interface Tab {
   icon: React.ReactNode;
 }
 
+const validTabs = ['dashboard', 'library', 'metadata', 'maintenance', 'users', 'logs'];
+
 /**
  * AdminPage Component
  * Panel de administración para gestionar la librería musical
  * Solo accesible para usuarios con rol admin
  */
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const tabFromUrl = urlParams.get('tab');
+
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize from URL if valid
+    if (tabFromUrl && validTabs.includes(tabFromUrl)) {
+      return tabFromUrl;
+    }
+    return 'dashboard';
+  });
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Handle URL tab parameter changes
+  useEffect(() => {
+    if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   // Reset scroll position when tab changes
   useEffect(() => {

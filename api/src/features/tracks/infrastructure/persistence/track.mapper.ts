@@ -37,6 +37,8 @@ export class TrackMapper {
       rgTrackPeak: raw.rgTrackPeak ?? undefined,
       rgAlbumGain: raw.rgAlbumGain ?? undefined,
       rgAlbumPeak: raw.rgAlbumPeak ?? undefined,
+      // Missing file tracking
+      missingAt: raw.missingAt ?? undefined,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });

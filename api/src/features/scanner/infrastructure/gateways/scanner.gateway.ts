@@ -21,6 +21,7 @@ import {
   CancelScanDto,
   ResumeScanDto,
   LufsProgressDto,
+  LibraryChangeDto,
 } from '../../presentation/dtos/scanner-events.dto';
 
 /**
@@ -303,5 +304,15 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    */
   getCurrentLufsProgress(): LufsProgressDto | null {
     return this.lufsProgress;
+  }
+
+  /**
+   * Emitir cambio en la biblioteca (track/album/artist añadido o eliminado)
+   * Usado por el file watcher para notificar cambios en tiempo real
+   */
+  emitLibraryChange(data: LibraryChangeDto): void {
+    // Broadcast to all connected clients
+    this.server.emit('library:change', data);
+    this.logger.log(`📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`);
   }
 }

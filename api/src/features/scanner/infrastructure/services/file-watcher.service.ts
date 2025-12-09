@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import chokidar, { FSWatcher } from 'chokidar';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
-import { join } from 'path';
+import { LibraryCleanupService } from './scanning/library-cleanup.service';
+import { ScannerGateway } from '../gateways/scanner.gateway';
+import { LibraryChangeType } from '../../presentation/dtos/scanner-events.dto';
 import { stat } from 'fs/promises';
 
 /**
@@ -30,6 +32,8 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
     private readonly configService: ConfigService,
     private readonly bullmq: BullmqService,
     private readonly settingsService: SettingsService,
+    private readonly libraryCleanup: LibraryCleanupService,
+    private readonly scannerGateway: ScannerGateway,
   ) {}
 
   /**
@@ -145,16 +149,44 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Handles deleted files
+   * Handles deleted files - marks as missing or deletes based on purge mode
    */
-  private handleFileDeleted(filePath: string): void {
+  private async handleFileDeleted(filePath: string): Promise<void> {
     if (!this.isSupportedFile(filePath)) {
       return;
     }
 
-    this.logger.debug(`File deleted: ${filePath}`);
-    // TODO: Implement track deletion from DB
-    // For now we leave it, full manual scan will clean orphaned tracks
+    this.logger.log(`👻 File deletion detected: ${filePath}`);
+
+    try {
+      // Handle missing file (mark or delete based on settings)
+      const result = await this.libraryCleanup.handleMissingFile(filePath);
+
+      if (result.trackMarkedMissing) {
+        // Track was marked as missing (not deleted)
+        this.scannerGateway.emitLibraryChange({
+          type: LibraryChangeType.TRACK_MISSING,
+          trackId: result.trackId,
+          trackTitle: result.trackTitle,
+          albumId: result.albumId,
+          timestamp: new Date().toISOString(),
+        });
+      } else if (result.trackDeleted) {
+        // Track was deleted (purge mode = 'always')
+        this.scannerGateway.emitLibraryChange({
+          type: LibraryChangeType.TRACK_DELETED,
+          trackId: result.trackId,
+          trackTitle: result.trackTitle,
+          albumId: result.albumId,
+          albumDeleted: result.albumDeleted,
+          artistId: result.artistId,
+          artistDeleted: result.artistDeleted,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      this.logger.error(`Error handling deleted file ${filePath}:`, error);
+    }
   }
 
   /**

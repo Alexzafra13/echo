@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, desc, or, inArray, count, sql, asc } from 'drizzle-orm';
+import { eq, desc, or, inArray, count, sql, asc, isNull, and } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
 import { createSearchPattern } from '@shared/utils';
@@ -47,6 +47,7 @@ export class DrizzleTrackRepository
     const result = await this.drizzle.db
       .select()
       .from(tracks)
+      .where(isNull(tracks.missingAt)) // Exclude missing tracks
       .orderBy(desc(tracks.createdAt))
       .offset(skip)
       .limit(take);
@@ -61,7 +62,10 @@ export class DrizzleTrackRepository
     const result = await this.drizzle.db
       .select()
       .from(tracks)
-      .where(sql`${tracks.title} ILIKE ${searchPattern}`)
+      .where(and(
+        sql`${tracks.title} ILIKE ${searchPattern}`,
+        isNull(tracks.missingAt), // Exclude missing tracks
+      ))
       .orderBy(tracks.title)
       .offset(skip)
       .limit(take);
@@ -69,11 +73,16 @@ export class DrizzleTrackRepository
     return TrackMapper.toDomainArray(result);
   }
 
-  async findByAlbumId(albumId: string): Promise<Track[]> {
+  async findByAlbumId(albumId: string, includeMissing = true): Promise<Track[]> {
+    // For album views, include missing tracks as "ghost tracks" (shown grayed out)
+    const whereCondition = includeMissing
+      ? eq(tracks.albumId, albumId)
+      : and(eq(tracks.albumId, albumId), isNull(tracks.missingAt));
+
     const result = await this.drizzle.db
       .select()
       .from(tracks)
-      .where(eq(tracks.albumId, albumId))
+      .where(whereCondition)
       .orderBy(asc(tracks.discNumber), asc(tracks.trackNumber));
 
     return TrackMapper.toDomainArray(result);
@@ -83,7 +92,10 @@ export class DrizzleTrackRepository
     const result = await this.drizzle.db
       .select()
       .from(tracks)
-      .where(or(eq(tracks.artistId, artistId), eq(tracks.albumArtistId, artistId)))
+      .where(and(
+        or(eq(tracks.artistId, artistId), eq(tracks.albumArtistId, artistId)),
+        isNull(tracks.missingAt), // Exclude missing tracks
+      ))
       .orderBy(desc(tracks.createdAt))
       .offset(skip)
       .limit(take);
@@ -94,7 +106,8 @@ export class DrizzleTrackRepository
   async count(): Promise<number> {
     const result = await this.drizzle.db
       .select({ count: count() })
-      .from(tracks);
+      .from(tracks)
+      .where(isNull(tracks.missingAt)); // Exclude missing tracks
 
     return result[0]?.count ?? 0;
   }
@@ -111,6 +124,7 @@ export class DrizzleTrackRepository
     const result = await this.drizzle.db
       .select()
       .from(tracks)
+      .where(isNull(tracks.missingAt)) // Exclude missing tracks
       .orderBy(sql`md5(${tracks.id} || ${seedStr})`)
       .offset(skip)
       .limit(take);
