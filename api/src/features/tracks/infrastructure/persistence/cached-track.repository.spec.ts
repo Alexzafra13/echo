@@ -185,7 +185,7 @@ describe('CachedTrackRepository', () => {
       const result = await cachedRepository.findByAlbumId('album-1');
 
       // Assert
-      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith('album-1');
+      expect(baseRepository.findByAlbumId).toHaveBeenCalledWith('album-1', true);
       expect(cacheService.get).not.toHaveBeenCalled();
       expect(result).toBe(tracks);
     });
