@@ -7,7 +7,7 @@ Configuración para exponer Echo con HTTPS en internet.
 ## Requisitos
 
 Echo necesita que el reverse proxy soporte:
-- **WebSocket** (para sincronización en tiempo real)
+- **SSE (Server-Sent Events)** (para sincronización en tiempo real)
 - **Headers X-Forwarded-*** (para detectar HTTPS)
 
 ## Caddy (más simple)
@@ -197,8 +197,8 @@ Después de configurar el reverse proxy:
 # Verificar HTTPS
 curl -I https://music.tudominio.com
 
-# Verificar WebSocket
-curl -I -H "Upgrade: websocket" -H "Connection: Upgrade" https://music.tudominio.com
+# Verificar SSE (Server-Sent Events)
+curl -N -H "Accept: text/event-stream" https://music.tudominio.com/api/system/health/stream
 
 # Verificar headers
 curl -s -D - https://music.tudominio.com -o /dev/null | grep -i strict
@@ -208,7 +208,7 @@ curl -s -D - https://music.tudominio.com -o /dev/null | grep -i strict
 
 | Problema | Causa | Solución |
 |----------|-------|----------|
-| WebSocket no conecta | Falta proxy de upgrade | Añadir headers `Upgrade` y `Connection` |
+| SSE no funciona | Buffering activo | Añadir `proxy_buffering off;` en nginx |
 | Mixed Content (HTTP/HTTPS) | Radio HTTP en página HTTPS | Echo lo maneja automáticamente con proxy interno |
 | 502 Bad Gateway | Echo no está corriendo | `docker compose logs echo` |
 | Certificado inválido | Dominio no apunta al servidor | Verificar DNS |

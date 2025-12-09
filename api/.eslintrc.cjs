@@ -21,7 +21,7 @@ module.exports = {
     'node_modules',
     'coverage',
     '*.config.js',
-    'prisma',
+    'drizzle',
   ],
   rules: {
     // TypeScript specific rules

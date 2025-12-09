@@ -86,7 +86,7 @@ echo/
 ├── api/                      # NestJS + Fastify
 │   └── src/
 │       ├── features/         # Módulos por funcionalidad
-│       ├── infrastructure/   # DB, cache, websocket
+│       ├── infrastructure/   # DB, cache, queue
 │       └── shared/           # Guards, decorators, utils
 ├── nginx/                    # Config de ejemplo para producción
 ├── docs/                     # Documentación
@@ -111,7 +111,7 @@ echo/
 - **Estado:** Zustand
 - **Data fetching:** TanStack Query
 - **Rutas:** Wouter
-- **WebSocket:** Socket.io
+- **Realtime:** SSE (Server-Sent Events)
 
 ## Producción local
 
