@@ -28,6 +28,8 @@ export interface TrackProps {
   rgTrackPeak?: number; // Pico máximo del track (0-1)
   rgAlbumGain?: number; // Ganancia para normalizar el álbum (en dB)
   rgAlbumPeak?: number; // Pico máximo del álbum (0-1)
+  // Missing file tracking
+  missingAt?: Date; // null = present, date = marked as missing
   createdAt: Date;
   updatedAt: Date;
 }
@@ -166,6 +168,14 @@ export class Track {
 
   get rgAlbumPeak(): number | undefined {
     return this.props.rgAlbumPeak;
+  }
+
+  get missingAt(): Date | undefined {
+    return this.props.missingAt;
+  }
+
+  get isMissing(): boolean {
+    return this.props.missingAt !== undefined && this.props.missingAt !== null;
   }
 
   get createdAt(): Date {

@@ -73,11 +73,16 @@ export class DrizzleTrackRepository
     return TrackMapper.toDomainArray(result);
   }
 
-  async findByAlbumId(albumId: string): Promise<Track[]> {
+  async findByAlbumId(albumId: string, includeMissing = true): Promise<Track[]> {
+    // For album views, include missing tracks as "ghost tracks" (shown grayed out)
+    const whereCondition = includeMissing
+      ? eq(tracks.albumId, albumId)
+      : and(eq(tracks.albumId, albumId), isNull(tracks.missingAt));
+
     const result = await this.drizzle.db
       .select()
       .from(tracks)
-      .where(and(eq(tracks.albumId, albumId), isNull(tracks.missingAt))) // Exclude missing
+      .where(whereCondition)
       .orderBy(asc(tracks.discNumber), asc(tracks.trackNumber));
 
     return TrackMapper.toDomainArray(result);

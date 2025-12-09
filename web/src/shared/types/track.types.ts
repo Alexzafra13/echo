@@ -57,6 +57,9 @@ export interface Track {
   rgAlbumGain?: number; // Gain to normalize album (in dB)
   rgAlbumPeak?: number; // Album peak (0-1)
 
+  // Missing file status (ghost track)
+  isMissing?: boolean; // True if the file is missing from disk
+
   // Player/playlist context
   coverImage?: string; // Direct cover URL (for player UI)
   playlistOrder?: number; // Order in playlist (when track is from a playlist)

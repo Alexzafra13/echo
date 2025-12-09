@@ -58,8 +58,8 @@ export class CachedTrackRepository
    * Find tracks by album ID.
    * Not cached - album track lists are typically small and change rarely.
    */
-  async findByAlbumId(albumId: string): Promise<Track[]> {
-    return this.baseRepository.findByAlbumId(albumId);
+  async findByAlbumId(albumId: string, includeMissing = true): Promise<Track[]> {
+    return this.baseRepository.findByAlbumId(albumId, includeMissing);
   }
 
   /**
