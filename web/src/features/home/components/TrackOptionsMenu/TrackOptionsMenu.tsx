@@ -1,4 +1,4 @@
-import { MoreVertical, ListPlus, Plus, Disc, User, Info, Trash2 } from 'lucide-react';
+import { MoreVertical, ListPlus, Plus, Disc, User, Info, Trash2, Download } from 'lucide-react';
 import { useDropdownMenu } from '@shared/hooks';
 import { Portal } from '@shared/components/ui';
 import type { Track } from '../../types';
@@ -12,6 +12,7 @@ interface TrackOptionsMenuProps {
   onGoToArtist?: (track: Track) => void;
   onShowInfo?: (track: Track) => void;
   onRemoveFromPlaylist?: (track: Track) => void;
+  onDownload?: (track: Track) => void;
 }
 
 /**
@@ -27,6 +28,7 @@ export function TrackOptionsMenu({
   onGoToArtist,
   onShowInfo,
   onRemoveFromPlaylist,
+  onDownload,
 }: TrackOptionsMenuProps) {
   const {
     isOpen,
@@ -86,6 +88,16 @@ export function TrackOptionsMenu({
               >
                 <Plus size={16} />
                 <span>Agregar a la cola</span>
+              </button>
+            )}
+
+            {onDownload && (
+              <button
+                className={styles.trackOptionsMenu__option}
+                onClick={(e) => handleOptionClick(e, onDownload, track)}
+              >
+                <Download size={16} />
+                <span>Descargar</span>
               </button>
             )}
 

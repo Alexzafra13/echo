@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Play, Disc, Ghost } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { useStreamToken } from '@features/player/hooks/useStreamToken';
 import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
 import { TrackInfoModal } from '../TrackInfoModal';
 import type { Track } from '../../types';
@@ -54,6 +55,7 @@ interface TrackListProps {
 export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false, onRemoveFromPlaylist }: TrackListProps) {
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
+  const { data: streamTokenData } = useStreamToken();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
   const [selectedTrackForInfo, setSelectedTrackForInfo] = useState<Track | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -134,6 +136,24 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
   const handleShowInfo = useCallback((track: Track) => {
     setSelectedTrackForInfo(track);
   }, []);
+
+  const handleDownload = useCallback((track: Track) => {
+    if (!streamTokenData?.token) {
+      console.error('No stream token available for download');
+      return;
+    }
+
+    // Create download URL with stream token
+    const downloadUrl = `/api/tracks/${track.id}/download?token=${streamTokenData.token}`;
+
+    // Create hidden anchor and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = ''; // Browser will use Content-Disposition filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [streamTokenData?.token]);
 
   // Helper function to render a single track row
   const renderTrackRow = (track: Track, index: number) => {
@@ -240,6 +260,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
             onGoToArtist={handleGoToArtist}
             onShowInfo={handleShowInfo}
             onRemoveFromPlaylist={onRemoveFromPlaylist}
+            onDownload={streamTokenData?.token ? handleDownload : undefined}
           />
         )}
       </div>
