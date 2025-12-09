@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
 import { Activity, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@shared/hooks/useAuth';
+import { useClickOutside } from '@shared/hooks/useClickOutside';
 import { useSystemHealthSSE } from '@shared/hooks/useSystemHealthSSE';
 import styles from './SystemHealthIndicator.module.css';
 
@@ -16,44 +17,17 @@ export function SystemHealthIndicator() {
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
   const [showTooltip, setShowTooltip] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdmin = user?.isAdmin ?? false;
 
+  // Click outside handler with touch and scroll support
+  const { ref: containerRef, isClosing, close } = useClickOutside<HTMLDivElement>(
+    () => setShowTooltip(false),
+    { enabled: isAdmin && showTooltip, animationDuration: 200 }
+  );
+
   // Use SSE for real-time health updates
   const { systemHealth: health, activeAlerts: alerts } = useSystemHealthSSE(token, isAdmin);
-
-  // Cerrar tooltip al hacer click/tap fuera
-  useEffect(() => {
-    if (!isAdmin || !showTooltip) return;
-
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsClosing(true);
-        closeTimeoutRef.current = setTimeout(() => {
-          setShowTooltip(false);
-          setIsClosing(false);
-        }, 200);
-      }
-    };
-
-    // Usar timeout para evitar que el evento de apertura cierre inmediatamente
-    const timeoutId = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside, { passive: true });
-    }, 10);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, [showTooltip, isAdmin]);
 
   // Solo mostrar para admins
   if (!isAdmin) {
@@ -124,23 +98,14 @@ export function SystemHealthIndicator() {
 
   const handleToggleTooltip = () => {
     if (showTooltip) {
-      setIsClosing(true);
-      closeTimeoutRef.current = setTimeout(() => {
-        setShowTooltip(false);
-        setIsClosing(false);
-      }, 200);
+      close();
     } else {
       setShowTooltip(true);
     }
   };
 
   const handleNavigateToDashboard = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setShowTooltip(false);
-      setIsClosing(false);
-      setLocation('/admin');
-    }, 200);
+    close(() => setLocation('/admin'));
   };
 
   return (
