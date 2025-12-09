@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
-import { Play, Shuffle, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
+import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
-import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist } from '../../hooks/usePlaylists';
+import {
+  usePlaylist,
+  usePlaylistTracks,
+  useUpdatePlaylist,
+  useRemoveTrackFromPlaylist,
+  useDeletePlaylist,
+  useCreatePlaylist,
+  useAddTrackToPlaylist,
+} from '../../hooks/usePlaylists';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
-import { PlaylistCoverMosaic, EditPlaylistModal } from '../../components';
+import { PlaylistCoverMosaic, PlaylistOptionsMenu } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { useAuthStore } from '@shared/store';
+import { useAuth } from '@shared/hooks';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -21,16 +30,22 @@ import styles from './PlaylistDetailPage.module.css';
  */
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { playQueue, currentTrack, setShuffle } = usePlayer();
+  const { playQueue, addToQueue, currentTrack, setShuffle } = usePlayer();
+  const { user } = useAuth();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
-  const [showEditModal, setShowEditModal] = useState(false);
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
   const updatePlaylistMutation = useUpdatePlaylist();
   const removeTrackMutation = useRemoveTrackFromPlaylist();
+  const deletePlaylistMutation = useDeletePlaylist();
+  const createPlaylistMutation = useCreatePlaylist();
+  const addTrackMutation = useAddTrackToPlaylist();
+
+  // Check if current user is the owner
+  const isOwner = user?.id === playlist?.ownerId;
 
   // Extract dominant color from first album cover in playlist
   useEffect(() => {
@@ -96,6 +111,38 @@ export default function PlaylistDetailPage() {
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
     await updatePlaylistMutation.mutateAsync({ id, dto: data });
+  };
+
+  const handleDeletePlaylist = async () => {
+    if (!id) return;
+    await deletePlaylistMutation.mutateAsync(id);
+  };
+
+  const handleAddToQueue = () => {
+    const tracks = playlistTracks?.tracks || [];
+    if (tracks.length === 0) return;
+    const playerTracks = convertToPlayerTracks(tracks);
+    addToQueue(playerTracks);
+  };
+
+  const handleDuplicatePlaylist = async () => {
+    if (!playlist || !playlistTracks) return;
+
+    // Create new playlist with same name + " (copia)"
+    const newPlaylist = await createPlaylistMutation.mutateAsync({
+      name: `${playlist.name} (copia)`,
+      description: playlist.description || undefined,
+      public: false, // Duplicates are private by default
+    });
+
+    // Add all tracks to the new playlist
+    const tracks = playlistTracks.tracks || [];
+    for (const track of tracks) {
+      await addTrackMutation.mutateAsync({
+        playlistId: newPlaylist.id,
+        dto: { trackId: track.id },
+      });
+    }
   };
 
   const handleRemoveTrack = async (track: any) => {
@@ -234,20 +281,17 @@ export default function PlaylistDetailPage() {
                 >
                   Aleatorio
                 </Button>
-                <button
-                  className={styles.playlistDetailPage__heroActionButton}
-                  aria-label="Edit playlist"
-                  title="Editar playlist"
-                  onClick={() => setShowEditModal(true)}
-                >
-                  <Edit2 size={20} />
-                </button>
-                <button
-                  className={styles.playlistDetailPage__heroMoreButton}
-                  aria-label="More options"
-                >
-                  <MoreHorizontal size={24} />
-                </button>
+                <PlaylistOptionsMenu
+                  playlist={playlist}
+                  tracks={tracks}
+                  isOwner={isOwner}
+                  onAddToQueue={handleAddToQueue}
+                  onDuplicate={handleDuplicatePlaylist}
+                  onDelete={handleDeletePlaylist}
+                  onUpdate={handleUpdatePlaylist}
+                  isUpdating={updatePlaylistMutation.isPending}
+                  isDeleting={deletePlaylistMutation.isPending}
+                />
               </div>
             </div>
           </div>
@@ -295,16 +339,6 @@ export default function PlaylistDetailPage() {
             />
           </div>
         </div>
-      )}
-
-      {/* Edit Playlist Modal */}
-      {showEditModal && playlist && (
-        <EditPlaylistModal
-          playlist={playlist}
-          onClose={() => setShowEditModal(false)}
-          onSubmit={handleUpdatePlaylist}
-          isLoading={updatePlaylistMutation.isPending}
-        />
       )}
     </div>
   );

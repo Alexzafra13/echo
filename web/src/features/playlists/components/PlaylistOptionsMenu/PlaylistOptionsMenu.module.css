@@ -1,0 +1,161 @@
+/* PlaylistOptionsMenu Styles - BEM Naming Convention */
+
+.playlistOptionsMenu {
+  position: relative;
+}
+
+.playlistOptionsMenu__trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary, #b8bcc8);
+  transition: all 0.2s ease;
+}
+
+.playlistOptionsMenu__trigger:hover {
+  background: var(--white-10);
+  color: var(--color-text-primary, #ffffff);
+}
+
+.playlistOptionsMenu__trigger:active {
+  transform: scale(0.95);
+}
+
+/* Dropdown - Portal rendered with fixed positioning */
+.playlistOptionsMenu__dropdown {
+  min-width: 220px;
+  overflow-y: auto;
+  background: var(--color-bg-elevated, #1e293b);
+  border: 1px solid var(--white-10);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px var(--black-60);
+  padding: 8px;
+  z-index: 1000;
+}
+
+/* Animation when dropdown opens below */
+.playlistOptionsMenu__dropdown[data-placement="bottom"] {
+  transform-origin: top right;
+  animation: scaleInFromTop 0.15s ease;
+}
+
+/* Animation when dropdown opens above */
+.playlistOptionsMenu__dropdown[data-placement="top"] {
+  transform-origin: bottom right;
+  animation: scaleInFromBottom 0.15s ease;
+}
+
+@keyframes scaleInFromTop {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes scaleInFromBottom {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Closing animations */
+.playlistOptionsMenu__dropdown--closing[data-placement="bottom"] {
+  animation: scaleOutToTop 0.15s ease forwards;
+}
+
+.playlistOptionsMenu__dropdown--closing[data-placement="top"] {
+  animation: scaleOutToBottom 0.15s ease forwards;
+}
+
+@keyframes scaleOutToTop {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-4px);
+  }
+}
+
+@keyframes scaleOutToBottom {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+}
+
+/* Option */
+.playlistOptionsMenu__option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #ffffff);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.playlistOptionsMenu__option:hover:not(:disabled) {
+  background: var(--white-10);
+}
+
+.playlistOptionsMenu__option:active:not(:disabled) {
+  background: var(--white-15);
+}
+
+.playlistOptionsMenu__option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.playlistOptionsMenu__option svg {
+  flex-shrink: 0;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+/* Danger option (delete) */
+.playlistOptionsMenu__option--danger {
+  color: var(--color-error, #ef4444);
+}
+
+.playlistOptionsMenu__option--danger svg {
+  color: var(--color-error, #ef4444);
+}
+
+.playlistOptionsMenu__option--danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Separator */
+.playlistOptionsMenu__separator {
+  height: 1px;
+  background: var(--white-10);
+  margin: 8px 0;
+}
