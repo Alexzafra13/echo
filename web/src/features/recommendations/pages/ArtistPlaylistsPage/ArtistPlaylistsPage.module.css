@@ -347,14 +347,27 @@
   }
 
   .artistPlaylistsPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
     min-height: 0; /* Eliminar min-height en mobile para flujo natural */
   }
 
   .playlistCard {
-    padding: 1rem;
+    padding: 12px;
     border-radius: 12px; /* iOS rounded */
+  }
+
+  .playlistCard__name {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .playlistCard__description {
+    display: none; /* Ocultar descripción en móvil para ahorrar espacio */
+  }
+
+  .playlistCard__meta {
+    font-size: 12px;
   }
 }
 
@@ -373,20 +386,20 @@
   }
 
   .artistPlaylistsPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit para mostrar 2+ columnas */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit consistente con HomePage */
     gap: 10px;
   }
 
   .playlistCard {
-    padding: 0.75rem;
+    padding: 10px;
   }
 
   .playlistCard__name {
-    font-size: 14px;
+    font-size: 13px;
   }
 
-  .playlistCard__description {
-    font-size: 12px;
+  .playlistCard__info {
+    margin-top: 8px;
   }
 
   .playlistCard__meta {

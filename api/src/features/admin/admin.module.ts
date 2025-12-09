@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '@features/auth/auth.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { HealthModule } from '@features/health/health.module';
+import { SocialModule } from '@features/social/social.module';
 import { AdminController } from './presentation/admin.controller';
 import { AdminDashboardController } from './presentation/admin-dashboard.controller';
 import { AdminLibraryController } from './presentation/admin-library.controller';
@@ -48,7 +49,7 @@ import {
 } from './domain/services';
 
 @Module({
-  imports: [AuthModule, ExternalMetadataModule, HealthModule],
+  imports: [AuthModule, ExternalMetadataModule, HealthModule, SocialModule],
   controllers: [
     AdminController,
     AdminDashboardController,

@@ -104,6 +104,41 @@
   line-height: 1.2;
 }
 
+/* Responsive - make covers fill container width on mobile */
+@media (max-width: 768px) {
+  .small,
+  .medium,
+  .large {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .artistName {
+    font-size: 14px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .coverText {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .artistName {
+    font-size: 12px;
+    bottom: 6px;
+    left: 6px;
+    right: 6px;
+  }
+
+  .coverText {
+    font-size: 11px;
+  }
+}
+
 /* Genre overlay image (PNG with transparency) */
 .genreOverlay {
   position: relative;
