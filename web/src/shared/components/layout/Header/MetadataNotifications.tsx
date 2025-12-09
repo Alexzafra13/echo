@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus } from 'lucide-react';
+import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, FileX } from 'lucide-react';
 import { useMetadataEnrichment } from '@shared/hooks';
 import { usePendingRequests } from '@features/social/hooks';
 import type { EnrichmentNotification } from '@shared/hooks';
@@ -14,9 +14,10 @@ interface MetadataNotificationsProps {
 interface SystemAlert {
   id: string;
   type: 'error' | 'warning';
-  category: 'storage' | 'database' | 'scanner';
+  category: 'storage' | 'database' | 'scanner' | 'missing';
   message: string;
   timestamp: string;
+  link?: string;
 }
 
 interface FriendRequestNotification {
@@ -126,6 +127,18 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         });
       }
 
+      // Archivos desaparecidos
+      if (data.activeAlerts?.missingFiles && data.activeAlerts.missingFiles > 0) {
+        alerts.push({
+          id: 'missing-files',
+          type: 'warning',
+          category: 'missing',
+          message: `${data.activeAlerts.missingFiles} archivo${data.activeAlerts.missingFiles > 1 ? 's' : ''} desaparecido${data.activeAlerts.missingFiles > 1 ? 's' : ''}`,
+          timestamp: new Date().toISOString(),
+          link: '/admin?tab=maintenance',
+        });
+      }
+
       setSystemAlerts(alerts);
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -187,6 +200,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
           return <Database size={16} />;
         case 'scanner':
           return <AlertTriangle size={16} />;
+        case 'missing':
+          return <FileX size={16} />;
         default:
           return <AlertTriangle size={16} />;
       }
@@ -254,6 +269,14 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
         setShowNotifications(false);
         setIsClosing(false);
         setLocation('/social');
+      }, 200);
+    } else if ('link' in item && item.link) {
+      // Navigate to linked page (e.g., missing files)
+      setIsClosing(true);
+      closeTimeoutRef.current = setTimeout(() => {
+        setShowNotifications(false);
+        setIsClosing(false);
+        setLocation(item.link!);
       }, 200);
     } else if ('entityType' in item && 'read' in item && !item.read) {
       markAsRead(item.id);

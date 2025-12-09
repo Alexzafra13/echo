@@ -315,6 +315,42 @@ export class LibraryCleanupService {
   }
 
   /**
+   * Delete a specific missing track by ID
+   * Used by admin panel to manually delete individual tracks
+   */
+  async deleteMissingTrackById(trackId: string): Promise<TrackMissingResult> {
+    // Get track info
+    const track = await this.drizzle.db
+      .select({ id: tracks.id, albumId: tracks.albumId, missingAt: tracks.missingAt })
+      .from(tracks)
+      .where(eq(tracks.id, trackId))
+      .limit(1);
+
+    if (!track[0]) {
+      this.logger.warn(`Track not found: ${trackId}`);
+      return {
+        trackMarkedMissing: false,
+        trackDeleted: false,
+        albumDeleted: false,
+        artistDeleted: false,
+      };
+    }
+
+    // Only allow deletion of tracks marked as missing
+    if (!track[0].missingAt) {
+      this.logger.warn(`Track ${trackId} is not marked as missing, cannot delete`);
+      return {
+        trackMarkedMissing: false,
+        trackDeleted: false,
+        albumDeleted: false,
+        artistDeleted: false,
+      };
+    }
+
+    return this.deleteTrackById(track[0].id, track[0].albumId);
+  }
+
+  /**
    * Remove tracks from DB that no longer exist in the filesystem
    * Also cleans up orphaned albums and artists
    *

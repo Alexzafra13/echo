@@ -85,6 +85,7 @@ export interface ScanStats {
 export interface ActiveAlerts {
   orphanedFiles: number;
   pendingConflicts: number;
+  missingFiles: number; // Tracks marked as missing (file not found)
   storageWarning: boolean;
   storageDetails?: {
     currentMB: number;
