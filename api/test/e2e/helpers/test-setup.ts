@@ -218,12 +218,15 @@ export async function cleanScannerTables(drizzle: DrizzleService): Promise<void>
 
 /**
  * Crea un artista de prueba
+ * Por defecto songCount=1 para que aparezca en listados (se filtran artistas sin contenido)
  */
 export async function createTestArtist(
   drizzle: DrizzleService,
   data: {
     name: string;
     biography?: string;
+    songCount?: number;
+    albumCount?: number;
   },
 ): Promise<{ id: string; name: string }> {
   const [artist] = await drizzle.db
@@ -231,8 +234,8 @@ export async function createTestArtist(
     .values({
       name: data.name,
       biography: data.biography,
-      albumCount: 0,
-      songCount: 0,
+      albumCount: data.albumCount ?? 1,
+      songCount: data.songCount ?? 1,
       size: 0,
     })
     .returning({ id: schema.artists.id, name: schema.artists.name });
