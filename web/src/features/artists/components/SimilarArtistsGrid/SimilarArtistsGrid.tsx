@@ -12,11 +12,13 @@ interface SimilarArtistsGridProps {
 // Card dimensions (synced with CSS)
 const CARD_WIDTH = 140; // .artistCard width
 const CARD_GAP = 16; // .similarArtists__scroll gap
+const MIN_VISIBLE = 10; // Minimum artists to show (scrollable on small screens)
 
 /**
  * SimilarArtistsGrid Component
  * Displays a horizontal row of similar artists
- * Dynamically calculates how many items fit based on container width
+ * - Large screens: shows exactly what fits
+ * - Small screens: shows at least 10, scrollable horizontally
  * All artists have local profiles (created automatically for external artists)
  */
 export function SimilarArtistsGrid({ artists }: SimilarArtistsGridProps) {
@@ -24,7 +26,7 @@ export function SimilarArtistsGrid({ artists }: SimilarArtistsGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate how many items fit in the container
-  const itemCount = useHorizontalItemCount(containerRef, {
+  const itemsInView = useHorizontalItemCount(containerRef, {
     itemWidth: CARD_WIDTH,
     gap: CARD_GAP,
     minItems: 3,
@@ -35,8 +37,9 @@ export function SimilarArtistsGrid({ artists }: SimilarArtistsGridProps) {
     return null;
   }
 
-  // Only show as many artists as fit in the container
-  const visibleArtists = artists.slice(0, itemCount);
+  // Show at least MIN_VISIBLE artists (scrollable) or what fits if more
+  const visibleCount = Math.max(itemsInView, MIN_VISIBLE);
+  const visibleArtists = artists.slice(0, visibleCount);
 
   return (
     <section className={styles.similarArtists} ref={containerRef}>
