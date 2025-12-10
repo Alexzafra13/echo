@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { eq, and, gte, lte, desc, count } from 'drizzle-orm';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { systemLogs } from '@infrastructure/database/schema';
 
@@ -195,8 +196,13 @@ export class LogService {
     error?: Error,
   ): Promise<void> {
     try {
-      // Prepare details as JSON
-      const details = metadata ? JSON.stringify(metadata, null, 2) : null;
+      // Prepare details as compact JSON (no pretty printing)
+      // Also truncate very long string values to avoid bloated logs
+      const sanitizedMetadata = metadata ? this.sanitizeMetadata(metadata) : null;
+      const details = sanitizedMetadata ? JSON.stringify(sanitizedMetadata) : null;
+
+      // Truncate stack trace to first 2000 chars (keeps most useful info)
+      const stackTrace = error?.stack ? error.stack.substring(0, 2000) : undefined;
 
       await this.drizzle.db
         .insert(systemLogs)
@@ -210,13 +216,52 @@ export class LogService {
           entityType: metadata?.entityType,
           requestId: metadata?.requestId,
           ipAddress: metadata?.ipAddress,
-          userAgent: metadata?.userAgent,
-          stackTrace: error?.stack,
+          userAgent: metadata?.userAgent?.substring(0, 512), // Limit user agent
+          stackTrace,
         });
     } catch (dbError) {
       // Fallback to console if DB fails
       this.logger.error({ error: dbError }, 'Failed to persist log to database');
     }
+  }
+
+  /**
+   * Sanitize metadata to reduce log size
+   * - Truncates long string values
+   * - Removes circular references
+   * - Limits nested object depth
+   */
+  private sanitizeMetadata(metadata: LogMetadata, maxStringLength = 500): Record<string, any> {
+    const result: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(metadata)) {
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      if (typeof value === 'string') {
+        // Truncate long strings
+        result[key] = value.length > maxStringLength
+          ? value.substring(0, maxStringLength) + '...[truncated]'
+          : value;
+      } else if (typeof value === 'object') {
+        // For objects, stringify and truncate if too long
+        try {
+          const str = JSON.stringify(value);
+          if (str.length > maxStringLength) {
+            result[key] = str.substring(0, maxStringLength) + '...[truncated]';
+          } else {
+            result[key] = value;
+          }
+        } catch {
+          result[key] = '[unserializable]';
+        }
+      } else {
+        result[key] = value;
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -341,5 +386,45 @@ export class LogService {
     );
 
     return result.length;
+  }
+
+  /**
+   * Get estimated storage size of logs table
+   */
+  async getLogsStorageSize(): Promise<{
+    totalRows: number;
+    estimatedSizeMB: number;
+  }> {
+    const [countResult, sizeResult] = await Promise.all([
+      this.drizzle.db.select({ count: count() }).from(systemLogs),
+      this.drizzle.db.execute(sql`
+        SELECT pg_total_relation_size('system_logs') as size_bytes
+      `),
+    ]);
+
+    const sizeBytes = Number((sizeResult.rows[0] as any)?.size_bytes || 0);
+
+    return {
+      totalRows: countResult[0]?.count ?? 0,
+      estimatedSizeMB: Math.round((sizeBytes / 1024 / 1024) * 100) / 100,
+    };
+  }
+
+  /**
+   * Scheduled cleanup - runs daily at 3 AM
+   * Keeps logs from last 14 days (configurable via LOG_RETENTION_DAYS env)
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async scheduledCleanup(): Promise<void> {
+    const retentionDays = parseInt(process.env.LOG_RETENTION_DAYS || '14', 10);
+
+    try {
+      const deleted = await this.cleanupOldLogs(retentionDays);
+      if (deleted > 0) {
+        this.logger.info({ deleted, retentionDays }, 'Scheduled log cleanup completed');
+      }
+    } catch (error) {
+      this.logger.error({ error }, 'Scheduled log cleanup failed');
+    }
   }
 }

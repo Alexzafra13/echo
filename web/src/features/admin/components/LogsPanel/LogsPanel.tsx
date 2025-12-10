@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Database, Clock } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
-import { formatDateWithTime } from '@shared/utils/format';
 import styles from './LogsPanel.module.css';
 
 interface SystemLog {
@@ -25,6 +24,17 @@ interface LogsResponse {
   offset: number;
 }
 
+interface LogsStats {
+  totalLogs: number;
+  byLevel: Record<string, number>;
+  byCategory: Record<string, number>;
+}
+
+interface StorageInfo {
+  totalRows: number;
+  estimatedSizeMB: number;
+}
+
 const LEVEL_CONFIG = {
   critical: { icon: XCircle, color: '#ef4444', label: 'CRÍTICO' },
   error: { icon: AlertCircle, color: '#f97316', label: 'ERROR' },
@@ -33,32 +43,107 @@ const LEVEL_CONFIG = {
   debug: { icon: Bug, color: '#6b7280', label: 'DEBUG' },
 };
 
+// Date range presets
+const DATE_RANGES = [
+  { value: 'all', label: 'Todo el tiempo' },
+  { value: '1h', label: 'Última hora' },
+  { value: '24h', label: 'Últimas 24h' },
+  { value: '7d', label: 'Últimos 7 días' },
+  { value: '30d', label: 'Últimos 30 días' },
+];
+
+/**
+ * Get relative time string
+ */
+function getRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) return 'hace unos segundos';
+  if (diffMins < 60) return `hace ${diffMins} min`;
+  if (diffHours < 24) return `hace ${diffHours}h`;
+  if (diffDays === 1) return 'ayer';
+  if (diffDays < 7) return `hace ${diffDays} días`;
+  if (diffDays < 30) return `hace ${Math.floor(diffDays / 7)} sem`;
+  return `hace ${Math.floor(diffDays / 30)} mes${Math.floor(diffDays / 30) > 1 ? 'es' : ''}`;
+}
+
+/**
+ * Get date from range preset
+ */
+function getStartDateFromRange(range: string): Date | undefined {
+  if (range === 'all') return undefined;
+
+  const now = new Date();
+  switch (range) {
+    case '1h':
+      return new Date(now.getTime() - 60 * 60 * 1000);
+    case '24h':
+      return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    case '7d':
+      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    case '30d':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    default:
+      return undefined;
+  }
+}
+
 /**
  * LogsPanel Component
- * Muestra los logs del sistema con filtros y paginación
+ * Muestra los logs del sistema con filtros, estadísticas y paginación
  */
 export function LogsPanel() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [stats, setStats] = useState<LogsStats | null>(null);
+  const [storage, setStorage] = useState<StorageInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedDateRange, setSelectedDateRange] = useState<string>('24h');
   const [limit] = useState(50);
   const [offset, setOffset] = useState(0);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar logs al montar
+  // Load stats and storage on mount
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  // Load logs when filters change
   useEffect(() => {
     loadLogs();
-  }, [selectedLevel, selectedCategory, offset]);
+  }, [selectedLevel, selectedCategory, selectedDateRange, offset]);
+
+  const loadStats = async () => {
+    try {
+      const [statsRes, storageRes] = await Promise.all([
+        apiClient.get<LogsStats>('/logs/stats'),
+        apiClient.get<StorageInfo>('/logs/storage'),
+      ]);
+      setStats(statsRes.data);
+      setStorage(storageRes.data);
+    } catch (err) {
+      // Stats are optional, don't show error
+      if (import.meta.env.DEV) {
+        console.error('Error loading stats:', err);
+      }
+    }
+  };
 
   const loadLogs = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const params: any = {
+      const params: Record<string, string | number> = {
         limit,
         offset,
       };
@@ -69,6 +154,11 @@ export function LogsPanel() {
 
       if (selectedCategory !== 'all') {
         params.category = selectedCategory;
+      }
+
+      const startDate = getStartDateFromRange(selectedDateRange);
+      if (startDate) {
+        params.startDate = startDate.toISOString();
       }
 
       const response = await apiClient.get<LogsResponse>('/logs', { params });
@@ -82,6 +172,11 @@ export function LogsPanel() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadStats();
+    loadLogs();
   };
 
   const toggleLogDetails = (logId: string) => {
@@ -100,8 +195,18 @@ export function LogsPanel() {
   const renderLogIcon = (level: SystemLog['level']) => {
     const config = LEVEL_CONFIG[level];
     const Icon = config.icon;
-    return <Icon size={20} style={{ color: config.color }} />;
+    return <Icon size={18} style={{ color: config.color }} />;
   };
+
+  // Calculate summary from stats
+  const summary = useMemo(() => {
+    if (!stats) return null;
+    return {
+      critical: stats.byLevel['critical'] || 0,
+      error: stats.byLevel['error'] || 0,
+      warning: stats.byLevel['warning'] || 0,
+    };
+  }, [stats]);
 
   if (isLoading && logs.length === 0) {
     return <div className={styles.loading}>Cargando logs...</div>;
@@ -109,14 +214,48 @@ export function LogsPanel() {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
+      {/* Header with stats */}
       <div className={styles.header}>
-        <h2 className={styles.title}>Logs del Sistema</h2>
-        <Button onClick={loadLogs} disabled={isLoading}>
+        <div className={styles.headerLeft}>
+          <h2 className={styles.title}>Logs del Sistema</h2>
+          {storage && (
+            <div className={styles.storageInfo}>
+              <Database size={14} />
+              <span>{storage.totalRows.toLocaleString()} logs</span>
+              <span className={styles.storageDot}>•</span>
+              <span>{storage.estimatedSizeMB} MB</span>
+            </div>
+          )}
+        </div>
+        <Button onClick={handleRefresh} disabled={isLoading}>
           <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
           Actualizar
         </Button>
       </div>
+
+      {/* Stats summary */}
+      {summary && (summary.critical > 0 || summary.error > 0 || summary.warning > 0) && (
+        <div className={styles.statsSummary}>
+          {summary.critical > 0 && (
+            <div className={`${styles.statBadge} ${styles.statCritical}`}>
+              <XCircle size={14} />
+              <span>{summary.critical} críticos</span>
+            </div>
+          )}
+          {summary.error > 0 && (
+            <div className={`${styles.statBadge} ${styles.statError}`}>
+              <AlertCircle size={14} />
+              <span>{summary.error} errores</span>
+            </div>
+          )}
+          {summary.warning > 0 && (
+            <div className={`${styles.statBadge} ${styles.statWarning}`}>
+              <AlertTriangle size={14} />
+              <span>{summary.warning} advertencias</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Error notification */}
       {error && (
@@ -127,11 +266,10 @@ export function LogsPanel() {
         />
       )}
 
-      {/* Filtros */}
+      {/* Filters */}
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
           <Filter size={16} />
-          <label>Nivel:</label>
           <select
             value={selectedLevel}
             onChange={(e) => {
@@ -140,17 +278,14 @@ export function LogsPanel() {
             }}
             className={styles.select}
           >
-            <option value="all">Todos</option>
+            <option value="all">Todos los niveles</option>
             <option value="critical">Crítico</option>
             <option value="error">Error</option>
             <option value="warning">Advertencia</option>
-            <option value="info">Info</option>
-            <option value="debug">Debug</option>
           </select>
         </div>
 
         <div className={styles.filterGroup}>
-          <label>Categoría:</label>
           <select
             value={selectedCategory}
             onChange={(e) => {
@@ -159,7 +294,7 @@ export function LogsPanel() {
             }}
             className={styles.select}
           >
-            <option value="all">Todas</option>
+            <option value="all">Todas las categorías</option>
             <option value="scanner">Scanner</option>
             <option value="metadata">Metadata</option>
             <option value="auth">Auth</option>
@@ -169,21 +304,37 @@ export function LogsPanel() {
           </select>
         </div>
 
+        <div className={styles.filterGroup}>
+          <Clock size={16} />
+          <select
+            value={selectedDateRange}
+            onChange={(e) => {
+              setSelectedDateRange(e.target.value);
+              setOffset(0);
+            }}
+            className={styles.select}
+          >
+            {DATE_RANGES.map((range) => (
+              <option key={range.value} value={range.value}>
+                {range.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className={styles.stats}>
-          Mostrando {offset + 1}-{Math.min(offset + limit, total)} de {total} logs
+          {offset + 1}-{Math.min(offset + limit, total)} de {total}
         </div>
       </div>
 
-      {/* Lista de Logs */}
+      {/* Logs List */}
       <div className={styles.logsList}>
         {logs.length === 0 ? (
           <div className={styles.empty}>
             <Info size={48} />
             <p>No hay logs que mostrar</p>
             <p className={styles.emptyHint}>
-              Solo se muestran logs de nivel WARNING, ERROR y CRITICAL.
-              <br />
-              Los logs INFO y DEBUG solo aparecen en la consola del servidor.
+              Solo se guardan logs de nivel WARNING, ERROR y CRITICAL.
             </p>
           </div>
         ) : (
@@ -199,11 +350,10 @@ export function LogsPanel() {
                   <span className={styles.levelLabel}>{LEVEL_CONFIG[log.level].label}</span>
                 </div>
 
-                <div className={styles.logCategory}>[{log.category.toUpperCase()}]</div>
+                <div className={styles.logCategory}>{log.category}</div>
 
-                <div className={styles.logTime}>
-                  <Calendar size={14} />
-                  {formatDateWithTime(log.createdAt)}
+                <div className={styles.logTime} title={new Date(log.createdAt).toLocaleString()}>
+                  {getRelativeTime(log.createdAt)}
                 </div>
               </div>
 
@@ -213,7 +363,7 @@ export function LogsPanel() {
                 <div className={styles.logDetails}>
                   {log.entityId && (
                     <div className={styles.detailRow}>
-                      <strong>Entity ID:</strong> {log.entityId}
+                      <strong>Entity:</strong> {log.entityId}
                       {log.entityType && ` (${log.entityType})`}
                     </div>
                   )}
@@ -238,7 +388,7 @@ export function LogsPanel() {
         )}
       </div>
 
-      {/* Paginación */}
+      {/* Pagination */}
       {total > limit && (
         <div className={styles.pagination}>
           <Button
