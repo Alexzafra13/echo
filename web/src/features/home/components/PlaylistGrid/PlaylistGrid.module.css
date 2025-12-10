@@ -144,24 +144,16 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 12px;
-    padding: 0 16px 16px;
+    padding: 0 16px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: var(--white-10) transparent;
+    /* Hide scrollbar */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
   }
 
   .playlistGrid__grid::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .playlistGrid__grid::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .playlistGrid__grid::-webkit-scrollbar-thumb {
-    background: var(--white-10);
-    border-radius: 2px;
+    display: none; /* Chrome/Safari/Opera */
   }
 
   .playlistCard {
