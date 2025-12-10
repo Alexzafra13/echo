@@ -27,26 +27,15 @@
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--white-10) transparent;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .similarArtists__scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.similarArtists__scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.similarArtists__scroll::-webkit-scrollbar-thumb {
-  background: var(--white-10);
-  border-radius: 3px;
-}
-
-.similarArtists__scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--white-20);
+  display: none; /* Chrome/Safari/Opera */
 }
 
 /* Artist Card */
@@ -60,6 +49,7 @@
   padding: 12px;
   border-radius: 12px;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  scroll-snap-align: start;
 }
 
 .artistCard__clickable {

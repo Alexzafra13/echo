@@ -9,6 +9,18 @@ import { usePlayer } from '@features/player';
 import type { HomeSectionConfig, HomeSectionId } from '../../services';
 import styles from './SettingsPage.module.css';
 
+// All valid section IDs
+const ALL_SECTION_IDS: HomeSectionId[] = [
+  'recent-albums',
+  'artist-mix',
+  'genre-mix',
+  'recently-played',
+  'my-playlists',
+  'top-played',
+  'favorite-radios',
+  'surprise-me',
+];
+
 // Section labels for display
 const SECTION_LABELS: Record<HomeSectionId, string> = {
   'recent-albums': 'Álbumes Añadidos',
@@ -20,6 +32,42 @@ const SECTION_LABELS: Record<HomeSectionId, string> = {
   'favorite-radios': 'Radios Favoritas',
   'surprise-me': 'Sorpréndeme',
 };
+
+// Default sections configuration
+const DEFAULT_SECTIONS: HomeSectionConfig[] = ALL_SECTION_IDS.map((id, index) => ({
+  id,
+  enabled: id === 'recent-albums' || id === 'artist-mix',
+  order: index,
+}));
+
+// Helper to normalize sections from server (filter invalid, add missing)
+function normalizeSections(serverSections: HomeSectionConfig[] | undefined): HomeSectionConfig[] {
+  if (!serverSections || serverSections.length === 0) {
+    return DEFAULT_SECTIONS;
+  }
+
+  // Filter to only valid section IDs
+  const validSections = serverSections.filter(s => ALL_SECTION_IDS.includes(s.id));
+
+  // Find missing sections and add them with defaults
+  const existingIds = new Set(validSections.map(s => s.id));
+  const missingSections = ALL_SECTION_IDS
+    .filter(id => !existingIds.has(id))
+    .map((id, i) => ({
+      id,
+      enabled: false,
+      order: validSections.length + i,
+    }));
+
+  // Combine and sort by order
+  const allSections = [...validSections, ...missingSections].sort((a, b) => a.order - b.order);
+
+  // Re-normalize order values (0, 1, 2, ...)
+  return allSections.map((section, index) => ({
+    ...section,
+    order: index,
+  }));
+}
 
 /**
  * SettingsPage Component
@@ -64,13 +112,10 @@ export function SettingsPage() {
     }
   }, [privacySettings]);
 
-  // Sync home sections with server data
+  // Sync home sections with server data (normalize to ensure all valid sections present)
   useEffect(() => {
-    if (homePreferences?.homeSections) {
-      // Sort by order for display
-      const sorted = [...homePreferences.homeSections].sort((a, b) => a.order - b.order);
-      setHomeSections(sorted);
-    }
+    const normalized = normalizeSections(homePreferences?.homeSections);
+    setHomeSections(normalized);
   }, [homePreferences]);
 
   // Home section handlers
@@ -102,12 +147,9 @@ export function SettingsPage() {
     updateHome({ homeSections });
   }, [homeSections, updateHome]);
 
-  // Check if home sections have changed
-  const hasHomeChanges = homePreferences?.homeSections && (
-    JSON.stringify(homeSections) !== JSON.stringify(
-      [...homePreferences.homeSections].sort((a, b) => a.order - b.order)
-    )
-  );
+  // Check if home sections have changed (compare with normalized server data)
+  const serverNormalized = normalizeSections(homePreferences?.homeSections);
+  const hasHomeChanges = JSON.stringify(homeSections) !== JSON.stringify(serverNormalized);
 
   const handleSavePrivacy = () => {
     updatePrivacy({
