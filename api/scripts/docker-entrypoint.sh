@@ -105,11 +105,12 @@ pool.query('SELECT COUNT(*) as c FROM \"__drizzle_migrations\"')
 
   if [ "$MIGRATION_COUNT" = "0" ] || [ -z "$MIGRATION_COUNT" ]; then
     echo "📋 Existing database without migration tracking - baselining..."
-    # Insert migration tags as hashes (drizzle-kit format)
+    # Insert migration SHA256 hashes (drizzle-kit format)
     node -e "
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 async function baseline() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -117,8 +118,12 @@ async function baseline() {
     await pool.query('CREATE TABLE IF NOT EXISTS \"__drizzle_migrations\" (id SERIAL PRIMARY KEY, hash TEXT NOT NULL, created_at BIGINT NOT NULL)');
     const journal = JSON.parse(fs.readFileSync(path.join('/app', 'drizzle/meta/_journal.json'), 'utf8'));
     for (const e of journal.entries) {
-      await pool.query('INSERT INTO \"__drizzle_migrations\" (hash, created_at) VALUES (\$1, \$2) ON CONFLICT DO NOTHING', [e.tag, e.when]);
-      console.log('  ✓ ' + e.tag);
+      // Compute SHA256 hash of migration SQL file (same as drizzle-kit)
+      const sqlPath = path.join('/app', 'drizzle', e.tag + '.sql');
+      const sqlContent = fs.readFileSync(sqlPath, 'utf8');
+      const hash = crypto.createHash('sha256').update(sqlContent).digest('hex');
+      await pool.query('INSERT INTO \"__drizzle_migrations\" (hash, created_at) VALUES (\$1, \$2) ON CONFLICT DO NOTHING', [hash, e.when]);
+      console.log('  ✓ ' + e.tag + ' (' + hash.slice(0, 8) + '...)');
     }
     console.log('✅ Baseline complete');
   } catch (err) { console.error('Error:', err.message); }
@@ -128,6 +133,11 @@ baseline();
 "
   fi
 fi
+
+# Sync: Register any migrations whose objects already exist in the database
+# This handles cases where migrations were applied but not tracked
+echo "  Checking for untracked migrations..."
+node /app/scripts/sync-migrations.js 2>/dev/null || true
 
 # Run drizzle-kit migrate
 if npx drizzle-kit migrate --config=drizzle.config.js 2>&1; then

@@ -105,6 +105,7 @@ COPY --from=builder --chown=echoapp:nodejs /build/web/dist ./web/dist
 # Copy scripts
 COPY --chown=echoapp:nodejs api/scripts/docker-entrypoint.sh /usr/local/bin/
 COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
+COPY --chown=echoapp:nodejs api/scripts/sync-migrations.js ./scripts/
 
 # Fix line endings and permissions
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
