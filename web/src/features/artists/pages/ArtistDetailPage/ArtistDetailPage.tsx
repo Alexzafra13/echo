@@ -3,7 +3,8 @@ import { BookOpen, Music } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
-import { ArtistOptionsMenu } from '../../components';
+import { ArtistOptionsMenu, UserPlaylistGrid } from '../../components';
+import { useArtistPlaylists } from '@features/playlists/hooks/usePlaylists';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
 import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks } from '../../hooks';
@@ -51,6 +52,10 @@ export default function ArtistDetailPage() {
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
+
+  // Fetch playlists containing tracks by this artist
+  const { data: artistPlaylistsData } = useArtistPlaylists(id, { take: 10 });
+  const artistPlaylists = artistPlaylistsData?.items || [];
 
   // Check if artist has images
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
@@ -400,6 +405,18 @@ export default function ArtistDetailPage() {
               <p className={styles.artistDetailPage__emptyAlbums}>
                 No hay álbumes disponibles para este artista.
               </p>
+            </section>
+          )}
+
+          {/* Playlists Section */}
+          {artistPlaylists.length > 0 && (
+            <section className={styles.artistDetailPage__playlists}>
+              <UserPlaylistGrid
+                title={`Playlists con ${artist.name}`}
+                playlists={artistPlaylists}
+                showViewAll={artistPlaylistsData && artistPlaylistsData.total > 10}
+                viewAllPath="/playlists"
+              />
             </section>
           )}
         </div>

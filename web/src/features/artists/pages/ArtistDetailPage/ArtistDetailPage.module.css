@@ -377,6 +377,11 @@
   margin: 20px 0 0 0;
 }
 
+/* Playlists Section */
+.artistDetailPage__playlists {
+  margin-bottom: 48px;
+}
+
 /* Loading/Error States */
 .artistDetailPage__loading,
 .artistDetailPage__error {

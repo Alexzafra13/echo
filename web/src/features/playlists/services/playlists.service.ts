@@ -111,4 +111,25 @@ export const playlistsService = {
   reorderTracks: async (playlistId: string, dto: ReorderTracksDto): Promise<void> => {
     await apiClient.post(`/playlists/${playlistId}/tracks/reorder`, dto);
   },
+
+  /**
+   * Get playlists containing tracks by a specific artist
+   */
+  getPlaylistsByArtist: async (
+    artistId: string,
+    params?: { skip?: number; take?: number }
+  ): Promise<{
+    items: Playlist[];
+    total: number;
+    skip: number;
+    take: number;
+  }> => {
+    const { data } = await apiClient.get<{
+      items: Playlist[];
+      total: number;
+      skip: number;
+      take: number;
+    }>(`/playlists/by-artist/${artistId}`, { params });
+    return data;
+  },
 };

@@ -325,4 +325,59 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
 
     return (result[0]?.count ?? 0) > 0;
   }
+
+  /**
+   * Find playlists that contain tracks by a specific artist
+   * Returns user's own playlists and public playlists
+   */
+  async findByArtistId(
+    artistId: string,
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<{ playlists: Playlist[]; total: number }> {
+    // Subquery to get playlist IDs that contain tracks by this artist
+    const playlistIdsWithArtist = this.drizzle.db
+      .selectDistinct({ playlistId: playlistTracks.playlistId })
+      .from(playlistTracks)
+      .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
+      .where(eq(tracks.artistId, artistId))
+      .as('playlist_ids_with_artist');
+
+    // Count total playlists (user's own OR public) that contain tracks by this artist
+    const countResult = await this.drizzle.db
+      .select({ count: count() })
+      .from(playlists)
+      .innerJoin(
+        playlistIdsWithArtist,
+        eq(playlists.id, playlistIdsWithArtist.playlistId),
+      )
+      .where(
+        sql`(${playlists.ownerId} = ${userId} OR ${playlists.public} = true)`,
+      );
+
+    const total = countResult[0]?.count ?? 0;
+
+    // Get paginated playlists
+    const result = await this.drizzle.db
+      .select({
+        playlist: playlists,
+      })
+      .from(playlists)
+      .innerJoin(
+        playlistIdsWithArtist,
+        eq(playlists.id, playlistIdsWithArtist.playlistId),
+      )
+      .where(
+        sql`(${playlists.ownerId} = ${userId} OR ${playlists.public} = true)`,
+      )
+      .orderBy(desc(playlists.updatedAt))
+      .offset(skip)
+      .limit(take);
+
+    return {
+      playlists: PlaylistMapper.toDomainArray(result.map((r) => r.playlist)),
+      total,
+    };
+  }
 }
