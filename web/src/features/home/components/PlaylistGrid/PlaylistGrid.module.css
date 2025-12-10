@@ -124,32 +124,56 @@
   }
 }
 
-/* Mobile - Responsive grid with auto-fit */
+/* Mobile - Horizontal scroll */
 @media (max-width: 768px) {
   .playlistGrid {
     margin-bottom: 32px;
   }
 
+  .playlistGrid__header {
+    padding: 0 16px;
+  }
+
   .playlistGrid__title {
     font-size: 20px;
     margin-bottom: 12px;
-    padding: 0 16px;
   }
 
   .playlistGrid__grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Auto-fit para mejor responsividad */
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
     gap: 12px;
-    padding: 0 16px;
-    min-height: 0; /* Eliminar min-height en mobile para flujo natural */
+    padding: 0 16px 16px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--white-10) transparent;
+  }
+
+  .playlistGrid__grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .playlistGrid__grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .playlistGrid__grid::-webkit-scrollbar-thumb {
+    background: var(--white-10);
+    border-radius: 2px;
   }
 
   .playlistCard {
+    flex-shrink: 0;
+    width: 140px;
+    scroll-snap-align: start;
     gap: 8px;
-    padding: 0; /* Sin padding para que la cover ocupe todo el espacio del grid */
+    padding: 0;
   }
 
   .playlistCard__coverContainer {
-    border-radius: 8px; /* Menos redondeado para mejor look en mobile */
+    border-radius: 8px;
   }
 
   .playlistCard__name {
@@ -163,14 +187,20 @@
 
 /* Small Mobile */
 @media (max-width: 480px) {
-  .playlistGrid__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Ajuste automático */
-    gap: 10px;
+  .playlistGrid__header {
     padding: 0 12px;
+  }
+
+  .playlistGrid__grid {
+    gap: 10px;
+    padding: 0 12px 12px;
+  }
+
+  .playlistCard {
+    width: 120px;
   }
 
   .playlistGrid__title {
     font-size: 18px;
-    padding: 0 12px;
   }
 }
