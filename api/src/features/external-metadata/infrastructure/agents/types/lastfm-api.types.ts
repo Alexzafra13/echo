@@ -67,6 +67,28 @@ export interface LastFMArtistInfoResponse {
   message?: string;
 }
 
+// ============ Similar Artists Types (artist.getSimilar) ============
+
+export interface LastFMSimilarArtist {
+  name: string;
+  mbid?: string;
+  match?: string; // 0-1 as string
+  url?: string;
+  image?: LastFMImage[];
+  streamable?: string;
+}
+
+export interface LastFMSimilarArtistsResponse {
+  similarartists?: {
+    artist?: LastFMSimilarArtist[];
+    '@attr'?: {
+      artist: string;
+    };
+  };
+  error?: number;
+  message?: string;
+}
+
 // ============ Album Types ============
 
 export interface LastFMAlbumTrack {

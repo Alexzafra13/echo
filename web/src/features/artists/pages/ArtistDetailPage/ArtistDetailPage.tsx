@@ -56,8 +56,8 @@ export default function ArtistDetailPage() {
   const { data: artistPlaylistsData } = useArtistPlaylists(id, { take: 10 });
   const artistPlaylists = artistPlaylistsData?.items || [];
 
-  // Fetch similar artists from Last.fm
-  const { data: similarArtists } = useSimilarArtists(id, 10);
+  // Fetch similar artists from Last.fm (prioritizes local artists)
+  const { data: similarArtists } = useSimilarArtists(id, 15);
 
   // Check if artist has images
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
