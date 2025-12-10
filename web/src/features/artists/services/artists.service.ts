@@ -81,7 +81,7 @@ export const artistsService = {
   },
 
   /**
-   * Get similar artists from Last.fm (prioritizes local artists)
+   * Get similar artists (creates profiles for external artists automatically)
    */
   async getSimilarArtists(artistId: string, limit = 15): Promise<SimilarArtist[]> {
     const response = await apiClient.get<SimilarArtist[]>(`/artists/${artistId}/similar`, {
@@ -92,13 +92,10 @@ export const artistsService = {
 };
 
 /**
- * Similar artist from Last.fm
+ * Similar artist - all have localId since external artists are created automatically
  */
 export interface SimilarArtist {
   name: string;
-  url: string | null;
-  imageUrl: string | null;
-  mbid: string | null; // MusicBrainz ID (for external image lookup)
-  localId: string | null; // ID if artist exists in local library
+  localId: string; // Local artist ID (always present now)
   match: number | null; // Similarity score (0-1)
 }
