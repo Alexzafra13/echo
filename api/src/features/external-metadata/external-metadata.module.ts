@@ -187,6 +187,7 @@ import { MbidAutoSearchController } from './presentation/mbid-auto-search.contro
     MbidAutoSearchService,
     MetadataEventsService,
     EnrichmentQueueService,
+    LastfmAgent, // For similar artists feature
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {

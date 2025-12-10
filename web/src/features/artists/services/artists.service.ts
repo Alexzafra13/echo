@@ -79,4 +79,24 @@ export const artistsService = {
     });
     return response.data;
   },
+
+  /**
+   * Get similar artists from Last.fm
+   */
+  async getSimilarArtists(artistId: string, limit = 10): Promise<SimilarArtist[]> {
+    const response = await apiClient.get<SimilarArtist[]>(`/artists/${artistId}/similar`, {
+      params: { limit },
+    });
+    return response.data;
+  },
 };
+
+/**
+ * Similar artist from Last.fm
+ */
+export interface SimilarArtist {
+  name: string;
+  url: string | null;
+  imageUrl: string | null;
+  localId: string | null; // ID if artist exists in local library
+}

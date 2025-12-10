@@ -23,6 +23,13 @@ export interface IArtistRepository {
   search(name: string, skip: number, take: number): Promise<Artist[]>;
 
   /**
+   * Busca artistas por nombres exactos (para matching de artistas similares)
+   * @param names Array de nombres de artistas
+   * @returns Map de nombre (lowercase) -> Artist
+   */
+  findByNames(names: string[]): Promise<Map<string, Artist>>;
+
+  /**
    * Cuenta el total de artistas
    */
   count(): Promise<number>;

@@ -1,0 +1,1 @@
+export { SimilarArtistsGrid } from './SimilarArtistsGrid';
