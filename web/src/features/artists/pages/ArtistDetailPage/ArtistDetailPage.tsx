@@ -370,7 +370,7 @@ export default function ArtistDetailPage() {
                       <div className={styles.artistDetailPage__trackInfo}>
                         <span className={styles.artistDetailPage__trackTitle}>{track.title}</span>
                         <span className={styles.artistDetailPage__trackPlayCount}>
-                          {(track.playCount || 0).toLocaleString()} reproducciones
+                          {(track.playCount || 0).toLocaleString()}
                         </span>
                       </div>
                       <span className={styles.artistDetailPage__trackDuration}>
