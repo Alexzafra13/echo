@@ -68,6 +68,7 @@ export const tracks = pgTable(
     rgTrackGain: real('rg_track_gain'),
     rgTrackPeak: real('rg_track_peak'),
     lufsAnalyzedAt: timestamp('lufs_analyzed_at'), // null = pendiente, fecha = ya analizado
+    playCount: bigint('play_count', { mode: 'number' }).default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     missingAt: timestamp('missing_at'), // null = presente, fecha = marcado como desaparecido

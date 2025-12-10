@@ -63,6 +63,14 @@ export interface ITrackRepository {
   ): Promise<Track[]>;
 
   /**
+   * Obtiene los tracks más reproducidos de un artista
+   * @param artistId - ID del artista
+   * @param limit - Número de tracks a retornar (default 5)
+   * @returns Array de tracks ordenados por playCount DESC
+   */
+  findTopByArtistId(artistId: string, limit?: number): Promise<Track[]>;
+
+  /**
    * Obtiene el total de tracks
    * @returns Número total de tracks
    */

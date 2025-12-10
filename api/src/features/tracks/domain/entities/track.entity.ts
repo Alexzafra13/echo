@@ -30,6 +30,8 @@ export interface TrackProps {
   rgAlbumPeak?: number; // Pico máximo del álbum (0-1)
   // Missing file tracking
   missingAt?: Date; // null = present, date = marked as missing
+  // Play statistics
+  playCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -176,6 +178,10 @@ export class Track {
 
   get isMissing(): boolean {
     return this.props.missingAt !== undefined && this.props.missingAt !== null;
+  }
+
+  get playCount(): number {
+    return this.props.playCount;
   }
 
   get createdAt(): Date {

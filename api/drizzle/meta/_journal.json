@@ -64,6 +64,13 @@
       "when": 1765352776840,
       "tag": "0008_add_artist_play_count",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765439176840,
+      "tag": "0009_add_track_play_count",
+      "breakpoints": true
     }
   ]
 }

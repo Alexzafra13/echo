@@ -1,16 +1,18 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Music, Play } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
-import { useArtist, useArtistAlbums, useArtistStats } from '../../hooks';
+import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks } from '../../hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
 import { logger } from '@shared/utils/logger';
+import { formatDuration } from '@shared/types/track.types';
+import { usePlayer } from '@features/player';
 import styles from './ArtistDetailPage.module.css';
 
 /**
@@ -29,6 +31,7 @@ export default function ArtistDetailPage() {
   const [logoRenderKey, setLogoRenderKey] = useState(0);
   const [profileRenderKey, setProfileRenderKey] = useState(0);
   const { user } = useAuth();
+  const { playQueue } = usePlayer();
 
   // Real-time synchronization via SSE for artist images and album covers
   useArtistMetadataSync(id);
@@ -42,6 +45,9 @@ export default function ArtistDetailPage() {
 
   // Fetch artist play stats
   const { data: artistStats } = useArtistStats(id);
+
+  // Fetch top tracks for this artist
+  const { data: topTracks } = useArtistTopTracks(id, 5);
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
@@ -330,6 +336,44 @@ export default function ArtistDetailPage() {
               <p className={styles.artistDetailPage__biographyPlaceholder}>
                 No hay biografía disponible para este artista.
               </p>
+            </section>
+          )}
+
+          {/* Top Tracks Section */}
+          {topTracks && topTracks.length > 0 && (
+            <section className={styles.artistDetailPage__topTracks}>
+              <div className={styles.artistDetailPage__topTracksHeader}>
+                <Music size={24} className={styles.artistDetailPage__topTracksIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Canciones populares</h2>
+              </div>
+              <div className={styles.artistDetailPage__trackList}>
+                {topTracks.map((track, index) => (
+                  <div
+                    key={track.id}
+                    className={styles.artistDetailPage__trackItem}
+                    onClick={() => playQueue(topTracks, index)}
+                  >
+                    <span className={styles.artistDetailPage__trackNumber}>{index + 1}</span>
+                    <div className={styles.artistDetailPage__trackInfo}>
+                      <span className={styles.artistDetailPage__trackTitle}>{track.title}</span>
+                      {track.albumName && (
+                        <span className={styles.artistDetailPage__trackAlbum}>{track.albumName}</span>
+                      )}
+                    </div>
+                    <div className={styles.artistDetailPage__trackStats}>
+                      {track.playCount !== undefined && track.playCount > 0 && (
+                        <span className={styles.artistDetailPage__trackPlayCount}>
+                          <Play size={12} />
+                          {track.playCount.toLocaleString()}
+                        </span>
+                      )}
+                      <span className={styles.artistDetailPage__trackDuration}>
+                        {formatDuration(track.duration)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 

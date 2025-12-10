@@ -73,6 +73,11 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     // Update track stats
     await this.updateItemStats(userId, trackId, 'track', weightedPlay, completionRate);
 
+    // Increment the track's global play count (denormalized for O(1) reads)
+    await this.drizzle.db.execute(sql`
+      UPDATE tracks SET play_count = play_count + 1 WHERE id = ${trackId}
+    `);
+
     // Get album and artist IDs
     const track = await this.drizzle.db
       .select({ albumId: tracks.albumId, artistId: tracks.artistId })

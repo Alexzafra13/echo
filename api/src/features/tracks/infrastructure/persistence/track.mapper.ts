@@ -39,6 +39,8 @@ export class TrackMapper {
       rgAlbumPeak: raw.rgAlbumPeak ?? undefined,
       // Missing file tracking
       missingAt: raw.missingAt ?? undefined,
+      // Play statistics
+      playCount: Number(raw.playCount || 0),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });

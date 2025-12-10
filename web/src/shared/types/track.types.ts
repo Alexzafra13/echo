@@ -60,6 +60,9 @@ export interface Track {
   // Missing file status (ghost track)
   isMissing?: boolean; // True if the file is missing from disk
 
+  // Play statistics
+  playCount?: number; // Total play count across all users
+
   // Player/playlist context
   coverImage?: string; // Direct cover URL (for player UI)
   playlistOrder?: number; // Order in playlist (when track is from a playlist)
