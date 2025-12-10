@@ -39,6 +39,7 @@ export class GetArtistUseCase {
       name: artist.name,
       albumCount: artist.albumCount,
       songCount: artist.songCount,
+      playCount: artist.playCount,
       mbzArtistId: artist.mbzArtistId,
       biography: artist.biography,
       smallImageUrl: artist.smallImageUrl,

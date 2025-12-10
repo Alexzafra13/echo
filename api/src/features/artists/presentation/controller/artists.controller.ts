@@ -1,9 +1,8 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
-import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
 import { parsePaginationParams } from '@shared/utils';
 
 /**
@@ -25,8 +24,6 @@ export class ArtistsController {
     private readonly getArtistsUseCase: GetArtistsUseCase,
     private readonly getArtistAlbumsUseCase: GetArtistAlbumsUseCase,
     private readonly searchArtistsUseCase: SearchArtistsUseCase,
-    @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly playTrackingRepository: IPlayTrackingRepository,
   ) {}
 
   /**
@@ -127,8 +124,9 @@ export class ArtistsController {
     },
   })
   async getArtistStats(@Param('id') id: string) {
-    const playCount = await this.playTrackingRepository.getItemGlobalPlayCount(id, 'artist');
-    return { playCount };
+    // O(1) read directly from the artists.playCount field
+    const artist = await this.getArtistUseCase.execute({ id });
+    return { playCount: artist.playCount };
   }
 
   /**

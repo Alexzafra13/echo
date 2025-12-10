@@ -48,6 +48,7 @@ export const artists = pgTable(
     externalUrl: varchar('external_url', { length: 512 }),
     metadataStorageSize: bigint('metadata_storage_size', { mode: 'number' }).default(0),
     orderArtistName: varchar('order_artist_name', { length: 255 }),
+    playCount: bigint('play_count', { mode: 'number' }).default(0).notNull(),
     size: bigint('size', { mode: 'number' }).default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

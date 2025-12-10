@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, desc, and, gte, count, avg, sql, sum } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { playHistory, userPlayStats, tracks, playQueues } from '@infrastructure/database/schema';
+import { playHistory, userPlayStats, tracks, playQueues, artists } from '@infrastructure/database/schema';
 import { IPlayTrackingRepository } from '../../domain/ports';
 import {
   PlayEvent,
@@ -90,6 +90,11 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     // Update artist stats if exists
     if (track[0].artistId) {
       await this.updateItemStats(userId, track[0].artistId, 'artist', weightedPlay, completionRate);
+
+      // Increment the artist's global play count (denormalized for O(1) reads)
+      await this.drizzle.db.execute(sql`
+        UPDATE artists SET play_count = play_count + 1 WHERE id = ${track[0].artistId}
+      `);
     }
   }
 

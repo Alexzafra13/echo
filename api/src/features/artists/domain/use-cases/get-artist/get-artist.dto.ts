@@ -7,6 +7,7 @@ export interface GetArtistOutput {
   name: string;
   albumCount: number;
   songCount: number;
+  playCount: number;
   mbzArtistId?: string;
   biography?: string;
   smallImageUrl?: string;
