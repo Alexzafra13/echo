@@ -61,4 +61,12 @@ export const artistsService = {
 
     return response.data;
   },
+
+  /**
+   * Get artist play stats (total plays across all users)
+   */
+  async getStats(artistId: string): Promise<{ playCount: number }> {
+    const response = await apiClient.get<{ playCount: number }>(`/artists/${artistId}/stats`);
+    return response.data;
+  },
 };

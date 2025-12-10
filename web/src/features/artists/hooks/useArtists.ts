@@ -47,3 +47,15 @@ export function useArtistAlbums(artistId: string | undefined, params?: { skip?: 
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
+
+/**
+ * Hook to fetch artist play stats (total plays across all users)
+ */
+export function useArtistStats(artistId: string | undefined) {
+  return useQuery({
+    queryKey: ['artists', artistId, 'stats'],
+    queryFn: () => artistsService.getStats(artistId!),
+    enabled: !!artistId,
+    staleTime: 10 * 60 * 1000, // 10 minutes - stats don't change frequently
+  });
+}

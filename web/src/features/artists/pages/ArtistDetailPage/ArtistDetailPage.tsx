@@ -6,7 +6,7 @@ import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
-import { useArtist, useArtistAlbums } from '../../hooks';
+import { useArtist, useArtistAlbums, useArtistStats } from '../../hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
@@ -39,6 +39,9 @@ export default function ArtistDetailPage() {
 
   // Fetch albums for this artist directly from the API
   const { data: artistAlbumsData } = useArtistAlbums(id);
+
+  // Fetch artist play stats
+  const { data: artistStats } = useArtistStats(id);
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
@@ -271,6 +274,12 @@ export default function ArtistDetailPage() {
                   <span>{artist.albumCount} {artist.albumCount === 1 ? 'álbum' : 'álbumes'}</span>
                   <span>•</span>
                   <span>{artist.songCount} {artist.songCount === 1 ? 'canción' : 'canciones'}</span>
+                  {artistStats && artistStats.playCount > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>{artistStats.playCount.toLocaleString()} {artistStats.playCount === 1 ? 'reproducción' : 'reproducciones'}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
