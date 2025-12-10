@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, desc, count, sql, inArray } from 'drizzle-orm';
+import { eq, desc, count, sql, inArray, gt } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
 import { createSearchPattern } from '@shared/utils';
@@ -30,10 +30,14 @@ export class DrizzleArtistRepository
     return result[0] ? ArtistMapper.toDomain(result[0]) : null;
   }
 
+  /**
+   * Find all artists with content (excludes external artists without tracks)
+   */
   async findAll(skip: number, take: number): Promise<Artist[]> {
     const result = await this.drizzle.db
       .select()
       .from(artists)
+      .where(gt(artists.songCount, 0)) // Only artists with tracks
       .orderBy(desc(artists.createdAt))
       .offset(skip)
       .limit(take);
@@ -41,6 +45,9 @@ export class DrizzleArtistRepository
     return ArtistMapper.toDomainArray(result);
   }
 
+  /**
+   * Search artists with content by name
+   */
   async search(name: string, skip: number, take: number): Promise<Artist[]> {
     // Use ILIKE for case-insensitive search with escaped wildcards
     const searchPattern = createSearchPattern(name);
@@ -48,7 +55,7 @@ export class DrizzleArtistRepository
     const result = await this.drizzle.db
       .select()
       .from(artists)
-      .where(sql`${artists.name} ILIKE ${searchPattern}`)
+      .where(sql`${artists.name} ILIKE ${searchPattern} AND ${artists.songCount} > 0`)
       .orderBy(artists.name)
       .offset(skip)
       .limit(take);
@@ -56,10 +63,14 @@ export class DrizzleArtistRepository
     return ArtistMapper.toDomainArray(result);
   }
 
+  /**
+   * Count artists with content
+   */
   async count(): Promise<number> {
     const result = await this.drizzle.db
       .select({ count: count() })
-      .from(artists);
+      .from(artists)
+      .where(gt(artists.songCount, 0)); // Only artists with tracks
 
     return result[0]?.count ?? 0;
   }

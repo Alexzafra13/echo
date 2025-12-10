@@ -28,17 +28,27 @@ export default function HomePage() {
   // Auto-refresh when scan completes
   useAutoRefreshOnScan();
 
+  // Minimum items for mobile horizontal scroll
+  const MIN_MOBILE_ITEMS = 12;
+
   // Calculate how many albums we need for 2 rows dynamically
-  const { itemsPerPage: neededAlbums } = useGridDimensions({
+  const { itemsPerPage: calculatedAlbums } = useGridDimensions({
     maxRows: 2,
     headerHeight: 450,
   });
 
   // Calculate how many playlists we need for 1 row dynamically
-  const { itemsPerPage: neededPlaylists } = useGridDimensions({
+  const { itemsPerPage: calculatedPlaylists } = useGridDimensions({
     maxRows: 1,
     headerHeight: 450,
   });
+
+  // Responsive state for mobile detection (moved up for use in item counts)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // On mobile, ensure minimum items for horizontal scroll
+  const neededAlbums = isMobile ? Math.max(calculatedAlbums, MIN_MOBILE_ITEMS) : calculatedAlbums;
+  const neededPlaylists = isMobile ? Math.max(calculatedPlaylists, MIN_MOBILE_ITEMS) : calculatedPlaylists;
 
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
@@ -92,9 +102,6 @@ export default function HomePage() {
     setRefreshKey(Date.now());
     setCurrentHeroIndex(0); // Reset to first item
   }, []);
-
-  // Responsive state for mobile detection
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Helper: Check if album was released recently (within N days)
   const isRecentRelease = (album: Album, days: number = 90): boolean => {

@@ -62,36 +62,70 @@
   }
 }
 
-/* Mobile - Responsive grid with auto-fit */
+/* Mobile - Horizontal scroll */
 @media (max-width: 768px) {
   .albumGrid {
     margin-bottom: 32px;
   }
 
-  .albumGrid__title {
-    font-size: 20px;
-    margin-bottom: 12px;
+  .albumGrid__header {
     padding: 0 16px;
   }
 
+  .albumGrid__title {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
   .albumGrid__grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Auto-fit para mejor responsividad */
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
     gap: 12px;
-    padding: 0 16px;
-    min-height: 0; /* Eliminar min-height en mobile para flujo natural */
+    padding: 0 16px 16px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--white-10) transparent;
+  }
+
+  .albumGrid__grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .albumGrid__grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .albumGrid__grid::-webkit-scrollbar-thumb {
+    background: var(--white-10);
+    border-radius: 2px;
+  }
+
+  /* Cards have fixed width in mobile scroll mode */
+  .albumGrid__grid > * {
+    flex-shrink: 0;
+    width: 140px;
+    scroll-snap-align: start;
   }
 }
 
 /* Small Mobile */
 @media (max-width: 480px) {
-  .albumGrid__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Ajuste automático */
-    gap: 10px;
+  .albumGrid__header {
     padding: 0 12px;
+  }
+
+  .albumGrid__grid {
+    gap: 10px;
+    padding: 0 12px 12px;
+  }
+
+  .albumGrid__grid > * {
+    width: 120px;
   }
 
   .albumGrid__title {
     font-size: 18px;
-    padding: 0 12px;
   }
 }
