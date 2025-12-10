@@ -153,7 +153,7 @@
   text-shadow: 0 2px 4px var(--black-80);
 }
 
-/* Biography Section - Modern Editorial Design */
+/* Biography Section - Clean Design */
 .artistDetailPage__biography {
   margin-bottom: 48px;
 }
@@ -179,130 +179,23 @@
 
 .artistDetailPage__biographyContent {
   max-width: 900px;
-  position: relative;
-  padding: 40px 48px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/* Decorative quote mark */
-.artistDetailPage__biographyContent::before {
-  content: '"';
-  position: absolute;
-  top: 20px;
-  left: 32px;
-  font-family: 'Georgia', serif;
-  font-size: 120px;
-  line-height: 1;
-  color: var(--color-accent, #ed6842);
-  opacity: 0.15;
-  pointer-events: none;
-  font-weight: 400;
 }
 
 .artistDetailPage__biographyText {
   font-family: var(--font-biography, 'Lora', Georgia, serif);
-  font-size: 17px;
-  line-height: 1.9;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.75);
   margin: 0;
   white-space: pre-wrap;
-  transition: max-height 0.3s ease;
-  letter-spacing: 0.01em;
-  font-weight: 400;
 }
 
-/* Drop cap - Elegant oversized first letter */
-.artistDetailPage__dropCap {
-  font-family: 'Georgia', serif;
-  font-size: 4em;
-  line-height: 0.8;
-  float: left;
-  margin-top: 0.05em;
-  margin-right: 12px;
-  margin-bottom: 0;
-  font-weight: 400;
-  color: var(--color-accent, #ed6842);
-  text-shadow: 0 2px 12px rgba(237, 104, 66, 0.3);
-}
-
-/* Collapsed text with elegant fade */
-.artistDetailPage__biographyText__collapsed {
-  max-height: 200px;
-  overflow: hidden;
-  position: relative;
-}
-
-.artistDetailPage__biographyText__collapsed::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(10, 14, 39, 0.85) 60%,
-    rgba(10, 14, 39, 1) 100%
-  );
-  pointer-events: none;
-}
-
-/* Read more/less button - Minimal style */
-.artistDetailPage__biographyToggle {
+/* Source attribution */
+.artistDetailPage__biographySource {
   margin-top: 20px;
-  padding: 10px 24px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 24px;
-  color: rgba(255, 255, 255, 0.7);
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.artistDetailPage__biographyToggle:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--color-accent, #ed6842);
-  color: var(--color-accent, #ed6842);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.15);
-}
-
-/* Source attribution - Subtle */
-.artistDetailPage__biographySource {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 12px;
   color: rgba(255, 255, 255, 0.4);
-  font-style: normal;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.artistDetailPage__biographyPlaceholder {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.4);
-  font-style: italic;
-  margin: 0;
 }
 
 /* Top Tracks Section */
@@ -547,25 +440,8 @@
     font-size: 24px;
   }
 
-  .artistDetailPage__biographyContent {
-    padding: 28px 24px;
-    border-radius: 16px;
-  }
-
-  .artistDetailPage__biographyContent::before {
-    font-size: 80px;
-    top: 12px;
-    left: 20px;
-  }
-
   .artistDetailPage__biographyText {
     font-size: 15px;
-    line-height: 1.8;
-  }
-
-  .artistDetailPage__dropCap {
-    font-size: 3em;
-    margin-right: 8px;
   }
 }
 
@@ -653,46 +529,11 @@
 }
 
 /* ===== Light Theme Styles ===== */
-:root[data-theme="light"] .artistDetailPage__biographyContent {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.02) 0%,
-    rgba(0, 0, 0, 0.01) 100%
-  );
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-:root[data-theme="light"] .artistDetailPage__biographyContent::before {
-  opacity: 0.1;
-}
-
 :root[data-theme="light"] .artistDetailPage__biographyText {
-  color: rgba(0, 0, 0, 0.75);
-}
-
-:root[data-theme="light"] .artistDetailPage__biographyText__collapsed::after {
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(245, 245, 245, 0.85) 60%,
-    rgba(245, 245, 245, 1) 100%
-  );
-}
-
-:root[data-theme="light"] .artistDetailPage__biographyToggle {
-  border-color: rgba(0, 0, 0, 0.15);
-  color: rgba(0, 0, 0, 0.6);
-}
-
-:root[data-theme="light"] .artistDetailPage__biographyToggle:hover {
-  background: rgba(0, 0, 0, 0.03);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme="light"] .artistDetailPage__biographySource {
-  border-top-color: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.4);
 }
 
