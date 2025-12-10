@@ -260,9 +260,10 @@ export class ArtistsController {
 
       // If artist doesn't exist locally and has MBID, create them
       if (!localArtist && similar.mbid) {
-        localArtist = await this.createExternalArtist(similar);
-        if (localArtist) {
-          artistsToEnrich.push(localArtist.id);
+        const created = await this.createExternalArtist(similar);
+        if (created) {
+          localArtist = created;
+          artistsToEnrich.push(created.id);
         }
       }
 
