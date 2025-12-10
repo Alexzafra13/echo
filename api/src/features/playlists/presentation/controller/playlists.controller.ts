@@ -120,9 +120,9 @@ export class PlaylistsController {
     @Param('artistId') artistId: string,
     @Query('skip') skip?: number,
     @Query('take') take?: number,
-    @Req() req?: RequestWithUser,
+    @Req() req: RequestWithUser,
   ): Promise<PlaylistsListResponseDto> {
-    const userId = req?.user?.id;
+    const userId = req.user.id;
 
     const result = await this.getPlaylistsByArtistUseCase.execute({
       artistId,
