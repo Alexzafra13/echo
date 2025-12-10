@@ -20,8 +20,12 @@ export class SimilarArtist {
     public readonly imageUrl: string | null,
 
     /**
-     * Match percentage (0-100) - how similar this artist is
-     * Note: Last.fm doesn't always provide this in artist.getinfo
+     * MusicBrainz ID (for fetching images from Fanart.tv)
+     */
+    public readonly mbid: string | null = null,
+
+    /**
+     * Match score (0-1) - how similar this artist is
      */
     public readonly match: number | null = null
   ) {}

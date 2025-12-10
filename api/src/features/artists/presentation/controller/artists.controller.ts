@@ -180,12 +180,13 @@ export class ArtistsController {
   /**
    * GET /artists/:id/similar
    * Obtener artistas similares desde Last.fm
+   * Prioriza artistas que existen en la biblioteca local
    */
   @Get(':id/similar')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener artistas similares',
-    description: 'Retorna artistas musicalmente similares usando datos de Last.fm. Si el artista existe en la biblioteca local, incluye su ID.'
+    description: 'Retorna artistas musicalmente similares usando datos de Last.fm. Prioriza los que existen en la biblioteca local.'
   })
   @ApiParam({
     name: 'id',
@@ -197,8 +198,8 @@ export class ArtistsController {
     name: 'limit',
     required: false,
     type: Number,
-    description: 'Número de artistas similares a retornar (1-20, default: 10)',
-    example: 10
+    description: 'Número de artistas similares a retornar (1-30, default: 15)',
+    example: 15
   })
   @ApiResponse({
     status: 200,
@@ -211,7 +212,9 @@ export class ArtistsController {
           name: { type: 'string', description: 'Nombre del artista' },
           url: { type: 'string', nullable: true, description: 'URL a Last.fm' },
           imageUrl: { type: 'string', nullable: true, description: 'URL de imagen' },
+          mbid: { type: 'string', nullable: true, description: 'MusicBrainz ID' },
           localId: { type: 'string', nullable: true, description: 'ID local si existe en biblioteca' },
+          match: { type: 'number', nullable: true, description: 'Score de similitud (0-1)' },
         },
       },
     },
@@ -221,7 +224,7 @@ export class ArtistsController {
     @Param('id') artistId: string,
     @Query('limit') limit?: string,
   ) {
-    const parsedLimit = Math.min(Math.max(parseInt(limit || '10', 10) || 10, 1), 20);
+    const parsedLimit = Math.min(Math.max(parseInt(limit || '15', 10) || 15, 1), 30);
 
     // Get artist from database to get MBID and name
     const artist = await this.getArtistUseCase.execute({ id: artistId });
@@ -232,11 +235,12 @@ export class ArtistsController {
       return [];
     }
 
-    // Get similar artists from Last.fm
+    // Request more artists from Last.fm to have enough after filtering
+    // We'll get 2x the limit to ensure we have enough local matches
     const similarArtists = await this.lastfmAgent.getSimilarArtists(
       artist.mbzArtistId || null,
       artist.name,
-      parsedLimit
+      parsedLimit * 2
     );
 
     if (!similarArtists || similarArtists.length === 0) {
@@ -247,16 +251,30 @@ export class ArtistsController {
     const similarNames = similarArtists.map((a) => a.name);
     const localArtistsMap = await this.artistRepository.findByNames(similarNames);
 
-    // Map similar artists with local IDs where available
-    return similarArtists.map((similar) => {
+    // Map similar artists with local info
+    const mappedArtists = similarArtists.map((similar) => {
       const localArtist = localArtistsMap.get(similar.name.toLowerCase());
       return {
         name: similar.name,
         url: similar.url,
         imageUrl: similar.imageUrl,
+        mbid: similar.mbid,
         localId: localArtist?.id || null,
+        match: similar.match,
       };
     });
+
+    // Sort: local artists first (they have avatars), then external by match score
+    const sortedArtists = mappedArtists.sort((a, b) => {
+      // Local artists come first
+      if (a.localId && !b.localId) return -1;
+      if (!a.localId && b.localId) return 1;
+      // Then sort by match score (higher = more similar)
+      return (b.match || 0) - (a.match || 0);
+    });
+
+    // Return only the requested limit
+    return sortedArtists.slice(0, parsedLimit);
   }
 
   /**

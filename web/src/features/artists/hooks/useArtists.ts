@@ -73,9 +73,9 @@ export function useArtistTopTracks(artistId: string | undefined, limit = 5) {
 }
 
 /**
- * Hook to fetch similar artists from Last.fm
+ * Hook to fetch similar artists from Last.fm (prioritizes local artists)
  */
-export function useSimilarArtists(artistId: string | undefined, limit = 10) {
+export function useSimilarArtists(artistId: string | undefined, limit = 15) {
   return useQuery({
     queryKey: ['artists', artistId, 'similar', limit],
     queryFn: () => artistsService.getSimilarArtists(artistId!, limit),

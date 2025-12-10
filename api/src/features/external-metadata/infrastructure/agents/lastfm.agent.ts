@@ -8,6 +8,7 @@ import { ExternalApiError } from '@shared/errors';
 import {
   LastFMArtistResponse,
   LastFMArtistInfoResponse,
+  LastFMSimilarArtistsResponse,
   LastFMTag,
   LastFMImage,
 } from './types';
@@ -180,48 +181,86 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
   }
 
   /**
-   * Get similar artists from Last.fm
+   * Get similar artists from Last.fm using artist.getSimilar endpoint
    * Returns artists that are musically similar to the given artist
    *
    * @param mbid MusicBrainz Artist ID
    * @param name Artist name
-   * @param limit Maximum number of similar artists to return (default 10)
+   * @param limit Maximum number of similar artists to return (default 15, max 100)
    * @returns Array of similar artists or null if not found
    */
   async getSimilarArtists(
     mbid: string | null,
     name: string,
-    limit: number = 10
+    limit: number = 15
   ): Promise<SimilarArtist[] | null> {
     try {
-      const artistInfo = await this.getArtistInfo(mbid, name);
-      if (!artistInfo?.similar?.artist || artistInfo.similar.artist.length === 0) {
+      await this.rateLimiter.waitForRateLimit(this.name);
+
+      const params = new URLSearchParams({
+        method: 'artist.getSimilar',
+        api_key: this.apiKey,
+        format: 'json',
+        autocorrect: '1',
+        limit: Math.min(limit, 100).toString(),
+      });
+
+      // Prefer MBID lookup, fallback to name
+      if (mbid) {
+        params.append('mbid', mbid);
+      } else {
+        params.append('artist', name);
+      }
+
+      const url = `${this.baseUrl}?${params.toString()}`;
+      this.logger.debug(`Fetching Last.fm similar artists for: ${mbid || name}`);
+
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000,
+        headers: {
+          'User-Agent': 'Echo-Music-Server/1.0.0',
+        },
+      });
+
+      if (!response.ok) {
+        throw new ExternalApiError('Last.fm', response.status, response.statusText);
+      }
+
+      const data: LastFMSimilarArtistsResponse = await response.json();
+
+      if (data.error) {
+        this.logger.debug(`Last.fm error for similar artists: ${data.message}`);
+        return null;
+      }
+
+      const artists = data.similarartists?.artist;
+      if (!artists || artists.length === 0) {
         this.logger.debug(`No similar artists found for: ${name}`);
         return null;
       }
 
-      const similarArtists = artistInfo.similar.artist
-        .slice(0, limit)
-        .map((artist) => {
-          // Get the best available image (extralarge > large > medium)
-          let imageUrl: string | null = null;
-          if (artist.image && artist.image.length > 0) {
-            const sizes = ['extralarge', 'large', 'medium'];
-            for (const size of sizes) {
-              const img = artist.image.find((i) => i.size === size);
-              if (img && img['#text'] && !img['#text'].includes('2a96cbd8b46e442fc41c2b86b821562f')) {
-                imageUrl = img['#text'];
-                break;
-              }
+      const similarArtists = artists.map((artist) => {
+        // Get the best available image (extralarge > large > medium)
+        let imageUrl: string | null = null;
+        if (artist.image && artist.image.length > 0) {
+          const sizes = ['extralarge', 'large', 'medium'];
+          for (const size of sizes) {
+            const img = artist.image.find((i) => i.size === size);
+            if (img && img['#text'] && !img['#text'].includes('2a96cbd8b46e442fc41c2b86b821562f')) {
+              imageUrl = img['#text'];
+              break;
             }
           }
+        }
 
-          return new SimilarArtist(
-            artist.name,
-            artist.url || null,
-            imageUrl
-          );
-        });
+        return new SimilarArtist(
+          artist.name,
+          artist.url || null,
+          imageUrl,
+          artist.mbid || null,
+          artist.match ? parseFloat(artist.match) : null
+        );
+      });
 
       this.logger.log(`Retrieved ${similarArtists.length} similar artists for: ${name}`);
       return similarArtists;
