@@ -3,11 +3,11 @@ import { BookOpen, Music } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
-import { ArtistOptionsMenu, UserPlaylistGrid } from '../../components';
+import { ArtistOptionsMenu, UserPlaylistGrid, SimilarArtistsGrid } from '../../components';
 import { useArtistPlaylists } from '@features/playlists/hooks/usePlaylists';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
-import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks } from '../../hooks';
+import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks, useSimilarArtists } from '../../hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, getAlbumCoverUrl } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
@@ -55,6 +55,9 @@ export default function ArtistDetailPage() {
   // Fetch playlists containing tracks by this artist
   const { data: artistPlaylistsData } = useArtistPlaylists(id, { take: 10 });
   const artistPlaylists = artistPlaylistsData?.items || [];
+
+  // Fetch similar artists from Last.fm
+  const { data: similarArtists } = useSimilarArtists(id, 10);
 
   // Check if artist has images
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
@@ -356,6 +359,11 @@ export default function ArtistDetailPage() {
                 viewAllPath="/playlists"
               />
             </section>
+          )}
+
+          {/* Similar Artists Section */}
+          {similarArtists && similarArtists.length > 0 && (
+            <SimilarArtistsGrid artists={similarArtists} />
           )}
 
           {/* Biography Section */}

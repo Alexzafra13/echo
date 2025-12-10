@@ -1,10 +1,12 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { ITrackRepository, TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
+import { IArtistRepository, ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
+import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
 import { parsePaginationParams } from '@shared/utils';
 
 /**
@@ -21,6 +23,8 @@ import { parsePaginationParams } from '@shared/utils';
 @ApiBearerAuth('JWT-auth')
 @Controller('artists')
 export class ArtistsController {
+  private readonly logger = new Logger(ArtistsController.name);
+
   constructor(
     private readonly getArtistUseCase: GetArtistUseCase,
     private readonly getArtistsUseCase: GetArtistsUseCase,
@@ -28,6 +32,9 @@ export class ArtistsController {
     private readonly searchArtistsUseCase: SearchArtistsUseCase,
     @Inject(TRACK_REPOSITORY)
     private readonly trackRepository: ITrackRepository,
+    @Inject(ARTIST_REPOSITORY)
+    private readonly artistRepository: IArtistRepository,
+    private readonly lastfmAgent: LastfmAgent,
   ) {}
 
   /**
@@ -168,6 +175,88 @@ export class ArtistsController {
     const parsedLimit = Math.min(Math.max(parseInt(limit || '5', 10) || 5, 1), 20);
     const tracks = await this.trackRepository.findTopByArtistId(artistId, parsedLimit);
     return tracks.map((track) => TrackResponseDto.fromDomain(track));
+  }
+
+  /**
+   * GET /artists/:id/similar
+   * Obtener artistas similares desde Last.fm
+   */
+  @Get(':id/similar')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener artistas similares',
+    description: 'Retorna artistas musicalmente similares usando datos de Last.fm. Si el artista existe en la biblioteca local, incluye su ID.'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del artista',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de artistas similares a retornar (1-20, default: 10)',
+    example: 10
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Artistas similares obtenidos exitosamente',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Nombre del artista' },
+          url: { type: 'string', nullable: true, description: 'URL a Last.fm' },
+          imageUrl: { type: 'string', nullable: true, description: 'URL de imagen' },
+          localId: { type: 'string', nullable: true, description: 'ID local si existe en biblioteca' },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Artista no encontrado' })
+  async getSimilarArtists(
+    @Param('id') artistId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedLimit = Math.min(Math.max(parseInt(limit || '10', 10) || 10, 1), 20);
+
+    // Get artist from database to get MBID and name
+    const artist = await this.getArtistUseCase.execute({ id: artistId });
+
+    // Check if Last.fm is enabled
+    if (!this.lastfmAgent.isEnabled()) {
+      this.logger.warn('Last.fm agent is not enabled, cannot fetch similar artists');
+      return [];
+    }
+
+    // Get similar artists from Last.fm
+    const similarArtists = await this.lastfmAgent.getSimilarArtists(
+      artist.mbzArtistId || null,
+      artist.name,
+      parsedLimit
+    );
+
+    if (!similarArtists || similarArtists.length === 0) {
+      return [];
+    }
+
+    // Find which similar artists exist in our local library
+    const similarNames = similarArtists.map((a) => a.name);
+    const localArtistsMap = await this.artistRepository.findByNames(similarNames);
+
+    // Map similar artists with local IDs where available
+    return similarArtists.map((similar) => {
+      const localArtist = localArtistsMap.get(similar.name.toLowerCase());
+      return {
+        name: similar.name,
+        url: similar.url,
+        imageUrl: similar.imageUrl,
+        localId: localArtist?.id || null,
+      };
+    });
   }
 
   /**

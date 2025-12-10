@@ -41,4 +41,12 @@ export class CachedArtistRepository
       Artist.reconstruct,
     );
   }
+
+  /**
+   * Find artists by exact names (for similar artists matching)
+   * Not cached - infrequent operation
+   */
+  async findByNames(names: string[]): Promise<Map<string, Artist>> {
+    return this.baseRepository.findByNames(names);
+  }
 }

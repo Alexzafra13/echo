@@ -71,3 +71,16 @@ export function useArtistTopTracks(artistId: string | undefined, limit = 5) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
+
+/**
+ * Hook to fetch similar artists from Last.fm
+ */
+export function useSimilarArtists(artistId: string | undefined, limit = 10) {
+  return useQuery({
+    queryKey: ['artists', artistId, 'similar', limit],
+    queryFn: () => artistsService.getSimilarArtists(artistId!, limit),
+    enabled: !!artistId,
+    staleTime: 30 * 60 * 1000, // 30 minutes - similar artists don't change
+    retry: 1, // Last.fm might be slow or unavailable
+  });
+}

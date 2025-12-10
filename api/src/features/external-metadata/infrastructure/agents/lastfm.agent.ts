@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { IArtistBioRetriever, IArtistImageRetriever } from '../../domain/interfaces';
-import { ArtistBio, ArtistImages } from '../../domain/entities';
+import { ArtistBio, ArtistImages, SimilarArtist } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
 import { SettingsService } from '../services/settings.service';
 import { fetchWithTimeout } from '@shared/utils';
@@ -173,6 +173,61 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     } catch (error) {
       this.logger.error(
         `Error fetching tags for ${name}: ${(error as Error).message}`,
+        (error as Error).stack
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Get similar artists from Last.fm
+   * Returns artists that are musically similar to the given artist
+   *
+   * @param mbid MusicBrainz Artist ID
+   * @param name Artist name
+   * @param limit Maximum number of similar artists to return (default 10)
+   * @returns Array of similar artists or null if not found
+   */
+  async getSimilarArtists(
+    mbid: string | null,
+    name: string,
+    limit: number = 10
+  ): Promise<SimilarArtist[] | null> {
+    try {
+      const artistInfo = await this.getArtistInfo(mbid, name);
+      if (!artistInfo?.similar?.artist || artistInfo.similar.artist.length === 0) {
+        this.logger.debug(`No similar artists found for: ${name}`);
+        return null;
+      }
+
+      const similarArtists = artistInfo.similar.artist
+        .slice(0, limit)
+        .map((artist) => {
+          // Get the best available image (extralarge > large > medium)
+          let imageUrl: string | null = null;
+          if (artist.image && artist.image.length > 0) {
+            const sizes = ['extralarge', 'large', 'medium'];
+            for (const size of sizes) {
+              const img = artist.image.find((i) => i.size === size);
+              if (img && img['#text'] && !img['#text'].includes('2a96cbd8b46e442fc41c2b86b821562f')) {
+                imageUrl = img['#text'];
+                break;
+              }
+            }
+          }
+
+          return new SimilarArtist(
+            artist.name,
+            artist.url || null,
+            imageUrl
+          );
+        });
+
+      this.logger.log(`Retrieved ${similarArtists.length} similar artists for: ${name}`);
+      return similarArtists;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching similar artists for ${name}: ${(error as Error).message}`,
         (error as Error).stack
       );
       return null;
