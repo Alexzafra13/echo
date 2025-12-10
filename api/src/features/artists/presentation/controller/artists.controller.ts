@@ -6,7 +6,10 @@ import { AlbumResponseDto } from '@features/albums/presentation/dtos';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { ITrackRepository, TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
 import { IArtistRepository, ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
+import { Artist } from '../../domain/entities/artist.entity';
 import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
+import { ExternalMetadataService } from '@features/external-metadata/application/external-metadata.service';
+import { SimilarArtist } from '@features/external-metadata/domain/entities';
 import { parsePaginationParams } from '@shared/utils';
 
 /**
@@ -35,6 +38,7 @@ export class ArtistsController {
     @Inject(ARTIST_REPOSITORY)
     private readonly artistRepository: IArtistRepository,
     private readonly lastfmAgent: LastfmAgent,
+    private readonly externalMetadataService: ExternalMetadataService,
   ) {}
 
   /**
@@ -180,13 +184,13 @@ export class ArtistsController {
   /**
    * GET /artists/:id/similar
    * Obtener artistas similares desde Last.fm
-   * Prioriza artistas que existen en la biblioteca local
+   * Crea perfiles para artistas externos y descarga sus imágenes
    */
   @Get(':id/similar')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener artistas similares',
-    description: 'Retorna artistas musicalmente similares usando datos de Last.fm. Prioriza los que existen en la biblioteca local.'
+    description: 'Retorna artistas musicalmente similares usando datos de Last.fm. Crea perfiles locales para artistas externos.'
   })
   @ApiParam({
     name: 'id',
@@ -210,10 +214,7 @@ export class ArtistsController {
         type: 'object',
         properties: {
           name: { type: 'string', description: 'Nombre del artista' },
-          url: { type: 'string', nullable: true, description: 'URL a Last.fm' },
-          imageUrl: { type: 'string', nullable: true, description: 'URL de imagen' },
-          mbid: { type: 'string', nullable: true, description: 'MusicBrainz ID' },
-          localId: { type: 'string', nullable: true, description: 'ID local si existe en biblioteca' },
+          localId: { type: 'string', description: 'ID local del artista' },
           match: { type: 'number', nullable: true, description: 'Score de similitud (0-1)' },
         },
       },
@@ -235,8 +236,7 @@ export class ArtistsController {
       return [];
     }
 
-    // Request more artists from Last.fm to have enough after filtering
-    // We'll get 2x the limit to ensure we have enough local matches
+    // Request more artists from Last.fm (2x limit to have options)
     const similarArtists = await this.lastfmAgent.getSimilarArtists(
       artist.mbzArtistId || null,
       artist.name,
@@ -247,34 +247,87 @@ export class ArtistsController {
       return [];
     }
 
-    // Find which similar artists exist in our local library
+    // Find existing local artists by name
     const similarNames = similarArtists.map((a) => a.name);
     const localArtistsMap = await this.artistRepository.findByNames(similarNames);
 
-    // Map similar artists with local info
-    const mappedArtists = similarArtists.map((similar) => {
-      const localArtist = localArtistsMap.get(similar.name.toLowerCase());
-      return {
+    // Process similar artists - create external ones if needed
+    const results: Array<{ name: string; localId: string; match: number | null }> = [];
+    const artistsToEnrich: string[] = [];
+
+    for (const similar of similarArtists) {
+      let localArtist = localArtistsMap.get(similar.name.toLowerCase());
+
+      // If artist doesn't exist locally and has MBID, create them
+      if (!localArtist && similar.mbid) {
+        localArtist = await this.createExternalArtist(similar);
+        if (localArtist) {
+          artistsToEnrich.push(localArtist.id);
+        }
+      }
+
+      if (localArtist) {
+        results.push({
+          name: similar.name,
+          localId: localArtist.id,
+          match: similar.match,
+        });
+      }
+    }
+
+    // Sort: by match score (all have localId now)
+    results.sort((a, b) => (b.match || 0) - (a.match || 0));
+
+    // Trigger enrichment for new artists (async - don't block response)
+    if (artistsToEnrich.length > 0) {
+      this.enrichExternalArtists(artistsToEnrich);
+    }
+
+    return results.slice(0, parsedLimit);
+  }
+
+  /**
+   * Create an external artist (similar artist without tracks)
+   */
+  private async createExternalArtist(similar: SimilarArtist): Promise<Artist | null> {
+    try {
+      const newArtist = Artist.create({
         name: similar.name,
-        url: similar.url,
-        imageUrl: similar.imageUrl,
-        mbid: similar.mbid,
-        localId: localArtist?.id || null,
-        match: similar.match,
-      };
-    });
+        mbzArtistId: similar.mbid || undefined,
+        albumCount: 0,
+        songCount: 0,
+        playCount: 0,
+        size: 0,
+      });
 
-    // Sort: local artists first (they have avatars), then external by match score
-    const sortedArtists = mappedArtists.sort((a, b) => {
-      // Local artists come first
-      if (a.localId && !b.localId) return -1;
-      if (!a.localId && b.localId) return 1;
-      // Then sort by match score (higher = more similar)
-      return (b.match || 0) - (a.match || 0);
-    });
+      const created = await this.artistRepository.create(newArtist);
+      this.logger.log(`Created external artist: ${similar.name} (${created.id})`);
+      return created;
+    } catch (error) {
+      // Artist might already exist (race condition), try to find them
+      this.logger.debug(`Could not create artist ${similar.name}: ${(error as Error).message}`);
+      const existing = await this.artistRepository.findByNames([similar.name]);
+      return existing.get(similar.name.toLowerCase()) || null;
+    }
+  }
 
-    // Return only the requested limit
-    return sortedArtists.slice(0, parsedLimit);
+  /**
+   * Trigger enrichment for external artists (async, doesn't block)
+   */
+  private enrichExternalArtists(artistIds: string[]): void {
+    // Run enrichment in background - don't await
+    Promise.all(
+      artistIds.map(async (id) => {
+        try {
+          await this.externalMetadataService.enrichArtist(id);
+          this.logger.log(`Enriched external artist: ${id}`);
+        } catch (error) {
+          this.logger.warn(`Failed to enrich artist ${id}: ${(error as Error).message}`);
+        }
+      })
+    ).catch(() => {
+      // Ignore errors - enrichment is best-effort
+    });
   }
 
   /**
