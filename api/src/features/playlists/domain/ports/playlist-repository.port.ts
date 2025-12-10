@@ -13,6 +13,14 @@ export interface IPlaylistRepository {
   update(id: string, playlist: Partial<Playlist>): Promise<Playlist | null>;
   delete(id: string): Promise<boolean>;
 
+  // Find playlists containing tracks by a specific artist
+  findByArtistId(
+    artistId: string,
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<{ playlists: Playlist[]; total: number }>;
+
   // PlaylistTrack management
   addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack>;
   addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack>;

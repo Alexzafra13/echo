@@ -1,0 +1,151 @@
+/* UserPlaylistGrid Component Styles - BEM Naming Convention */
+
+/* Block: userPlaylistGrid */
+.userPlaylistGrid {
+  margin-bottom: 40px;
+}
+
+.userPlaylistGrid__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0 20px;
+}
+
+.userPlaylistGrid__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+}
+
+.userPlaylistGrid__viewAllButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.userPlaylistGrid__viewAllButton:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.userPlaylistGrid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* Playlist Card */
+.playlistCard {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.playlistCard:hover {
+  background-color: var(--surface-hover, rgba(255, 255, 255, 0.1));
+}
+
+.playlistCard__cover {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background-color: var(--surface-secondary, #282828);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.playlistCard__name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlistCard__meta {
+  font-size: 14px;
+  color: var(--text-secondary, #b3b3b3);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlistCard__owner {
+  color: var(--text-secondary, #b3b3b3);
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .userPlaylistGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .userPlaylistGrid__title {
+    font-size: 22px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .userPlaylistGrid {
+    margin-bottom: 32px;
+  }
+
+  .userPlaylistGrid__title {
+    font-size: 20px;
+    padding: 0 16px;
+  }
+
+  .userPlaylistGrid__grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    padding: 0 16px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .userPlaylistGrid__grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .userPlaylistGrid__title {
+    font-size: 18px;
+    padding: 0 12px;
+  }
+
+  .playlistCard {
+    padding: 8px;
+  }
+
+  .playlistCard__name {
+    font-size: 14px;
+  }
+
+  .playlistCard__meta {
+    font-size: 12px;
+  }
+}

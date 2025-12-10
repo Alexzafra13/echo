@@ -25,6 +25,7 @@ import {
   CreatePlaylistUseCase,
   GetPlaylistUseCase,
   GetPlaylistsUseCase,
+  GetPlaylistsByArtistUseCase,
   UpdatePlaylistUseCase,
   DeletePlaylistUseCase,
   AddTrackToPlaylistUseCase,
@@ -51,6 +52,7 @@ export class PlaylistsController {
     private readonly createPlaylistUseCase: CreatePlaylistUseCase,
     private readonly getPlaylistUseCase: GetPlaylistUseCase,
     private readonly getPlaylistsUseCase: GetPlaylistsUseCase,
+    private readonly getPlaylistsByArtistUseCase: GetPlaylistsByArtistUseCase,
     private readonly updatePlaylistUseCase: UpdatePlaylistUseCase,
     private readonly deletePlaylistUseCase: DeletePlaylistUseCase,
     private readonly addTrackToPlaylistUseCase: AddTrackToPlaylistUseCase,
@@ -87,6 +89,49 @@ export class PlaylistsController {
     });
 
     return PlaylistResponseDto.fromDomain(result);
+  }
+
+  /**
+   * GET /playlists/by-artist/:artistId
+   * Obtener playlists que contienen tracks de un artista
+   */
+  @Get('by-artist/:artistId')
+  @ApiOperation({ summary: 'Obtener playlists que contienen tracks de un artista' })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    type: Number,
+    description: 'Registros a saltar',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Registros a obtener',
+    example: 20,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de playlists que contienen tracks del artista',
+    type: PlaylistsListResponseDto,
+  })
+  async getPlaylistsByArtist(
+    @Param('artistId') artistId: string,
+    @Query('skip') skip?: number,
+    @Query('take') take?: number,
+    @Req() req?: RequestWithUser,
+  ): Promise<PlaylistsListResponseDto> {
+    const userId = req?.user?.id;
+
+    const result = await this.getPlaylistsByArtistUseCase.execute({
+      artistId,
+      userId,
+      skip: skip ? parseInt(skip.toString()) : 0,
+      take: take ? parseInt(take.toString()) : 20,
+    });
+
+    return PlaylistsListResponseDto.fromDomain(result);
   }
 
   /**
