@@ -21,6 +21,10 @@ export class ArtistResponseDto {
   @Expose()
   songCount!: number;
 
+  @ApiProperty({ example: 1523, description: 'Total de reproducciones del artista' })
+  @Expose()
+  playCount!: number;
+
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', required: false })
   @Expose()
   mbzArtistId?: string;
@@ -75,6 +79,7 @@ export class ArtistResponseDto {
     dto.name = data.name;
     dto.albumCount = data.albumCount;
     dto.songCount = data.songCount;
+    dto.playCount = data.playCount || 0;
     dto.mbzArtistId = data.mbzArtistId;
     dto.biography = data.biography;
 

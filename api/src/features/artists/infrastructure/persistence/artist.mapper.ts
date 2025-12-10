@@ -17,6 +17,7 @@ export class ArtistMapper {
       name: raw.name,
       albumCount: raw.albumCount || 0,
       songCount: raw.songCount || 0,
+      playCount: Number(raw.playCount || 0),
       mbzArtistId: raw.mbzArtistId || undefined,
       biography: raw.biography || undefined,
       externalUrl: raw.externalUrl || undefined,

@@ -85,4 +85,12 @@ export class CachedTrackRepository
   ): Promise<Track[]> {
     return this.baseRepository.findShuffledPaginated(seed, skip, take);
   }
+
+  /**
+   * Get top played tracks by artist.
+   * Not cached - play counts change frequently.
+   */
+  async findTopByArtistId(artistId: string, limit = 5): Promise<Track[]> {
+    return this.baseRepository.findTopByArtistId(artistId, limit);
+  }
 }

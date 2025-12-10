@@ -8,6 +8,7 @@ export interface ArtistProps {
   name: string;
   albumCount: number;
   songCount: number;
+  playCount: number;
   mbzArtistId?: string;
   biography?: string;
   smallImageUrl?: string;
@@ -72,6 +73,10 @@ export class Artist {
 
   get songCount(): number {
     return this.props.songCount;
+  }
+
+  get playCount(): number {
+    return this.props.playCount;
   }
 
   get mbzArtistId(): string | undefined {

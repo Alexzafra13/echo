@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { CacheModule } from '@infrastructure/cache/cache.module';
 import { AlbumsModule } from '@features/albums/albums.module';
-import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
+import { TracksModule } from '@features/tracks/tracks.module';
 import { ArtistsController } from './presentation/controller/artists.controller';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from './domain/use-cases';
 import { DrizzleArtistRepository } from './infrastructure/persistence/artist.repository';
@@ -33,7 +33,7 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
   imports: [
     CacheModule,
     forwardRef(() => AlbumsModule), // For GetArtistAlbumsUseCase
-    PlayTrackingModule, // For artist play stats
+    TracksModule, // For top tracks endpoint
   ],
   controllers: [ArtistsController],
   providers: [

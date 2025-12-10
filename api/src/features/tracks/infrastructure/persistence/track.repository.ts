@@ -103,6 +103,20 @@ export class DrizzleTrackRepository
     return TrackMapper.toDomainArray(result);
   }
 
+  async findTopByArtistId(artistId: string, limit = 5): Promise<Track[]> {
+    const result = await this.drizzle.db
+      .select()
+      .from(tracks)
+      .where(and(
+        or(eq(tracks.artistId, artistId), eq(tracks.albumArtistId, artistId)),
+        isNull(tracks.missingAt), // Exclude missing tracks
+      ))
+      .orderBy(desc(tracks.playCount))
+      .limit(limit);
+
+    return TrackMapper.toDomainArray(result);
+  }
+
   async count(): Promise<number> {
     const result = await this.drizzle.db
       .select({ count: count() })

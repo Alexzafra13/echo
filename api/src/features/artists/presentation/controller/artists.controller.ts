@@ -3,7 +3,8 @@ import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth }
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
-import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
+import { TrackResponseDto } from '@features/tracks/presentation/dtos';
+import { ITrackRepository, TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
 import { parsePaginationParams } from '@shared/utils';
 
 /**
@@ -25,8 +26,8 @@ export class ArtistsController {
     private readonly getArtistsUseCase: GetArtistsUseCase,
     private readonly getArtistAlbumsUseCase: GetArtistAlbumsUseCase,
     private readonly searchArtistsUseCase: SearchArtistsUseCase,
-    @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly playTrackingRepository: IPlayTrackingRepository,
+    @Inject(TRACK_REPOSITORY)
+    private readonly trackRepository: ITrackRepository,
   ) {}
 
   /**
@@ -127,8 +128,46 @@ export class ArtistsController {
     },
   })
   async getArtistStats(@Param('id') id: string) {
-    const playCount = await this.playTrackingRepository.getItemGlobalPlayCount(id, 'artist');
-    return { playCount };
+    // O(1) read directly from the artists.playCount field
+    const artist = await this.getArtistUseCase.execute({ id });
+    return { playCount: artist.playCount };
+  }
+
+  /**
+   * GET /artists/:id/top-tracks
+   * Obtener las canciones más reproducidas del artista
+   */
+  @Get(':id/top-tracks')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener top tracks del artista',
+    description: 'Retorna las canciones más reproducidas del artista, ordenadas por número de reproducciones'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del artista',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de tracks a retornar (1-20, default: 5)',
+    example: 5
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Top tracks obtenidos exitosamente',
+    type: [TrackResponseDto]
+  })
+  async getArtistTopTracks(
+    @Param('id') artistId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedLimit = Math.min(Math.max(parseInt(limit || '5', 10) || 5, 1), 20);
+    const tracks = await this.trackRepository.findTopByArtistId(artistId, parsedLimit);
+    return tracks.map((track) => TrackResponseDto.fromDomain(track));
   }
 
   /**

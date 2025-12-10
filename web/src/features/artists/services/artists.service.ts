@@ -1,5 +1,5 @@
 import { apiClient } from '@shared/services/api';
-import type { PaginatedResponse, PaginationParams } from '@shared/types';
+import type { PaginatedResponse, PaginationParams, Track } from '@shared/types';
 import type { ArtistDetail, PaginatedArtists } from '../types';
 import type { Album } from '@features/home/types';
 
@@ -67,6 +67,16 @@ export const artistsService = {
    */
   async getStats(artistId: string): Promise<{ playCount: number }> {
     const response = await apiClient.get<{ playCount: number }>(`/artists/${artistId}/stats`);
+    return response.data;
+  },
+
+  /**
+   * Get top tracks by artist (sorted by play count)
+   */
+  async getTopTracks(artistId: string, limit = 5): Promise<Track[]> {
+    const response = await apiClient.get<Track[]>(`/artists/${artistId}/top-tracks`, {
+      params: { limit },
+    });
     return response.data;
   },
 };

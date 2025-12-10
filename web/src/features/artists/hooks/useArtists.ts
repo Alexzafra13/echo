@@ -59,3 +59,15 @@ export function useArtistStats(artistId: string | undefined) {
     staleTime: 10 * 60 * 1000, // 10 minutes - stats don't change frequently
   });
 }
+
+/**
+ * Hook to fetch top played tracks by artist
+ */
+export function useArtistTopTracks(artistId: string | undefined, limit = 5) {
+  return useQuery({
+    queryKey: ['artists', artistId, 'top-tracks', limit],
+    queryFn: () => artistsService.getTopTracks(artistId!, limit),
+    enabled: !!artistId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
