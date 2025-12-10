@@ -35,6 +35,9 @@ export interface IPlayTrackingRepository {
   // Get play count for a specific item
   getItemPlayCount(userId: string, itemId: string, itemType: 'track' | 'album' | 'artist'): Promise<{ playCount: number; lastPlayedAt: Date | null } | null>;
 
+  // Get global play count for a specific item (sum across all users)
+  getItemGlobalPlayCount(itemId: string, itemType: 'track' | 'album' | 'artist'): Promise<number>;
+
   // Get recently played
   getRecentlyPlayed(userId: string, limit?: number): Promise<string[]>; // Returns track IDs
 
