@@ -352,24 +352,9 @@
   text-overflow: ellipsis;
 }
 
-.artistDetailPage__trackStats {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
 .artistDetailPage__trackPlayCount {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 13px;
-  color: var(--color-accent, #ed6842);
-  font-weight: 500;
-}
-
-.artistDetailPage__trackPlayCount svg {
-  opacity: 0.9;
+  color: var(--color-text-tertiary, #6b7280);
 }
 
 .artistDetailPage__trackDuration {
