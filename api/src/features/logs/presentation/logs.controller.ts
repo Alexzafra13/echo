@@ -256,4 +256,29 @@ export class LogsController {
       levels: Object.values(LogLevel),
     };
   }
+
+  /**
+   * GET /api/logs/storage
+   * Obtener tamaño de almacenamiento de logs
+   */
+  @Get('storage')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener tamaño de almacenamiento de logs',
+    description: 'Retorna el número de filas y tamaño estimado en MB',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tamaño obtenido exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        totalRows: { type: 'number' },
+        estimatedSizeMB: { type: 'number' },
+      },
+    },
+  })
+  async getStorageSize() {
+    return await this.logService.getLogsStorageSize();
+  }
 }
