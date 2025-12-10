@@ -315,6 +315,16 @@
   font-weight: 600;
   color: var(--color-text-tertiary, #6b7280);
   text-align: center;
+  flex-shrink: 0;
+}
+
+.artistDetailPage__trackCover {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--black-30);
 }
 
 .artistDetailPage__trackInfo {
@@ -352,13 +362,14 @@
 .artistDetailPage__trackPlayCount {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 13px;
-  color: var(--color-text-tertiary, #6b7280);
+  color: var(--color-accent, #ed6842);
+  font-weight: 500;
 }
 
 .artistDetailPage__trackPlayCount svg {
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .artistDetailPage__trackDuration {

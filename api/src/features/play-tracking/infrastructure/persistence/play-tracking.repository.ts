@@ -80,7 +80,7 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
 
     // Get album and artist IDs
     const track = await this.drizzle.db
-      .select({ albumId: tracks.albumId, artistId: tracks.artistId })
+      .select({ albumId: tracks.albumId, artistId: tracks.artistId, albumArtistId: tracks.albumArtistId })
       .from(tracks)
       .where(eq(tracks.id, trackId))
       .limit(1);
@@ -92,13 +92,16 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
       await this.updateItemStats(userId, track[0].albumId, 'album', weightedPlay, completionRate);
     }
 
+    // Determine which artist to credit (prefer artistId, fallback to albumArtistId)
+    const effectiveArtistId = track[0].artistId || track[0].albumArtistId;
+
     // Update artist stats if exists
-    if (track[0].artistId) {
-      await this.updateItemStats(userId, track[0].artistId, 'artist', weightedPlay, completionRate);
+    if (effectiveArtistId) {
+      await this.updateItemStats(userId, effectiveArtistId, 'artist', weightedPlay, completionRate);
 
       // Increment the artist's global play count (denormalized for O(1) reads)
       await this.drizzle.db.execute(sql`
-        UPDATE artists SET play_count = play_count + 1 WHERE id = ${track[0].artistId}
+        UPDATE artists SET play_count = play_count + 1 WHERE id = ${effectiveArtistId}
       `);
     }
   }

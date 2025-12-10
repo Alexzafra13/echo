@@ -7,7 +7,7 @@ import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
 import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks } from '../../hooks';
-import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
+import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, getAlbumCoverUrl } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { getArtistInitials } from '../../utils/artist-image.utils';
 import { logger } from '@shared/utils/logger';
@@ -354,6 +354,13 @@ export default function ArtistDetailPage() {
                     onClick={() => playQueue(topTracks, index)}
                   >
                     <span className={styles.artistDetailPage__trackNumber}>{index + 1}</span>
+                    {track.albumId && (
+                      <img
+                        src={getAlbumCoverUrl(track.albumId)}
+                        alt={track.albumName || 'Album'}
+                        className={styles.artistDetailPage__trackCover}
+                      />
+                    )}
                     <div className={styles.artistDetailPage__trackInfo}>
                       <span className={styles.artistDetailPage__trackTitle}>{track.title}</span>
                       {track.albumName && (
@@ -361,12 +368,10 @@ export default function ArtistDetailPage() {
                       )}
                     </div>
                     <div className={styles.artistDetailPage__trackStats}>
-                      {track.playCount !== undefined && track.playCount > 0 && (
-                        <span className={styles.artistDetailPage__trackPlayCount}>
-                          <Play size={12} />
-                          {track.playCount.toLocaleString()}
-                        </span>
-                      )}
+                      <span className={styles.artistDetailPage__trackPlayCount}>
+                        <Play size={14} fill="currentColor" />
+                        {(track.playCount || 0).toLocaleString()}
+                      </span>
                       <span className={styles.artistDetailPage__trackDuration}>
                         {formatDuration(track.duration)}
                       </span>
