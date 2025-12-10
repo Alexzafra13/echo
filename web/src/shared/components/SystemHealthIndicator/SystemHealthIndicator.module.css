@@ -222,6 +222,12 @@
     height: 24px;
   }
 
+  /* Smaller touch area on mobile to avoid overlapping adjacent buttons */
+  .indicator::before {
+    width: 32px;
+    height: 32px;
+  }
+
   /* Tooltip como modal full-width en móvil */
   .tooltip {
     position: fixed;
