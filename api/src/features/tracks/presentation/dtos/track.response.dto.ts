@@ -101,6 +101,10 @@ export class TrackResponseDto {
   @Expose()
   isMissing!: boolean;
 
+  @ApiProperty({ example: 42, description: 'Total play count across all users', required: false })
+  @Expose()
+  playCount?: number;
+
   @ApiProperty()
   @Expose()
   createdAt!: Date;
@@ -140,6 +144,8 @@ export class TrackResponseDto {
     dto.rgAlbumPeak = data.rgAlbumPeak;
     // Missing file status
     dto.isMissing = data.missingAt !== undefined && data.missingAt !== null;
+    // Play statistics
+    dto.playCount = data.playCount;
     dto.createdAt = data.createdAt;
     dto.updatedAt = data.updatedAt;
     return dto;

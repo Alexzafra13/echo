@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, desc, or, inArray, count, sql, asc, isNull, and } from 'drizzle-orm';
+import { eq, desc, or, inArray, count, sql, asc, isNull, and, gt } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
 import { createSearchPattern } from '@shared/utils';
@@ -110,6 +110,7 @@ export class DrizzleTrackRepository
       .where(and(
         or(eq(tracks.artistId, artistId), eq(tracks.albumArtistId, artistId)),
         isNull(tracks.missingAt), // Exclude missing tracks
+        gt(tracks.playCount, 0), // Only include tracks with at least 1 play
       ))
       .orderBy(desc(tracks.playCount))
       .limit(limit);
