@@ -201,6 +201,53 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   }
 
   /**
+   * Item play count for a specific user - cached with 10 min TTL
+   */
+  async getItemPlayCount(
+    userId: string,
+    itemId: string,
+    itemType: 'track' | 'album' | 'artist',
+  ): Promise<{ playCount: number; lastPlayedAt: Date | null } | null> {
+    const cacheKey = `${this.KEY_PREFIX}item-play-count:${userId}:${itemId}:${itemType}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Item play count cache hit');
+      return cached;
+    }
+
+    const result = await this.baseRepository.getItemPlayCount(userId, itemId, itemType);
+
+    if (result) {
+      await this.cache.set(cacheKey, result, this.STATS_TTL);
+    }
+
+    return result;
+  }
+
+  /**
+   * Global play count (all users) - cached with 10 min TTL
+   */
+  async getItemGlobalPlayCount(
+    itemId: string,
+    itemType: 'track' | 'album' | 'artist',
+  ): Promise<number> {
+    const cacheKey = `${this.KEY_PREFIX}item-global-play-count:${itemId}:${itemType}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached !== undefined) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Item global play count cache hit');
+      return cached;
+    }
+
+    const result = await this.baseRepository.getItemGlobalPlayCount(itemId, itemType);
+
+    await this.cache.set(cacheKey, result, this.STATS_TTL);
+
+    return result;
+  }
+
+  /**
    * Recently played - cached with 5 min TTL (more dynamic)
    */
   async getRecentlyPlayed(userId: string, limit?: number): Promise<string[]> {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, desc, and, gte, count, avg, sql } from 'drizzle-orm';
+import { eq, desc, and, gte, count, avg, sql, sum } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { playHistory, userPlayStats, tracks, playQueues } from '@infrastructure/database/schema';
 import { IPlayTrackingRepository } from '../../domain/ports';
@@ -418,6 +418,25 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
       playCount: Number(result[0].playCount),
       lastPlayedAt: result[0].lastPlayedAt,
     };
+  }
+
+  async getItemGlobalPlayCount(
+    itemId: string,
+    itemType: 'track' | 'album' | 'artist',
+  ): Promise<number> {
+    const result = await this.drizzle.db
+      .select({
+        totalPlayCount: sum(userPlayStats.playCount),
+      })
+      .from(userPlayStats)
+      .where(
+        and(
+          eq(userPlayStats.itemId, itemId),
+          eq(userPlayStats.itemType, itemType),
+        ),
+      );
+
+    return Number(result[0]?.totalPlayCount || 0);
   }
 
   async getRecentlyPlayed(userId: string, limit: number = 20): Promise<string[]> {
