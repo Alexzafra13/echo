@@ -23,7 +23,6 @@ import styles from './ArtistDetailPage.module.css';
 export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, _setLocation] = useLocation();
-  const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
@@ -176,19 +175,6 @@ export default function ArtistDetailPage() {
     setIsAvatarSelectorOpen(true);
   };
 
-  // Helper to format biography with drop cap
-  const formatBiographyWithDropCap = (text: string) => {
-    if (!text || text.length === 0) return text;
-    const firstChar = text.charAt(0);
-    const restOfText = text.slice(1);
-    return (
-      <>
-        <span className={styles.artistDetailPage__dropCap}>{firstChar}</span>
-        {restOfText}
-      </>
-    );
-  };
-
   if (loadingArtist) {
     return (
       <div className={styles.artistDetailPage}>
@@ -296,54 +282,6 @@ export default function ArtistDetailPage() {
             </div>
           </section>
 
-          {/* Biography Section */}
-          {artist.biography && (
-            <section className={styles.artistDetailPage__biography}>
-              <div className={styles.artistDetailPage__biographyHeader}>
-                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
-              </div>
-
-              <div className={styles.artistDetailPage__biographyContent}>
-                <div className={`${styles.artistDetailPage__biographyText} ${
-                  !isBioExpanded && artist.biography.length > 500 ? styles.artistDetailPage__biographyText__collapsed : ''
-                }`}>
-                  {formatBiographyWithDropCap(artist.biography)}
-                </div>
-
-                {artist.biography.length > 500 && (
-                  <button
-                    className={styles.artistDetailPage__biographyToggle}
-                    onClick={() => setIsBioExpanded(!isBioExpanded)}
-                  >
-                    {isBioExpanded ? 'Leer menos' : 'Leer más'}
-                  </button>
-                )}
-
-                {artist.biographySource && (
-                  <div className={styles.artistDetailPage__biographySource}>
-                    Fuente: {artist.biographySource === 'wikipedia' ? 'Wikipedia' :
-                            artist.biographySource === 'lastfm' ? 'Last.fm' :
-                            artist.biographySource}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* No Biography Placeholder */}
-          {!artist.biography && (
-            <section className={styles.artistDetailPage__biography}>
-              <div className={styles.artistDetailPage__biographyHeader}>
-                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
-              </div>
-              <p className={styles.artistDetailPage__biographyPlaceholder}>
-                No hay biografía disponible para este artista.
-              </p>
-            </section>
-          )}
-
           {/* Top Tracks Section */}
           {topTracks && topTracks.length > 0 && (() => {
             // Add cover image to tracks for player (computed once)
@@ -417,6 +355,30 @@ export default function ArtistDetailPage() {
                 showViewAll={artistPlaylistsData && artistPlaylistsData.total > 10}
                 viewAllPath="/playlists"
               />
+            </section>
+          )}
+
+          {/* Biography Section */}
+          {artist.biography && (
+            <section className={styles.artistDetailPage__biography}>
+              <div className={styles.artistDetailPage__biographyHeader}>
+                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
+              </div>
+
+              <div className={styles.artistDetailPage__biographyContent}>
+                <p className={styles.artistDetailPage__biographyText}>
+                  {artist.biography}
+                </p>
+
+                {artist.biographySource && (
+                  <div className={styles.artistDetailPage__biographySource}>
+                    Fuente: {artist.biographySource === 'wikipedia' ? 'Wikipedia' :
+                            artist.biographySource === 'lastfm' ? 'Last.fm' :
+                            artist.biographySource}
+                  </div>
+                )}
+              </div>
             </section>
           )}
         </div>
