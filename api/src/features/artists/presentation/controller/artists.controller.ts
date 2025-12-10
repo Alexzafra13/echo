@@ -1,8 +1,9 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
+import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
 import { parsePaginationParams } from '@shared/utils';
 
 /**
@@ -24,6 +25,8 @@ export class ArtistsController {
     private readonly getArtistsUseCase: GetArtistsUseCase,
     private readonly getArtistAlbumsUseCase: GetArtistAlbumsUseCase,
     private readonly searchArtistsUseCase: SearchArtistsUseCase,
+    @Inject(PLAY_TRACKING_REPOSITORY)
+    private readonly playTrackingRepository: IPlayTrackingRepository,
   ) {}
 
   /**
@@ -95,6 +98,37 @@ export class ArtistsController {
       take: result.take,
       hasMore: result.hasMore,
     };
+  }
+
+  /**
+   * GET /artists/:id/stats
+   * Obtener estadísticas de reproducciones del artista
+   */
+  @Get(':id/stats')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener estadísticas del artista',
+    description: 'Retorna el total de reproducciones del artista sumando todos los usuarios'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del artista',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estadísticas obtenidas exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        playCount: { type: 'number', description: 'Total de reproducciones' },
+      },
+    },
+  })
+  async getArtistStats(@Param('id') id: string) {
+    const playCount = await this.playTrackingRepository.getItemGlobalPlayCount(id, 'artist');
+    return { playCount };
   }
 
   /**
