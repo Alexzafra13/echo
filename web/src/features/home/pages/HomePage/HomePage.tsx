@@ -43,7 +43,7 @@ export default function HomePage() {
     headerHeight: 450,
   });
 
-  // Responsive state for mobile detection (moved up for use in item counts)
+  // Responsive state for mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // On mobile, ensure minimum items for horizontal scroll
@@ -282,6 +282,7 @@ export default function HomePage() {
             albums={displayedRecentAlbums}
             showViewAll={true}
             viewAllPath="/albums"
+            mobileScroll
           />
         );
       case 'artist-mix':
@@ -314,6 +315,7 @@ export default function HomePage() {
             title="Escuchados Recientemente"
             albums={displayedRecentlyPlayedAlbums}
             showViewAll={false}
+            mobileScroll
           />
         );
       case 'top-played':
@@ -324,6 +326,7 @@ export default function HomePage() {
             title="Más Escuchados"
             albums={displayedTopPlayedAlbums}
             showViewAll={false}
+            mobileScroll
           />
         );
       case 'my-playlists':
@@ -408,7 +411,7 @@ export default function HomePage() {
                 <RefreshCw size={16} />
               </button>
             </div>
-            <AlbumGrid title="" albums={randomAlbums} />
+            <AlbumGrid title="" albums={randomAlbums} mobileScroll />
           </section>
         );
       default:

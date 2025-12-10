@@ -62,7 +62,7 @@
   }
 }
 
-/* Mobile - Horizontal scroll */
+/* Mobile */
 @media (max-width: 768px) {
   .albumGrid {
     margin-bottom: 32px;
@@ -78,24 +78,27 @@
   }
 
   .albumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  /* Mobile horizontal scroll variant (opt-in) */
+  .albumGrid__grid--mobileScroll {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
-    gap: 12px;
-    padding: 0 16px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    /* Hide scrollbar */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
-  .albumGrid__grid::-webkit-scrollbar {
-    display: none; /* Chrome/Safari/Opera */
+  .albumGrid__grid--mobileScroll::-webkit-scrollbar {
+    display: none;
   }
 
-  /* Cards have fixed width in mobile scroll mode */
-  .albumGrid__grid > * {
+  .albumGrid__grid--mobileScroll > * {
     flex-shrink: 0;
     width: 140px;
     scroll-snap-align: start;
@@ -109,11 +112,12 @@
   }
 
   .albumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
-    padding: 0 12px 12px;
+    padding: 0 12px;
   }
 
-  .albumGrid__grid > * {
+  .albumGrid__grid--mobileScroll > * {
     width: 120px;
   }
 

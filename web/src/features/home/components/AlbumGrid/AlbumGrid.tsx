@@ -17,7 +17,7 @@ import styles from './AlbumGrid.module.css';
  *   viewAllPath="/albums"
  * />
  */
-export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/albums' }: AlbumGridProps & { showViewAll?: boolean; viewAllPath?: string }) {
+export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/albums', mobileScroll = false }: AlbumGridProps & { showViewAll?: boolean; viewAllPath?: string; mobileScroll?: boolean }) {
   const [, setLocation] = useLocation();
   const { playQueue } = usePlayer();
 
@@ -77,7 +77,7 @@ export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/
           </button>
         )}
       </div>
-      <div className={styles.albumGrid__grid}>
+      <div className={`${styles.albumGrid__grid} ${mobileScroll ? styles['albumGrid__grid--mobileScroll'] : ''}`}>
         {albums.map((album) => (
           <AlbumCard
             key={album.id}
