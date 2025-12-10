@@ -1,6 +1,7 @@
 import { ConflictError, ValidationError } from '@shared/errors';
 import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { LogService } from '@features/logs/application/log.service';
+import { ISocialRepository } from '@features/social/domain/ports';
 import { CreateUserUseCase } from './create-user.use-case';
 import {
   MockUserRepository,
@@ -10,6 +11,20 @@ import {
   createMockPasswordService,
   createMockLogService,
 } from '@shared/testing/mock.types';
+
+// Mock social repository
+const createMockSocialRepository = (): jest.Mocked<ISocialRepository> => ({
+  getFriends: jest.fn(),
+  getFriendship: jest.fn(),
+  getPendingFriendRequests: jest.fn(),
+  getSentFriendRequests: jest.fn(),
+  sendFriendRequest: jest.fn(),
+  createAcceptedFriendship: jest.fn(),
+  acceptFriendRequest: jest.fn(),
+  rejectFriendRequest: jest.fn(),
+  removeFriend: jest.fn(),
+  areFriends: jest.fn(),
+});
 
 // Helper to create mock user with all required fields
 const createMockUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
@@ -36,16 +51,19 @@ describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let mockUserRepository: MockUserRepository;
   let mockPasswordService: MockPasswordService;
+  let mockSocialRepository: jest.Mocked<ISocialRepository>;
   let mockLogService: MockLogService;
 
   beforeEach(() => {
     mockUserRepository = createMockUserRepository();
     mockPasswordService = createMockPasswordService();
+    mockSocialRepository = createMockSocialRepository();
     mockLogService = createMockLogService();
 
     useCase = new CreateUserUseCase(
       mockUserRepository,
       mockPasswordService,
+      mockSocialRepository,
       mockLogService as unknown as LogService,
     );
   });
