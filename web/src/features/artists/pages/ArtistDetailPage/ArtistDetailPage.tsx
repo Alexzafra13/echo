@@ -1,5 +1,5 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen, Music, Play } from 'lucide-react';
+import { BookOpen, Music } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
@@ -340,47 +340,48 @@ export default function ArtistDetailPage() {
           )}
 
           {/* Top Tracks Section */}
-          {topTracks && topTracks.length > 0 && (
-            <section className={styles.artistDetailPage__topTracks}>
-              <div className={styles.artistDetailPage__topTracksHeader}>
-                <Music size={24} className={styles.artistDetailPage__topTracksIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Canciones populares</h2>
-              </div>
-              <div className={styles.artistDetailPage__trackList}>
-                {topTracks.map((track, index) => (
-                  <div
-                    key={track.id}
-                    className={styles.artistDetailPage__trackItem}
-                    onClick={() => playQueue(topTracks, index)}
-                  >
-                    <span className={styles.artistDetailPage__trackNumber}>{index + 1}</span>
-                    {track.albumId && (
-                      <img
-                        src={getAlbumCoverUrl(track.albumId)}
-                        alt={track.albumName || 'Album'}
-                        className={styles.artistDetailPage__trackCover}
-                      />
-                    )}
-                    <div className={styles.artistDetailPage__trackInfo}>
-                      <span className={styles.artistDetailPage__trackTitle}>{track.title}</span>
-                      {track.albumName && (
-                        <span className={styles.artistDetailPage__trackAlbum}>{track.albumName}</span>
+          {topTracks && topTracks.length > 0 && (() => {
+            // Add cover image to tracks for player (computed once)
+            const tracksWithCovers = topTracks.map(t => ({
+              ...t,
+              coverImage: t.albumId ? getAlbumCoverUrl(t.albumId) : undefined
+            }));
+            return (
+              <section className={styles.artistDetailPage__topTracks}>
+                <div className={styles.artistDetailPage__topTracksHeader}>
+                  <Music size={24} className={styles.artistDetailPage__topTracksIcon} />
+                  <h2 className={styles.artistDetailPage__sectionTitle}>Canciones populares</h2>
+                </div>
+                <div className={styles.artistDetailPage__trackList}>
+                  {topTracks.map((track, index) => (
+                    <div
+                      key={track.id}
+                      className={styles.artistDetailPage__trackItem}
+                      onClick={() => playQueue(tracksWithCovers, index)}
+                    >
+                      <span className={styles.artistDetailPage__trackNumber}>{index + 1}</span>
+                      {track.albumId && (
+                        <img
+                          src={getAlbumCoverUrl(track.albumId)}
+                          alt={track.albumName || 'Album'}
+                          className={styles.artistDetailPage__trackCover}
+                        />
                       )}
-                    </div>
-                    <div className={styles.artistDetailPage__trackStats}>
-                      <span className={styles.artistDetailPage__trackPlayCount}>
-                        <Play size={14} fill="currentColor" />
-                        {(track.playCount || 0).toLocaleString()}
-                      </span>
+                      <div className={styles.artistDetailPage__trackInfo}>
+                        <span className={styles.artistDetailPage__trackTitle}>{track.title}</span>
+                        <span className={styles.artistDetailPage__trackPlayCount}>
+                          {(track.playCount || 0).toLocaleString()} reproducciones
+                        </span>
+                      </div>
                       <span className={styles.artistDetailPage__trackDuration}>
                         {formatDuration(track.duration)}
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
 
           {/* Albums Section */}
           {artistAlbums.length > 0 && (
