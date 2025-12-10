@@ -118,9 +118,9 @@ export class PlaylistsController {
   })
   async getPlaylistsByArtist(
     @Param('artistId') artistId: string,
+    @Req() req: RequestWithUser,
     @Query('skip') skip?: number,
     @Query('take') take?: number,
-    @Req() req: RequestWithUser,
   ): Promise<PlaylistsListResponseDto> {
     const userId = req.user.id;
 
