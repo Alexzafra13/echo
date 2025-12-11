@@ -13,6 +13,12 @@ import { players, transcodings } from './player';
 import { radioStations } from './radio';
 import { shares, bookmarks } from './shares';
 import { friendships } from './social';
+import {
+  connectedServers,
+  federationTokens,
+  federationAccessTokens,
+  albumImportQueue,
+} from './federation';
 
 // ============================================
 // User Relations
@@ -33,6 +39,11 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   sentFriendRequests: many(friendships, { relationName: 'requester' }),
   // Social: friendships where user is the addressee
   receivedFriendRequests: many(friendships, { relationName: 'addressee' }),
+  // Federation
+  connectedServers: many(connectedServers),
+  federationTokens: many(federationTokens),
+  federationAccessTokens: many(federationAccessTokens),
+  albumImports: many(albumImportQueue),
 }));
 
 export const streamTokensRelations = relations(streamTokens, ({ one }) => ({
@@ -316,5 +327,41 @@ export const friendshipsRelations = relations(friendships, ({ one }) => ({
     fields: [friendships.addresseeId],
     references: [users.id],
     relationName: 'addressee',
+  }),
+}));
+
+// ============================================
+// Federation Relations
+// ============================================
+export const connectedServersRelations = relations(connectedServers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [connectedServers.userId],
+    references: [users.id],
+  }),
+  albumImports: many(albumImportQueue),
+}));
+
+export const federationTokensRelations = relations(federationTokens, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [federationTokens.createdByUserId],
+    references: [users.id],
+  }),
+}));
+
+export const federationAccessTokensRelations = relations(federationAccessTokens, ({ one }) => ({
+  owner: one(users, {
+    fields: [federationAccessTokens.ownerId],
+    references: [users.id],
+  }),
+}));
+
+export const albumImportQueueRelations = relations(albumImportQueue, ({ one }) => ({
+  user: one(users, {
+    fields: [albumImportQueue.userId],
+    references: [users.id],
+  }),
+  connectedServer: one(connectedServers, {
+    fields: [albumImportQueue.connectedServerId],
+    references: [connectedServers.id],
   }),
 }));
