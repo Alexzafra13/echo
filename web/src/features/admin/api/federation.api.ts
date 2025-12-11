@@ -93,6 +93,7 @@ export interface ConnectToServerRequest {
   serverUrl: string;
   invitationToken: string;
   serverName?: string;
+  localServerUrl?: string;
 }
 
 export interface UpdatePermissionsRequest {

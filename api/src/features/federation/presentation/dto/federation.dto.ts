@@ -64,6 +64,14 @@ export class ConnectToServerDto {
   @IsOptional()
   @IsString()
   serverName?: string;
+
+  @ApiPropertyOptional({
+    description: 'URL pública de nuestro servidor (para que el servidor remoto pueda conectarse de vuelta)',
+    example: 'https://mi-servidor.example.com',
+  })
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  localServerUrl?: string;
 }
 
 export class AcceptConnectionDto {

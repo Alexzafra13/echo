@@ -75,6 +75,7 @@ export class RemoteServerService {
     serverUrl: string,
     invitationToken: string,
     serverName?: string,
+    localServerUrl?: string,
   ): Promise<ConnectedServer> {
     // Normalize URL
     const normalizedUrl = this.normalizeUrl(serverUrl);
@@ -95,10 +96,13 @@ export class RemoteServerService {
         body: JSON.stringify({
           invitationToken,
           serverName: serverName || 'Echo Server',
+          serverUrl: localServerUrl, // URL de nuestro servidor para que el remoto pueda conectarse
         }),
       });
 
       // Create connected server record
+      // Mark as online since we just successfully connected
+      const now = new Date();
       const connectedServer = await this.repository.createConnectedServer({
         userId,
         name: response.serverInfo.name || serverName || 'Remote Server',
@@ -107,7 +111,10 @@ export class RemoteServerService {
         remoteAlbumCount: response.serverInfo.albumCount,
         remoteTrackCount: response.serverInfo.trackCount,
         remoteArtistCount: response.serverInfo.artistCount,
-        lastSyncAt: new Date(),
+        lastSyncAt: now,
+        isOnline: true,
+        lastOnlineAt: now,
+        lastCheckedAt: now,
       });
 
       this.logger.info(

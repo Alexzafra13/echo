@@ -36,6 +36,7 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
         serverUrl: serverUrl.trim(),
         invitationToken: invitationToken.trim(),
         serverName: serverName.trim() || undefined,
+        localServerUrl: window.location.origin, // Enviar nuestra URL para que el servidor remoto pueda identificarnos
       });
       onSuccess();
     } catch (err) {

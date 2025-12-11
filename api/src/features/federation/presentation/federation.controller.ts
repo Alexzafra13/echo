@@ -194,6 +194,7 @@ export class FederationController {
       dto.serverUrl,
       dto.invitationToken,
       dto.serverName,
+      dto.localServerUrl,
     );
 
     this.logger.info(
