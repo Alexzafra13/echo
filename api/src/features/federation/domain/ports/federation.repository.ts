@@ -26,6 +26,7 @@ export interface IFederationRepository {
   // Federation Tokens (Invitation codes)
   createFederationToken(data: NewFederationToken): Promise<FederationToken>;
   findFederationTokenByToken(token: string): Promise<FederationToken | null>;
+  findFederationTokenById(id: string): Promise<FederationToken | null>;
   findFederationTokensByUserId(userId: string): Promise<FederationToken[]>;
   updateFederationToken(id: string, data: Partial<FederationToken>): Promise<FederationToken | null>;
   deleteFederationToken(id: string): Promise<boolean>;
@@ -34,6 +35,7 @@ export interface IFederationRepository {
   // Federation Access Tokens (Long-lived tokens for connected servers)
   createFederationAccessToken(data: NewFederationAccessToken): Promise<FederationAccessToken>;
   findFederationAccessTokenByToken(token: string): Promise<FederationAccessToken | null>;
+  findFederationAccessTokenById(id: string): Promise<FederationAccessToken | null>;
   findFederationAccessTokensByOwnerId(ownerId: string): Promise<FederationAccessToken[]>;
   updateFederationAccessToken(id: string, data: Partial<FederationAccessToken>): Promise<FederationAccessToken | null>;
   deleteFederationAccessToken(id: string): Promise<boolean>;

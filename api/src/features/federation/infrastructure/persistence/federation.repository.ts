@@ -105,6 +105,15 @@ export class FederationRepository implements IFederationRepository {
     return result ?? null;
   }
 
+  async findFederationTokenById(id: string): Promise<FederationToken | null> {
+    const [result] = await this.drizzle.db
+      .select()
+      .from(federationTokens)
+      .where(eq(federationTokens.id, id))
+      .limit(1);
+    return result ?? null;
+  }
+
   async findFederationTokensByUserId(userId: string): Promise<FederationToken[]> {
     return this.drizzle.db
       .select()
@@ -164,6 +173,15 @@ export class FederationRepository implements IFederationRepository {
           eq(federationAccessTokens.isActive, true),
         ),
       )
+      .limit(1);
+    return result ?? null;
+  }
+
+  async findFederationAccessTokenById(id: string): Promise<FederationAccessToken | null> {
+    const [result] = await this.drizzle.db
+      .select()
+      .from(federationAccessTokens)
+      .where(eq(federationAccessTokens.id, id))
       .limit(1);
     return result ?? null;
   }
