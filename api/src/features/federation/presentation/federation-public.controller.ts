@@ -24,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
   albums,
@@ -229,13 +229,13 @@ export class FederationPublicController {
 
     // Get totals
     const [albumCount] = await this.drizzle.db
-      .select({ count: albums.id })
+      .select({ count: count() })
       .from(albums);
     const [trackCount] = await this.drizzle.db
-      .select({ count: tracks.id })
+      .select({ count: count() })
       .from(tracks);
     const [artistCount] = await this.drizzle.db
-      .select({ count: artists.id })
+      .select({ count: count() })
       .from(artists);
 
     return {
@@ -252,9 +252,9 @@ export class FederationPublicController {
           ? `/api/federation/albums/${album.id}/cover`
           : undefined,
       })),
-      totalAlbums: Number(albumCount?.count || 0),
-      totalTracks: Number(trackCount?.count || 0),
-      totalArtists: Number(artistCount?.count || 0),
+      totalAlbums: Number(albumCount?.count ?? 0),
+      totalTracks: Number(trackCount?.count ?? 0),
+      totalArtists: Number(artistCount?.count ?? 0),
     };
   }
 
@@ -295,7 +295,7 @@ export class FederationPublicController {
       .offset(offset);
 
     const [total] = await this.drizzle.db
-      .select({ count: albums.id })
+      .select({ count: count() })
       .from(albums);
 
     return {
@@ -312,7 +312,7 @@ export class FederationPublicController {
           ? `/api/federation/albums/${album.id}/cover`
           : undefined,
       })),
-      total: Number(total?.count || 0),
+      total: Number(total?.count ?? 0),
     };
   }
 
@@ -603,21 +603,21 @@ export class FederationPublicController {
 
   private async getServerInfo(): Promise<ServerInfoResponseDto> {
     const [albumCount] = await this.drizzle.db
-      .select({ count: albums.id })
+      .select({ count: count() })
       .from(albums);
     const [trackCount] = await this.drizzle.db
-      .select({ count: tracks.id })
+      .select({ count: count() })
       .from(tracks);
     const [artistCount] = await this.drizzle.db
-      .select({ count: artists.id })
+      .select({ count: count() })
       .from(artists);
 
     return {
       name: 'Echo Music Server',
       version: '1.0.0',
-      albumCount: Number(albumCount?.count || 0),
-      trackCount: Number(trackCount?.count || 0),
-      artistCount: Number(artistCount?.count || 0),
+      albumCount: Number(albumCount?.count ?? 0),
+      trackCount: Number(trackCount?.count ?? 0),
+      artistCount: Number(artistCount?.count ?? 0),
     };
   }
 

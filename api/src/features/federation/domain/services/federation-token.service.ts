@@ -130,9 +130,7 @@ export class FederationTokenService {
     id: string,
     permissions: Partial<FederationPermissions>,
   ): Promise<FederationAccessToken | null> {
-    const accessToken = await this.repository.findFederationAccessTokensByOwnerId('').then(
-      tokens => tokens.find(t => t.id === id),
-    );
+    const accessToken = await this.repository.findFederationAccessTokenById(id);
 
     if (!accessToken) {
       return null;
