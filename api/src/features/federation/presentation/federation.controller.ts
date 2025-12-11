@@ -248,6 +248,55 @@ export class FederationController {
     this.logger.info({ userId: user.id, serverId: id }, 'Disconnected from server');
   }
 
+  @Post('servers/health')
+  @ApiOperation({
+    summary: 'Verificar estado de todos los servidores',
+    description: 'Comprueba si los servidores conectados están online y actualiza su estado',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estado actualizado',
+    type: [ConnectedServerResponseDto],
+  })
+  async checkServersHealth(
+    @CurrentUser() user: User,
+  ): Promise<ConnectedServerResponseDto[]> {
+    this.logger.info({ userId: user.id }, 'Checking health of all connected servers');
+    const servers = await this.remoteServerService.checkAllServersHealth(user.id);
+    return servers.map(this.mapServerToResponse);
+  }
+
+  @Post('servers/:id/health')
+  @ApiOperation({
+    summary: 'Verificar estado de un servidor',
+    description: 'Comprueba si un servidor específico está online',
+  })
+  @ApiParam({ name: 'id', description: 'ID del servidor' })
+  @ApiResponse({
+    status: 200,
+    description: 'Estado actualizado',
+    type: ConnectedServerResponseDto,
+  })
+  async checkServerHealth(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<ConnectedServerResponseDto> {
+    const server = await this.remoteServerService['repository'].findConnectedServerById(id);
+    if (!server) {
+      throw new Error('Server not found');
+    }
+
+    await this.remoteServerService.pingServer(server);
+    const updated = await this.remoteServerService['repository'].findConnectedServerById(id);
+
+    this.logger.info(
+      { userId: user.id, serverId: id, isOnline: updated?.isOnline },
+      'Server health checked',
+    );
+
+    return this.mapServerToResponse(updated);
+  }
+
   // ============================================
   // Remote Library (Navegar biblioteca de servidor remoto)
   // ============================================
@@ -375,6 +424,9 @@ export class FederationController {
       name: server.name,
       baseUrl: server.baseUrl,
       isActive: server.isActive,
+      isOnline: server.isOnline,
+      lastOnlineAt: server.lastOnlineAt ?? undefined,
+      lastCheckedAt: server.lastCheckedAt ?? undefined,
       remoteAlbumCount: server.remoteAlbumCount,
       remoteTrackCount: server.remoteTrackCount,
       remoteArtistCount: server.remoteArtistCount,

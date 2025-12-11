@@ -29,6 +29,10 @@ export const connectedServers = pgTable(
     baseUrl: varchar('base_url', { length: 512 }).notNull(), // URL del servidor
     authToken: varchar('auth_token', { length: 512 }).notNull(), // Token de autenticación
     isActive: boolean('is_active').default(true).notNull(),
+    // Online status
+    isOnline: boolean('is_online').default(false).notNull(),
+    lastOnlineAt: timestamp('last_online_at'),
+    lastCheckedAt: timestamp('last_checked_at'),
     // Stats del servidor remoto (cacheadas)
     remoteAlbumCount: integer('remote_album_count').default(0).notNull(),
     remoteTrackCount: integer('remote_track_count').default(0).notNull(),

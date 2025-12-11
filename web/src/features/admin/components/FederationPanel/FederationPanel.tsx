@@ -15,18 +15,20 @@ import {
   Download,
   Radio,
   Shield,
+  Wifi,
+  WifiOff,
+  Activity,
 } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import {
   useConnectedServers,
   useInvitationTokens,
   useAccessTokens,
-  useCreateInvitation,
   useDeleteInvitation,
-  useConnectToServer,
   useDisconnectFromServer,
   useSyncServer,
   useRevokeAccessToken,
+  useCheckAllServersHealth,
 } from '../../hooks/useFederation';
 import { ConnectedServer, InvitationToken, AccessToken } from '../../api/federation.api';
 import { ConnectServerModal } from './ConnectServerModal';
@@ -58,12 +60,11 @@ export function FederationPanel() {
   const { data: accessTokens, isLoading: accessLoading } = useAccessTokens();
 
   // Mutations
-  const connectMutation = useConnectToServer();
   const disconnectMutation = useDisconnectFromServer();
   const syncMutation = useSyncServer();
-  const createInvitationMutation = useCreateInvitation();
   const deleteInvitationMutation = useDeleteInvitation();
   const revokeAccessMutation = useRevokeAccessToken();
+  const checkHealthMutation = useCheckAllServersHealth();
 
   // Handlers
   const handleCopyToken = async (token: string) => {
@@ -82,6 +83,15 @@ export function FederationPanel() {
       setNotification({ type: 'success', message: `Sincronizado con ${server.name}` });
     } catch {
       setNotification({ type: 'error', message: 'Error al sincronizar' });
+    }
+  };
+
+  const handleCheckHealth = async () => {
+    try {
+      await checkHealthMutation.mutateAsync();
+      setNotification({ type: 'success', message: 'Estado de servidores actualizado' });
+    } catch {
+      setNotification({ type: 'error', message: 'Error al verificar estado' });
     }
   };
 
@@ -191,13 +201,25 @@ export function FederationPanel() {
                 <h3>Servidores a los que te has conectado</h3>
                 <p>Estos son los servidores de amigos cuya biblioteca puedes ver.</p>
               </div>
-              <Button
-                variant="primary"
-                leftIcon={<Plus size={18} />}
-                onClick={() => setIsConnectModalOpen(true)}
-              >
-                Conectar Servidor
-              </Button>
+              <div className={styles.headerActions}>
+                {servers && servers.length > 0 && (
+                  <Button
+                    variant="secondary"
+                    leftIcon={<Activity size={18} />}
+                    onClick={handleCheckHealth}
+                    disabled={checkHealthMutation.isPending}
+                  >
+                    {checkHealthMutation.isPending ? 'Verificando...' : 'Verificar estado'}
+                  </Button>
+                )}
+                <Button
+                  variant="primary"
+                  leftIcon={<Plus size={18} />}
+                  onClick={() => setIsConnectModalOpen(true)}
+                >
+                  Conectar Servidor
+                </Button>
+              </div>
             </div>
 
             {serversLoading ? (
@@ -214,8 +236,18 @@ export function FederationPanel() {
                         <h4 className={styles.serverName}>{server.name}</h4>
                         <span className={styles.serverUrl}>{server.baseUrl}</span>
                       </div>
-                      <span className={`${styles.serverStatus} ${server.isActive ? styles.statusActive : styles.statusInactive}`}>
-                        {server.isActive ? 'Conectado' : 'Desconectado'}
+                      <span className={`${styles.serverStatus} ${server.isOnline ? styles.statusOnline : styles.statusOffline}`}>
+                        {server.isOnline ? (
+                          <>
+                            <Wifi size={14} />
+                            Online
+                          </>
+                        ) : (
+                          <>
+                            <WifiOff size={14} />
+                            Offline
+                          </>
+                        )}
                       </span>
                     </div>
 
@@ -242,11 +274,18 @@ export function FederationPanel() {
                     )}
 
                     <div className={styles.serverFooter}>
-                      {server.lastSyncAt && (
-                        <span className={styles.lastSync}>
-                          Última sync: {formatDistanceToNow(new Date(server.lastSyncAt))}
-                        </span>
-                      )}
+                      <div className={styles.serverMeta}>
+                        {!server.isOnline && server.lastOnlineAt && (
+                          <span className={styles.lastOnline}>
+                            Última conexión: {formatDistanceToNow(new Date(server.lastOnlineAt))}
+                          </span>
+                        )}
+                        {server.lastSyncAt && (
+                          <span className={styles.lastSync}>
+                            Última sync: {formatDistanceToNow(new Date(server.lastSyncAt))}
+                          </span>
+                        )}
+                      </div>
                       <div className={styles.serverActions}>
                         <button
                           className={styles.iconButton}

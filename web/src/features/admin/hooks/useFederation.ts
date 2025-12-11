@@ -115,6 +115,34 @@ export function useDisconnectFromServer() {
   });
 }
 
+/**
+ * Hook para verificar el estado de todos los servidores
+ */
+export function useCheckAllServersHealth() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => federationApi.checkAllServersHealth(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'servers'] });
+    },
+  });
+}
+
+/**
+ * Hook para verificar el estado de un servidor específico
+ */
+export function useCheckServerHealth() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => federationApi.checkServerHealth(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'servers'] });
+    },
+  });
+}
+
 // ============================================
 // Remote Library Hooks
 // ============================================

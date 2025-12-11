@@ -220,18 +220,54 @@ export class RemoteServerService {
   }
 
   /**
-   * Check if a server is reachable
+   * Check if a server is reachable and update its online status
    */
   async pingServer(server: ConnectedServer): Promise<boolean> {
+    const now = new Date();
     try {
       await this.makeAuthenticatedRequest<{ ok: boolean }>(
         server,
         '/api/federation/ping',
       );
+
+      // Server is online - update status
+      await this.repository.updateConnectedServer(server.id, {
+        isOnline: true,
+        lastOnlineAt: now,
+        lastCheckedAt: now,
+        lastError: null,
+        lastErrorAt: null,
+      });
+
       return true;
-    } catch {
+    } catch (error) {
+      // Server is offline - update status
+      await this.repository.updateConnectedServer(server.id, {
+        isOnline: false,
+        lastCheckedAt: now,
+        lastError: error instanceof Error ? error.message : 'Connection failed',
+        lastErrorAt: now,
+      });
+
       return false;
     }
+  }
+
+  /**
+   * Check health of all servers for a user
+   */
+  async checkAllServersHealth(userId: string): Promise<ConnectedServer[]> {
+    const servers = await this.repository.findConnectedServersByUserId(userId);
+
+    // Ping all servers in parallel
+    await Promise.all(
+      servers.map(async (server) => {
+        await this.pingServer(server);
+      }),
+    );
+
+    // Return updated servers
+    return this.repository.findConnectedServersByUserId(userId);
   }
 
   /**

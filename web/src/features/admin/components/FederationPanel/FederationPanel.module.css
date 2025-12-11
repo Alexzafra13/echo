@@ -117,6 +117,12 @@
   margin: 0;
 }
 
+.headerActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 /* Server Grid */
 .serverGrid {
   display: grid;
@@ -198,6 +204,22 @@
   color: var(--color-error);
 }
 
+.statusOnline {
+  background: var(--success-15);
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.statusOffline {
+  background: var(--error-10);
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .serverStats {
   display: flex;
   gap: 16px;
@@ -233,9 +255,20 @@
   border-top: 1px solid var(--white-08);
 }
 
+.serverMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .lastSync {
   font-size: 12px;
   color: var(--color-text-secondary, #b8bcc8);
+}
+
+.lastOnline {
+  font-size: 12px;
+  color: var(--color-error);
 }
 
 .serverActions {

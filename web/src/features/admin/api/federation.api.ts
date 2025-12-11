@@ -9,6 +9,9 @@ export interface ConnectedServer {
   name: string;
   baseUrl: string;
   isActive: boolean;
+  isOnline: boolean;
+  lastOnlineAt?: string;
+  lastCheckedAt?: string;
   remoteAlbumCount: number;
   remoteTrackCount: number;
   remoteArtistCount: number;
@@ -171,6 +174,22 @@ export const federationApi = {
    */
   async disconnectFromServer(id: string): Promise<void> {
     await apiClient.delete(`/federation/servers/${id}`);
+  },
+
+  /**
+   * Verifica el estado de todos los servidores conectados
+   */
+  async checkAllServersHealth(): Promise<ConnectedServer[]> {
+    const response = await apiClient.post<ConnectedServer[]>('/federation/servers/health');
+    return response.data;
+  },
+
+  /**
+   * Verifica el estado de un servidor específico
+   */
+  async checkServerHealth(id: string): Promise<ConnectedServer> {
+    const response = await apiClient.post<ConnectedServer>(`/federation/servers/${id}/health`);
+    return response.data;
   },
 
   // ============================================

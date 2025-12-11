@@ -192,6 +192,15 @@ export class ConnectedServerResponseDto {
   @ApiProperty({ description: 'Si está activo' })
   isActive: boolean;
 
+  @ApiProperty({ description: 'Si el servidor está online' })
+  isOnline: boolean;
+
+  @ApiPropertyOptional({ description: 'Última vez que estuvo online' })
+  lastOnlineAt?: Date;
+
+  @ApiPropertyOptional({ description: 'Última vez que se verificó el estado' })
+  lastCheckedAt?: Date;
+
   @ApiProperty({ description: 'Número de álbums en el servidor' })
   remoteAlbumCount: number;
 
