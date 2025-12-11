@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Database, Clock } from 'lucide-react';
+import { AlertCircle, AlertTriangle, XCircle, Filter, Database, Clock, Info } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import styles from './LogsPanel.module.css';
 
 interface SystemLog {
   id: string;
-  level: 'critical' | 'error' | 'warning' | 'info' | 'debug';
+  level: 'critical' | 'error' | 'warning';
   category: string;
   message: string;
   details: string | null;
@@ -35,12 +35,11 @@ interface StorageInfo {
   estimatedSizeMB: number;
 }
 
-const LEVEL_CONFIG = {
+// Only warning, error, and critical are persisted to DB
+const LEVEL_CONFIG: Record<string, { icon: typeof XCircle; color: string; label: string }> = {
   critical: { icon: XCircle, color: '#ef4444', label: 'CRÍTICO' },
   error: { icon: AlertCircle, color: '#f97316', label: 'ERROR' },
   warning: { icon: AlertTriangle, color: '#eab308', label: 'ADVERTENCIA' },
-  info: { icon: Info, color: '#3b82f6', label: 'INFO' },
-  debug: { icon: Bug, color: '#6b7280', label: 'DEBUG' },
 };
 
 // Date range presets
@@ -174,11 +173,6 @@ export function LogsPanel() {
     }
   };
 
-  const handleRefresh = () => {
-    loadStats();
-    loadLogs();
-  };
-
   const toggleLogDetails = (logId: string) => {
     setExpandedLog(expandedLog === logId ? null : logId);
   };
@@ -216,21 +210,15 @@ export function LogsPanel() {
     <div className={styles.container}>
       {/* Header with stats */}
       <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <h2 className={styles.title}>Logs del Sistema</h2>
-          {storage && (
-            <div className={styles.storageInfo}>
-              <Database size={14} />
-              <span>{storage.totalRows.toLocaleString()} logs</span>
-              <span className={styles.storageDot}>•</span>
-              <span>{storage.estimatedSizeMB} MB</span>
-            </div>
-          )}
-        </div>
-        <Button onClick={handleRefresh} disabled={isLoading}>
-          <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
-          Actualizar
-        </Button>
+        <h2 className={styles.title}>Logs del Sistema</h2>
+        {storage && (
+          <div className={styles.storageInfo}>
+            <Database size={14} />
+            <span>{storage.totalRows.toLocaleString()} logs</span>
+            <span className={styles.storageDot}>•</span>
+            <span>{storage.estimatedSizeMB} MB</span>
+          </div>
+        )}
       </div>
 
       {/* Stats summary */}

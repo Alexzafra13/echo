@@ -17,13 +17,6 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.headerLeft {
-  display: flex;
-  align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -179,7 +172,7 @@
   border-color: var(--white-12);
 }
 
-/* Level-specific left border */
+/* Level-specific left border (only warning, error, critical are persisted) */
 .level-critical {
   border-left: 3px solid #ef4444;
 }
@@ -190,14 +183,6 @@
 
 .level-warning {
   border-left: 3px solid #eab308;
-}
-
-.level-info {
-  border-left: 3px solid #3b82f6;
-}
-
-.level-debug {
-  border-left: 3px solid #6b7280;
 }
 
 /* Log Header */
@@ -305,16 +290,6 @@
   color: var(--color-text-secondary, #b8bcc8);
 }
 
-/* Spinning animation */
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
   .container {
@@ -322,12 +297,6 @@
   }
 
   .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .headerLeft {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
