@@ -10,6 +10,9 @@ import {
   UseGuards,
   HttpStatus,
   Req,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -82,29 +85,49 @@ export class FederationPublicController {
   ): Promise<ConnectionResponseDto> {
     const ip = request.ip;
 
-    const accessToken = await this.tokenService.useInvitationToken(
-      dto.invitationToken,
-      dto.serverName,
-      dto.serverUrl,
-      ip,
-    );
-
-    if (!accessToken) {
-      throw new Error('Invalid or expired invitation token');
-    }
-
-    // Get server stats
-    const serverInfo = await this.getServerInfo();
-
     this.logger.info(
-      { serverName: dto.serverName, serverUrl: dto.serverUrl, ip },
-      'New server connected via invitation',
+      { serverName: dto.serverName, serverUrl: dto.serverUrl, ip, token: dto.invitationToken?.substring(0, 4) + '...' },
+      'Federation connection attempt',
     );
 
-    return {
-      accessToken: accessToken.token,
-      serverInfo,
-    };
+    try {
+      const accessToken = await this.tokenService.useInvitationToken(
+        dto.invitationToken,
+        dto.serverName,
+        dto.serverUrl,
+        ip,
+      );
+
+      if (!accessToken) {
+        this.logger.warn(
+          { serverName: dto.serverName, token: dto.invitationToken?.substring(0, 4) + '...' },
+          'Invalid or expired invitation token',
+        );
+        throw new UnauthorizedException('Invalid or expired invitation token');
+      }
+
+      // Get server stats
+      const serverInfo = await this.getServerInfo();
+
+      this.logger.info(
+        { serverName: dto.serverName, serverUrl: dto.serverUrl, ip },
+        'New server connected via invitation',
+      );
+
+      return {
+        accessToken: accessToken.token,
+        serverInfo,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.error(
+        { error: error instanceof Error ? error.message : String(error), serverName: dto.serverName },
+        'Error processing federation connection',
+      );
+      throw error;
+    }
   }
 
   @Get('ping')
@@ -179,7 +202,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canBrowse) {
-      throw new Error('Browse permission not granted');
+      throw new ForbiddenException('Browse permission not granted');
     }
 
     const page = query.page || 1;
@@ -247,7 +270,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canBrowse) {
-      throw new Error('Browse permission not granted');
+      throw new ForbiddenException('Browse permission not granted');
     }
 
     const page = query.page || 1;
@@ -306,7 +329,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canBrowse) {
-      throw new Error('Browse permission not granted');
+      throw new ForbiddenException('Browse permission not granted');
     }
 
     // Get album
@@ -328,7 +351,7 @@ export class FederationPublicController {
       .limit(1);
 
     if (!album) {
-      throw new Error('Album not found');
+      throw new NotFoundException('Album not found');
     }
 
     // Get tracks
