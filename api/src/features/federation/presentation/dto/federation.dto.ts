@@ -48,14 +48,14 @@ export class ConnectToServerDto {
     example: 'https://music.example.com',
   })
   @IsUrl({ require_tld: false })
-  serverUrl: string;
+  serverUrl!: string;
 
   @ApiProperty({
     description: 'Token de invitación proporcionado por el servidor',
     example: 'ABCD-1234-EFGH-5678',
   })
   @IsString()
-  invitationToken: string;
+  invitationToken!: string;
 
   @ApiPropertyOptional({
     description: 'Nombre personalizado para identificar el servidor',
@@ -72,14 +72,14 @@ export class AcceptConnectionDto {
     example: 'ABCD-1234-EFGH-5678',
   })
   @IsString()
-  invitationToken: string;
+  invitationToken!: string;
 
   @ApiProperty({
     description: 'Nombre del servidor que se conecta',
     example: 'Echo Server de María',
   })
   @IsString()
-  serverName: string;
+  serverName!: string;
 
   @ApiPropertyOptional({
     description: 'URL del servidor que se conecta',
@@ -152,48 +152,48 @@ export class PaginationQueryDto {
 
 export class InvitationTokenResponseDto {
   @ApiProperty({ description: 'ID del token' })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Token de invitación',
     example: 'ABCD-1234-EFGH-5678',
   })
-  token: string;
+  token!: string;
 
   @ApiPropertyOptional({ description: 'Nombre descriptivo' })
   name?: string;
 
   @ApiProperty({ description: 'Fecha de expiración' })
-  expiresAt: Date;
+  expiresAt!: Date;
 
   @ApiProperty({ description: 'Número máximo de usos' })
-  maxUses: number;
+  maxUses!: number;
 
   @ApiProperty({ description: 'Usos actuales' })
-  currentUses: number;
+  currentUses!: number;
 
   @ApiProperty({ description: 'Si el token está agotado' })
-  isUsed: boolean;
+  isUsed!: boolean;
 
   @ApiProperty({ description: 'Fecha de creación' })
-  createdAt: Date;
+  createdAt!: Date;
 }
 
 export class ConnectedServerResponseDto {
   @ApiProperty({ description: 'ID del servidor conectado' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'Nombre del servidor' })
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'URL base del servidor' })
-  baseUrl: string;
+  baseUrl!: string;
 
   @ApiProperty({ description: 'Si está activo' })
-  isActive: boolean;
+  isActive!: boolean;
 
   @ApiProperty({ description: 'Si el servidor está online' })
-  isOnline: boolean;
+  isOnline!: boolean;
 
   @ApiPropertyOptional({ description: 'Última vez que estuvo online' })
   lastOnlineAt?: Date;
@@ -202,13 +202,13 @@ export class ConnectedServerResponseDto {
   lastCheckedAt?: Date;
 
   @ApiProperty({ description: 'Número de álbums en el servidor' })
-  remoteAlbumCount: number;
+  remoteAlbumCount!: number;
 
   @ApiProperty({ description: 'Número de tracks en el servidor' })
-  remoteTrackCount: number;
+  remoteTrackCount!: number;
 
   @ApiProperty({ description: 'Número de artistas en el servidor' })
-  remoteArtistCount: number;
+  remoteArtistCount!: number;
 
   @ApiPropertyOptional({ description: 'Última sincronización' })
   lastSyncAt?: Date;
@@ -220,85 +220,85 @@ export class ConnectedServerResponseDto {
   lastErrorAt?: Date;
 
   @ApiProperty({ description: 'Fecha de conexión' })
-  createdAt: Date;
+  createdAt!: Date;
 }
 
 export class AccessTokenResponseDto {
   @ApiProperty({ description: 'ID del token de acceso' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'Nombre del servidor que usa este token' })
-  serverName: string;
+  serverName!: string;
 
   @ApiPropertyOptional({ description: 'URL del servidor' })
   serverUrl?: string;
 
   @ApiProperty({ description: 'Permisos' })
-  permissions: {
+  permissions!: {
     canBrowse: boolean;
     canStream: boolean;
     canDownload: boolean;
   };
 
   @ApiProperty({ description: 'Si está activo' })
-  isActive: boolean;
+  isActive!: boolean;
 
   @ApiPropertyOptional({ description: 'Último uso' })
   lastUsedAt?: Date;
 
   @ApiProperty({ description: 'Fecha de creación' })
-  createdAt: Date;
+  createdAt!: Date;
 }
 
 export class ServerInfoResponseDto {
   @ApiProperty({ description: 'Nombre del servidor' })
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'Versión del servidor' })
-  version: string;
+  version!: string;
 
   @ApiProperty({ description: 'Número de álbums' })
-  albumCount: number;
+  albumCount!: number;
 
   @ApiProperty({ description: 'Número de tracks' })
-  trackCount: number;
+  trackCount!: number;
 
   @ApiProperty({ description: 'Número de artistas' })
-  artistCount: number;
+  artistCount!: number;
 }
 
 export class ConnectionResponseDto {
   @ApiProperty({ description: 'Token de acceso generado' })
-  accessToken: string;
+  accessToken!: string;
 
   @ApiProperty({ description: 'Información del servidor' })
-  serverInfo: ServerInfoResponseDto;
+  serverInfo!: ServerInfoResponseDto;
 }
 
 export class RemoteAlbumDto {
   @ApiProperty({ description: 'ID del álbum' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'Nombre del álbum' })
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'Nombre del artista' })
-  artistName: string;
+  artistName!: string;
 
   @ApiProperty({ description: 'ID del artista' })
-  artistId: string;
+  artistId!: string;
 
   @ApiPropertyOptional({ description: 'Año' })
   year?: number;
 
   @ApiProperty({ description: 'Número de canciones' })
-  songCount: number;
+  songCount!: number;
 
   @ApiProperty({ description: 'Duración total en segundos' })
-  duration: number;
+  duration!: number;
 
   @ApiProperty({ description: 'Tamaño en bytes' })
-  size: number;
+  size!: number;
 
   @ApiPropertyOptional({ description: 'URL de la carátula' })
   coverUrl?: string;
@@ -309,22 +309,22 @@ export class RemoteAlbumDto {
 
 export class RemoteTrackDto {
   @ApiProperty({ description: 'ID del track' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'Título' })
-  title: string;
+  title!: string;
 
   @ApiProperty({ description: 'Nombre del artista' })
-  artistName: string;
+  artistName!: string;
 
   @ApiProperty({ description: 'ID del artista' })
-  artistId: string;
+  artistId!: string;
 
   @ApiProperty({ description: 'Nombre del álbum' })
-  albumName: string;
+  albumName!: string;
 
   @ApiProperty({ description: 'ID del álbum' })
-  albumId: string;
+  albumId!: string;
 
   @ApiPropertyOptional({ description: 'Número de pista' })
   trackNumber?: number;
@@ -333,10 +333,10 @@ export class RemoteTrackDto {
   discNumber?: number;
 
   @ApiProperty({ description: 'Duración en segundos' })
-  duration: number;
+  duration!: number;
 
   @ApiProperty({ description: 'Tamaño en bytes' })
-  size: number;
+  size!: number;
 
   @ApiPropertyOptional({ description: 'Bitrate' })
   bitRate?: number;
@@ -347,14 +347,14 @@ export class RemoteTrackDto {
 
 export class RemoteLibraryResponseDto {
   @ApiProperty({ type: [RemoteAlbumDto], description: 'Lista de álbums' })
-  albums: RemoteAlbumDto[];
+  albums!: RemoteAlbumDto[];
 
   @ApiProperty({ description: 'Total de álbums' })
-  totalAlbums: number;
+  totalAlbums!: number;
 
   @ApiProperty({ description: 'Total de tracks' })
-  totalTracks: number;
+  totalTracks!: number;
 
   @ApiProperty({ description: 'Total de artistas' })
-  totalArtists: number;
+  totalArtists!: number;
 }
