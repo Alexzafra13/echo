@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Database, Clock } from 'lucide-react';
+import { RefreshCw, AlertCircle, AlertTriangle, XCircle, Filter, Database, Clock, Info } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import styles from './LogsPanel.module.css';
 
 interface SystemLog {
   id: string;
-  level: 'critical' | 'error' | 'warning' | 'info' | 'debug';
+  level: 'critical' | 'error' | 'warning';
   category: string;
   message: string;
   details: string | null;
@@ -35,12 +35,11 @@ interface StorageInfo {
   estimatedSizeMB: number;
 }
 
-const LEVEL_CONFIG = {
+// Only warning, error, and critical are persisted to DB
+const LEVEL_CONFIG: Record<string, { icon: typeof XCircle; color: string; label: string }> = {
   critical: { icon: XCircle, color: '#ef4444', label: 'CRÍTICO' },
   error: { icon: AlertCircle, color: '#f97316', label: 'ERROR' },
   warning: { icon: AlertTriangle, color: '#eab308', label: 'ADVERTENCIA' },
-  info: { icon: Info, color: '#3b82f6', label: 'INFO' },
-  debug: { icon: Bug, color: '#6b7280', label: 'DEBUG' },
 };
 
 // Date range presets

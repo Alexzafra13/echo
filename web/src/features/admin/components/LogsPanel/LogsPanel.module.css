@@ -179,7 +179,7 @@
   border-color: var(--white-12);
 }
 
-/* Level-specific left border */
+/* Level-specific left border (only warning, error, critical are persisted) */
 .level-critical {
   border-left: 3px solid #ef4444;
 }
@@ -190,14 +190,6 @@
 
 .level-warning {
   border-left: 3px solid #eab308;
-}
-
-.level-info {
-  border-left: 3px solid #3b82f6;
-}
-
-.level-debug {
-  border-left: 3px solid #6b7280;
 }
 
 /* Log Header */
