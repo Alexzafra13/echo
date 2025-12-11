@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { RefreshCw, AlertCircle, AlertTriangle, XCircle, Filter, Database, Clock, Info } from 'lucide-react';
+import { AlertCircle, AlertTriangle, XCircle, Filter, Database, Clock, Info } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import styles from './LogsPanel.module.css';
@@ -173,11 +173,6 @@ export function LogsPanel() {
     }
   };
 
-  const handleRefresh = () => {
-    loadStats();
-    loadLogs();
-  };
-
   const toggleLogDetails = (logId: string) => {
     setExpandedLog(expandedLog === logId ? null : logId);
   };
@@ -215,21 +210,15 @@ export function LogsPanel() {
     <div className={styles.container}>
       {/* Header with stats */}
       <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <h2 className={styles.title}>Logs del Sistema</h2>
-          {storage && (
-            <div className={styles.storageInfo}>
-              <Database size={14} />
-              <span>{storage.totalRows.toLocaleString()} logs</span>
-              <span className={styles.storageDot}>•</span>
-              <span>{storage.estimatedSizeMB} MB</span>
-            </div>
-          )}
-        </div>
-        <Button onClick={handleRefresh} disabled={isLoading}>
-          <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
-          Actualizar
-        </Button>
+        <h2 className={styles.title}>Logs del Sistema</h2>
+        {storage && (
+          <div className={styles.storageInfo}>
+            <Database size={14} />
+            <span>{storage.totalRows.toLocaleString()} logs</span>
+            <span className={styles.storageDot}>•</span>
+            <span>{storage.estimatedSizeMB} MB</span>
+          </div>
+        )}
       </div>
 
       {/* Stats summary */}
