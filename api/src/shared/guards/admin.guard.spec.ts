@@ -1,15 +1,31 @@
 import { ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AdminGuard } from './admin.guard';
 import { createMockExecutionContext } from '@shared/testing/mock.types';
 
 describe('AdminGuard', () => {
   let guard: AdminGuard;
+  let mockReflector: jest.Mocked<Reflector>;
 
   beforeEach(() => {
-    guard = new AdminGuard();
+    mockReflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(false),
+    } as any;
+    guard = new AdminGuard(mockReflector);
   });
 
   describe('canActivate', () => {
+    it('debería permitir acceso si la ruta es pública', () => {
+      mockReflector.getAllAndOverride.mockReturnValue(true);
+      const mockContext = createMockExecutionContext({
+        request: { user: undefined },
+      });
+
+      const result = guard.canActivate(mockContext);
+
+      expect(result).toBe(true);
+    });
+
     it('debería permitir acceso si el usuario es admin', () => {
       const mockContext = createMockExecutionContext({
         request: {
