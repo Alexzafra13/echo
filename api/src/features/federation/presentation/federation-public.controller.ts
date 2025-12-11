@@ -448,7 +448,7 @@ export class FederationPublicController {
       return;
     }
 
-    const fileSize = track.size;
+    const fileSize = track.size ?? fs.statSync(track.path).size;
     const mimeType = this.getMimeType(track.path);
 
     if (range) {
