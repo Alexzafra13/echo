@@ -75,6 +75,7 @@ export class RemoteServerService {
     serverUrl: string,
     invitationToken: string,
     serverName?: string,
+    localServerUrl?: string,
   ): Promise<ConnectedServer> {
     // Normalize URL
     const normalizedUrl = this.normalizeUrl(serverUrl);
@@ -95,6 +96,7 @@ export class RemoteServerService {
         body: JSON.stringify({
           invitationToken,
           serverName: serverName || 'Echo Server',
+          serverUrl: localServerUrl, // URL de nuestro servidor para que el remoto pueda conectarse
         }),
       });
 
