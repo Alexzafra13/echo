@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, Check } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import {
   useMetadataConflicts,
@@ -72,6 +72,11 @@ export function MetadataConflictsPanel() {
     );
   }
 
+  // Hide panel completely when there are no suggestions
+  if (conflicts.length === 0) {
+    return null;
+  }
+
   const selectedConflicts = selectedArtist ? groupedConflicts[selectedArtist] || [] : [];
 
   return (
@@ -93,16 +98,7 @@ export function MetadataConflictsPanel() {
       </div>
 
       {/* Main Content Area */}
-      {conflicts.length === 0 ? (
-        <div className={styles.emptyState}>
-          <Check size={48} className={styles.emptyIcon} />
-          <h3 className={styles.emptyTitle}>¡Todo al día!</h3>
-          <p className={styles.emptyMessage}>
-            No hay sugerencias de metadatos pendientes de revisar
-          </p>
-        </div>
-      ) : (
-        <div className={styles.contentLayout}>
+      <div className={styles.contentLayout}>
           {/* Sidebar - Artist List */}
           <aside className={styles.sidebar}>
             <div className={styles.sidebarHeader}>
@@ -146,7 +142,6 @@ export function MetadataConflictsPanel() {
             )}
           </main>
         </div>
-      )}
 
       {/* Info Box */}
       <CollapsibleInfo title="Sobre las sugerencias" defaultExpanded={false}>
