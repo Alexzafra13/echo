@@ -316,14 +316,14 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
 
   /**
    * Generic helper to get top items for a user by item type
+   * Always fetches weightedPlayCount for consistent typing
    */
   private async getUserTopItems(
     userId: string,
     itemType: 'track' | 'album' | 'artist',
     limit: number,
     days?: number,
-    includeWeighted = false,
-  ): Promise<{ itemId: string; playCount: number; weightedPlayCount?: number }[]> {
+  ): Promise<{ itemId: string; playCount: number; weightedPlayCount: number }[]> {
     let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, itemType));
 
     if (days) {
@@ -332,12 +332,12 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
       whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
     }
 
-    const selectFields = includeWeighted
-      ? { itemId: userPlayStats.itemId, playCount: userPlayStats.playCount, weightedPlayCount: userPlayStats.weightedPlayCount }
-      : { itemId: userPlayStats.itemId, playCount: userPlayStats.playCount };
-
     const stats = await this.drizzle.db
-      .select(selectFields)
+      .select({
+        itemId: userPlayStats.itemId,
+        playCount: userPlayStats.playCount,
+        weightedPlayCount: userPlayStats.weightedPlayCount,
+      })
       .from(userPlayStats)
       .where(whereCondition)
       .orderBy(desc(userPlayStats.weightedPlayCount))
@@ -346,7 +346,7 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     return stats.map((stat) => ({
       itemId: stat.itemId,
       playCount: Number(stat.playCount),
-      ...(includeWeighted && 'weightedPlayCount' in stat ? { weightedPlayCount: stat.weightedPlayCount } : {}),
+      weightedPlayCount: stat.weightedPlayCount,
     }));
   }
 
@@ -355,11 +355,11 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     limit: number = 50,
     days?: number,
   ): Promise<{ trackId: string; playCount: number; weightedPlayCount: number }[]> {
-    const items = await this.getUserTopItems(userId, 'track', limit, days, true);
+    const items = await this.getUserTopItems(userId, 'track', limit, days);
     return items.map(({ itemId, playCount, weightedPlayCount }) => ({
       trackId: itemId,
       playCount,
-      weightedPlayCount: weightedPlayCount ?? 0,
+      weightedPlayCount,
     }));
   }
 
