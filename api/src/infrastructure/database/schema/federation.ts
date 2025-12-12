@@ -101,6 +101,10 @@ export const federationAccessTokens = pgTable(
     lastUsedAt: timestamp('last_used_at'),
     lastUsedIp: varchar('last_used_ip', { length: 45 }),
     expiresAt: timestamp('expires_at'),
+    // Mutual federation fields
+    mutualInvitationToken: varchar('mutual_invitation_token', { length: 64 }), // Token para conectarnos de vuelta
+    mutualStatus: varchar('mutual_status', { length: 20 }).default('none').notNull(), // none, pending, approved, rejected
+    mutualRespondedAt: timestamp('mutual_responded_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -108,33 +112,6 @@ export const federationAccessTokens = pgTable(
     index('idx_federation_access_tokens_token').on(table.token),
     index('idx_federation_access_tokens_owner').on(table.ownerId),
     index('idx_federation_access_tokens_active').on(table.isActive),
-  ],
-);
-
-// ============================================
-// Federation Requests (Solicitudes de federación mutua)
-// ============================================
-// Pending requests from other servers to establish mutual federation
-export const federationRequests = pgTable(
-  'federation_requests',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    serverName: varchar('server_name', { length: 100 }).notNull(),
-    serverUrl: varchar('server_url', { length: 512 }).notNull(),
-    invitationToken: varchar('invitation_token', { length: 64 }).notNull(), // Token que debemos usar para conectarnos
-    status: varchar('status', { length: 20 }).notNull().default('pending'),
-    respondedAt: timestamp('responded_at'),
-    expiresAt: timestamp('expires_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => [
-    index('idx_federation_requests_user').on(table.userId),
-    index('idx_federation_requests_status').on(table.status),
-    index('idx_federation_requests_expires').on(table.expiresAt),
-    check('valid_request_status', sql`${table.status} IN ('pending', 'approved', 'rejected', 'expired')`),
   ],
 );
 
@@ -197,8 +174,5 @@ export type NewFederationAccessToken = typeof federationAccessTokens.$inferInser
 export type AlbumImportQueue = typeof albumImportQueue.$inferSelect;
 export type NewAlbumImportQueue = typeof albumImportQueue.$inferInsert;
 
-export type FederationRequest = typeof federationRequests.$inferSelect;
-export type NewFederationRequest = typeof federationRequests.$inferInsert;
-
 export type ImportStatus = 'pending' | 'downloading' | 'completed' | 'failed' | 'cancelled';
-export type FederationRequestStatus = 'pending' | 'approved' | 'rejected' | 'expired';
+export type MutualFederationStatus = 'none' | 'pending' | 'approved' | 'rejected';

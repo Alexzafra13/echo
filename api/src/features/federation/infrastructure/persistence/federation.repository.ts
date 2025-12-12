@@ -6,7 +6,6 @@ import {
   federationTokens,
   federationAccessTokens,
   albumImportQueue,
-  federationRequests,
   ConnectedServer,
   NewConnectedServer,
   FederationToken,
@@ -16,9 +15,7 @@ import {
   AlbumImportQueue,
   NewAlbumImportQueue,
   ImportStatus,
-  FederationRequest,
-  NewFederationRequest,
-  FederationRequestStatus,
+  MutualFederationStatus,
 } from '@infrastructure/database/schema';
 import { IFederationRepository } from '../../domain/ports/federation.repository';
 
@@ -310,108 +307,35 @@ export class FederationRepository implements IFederationRepository {
   }
 
   // ============================================
-  // Federation Requests
+  // Mutual Federation
   // ============================================
 
-  async createFederationRequest(data: NewFederationRequest): Promise<FederationRequest> {
-    const [request] = await this.drizzle.db
-      .insert(federationRequests)
-      .values(data)
-      .returning();
-    return request;
-  }
-
-  async findFederationRequestById(id: string): Promise<FederationRequest | null> {
-    const [request] = await this.drizzle.db
-      .select()
-      .from(federationRequests)
-      .where(eq(federationRequests.id, id))
-      .limit(1);
-    return request ?? null;
-  }
-
-  async findFederationRequestsByUserId(userId: string): Promise<FederationRequest[]> {
+  async findPendingMutualRequests(ownerId: string): Promise<FederationAccessToken[]> {
     return this.drizzle.db
       .select()
-      .from(federationRequests)
-      .where(eq(federationRequests.userId, userId));
-  }
-
-  async findPendingFederationRequestsByUserId(userId: string): Promise<FederationRequest[]> {
-    return this.drizzle.db
-      .select()
-      .from(federationRequests)
+      .from(federationAccessTokens)
       .where(
         and(
-          eq(federationRequests.userId, userId),
-          eq(federationRequests.status, 'pending'),
+          eq(federationAccessTokens.ownerId, ownerId),
+          eq(federationAccessTokens.mutualStatus, 'pending'),
+          eq(federationAccessTokens.isActive, true),
         ),
       );
   }
 
-  async findFederationRequestByServerUrl(
-    userId: string,
-    serverUrl: string,
-  ): Promise<FederationRequest | null> {
-    const [request] = await this.drizzle.db
-      .select()
-      .from(federationRequests)
-      .where(
-        and(
-          eq(federationRequests.userId, userId),
-          eq(federationRequests.serverUrl, serverUrl),
-          eq(federationRequests.status, 'pending'),
-        ),
-      )
-      .limit(1);
-    return request ?? null;
-  }
-
-  async updateFederationRequest(
+  async updateMutualStatus(
     id: string,
-    data: Partial<FederationRequest>,
-  ): Promise<FederationRequest | null> {
-    const [request] = await this.drizzle.db
-      .update(federationRequests)
-      .set(data)
-      .where(eq(federationRequests.id, id))
-      .returning();
-    return request ?? null;
-  }
-
-  async updateFederationRequestStatus(
-    id: string,
-    status: FederationRequestStatus,
-  ): Promise<FederationRequest | null> {
-    const [request] = await this.drizzle.db
-      .update(federationRequests)
+    status: MutualFederationStatus,
+  ): Promise<FederationAccessToken | null> {
+    const [token] = await this.drizzle.db
+      .update(federationAccessTokens)
       .set({
-        status,
-        respondedAt: status !== 'pending' ? new Date() : undefined,
+        mutualStatus: status,
+        mutualRespondedAt: status !== 'pending' ? new Date() : undefined,
+        updatedAt: new Date(),
       })
-      .where(eq(federationRequests.id, id))
+      .where(eq(federationAccessTokens.id, id))
       .returning();
-    return request ?? null;
-  }
-
-  async deleteFederationRequest(id: string): Promise<boolean> {
-    const result = await this.drizzle.db
-      .delete(federationRequests)
-      .where(eq(federationRequests.id, id))
-      .returning();
-    return result.length > 0;
-  }
-
-  async deleteExpiredFederationRequests(): Promise<number> {
-    const result = await this.drizzle.db
-      .delete(federationRequests)
-      .where(
-        and(
-          lt(federationRequests.expiresAt, new Date()),
-          eq(federationRequests.status, 'pending'),
-        ),
-      )
-      .returning();
-    return result.length;
+    return token ?? null;
   }
 }

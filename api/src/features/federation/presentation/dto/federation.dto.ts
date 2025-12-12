@@ -280,6 +280,12 @@ export class AccessTokenResponseDto {
 
   @ApiProperty({ description: 'Fecha de creación' })
   createdAt!: Date;
+
+  @ApiPropertyOptional({
+    description: 'Estado de la solicitud de federación mutua',
+    enum: ['none', 'pending', 'approved', 'rejected'],
+  })
+  mutualStatus?: string;
 }
 
 export class ServerInfoResponseDto {
@@ -391,28 +397,3 @@ export class RemoteLibraryResponseDto {
   totalArtists!: number;
 }
 
-export class FederationRequestResponseDto {
-  @ApiProperty({ description: 'ID de la solicitud' })
-  id!: string;
-
-  @ApiProperty({ description: 'Nombre del servidor que solicita' })
-  serverName!: string;
-
-  @ApiProperty({ description: 'URL del servidor que solicita' })
-  serverUrl!: string;
-
-  @ApiProperty({
-    description: 'Estado de la solicitud',
-    enum: ['pending', 'approved', 'rejected', 'expired'],
-  })
-  status!: string;
-
-  @ApiProperty({ description: 'Fecha de expiración' })
-  expiresAt!: Date;
-
-  @ApiProperty({ description: 'Fecha de creación' })
-  createdAt!: Date;
-
-  @ApiPropertyOptional({ description: 'Fecha de respuesta' })
-  respondedAt?: Date;
-}

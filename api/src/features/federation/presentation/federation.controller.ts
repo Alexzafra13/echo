@@ -36,7 +36,6 @@ import {
   AccessTokenResponseDto,
   RemoteLibraryResponseDto,
   RemoteAlbumDto,
-  FederationRequestResponseDto,
 } from './dto';
 
 /**
@@ -458,142 +457,111 @@ export class FederationController {
   }
 
   // ============================================
-  // Federation Requests (Solicitudes de federación mutua)
+  // Mutual Federation (Solicitudes de federación mutua)
   // ============================================
 
-  @Get('requests')
+  @Get('access-tokens/pending-mutual')
   @ApiOperation({
-    summary: 'Listar solicitudes de federación',
-    description: 'Obtiene todas las solicitudes de federación mutua pendientes',
+    summary: 'Listar solicitudes de federación mutua pendientes',
+    description: 'Obtiene los servidores que han solicitado federación mutua',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de solicitudes',
-    type: [FederationRequestResponseDto],
+    description: 'Lista de servidores con solicitud mutua pendiente',
+    type: [AccessTokenResponseDto],
   })
-  async getFederationRequests(
+  async getPendingMutualRequests(
     @CurrentUser() user: User,
-  ): Promise<FederationRequestResponseDto[]> {
-    const requests = await this.tokenService.getUserFederationRequests(user.id);
-    return requests.map(this.mapRequestToResponse);
+  ): Promise<AccessTokenResponseDto[]> {
+    const tokens = await this.tokenService.getPendingMutualRequests(user.id);
+    return tokens.map((token) => ({
+      id: token.id,
+      serverName: token.serverName,
+      serverUrl: token.serverUrl ?? undefined,
+      permissions: token.permissions,
+      isActive: token.isActive,
+      lastUsedAt: token.lastUsedAt ?? undefined,
+      createdAt: token.createdAt,
+      mutualStatus: token.mutualStatus,
+    }));
   }
 
-  @Get('requests/pending')
+  @Post('access-tokens/:id/approve-mutual')
   @ApiOperation({
-    summary: 'Listar solicitudes pendientes',
-    description: 'Obtiene solo las solicitudes de federación mutua pendientes',
+    summary: 'Aprobar solicitud de federación mutua',
+    description: 'Aprueba la solicitud y conecta automáticamente al servidor que la solicitó',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de solicitudes pendientes',
-    type: [FederationRequestResponseDto],
-  })
-  async getPendingFederationRequests(
-    @CurrentUser() user: User,
-  ): Promise<FederationRequestResponseDto[]> {
-    const requests = await this.tokenService.getPendingFederationRequests(user.id);
-    return requests.map(this.mapRequestToResponse);
-  }
-
-  @Post('requests/:id/approve')
-  @ApiOperation({
-    summary: 'Aprobar solicitud de federación',
-    description: 'Aprueba una solicitud de federación mutua y conecta automáticamente al servidor solicitante',
-  })
-  @ApiParam({ name: 'id', description: 'ID de la solicitud' })
+  @ApiParam({ name: 'id', description: 'ID del access token' })
   @ApiResponse({
     status: 200,
     description: 'Solicitud aprobada y conectado al servidor',
     type: ConnectedServerResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Solicitud no encontrada o expirada' })
-  @ApiResponse({ status: 403, description: 'Sin acceso a la solicitud' })
-  async approveFederationRequest(
+  @ApiResponse({ status: 404, description: 'Access token no encontrado o sin solicitud pendiente' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
+  async approveMutualRequest(
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<ConnectedServerResponseDto> {
-    // Get the request and verify ownership
-    const request = await this.tokenService.getFederationRequestById(id);
-    if (!request) {
-      throw new NotFoundException('Federation request not found');
+    // Get the access token and verify ownership
+    const accessToken = await this.tokenService.getAccessTokenById(id);
+    if (!accessToken) {
+      throw new NotFoundException('Access token not found');
     }
-    if (request.userId !== user.id) {
-      throw new ForbiddenException('You do not have access to this request');
+    if (accessToken.ownerId !== user.id) {
+      throw new ForbiddenException('You do not have access to this access token');
+    }
+    if (accessToken.mutualStatus !== 'pending' || !accessToken.mutualInvitationToken || !accessToken.serverUrl) {
+      throw new NotFoundException('No pending mutual request found');
     }
 
     // Approve the request
-    const approved = await this.tokenService.approveFederationRequest(id);
+    const approved = await this.tokenService.approveMutualRequest(id);
     if (!approved) {
-      throw new NotFoundException('Federation request not found or expired');
+      throw new NotFoundException('Failed to approve mutual request');
     }
 
     // Connect to the remote server using the invitation token they provided
     const server = await this.remoteServerService.connectToServer(
       user.id,
-      request.serverUrl,
-      request.invitationToken,
-      request.serverName,
+      accessToken.serverUrl,
+      accessToken.mutualInvitationToken,
+      accessToken.serverName,
     );
 
     this.logger.info(
-      { userId: user.id, requestId: id, serverUrl: request.serverUrl },
-      'Federation request approved and connected',
+      { userId: user.id, accessTokenId: id, serverUrl: accessToken.serverUrl },
+      'Mutual federation request approved and connected',
     );
 
     return this.mapServerToResponse(server);
   }
 
-  @Post('requests/:id/reject')
+  @Post('access-tokens/:id/reject-mutual')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Rechazar solicitud de federación',
-    description: 'Rechaza una solicitud de federación mutua',
+    summary: 'Rechazar solicitud de federación mutua',
+    description: 'Rechaza la solicitud de federación mutua (el servidor sigue pudiendo acceder a tu biblioteca)',
   })
-  @ApiParam({ name: 'id', description: 'ID de la solicitud' })
+  @ApiParam({ name: 'id', description: 'ID del access token' })
   @ApiResponse({ status: 204, description: 'Solicitud rechazada' })
-  @ApiResponse({ status: 404, description: 'Solicitud no encontrada' })
-  @ApiResponse({ status: 403, description: 'Sin acceso a la solicitud' })
-  async rejectFederationRequest(
+  @ApiResponse({ status: 404, description: 'Access token no encontrado' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
+  async rejectMutualRequest(
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<void> {
-    // Get the request and verify ownership
-    const request = await this.tokenService.getFederationRequestById(id);
-    if (!request) {
-      throw new NotFoundException('Federation request not found');
+    // Get the access token and verify ownership
+    const accessToken = await this.tokenService.getAccessTokenById(id);
+    if (!accessToken) {
+      throw new NotFoundException('Access token not found');
     }
-    if (request.userId !== user.id) {
-      throw new ForbiddenException('You do not have access to this request');
-    }
-
-    await this.tokenService.rejectFederationRequest(id);
-    this.logger.info({ userId: user.id, requestId: id }, 'Federation request rejected');
-  }
-
-  @Delete('requests/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Eliminar solicitud de federación',
-  })
-  @ApiParam({ name: 'id', description: 'ID de la solicitud' })
-  @ApiResponse({ status: 204, description: 'Solicitud eliminada' })
-  @ApiResponse({ status: 404, description: 'Solicitud no encontrada' })
-  @ApiResponse({ status: 403, description: 'Sin acceso a la solicitud' })
-  async deleteFederationRequest(
-    @CurrentUser() user: User,
-    @Param('id') id: string,
-  ): Promise<void> {
-    // Get the request and verify ownership
-    const request = await this.tokenService.getFederationRequestById(id);
-    if (!request) {
-      throw new NotFoundException('Federation request not found');
-    }
-    if (request.userId !== user.id) {
-      throw new ForbiddenException('You do not have access to this request');
+    if (accessToken.ownerId !== user.id) {
+      throw new ForbiddenException('You do not have access to this access token');
     }
 
-    await this.tokenService.deleteFederationRequest(id);
-    this.logger.info({ userId: user.id, requestId: id }, 'Federation request deleted');
+    await this.tokenService.rejectMutualRequest(id);
+    this.logger.info({ userId: user.id, accessTokenId: id }, 'Mutual federation request rejected');
   }
 
   // ============================================
@@ -616,18 +584,6 @@ export class FederationController {
       lastError: server.lastError ?? undefined,
       lastErrorAt: server.lastErrorAt ?? undefined,
       createdAt: server.createdAt,
-    };
-  }
-
-  private mapRequestToResponse(request: any): FederationRequestResponseDto {
-    return {
-      id: request.id,
-      serverName: request.serverName,
-      serverUrl: request.serverUrl,
-      status: request.status,
-      expiresAt: request.expiresAt,
-      createdAt: request.createdAt,
-      respondedAt: request.respondedAt ?? undefined,
     };
   }
 }
