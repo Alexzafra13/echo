@@ -314,12 +314,17 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
   // READ OPERATIONS - TOP ITEMS
   // ===================================
 
-  async getUserTopTracks(
+  /**
+   * Generic helper to get top items for a user by item type
+   */
+  private async getUserTopItems(
     userId: string,
-    limit: number = 50,
+    itemType: 'track' | 'album' | 'artist',
+    limit: number,
     days?: number,
-  ): Promise<{ trackId: string; playCount: number; weightedPlayCount: number }[]> {
-    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, 'track'));
+    includeWeighted = false,
+  ): Promise<{ itemId: string; playCount: number; weightedPlayCount?: number }[]> {
+    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, itemType));
 
     if (days) {
       const since = new Date();
@@ -327,21 +332,34 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
       whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
     }
 
+    const selectFields = includeWeighted
+      ? { itemId: userPlayStats.itemId, playCount: userPlayStats.playCount, weightedPlayCount: userPlayStats.weightedPlayCount }
+      : { itemId: userPlayStats.itemId, playCount: userPlayStats.playCount };
+
     const stats = await this.drizzle.db
-      .select({
-        itemId: userPlayStats.itemId,
-        playCount: userPlayStats.playCount,
-        weightedPlayCount: userPlayStats.weightedPlayCount,
-      })
+      .select(selectFields)
       .from(userPlayStats)
       .where(whereCondition)
       .orderBy(desc(userPlayStats.weightedPlayCount))
       .limit(limit);
 
     return stats.map((stat) => ({
-      trackId: stat.itemId,
+      itemId: stat.itemId,
       playCount: Number(stat.playCount),
-      weightedPlayCount: stat.weightedPlayCount,
+      ...(includeWeighted && 'weightedPlayCount' in stat ? { weightedPlayCount: stat.weightedPlayCount } : {}),
+    }));
+  }
+
+  async getUserTopTracks(
+    userId: string,
+    limit: number = 50,
+    days?: number,
+  ): Promise<{ trackId: string; playCount: number; weightedPlayCount: number }[]> {
+    const items = await this.getUserTopItems(userId, 'track', limit, days, true);
+    return items.map(({ itemId, playCount, weightedPlayCount }) => ({
+      trackId: itemId,
+      playCount,
+      weightedPlayCount: weightedPlayCount ?? 0,
     }));
   }
 
@@ -350,28 +368,8 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     limit: number = 50,
     days?: number,
   ): Promise<{ albumId: string; playCount: number }[]> {
-    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, 'album'));
-
-    if (days) {
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
-    }
-
-    const stats = await this.drizzle.db
-      .select({
-        itemId: userPlayStats.itemId,
-        playCount: userPlayStats.playCount,
-      })
-      .from(userPlayStats)
-      .where(whereCondition)
-      .orderBy(desc(userPlayStats.weightedPlayCount))
-      .limit(limit);
-
-    return stats.map((stat) => ({
-      albumId: stat.itemId,
-      playCount: Number(stat.playCount),
-    }));
+    const items = await this.getUserTopItems(userId, 'album', limit, days);
+    return items.map(({ itemId, playCount }) => ({ albumId: itemId, playCount }));
   }
 
   async getUserTopArtists(
@@ -379,28 +377,8 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     limit: number = 50,
     days?: number,
   ): Promise<{ artistId: string; playCount: number }[]> {
-    let whereCondition = and(eq(userPlayStats.userId, userId), eq(userPlayStats.itemType, 'artist'));
-
-    if (days) {
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      whereCondition = and(whereCondition, gte(userPlayStats.lastPlayedAt, since));
-    }
-
-    const stats = await this.drizzle.db
-      .select({
-        itemId: userPlayStats.itemId,
-        playCount: userPlayStats.playCount,
-      })
-      .from(userPlayStats)
-      .where(whereCondition)
-      .orderBy(desc(userPlayStats.weightedPlayCount))
-      .limit(limit);
-
-    return stats.map((stat) => ({
-      artistId: stat.itemId,
-      playCount: Number(stat.playCount),
-    }));
+    const items = await this.getUserTopItems(userId, 'artist', limit, days);
+    return items.map(({ itemId, playCount }) => ({ artistId: itemId, playCount }));
   }
 
   async getItemPlayCount(

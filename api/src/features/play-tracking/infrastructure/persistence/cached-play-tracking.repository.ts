@@ -44,6 +44,36 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   ) {}
 
   // ===================================
+  // CACHE HELPER
+  // ===================================
+
+  /**
+   * Generic cache-aside pattern helper
+   * Checks cache first, fetches from DB if miss, then caches result
+   */
+  private async getCachedOrFetch<T>(
+    cacheKey: string,
+    fetcher: () => Promise<T>,
+    ttl: number,
+    shouldCache: (result: T) => boolean = () => true,
+  ): Promise<T> {
+    const cached = await this.cache.get<T>(cacheKey);
+    if (cached !== null && cached !== undefined) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Cache hit');
+      return cached;
+    }
+
+    this.logger.debug({ cacheKey, type: 'MISS' }, 'Cache miss');
+    const result = await fetcher();
+
+    if (shouldCache(result)) {
+      await this.cache.set(cacheKey, result, ttl);
+    }
+
+    return result;
+  }
+
+  // ===================================
   // WRITE OPERATIONS (Invalidate cache)
   // ===================================
 
@@ -86,49 +116,28 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   // READ OPERATIONS (With cache)
   // ===================================
 
+  // Helper to check if array result should be cached
+  private readonly hasItems = <T>(arr: T[]): boolean => arr.length > 0;
+
   /**
    * CRITICAL: Most frequently called method (every Wave Mix generation)
-   * Cache aggressively with 10 min TTL
    */
   async getUserPlayStats(userId: string, itemType?: string): Promise<PlayStats[]> {
-    const cacheKey = `${this.KEY_PREFIX}user-stats:${userId}:${itemType || 'all'}`;
-
-    // Check cache
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Play stats cache hit');
-      return cached;
-    }
-
-    this.logger.debug({ cacheKey, type: 'MISS' }, 'Play stats cache miss');
-
-    // Fetch from DB
-    const stats = await this.baseRepository.getUserPlayStats(userId, itemType);
-
-    // Cache result
-    if (stats.length > 0) {
-      await this.cache.set(cacheKey, stats, this.STATS_TTL);
-    }
-
-    return stats;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}user-stats:${userId}:${itemType || 'all'}`,
+      () => this.baseRepository.getUserPlayStats(userId, itemType),
+      this.STATS_TTL,
+      this.hasItems,
+    );
   }
 
   async getTrackPlayStats(trackId: string): Promise<PlayStats[]> {
-    const cacheKey = `${this.KEY_PREFIX}track-stats:${trackId}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Track stats cache hit');
-      return cached;
-    }
-
-    const stats = await this.baseRepository.getTrackPlayStats(trackId);
-
-    if (stats.length > 0) {
-      await this.cache.set(cacheKey, stats, this.STATS_TTL);
-    }
-
-    return stats;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}track-stats:${trackId}`,
+      () => this.baseRepository.getTrackPlayStats(trackId),
+      this.STATS_TTL,
+      this.hasItems,
+    );
   }
 
   /**
@@ -139,21 +148,12 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     limit?: number,
     days?: number,
   ): Promise<{ trackId: string; playCount: number; weightedPlayCount: number }[]> {
-    const cacheKey = `${this.KEY_PREFIX}top-tracks:${userId}:${limit || 50}:${days || 'all'}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Top tracks cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getUserTopTracks(userId, limit, days);
-
-    if (result.length > 0) {
-      await this.cache.set(cacheKey, result, this.TOP_ITEMS_TTL);
-    }
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}top-tracks:${userId}:${limit || 50}:${days || 'all'}`,
+      () => this.baseRepository.getUserTopTracks(userId, limit, days),
+      this.TOP_ITEMS_TTL,
+      this.hasItems,
+    );
   }
 
   async getUserTopAlbums(
@@ -161,21 +161,12 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     limit?: number,
     days?: number,
   ): Promise<{ albumId: string; playCount: number }[]> {
-    const cacheKey = `${this.KEY_PREFIX}top-albums:${userId}:${limit || 50}:${days || 'all'}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Top albums cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getUserTopAlbums(userId, limit, days);
-
-    if (result.length > 0) {
-      await this.cache.set(cacheKey, result, this.TOP_ITEMS_TTL);
-    }
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}top-albums:${userId}:${limit || 50}:${days || 'all'}`,
+      () => this.baseRepository.getUserTopAlbums(userId, limit, days),
+      this.TOP_ITEMS_TTL,
+      this.hasItems,
+    );
   }
 
   async getUserTopArtists(
@@ -183,145 +174,85 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
     limit?: number,
     days?: number,
   ): Promise<{ artistId: string; playCount: number }[]> {
-    const cacheKey = `${this.KEY_PREFIX}top-artists:${userId}:${limit || 50}:${days || 'all'}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Top artists cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getUserTopArtists(userId, limit, days);
-
-    if (result.length > 0) {
-      await this.cache.set(cacheKey, result, this.TOP_ITEMS_TTL);
-    }
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}top-artists:${userId}:${limit || 50}:${days || 'all'}`,
+      () => this.baseRepository.getUserTopArtists(userId, limit, days),
+      this.TOP_ITEMS_TTL,
+      this.hasItems,
+    );
   }
 
   /**
-   * Item play count for a specific user - cached with 10 min TTL
+   * Item play count for a specific user
    */
   async getItemPlayCount(
     userId: string,
     itemId: string,
     itemType: 'track' | 'album' | 'artist',
   ): Promise<{ playCount: number; lastPlayedAt: Date | null } | null> {
-    const cacheKey = `${this.KEY_PREFIX}item-play-count:${userId}:${itemId}:${itemType}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Item play count cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getItemPlayCount(userId, itemId, itemType);
-
-    if (result) {
-      await this.cache.set(cacheKey, result, this.STATS_TTL);
-    }
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}item-play-count:${userId}:${itemId}:${itemType}`,
+      () => this.baseRepository.getItemPlayCount(userId, itemId, itemType),
+      this.STATS_TTL,
+      (result) => result !== null,
+    );
   }
 
   /**
-   * Global play count (all users) - cached with 10 min TTL
+   * Global play count (all users)
    */
   async getItemGlobalPlayCount(
     itemId: string,
     itemType: 'track' | 'album' | 'artist',
   ): Promise<number> {
-    const cacheKey = `${this.KEY_PREFIX}item-global-play-count:${itemId}:${itemType}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached !== undefined) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Item global play count cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getItemGlobalPlayCount(itemId, itemType);
-
-    await this.cache.set(cacheKey, result, this.STATS_TTL);
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}item-global-play-count:${itemId}:${itemType}`,
+      () => this.baseRepository.getItemGlobalPlayCount(itemId, itemType),
+      this.STATS_TTL,
+    );
   }
 
   /**
    * Recently played - cached with 5 min TTL (more dynamic)
    */
   async getRecentlyPlayed(userId: string, limit?: number): Promise<string[]> {
-    const cacheKey = `${this.KEY_PREFIX}recent:${userId}:${limit || 20}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Recently played cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getRecentlyPlayed(userId, limit);
-
-    if (result.length > 0) {
-      await this.cache.set(cacheKey, result, this.RECENT_TTL);
-    }
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}recent:${userId}:${limit || 20}`,
+      () => this.baseRepository.getRecentlyPlayed(userId, limit),
+      this.RECENT_TTL,
+      this.hasItems,
+    );
   }
 
   /**
-   * Summaries - cached with 10 min TTL
+   * Summaries
    */
   async getUserPlaySummary(userId: string, days?: number): Promise<UserPlaySummary> {
-    const cacheKey = `${this.KEY_PREFIX}summary:${userId}:${days || 'all'}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Play summary cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getUserPlaySummary(userId, days);
-
-    await this.cache.set(cacheKey, result, this.STATS_TTL);
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}summary:${userId}:${days || 'all'}`,
+      () => this.baseRepository.getUserPlaySummary(userId, days),
+      this.STATS_TTL,
+    );
   }
 
   async getTrackPlaySummary(trackId: string): Promise<TrackPlaySummary> {
-    const cacheKey = `${this.KEY_PREFIX}track-summary:${trackId}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Track summary cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getTrackPlaySummary(trackId);
-
-    await this.cache.set(cacheKey, result, this.STATS_TTL);
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}track-summary:${trackId}`,
+      () => this.baseRepository.getTrackPlaySummary(trackId),
+      this.STATS_TTL,
+    );
   }
 
   async getListeningTimeByDay(
     userId: string,
     days?: number,
   ): Promise<{ date: string; minutes: number }[]> {
-    const cacheKey = `${this.KEY_PREFIX}listening-time:${userId}:${days || 30}`;
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      this.logger.debug({ cacheKey, type: 'HIT' }, 'Listening time cache hit');
-      return cached;
-    }
-
-    const result = await this.baseRepository.getListeningTimeByDay(userId, days);
-
-    if (result.length > 0) {
-      await this.cache.set(cacheKey, result, this.STATS_TTL);
-    }
-
-    return result;
+    return this.getCachedOrFetch(
+      `${this.KEY_PREFIX}listening-time:${userId}:${days || 30}`,
+      () => this.baseRepository.getListeningTimeByDay(userId, days),
+      this.STATS_TTL,
+      this.hasItems,
+    );
   }
 
   // ===================================

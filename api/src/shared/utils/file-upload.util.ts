@@ -1,7 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as path from 'path';
-import { getImageExtensionFromMimeType } from './mime-type.util';
 
 /**
  * File upload configuration
@@ -67,13 +66,4 @@ export function generateUniqueFilename(
  */
 export function normalizePathSeparators(filePath: string): string {
   return filePath.replace(/\\/g, '/');
-}
-
-/**
- * Gets file extension from MIME type (without leading dot for backwards compatibility)
- * @deprecated Use getImageExtensionFromMimeType from mime-type.util.ts instead
- */
-export function getExtensionFromMimeType(mimeType: string): string {
-  // Remove leading dot for backwards compatibility with existing code
-  return getImageExtensionFromMimeType(mimeType).slice(1);
 }
