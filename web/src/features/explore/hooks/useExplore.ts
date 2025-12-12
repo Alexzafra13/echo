@@ -40,6 +40,7 @@ export function useHiddenGems(limit: number = 30) {
 
 /**
  * Hook to fetch random albums for surprise section
+ * Non-blocking: won't retry on failure to avoid blocking page load
  */
 export function useRandomAlbums(count: number = 6) {
   return useQuery({
@@ -47,5 +48,7 @@ export function useRandomAlbums(count: number = 6) {
     queryFn: () => exploreService.getRandomAlbums(count),
     staleTime: 0,
     refetchOnWindowFocus: false,
+    retry: false, // Don't retry - optional feature
+    placeholderData: { albums: [] }, // Show empty while loading
   });
 }

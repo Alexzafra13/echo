@@ -4,12 +4,15 @@ import type { SaveApiStationDto, CreateCustomStationDto } from '../types';
 
 /**
  * Hook to fetch user's favorite stations
+ * Non-blocking: won't retry on failure to avoid blocking page load
  */
 export function useFavoriteStations() {
   return useQuery({
     queryKey: ['radio', 'favorites'],
     queryFn: () => radioService.getFavorites(),
     staleTime: 2 * 60 * 1000, // 2 minutos
+    retry: false, // Don't retry - optional feature
+    placeholderData: [], // Show empty while loading
   });
 }
 
