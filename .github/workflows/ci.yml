@@ -107,6 +107,8 @@ jobs:
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          DATA_PATH: ${{ github.workspace }}/api/test-data
+          MUSIC_LIBRARY_PATH: ${{ github.workspace }}/api/test-music
         run: pnpm test:integration
 
       # E2E tests: Full HTTP requests with real app
@@ -118,6 +120,8 @@ jobs:
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          DATA_PATH: ${{ github.workspace }}/api/test-data
+          MUSIC_LIBRARY_PATH: ${{ github.workspace }}/api/test-music
         run: pnpm test:e2e
 
       - name: Build project
