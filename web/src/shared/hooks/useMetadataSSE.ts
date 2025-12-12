@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, QueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@shared/store/authStore';
 import { logger } from '@shared/utils/logger';
 
@@ -67,15 +67,231 @@ export interface MetadataSSEHandlers {
 }
 
 /**
+ * Internal metadata event type
+ */
+type MetadataEventData =
+  | { type: 'artist:images:updated'; data: ArtistImagesUpdatedEvent }
+  | { type: 'album:cover:updated'; data: AlbumCoverUpdatedEvent }
+  | { type: 'metadata:cache:invalidate'; data: CacheInvalidationEvent };
+
+type MetadataEventHandler = (event: MetadataEventData) => void;
+
+/**
+ * Singleton manager for the Metadata SSE connection.
+ * Ensures only one EventSource connection exists regardless of how many
+ * hooks are subscribed. This prevents multiple connections to the same
+ * endpoint which can cause performance issues and connection limits.
+ */
+class MetadataSSEManager {
+  private eventSource: EventSource | null = null;
+  private handlers: Set<MetadataEventHandler> = new Set();
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private reconnectAttempts = 0;
+  private currentUserId: string | null = null;
+  private queryClient: QueryClient | null = null;
+
+  connect(userId: string, queryClient: QueryClient) {
+    // Already connected for this user
+    if (this.eventSource && this.currentUserId === userId) {
+      return;
+    }
+
+    // Different user - close existing connection
+    if (this.eventSource && this.currentUserId !== userId) {
+      this.disconnect();
+    }
+
+    this.currentUserId = userId;
+    this.queryClient = queryClient;
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const url = `${apiUrl}/metadata/stream`;
+
+      logger.debug('[MetadataSSE] Singleton connecting to:', url);
+
+      this.eventSource = new EventSource(url);
+
+      this.eventSource.onopen = () => {
+        logger.debug('[MetadataSSE] Singleton connected');
+        this.reconnectAttempts = 0;
+      };
+
+      // Handle artist images updated
+      this.eventSource.addEventListener('artist:images:updated', (event: MessageEvent) => {
+        try {
+          const data: ArtistImagesUpdatedEvent = JSON.parse(event.data);
+          logger.debug('[MetadataSSE] Artist images updated:', data);
+
+          // Notify all handlers
+          this.notifyHandlers({ type: 'artist:images:updated', data });
+
+          // Invalidate artist queries via the stored queryClient
+          if (this.queryClient) {
+            this.queryClient.refetchQueries({
+              queryKey: ['artists', data.artistId],
+              type: 'active',
+            });
+            this.queryClient.refetchQueries({
+              queryKey: ['artist-images', data.artistId],
+              type: 'active',
+            });
+          }
+        } catch (err) {
+          logger.error('[MetadataSSE] Failed to parse artist:images:updated:', err);
+        }
+      });
+
+      // Handle album cover updated
+      this.eventSource.addEventListener('album:cover:updated', (event: MessageEvent) => {
+        try {
+          const data: AlbumCoverUpdatedEvent = JSON.parse(event.data);
+          logger.debug('[MetadataSSE] Album cover updated:', data);
+
+          // Notify all handlers
+          this.notifyHandlers({ type: 'album:cover:updated', data });
+
+          // Invalidate album queries via the stored queryClient
+          if (this.queryClient) {
+            this.queryClient.refetchQueries({
+              queryKey: ['albums', data.albumId],
+              type: 'active',
+            });
+            this.queryClient.refetchQueries({
+              queryKey: ['album-cover-metadata', data.albumId],
+              type: 'active',
+            });
+
+            // Also invalidate artist queries (album covers appear on artist pages)
+            if (data.artistId) {
+              this.queryClient.refetchQueries({
+                queryKey: ['artists', data.artistId],
+                type: 'active',
+              });
+            }
+          }
+        } catch (err) {
+          logger.error('[MetadataSSE] Failed to parse album:cover:updated:', err);
+        }
+      });
+
+      // Handle cache invalidation
+      this.eventSource.addEventListener('metadata:cache:invalidate', (event: MessageEvent) => {
+        try {
+          const data: CacheInvalidationEvent = JSON.parse(event.data);
+          logger.debug('[MetadataSSE] Cache invalidation:', data);
+
+          // Notify all handlers
+          this.notifyHandlers({ type: 'metadata:cache:invalidate', data });
+
+          // Invalidate the appropriate queries based on entity type
+          if (this.queryClient) {
+            if (data.entityType === 'artist') {
+              this.queryClient.refetchQueries({
+                queryKey: ['artists', data.entityId],
+                type: 'active',
+              });
+            } else if (data.entityType === 'album') {
+              this.queryClient.refetchQueries({
+                queryKey: ['albums', data.entityId],
+                type: 'active',
+              });
+            }
+          }
+        } catch (err) {
+          logger.error('[MetadataSSE] Failed to parse metadata:cache:invalidate:', err);
+        }
+      });
+
+      // Handle connection established
+      this.eventSource.addEventListener('connected', (event: MessageEvent) => {
+        logger.debug('[MetadataSSE] Metadata stream connected:', event.data);
+      });
+
+      // Handle keepalive
+      this.eventSource.addEventListener('keepalive', () => {
+        // Keepalive received - connection is healthy
+      });
+
+      // Handle connection errors
+      this.eventSource.onerror = () => {
+        logger.error('[MetadataSSE] Singleton connection error');
+        this.eventSource?.close();
+        this.eventSource = null;
+
+        // Only reconnect if we still have subscribers
+        if (this.handlers.size > 0 && this.currentUserId && this.queryClient) {
+          const backoffDelay = Math.min(
+            1000 * Math.pow(2, this.reconnectAttempts),
+            30000
+          );
+          this.reconnectAttempts++;
+
+          logger.debug(`[MetadataSSE] Reconnecting in ${backoffDelay}ms (attempt ${this.reconnectAttempts})`);
+
+          this.reconnectTimeout = setTimeout(() => {
+            if (this.currentUserId && this.queryClient) {
+              this.connect(this.currentUserId, this.queryClient);
+            }
+          }, backoffDelay);
+        }
+      };
+
+    } catch (err) {
+      logger.error('[MetadataSSE] Failed to create EventSource:', err);
+    }
+  }
+
+  disconnect() {
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    this.currentUserId = null;
+    this.reconnectAttempts = 0;
+  }
+
+  subscribe(handler: MetadataEventHandler) {
+    this.handlers.add(handler);
+    return () => {
+      this.handlers.delete(handler);
+      // Disconnect if no more subscribers
+      if (this.handlers.size === 0) {
+        this.disconnect();
+      }
+    };
+  }
+
+  private notifyHandlers(event: MetadataEventData) {
+    this.handlers.forEach((handler) => handler(event));
+  }
+
+  isConnected() {
+    return this.eventSource !== null;
+  }
+
+  getCurrentUserId() {
+    return this.currentUserId;
+  }
+}
+
+// Singleton instance
+const metadataSSEManager = new MetadataSSEManager();
+
+/**
  * useMetadataSSE
  *
  * Hook for real-time metadata updates via Server-Sent Events
  *
+ * Uses a shared singleton EventSource connection so multiple components
+ * can subscribe without creating duplicate connections.
+ *
  * When artist images or album covers are updated, this hook receives the update
  * instantly via SSE and can trigger cache invalidation.
- *
- * This replaces the WebSocket-based useMetadataWebSocket hook with a more
- * efficient SSE implementation for unidirectional (server -> client) updates.
  *
  * @param handlers - Optional event handlers for specific events
  *
@@ -94,10 +310,6 @@ export interface MetadataSSEHandlers {
 export function useMetadataSSE(handlers?: MetadataSSEHandlers) {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
-
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reconnectAttemptsRef = useRef(0);
   const handlersRef = useRef(handlers);
 
   // Keep handlers ref up to date
@@ -105,165 +317,44 @@ export function useMetadataSSE(handlers?: MetadataSSEHandlers) {
     handlersRef.current = handlers;
   }, [handlers]);
 
-  const connect = useCallback(() => {
-    // SSE endpoint is public, but we only connect if user is authenticated
-    if (!user?.id) return;
-
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/metadata/stream`;
-
-      const eventSource = new EventSource(url);
-
-      eventSource.onopen = () => {
-        logger.debug('[MetadataSSE] Connected to metadata stream');
-        reconnectAttemptsRef.current = 0;
-      };
-
-      // Handle artist images updated
-      eventSource.addEventListener('artist:images:updated', (event: MessageEvent) => {
-        try {
-          const data: ArtistImagesUpdatedEvent = JSON.parse(event.data);
-          logger.debug('[MetadataSSE] Artist images updated:', data);
-
-          // Call custom handler if provided
-          handlersRef.current?.onArtistImagesUpdated?.(data);
-
-          // Invalidate artist queries
-          queryClient.refetchQueries({
-            queryKey: ['artists', data.artistId],
-            type: 'active',
-          });
-          queryClient.refetchQueries({
-            queryKey: ['artist-images', data.artistId],
-            type: 'active',
-          });
-        } catch (err) {
-          logger.error('[MetadataSSE] Failed to parse artist:images:updated:', err);
-        }
-      });
-
-      // Handle album cover updated
-      eventSource.addEventListener('album:cover:updated', (event: MessageEvent) => {
-        try {
-          const data: AlbumCoverUpdatedEvent = JSON.parse(event.data);
-          logger.debug('[MetadataSSE] Album cover updated:', data);
-
-          // Call custom handler if provided
-          handlersRef.current?.onAlbumCoverUpdated?.(data);
-
-          // Invalidate album queries
-          queryClient.refetchQueries({
-            queryKey: ['albums', data.albumId],
-            type: 'active',
-          });
-          queryClient.refetchQueries({
-            queryKey: ['album-cover-metadata', data.albumId],
-            type: 'active',
-          });
-
-          // Also invalidate artist queries (album covers appear on artist pages)
-          if (data.artistId) {
-            queryClient.refetchQueries({
-              queryKey: ['artists', data.artistId],
-              type: 'active',
-            });
-          }
-        } catch (err) {
-          logger.error('[MetadataSSE] Failed to parse album:cover:updated:', err);
-        }
-      });
-
-      // Handle cache invalidation
-      eventSource.addEventListener('metadata:cache:invalidate', (event: MessageEvent) => {
-        try {
-          const data: CacheInvalidationEvent = JSON.parse(event.data);
-          logger.debug('[MetadataSSE] Cache invalidation:', data);
-
-          // Call custom handler if provided
-          handlersRef.current?.onCacheInvalidation?.(data);
-
-          // Invalidate the appropriate queries based on entity type
-          if (data.entityType === 'artist') {
-            queryClient.refetchQueries({
-              queryKey: ['artists', data.entityId],
-              type: 'active',
-            });
-          } else if (data.entityType === 'album') {
-            queryClient.refetchQueries({
-              queryKey: ['albums', data.entityId],
-              type: 'active',
-            });
-          }
-        } catch (err) {
-          logger.error('[MetadataSSE] Failed to parse metadata:cache:invalidate:', err);
-        }
-      });
-
-      // Handle connection established
-      eventSource.addEventListener('connected', (event: MessageEvent) => {
-        logger.debug('[MetadataSSE] Metadata stream connected:', event.data);
-      });
-
-      // Handle keepalive
-      eventSource.addEventListener('keepalive', () => {
-        // Keepalive received - connection is healthy
-      });
-
-      // Handle connection errors
-      eventSource.onerror = (err) => {
-        logger.error('[MetadataSSE] Connection error:', err);
-        eventSource.close();
-
-        // Exponential backoff for reconnection (max 30 seconds)
-        const backoffDelay = Math.min(
-          1000 * Math.pow(2, reconnectAttemptsRef.current),
-          30000
-        );
-        reconnectAttemptsRef.current += 1;
-
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, backoffDelay);
-      };
-
-      eventSourceRef.current = eventSource;
-    } catch (err) {
-      logger.error('[MetadataSSE] Failed to create EventSource:', err);
+  const handleEvent = useCallback((event: MetadataEventData) => {
+    switch (event.type) {
+      case 'artist:images:updated':
+        handlersRef.current?.onArtistImagesUpdated?.(event.data);
+        break;
+      case 'album:cover:updated':
+        handlersRef.current?.onAlbumCoverUpdated?.(event.data);
+        break;
+      case 'metadata:cache:invalidate':
+        handlersRef.current?.onCacheInvalidation?.(event.data);
+        break;
     }
-  }, [user?.id, queryClient]);
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
 
-    // Connect to SSE
-    connect();
+    // Subscribe to events
+    const unsubscribe = metadataSSEManager.subscribe(handleEvent);
 
-    // Cleanup on unmount
+    // Connect if not already connected or different user
+    if (!metadataSSEManager.isConnected() || metadataSSEManager.getCurrentUserId() !== user.id) {
+      metadataSSEManager.connect(user.id, queryClient);
+    }
+
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
+      unsubscribe();
     };
-  }, [user?.id, connect]);
+  }, [user?.id, queryClient, handleEvent]);
 
   // Handle page visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // User switched tabs, close connection to save resources
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
-      } else if (user?.id) {
-        // User came back, reconnect
-        connect();
+        // Don't disconnect - other components might still need it
+        // The manager will disconnect when all subscribers are gone
+      } else if (user?.id && !metadataSSEManager.isConnected()) {
+        metadataSSEManager.connect(user.id, queryClient);
       }
     };
 
@@ -271,7 +362,7 @@ export function useMetadataSSE(handlers?: MetadataSSEHandlers) {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user?.id, connect]);
+  }, [user?.id, queryClient]);
 }
 
 /**

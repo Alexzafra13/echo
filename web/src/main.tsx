@@ -9,13 +9,27 @@ import { PlayerProvider } from '@features/player';
 import App from './app/App';
 import '@shared/styles/global.css';
 
-// Create React Query client
+// Create React Query client with optimized settings for better loading UX
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Don't retry on 4xx errors (client errors)
+        if (error && typeof error === 'object' && 'response' in error) {
+          const status = (error as { response?: { status?: number } }).response?.status;
+          if (status && status >= 400 && status < 500) {
+            return false;
+          }
+        }
+        // Retry once for network/server errors
+        return failureCount < 1;
+      },
       refetchOnWindowFocus: false,
+      // Don't throw errors - let components handle loading states gracefully
+      throwOnError: false,
+      // Network mode: always try to fetch, even if offline (will use cache)
+      networkMode: 'offlineFirst',
     },
   },
 });
