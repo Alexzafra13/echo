@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ALLOW_CHANGE_PASSWORD_KEY } from '../decorators/allow-change-password.decorator';
 
 /**
  * MustChangePasswordGuard - Bloquea acceso si usuario debe cambiar contraseña
@@ -31,7 +32,7 @@ export class MustChangePasswordGuard implements CanActivate {
 
     // Verificar si la ruta está marcada como permitida
     const allowChangePassword = this.reflector.getAllAndOverride<boolean>(
-      'allowChangePassword',
+      ALLOW_CHANGE_PASSWORD_KEY,
       [context.getHandler(), context.getClass()],
     );
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PlayContext, CONTEXT_WEIGHTS } from '../entities/play-event.entity';
+import { PlayContext, CONTEXT_WEIGHTS } from '../entities/play-event.types';
 
 @Injectable()
 export class PlayStatsCalculatorService {

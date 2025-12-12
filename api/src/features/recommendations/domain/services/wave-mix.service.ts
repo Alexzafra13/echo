@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { AutoPlaylist, WaveMixConfig, TrackScore } from '../entities/track-score.entity';
+import { AutoPlaylist, WaveMixConfig, TrackScore } from '../entities/track-score.types';
 import { ScoringService } from './scoring.service';
 import {
   IPlayTrackingRepository,

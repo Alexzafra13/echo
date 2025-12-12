@@ -1,6 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { MustChangePasswordGuard } from './must-change-password.guard';
 import { createMockExecutionContext, createMockReflector } from '@shared/testing/mock.types';
+import { ALLOW_CHANGE_PASSWORD_KEY } from '../decorators/allow-change-password.decorator';
 
 describe('MustChangePasswordGuard', () => {
   let guard: MustChangePasswordGuard;
@@ -111,7 +112,7 @@ describe('MustChangePasswordGuard', () => {
       guard.canActivate(mockContext);
 
       expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
-        'allowChangePassword',
+        ALLOW_CHANGE_PASSWORD_KEY,
         expect.anything(),
       );
     });

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
-import { FriendshipStatus } from '../entities/friendship.entity';
+import { FriendshipStatus } from '../entities/friendship.types';
 
 export interface SearchUserResult {
   id: string;

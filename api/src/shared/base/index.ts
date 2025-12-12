@@ -1,4 +1,4 @@
-export { DrizzleBaseRepository, BaseRepository } from './drizzle-base.repository';
+export { DrizzleBaseRepository } from './drizzle-base.repository';
 export type { EntityMapper } from './drizzle-base.repository';
 
 export { BaseCachedRepository } from './cached-repository.base';

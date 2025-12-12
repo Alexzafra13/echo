@@ -128,7 +128,3 @@ export abstract class DrizzleBaseRepository<
     return updateData;
   }
 }
-
-// Re-export for backwards compatibility (deprecated, use DrizzleBaseRepository)
-/** @deprecated Use DrizzleBaseRepository instead */
-export const BaseRepository = DrizzleBaseRepository;

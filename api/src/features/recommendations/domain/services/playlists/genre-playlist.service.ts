@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq, inArray, count, desc } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { tracks, genres, trackGenres } from '@infrastructure/database/schema';
-import { AutoPlaylist, PlaylistMetadata } from '../../entities/track-score.entity';
+import { AutoPlaylist, PlaylistMetadata } from '../../entities/track-score.types';
 import { ScoringService } from '../scoring.service';
 import {
   IPlayTrackingRepository,

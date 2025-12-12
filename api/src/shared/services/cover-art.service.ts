@@ -4,6 +4,7 @@ import { parseFile } from 'music-metadata';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { existsSync } from 'fs';
+import { getImageExtensionFromMimeType } from '@shared/utils/mime-type.util';
 
 /**
  * CoverArtService - Manages album cover extraction and caching
@@ -197,8 +198,8 @@ export class CoverArtService {
     buffer: Buffer,
     mimeType: string,
   ): Promise<string> {
-    // Determine extension from MIME type
-    const ext = this.mimeTypeToExtension(mimeType);
+    // Determine extension from MIME type using shared utility
+    const ext = getImageExtensionFromMimeType(mimeType);
     const destFileName = `${albumId}${ext}`;
     const destPath = path.join(this.coversPath, destFileName);
 
@@ -207,20 +208,6 @@ export class CoverArtService {
 
     this.logger.debug(`Cover cached: ${destFileName}`);
     return destFileName;
-  }
-
-  /**
-   * Converts MIME type to file extension
-   */
-  private mimeTypeToExtension(mimeType: string): string {
-    const mimeMap: Record<string, string> = {
-      'image/jpeg': '.jpg',
-      'image/jpg': '.jpg',
-      'image/png': '.png',
-      'image/gif': '.gif',
-      'image/webp': '.webp',
-    };
-    return mimeMap[mimeType.toLowerCase()] || '.jpg';
   }
 
   /**

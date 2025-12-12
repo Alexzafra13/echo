@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
 import { IUserRepository, USER_REPOSITORY } from '@features/auth/domain/ports/user-repository.port';
-import { Friendship } from '../entities/friendship.entity';
+import { Friendship } from '../entities/friendship.types';
 import { SocialEventsService } from '../services/social-events.service';
 
 @Injectable()

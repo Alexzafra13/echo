@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '../ports';
-import { UserPlaySummary } from '../entities/play-event.entity';
+import { UserPlaySummary } from '../entities/play-event.types';
 
 @Injectable()
 export class GetUserPlaySummaryUseCase {

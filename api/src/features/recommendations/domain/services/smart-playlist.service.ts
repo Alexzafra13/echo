@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, inArray } from 'drizzle-orm';
 import { ScoringService } from './scoring.service';
-import { SmartPlaylistConfig, TrackScore } from '../entities/track-score.entity';
+import { SmartPlaylistConfig, TrackScore } from '../entities/track-score.types';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { tracks, trackGenres, playHistory } from '@infrastructure/database/schema';
 

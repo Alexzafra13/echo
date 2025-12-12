@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '../ports';
-import { PlayEvent, PlayContext } from '../entities/play-event.entity';
+import { PlayEvent, PlayContext } from '../entities/play-event.types';
 
 @Injectable()
 export class RecordSkipUseCase {

@@ -3,7 +3,7 @@ import {
   Friend,
   ListeningUser,
   ActivityItem,
-} from '../../domain/entities/friendship.entity';
+} from '../../domain/entities/friendship.types';
 import {
   FriendshipResponseDto,
   FriendResponseDto,

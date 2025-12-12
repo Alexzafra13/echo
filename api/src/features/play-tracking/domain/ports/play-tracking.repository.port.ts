@@ -5,7 +5,7 @@ import {
   SourceType,
   UserPlaySummary,
   TrackPlaySummary,
-} from '../entities/play-event.entity';
+} from '../entities/play-event.types';
 
 export interface IPlayTrackingRepository {
   // Record play events

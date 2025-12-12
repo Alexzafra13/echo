@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
-import { ActivityItem } from '../entities/friendship.entity';
+import { ActivityItem } from '../entities/friendship.types';
 
 @Injectable()
 export class GetFriendsActivityUseCase {

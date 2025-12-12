@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IPlayTrackingRepository, PLAY_TRACKING_REPOSITORY } from '../ports';
-import { PlayEvent, PlayContext, SourceType } from '../entities/play-event.entity';
+import { PlayEvent, PlayContext, SourceType } from '../entities/play-event.types';
 import { PlayStatsCalculatorService } from '../services/play-stats-calculator.service';
 
 export interface RecordPlayInput {

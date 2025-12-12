@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as path from 'path';
+import { getImageExtensionFromMimeType } from './mime-type.util';
 
 /**
  * File upload configuration
@@ -69,18 +70,10 @@ export function normalizePathSeparators(filePath: string): string {
 }
 
 /**
- * Maps MIME types to file extensions
- */
-export const MIME_TO_EXTENSION: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/jpg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
-
-/**
- * Gets file extension from MIME type
+ * Gets file extension from MIME type (without leading dot for backwards compatibility)
+ * @deprecated Use getImageExtensionFromMimeType from mime-type.util.ts instead
  */
 export function getExtensionFromMimeType(mimeType: string): string {
-  return MIME_TO_EXTENSION[mimeType] || 'jpg';
+  // Remove leading dot for backwards compatibility with existing code
+  return getImageExtensionFromMimeType(mimeType).slice(1);
 }

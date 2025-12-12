@@ -130,6 +130,12 @@ export interface IAlbumRepository {
    * @returns true si se eliminó, false si no existía
    */
   delete(id: string): Promise<boolean>;
+
+  /**
+   * Invalida los cachés de listas de álbumes
+   * Este método es opcional - implementaciones sin caché pueden no hacer nada
+   */
+  invalidateListCaches?(): Promise<void>;
 }
 
 /**

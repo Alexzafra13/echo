@@ -1,5 +1,5 @@
 import { RecordPlayUseCase } from './record-play.use-case';
-import { PlayEvent, PlayContext } from '../entities/play-event.entity';
+import { PlayEvent, PlayContext } from '../entities/play-event.types';
 import { PlayStatsCalculatorService } from '../services/play-stats-calculator.service';
 import { createMockPinoLogger } from '@shared/testing/mock.types';
 
