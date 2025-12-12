@@ -19,7 +19,7 @@ jobs:
           POSTGRES_PASSWORD: music_password
           POSTGRES_DB: music_server
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U music_admin"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5

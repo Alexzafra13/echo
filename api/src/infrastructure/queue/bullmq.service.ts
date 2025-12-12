@@ -75,6 +75,27 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     return await queue.add(jobName, data, opts);
   }
 
+  /**
+   * Obliterate all jobs from a queue (for testing)
+   */
+  async obliterateQueue(queueName: string): Promise<void> {
+    const queue = this.queues.get(queueName);
+    if (queue) {
+      await queue.obliterate({ force: true });
+      this.logger.info({ queueName }, 'Queue obliterated');
+    }
+  }
+
+  /**
+   * Obliterate all registered queues (for testing)
+   */
+  async obliterateAllQueues(): Promise<void> {
+    for (const [name, queue] of this.queues.entries()) {
+      await queue.obliterate({ force: true });
+      this.logger.info({ queueName: name }, 'Queue obliterated');
+    }
+  }
+
   registerProcessor(
     queueName: string,
     processor: (job: any) => Promise<any>,

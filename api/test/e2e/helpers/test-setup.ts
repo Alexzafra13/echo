@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
+import { BullmqService } from '../../../src/infrastructure/queue/bullmq.service';
 import { AppModule } from '../../../src/app.module';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
@@ -26,6 +27,7 @@ export async function createTestApp(): Promise<{
   app: INestApplication;
   module: TestingModule;
   drizzle: DrizzleService;
+  bullmq: BullmqService;
 }> {
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
@@ -49,8 +51,9 @@ export async function createTestApp(): Promise<{
   await app.init();
 
   const drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
+  const bullmq = moduleFixture.get<BullmqService>(BullmqService);
 
-  return { app, module: moduleFixture, drizzle };
+  return { app, module: moduleFixture, drizzle, bullmq };
 }
 
 /**
@@ -214,6 +217,13 @@ export async function cleanAllTables(drizzle: DrizzleService): Promise<void> {
  */
 export async function cleanScannerTables(drizzle: DrizzleService): Promise<void> {
   await drizzle.db.delete(libraryScans);
+}
+
+/**
+ * Limpia las colas de BullMQ para evitar jobs huérfanos entre tests
+ */
+export async function cleanQueues(bullmq: BullmqService): Promise<void> {
+  await bullmq.obliterateAllQueues();
 }
 
 /**
