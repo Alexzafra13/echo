@@ -365,7 +365,6 @@ export class AlbumImportService {
       .values({
         name: artistName,
         orderArtistName: artistName.toLowerCase(),
-        sortArtistName: artistName,
       })
       .returning({ id: artists.id });
 
