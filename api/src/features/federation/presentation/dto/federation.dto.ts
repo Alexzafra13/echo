@@ -397,3 +397,38 @@ export class RemoteLibraryResponseDto {
   totalArtists!: number;
 }
 
+// ============================================
+// Shared Libraries DTOs (Aggregated from all servers)
+// ============================================
+
+export class SharedAlbumDto extends RemoteAlbumDto {
+  @ApiProperty({ description: 'ID del servidor de origen' })
+  serverId!: string;
+
+  @ApiProperty({ description: 'Nombre del servidor de origen' })
+  serverName!: string;
+
+  @ApiPropertyOptional({ description: 'Fecha de creación en el servidor remoto' })
+  createdAt?: Date;
+}
+
+export class SharedAlbumsResponseDto {
+  @ApiProperty({ type: [SharedAlbumDto], description: 'Lista de álbums compartidos' })
+  albums!: SharedAlbumDto[];
+
+  @ApiProperty({ description: 'Total de álbums' })
+  total!: number;
+
+  @ApiProperty({ description: 'Número de servidores consultados' })
+  serverCount!: number;
+}
+
+export class SharedLibrariesQueryDto extends PaginationQueryDto {
+  @ApiPropertyOptional({
+    description: 'ID de servidor específico (opcional, si no se especifica consulta todos)',
+  })
+  @IsOptional()
+  @IsString()
+  serverId?: string;
+}
+

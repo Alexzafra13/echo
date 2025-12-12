@@ -19,6 +19,7 @@ const ALL_SECTION_IDS: HomeSectionId[] = [
   'top-played',
   'favorite-radios',
   'surprise-me',
+  'shared-libraries',
 ];
 
 // Section labels for display
@@ -31,6 +32,7 @@ const SECTION_LABELS: Record<HomeSectionId, string> = {
   'top-played': 'Más Escuchados',
   'favorite-radios': 'Radios Favoritas',
   'surprise-me': 'Sorpréndeme',
+  'shared-libraries': 'Bibliotecas Compartidas',
 };
 
 // Default sections configuration

@@ -1,0 +1,223 @@
+/* SharedAlbumGrid Component Styles - BEM Naming Convention */
+
+/* Block: sharedAlbumGrid */
+.sharedAlbumGrid {
+  margin-bottom: 40px;
+}
+
+.sharedAlbumGrid__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0 20px;
+}
+
+.sharedAlbumGrid__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+}
+
+.sharedAlbumGrid__viewAllButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sharedAlbumGrid__viewAllButton:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.sharedAlbumGrid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* Album Card */
+.sharedAlbumGrid__card {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.2s ease;
+}
+
+.sharedAlbumGrid__card:hover {
+  transform: translateY(-4px);
+}
+
+.sharedAlbumGrid__coverWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+  margin-bottom: 12px;
+}
+
+.sharedAlbumGrid__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sharedAlbumGrid__coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary, rgba(255, 255, 255, 0.1)) 100%);
+}
+
+.sharedAlbumGrid__serverBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: var(--text-primary, #ffffff);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sharedAlbumGrid__info {
+  padding: 0 4px;
+}
+
+.sharedAlbumGrid__albumTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sharedAlbumGrid__artist {
+  font-size: 13px;
+  color: var(--text-secondary, #9ca3af);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Responsive Design ===== */
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .sharedAlbumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .sharedAlbumGrid__title {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sharedAlbumGrid {
+    margin-bottom: 32px;
+  }
+
+  .sharedAlbumGrid__header {
+    padding: 0 16px;
+  }
+
+  .sharedAlbumGrid__title {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .sharedAlbumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  /* Mobile horizontal scroll variant (opt-in) */
+  .sharedAlbumGrid__grid--mobileScroll {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sharedAlbumGrid__grid--mobileScroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sharedAlbumGrid__grid--mobileScroll > * {
+    flex-shrink: 0;
+    width: 140px;
+    scroll-snap-align: start;
+  }
+
+  .sharedAlbumGrid__coverPlaceholder {
+    font-size: 36px;
+  }
+
+  .sharedAlbumGrid__serverBadge {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .sharedAlbumGrid__header {
+    padding: 0 12px;
+  }
+
+  .sharedAlbumGrid__grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .sharedAlbumGrid__grid--mobileScroll > * {
+    width: 120px;
+  }
+
+  .sharedAlbumGrid__title {
+    font-size: 18px;
+  }
+
+  .sharedAlbumGrid__albumTitle {
+    font-size: 13px;
+  }
+
+  .sharedAlbumGrid__artist {
+    font-size: 12px;
+  }
+}

@@ -36,6 +36,8 @@ import {
   AccessTokenResponseDto,
   RemoteLibraryResponseDto,
   RemoteAlbumDto,
+  SharedAlbumsResponseDto,
+  SharedLibrariesQueryDto,
 } from './dto';
 
 /**
@@ -330,6 +332,89 @@ export class FederationController {
     );
 
     return this.mapServerToResponse(updated!);
+  }
+
+  // ============================================
+  // Shared Libraries (Álbums de todos los servidores)
+  // ============================================
+
+  @Get('shared-albums')
+  @ApiOperation({
+    summary: 'Ver álbums de todos los servidores conectados',
+    description: 'Obtiene álbums agregados de todos los servidores conectados (para la sección Bibliotecas Compartidas)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Álbums compartidos',
+    type: SharedAlbumsResponseDto,
+  })
+  async getSharedAlbums(
+    @CurrentUser() user: User,
+    @Query() query: SharedLibrariesQueryDto,
+  ): Promise<SharedAlbumsResponseDto> {
+    const servers = await this.repository.findConnectedServersByUserId(user.id);
+
+    // If specific server requested, filter to just that one
+    const targetServers = query.serverId
+      ? servers.filter(s => s.id === query.serverId)
+      : servers.filter(s => s.isOnline !== false); // Only query online servers
+
+    if (targetServers.length === 0) {
+      return { albums: [], total: 0, serverCount: 0 };
+    }
+
+    // Fetch albums from each server in parallel
+    const results = await Promise.allSettled(
+      targetServers.map(async (server) => {
+        try {
+          const result = await this.remoteServerService.getRemoteAlbums(
+            server,
+            query.page || 1,
+            query.limit || 20,
+            query.search,
+          );
+          return {
+            server,
+            albums: result.albums,
+            total: result.total,
+          };
+        } catch (error) {
+          this.logger.warn(
+            { serverId: server.id, error: error instanceof Error ? error.message : error },
+            'Failed to fetch albums from server',
+          );
+          return { server, albums: [], total: 0 };
+        }
+      }),
+    );
+
+    // Aggregate results
+    const allAlbums: SharedAlbumsResponseDto['albums'] = [];
+    let totalCount = 0;
+    let successfulServers = 0;
+
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.albums.length > 0) {
+        successfulServers++;
+        totalCount += result.value.total;
+        for (const album of result.value.albums) {
+          allAlbums.push({
+            ...album,
+            serverId: result.value.server.id,
+            serverName: result.value.server.name,
+          });
+        }
+      }
+    }
+
+    // Sort by name (could be enhanced with more sorting options)
+    allAlbums.sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      albums: allAlbums.slice(0, query.limit || 20),
+      total: totalCount,
+      serverCount: successfulServers,
+    };
   }
 
   // ============================================
