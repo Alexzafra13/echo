@@ -14,16 +14,21 @@ import {
 
 // Mock social repository
 const createMockSocialRepository = (): jest.Mocked<ISocialRepository> => ({
-  getFriends: jest.fn(),
-  getFriendship: jest.fn(),
-  getPendingFriendRequests: jest.fn(),
-  getSentFriendRequests: jest.fn(),
   sendFriendRequest: jest.fn(),
   createAcceptedFriendship: jest.fn(),
   acceptFriendRequest: jest.fn(),
-  rejectFriendRequest: jest.fn(),
-  removeFriend: jest.fn(),
-  areFriends: jest.fn(),
+  removeFriendship: jest.fn(),
+  blockUser: jest.fn(),
+  getFriendshipById: jest.fn(),
+  getFriendshipBetweenUsers: jest.fn(),
+  getFriends: jest.fn(),
+  getPendingRequests: jest.fn(),
+  getSentRequests: jest.fn(),
+  countPendingRequests: jest.fn(),
+  getListeningFriends: jest.fn(),
+  getAllListeningUsers: jest.fn(),
+  getFriendsActivity: jest.fn(),
+  searchUsers: jest.fn(),
 });
 
 // Helper to create mock user with all required fields

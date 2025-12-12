@@ -67,7 +67,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async get<T = unknown>(key: string): Promise<T | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async get<T = any>(key: string): Promise<T | null> {
     if (!this.isConnected) return null;
 
     try {
@@ -81,7 +82,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async set<T = unknown>(key: string, value: T, ttl?: number): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async set<T = any>(key: string, value: T, ttl?: number): Promise<void> {
     if (!this.isConnected) return;
 
     try {

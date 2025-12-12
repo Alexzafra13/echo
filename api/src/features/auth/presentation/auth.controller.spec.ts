@@ -2,9 +2,9 @@ import { UnauthorizedError } from '@shared/errors';
 import { AuthController } from './auth.controller';
 import { LoginRequestDto } from './dtos';
 import { JwtUser } from '@shared/types/request.types';
-import { IUserRepository } from '../../domain/ports';
-import { LoginUseCase } from '../../domain/use-cases/login';
-import { RefreshTokenUseCase } from '../../domain/use-cases/refresh-token';
+import { IUserRepository } from '../domain/ports';
+import { LoginUseCase } from '../domain/use-cases/login';
+import { RefreshTokenUseCase } from '../domain/use-cases/refresh-token';
 
 interface MockLoginUseCase {
   execute: jest.Mock;
