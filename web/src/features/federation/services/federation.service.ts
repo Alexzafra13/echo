@@ -8,6 +8,26 @@ export interface SharedAlbumsParams {
   serverId?: string;
 }
 
+export interface AlbumImport {
+  id: string;
+  userId: string;
+  connectedServerId: string;
+  remoteAlbumId: string;
+  albumName: string;
+  artistName: string | null;
+  status: 'pending' | 'downloading' | 'completed' | 'failed' | 'cancelled';
+  progress: number;
+  totalTracks: number;
+  downloadedTracks: number;
+  totalSize: number;
+  downloadedSize: number;
+  errorMessage: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const federationService = {
   /**
    * Get all connected servers
@@ -31,6 +51,41 @@ export const federationService = {
     const url = `/federation/shared-albums${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get<SharedAlbumsResponse>(url);
+    return response.data;
+  },
+
+  /**
+   * Start importing an album from a connected server
+   */
+  async startImport(serverId: string, remoteAlbumId: string): Promise<AlbumImport> {
+    const response = await apiClient.post<AlbumImport>('/federation/import', {
+      serverId,
+      remoteAlbumId,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get all imports for the current user
+   */
+  async getImports(): Promise<AlbumImport[]> {
+    const response = await apiClient.get<AlbumImport[]>('/federation/import');
+    return response.data;
+  },
+
+  /**
+   * Get import status
+   */
+  async getImportStatus(importId: string): Promise<AlbumImport> {
+    const response = await apiClient.get<AlbumImport>(`/federation/import/${importId}`);
+    return response.data;
+  },
+
+  /**
+   * Cancel a pending import
+   */
+  async cancelImport(importId: string): Promise<{ success: boolean }> {
+    const response = await apiClient.delete<{ success: boolean }>(`/federation/import/${importId}`);
     return response.data;
   },
 };

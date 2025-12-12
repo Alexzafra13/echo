@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { FederationController } from './presentation/federation.controller';
 import { FederationPublicController } from './presentation/federation-public.controller';
-import { FederationTokenService, RemoteServerService } from './domain/services';
+import { FederationImportController } from './presentation/federation-import.controller';
+import { FederationTokenService, RemoteServerService, AlbumImportService } from './domain/services';
 import { FederationAccessGuard } from './domain/services/federation-access.guard';
 import { FederationRepository } from './infrastructure/persistence/federation.repository';
 import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
@@ -28,11 +29,12 @@ import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
  * - Permisos granulares (browse, stream, download)
  */
 @Module({
-  controllers: [FederationController, FederationPublicController],
+  controllers: [FederationController, FederationPublicController, FederationImportController],
   providers: [
     // Services
     FederationTokenService,
     RemoteServerService,
+    AlbumImportService,
     FederationAccessGuard,
     // Repository
     {
@@ -40,6 +42,6 @@ import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
       useClass: FederationRepository,
     },
   ],
-  exports: [FederationTokenService, RemoteServerService, FEDERATION_REPOSITORY],
+  exports: [FederationTokenService, RemoteServerService, AlbumImportService, FEDERATION_REPOSITORY],
 })
 export class FederationModule {}

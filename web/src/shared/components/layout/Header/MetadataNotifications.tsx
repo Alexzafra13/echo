@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, UserCheck, FileX } from 'lucide-react';
+import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, UserCheck, FileX, Download } from 'lucide-react';
 import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
 import { useSystemHealthSSE } from '@shared/hooks/useSystemHealthSSE';
 import { usePendingRequests, useSocialNotificationsSSE, SocialNotification } from '@features/social/hooks';
+import { useAlbumImportSSE, AlbumImportProgressEvent } from '@features/federation/hooks/useAlbumImportSSE';
 import type { EnrichmentNotification } from '@shared/hooks';
 import styles from './MetadataNotifications.module.css';
 
@@ -41,7 +42,21 @@ interface FriendRequestAcceptedNotification {
   timestamp: string;
 }
 
-type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNotification | FriendRequestAcceptedNotification;
+interface AlbumImportNotification {
+  id: string;
+  type: 'album_import';
+  importId: string;
+  albumName: string;
+  artistName: string;
+  status: 'downloading' | 'completed' | 'failed';
+  progress: number;
+  currentTrack: number;
+  totalTracks: number;
+  error?: string;
+  timestamp: string;
+}
+
+type NotificationItem = EnrichmentNotification | SystemAlert | FriendRequestNotification | FriendRequestAcceptedNotification | AlbumImportNotification;
 
 /**
  * MetadataNotifications Component
@@ -94,6 +109,46 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   }, []);
 
   useSocialNotificationsSSE(handleSocialNotification);
+
+  // Album import notifications via SSE (all users)
+  const [importNotifications, setImportNotifications] = useState<AlbumImportNotification[]>([]);
+
+  const handleImportNotification = useCallback((event: { type: string; data: AlbumImportProgressEvent }) => {
+    const importNotif: AlbumImportNotification = {
+      id: `import-${event.data.importId}`,
+      type: 'album_import',
+      importId: event.data.importId,
+      albumName: event.data.albumName,
+      artistName: event.data.artistName,
+      status: event.data.status,
+      progress: event.data.progress,
+      currentTrack: event.data.currentTrack,
+      totalTracks: event.data.totalTracks,
+      error: event.data.error,
+      timestamp: new Date().toISOString(),
+    };
+
+    setImportNotifications((prev) => {
+      // Update existing or add new
+      const existing = prev.findIndex((n) => n.importId === event.data.importId);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = importNotif;
+        // Remove completed/failed after 10 seconds
+        if (importNotif.status === 'completed' || importNotif.status === 'failed') {
+          setTimeout(() => {
+            setImportNotifications((current) =>
+              current.filter((n) => n.importId !== event.data.importId)
+            );
+          }, 10000);
+        }
+        return updated;
+      }
+      return [importNotif, ...prev].slice(0, 5);
+    });
+  }, []);
+
+  useAlbumImportSSE(handleImportNotification);
 
   // Convert pending requests to notifications
   const friendRequestNotifications: FriendRequestNotification[] =
@@ -182,6 +237,15 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     if ('type' in item && item.type === 'friend_request_accepted') {
       return <UserCheck size={16} />;
     }
+    if ('type' in item && item.type === 'album_import') {
+      if (item.status === 'completed') {
+        return <Check size={16} />;
+      }
+      if (item.status === 'failed') {
+        return <AlertTriangle size={16} />;
+      }
+      return <Download size={16} />;
+    }
     if ('entityType' in item) {
       return item.entityType === 'artist' ? <Music size={16} /> : <Disc size={16} />;
     }
@@ -216,6 +280,17 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       return {
         title: item.name || item.username,
         message: 'ha aceptado tu solicitud de amistad',
+      };
+    }
+    if ('type' in item && item.type === 'album_import') {
+      const statusMessages = {
+        downloading: `Descargando... ${item.currentTrack}/${item.totalTracks} tracks (${item.progress}%)`,
+        completed: 'Importación completada',
+        failed: item.error || 'Error en la importación',
+      };
+      return {
+        title: `${item.artistName} - ${item.albumName}`,
+        message: statusMessages[item.status],
       };
     }
     if ('entityType' in item) {
@@ -285,8 +360,9 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     close();
   };
 
-  // Combinar notificaciones: aceptadas primero, solicitudes, alertas del sistema, metadata
+  // Combinar notificaciones: importaciones primero, aceptadas, solicitudes, alertas del sistema, metadata
   const allNotifications: NotificationItem[] = [
+    ...importNotifications,
     ...acceptedNotifications,
     ...friendRequestNotifications,
     ...(isAdmin ? systemAlerts : []),
@@ -294,9 +370,10 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
   ];
 
   // Contar total de notificaciones importantes
+  const importNotificationCount = importNotifications.length;
   const socialNotificationCount = friendRequestNotifications.length + acceptedNotifications.length;
   const adminNotificationCount = isAdmin ? (systemAlerts.length + metadataUnreadCount) : 0;
-  const totalCount = socialNotificationCount + adminNotificationCount;
+  const totalCount = importNotificationCount + socialNotificationCount + adminNotificationCount;
 
   return (
     <div className={styles.notifications} ref={dropdownRef}>
