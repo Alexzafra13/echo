@@ -41,7 +41,7 @@ export class StorageService {
       if (storageLocation === 'centralized') {
         // Priority: ENV > DB > default
         const envStoragePath = this.config.get<string>('METADATA_STORAGE_PATH');
-        const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+        const dataPath = this.config.get<string>('DATA_PATH', path.join(process.cwd(), 'data'));
         const defaultPath = path.join(dataPath, 'metadata');
         const storagePath = envStoragePath || await this.settings.getString(
           'metadata.storage.path',
@@ -51,7 +51,7 @@ export class StorageService {
         this.basePath = storagePath.startsWith('/') ? storagePath : path.resolve(process.cwd(), storagePath);
       } else {
         // Portable: use music library path
-        const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
+        const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', path.join(process.cwd(), 'music'));
         this.basePath = path.join(musicPath, '.echo-metadata');
       }
 
