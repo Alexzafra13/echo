@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearch, useLocation } from 'wouter';
 import { Search, X } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Pagination } from '@shared/components/ui';
@@ -12,21 +13,44 @@ import {
   useAlbumsFavorites,
 } from '../../hooks/useAlbums';
 import { useGridDimensions } from '../../hooks/useGridDimensions';
+import { useSharedAlbums, useConnectedServers, SharedAlbumGrid } from '@features/federation';
 import type { AlbumSortOption } from '../../types';
 import styles from './AlbumsPage.module.css';
+
+type LibrarySource = 'local' | 'shared';
 
 /**
  * AlbumsPage Component
  * Shows all albums with pagination, inline search filtering and sort options
+ * Supports both local library and shared libraries from connected servers
  */
 export default function AlbumsPage() {
+  const [, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
+  const sourceParam = searchParams.get('source');
+
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<AlbumSortOption>('recent');
+  const [librarySource, setLibrarySource] = useState<LibrarySource>(
+    sourceParam === 'shared' ? 'shared' : 'local'
+  );
+  const [selectedServerId, setSelectedServerId] = useState<string | undefined>();
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
-    headerHeight: 220, // Header + page title + filter selector height
+    headerHeight: 260, // Header + page title + filter selector height + source tabs
+  });
+
+  // Fetch connected servers for the dropdown
+  const { data: connectedServers = [] } = useConnectedServers();
+
+  // Shared albums query
+  const sharedAlbumsQuery = useSharedAlbums({
+    page,
+    limit: itemsPerPage,
+    search: searchQuery || undefined,
+    serverId: selectedServerId,
   });
 
   // Fetch data based on selected sort option
@@ -85,16 +109,32 @@ export default function AlbumsPage() {
     album.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Reset to first page when sort option or itemsPerPage changes
+  // Reset to first page when sort option, itemsPerPage, or source changes
   useEffect(() => {
     setPage(1);
-  }, [sortBy, itemsPerPage]);
+  }, [sortBy, itemsPerPage, librarySource, selectedServerId]);
+
+  // Update URL when source changes
+  const handleSourceChange = (source: LibrarySource) => {
+    setLibrarySource(source);
+    setSearchQuery('');
+    if (source === 'shared') {
+      setLocation('/albums?source=shared');
+    } else {
+      setLocation('/albums');
+    }
+  };
 
   // Pagination handler
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Shared albums data
+  const sharedAlbums = sharedAlbumsQuery.data?.albums || [];
+  const sharedTotal = sharedAlbumsQuery.data?.total || 0;
+  const sharedServerCount = sharedAlbumsQuery.data?.serverCount || 0;
 
   return (
     <div className={styles.albumsPage}>
@@ -132,81 +172,166 @@ export default function AlbumsPage() {
         <div className={styles.albumsPage__content}>
           {/* Page Header */}
           <div className={styles.albumsPage__pageHeader}>
-            <h1 className={styles.albumsPage__title}>Todos los Álbumes</h1>
+            <h1 className={styles.albumsPage__title}>
+              {librarySource === 'shared' ? 'Bibliotecas Compartidas' : 'Todos los Álbumes'}
+            </h1>
             <p className={styles.albumsPage__subtitle}>
-              Explora tu colección completa de música
+              {librarySource === 'shared'
+                ? `Álbumes de ${sharedServerCount} servidor${sharedServerCount !== 1 ? 'es' : ''} conectado${sharedServerCount !== 1 ? 's' : ''}`
+                : 'Explora tu colección completa de música'}
             </p>
           </div>
 
-          {/* Sort Filter */}
-          <div className={styles.albumsPage__filterWrapper}>
-            <label htmlFor="album-sort" className={styles.albumsPage__filterLabel}>
-              Ordenar por:
-            </label>
-            <select
-              id="album-sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as AlbumSortOption)}
-              className={styles.albumsPage__filterSelect}
+          {/* Source Tabs */}
+          <div className={styles.albumsPage__sourceTabs}>
+            <button
+              className={`${styles.albumsPage__sourceTab} ${librarySource === 'local' ? styles['albumsPage__sourceTab--active'] : ''}`}
+              onClick={() => handleSourceChange('local')}
             >
-              <option value="recent">Añadidos recientemente</option>
-              <option value="alphabetical">Por nombre (A-Z)</option>
-              <option value="artist">Por artista (A-Z)</option>
-              <option value="recently-played">Reproducidos recientemente</option>
-              <option value="top-played">Los más reproducidos</option>
-              <option value="favorites">Mis favoritos</option>
-            </select>
+              Mi Biblioteca
+            </button>
+            <button
+              className={`${styles.albumsPage__sourceTab} ${librarySource === 'shared' ? styles['albumsPage__sourceTab--active'] : ''}`}
+              onClick={() => handleSourceChange('shared')}
+            >
+              Bibliotecas Compartidas
+            </button>
           </div>
 
-          {/* Top Pagination - Mobile Only */}
-          {!isLoading && !error && filteredAlbums && filteredAlbums.length > 0 && totalPages > 1 && (
-            <div className={styles.albumsPage__paginationTop}>
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                disabled={isLoading}
-              />
-            </div>
-          )}
+          {/* Filter Row */}
+          <div className={styles.albumsPage__filterWrapper}>
+            {librarySource === 'local' ? (
+              <>
+                <label htmlFor="album-sort" className={styles.albumsPage__filterLabel}>
+                  Ordenar por:
+                </label>
+                <select
+                  id="album-sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as AlbumSortOption)}
+                  className={styles.albumsPage__filterSelect}
+                >
+                  <option value="recent">Añadidos recientemente</option>
+                  <option value="alphabetical">Por nombre (A-Z)</option>
+                  <option value="artist">Por artista (A-Z)</option>
+                  <option value="recently-played">Reproducidos recientemente</option>
+                  <option value="top-played">Los más reproducidos</option>
+                  <option value="favorites">Mis favoritos</option>
+                </select>
+              </>
+            ) : (
+              connectedServers.length > 1 && (
+                <>
+                  <label htmlFor="server-filter" className={styles.albumsPage__filterLabel}>
+                    Servidor:
+                  </label>
+                  <select
+                    id="server-filter"
+                    value={selectedServerId || ''}
+                    onChange={(e) => setSelectedServerId(e.target.value || undefined)}
+                    className={styles.albumsPage__filterSelect}
+                  >
+                    <option value="">Todos los servidores</option>
+                    {connectedServers.map((server) => (
+                      <option key={server.id} value={server.id}>
+                        {server.name}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )
+            )}
+          </div>
 
-          {/* Albums Grid */}
-          {isLoading ? (
-            <div className={styles.albumsPage__loadingState}>
-              <div className={styles.albumsPage__spinner} />
-              <p>Cargando álbumes...</p>
-            </div>
-          ) : error ? (
-            <div className={styles.albumsPage__errorState}>
-              <p>Error al cargar los álbumes</p>
-              <button
-                onClick={() => window.location.reload()}
-                className={styles.albumsPage__retryButton}
-              >
-                Reintentar
-              </button>
-            </div>
-          ) : filteredAlbums && filteredAlbums.length > 0 ? (
-            <div className={styles.albumsPage__gridWrapper}>
-              <AlbumGrid title="" albums={filteredAlbums} />
-
-              {/* Pagination Controls */}
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                disabled={isLoading}
-              />
-            </div>
-          ) : (
-            <div className={styles.albumsPage__emptyState}>
-              <p>{searchQuery ? 'No se encontraron álbumes' : 'No hay álbumes en tu biblioteca'}</p>
-              {!searchQuery && (
-                <p className={styles.albumsPage__emptyHint}>
-                  Agrega música a tu biblioteca para empezar
-                </p>
+          {/* Content based on source */}
+          {librarySource === 'local' ? (
+            <>
+              {/* Top Pagination - Mobile Only */}
+              {!isLoading && !error && filteredAlbums && filteredAlbums.length > 0 && totalPages > 1 && (
+                <div className={styles.albumsPage__paginationTop}>
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    disabled={isLoading}
+                  />
+                </div>
               )}
-            </div>
+
+              {/* Local Albums Grid */}
+              {isLoading ? (
+                <div className={styles.albumsPage__loadingState}>
+                  <div className={styles.albumsPage__spinner} />
+                  <p>Cargando álbumes...</p>
+                </div>
+              ) : error ? (
+                <div className={styles.albumsPage__errorState}>
+                  <p>Error al cargar los álbumes</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className={styles.albumsPage__retryButton}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : filteredAlbums && filteredAlbums.length > 0 ? (
+                <div className={styles.albumsPage__gridWrapper}>
+                  <AlbumGrid title="" albums={filteredAlbums} />
+
+                  {/* Pagination Controls */}
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    disabled={isLoading}
+                  />
+                </div>
+              ) : (
+                <div className={styles.albumsPage__emptyState}>
+                  <p>{searchQuery ? 'No se encontraron álbumes' : 'No hay álbumes en tu biblioteca'}</p>
+                  {!searchQuery && (
+                    <p className={styles.albumsPage__emptyHint}>
+                      Agrega música a tu biblioteca para empezar
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Shared Albums Grid */}
+              {sharedAlbumsQuery.isLoading ? (
+                <div className={styles.albumsPage__loadingState}>
+                  <div className={styles.albumsPage__spinner} />
+                  <p>Cargando álbumes compartidos...</p>
+                </div>
+              ) : sharedAlbumsQuery.error ? (
+                <div className={styles.albumsPage__errorState}>
+                  <p>Error al cargar los álbumes compartidos</p>
+                  <button
+                    onClick={() => sharedAlbumsQuery.refetch()}
+                    className={styles.albumsPage__retryButton}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : sharedAlbums.length > 0 ? (
+                <div className={styles.albumsPage__gridWrapper}>
+                  <SharedAlbumGrid title="" albums={sharedAlbums} />
+                </div>
+              ) : connectedServers.length === 0 ? (
+                <div className={styles.albumsPage__emptyState}>
+                  <p>No tienes servidores conectados</p>
+                  <p className={styles.albumsPage__emptyHint}>
+                    Conecta con servidores de amigos desde el panel de administración para ver sus bibliotecas
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.albumsPage__emptyState}>
+                  <p>{searchQuery ? 'No se encontraron álbumes' : 'No hay álbumes en los servidores conectados'}</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

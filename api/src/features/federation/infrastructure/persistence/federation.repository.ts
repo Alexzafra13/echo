@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, lt, gte } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
   connectedServers,
@@ -15,6 +15,7 @@ import {
   AlbumImportQueue,
   NewAlbumImportQueue,
   ImportStatus,
+  MutualFederationStatus,
 } from '@infrastructure/database/schema';
 import { IFederationRepository } from '../../domain/ports/federation.repository';
 
@@ -303,5 +304,38 @@ export class FederationRepository implements IFederationRepository {
       .where(eq(albumImportQueue.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  // ============================================
+  // Mutual Federation
+  // ============================================
+
+  async findPendingMutualRequests(ownerId: string): Promise<FederationAccessToken[]> {
+    return this.drizzle.db
+      .select()
+      .from(federationAccessTokens)
+      .where(
+        and(
+          eq(federationAccessTokens.ownerId, ownerId),
+          eq(federationAccessTokens.mutualStatus, 'pending'),
+          eq(federationAccessTokens.isActive, true),
+        ),
+      );
+  }
+
+  async updateMutualStatus(
+    id: string,
+    status: MutualFederationStatus,
+  ): Promise<FederationAccessToken | null> {
+    const [token] = await this.drizzle.db
+      .update(federationAccessTokens)
+      .set({
+        mutualStatus: status,
+        mutualRespondedAt: status !== 'pending' ? new Date() : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(federationAccessTokens.id, id))
+      .returning();
+    return token ?? null;
   }
 }

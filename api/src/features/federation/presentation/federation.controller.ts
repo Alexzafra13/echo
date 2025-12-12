@@ -36,6 +36,8 @@ import {
   AccessTokenResponseDto,
   RemoteLibraryResponseDto,
   RemoteAlbumDto,
+  SharedAlbumsResponseDto,
+  SharedLibrariesQueryDto,
 } from './dto';
 
 /**
@@ -176,7 +178,8 @@ export class FederationController {
   @Post('servers')
   @ApiOperation({
     summary: 'Conectar a servidor',
-    description: 'Conectarse a un servidor de un amigo usando su token de invitación',
+    description: 'Conectarse a un servidor de un amigo usando su token de invitación. ' +
+      'Si requestMutual es true, se enviará una solicitud para que el servidor remoto también pueda ver tu biblioteca.',
   })
   @ApiResponse({
     status: 201,
@@ -195,10 +198,11 @@ export class FederationController {
       dto.invitationToken,
       dto.serverName,
       dto.localServerUrl,
+      dto.requestMutual ?? false,
     );
 
     this.logger.info(
-      { userId: user.id, serverId: server.id, serverUrl: dto.serverUrl },
+      { userId: user.id, serverId: server.id, serverUrl: dto.serverUrl, requestMutual: dto.requestMutual },
       'Connected to remote server',
     );
 
@@ -331,6 +335,89 @@ export class FederationController {
   }
 
   // ============================================
+  // Shared Libraries (Álbums de todos los servidores)
+  // ============================================
+
+  @Get('shared-albums')
+  @ApiOperation({
+    summary: 'Ver álbums de todos los servidores conectados',
+    description: 'Obtiene álbums agregados de todos los servidores conectados (para la sección Bibliotecas Compartidas)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Álbums compartidos',
+    type: SharedAlbumsResponseDto,
+  })
+  async getSharedAlbums(
+    @CurrentUser() user: User,
+    @Query() query: SharedLibrariesQueryDto,
+  ): Promise<SharedAlbumsResponseDto> {
+    const servers = await this.repository.findConnectedServersByUserId(user.id);
+
+    // If specific server requested, filter to just that one
+    const targetServers = query.serverId
+      ? servers.filter(s => s.id === query.serverId)
+      : servers.filter(s => s.isOnline !== false); // Only query online servers
+
+    if (targetServers.length === 0) {
+      return { albums: [], total: 0, serverCount: 0 };
+    }
+
+    // Fetch albums from each server in parallel
+    const results = await Promise.allSettled(
+      targetServers.map(async (server) => {
+        try {
+          const result = await this.remoteServerService.getRemoteAlbums(
+            server,
+            query.page || 1,
+            query.limit || 20,
+            query.search,
+          );
+          return {
+            server,
+            albums: result.albums,
+            total: result.total,
+          };
+        } catch (error) {
+          this.logger.warn(
+            { serverId: server.id, error: error instanceof Error ? error.message : error },
+            'Failed to fetch albums from server',
+          );
+          return { server, albums: [], total: 0 };
+        }
+      }),
+    );
+
+    // Aggregate results
+    const allAlbums: SharedAlbumsResponseDto['albums'] = [];
+    let totalCount = 0;
+    let successfulServers = 0;
+
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.albums.length > 0) {
+        successfulServers++;
+        totalCount += result.value.total;
+        for (const album of result.value.albums) {
+          allAlbums.push({
+            ...album,
+            serverId: result.value.server.id,
+            serverName: result.value.server.name,
+          });
+        }
+      }
+    }
+
+    // Sort by name (could be enhanced with more sorting options)
+    allAlbums.sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      albums: allAlbums.slice(0, query.limit || 20),
+      total: totalCount,
+      serverCount: successfulServers,
+    };
+  }
+
+  // ============================================
   // Remote Library (Navegar biblioteca de servidor remoto)
   // ============================================
 
@@ -452,6 +539,114 @@ export class FederationController {
     }
     await this.tokenService.revokeAccessToken(id);
     this.logger.info({ userId: user.id, tokenId: id }, 'Access token revoked');
+  }
+
+  // ============================================
+  // Mutual Federation (Solicitudes de federación mutua)
+  // ============================================
+
+  @Get('access-tokens/pending-mutual')
+  @ApiOperation({
+    summary: 'Listar solicitudes de federación mutua pendientes',
+    description: 'Obtiene los servidores que han solicitado federación mutua',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de servidores con solicitud mutua pendiente',
+    type: [AccessTokenResponseDto],
+  })
+  async getPendingMutualRequests(
+    @CurrentUser() user: User,
+  ): Promise<AccessTokenResponseDto[]> {
+    const tokens = await this.tokenService.getPendingMutualRequests(user.id);
+    return tokens.map((token) => ({
+      id: token.id,
+      serverName: token.serverName,
+      serverUrl: token.serverUrl ?? undefined,
+      permissions: token.permissions,
+      isActive: token.isActive,
+      lastUsedAt: token.lastUsedAt ?? undefined,
+      createdAt: token.createdAt,
+      mutualStatus: token.mutualStatus,
+    }));
+  }
+
+  @Post('access-tokens/:id/approve-mutual')
+  @ApiOperation({
+    summary: 'Aprobar solicitud de federación mutua',
+    description: 'Aprueba la solicitud y conecta automáticamente al servidor que la solicitó',
+  })
+  @ApiParam({ name: 'id', description: 'ID del access token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Solicitud aprobada y conectado al servidor',
+    type: ConnectedServerResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Access token no encontrado o sin solicitud pendiente' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
+  async approveMutualRequest(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<ConnectedServerResponseDto> {
+    // Get the access token and verify ownership
+    const accessToken = await this.tokenService.getAccessTokenById(id);
+    if (!accessToken) {
+      throw new NotFoundException('Access token not found');
+    }
+    if (accessToken.ownerId !== user.id) {
+      throw new ForbiddenException('You do not have access to this access token');
+    }
+    if (accessToken.mutualStatus !== 'pending' || !accessToken.mutualInvitationToken || !accessToken.serverUrl) {
+      throw new NotFoundException('No pending mutual request found');
+    }
+
+    // Approve the request
+    const approved = await this.tokenService.approveMutualRequest(id);
+    if (!approved) {
+      throw new NotFoundException('Failed to approve mutual request');
+    }
+
+    // Connect to the remote server using the invitation token they provided
+    const server = await this.remoteServerService.connectToServer(
+      user.id,
+      accessToken.serverUrl,
+      accessToken.mutualInvitationToken,
+      accessToken.serverName,
+    );
+
+    this.logger.info(
+      { userId: user.id, accessTokenId: id, serverUrl: accessToken.serverUrl },
+      'Mutual federation request approved and connected',
+    );
+
+    return this.mapServerToResponse(server);
+  }
+
+  @Post('access-tokens/:id/reject-mutual')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Rechazar solicitud de federación mutua',
+    description: 'Rechaza la solicitud de federación mutua (el servidor sigue pudiendo acceder a tu biblioteca)',
+  })
+  @ApiParam({ name: 'id', description: 'ID del access token' })
+  @ApiResponse({ status: 204, description: 'Solicitud rechazada' })
+  @ApiResponse({ status: 404, description: 'Access token no encontrado' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
+  async rejectMutualRequest(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<void> {
+    // Get the access token and verify ownership
+    const accessToken = await this.tokenService.getAccessTokenById(id);
+    if (!accessToken) {
+      throw new NotFoundException('Access token not found');
+    }
+    if (accessToken.ownerId !== user.id) {
+      throw new ForbiddenException('You do not have access to this access token');
+    }
+
+    await this.tokenService.rejectMutualRequest(id);
+    this.logger.info({ userId: user.id, accessTokenId: id }, 'Mutual federation request rejected');
   }
 
   // ============================================

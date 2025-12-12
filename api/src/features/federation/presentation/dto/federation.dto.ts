@@ -66,12 +66,20 @@ export class ConnectToServerDto {
   serverName?: string;
 
   @ApiPropertyOptional({
-    description: 'URL pública de nuestro servidor (para que el servidor remoto pueda conectarse de vuelta)',
+    description: 'URL pública de nuestro servidor (requerida si requestMutual es true)',
     example: 'https://mi-servidor.example.com',
   })
   @IsOptional()
   @IsUrl({ require_tld: false })
   localServerUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Solicitar federación mutua (el servidor remoto podrá ver nuestra biblioteca)',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  requestMutual?: boolean;
 }
 
 export class AcceptConnectionDto {
@@ -96,6 +104,22 @@ export class AcceptConnectionDto {
   @IsOptional()
   @IsUrl({ require_tld: false })
   serverUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Si se solicita federación mutua',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  requestMutual?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Token de invitación del servidor remoto para establecer conexión mutua',
+    example: 'WXYZ-5678-ABCD-1234',
+  })
+  @IsOptional()
+  @IsString()
+  mutualInvitationToken?: string;
 }
 
 export class UpdatePermissionsDto {
@@ -256,6 +280,12 @@ export class AccessTokenResponseDto {
 
   @ApiProperty({ description: 'Fecha de creación' })
   createdAt!: Date;
+
+  @ApiPropertyOptional({
+    description: 'Estado de la solicitud de federación mutua',
+    enum: ['none', 'pending', 'approved', 'rejected'],
+  })
+  mutualStatus?: string;
 }
 
 export class ServerInfoResponseDto {
@@ -366,3 +396,39 @@ export class RemoteLibraryResponseDto {
   @ApiProperty({ description: 'Total de artistas' })
   totalArtists!: number;
 }
+
+// ============================================
+// Shared Libraries DTOs (Aggregated from all servers)
+// ============================================
+
+export class SharedAlbumDto extends RemoteAlbumDto {
+  @ApiProperty({ description: 'ID del servidor de origen' })
+  serverId!: string;
+
+  @ApiProperty({ description: 'Nombre del servidor de origen' })
+  serverName!: string;
+
+  @ApiPropertyOptional({ description: 'Fecha de creación en el servidor remoto' })
+  createdAt?: Date;
+}
+
+export class SharedAlbumsResponseDto {
+  @ApiProperty({ type: [SharedAlbumDto], description: 'Lista de álbums compartidos' })
+  albums!: SharedAlbumDto[];
+
+  @ApiProperty({ description: 'Total de álbums' })
+  total!: number;
+
+  @ApiProperty({ description: 'Número de servidores consultados' })
+  serverCount!: number;
+}
+
+export class SharedLibrariesQueryDto extends PaginationQueryDto {
+  @ApiPropertyOptional({
+    description: 'ID de servidor específico (opcional, si no se especifica consulta todos)',
+  })
+  @IsOptional()
+  @IsString()
+  serverId?: string;
+}
+

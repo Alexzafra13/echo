@@ -101,6 +101,10 @@ export const federationAccessTokens = pgTable(
     lastUsedAt: timestamp('last_used_at'),
     lastUsedIp: varchar('last_used_ip', { length: 45 }),
     expiresAt: timestamp('expires_at'),
+    // Mutual federation fields
+    mutualInvitationToken: varchar('mutual_invitation_token', { length: 64 }), // Token para conectarnos de vuelta
+    mutualStatus: varchar('mutual_status', { length: 20 }).default('none').notNull(), // none, pending, approved, rejected
+    mutualRespondedAt: timestamp('mutual_responded_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -171,3 +175,4 @@ export type AlbumImportQueue = typeof albumImportQueue.$inferSelect;
 export type NewAlbumImportQueue = typeof albumImportQueue.$inferInsert;
 
 export type ImportStatus = 'pending' | 'downloading' | 'completed' | 'failed' | 'cancelled';
+export type MutualFederationStatus = 'none' | 'pending' | 'approved' | 'rejected';

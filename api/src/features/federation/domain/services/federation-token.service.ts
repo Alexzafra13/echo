@@ -1,7 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../ports/federation.repository';
-import { FederationToken, FederationAccessToken, FederationPermissions } from '@infrastructure/database/schema';
+import {
+  FederationToken,
+  FederationAccessToken,
+  FederationPermissions,
+  MutualFederationStatus,
+} from '@infrastructure/database/schema';
 
 @Injectable()
 export class FederationTokenService {
@@ -62,12 +67,14 @@ export class FederationTokenService {
 
   /**
    * Mark an invitation token as used and create access token for the connecting server
+   * @param mutualInvitationToken - Token provided by the connecting server for mutual federation
    */
   async useInvitationToken(
     token: string,
     serverName: string,
     serverUrl?: string,
     ip?: string,
+    mutualInvitationToken?: string,
   ): Promise<FederationAccessToken | null> {
     const federationToken = await this.validateInvitationToken(token);
 
@@ -87,6 +94,9 @@ export class FederationTokenService {
     // Generate access token for the connecting server
     const accessToken = randomBytes(32).toString('hex');
 
+    // Determine mutual status based on whether a mutual token was provided
+    const mutualStatus: MutualFederationStatus = mutualInvitationToken ? 'pending' : 'none';
+
     return this.repository.createFederationAccessToken({
       ownerId: federationToken.createdByUserId,
       token: accessToken,
@@ -97,6 +107,8 @@ export class FederationTokenService {
         canStream: true,
         canDownload: false,
       },
+      mutualInvitationToken: mutualInvitationToken ?? null,
+      mutualStatus,
     });
   }
 
@@ -179,5 +191,48 @@ export class FederationTokenService {
    */
   async cleanupExpiredTokens(): Promise<number> {
     return this.repository.deleteExpiredFederationTokens();
+  }
+
+  // ============================================
+  // Mutual Federation
+  // ============================================
+
+  /**
+   * Get access tokens with pending mutual federation requests
+   */
+  async getPendingMutualRequests(userId: string): Promise<FederationAccessToken[]> {
+    return this.repository.findPendingMutualRequests(userId);
+  }
+
+  /**
+   * Approve a mutual federation request
+   * Returns the access token with the invitation token to use for connecting back
+   */
+  async approveMutualRequest(accessTokenId: string): Promise<FederationAccessToken | null> {
+    const accessToken = await this.repository.findFederationAccessTokenById(accessTokenId);
+    if (!accessToken || accessToken.mutualStatus !== 'pending') {
+      return null;
+    }
+
+    return this.repository.updateMutualStatus(accessTokenId, 'approved');
+  }
+
+  /**
+   * Reject a mutual federation request
+   */
+  async rejectMutualRequest(accessTokenId: string): Promise<FederationAccessToken | null> {
+    const accessToken = await this.repository.findFederationAccessTokenById(accessTokenId);
+    if (!accessToken || accessToken.mutualStatus !== 'pending') {
+      return null;
+    }
+
+    return this.repository.updateMutualStatus(accessTokenId, 'rejected');
+  }
+
+  /**
+   * Get access token by ID
+   */
+  async getAccessTokenById(id: string): Promise<FederationAccessToken | null> {
+    return this.repository.findFederationAccessTokenById(id);
   }
 }

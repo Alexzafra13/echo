@@ -8,6 +8,7 @@ import {
   AlbumImportQueue,
   NewAlbumImportQueue,
   ImportStatus,
+  MutualFederationStatus,
 } from '@infrastructure/database/schema';
 
 /**
@@ -49,6 +50,10 @@ export interface IFederationRepository {
   updateAlbumImport(id: string, data: Partial<AlbumImportQueue>): Promise<AlbumImportQueue | null>;
   updateAlbumImportStatus(id: string, status: ImportStatus, errorMessage?: string): Promise<AlbumImportQueue | null>;
   deleteAlbumImport(id: string): Promise<boolean>;
+
+  // Mutual Federation
+  findPendingMutualRequests(ownerId: string): Promise<FederationAccessToken[]>;
+  updateMutualStatus(id: string, status: MutualFederationStatus): Promise<FederationAccessToken | null>;
 }
 
 export const FEDERATION_REPOSITORY = Symbol('FEDERATION_REPOSITORY');
