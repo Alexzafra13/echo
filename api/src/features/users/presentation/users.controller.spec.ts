@@ -12,6 +12,7 @@ import { UploadAvatarUseCase } from '../domain/use-cases/upload-avatar/upload-av
 import { DeleteAvatarUseCase } from '../domain/use-cases/delete-avatar/delete-avatar.use-case';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { MockUseCase, createMockUseCase } from '@shared/testing/mock.types';
+import { JwtUser } from '@shared/types/request.types';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -24,10 +25,22 @@ describe('UsersController', () => {
   let mockUpdatePrivacySettingsUseCase: MockUseCase;
   let mockUpdateHomePreferencesUseCase: MockUseCase;
 
-  const mockUser = {
+  const mockUser: JwtUser = {
     id: 'user-123',
     username: 'testuser',
+    passwordHash: '$2b$12$hashed',
+    isActive: true,
     isAdmin: false,
+    mustChangePassword: false,
+    theme: 'dark',
+    language: 'es',
+    isPublicProfile: false,
+    showTopTracks: true,
+    showTopArtists: true,
+    showTopAlbums: true,
+    showPlaylists: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(async () => {
@@ -112,10 +125,10 @@ describe('UsersController', () => {
         newPassword: 'new',
       };
 
-      const differentUser = {
+      const differentUser: JwtUser = {
+        ...mockUser,
         id: 'user-999',
         username: 'otheruser',
-        isAdmin: false,
       };
 
       mockChangePasswordUseCase.execute.mockResolvedValue(undefined);

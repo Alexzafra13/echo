@@ -43,6 +43,7 @@ describe('AddTrackToPlaylistUseCase', () => {
     artistId: 'artist-123',
     albumId: 'album-123',
     compilation: false,
+    playCount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   });

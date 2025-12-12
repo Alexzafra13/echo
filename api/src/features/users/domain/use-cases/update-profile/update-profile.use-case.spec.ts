@@ -1,10 +1,32 @@
 import { NotFoundError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { UpdateProfileUseCase } from './update-profile.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
 } from '@shared/testing/mock.types';
+
+// Helper para crear UserProps con todos los campos requeridos
+const createUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'juan',
+  passwordHash: '$2b$12$hashed',
+  name: 'Juan Old',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'dark',
+  language: 'es',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 describe('UpdateProfileUseCase', () => {
   let useCase: UpdateProfileUseCase;
@@ -19,33 +41,9 @@ describe('UpdateProfileUseCase', () => {
   describe('execute', () => {
     it('debería actualizar nombre correctamente', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Old',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
-      const updatedUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Updated',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const updatedUser = User.reconstruct(createUserProps({ name: 'Juan Updated' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
@@ -81,19 +79,7 @@ describe('UpdateProfileUseCase', () => {
 
     it('NO debería incluir campos sensibles en la respuesta', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$super_secret_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ passwordHash: '$2b$12$super_secret_hash' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(mockUser);
@@ -113,33 +99,9 @@ describe('UpdateProfileUseCase', () => {
 
     it('debería preservar username (no debe cambiar)', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
-      const updatedUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Updated',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const updatedUser = User.reconstruct(createUserProps({ name: 'Juan Updated' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);

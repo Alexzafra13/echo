@@ -13,6 +13,7 @@ describe('GetShuffledTracksUseCase', () => {
     discNumber: 1,
     path: '/music/test.mp3',
     compilation: false,
+    playCount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -114,6 +115,7 @@ describe('GetShuffledTracksUseCase', () => {
       duration: 300,
       path: '/music/full.mp3',
       compilation: true,
+      playCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

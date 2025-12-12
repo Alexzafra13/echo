@@ -11,7 +11,6 @@ describe('AdminSettingsController', () => {
   let settingsService: jest.Mocked<SettingsService>;
 
   const mockSetting = {
-    id: '1',
     key: 'test.key',
     value: 'test-value',
     type: 'string',
@@ -310,7 +309,7 @@ describe('AdminSettingsController', () => {
     it('debería eliminar una configuración', async () => {
       // Arrange
       settingsService.findOne.mockResolvedValue(mockSetting);
-      settingsService.delete.mockResolvedValue(mockSetting);
+      settingsService.delete.mockResolvedValue(undefined);
 
       // Act
       const result = await controller.deleteSetting('test.key');

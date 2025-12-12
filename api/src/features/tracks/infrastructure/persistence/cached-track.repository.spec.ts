@@ -19,13 +19,15 @@ describe('CachedTrackRepository', () => {
     title: 'Test Track',
     duration: 240,
     trackNumber: 1,
+    discNumber: 1,
     albumId: 'album-1',
     artistId: 'artist-1',
-    filePath: '/music/track1.mp3',
-    fileSize: 5242880,
-    mimeType: 'audio/mpeg',
-    bitrate: 320,
-    sampleRate: 44100,
+    path: '/music/track1.mp3',
+    size: 5242880,
+    bitRate: 320,
+    suffix: 'mp3',
+    compilation: false,
+    playCount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -41,12 +43,13 @@ describe('CachedTrackRepository', () => {
       search: jest.fn(),
       findByAlbumId: jest.fn(),
       findByArtistId: jest.fn(),
+      findTopByArtistId: jest.fn(),
       count: jest.fn(),
       findShuffledPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as jest.Mocked<ITrackRepository>;
+    } as unknown as jest.Mocked<ITrackRepository>;
 
     // Mock cache service
     cacheService = createMockCacheService();
@@ -56,8 +59,8 @@ describe('CachedTrackRepository', () => {
 
     // Create instance directly without TestingModule for simplicity
     cachedRepository = new CachedTrackRepository(
-      baseRepository,
-      cacheService,
+      baseRepository as any,
+      cacheService as any,
       mockLogger as unknown as PinoLogger,
     );
   });

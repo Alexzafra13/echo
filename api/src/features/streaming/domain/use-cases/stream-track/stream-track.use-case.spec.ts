@@ -26,6 +26,7 @@ describe('StreamTrackUseCase', () => {
     duration: 180,
     discNumber: 1,
     compilation: false,
+    playCount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -124,6 +125,7 @@ describe('StreamTrackUseCase', () => {
         path: undefined as any,
         discNumber: 1,
         compilation: false,
+        playCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

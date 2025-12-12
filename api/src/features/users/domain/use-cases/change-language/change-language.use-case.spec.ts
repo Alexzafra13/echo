@@ -1,10 +1,32 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { ChangeLanguageUseCase } from './change-language.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
 } from '@shared/testing/mock.types';
+
+// Helper para crear UserProps con todos los campos requeridos
+const createUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'juan',
+  passwordHash: '$2b$12$hashed',
+  name: 'Juan',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'dark',
+  language: 'en',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 describe('ChangeLanguageUseCase', () => {
   let useCase: ChangeLanguageUseCase;
@@ -19,19 +41,7 @@ describe('ChangeLanguageUseCase', () => {
   describe('execute', () => {
     it('debería cambiar idioma a español', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'en',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'en' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -51,19 +61,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería cambiar idioma a inglés', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'es' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -82,19 +80,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería permitir establecer el mismo idioma actual', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'es' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -123,19 +109,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería lanzar error si idioma no es válido', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'es' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -156,19 +130,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería lanzar error para idioma vacío', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'es' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -183,19 +145,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería lanzar error para idioma con mayúsculas', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'es' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -225,19 +175,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería rechazar códigos de idioma con región', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'es' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -256,19 +194,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('NO debería retornar nada (void)', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'en',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ language: 'en' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -285,19 +211,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería funcionar para usuarios inactivos', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: false,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'en',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ isActive: false, language: 'en' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);

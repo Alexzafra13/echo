@@ -220,7 +220,7 @@ describe('AuthController', () => {
         isAdmin: false,
         isActive: true,
         mustChangePassword: false,
-        avatarPath: null,
+        avatarPath: undefined,
         createdAt: new Date(),
       };
       mockUserRepository.findById.mockResolvedValue(freshUser);
@@ -272,7 +272,7 @@ describe('AuthController', () => {
         isAdmin: false,
         isActive: true,
         mustChangePassword: false,
-        avatarPath: null,
+        avatarPath: undefined,
         createdAt: new Date(),
       };
 
