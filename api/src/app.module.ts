@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig } from './config/app.config';
@@ -86,6 +87,9 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
 
     // Scheduled Tasks (cron jobs)
     ScheduleModule.forRoot(),
+
+    // Event Emitter (for internal events like album import progress)
+    EventEmitterModule.forRoot(),
 
     // Global Infrastructure
     DrizzleModule,
