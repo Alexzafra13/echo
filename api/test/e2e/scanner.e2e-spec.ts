@@ -1,12 +1,14 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import { BullmqService } from '../../src/infrastructure/queue/bullmq.service';
 import {
   createTestApp,
   createAdminAndLogin,
   createUserAndLogin,
   cleanUserTables,
   cleanScannerTables,
+  cleanQueues,
 } from './helpers/test-setup';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -24,6 +26,7 @@ import * as path from 'path';
 describe('Scanner E2E', () => {
   let app: INestApplication;
   let drizzle: DrizzleService;
+  let bullmq: BullmqService;
   let adminToken: string;
   let userToken: string;
   let testMusicDir: string;
@@ -32,6 +35,7 @@ describe('Scanner E2E', () => {
     const testApp = await createTestApp();
     app = testApp.app;
     drizzle = testApp.drizzle;
+    bullmq = testApp.bullmq;
 
     // Crear directorio temporal para archivos de prueba
     testMusicDir = path.join(process.cwd(), 'test-music-temp');
@@ -50,6 +54,8 @@ describe('Scanner E2E', () => {
   });
 
   beforeEach(async () => {
+    // Limpiar colas de BullMQ para evitar jobs huérfanos
+    await cleanQueues(bullmq);
     await cleanScannerTables(drizzle);
     await cleanUserTables(drizzle);
 
