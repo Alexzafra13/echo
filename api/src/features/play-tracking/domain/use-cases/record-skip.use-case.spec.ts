@@ -1,5 +1,5 @@
 import { RecordSkipUseCase } from './record-skip.use-case';
-import { PlayEvent, PlayContext } from '../entities/play-event.entity';
+import { PlayEvent, PlayContext } from '../entities/play-event.types';
 
 describe('RecordSkipUseCase', () => {
   let useCase: RecordSkipUseCase;

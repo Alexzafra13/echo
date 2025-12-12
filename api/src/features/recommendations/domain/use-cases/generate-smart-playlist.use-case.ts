@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SmartPlaylistService } from '../services/smart-playlist.service';
-import { SmartPlaylistConfig, TrackScore } from '../entities/track-score.entity';
+import { SmartPlaylistConfig, TrackScore } from '../entities/track-score.types';
 
 @Injectable()
 export class GenerateSmartPlaylistUseCase {

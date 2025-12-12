@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ScoringService } from '../services/scoring.service';
-import { TrackScore } from '../entities/track-score.entity';
+import { TrackScore } from '../entities/track-score.types';
 
 @Injectable()
 export class CalculateTrackScoreUseCase {

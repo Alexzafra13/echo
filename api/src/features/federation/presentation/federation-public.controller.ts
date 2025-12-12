@@ -26,6 +26,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { eq, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
+import { getAudioMimeType } from '@shared/utils/mime-type.util';
 import {
   albums,
   tracks,
@@ -42,6 +43,7 @@ import {
 } from './dto';
 import { Public } from '@shared/decorators/public.decorator';
 import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * FederationPublicController - Endpoints públicos para servidores conectados
@@ -491,7 +493,7 @@ export class FederationPublicController {
     }
 
     const fileSize = track.size ?? fs.statSync(track.path).size;
-    const mimeType = this.getMimeType(track.path);
+    const mimeType = getAudioMimeType(path.extname(track.path));
 
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');
@@ -794,17 +796,4 @@ export class FederationPublicController {
     };
   }
 
-  private getMimeType(filePath: string): string {
-    const ext = filePath.split('.').pop()?.toLowerCase();
-    const mimeTypes: Record<string, string> = {
-      mp3: 'audio/mpeg',
-      flac: 'audio/flac',
-      m4a: 'audio/mp4',
-      aac: 'audio/aac',
-      ogg: 'audio/ogg',
-      wav: 'audio/wav',
-      wma: 'audio/x-ms-wma',
-    };
-    return mimeTypes[ext || ''] || 'audio/mpeg';
-  }
 }

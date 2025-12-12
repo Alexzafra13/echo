@@ -77,8 +77,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         this.timeout<string | null>(this.operationTimeout),
       ]);
       return data ? (JSON.parse(data) as T) : null;
-    } catch {
-      return null; // Fail silently, just skip cache
+    } catch (error) {
+      this.logger.warn({ key, error: error instanceof Error ? error.message : error }, 'Redis GET failed');
+      return null;
     }
   }
 
@@ -99,8 +100,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
           this.timeout(this.operationTimeout),
         ]);
       }
-    } catch {
-      // Fail silently
+    } catch (error) {
+      this.logger.warn({ key, ttl, error: error instanceof Error ? error.message : error }, 'Redis SET failed');
     }
   }
 
@@ -112,8 +113,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         this.redis.del(key),
         this.timeout(this.operationTimeout),
       ]);
-    } catch {
-      // Fail silently
+    } catch (error) {
+      this.logger.warn({ key, error: error instanceof Error ? error.message : error }, 'Redis DEL failed');
     }
   }
 
@@ -147,8 +148,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
           await this.redis.del(...batch);
         }
       }
-    } catch {
-      // Fail silently
+    } catch (error) {
+      this.logger.warn({ pattern, error: error instanceof Error ? error.message : error }, 'Redis DELPATTERN failed');
     }
   }
 
@@ -157,8 +158,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     try {
       await this.redis.flushdb();
-    } catch {
-      // Fail silently
+    } catch (error) {
+      this.logger.warn({ error: error instanceof Error ? error.message : error }, 'Redis FLUSHDB failed');
     }
   }
 

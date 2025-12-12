@@ -67,6 +67,6 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
       useClass: USE_CACHE ? CachedAlbumRepository : DrizzleAlbumRepository,
     },
   ],
-  exports: [ALBUM_REPOSITORY, CachedAlbumRepository],
+  exports: [ALBUM_REPOSITORY],
 })
 export class AlbumsModule {}

@@ -4,7 +4,7 @@ import {
   Friend,
   ListeningUser,
   ActivityItem,
-} from '../entities/friendship.entity';
+} from '../entities/friendship.types';
 
 export interface ISocialRepository {
   // ============================================

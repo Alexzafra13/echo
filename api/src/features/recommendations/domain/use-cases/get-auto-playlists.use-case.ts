@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { WaveMixService } from '../services/wave-mix.service';
-import { AutoPlaylist } from '../entities/track-score.entity';
+import { AutoPlaylist } from '../entities/track-score.types';
 
 @Injectable()
 export class GetAutoPlaylistsUseCase {

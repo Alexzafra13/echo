@@ -1,4 +1,4 @@
-import { PlayEvent, PlayContext, SourceType } from '../../domain/entities/play-event.entity';
+import { PlayEvent, PlayContext, SourceType } from '../../domain/entities/play-event.types';
 import { PlayHistory } from '@infrastructure/database/schema/play-stats';
 
 export class PlayTrackingMapper {

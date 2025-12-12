@@ -6,7 +6,7 @@ import {
   SCORING_WEIGHTS,
   FEEDBACK_SCORES,
   RECENCY_DECAY,
-} from '../entities/track-score.entity';
+} from '../entities/track-score.types';
 import {
   IUserInteractionsRepository,
   USER_INTERACTIONS_REPOSITORY,

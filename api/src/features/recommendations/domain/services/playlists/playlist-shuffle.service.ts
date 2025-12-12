@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TrackScore, PlaylistMetadata } from '../../entities/track-score.entity';
+import { TrackScore, PlaylistMetadata } from '../../entities/track-score.types';
 import {
   IPlayTrackingRepository,
   PLAY_TRACKING_REPOSITORY,

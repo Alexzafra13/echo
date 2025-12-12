@@ -9,7 +9,7 @@ import {
   SourceType,
   UserPlaySummary,
   TrackPlaySummary,
-} from '../../domain/entities/play-event.entity';
+} from '../../domain/entities/play-event.types';
 import { DrizzlePlayTrackingRepository } from './play-tracking.repository';
 import { cacheConfig } from '@config/cache.config';
 

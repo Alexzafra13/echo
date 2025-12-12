@@ -12,7 +12,7 @@ import { FileScannerService } from './file-scanner.service';
 import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
 import { ScannerEventsService } from '../../domain/services/scanner-events.service';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
-import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
+import { IAlbumRepository, ALBUM_REPOSITORY } from '@features/albums/domain/ports/album-repository.port';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { EnrichmentQueueService } from '@features/external-metadata/infrastructure/services/enrichment-queue.service';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
@@ -47,12 +47,13 @@ export class ScanProcessorService implements OnModuleInit {
   constructor(
     @Inject(SCANNER_REPOSITORY)
     private readonly scannerRepository: IScannerRepository,
+    @Inject(ALBUM_REPOSITORY)
+    private readonly albumRepository: IAlbumRepository,
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly lufsAnalysisQueue: LufsAnalysisQueueService,
     private readonly scannerEventsService: ScannerEventsService,
-    private readonly cachedAlbumRepository: CachedAlbumRepository,
     private readonly settingsService: SettingsService,
     private readonly enrichmentQueueService: EnrichmentQueueService,
     private readonly logService: LogService,
@@ -207,7 +208,7 @@ export class ScanProcessorService implements OnModuleInit {
       const duration = Date.now() - startTime;
 
       // Invalidate cache
-      await this.cachedAlbumRepository.invalidateListCaches();
+      await this.albumRepository.invalidateListCaches?.();
 
       // Post-scan tasks
       await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
@@ -386,7 +387,7 @@ export class ScanProcessorService implements OnModuleInit {
       }
 
       // Invalidate cache
-      await this.cachedAlbumRepository.invalidateListCaches();
+      await this.albumRepository.invalidateListCaches?.();
 
       // Post-scan tasks
       await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);

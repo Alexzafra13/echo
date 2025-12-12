@@ -19,7 +19,7 @@ import {
   Friend,
   ListeningUser,
   ActivityItem,
-} from '../../domain/entities/friendship.entity';
+} from '../../domain/entities/friendship.types';
 
 @Injectable()
 export class DrizzleSocialRepository implements ISocialRepository {

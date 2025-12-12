@@ -10,7 +10,7 @@ import {
   UserPlaySummary,
   TrackPlaySummary,
   CONTEXT_WEIGHTS,
-} from '../../domain/entities/play-event.entity';
+} from '../../domain/entities/play-event.types';
 import { PlayTrackingMapper } from '../mappers/play-tracking.mapper';
 
 @Injectable()
