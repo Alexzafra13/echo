@@ -14,8 +14,12 @@ describe('CachedArtistRepository', () => {
   const mockArtistPrimitives = {
     id: 'artist-1',
     name: 'Test Artist',
-    bio: 'A test artist bio',
-    imageUrl: '/images/artist1.jpg',
+    albumCount: 5,
+    songCount: 50,
+    playCount: 1000,
+    size: 500000000,
+    biography: 'A test artist bio',
+    smallImageUrl: '/images/artist1.jpg',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -32,13 +36,17 @@ describe('CachedArtistRepository', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as jest.Mocked<IArtistRepository>;
+      findByNames: jest.fn(),
+    } as unknown as jest.Mocked<IArtistRepository>;
 
     // Mock cache service
     cacheService = createMockCacheService();
 
     // Create instance directly without TestingModule for simplicity
-    cachedRepository = new CachedArtistRepository(baseRepository, cacheService);
+    cachedRepository = new CachedArtistRepository(
+      baseRepository as unknown as import('./artist.repository').DrizzleArtistRepository,
+      cacheService as unknown as import('@infrastructure/cache/redis.service').RedisService,
+    );
   });
 
   afterEach(() => {
@@ -227,7 +235,7 @@ describe('CachedArtistRepository', () => {
 
     it('should handle partial updates correctly', async () => {
       // Arrange
-      const updates = { bio: 'New bio' };
+      const updates = { biography: 'New bio' } as Partial<Artist>;
       baseRepository.update.mockResolvedValue(mockArtist);
 
       // Act

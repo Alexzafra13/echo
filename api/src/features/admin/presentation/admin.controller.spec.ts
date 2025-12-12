@@ -17,7 +17,19 @@ import { JwtUser } from '@shared/types/request.types';
 const mockCurrentUser: JwtUser = {
   id: 'admin-999',
   username: 'adminuser',
+  passwordHash: '$2b$12$hashed',
+  isActive: true,
   isAdmin: true,
+  theme: 'dark',
+  language: 'en',
+  mustChangePassword: false,
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('AdminController', () => {

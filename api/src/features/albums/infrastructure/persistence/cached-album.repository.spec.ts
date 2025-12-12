@@ -16,10 +16,14 @@ describe('CachedAlbumRepository', () => {
 
   const mockAlbumPrimitives = {
     id: 'album-1',
-    title: 'Test Album',
+    name: 'Test Album',
     artistId: 'artist-1',
     releaseDate: new Date('2024-01-01'),
-    coverPath: '/covers/album1.jpg',
+    coverArtPath: '/covers/album1.jpg',
+    compilation: false,
+    songCount: 10,
+    duration: 3600,
+    size: 100000000,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -42,7 +46,7 @@ describe('CachedAlbumRepository', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    } as jest.Mocked<IAlbumRepository>;
+    } as unknown as jest.Mocked<IAlbumRepository>;
 
     // Mock cache service
     cacheService = createMockCacheService();
@@ -54,7 +58,7 @@ describe('CachedAlbumRepository', () => {
     // Constructor expects: (baseRepository, cache, logger)
     cachedRepository = new CachedAlbumRepository(
       baseRepository as unknown as import('./album.repository').DrizzleAlbumRepository,
-      cacheService,
+      cacheService as unknown as import('@infrastructure/cache/redis.service').RedisService,
       mockLogger as unknown as PinoLogger,
     );
   });
@@ -331,7 +335,7 @@ describe('CachedAlbumRepository', () => {
   describe('update', () => {
     it('should update album and invalidate caches', async () => {
       // Arrange
-      const updates = { title: 'Updated Title' };
+      const updates = { name: 'Updated Title' } as Partial<Album>;
       baseRepository.update.mockResolvedValue(mockAlbum);
 
       // Act
