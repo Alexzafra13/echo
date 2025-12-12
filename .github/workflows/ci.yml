@@ -98,6 +98,11 @@ jobs:
         working-directory: api
         run: pnpm test:unit
 
+      - name: Prepare test directories
+        run: |
+          mkdir -p api/test-music
+          mkdir -p api/test-data
+
       # Integration tests: Test real DB/Redis operations
       - name: Run integration tests
         working-directory: api
