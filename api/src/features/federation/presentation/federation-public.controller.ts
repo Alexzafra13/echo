@@ -534,6 +534,160 @@ export class FederationPublicController {
   // Download endpoints
   // ============================================
 
+  @Get('albums/:id/export')
+  @UseGuards(FederationAccessGuard)
+  @ApiOperation({
+    summary: 'Exportar metadatos completos del álbum',
+    description: 'Retorna todos los metadatos del álbum incluyendo LUFS, ReplayGain, MusicBrainz IDs para importación',
+  })
+  @ApiParam({ name: 'id', description: 'ID del álbum' })
+  async exportAlbumMetadata(
+    @Param('id') id: string,
+    @Req() request: FastifyRequest,
+  ) {
+    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+
+    if (!accessToken.permissions.canDownload) {
+      throw new ForbiddenException('Download permission not granted');
+    }
+
+    // Get album with all metadata
+    const [album] = await this.drizzle.db
+      .select({
+        id: albums.id,
+        name: albums.name,
+        year: albums.year,
+        releaseDate: albums.releaseDate,
+        originalDate: albums.originalDate,
+        compilation: albums.compilation,
+        songCount: albums.songCount,
+        duration: albums.duration,
+        size: albums.size,
+        coverArtPath: albums.coverArtPath,
+        mbzAlbumId: albums.mbzAlbumId,
+        mbzAlbumArtistId: albums.mbzAlbumArtistId,
+        mbzAlbumType: albums.mbzAlbumType,
+        catalogNum: albums.catalogNum,
+        comment: albums.comment,
+        description: albums.description,
+        artistId: artists.id,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
+      .where(eq(albums.id, id))
+      .limit(1);
+
+    if (!album) {
+      throw new NotFoundException('Album not found');
+    }
+
+    // Get tracks with ALL metadata including LUFS/ReplayGain
+    const albumTracks = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        trackNumber: tracks.trackNumber,
+        discNumber: tracks.discNumber,
+        discSubtitle: tracks.discSubtitle,
+        duration: tracks.duration,
+        size: tracks.size,
+        bitRate: tracks.bitRate,
+        channels: tracks.channels,
+        suffix: tracks.suffix,
+        year: tracks.year,
+        date: tracks.date,
+        originalDate: tracks.originalDate,
+        releaseDate: tracks.releaseDate,
+        artistName: tracks.artistName,
+        albumArtistName: tracks.albumArtistName,
+        comment: tracks.comment,
+        lyrics: tracks.lyrics,
+        bpm: tracks.bpm,
+        // ReplayGain data
+        rgAlbumGain: tracks.rgAlbumGain,
+        rgAlbumPeak: tracks.rgAlbumPeak,
+        rgTrackGain: tracks.rgTrackGain,
+        rgTrackPeak: tracks.rgTrackPeak,
+        // LUFS analyzed flag
+        lufsAnalyzedAt: tracks.lufsAnalyzedAt,
+        // MusicBrainz IDs
+        mbzTrackId: tracks.mbzTrackId,
+        mbzAlbumId: tracks.mbzAlbumId,
+        mbzArtistId: tracks.mbzArtistId,
+        mbzAlbumArtistId: tracks.mbzAlbumArtistId,
+        mbzReleaseTrackId: tracks.mbzReleaseTrackId,
+        catalogNum: tracks.catalogNum,
+        // File info
+        path: tracks.path,
+      })
+      .from(tracks)
+      .where(eq(tracks.albumId, id))
+      .orderBy(tracks.discNumber, tracks.trackNumber);
+
+    return {
+      album: {
+        id: album.id,
+        name: album.name,
+        artistName: album.artistName || 'Unknown Artist',
+        artistId: album.artistId,
+        year: album.year,
+        releaseDate: album.releaseDate,
+        originalDate: album.originalDate,
+        compilation: album.compilation,
+        songCount: album.songCount,
+        duration: album.duration,
+        size: album.size,
+        hasCover: !!album.coverArtPath,
+        coverUrl: album.coverArtPath ? `/api/federation/albums/${album.id}/cover` : null,
+        // MusicBrainz
+        mbzAlbumId: album.mbzAlbumId,
+        mbzAlbumArtistId: album.mbzAlbumArtistId,
+        mbzAlbumType: album.mbzAlbumType,
+        catalogNum: album.catalogNum,
+        comment: album.comment,
+        description: album.description,
+      },
+      tracks: albumTracks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        trackNumber: t.trackNumber,
+        discNumber: t.discNumber,
+        discSubtitle: t.discSubtitle,
+        duration: t.duration,
+        size: t.size,
+        bitRate: t.bitRate,
+        channels: t.channels,
+        suffix: t.suffix,
+        year: t.year,
+        date: t.date,
+        originalDate: t.originalDate,
+        releaseDate: t.releaseDate,
+        artistName: t.artistName,
+        albumArtistName: t.albumArtistName,
+        comment: t.comment,
+        lyrics: t.lyrics,
+        bpm: t.bpm,
+        // ReplayGain/LUFS - the key data for normalization
+        rgAlbumGain: t.rgAlbumGain,
+        rgAlbumPeak: t.rgAlbumPeak,
+        rgTrackGain: t.rgTrackGain,
+        rgTrackPeak: t.rgTrackPeak,
+        lufsAnalyzed: !!t.lufsAnalyzedAt,
+        // MusicBrainz
+        mbzTrackId: t.mbzTrackId,
+        mbzAlbumId: t.mbzAlbumId,
+        mbzArtistId: t.mbzArtistId,
+        mbzAlbumArtistId: t.mbzAlbumArtistId,
+        mbzReleaseTrackId: t.mbzReleaseTrackId,
+        catalogNum: t.catalogNum,
+        // File info for download
+        filename: t.path.split('/').pop(),
+        streamUrl: `/api/federation/stream/${t.id}`,
+      })),
+    };
+  }
+
   @Get('albums/:id/download')
   @UseGuards(FederationAccessGuard)
   @ApiOperation({
