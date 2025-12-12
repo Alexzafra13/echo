@@ -1,11 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import { BullmqService } from '../../src/infrastructure/queue/bullmq.service';
 import {
   createTestApp,
   createUserAndLogin,
   cleanUserTables,
   cleanContentTables,
+  cleanQueues,
   createTestArtist,
 } from './helpers/test-setup';
 
@@ -20,6 +22,7 @@ import {
 describe('Artists E2E', () => {
   let app: INestApplication;
   let drizzle: DrizzleService;
+  let bullmq: BullmqService;
   let accessToken: string;
 
   let artist1Id: string;
@@ -30,6 +33,7 @@ describe('Artists E2E', () => {
     const testApp = await createTestApp();
     app = testApp.app;
     drizzle = testApp.drizzle;
+    bullmq = testApp.bullmq;
   });
 
   afterAll(async () => {
@@ -37,6 +41,8 @@ describe('Artists E2E', () => {
   });
 
   beforeEach(async () => {
+    // Limpiar colas de BullMQ para evitar jobs huérfanos
+    await cleanQueues(bullmq);
     // Limpiar BD antes de cada test
     await cleanContentTables(drizzle);
     await cleanUserTables(drizzle);
