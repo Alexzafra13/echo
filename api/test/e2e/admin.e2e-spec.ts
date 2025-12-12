@@ -1,12 +1,14 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import { BullmqService } from '../../src/infrastructure/queue/bullmq.service';
 import {
   createTestApp,
   createTestUser,
   createAdminAndLogin,
   createUserAndLogin,
   cleanUserTables,
+  cleanQueues,
   getUserById,
 } from './helpers/test-setup';
 
@@ -24,11 +26,13 @@ import {
 describe('Admin E2E', () => {
   let app: INestApplication;
   let drizzle: DrizzleService;
+  let bullmq: BullmqService;
 
   beforeAll(async () => {
     const testApp = await createTestApp();
     app = testApp.app;
     drizzle = testApp.drizzle;
+    bullmq = testApp.bullmq;
   });
 
   afterAll(async () => {
@@ -36,6 +40,7 @@ describe('Admin E2E', () => {
   });
 
   beforeEach(async () => {
+    await cleanQueues(bullmq);
     await cleanUserTables(drizzle);
   });
 

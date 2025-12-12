@@ -1,11 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import { BullmqService } from '../../src/infrastructure/queue/bullmq.service';
 import {
   createTestApp,
   createUserAndLogin,
   cleanUserTables,
   cleanContentTables,
+  cleanQueues,
   createTestArtist,
   createTestAlbum,
   createTestTrack,
@@ -22,6 +24,7 @@ import {
 describe('Tracks E2E', () => {
   let app: INestApplication;
   let drizzle: DrizzleService;
+  let bullmq: BullmqService;
   let accessToken: string;
 
   let track1Id: string;
@@ -32,6 +35,7 @@ describe('Tracks E2E', () => {
     const testApp = await createTestApp();
     app = testApp.app;
     drizzle = testApp.drizzle;
+    bullmq = testApp.bullmq;
   });
 
   afterAll(async () => {
@@ -39,6 +43,8 @@ describe('Tracks E2E', () => {
   });
 
   beforeEach(async () => {
+    // Limpiar colas de BullMQ para evitar jobs huérfanos
+    await cleanQueues(bullmq);
     // Limpiar BD antes de cada test
     await cleanContentTables(drizzle);
     await cleanUserTables(drizzle);

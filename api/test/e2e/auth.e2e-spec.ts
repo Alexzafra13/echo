@@ -1,11 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { DrizzleService } from '../../src/infrastructure/database/drizzle.service';
+import { BullmqService } from '../../src/infrastructure/queue/bullmq.service';
 import {
   createTestApp,
   createTestUser,
   loginUser,
   cleanUserTables,
+  cleanQueues,
   getUserByUsername,
 } from './helpers/test-setup';
 
@@ -23,11 +25,13 @@ import {
 describe('Auth E2E', () => {
   let app: INestApplication;
   let drizzle: DrizzleService;
+  let bullmq: BullmqService;
 
   beforeAll(async () => {
     const testApp = await createTestApp();
     app = testApp.app;
     drizzle = testApp.drizzle;
+    bullmq = testApp.bullmq;
   });
 
   afterAll(async () => {
@@ -35,7 +39,8 @@ describe('Auth E2E', () => {
   });
 
   beforeEach(async () => {
-    // Limpiar usuarios antes de cada test
+    // Limpiar colas y usuarios antes de cada test
+    await cleanQueues(bullmq);
     await cleanUserTables(drizzle);
   });
 
