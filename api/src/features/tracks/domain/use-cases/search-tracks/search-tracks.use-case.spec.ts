@@ -23,6 +23,7 @@ describe('SearchTracksUseCase', () => {
       size: Number(10485760),
       suffix: 'mp3',
       compilation: false,
+      playCount: 0,
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-01'),
     }),
@@ -40,6 +41,7 @@ describe('SearchTracksUseCase', () => {
       size: Number(8800000),
       suffix: 'mp3',
       compilation: false,
+      playCount: 0,
       createdAt: new Date('2025-01-02'),
       updatedAt: new Date('2025-01-02'),
     }),
@@ -251,6 +253,7 @@ describe('SearchTracksUseCase', () => {
         artistName: 'Search Artist',
         albumArtistName: 'Search Album Artist',
         compilation: true,
+        playCount: 0,
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
       });

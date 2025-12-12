@@ -1,10 +1,32 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { ChangeThemeUseCase } from './change-theme.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
 } from '@shared/testing/mock.types';
+
+// Helper para crear UserProps con todos los campos requeridos
+const createUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'juan',
+  passwordHash: '$2b$12$hashed',
+  name: 'Juan',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'light',
+  language: 'es',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 describe('ChangeThemeUseCase', () => {
   let useCase: ChangeThemeUseCase;
@@ -19,19 +41,7 @@ describe('ChangeThemeUseCase', () => {
   describe('execute', () => {
     it('debería cambiar tema a dark', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'light',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -51,19 +61,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('debería cambiar tema a light', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ theme: 'dark' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -82,19 +80,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('debería permitir establecer el mismo tema actual', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ theme: 'dark' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -123,19 +109,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('debería lanzar error si tema no es válido', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ theme: 'dark' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -156,19 +130,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('debería lanzar error para tema vacío', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ theme: 'dark' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -183,19 +145,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('debería lanzar error para tema con mayúsculas', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ theme: 'dark' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -225,19 +175,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('NO debería retornar nada (void)', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'light',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -254,19 +192,7 @@ describe('ChangeThemeUseCase', () => {
 
     it('debería funcionar para usuarios inactivos', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: false,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'light',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ isActive: false }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);

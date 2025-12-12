@@ -42,6 +42,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
       duration: 180,
       discNumber: 1,
       compilation: false,
+      playCount: 0,
       size: 5000000,
       createdAt: new Date(),
       updatedAt: new Date(),

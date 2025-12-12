@@ -75,9 +75,29 @@ const mockAccessToken: FederationAccessToken = {
 
 describe('FederationController', () => {
   let controller: FederationController;
-  let mockTokenService: jest.Mocked<Partial<FederationTokenService>>;
-  let mockRemoteServerService: jest.Mocked<Partial<RemoteServerService>>;
-  let mockRepository: jest.Mocked<Partial<IFederationRepository>>;
+  let mockTokenService: {
+    generateInvitationToken: jest.Mock;
+    getUserInvitationTokens: jest.Mock;
+    deleteInvitationToken: jest.Mock;
+    getUserAccessTokens: jest.Mock;
+    revokeAccessToken: jest.Mock;
+  };
+  let mockRemoteServerService: {
+    connectToServer: jest.Mock;
+    syncServerStats: jest.Mock;
+    disconnectFromServer: jest.Mock;
+    checkAllServersHealth: jest.Mock;
+    pingServer: jest.Mock;
+    getRemoteLibrary: jest.Mock;
+    getRemoteAlbums: jest.Mock;
+    getRemoteAlbum: jest.Mock;
+  };
+  let mockRepository: {
+    findConnectedServerById: jest.Mock;
+    findConnectedServersByUserId: jest.Mock;
+    findFederationTokenById: jest.Mock;
+    findFederationAccessTokenById: jest.Mock;
+  };
   let mockLogger: { info: jest.Mock; error: jest.Mock; warn: jest.Mock };
 
   beforeEach(async () => {
@@ -147,7 +167,7 @@ describe('FederationController', () => {
 
   describe('getConnectedServer', () => {
     it('should return server when user owns it', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       const result = await controller.getConnectedServer(mockUser as User, 'server-123');
 
@@ -156,7 +176,7 @@ describe('FederationController', () => {
     });
 
     it('should throw NotFoundException when server does not exist', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(null);
+      mockRepository.findConnectedServerById.mockResolvedValue(null);
 
       await expect(
         controller.getConnectedServer(mockUser as User, 'non-existent'),
@@ -164,7 +184,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.getConnectedServer(mockOtherUser as User, 'server-123'),
@@ -174,8 +194,8 @@ describe('FederationController', () => {
 
   describe('syncServer', () => {
     it('should sync server when user owns it', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
-      mockRemoteServerService.syncServerStats!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
+      mockRemoteServerService.syncServerStats.mockResolvedValue(mockServer);
 
       const result = await controller.syncServer(mockUser as User, 'server-123');
 
@@ -184,7 +204,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.syncServer(mockOtherUser as User, 'server-123'),
@@ -196,8 +216,8 @@ describe('FederationController', () => {
 
   describe('disconnectFromServer', () => {
     it('should disconnect when user owns the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
-      mockRemoteServerService.disconnectFromServer!.mockResolvedValue(true);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
+      mockRemoteServerService.disconnectFromServer.mockResolvedValue(true);
 
       await controller.disconnectFromServer(mockUser as User, 'server-123');
 
@@ -205,7 +225,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.disconnectFromServer(mockOtherUser as User, 'server-123'),
@@ -215,7 +235,7 @@ describe('FederationController', () => {
     });
 
     it('should throw NotFoundException when server does not exist', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(null);
+      mockRepository.findConnectedServerById.mockResolvedValue(null);
 
       await expect(
         controller.disconnectFromServer(mockUser as User, 'non-existent'),
@@ -225,8 +245,8 @@ describe('FederationController', () => {
 
   describe('checkServerHealth', () => {
     it('should check health when user owns the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
-      mockRemoteServerService.pingServer!.mockResolvedValue(true);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
+      mockRemoteServerService.pingServer.mockResolvedValue(true);
 
       const result = await controller.checkServerHealth(mockUser as User, 'server-123');
 
@@ -235,7 +255,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.checkServerHealth(mockOtherUser as User, 'server-123'),
@@ -258,8 +278,8 @@ describe('FederationController', () => {
         totalArtists: 50,
       };
 
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
-      mockRemoteServerService.getRemoteLibrary!.mockResolvedValue(mockLibrary);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
+      mockRemoteServerService.getRemoteLibrary.mockResolvedValue(mockLibrary);
 
       const result = await controller.getRemoteLibrary(
         mockUser as User,
@@ -272,7 +292,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.getRemoteLibrary(mockOtherUser as User, 'server-123', { page: 1, limit: 50 }),
@@ -284,8 +304,8 @@ describe('FederationController', () => {
     it('should get albums when user owns the server', async () => {
       const mockAlbums = { albums: [], total: 0 };
 
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
-      mockRemoteServerService.getRemoteAlbums!.mockResolvedValue(mockAlbums);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
+      mockRemoteServerService.getRemoteAlbums.mockResolvedValue(mockAlbums);
 
       const result = await controller.getRemoteAlbums(
         mockUser as User,
@@ -297,7 +317,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.getRemoteAlbums(mockOtherUser as User, 'server-123', { page: 1, limit: 50 }),
@@ -318,8 +338,8 @@ describe('FederationController', () => {
         tracks: [],
       };
 
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
-      mockRemoteServerService.getRemoteAlbum!.mockResolvedValue(mockAlbum);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
+      mockRemoteServerService.getRemoteAlbum.mockResolvedValue(mockAlbum);
 
       const result = await controller.getRemoteAlbum(
         mockUser as User,
@@ -331,7 +351,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the server', async () => {
-      mockRepository.findConnectedServerById!.mockResolvedValue(mockServer);
+      mockRepository.findConnectedServerById.mockResolvedValue(mockServer);
 
       await expect(
         controller.getRemoteAlbum(mockOtherUser as User, 'server-123', 'album-123'),
@@ -345,8 +365,8 @@ describe('FederationController', () => {
 
   describe('deleteInvitationToken', () => {
     it('should delete token when user owns it', async () => {
-      mockRepository.findFederationTokenById!.mockResolvedValue(mockFederationToken);
-      mockTokenService.deleteInvitationToken!.mockResolvedValue(true);
+      mockRepository.findFederationTokenById.mockResolvedValue(mockFederationToken);
+      mockTokenService.deleteInvitationToken.mockResolvedValue(true);
 
       await controller.deleteInvitationToken(mockUser as User, 'token-123');
 
@@ -354,7 +374,7 @@ describe('FederationController', () => {
     });
 
     it('should throw NotFoundException when token does not exist', async () => {
-      mockRepository.findFederationTokenById!.mockResolvedValue(null);
+      mockRepository.findFederationTokenById.mockResolvedValue(null);
 
       await expect(
         controller.deleteInvitationToken(mockUser as User, 'non-existent'),
@@ -364,7 +384,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the token', async () => {
-      mockRepository.findFederationTokenById!.mockResolvedValue(mockFederationToken);
+      mockRepository.findFederationTokenById.mockResolvedValue(mockFederationToken);
 
       await expect(
         controller.deleteInvitationToken(mockOtherUser as User, 'token-123'),
@@ -376,8 +396,8 @@ describe('FederationController', () => {
 
   describe('revokeAccessToken', () => {
     it('should revoke token when user owns it', async () => {
-      mockRepository.findFederationAccessTokenById!.mockResolvedValue(mockAccessToken);
-      mockTokenService.revokeAccessToken!.mockResolvedValue(true);
+      mockRepository.findFederationAccessTokenById.mockResolvedValue(mockAccessToken);
+      mockTokenService.revokeAccessToken.mockResolvedValue(true);
 
       await controller.revokeAccessToken(mockUser as User, 'access-123');
 
@@ -385,7 +405,7 @@ describe('FederationController', () => {
     });
 
     it('should throw NotFoundException when token does not exist', async () => {
-      mockRepository.findFederationAccessTokenById!.mockResolvedValue(null);
+      mockRepository.findFederationAccessTokenById.mockResolvedValue(null);
 
       await expect(
         controller.revokeAccessToken(mockUser as User, 'non-existent'),
@@ -395,7 +415,7 @@ describe('FederationController', () => {
     });
 
     it('should throw ForbiddenException when user does not own the token', async () => {
-      mockRepository.findFederationAccessTokenById!.mockResolvedValue(mockAccessToken);
+      mockRepository.findFederationAccessTokenById.mockResolvedValue(mockAccessToken);
 
       await expect(
         controller.revokeAccessToken(mockOtherUser as User, 'access-123'),
@@ -411,7 +431,7 @@ describe('FederationController', () => {
 
   describe('getConnectedServers', () => {
     it('should return servers owned by the user', async () => {
-      mockRepository.findConnectedServersByUserId!.mockResolvedValue([mockServer]);
+      mockRepository.findConnectedServersByUserId.mockResolvedValue([mockServer]);
 
       const result = await controller.getConnectedServers(mockUser as User);
 
@@ -423,7 +443,7 @@ describe('FederationController', () => {
 
   describe('getInvitationTokens', () => {
     it('should return tokens owned by the user', async () => {
-      mockTokenService.getUserInvitationTokens!.mockResolvedValue([mockFederationToken]);
+      mockTokenService.getUserInvitationTokens.mockResolvedValue([mockFederationToken]);
 
       const result = await controller.getInvitationTokens(mockUser as User);
 
@@ -435,7 +455,7 @@ describe('FederationController', () => {
 
   describe('getAccessTokens', () => {
     it('should return access tokens owned by the user', async () => {
-      mockTokenService.getUserAccessTokens!.mockResolvedValue([mockAccessToken]);
+      mockTokenService.getUserAccessTokens.mockResolvedValue([mockAccessToken]);
 
       const result = await controller.getAccessTokens(mockUser as User);
 

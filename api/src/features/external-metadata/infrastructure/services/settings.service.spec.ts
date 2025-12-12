@@ -46,7 +46,7 @@ describe('SettingsService', () => {
     it('debería retornar valor del cache si existe', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'test.key', value: 'test-value', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'test.key', value: 'test-value', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Inicializar cache
@@ -64,7 +64,6 @@ describe('SettingsService', () => {
       // Arrange
       repository.findAll.mockResolvedValue([]);
       repository.findOne.mockResolvedValue({
-        id: '1',
         key: 'test.key',
         value: 'database-value',
         type: 'string',
@@ -112,7 +111,7 @@ describe('SettingsService', () => {
     it('debería convertir "true" a boolean true', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'bool.key', value: 'true', type: 'boolean', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'bool.key', value: 'true', type: 'boolean', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Act
@@ -125,7 +124,7 @@ describe('SettingsService', () => {
     it('debería convertir "false" a boolean false', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'bool.key', value: 'false', type: 'boolean', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'bool.key', value: 'false', type: 'boolean', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Act
@@ -152,7 +151,7 @@ describe('SettingsService', () => {
     it('debería convertir string a número', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'num.key', value: '42', type: 'number', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'num.key', value: '42', type: 'number', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Act
@@ -179,7 +178,7 @@ describe('SettingsService', () => {
     it('debería retornar valor como string', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'str.key', value: 'hello', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'str.key', value: 'hello', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Act
@@ -207,7 +206,6 @@ describe('SettingsService', () => {
       // Arrange
       repository.findAll.mockResolvedValue([]);
       repository.update.mockResolvedValue({
-        id: '1',
         key: 'test.key',
         value: 'new-value',
         type: 'string',
@@ -293,9 +291,9 @@ describe('SettingsService', () => {
     it('debería retornar todas las settings de una categoría', async () => {
       // Arrange
       repository.findByCategory.mockResolvedValue([
-        { id: '1', key: 'cat.key1', value: 'val1', type: 'string', category: 'cat', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
-        { id: '2', key: 'cat.key2', value: 'true', type: 'boolean', category: 'cat', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
-        { id: '3', key: 'cat.key3', value: '42', type: 'number', category: 'cat', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'cat.key1', value: 'val1', type: 'string', category: 'cat', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'cat.key2', value: 'true', type: 'boolean', category: 'cat', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'cat.key3', value: '42', type: 'number', category: 'cat', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Act
@@ -402,7 +400,7 @@ describe('SettingsService', () => {
     it('debería limpiar el cache', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'test.key', value: 'test', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'test.key', value: 'test', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
 
       // Inicializar cache
@@ -421,10 +419,9 @@ describe('SettingsService', () => {
     it('debería actualizar setting y invalidar cache', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'test.key', value: 'old', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'test.key', value: 'old', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
       repository.update.mockResolvedValue({
-        id: '1',
         key: 'test.key',
         value: 'new',
         type: 'string',
@@ -450,19 +447,9 @@ describe('SettingsService', () => {
     it('debería eliminar setting y invalidar cache', async () => {
       // Arrange
       repository.findAll.mockResolvedValue([
-        { id: '1', key: 'test.key', value: 'test', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
+        { key: 'test.key', value: 'test', type: 'string', category: 'test', description: '', isPublic: false, createdAt: new Date(), updatedAt: new Date() },
       ]);
-      repository.delete.mockResolvedValue({
-        id: '1',
-        key: 'test.key',
-        value: 'test',
-        type: 'string',
-        category: 'test',
-        description: '',
-        isPublic: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      repository.delete.mockResolvedValue(undefined);
 
       // Inicializar cache
       await service.get('test.key');

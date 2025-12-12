@@ -5,7 +5,7 @@ import { FederationAccessToken } from '@infrastructure/database/schema';
 
 describe('FederationAccessGuard', () => {
   let guard: FederationAccessGuard;
-  let mockTokenService: jest.Mocked<Partial<FederationTokenService>>;
+  let mockTokenService: { validateAccessToken: jest.Mock };
 
   const mockAccessToken: FederationAccessToken = {
     id: 'access-123',
@@ -48,7 +48,7 @@ describe('FederationAccessGuard', () => {
 
   describe('canActivate', () => {
     it('should allow access with valid Bearer token in header', async () => {
-      mockTokenService.validateAccessToken!.mockResolvedValue(mockAccessToken);
+      mockTokenService.validateAccessToken.mockResolvedValue(mockAccessToken);
 
       const context = createMockContext('Bearer valid-access-token');
       const result = await guard.canActivate(context);
@@ -58,7 +58,7 @@ describe('FederationAccessGuard', () => {
     });
 
     it('should allow access with valid token in query parameter', async () => {
-      mockTokenService.validateAccessToken!.mockResolvedValue(mockAccessToken);
+      mockTokenService.validateAccessToken.mockResolvedValue(mockAccessToken);
 
       const context = createMockContext(undefined, 'valid-access-token');
       const result = await guard.canActivate(context);
@@ -68,7 +68,7 @@ describe('FederationAccessGuard', () => {
     });
 
     it('should prefer Authorization header over query token', async () => {
-      mockTokenService.validateAccessToken!.mockResolvedValue(mockAccessToken);
+      mockTokenService.validateAccessToken.mockResolvedValue(mockAccessToken);
 
       const context = createMockContext('Bearer header-token', 'query-token');
       await guard.canActivate(context);
@@ -84,7 +84,7 @@ describe('FederationAccessGuard', () => {
     });
 
     it('should throw UnauthorizedException when token is invalid', async () => {
-      mockTokenService.validateAccessToken!.mockResolvedValue(null);
+      mockTokenService.validateAccessToken.mockResolvedValue(null);
 
       const context = createMockContext('Bearer invalid-token');
 
@@ -95,7 +95,7 @@ describe('FederationAccessGuard', () => {
     });
 
     it('should throw UnauthorizedException when token is expired', async () => {
-      mockTokenService.validateAccessToken!.mockResolvedValue(null);
+      mockTokenService.validateAccessToken.mockResolvedValue(null);
 
       const context = createMockContext('Bearer expired-token');
 
@@ -103,7 +103,7 @@ describe('FederationAccessGuard', () => {
     });
 
     it('should attach access token to request', async () => {
-      mockTokenService.validateAccessToken!.mockResolvedValue(mockAccessToken);
+      mockTokenService.validateAccessToken.mockResolvedValue(mockAccessToken);
 
       const request: any = {
         headers: { authorization: 'Bearer valid-access-token' },

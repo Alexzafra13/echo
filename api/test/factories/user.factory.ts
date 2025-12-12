@@ -34,6 +34,7 @@ export class UserFactory {
       showTopAlbums: true,
       showPlaylists: true,
       bio: undefined,
+      homeSections: [],
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-01'),
       ...overrides,

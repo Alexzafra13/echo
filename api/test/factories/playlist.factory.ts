@@ -1,4 +1,4 @@
-import { Playlist } from '@features/playlists/domain/entities/playlist.entity';
+import { Playlist, PlaylistProps } from '@features/playlists/domain/entities/playlist.entity';
 
 /**
  * Factory para crear instancias de Playlist en tests
@@ -9,32 +9,18 @@ export class PlaylistFactory {
    * Crea una playlist de test con valores por defecto
    * @param overrides Propiedades a sobrescribir
    */
-  static create(overrides?: Partial<{
-    id: string;
-    name: string;
-    description: string | null;
-    coverImageUrl: string | null;
-    duration: number;
-    size: bigint;
-    ownerId: string;
-    public: boolean;
-    songCount: number;
-    path: string | null;
-    sync: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-  }>): Playlist {
+  static create(overrides?: Partial<PlaylistProps>): Playlist {
     return Playlist.fromPrimitives({
       id: 'playlist-123',
       name: 'Test Playlist',
       description: 'Test description',
-      coverImageUrl: null,
+      coverImageUrl: undefined,
       duration: 600,
-      size: BigInt(25000000),
+      size: 25000000,
       ownerId: 'user-123',
       public: false,
       songCount: 5,
-      path: null,
+      path: undefined,
       sync: false,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-01'),
@@ -45,7 +31,7 @@ export class PlaylistFactory {
   /**
    * Crea una playlist pública
    */
-  static createPublic(overrides?: Partial<any>): Playlist {
+  static createPublic(overrides?: Partial<PlaylistProps>): Playlist {
     return PlaylistFactory.create({
       public: true,
       ...overrides,
@@ -55,7 +41,7 @@ export class PlaylistFactory {
   /**
    * Crea múltiples playlists
    */
-  static createMany(count: number, overridesFn?: (index: number) => Partial<any>): Playlist[] {
+  static createMany(count: number, overridesFn?: (index: number) => Partial<PlaylistProps>): Playlist[] {
     return Array.from({ length: count }, (_, i) =>
       PlaylistFactory.create(overridesFn ? overridesFn(i) : {
         id: `playlist-${i}`,

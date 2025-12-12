@@ -28,6 +28,7 @@ describe('GetTrackUseCase', () => {
     artistName: 'The Beatles',
     albumArtistName: 'The Beatles',
     compilation: false,
+    playCount: 0,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
   });
@@ -143,6 +144,7 @@ describe('GetTrackUseCase', () => {
         artistName: undefined,
         albumArtistName: undefined,
         compilation: false,
+        playCount: 0,
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
       });
@@ -167,6 +169,7 @@ describe('GetTrackUseCase', () => {
         title: 'Greatest Hit #1',
         albumId: 'compilation-album-1',
         compilation: true,
+        playCount: 0,
         discNumber: 1,
         path: '/music/compilations/hit1.mp3',
         createdAt: new Date('2025-01-01'),

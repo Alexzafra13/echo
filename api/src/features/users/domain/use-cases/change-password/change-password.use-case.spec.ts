@@ -1,5 +1,5 @@
 import { NotFoundError, ValidationError, UnauthorizedError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
+import { User, UserProps } from '@features/auth/domain/entities/user.entity';
 import { ChangePasswordUseCase } from './change-password.use-case';
 import {
   MockUserRepository,
@@ -9,6 +9,28 @@ import {
   createMockPasswordService,
   createMockLogService,
 } from '@shared/testing/mock.types';
+
+// Helper para crear UserProps con todos los campos requeridos
+const createUserProps = (overrides: Partial<UserProps> = {}): UserProps => ({
+  id: 'user-123',
+  username: 'juan',
+  passwordHash: '$2b$12$old_password_hash',
+  name: 'Juan',
+  isActive: true,
+  isAdmin: false,
+  mustChangePassword: false,
+  theme: 'dark',
+  language: 'es',
+  isPublicProfile: false,
+  showTopTracks: true,
+  showTopArtists: true,
+  showTopAlbums: true,
+  showPlaylists: true,
+  homeSections: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 describe('ChangePasswordUseCase', () => {
   let useCase: ChangePasswordUseCase;
@@ -24,26 +46,14 @@ describe('ChangePasswordUseCase', () => {
     useCase = new ChangePasswordUseCase(
       mockUserRepository,
       mockPasswordService,
-      mockLogService,
+      mockLogService as any,
     );
   });
 
   describe('execute', () => {
     it('debería cambiar contraseña correctamente', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
@@ -74,19 +84,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería quitar mustChangePassword si era primer login', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: true,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ mustChangePassword: true }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
@@ -111,19 +109,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('NO debería llamar updatePartial si mustChangePassword ya era false', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
@@ -177,19 +163,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería lanzar error si contraseña actual es incorrecta', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(false);
@@ -213,19 +187,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería lanzar error si nueva contraseña es igual a la actual', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps({ passwordHash: '$2b$12$password_hash' }));
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(true);
@@ -249,19 +211,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería permitir contraseña con exactamente 8 caracteres', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = User.reconstruct(createUserProps());
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
