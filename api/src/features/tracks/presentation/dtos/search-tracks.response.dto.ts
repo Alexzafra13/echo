@@ -1,6 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TrackResponseDto } from './track.response.dto';
+import { SearchTracksOutput } from '../../domain/use-cases/search-tracks/search-tracks.dto';
 
 /**
  * SearchTracksResponseDto - DTO de respuesta para búsqueda de tracks
@@ -31,9 +32,9 @@ export class SearchTracksResponseDto {
   @Expose()
   hasMore!: boolean;
 
-  static fromDomain(data: any): SearchTracksResponseDto {
+  static fromDomain(data: SearchTracksOutput): SearchTracksResponseDto {
     const dto = new SearchTracksResponseDto();
-    dto.data = data.data.map((track: any) => TrackResponseDto.fromDomain(track));
+    dto.data = data.data.map((track) => TrackResponseDto.fromDomain(track));
     dto.total = data.total;
     dto.skip = data.skip;
     dto.take = data.take;

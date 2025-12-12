@@ -1,5 +1,44 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Track, TrackProps } from '../../domain/entities/track.entity';
+
+/**
+ * Interface mínima para datos de track (compatible con entity, props y use case outputs)
+ */
+interface TrackDataInput {
+  id: string;
+  title: string;
+  albumId?: string;
+  artistId?: string;
+  albumArtistId?: string;
+  trackNumber?: number;
+  discNumber: number;
+  year?: number;
+  duration?: number;
+  path: string;
+  bitRate?: number;
+  size?: number;
+  suffix?: string;
+  lyrics?: string;
+  comment?: string;
+  albumName?: string;
+  artistName?: string;
+  albumArtistName?: string;
+  compilation: boolean;
+  rgTrackGain?: number;
+  rgTrackPeak?: number;
+  rgAlbumGain?: number;
+  rgAlbumPeak?: number;
+  missingAt?: Date;
+  playCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Tipo unificado para datos de track (entity o datos planos)
+ */
+type TrackData = Track | TrackProps | TrackDataInput;
 
 /**
  * TrackResponseDto - DTO de respuesta para UN track
@@ -113,9 +152,9 @@ export class TrackResponseDto {
   @Expose()
   updatedAt!: Date;
 
-  static fromDomain(track: any): TrackResponseDto {
-    // Convert to primitives if it's a Track entity (has toPrimitives method)
-    const data = track.toPrimitives ? track.toPrimitives() : track;
+  static fromDomain(track: TrackData): TrackResponseDto {
+    // Extraer propiedades (funciona tanto con Track entity como TrackProps)
+    const data = 'toPrimitives' in track ? track.toPrimitives() : track;
 
     const dto = new TrackResponseDto();
     dto.id = data.id;
@@ -129,7 +168,7 @@ export class TrackResponseDto {
     dto.duration = data.duration;
     dto.path = data.path;
     dto.bitRate = data.bitRate;
-    dto.size = data.size; // Now correctly a number from toPrimitives()
+    dto.size = data.size;
     dto.suffix = data.suffix;
     dto.lyrics = data.lyrics;
     dto.comment = data.comment;

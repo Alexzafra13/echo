@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, UseGuards, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
@@ -355,6 +355,9 @@ export class AlbumsController {
   })
   async getFeaturedAlbum(): Promise<AlbumResponseDto> {
     const result = await this.getFeaturedAlbumUseCase.execute();
+    if (!result) {
+      throw new NotFoundException('No hay álbumes en la librería');
+    }
     return AlbumResponseDto.fromDomain(result);
   }
 

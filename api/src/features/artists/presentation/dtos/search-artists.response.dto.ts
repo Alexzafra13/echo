@@ -1,6 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { ArtistResponseDto } from './artist.response.dto';
+import { SearchArtistsOutput } from '../../domain/use-cases/search-artists/search-artists.dto';
 
 /**
  * SearchArtistsResponseDto - DTO de respuesta para búsqueda de artistas
@@ -31,9 +32,9 @@ export class SearchArtistsResponseDto {
   @Expose()
   hasMore!: boolean;
 
-  static fromDomain(data: any): SearchArtistsResponseDto {
+  static fromDomain(data: SearchArtistsOutput): SearchArtistsResponseDto {
     const dto = new SearchArtistsResponseDto();
-    dto.data = data.data.map((artist: any) => ArtistResponseDto.fromDomain(artist));
+    dto.data = data.data.map((artist) => ArtistResponseDto.fromDomain(artist));
     dto.total = data.total;
     dto.skip = data.skip;
     dto.take = data.take;
