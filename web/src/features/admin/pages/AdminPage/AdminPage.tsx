@@ -47,7 +47,7 @@ export default function AdminPage() {
     if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
-  }, [tabFromUrl]);
+  }, [tabFromUrl, activeTab]);
 
   // Reset scroll position when tab changes
   useEffect(() => {
