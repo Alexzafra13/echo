@@ -133,7 +133,6 @@ export default function AlbumsPage() {
 
   // Shared albums data
   const sharedAlbums = sharedAlbumsQuery.data?.albums || [];
-  const sharedTotal = sharedAlbumsQuery.data?.total || 0;
   const sharedServerCount = sharedAlbumsQuery.data?.serverCount || 0;
 
   return (
