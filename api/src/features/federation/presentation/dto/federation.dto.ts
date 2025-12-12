@@ -66,12 +66,20 @@ export class ConnectToServerDto {
   serverName?: string;
 
   @ApiPropertyOptional({
-    description: 'URL pública de nuestro servidor (para que el servidor remoto pueda conectarse de vuelta)',
+    description: 'URL pública de nuestro servidor (requerida si requestMutual es true)',
     example: 'https://mi-servidor.example.com',
   })
   @IsOptional()
   @IsUrl({ require_tld: false })
   localServerUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Solicitar federación mutua (el servidor remoto podrá ver nuestra biblioteca)',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  requestMutual?: boolean;
 }
 
 export class AcceptConnectionDto {
@@ -96,6 +104,22 @@ export class AcceptConnectionDto {
   @IsOptional()
   @IsUrl({ require_tld: false })
   serverUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Si se solicita federación mutua',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  requestMutual?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Token de invitación del servidor remoto para establecer conexión mutua',
+    example: 'WXYZ-5678-ABCD-1234',
+  })
+  @IsOptional()
+  @IsString()
+  mutualInvitationToken?: string;
 }
 
 export class UpdatePermissionsDto {
@@ -365,4 +389,30 @@ export class RemoteLibraryResponseDto {
 
   @ApiProperty({ description: 'Total de artistas' })
   totalArtists!: number;
+}
+
+export class FederationRequestResponseDto {
+  @ApiProperty({ description: 'ID de la solicitud' })
+  id!: string;
+
+  @ApiProperty({ description: 'Nombre del servidor que solicita' })
+  serverName!: string;
+
+  @ApiProperty({ description: 'URL del servidor que solicita' })
+  serverUrl!: string;
+
+  @ApiProperty({
+    description: 'Estado de la solicitud',
+    enum: ['pending', 'approved', 'rejected', 'expired'],
+  })
+  status!: string;
+
+  @ApiProperty({ description: 'Fecha de expiración' })
+  expiresAt!: Date;
+
+  @ApiProperty({ description: 'Fecha de creación' })
+  createdAt!: Date;
+
+  @ApiPropertyOptional({ description: 'Fecha de respuesta' })
+  respondedAt?: Date;
 }

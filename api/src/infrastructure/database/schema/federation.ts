@@ -112,6 +112,33 @@ export const federationAccessTokens = pgTable(
 );
 
 // ============================================
+// Federation Requests (Solicitudes de federación mutua)
+// ============================================
+// Pending requests from other servers to establish mutual federation
+export const federationRequests = pgTable(
+  'federation_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    serverName: varchar('server_name', { length: 100 }).notNull(),
+    serverUrl: varchar('server_url', { length: 512 }).notNull(),
+    invitationToken: varchar('invitation_token', { length: 64 }).notNull(), // Token que debemos usar para conectarnos
+    status: varchar('status', { length: 20 }).notNull().default('pending'),
+    respondedAt: timestamp('responded_at'),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_federation_requests_user').on(table.userId),
+    index('idx_federation_requests_status').on(table.status),
+    index('idx_federation_requests_expires').on(table.expiresAt),
+    check('valid_request_status', sql`${table.status} IN ('pending', 'approved', 'rejected', 'expired')`),
+  ],
+);
+
+// ============================================
 // Album Import Queue (Cola de descarga de álbumes)
 // ============================================
 // Queue for downloading albums from connected servers
@@ -170,4 +197,8 @@ export type NewFederationAccessToken = typeof federationAccessTokens.$inferInser
 export type AlbumImportQueue = typeof albumImportQueue.$inferSelect;
 export type NewAlbumImportQueue = typeof albumImportQueue.$inferInsert;
 
+export type FederationRequest = typeof federationRequests.$inferSelect;
+export type NewFederationRequest = typeof federationRequests.$inferInsert;
+
 export type ImportStatus = 'pending' | 'downloading' | 'completed' | 'failed' | 'cancelled';
+export type FederationRequestStatus = 'pending' | 'approved' | 'rejected' | 'expired';

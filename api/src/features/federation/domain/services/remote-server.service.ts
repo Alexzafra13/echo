@@ -1,7 +1,8 @@
-import { Injectable, Inject, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Inject, HttpException, HttpStatus, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../ports/federation.repository';
 import { ConnectedServer } from '@infrastructure/database/schema';
+import { FederationTokenService } from './federation-token.service';
 
 /**
  * DTOs for remote server responses
@@ -65,10 +66,13 @@ export class RemoteServerService {
     private readonly logger: PinoLogger,
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
+    @Inject(forwardRef(() => FederationTokenService))
+    private readonly tokenService: FederationTokenService,
   ) {}
 
   /**
    * Connect to a remote server using an invitation token
+   * @param requestMutual - If true, generates an invitation token and sends it to request mutual federation
    */
   async connectToServer(
     userId: string,
@@ -76,6 +80,7 @@ export class RemoteServerService {
     invitationToken: string,
     serverName?: string,
     localServerUrl?: string,
+    requestMutual = false,
   ): Promise<ConnectedServer> {
     // Normalize URL
     const normalizedUrl = this.normalizeUrl(serverUrl);
@@ -84,6 +89,26 @@ export class RemoteServerService {
     const existing = await this.repository.findConnectedServerByUrl(userId, normalizedUrl);
     if (existing) {
       throw new HttpException('Already connected to this server', HttpStatus.CONFLICT);
+    }
+
+    // If requesting mutual federation, we need a local server URL
+    if (requestMutual && !localServerUrl) {
+      throw new HttpException(
+        'Local server URL is required for mutual federation',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Generate a mutual invitation token if requested
+    let mutualInvitationToken: string | undefined;
+    if (requestMutual && localServerUrl) {
+      const token = await this.tokenService.generateInvitationToken(
+        userId,
+        `Mutual federation with ${normalizedUrl}`,
+        7, // 7 days expiration
+        1, // Single use
+      );
+      mutualInvitationToken = token.token;
     }
 
     // Try to connect to the remote server
@@ -96,7 +121,9 @@ export class RemoteServerService {
         body: JSON.stringify({
           invitationToken,
           serverName: serverName || 'Echo Server',
-          serverUrl: localServerUrl, // URL de nuestro servidor para que el remoto pueda conectarse
+          serverUrl: localServerUrl,
+          requestMutual,
+          mutualInvitationToken,
         }),
       });
 
@@ -118,7 +145,7 @@ export class RemoteServerService {
       });
 
       this.logger.info(
-        { serverId: connectedServer.id, serverUrl: normalizedUrl },
+        { serverId: connectedServer.id, serverUrl: normalizedUrl, requestMutual },
         'Successfully connected to remote server',
       );
 

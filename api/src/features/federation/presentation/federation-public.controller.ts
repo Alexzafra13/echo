@@ -86,7 +86,13 @@ export class FederationPublicController {
     const ip = request.ip;
 
     this.logger.info(
-      { serverName: dto.serverName, serverUrl: dto.serverUrl, ip, token: dto.invitationToken?.substring(0, 4) + '...' },
+      {
+        serverName: dto.serverName,
+        serverUrl: dto.serverUrl,
+        ip,
+        token: dto.invitationToken?.substring(0, 4) + '...',
+        requestMutual: dto.requestMutual,
+      },
       'Federation connection attempt',
     );
 
@@ -104,6 +110,22 @@ export class FederationPublicController {
           'Invalid or expired invitation token',
         );
         throw new UnauthorizedException('Invalid or expired invitation token');
+      }
+
+      // If mutual federation is requested and we have the required data
+      if (dto.requestMutual && dto.serverUrl && dto.mutualInvitationToken) {
+        // Create a federation request for the owner to review
+        await this.tokenService.createFederationRequest(
+          accessToken.ownerId,
+          dto.serverName,
+          dto.serverUrl,
+          dto.mutualInvitationToken,
+        );
+
+        this.logger.info(
+          { serverName: dto.serverName, serverUrl: dto.serverUrl },
+          'Mutual federation request created',
+        );
       }
 
       // Get server stats

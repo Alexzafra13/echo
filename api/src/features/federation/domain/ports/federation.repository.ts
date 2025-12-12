@@ -8,6 +8,9 @@ import {
   AlbumImportQueue,
   NewAlbumImportQueue,
   ImportStatus,
+  FederationRequest,
+  NewFederationRequest,
+  FederationRequestStatus,
 } from '@infrastructure/database/schema';
 
 /**
@@ -49,6 +52,17 @@ export interface IFederationRepository {
   updateAlbumImport(id: string, data: Partial<AlbumImportQueue>): Promise<AlbumImportQueue | null>;
   updateAlbumImportStatus(id: string, status: ImportStatus, errorMessage?: string): Promise<AlbumImportQueue | null>;
   deleteAlbumImport(id: string): Promise<boolean>;
+
+  // Federation Requests (Solicitudes de federación mutua)
+  createFederationRequest(data: NewFederationRequest): Promise<FederationRequest>;
+  findFederationRequestById(id: string): Promise<FederationRequest | null>;
+  findFederationRequestsByUserId(userId: string): Promise<FederationRequest[]>;
+  findPendingFederationRequestsByUserId(userId: string): Promise<FederationRequest[]>;
+  findFederationRequestByServerUrl(userId: string, serverUrl: string): Promise<FederationRequest | null>;
+  updateFederationRequest(id: string, data: Partial<FederationRequest>): Promise<FederationRequest | null>;
+  updateFederationRequestStatus(id: string, status: FederationRequestStatus): Promise<FederationRequest | null>;
+  deleteFederationRequest(id: string): Promise<boolean>;
+  deleteExpiredFederationRequests(): Promise<number>;
 }
 
 export const FEDERATION_REPOSITORY = Symbol('FEDERATION_REPOSITORY');
