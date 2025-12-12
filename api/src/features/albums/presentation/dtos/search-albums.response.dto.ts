@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { AlbumResponseDto } from './album.response.dto';
+import { SearchAlbumsOutput } from '../../domain/use-cases/search-albums/search-albums.dto';
 
 /**
  * SearchAlbumsResponseDto - DTO de respuesta para búsqueda de álbumes
@@ -24,9 +25,9 @@ export class SearchAlbumsResponseDto {
   @Expose()
   hasMore!: boolean;
 
-  static fromDomain(data: any): SearchAlbumsResponseDto {
+  static fromDomain(data: SearchAlbumsOutput): SearchAlbumsResponseDto {
     const dto = new SearchAlbumsResponseDto();
-    dto.data = data.data.map((album: any) => AlbumResponseDto.fromDomain(album));
+    dto.data = data.data.map((album) => AlbumResponseDto.fromDomain(album));
     dto.total = data.total;
     dto.skip = data.skip;
     dto.take = data.take;

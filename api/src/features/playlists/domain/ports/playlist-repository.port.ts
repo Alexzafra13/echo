@@ -1,5 +1,17 @@
-import { Playlist, PlaylistTrack } from '../entities';
+import { Playlist, PlaylistTrack, PlaylistProps } from '../entities';
 import { Track } from '@features/tracks/domain/entities/track.entity';
+
+/**
+ * Track con información adicional de posición en playlist
+ */
+export interface TrackWithPlaylistOrder extends Track {
+  playlistOrder: number;
+}
+
+/**
+ * Tipo para actualizar playlist (entity completo o propiedades parciales)
+ */
+export type PlaylistUpdateInput = Playlist | Partial<PlaylistProps>;
 
 export interface IPlaylistRepository {
   // Playlist CRUD
@@ -10,7 +22,7 @@ export interface IPlaylistRepository {
   count(): Promise<number>;
   countByOwnerId(ownerId: string): Promise<number>;
   create(playlist: Playlist): Promise<Playlist>;
-  update(id: string, playlist: Partial<Playlist>): Promise<Playlist | null>;
+  update(id: string, playlist: PlaylistUpdateInput): Promise<Playlist | null>;
   delete(id: string): Promise<boolean>;
 
   // Find playlists containing tracks by a specific artist
@@ -25,7 +37,7 @@ export interface IPlaylistRepository {
   addTrack(playlistTrack: PlaylistTrack): Promise<PlaylistTrack>;
   addTrackWithAutoOrder(playlistId: string, trackId: string): Promise<PlaylistTrack>;
   removeTrack(playlistId: string, trackId: string): Promise<boolean>;
-  getPlaylistTracks(playlistId: string): Promise<Track[]>;
+  getPlaylistTracks(playlistId: string): Promise<TrackWithPlaylistOrder[]>;
   getPlaylistAlbumIds(playlistId: string): Promise<string[]>;
   getBatchPlaylistAlbumIds(playlistIds: string[]): Promise<Map<string, string[]>>;
   reorderTracks(playlistId: string, trackOrders: Array<{ trackId: string; order: number }>): Promise<boolean>;

@@ -14,8 +14,11 @@ export class GetAlbumsUseCase {
   async execute(input: GetAlbumsInput): Promise<GetAlbumsOutput> {
     const { skip, take } = validatePagination(input.skip, input.take);
 
-    const albums = await this.albumRepository.findAll(skip, take);
-    const total = await this.albumRepository.count();
+    // Ejecutar queries en paralelo para mejor rendimiento
+    const [albums, total] = await Promise.all([
+      this.albumRepository.findAll(skip, take),
+      this.albumRepository.count(),
+    ]);
     const hasMore = skip + take < total;
 
     return {

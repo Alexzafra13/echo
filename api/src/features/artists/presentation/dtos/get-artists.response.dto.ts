@@ -1,6 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { ArtistResponseDto } from './artist.response.dto';
+import { GetArtistsOutput } from '../../domain/use-cases/get-artists/get-artists.dto';
 
 /**
  * GetArtistsResponseDto - DTO de respuesta para lista paginada de artistas
@@ -27,9 +28,9 @@ export class GetArtistsResponseDto {
   @Expose()
   hasMore!: boolean;
 
-  static fromDomain(data: any): GetArtistsResponseDto {
+  static fromDomain(data: GetArtistsOutput): GetArtistsResponseDto {
     const dto = new GetArtistsResponseDto();
-    dto.data = data.data.map((artist: any) => ArtistResponseDto.fromDomain(artist));
+    dto.data = data.data.map((artist) => ArtistResponseDto.fromDomain(artist));
     dto.total = data.total;
     dto.skip = data.skip;
     dto.take = data.take;
