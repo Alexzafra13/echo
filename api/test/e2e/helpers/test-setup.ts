@@ -4,7 +4,7 @@ import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { BullmqService } from '../../../src/infrastructure/queue/bullmq.service';
 import { AppModule } from '../../../src/app.module';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
 import { libraryScans } from '../../../src/infrastructure/database/schema/system';
@@ -180,74 +180,76 @@ export async function createUserAndLogin(
 
 /**
  * Limpia todas las tablas relacionadas con usuarios
- * Orden: tablas dependientes primero, luego users
+ *
+ * Todas las FK a users tienen onDelete: 'cascade', por lo que eliminar
+ * de users automáticamente elimina registros en tablas dependientes.
+ * Sin embargo, primero limpiamos tablas que tienen FK tanto a users como
+ * a content (como playlists y playHistory) para evitar conflictos de orden.
  */
 export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
-  // Tablas con FK a users (orden importa por dependencias)
+  // Primero limpiar tablas que tienen FK tanto a users como a content
+  // playHistory tiene FK a users Y tracks, limpiamos explícitamente
+  await drizzle.db.delete(schema.playHistory);
 
-  // Federation (albumImportQueue depende de connectedServers)
-  await drizzle.db.delete(schema.albumImportQueue);
-  await drizzle.db.delete(schema.federationAccessTokens);
-  await drizzle.db.delete(schema.federationTokens);
-  await drizzle.db.delete(schema.connectedServers);
-
-  // Play queue tracks depende de play queues
+  // playQueueTracks tiene FK a playQueues Y tracks
   await drizzle.db.delete(schema.playQueueTracks);
   await drizzle.db.delete(schema.playQueues);
 
-  // Stats y historial
-  await drizzle.db.delete(schema.playHistory);
-  await drizzle.db.delete(schema.userPlayStats);
-  await drizzle.db.delete(schema.userStarred);
-  await drizzle.db.delete(schema.userRatings);
+  // playlists y playlistTracks tienen FK a users Y tracks
+  await drizzle.db.delete(schema.playlistTracks);
+  await drizzle.db.delete(schema.playlists);
 
-  // Social
-  await drizzle.db.delete(schema.friendships);
-
-  // Shares y bookmarks
-  await drizzle.db.delete(schema.shares);
-  await drizzle.db.delete(schema.bookmarks);
-
-  // Radio
-  await drizzle.db.delete(schema.radioStations);
-
-  // Players
-  await drizzle.db.delete(schema.players);
-
-  // Stream tokens
-  await drizzle.db.delete(schema.streamTokens);
-
-  // Finalmente users
+  // Ahora eliminar users - esto cascadeará a todas las demás tablas dependientes:
+  // - federationAccessTokens, federationTokens, connectedServers, albumImportQueue
+  // - userPlayStats, userStarred, userRatings
+  // - friendships
+  // - shares, bookmarks
+  // - radioStations
+  // - players
+  // - streamTokens
   await drizzle.db.delete(schema.users);
 }
 
 /**
  * Limpia tablas de contenido (albums, artists, tracks)
+ *
+ * NOTA: playlists y playlistTracks se limpian en cleanUserTables
+ * porque tienen FK a users y necesitan limpiarse antes de users.
  */
 export async function cleanContentTables(drizzle: DrizzleService): Promise<void> {
-  // Tablas dependientes primero (orden importa por FK constraints)
-  await drizzle.db.delete(schema.playlistTracks);
-  await drizzle.db.delete(schema.playlists);
+  // trackArtists tiene FK a tracks Y artists
   await drizzle.db.delete(schema.trackArtists);
-  // Genre tables (FK to artists, albums, tracks)
+
+  // Genre junction tables (FK to artists, albums, tracks, genres)
   await drizzle.db.delete(schema.trackGenres);
   await drizzle.db.delete(schema.albumGenres);
   await drizzle.db.delete(schema.artistGenres);
+
+  // Tracks (FK to albums, artists con cascade/set null)
   await drizzle.db.delete(schema.tracks);
+
+  // Custom covers/images (FK to albums/artists)
   await drizzle.db.delete(schema.customAlbumCovers);
   await drizzle.db.delete(schema.albums);
   await drizzle.db.delete(schema.customArtistImages);
   await drizzle.db.delete(schema.artistBanners);
   await drizzle.db.delete(schema.artists);
+
+  // Genres no tiene FK salvo las junction tables ya limpias
   await drizzle.db.delete(schema.genres);
 }
 
 /**
  * Limpia todas las tablas de prueba
+ *
+ * ORDEN IMPORTANTE:
+ * 1. Users primero - cascadea a playlists, playHistory, etc.
+ * 2. Content después - tracks, albums, artists
+ * 3. Scanner al final
  */
 export async function cleanAllTables(drizzle: DrizzleService): Promise<void> {
-  await cleanContentTables(drizzle);
   await cleanUserTables(drizzle);
+  await cleanContentTables(drizzle);
   await cleanScannerTables(drizzle);
 }
 

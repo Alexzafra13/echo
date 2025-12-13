@@ -52,8 +52,9 @@ describe('Playlists E2E', () => {
     // Limpiar colas de BullMQ para evitar jobs huérfanos
     await cleanQueues(bullmq);
     // Limpiar BD
-    await cleanContentTables(drizzle);
+    // ORDEN IMPORTANTE: users primero (cascadea a playlists/playHistory), luego content
     await cleanUserTables(drizzle);
+    await cleanContentTables(drizzle);
 
     // Crear usuario 1
     const user1Result = await createUserAndLogin(drizzle, app, {
