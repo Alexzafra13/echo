@@ -35,7 +35,7 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== EXTERNAL HOOKS ==========
-  const { data: streamTokenData } = useStreamToken();
+  const { data: streamTokenData, isLoading: isTokenLoading, error: tokenError } = useStreamToken();
   const {
     settings: crossfadeSettings,
     setEnabled: setCrossfadeEnabledStorage,
@@ -179,13 +179,21 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Build stream URL for a track
    */
   const getStreamUrl = useCallback((track: Track): string | null => {
+    if (isTokenLoading) {
+      logger.warn('[Player] Stream token is still loading...');
+      return null;
+    }
+    if (tokenError) {
+      logger.error('[Player] Stream token failed to load:', tokenError);
+      return null;
+    }
     if (!streamTokenData?.token) {
-      logger.error('[Player] Stream token not available');
+      logger.error('[Player] Stream token not available (user not authenticated?)');
       return null;
     }
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
     return `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
-  }, [streamTokenData?.token]);
+  }, [streamTokenData?.token, isTokenLoading, tokenError]);
 
   /**
    * Play a track with optional crossfade
