@@ -192,11 +192,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    */
   const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
     const streamUrl = getStreamUrl(track);
-    if (!streamUrl) {
-      logger.error('[Player] Cannot play track - stream URL not available (token missing?)');
-      setIsPlaying(false);
-      return;
-    }
+    if (!streamUrl) return;
 
     // Exit radio mode if active
     if (radio.isRadioMode) {
@@ -225,15 +221,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
 
-      // Set track immediately so UI updates
+      audioElements.playActive().catch((error) => {
+        logger.error('[Player] Failed to play:', error.message);
+      });
+
       setCurrentTrack(track);
       playTracking.startPlaySession(track);
-
-      // Start playback (handle errors but don't block)
-      audioElements.playActive().catch((error) => {
-        logger.error('[Player] Failed to play:', (error as Error).message);
-        setIsPlaying(false);
-      });
     }
 
     crossfade.resetCrossfadeFlag();
@@ -247,16 +240,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTrack(track, withCrossfade);
     } else if (currentTrack && !radio.isRadioMode) {
       // Resume current track
-      audioElements.playActive().catch((error) => {
-        logger.error('[Player] Failed to resume playback:', error.message);
-        setIsPlaying(false);
-      });
+      audioElements.playActive();
     } else if (radio.isRadioMode && radio.currentStation) {
       // Resume radio
-      radio.resumeRadio().catch((error) => {
-        logger.error('[Player] Failed to resume radio:', error.message);
-        setIsPlaying(false);
-      });
+      radio.resumeRadio();
     }
   }, [playTrack, currentTrack, radio, audioElements]);
 
@@ -406,10 +393,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTracking.endPlaySession(false);
 
       if (queue.repeatMode === 'one') {
-        audioElements.playActive().catch((error) => {
-          logger.error('[Player] Failed to repeat track:', error.message);
-          setIsPlaying(false);
-        });
+        audioElements.playActive();
       } else if (queue.hasNext()) {
         handlePlayNext(false);
       } else {

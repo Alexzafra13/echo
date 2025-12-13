@@ -188,8 +188,8 @@ export function useCrossfadeLogic({
       }
     };
 
-    // Note: Don't reset crossfadeStartedRef here - it should only be reset
-    // when a new track starts playing (via resetCrossfadeFlag)
+    // Reset crossfade flag when setting up new listeners
+    crossfadeStartedRef.current = false;
 
     audioA.addEventListener('timeupdate', handleTimeUpdate);
     audioB.addEventListener('timeupdate', handleTimeUpdate);

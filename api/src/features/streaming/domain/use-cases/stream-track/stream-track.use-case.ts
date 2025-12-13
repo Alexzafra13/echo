@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { getAudioMimeType } from '@shared/utils';
 import { StreamTrackInput, StreamTrackOutput } from './stream-track.dto';
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
 import * as path from 'path';
 
 /**
@@ -44,16 +44,15 @@ export class StreamTrackUseCase {
       throw new NotFoundException(`Track ${input.trackId} has no file path`);
     }
 
-    // 4. Verificar que el archivo existe y obtener stats
-    let stats: Awaited<ReturnType<typeof fs.stat>>;
-    try {
-      stats = await fs.stat(filePath);
-    } catch {
+    // 4. Verificar que el archivo existe
+    if (!fs.existsSync(filePath)) {
       this.logger.error({ trackId: input.trackId, filePath }, 'Audio file not found');
       throw new NotFoundException(`Audio file not found: ${filePath}`);
     }
 
-    // 5. Verificar que es un archivo
+    // 5. Obtener stats del archivo
+    const stats = fs.statSync(filePath);
+
     if (!stats.isFile()) {
       this.logger.error({ trackId: input.trackId, filePath }, 'Path is not a file');
       throw new NotFoundException(`Path is not a file: ${filePath}`);
