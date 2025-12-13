@@ -192,7 +192,11 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    */
   const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
     const streamUrl = getStreamUrl(track);
-    if (!streamUrl) return;
+    if (!streamUrl) {
+      logger.error('[Player] Cannot play track - stream URL not available (token missing?)');
+      setIsPlaying(false);
+      return;
+    }
 
     // Exit radio mode if active
     if (radio.isRadioMode) {
@@ -221,12 +225,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
 
-      audioElements.playActive().catch((error) => {
-        logger.error('[Player] Failed to play:', error.message);
-      });
-
-      setCurrentTrack(track);
-      playTracking.startPlaySession(track);
+      try {
+        await audioElements.playActive();
+        setCurrentTrack(track);
+        playTracking.startPlaySession(track);
+      } catch (error) {
+        logger.error('[Player] Failed to play:', (error as Error).message);
+        setIsPlaying(false);
+        setCurrentTrack(null);
+        return;
+      }
     }
 
     crossfade.resetCrossfadeFlag();
@@ -242,11 +250,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Resume current track
       audioElements.playActive().catch((error) => {
         logger.error('[Player] Failed to resume playback:', error.message);
+        setIsPlaying(false);
       });
     } else if (radio.isRadioMode && radio.currentStation) {
       // Resume radio
       radio.resumeRadio().catch((error) => {
         logger.error('[Player] Failed to resume radio:', error.message);
+        setIsPlaying(false);
       });
     }
   }, [playTrack, currentTrack, radio, audioElements]);
