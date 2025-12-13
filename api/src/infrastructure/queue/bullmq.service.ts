@@ -76,6 +76,20 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Pause all workers (for testing cleanup)
+   */
+  async pauseAllWorkers(): Promise<void> {
+    await Promise.all(this.workers.map((worker) => worker.pause()));
+  }
+
+  /**
+   * Resume all workers (for testing)
+   */
+  async resumeAllWorkers(): Promise<void> {
+    await Promise.all(this.workers.map((worker) => worker.resume()));
+  }
+
+  /**
    * Obliterate all jobs from a queue (for testing)
    */
   async obliterateQueue(queueName: string): Promise<void> {
@@ -88,12 +102,25 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Obliterate all registered queues (for testing)
+   * Pauses workers first to prevent "Missing key" errors
    */
   async obliterateAllQueues(): Promise<void> {
+    // Pause workers to prevent them from picking up jobs during cleanup
+    await this.pauseAllWorkers();
+
+    // Drain active jobs before obliterating
+    for (const queue of this.queues.values()) {
+      await queue.drain();
+    }
+
+    // Now safe to obliterate
     for (const [name, queue] of this.queues.entries()) {
       await queue.obliterate({ force: true });
       this.logger.info({ queueName: name }, 'Queue obliterated');
     }
+
+    // Resume workers for next test
+    await this.resumeAllWorkers();
   }
 
   registerProcessor(
