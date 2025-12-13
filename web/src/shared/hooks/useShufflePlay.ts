@@ -119,8 +119,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
             state.seenTrackIds.clear();
             state.seed = Math.random(); // New seed for fresh order
             state.skip = 0;
-            // Increment attempts before continuing to prevent infinite loop
-            attempts++;
+            // Continue to load fresh tracks with new seed
             continue;
           }
           break;
@@ -217,8 +216,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
             state.seenTrackIds.clear();
             currentSeed = Math.random();
             currentSkip = 0;
-            // Increment attempts before continuing to prevent infinite loop
-            attempts++;
+            // Don't count this as an attempt since we're starting fresh
             continue;
           }
           break;
