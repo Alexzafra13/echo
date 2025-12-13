@@ -99,12 +99,12 @@ describe('Artists E2E', () => {
         });
     });
 
-    it('debería retornar 500 si el ID tiene formato inválido', () => {
-      // PostgreSQL lanza error para UUIDs inválidos
+    it('debería retornar 400 si el ID tiene formato inválido', () => {
+      // UUIDs inválidos devuelven Bad Request
       return request(app.getHttpServer())
         .get('/api/artists/invalid-id')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(500);
+        .expect(400);
     });
 
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
