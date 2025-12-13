@@ -123,6 +123,13 @@ describe('Tracks E2E', () => {
         });
     });
 
+    it('debería retornar 400 si el ID tiene formato inválido', () => {
+      return request(app.getHttpServer())
+        .get('/api/tracks/invalid-id')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400);
+    });
+
     it('debería permitir acceso sin autenticación (endpoint público)', () => {
       return request(app.getHttpServer())
         .get(`/api/tracks/${track1Id}`)

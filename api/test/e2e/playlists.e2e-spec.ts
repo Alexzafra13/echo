@@ -184,6 +184,13 @@ describe('Playlists E2E', () => {
         .expect(404);
     });
 
+    it('debería retornar 400 para ID inválido', () => {
+      return request(app.getHttpServer())
+        .get('/api/playlists/invalid-id')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(400);
+    });
+
     it('debería rechazar sin autenticación', async () => {
       const createRes = await request(app.getHttpServer())
         .post('/api/playlists')
