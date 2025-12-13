@@ -191,16 +191,21 @@ export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
  * Limpia tablas de contenido (albums, artists, tracks)
  */
 export async function cleanContentTables(drizzle: DrizzleService): Promise<void> {
-  // Tablas dependientes primero
+  // Tablas dependientes primero (orden importa por FK constraints)
   await drizzle.db.delete(schema.playlistTracks);
   await drizzle.db.delete(schema.playlists);
   await drizzle.db.delete(schema.trackArtists);
+  // Genre tables (FK to artists, albums, tracks)
+  await drizzle.db.delete(schema.trackGenres);
+  await drizzle.db.delete(schema.albumGenres);
+  await drizzle.db.delete(schema.artistGenres);
   await drizzle.db.delete(schema.tracks);
   await drizzle.db.delete(schema.customAlbumCovers);
   await drizzle.db.delete(schema.albums);
   await drizzle.db.delete(schema.customArtistImages);
   await drizzle.db.delete(schema.artistBanners);
   await drizzle.db.delete(schema.artists);
+  await drizzle.db.delete(schema.genres);
 }
 
 /**
