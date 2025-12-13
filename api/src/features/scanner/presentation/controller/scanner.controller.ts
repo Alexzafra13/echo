@@ -132,6 +132,12 @@ export class ScannerController {
 
     const subject = new Subject<MessageEvent>();
 
+    // Send keepalive every 15 seconds to prevent connection timeout
+    // Browser/proxy default timeout is ~24-25 seconds, so 15s gives us safe margin
+    const keepaliveInterval = setInterval(() => {
+      subject.next({ data: { timestamp: Date.now() }, type: 'keepalive' } as MessageEvent);
+    }, 15000);
+
     // Send current state to late subscribers
     const currentLufs = this.scannerEventsService.getCurrentLufsProgress();
     if (currentLufs) {
@@ -175,6 +181,7 @@ export class ScannerController {
     // Cleanup on disconnect
     request.raw.on('close', () => {
       this.logger.log('SSE client disconnected from scanner stream');
+      clearInterval(keepaliveInterval);
       this.scannerEventsService.off('scan:progress', handleProgress);
       this.scannerEventsService.off('scan:error', handleError);
       this.scannerEventsService.off('scan:completed', handleCompleted);
