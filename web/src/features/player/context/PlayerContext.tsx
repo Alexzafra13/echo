@@ -35,7 +35,7 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== EXTERNAL HOOKS ==========
-  const { data: streamTokenData, ensureToken } = useStreamToken();
+  const { data: streamTokenData } = useStreamToken();
   const {
     settings: crossfadeSettings,
     setEnabled: setCrossfadeEnabledStorage,
@@ -178,37 +178,21 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Build stream URL for a track
    */
-  const getStreamUrl = useCallback((track: Track, token?: string): string | null => {
-    const tokenToUse = token || streamTokenData?.token;
-    if (!tokenToUse) {
+  const getStreamUrl = useCallback((track: Track): string | null => {
+    if (!streamTokenData?.token) {
       logger.error('[Player] Stream token not available');
       return null;
     }
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${tokenToUse}`;
+    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
   }, [streamTokenData?.token]);
 
   /**
    * Play a track with optional crossfade
    */
   const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
-    // Try to get stream URL, fetching token if needed
-    let streamUrl = getStreamUrl(track);
-
-    // If token not available, try to fetch it
-    if (!streamUrl) {
-      logger.debug('[Player] Token not ready, fetching...');
-      const token = await ensureToken();
-      if (token) {
-        streamUrl = getStreamUrl(track, token);
-      }
-    }
-
-    if (!streamUrl) {
-      logger.error('[Player] Cannot play track - stream URL not available (token missing?)');
-      setIsPlaying(false);
-      return;
-    }
+    const streamUrl = getStreamUrl(track);
+    if (!streamUrl) return;
 
     // Exit radio mode if active
     if (radio.isRadioMode) {
@@ -237,19 +221,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
 
-      // Set track immediately so UI updates
+      audioElements.playActive().catch((error) => {
+        logger.error('[Player] Failed to play:', error.message);
+      });
+
       setCurrentTrack(track);
       playTracking.startPlaySession(track);
-
-      // Start playback (handle errors but don't block)
-      audioElements.playActive().catch((error) => {
-        logger.error('[Player] Failed to play:', (error as Error).message);
-        setIsPlaying(false);
-      });
     }
 
     crossfade.resetCrossfadeFlag();
-  }, [getStreamUrl, ensureToken, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
+  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
 
   /**
    * Play - either a new track or resume current playback
@@ -259,16 +240,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTrack(track, withCrossfade);
     } else if (currentTrack && !radio.isRadioMode) {
       // Resume current track
-      audioElements.playActive().catch((error) => {
-        logger.error('[Player] Failed to resume playback:', error.message);
-        setIsPlaying(false);
-      });
+      audioElements.playActive();
     } else if (radio.isRadioMode && radio.currentStation) {
       // Resume radio
-      radio.resumeRadio().catch((error) => {
-        logger.error('[Player] Failed to resume radio:', error.message);
-        setIsPlaying(false);
-      });
+      radio.resumeRadio();
     }
   }, [playTrack, currentTrack, radio, audioElements]);
 
@@ -418,10 +393,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTracking.endPlaySession(false);
 
       if (queue.repeatMode === 'one') {
-        audioElements.playActive().catch((error) => {
-          logger.error('[Player] Failed to repeat track:', error.message);
-          setIsPlaying(false);
-        });
+        audioElements.playActive();
       } else if (queue.hasNext()) {
         handlePlayNext(false);
       } else {
