@@ -40,6 +40,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     } else if (exception instanceof HttpException) {
       // NestJS HTTP exceptions
       status = exception.getStatus();
+    } else if (this.isPostgresUuidError(exception)) {
+      // PostgreSQL invalid UUID error -> 400 Bad Request
+      status = HttpStatus.BAD_REQUEST;
     } else {
       // Unknown errors
       status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -66,6 +69,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = exception.message;
         error = exception.name;
       }
+    } else if (this.isPostgresUuidError(exception)) {
+      message = 'Invalid UUID format';
+      error = 'BadRequest';
     } else if (exception instanceof Error) {
       message = 'Internal server error';
       error = 'InternalServerError';
@@ -119,5 +125,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // Enviar respuesta
     response.status(status).send(errorResponse);
+  }
+
+  /**
+   * Detecta errores de PostgreSQL por UUID inválido
+   * PostgreSQL code 22P02 = invalid_text_representation (incluye UUIDs inválidos)
+   */
+  private isPostgresUuidError(exception: unknown): boolean {
+    if (!(exception instanceof Error)) return false;
+
+    const error = exception as Error & { code?: string };
+
+    // PostgreSQL error code for invalid input syntax
+    if (error.code === '22P02') {
+      return error.message?.includes('uuid') || false;
+    }
+
+    // Fallback: check message pattern
+    return error.message?.includes('invalid input syntax for type uuid') || false;
   }
 }

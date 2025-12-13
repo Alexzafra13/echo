@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
@@ -91,7 +91,7 @@ export class ArtistsController {
     description: 'Artista no encontrado'
   })
   async getArtistAlbums(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
   ) {
@@ -353,10 +353,14 @@ export class ArtistsController {
     type: ArtistResponseDto
   })
   @ApiResponse({
+    status: 400,
+    description: 'ID inválido (no es un UUID válido)'
+  })
+  @ApiResponse({
     status: 404,
     description: 'Artista no encontrado'
   })
-  async getArtist(@Param('id') id: string): Promise<ArtistResponseDto> {
+  async getArtist(@Param('id', ParseUUIDPipe) id: string): Promise<ArtistResponseDto> {
     const result = await this.getArtistUseCase.execute({ id });
     return ArtistResponseDto.fromDomain(result);
   }
