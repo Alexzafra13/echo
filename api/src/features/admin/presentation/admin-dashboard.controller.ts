@@ -111,13 +111,14 @@ export class AdminDashboardController {
 
       const unsubscribe = this.systemHealthEventsService.subscribe(handleEvent);
 
-      // Keepalive every 30 seconds
+      // Keepalive every 15 seconds to prevent connection timeout
+      // Browser/proxy default timeout is ~24-25 seconds, so 15s gives us safe margin
       const keepaliveInterval = setInterval(() => {
         subscriber.next({
           type: 'keepalive',
           data: { timestamp: Date.now() },
         } as MessageEvent);
-      }, 30000);
+      }, 15000);
 
       // Cleanup on disconnect
       request.raw.on('close', () => {

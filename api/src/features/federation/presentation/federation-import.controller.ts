@@ -225,13 +225,14 @@ export class FederationImportController {
         subscriber.next(event);
       });
 
-      // Keepalive every 30 seconds
+      // Keepalive every 15 seconds to prevent connection timeout
+      // Browser/proxy default timeout is ~24-25 seconds, so 15s gives us safe margin
       const keepalive = setInterval(() => {
         subscriber.next({
           type: 'keepalive',
           data: JSON.stringify({ timestamp: new Date().toISOString() }),
         });
-      }, 30000);
+      }, 15000);
 
       // Cleanup on disconnect
       return () => {
