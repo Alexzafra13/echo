@@ -244,13 +244,14 @@ export class SocialController {
 
       const unsubscribe = this.listeningNowService.subscribe(handleUpdate);
 
-      // Send keepalive every 30 seconds
+      // Send keepalive every 15 seconds to prevent connection timeout
+      // Browser/proxy default timeout is ~24-25 seconds, so 15s gives us safe margin
       const keepaliveInterval = setInterval(() => {
         subscriber.next({
           type: 'keepalive',
           data: { timestamp: Date.now() },
         } as MessageEvent);
-      }, 30000);
+      }, 15000);
 
       // Send initial "connected" event
       subscriber.next({
