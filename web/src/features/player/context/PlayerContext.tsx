@@ -35,7 +35,7 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== EXTERNAL HOOKS ==========
-  const { data: streamTokenData } = useStreamToken();
+  const { data: streamTokenData, ensureToken } = useStreamToken();
   const {
     settings: crossfadeSettings,
     setEnabled: setCrossfadeEnabledStorage,
@@ -178,20 +178,32 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Build stream URL for a track
    */
-  const getStreamUrl = useCallback((track: Track): string | null => {
-    if (!streamTokenData?.token) {
+  const getStreamUrl = useCallback((track: Track, token?: string): string | null => {
+    const tokenToUse = token || streamTokenData?.token;
+    if (!tokenToUse) {
       logger.error('[Player] Stream token not available');
       return null;
     }
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
+    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${tokenToUse}`;
   }, [streamTokenData?.token]);
 
   /**
    * Play a track with optional crossfade
    */
   const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
-    const streamUrl = getStreamUrl(track);
+    // Try to get stream URL, fetching token if needed
+    let streamUrl = getStreamUrl(track);
+
+    // If token not available, try to fetch it
+    if (!streamUrl) {
+      logger.debug('[Player] Token not ready, fetching...');
+      const token = await ensureToken();
+      if (token) {
+        streamUrl = getStreamUrl(track, token);
+      }
+    }
+
     if (!streamUrl) {
       logger.error('[Player] Cannot play track - stream URL not available (token missing?)');
       setIsPlaying(false);
@@ -237,7 +249,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
 
     crossfade.resetCrossfadeFlag();
-  }, [getStreamUrl, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
+  }, [getStreamUrl, ensureToken, radio, crossfadeSettings.enabled, isPlaying, crossfade, audioElements, playTracking, normalization]);
 
   /**
    * Play - either a new track or resume current playback
