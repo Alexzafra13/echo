@@ -138,7 +138,7 @@ export class ArtistsController {
       },
     },
   })
-  async getArtistStats(@Param('id') id: string) {
+  async getArtistStats(@Param('id', ParseUUIDPipe) id: string) {
     // O(1) read directly from the artists.playCount field
     const artist = await this.getArtistUseCase.execute({ id });
     return { playCount: artist.playCount };
@@ -173,7 +173,7 @@ export class ArtistsController {
     type: [TrackResponseDto]
   })
   async getArtistTopTracks(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
   ) {
     const parsedLimit = Math.min(Math.max(parseInt(limit || '5', 10) || 5, 1), 20);
@@ -222,7 +222,7 @@ export class ArtistsController {
   })
   @ApiResponse({ status: 404, description: 'Artista no encontrado' })
   async getSimilarArtists(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
   ) {
     const parsedLimit = Math.min(Math.max(parseInt(limit || '15', 10) || 15, 1), 30);
