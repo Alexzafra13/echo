@@ -225,16 +225,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
 
-      try {
-        await audioElements.playActive();
-        setCurrentTrack(track);
-        playTracking.startPlaySession(track);
-      } catch (error) {
+      // Set track immediately so UI updates
+      setCurrentTrack(track);
+      playTracking.startPlaySession(track);
+
+      // Start playback (handle errors but don't block)
+      audioElements.playActive().catch((error) => {
         logger.error('[Player] Failed to play:', (error as Error).message);
         setIsPlaying(false);
-        setCurrentTrack(null);
-        return;
-      }
+      });
     }
 
     crossfade.resetCrossfadeFlag();
