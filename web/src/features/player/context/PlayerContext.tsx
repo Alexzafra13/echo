@@ -35,7 +35,7 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== EXTERNAL HOOKS ==========
-  const { data: streamTokenData, isLoading: isTokenLoading, error: tokenError } = useStreamToken();
+  const { data: streamTokenData } = useStreamToken();
   const {
     settings: crossfadeSettings,
     setEnabled: setCrossfadeEnabledStorage,
@@ -179,21 +179,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Build stream URL for a track
    */
   const getStreamUrl = useCallback((track: Track): string | null => {
-    if (isTokenLoading) {
-      logger.warn('[Player] Stream token is still loading...');
-      return null;
-    }
-    if (tokenError) {
-      logger.error('[Player] Stream token failed to load:', tokenError);
-      return null;
-    }
     if (!streamTokenData?.token) {
-      logger.error('[Player] Stream token not available (user not authenticated?)');
+      logger.error('[Player] Stream token not available');
       return null;
     }
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
     return `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
-  }, [streamTokenData?.token, isTokenLoading, tokenError]);
+  }, [streamTokenData?.token]);
 
   /**
    * Play a track with optional crossfade
@@ -233,16 +225,15 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
 
-      try {
-        await audioElements.playActive();
-        setCurrentTrack(track);
-        playTracking.startPlaySession(track);
-      } catch (error) {
+      // Set track immediately so UI updates
+      setCurrentTrack(track);
+      playTracking.startPlaySession(track);
+
+      // Start playback (handle errors but don't block)
+      audioElements.playActive().catch((error) => {
         logger.error('[Player] Failed to play:', (error as Error).message);
         setIsPlaying(false);
-        setCurrentTrack(null);
-        return;
-      }
+      });
     }
 
     crossfade.resetCrossfadeFlag();
