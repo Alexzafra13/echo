@@ -94,8 +94,10 @@ export function usePlayTracking({ audioElements, isShuffle }: UsePlayTrackingPar
         sourceType: session.sourceType,
       });
     } else {
-      // Record play event (only if completion > 30% or track ended naturally)
-      if (completionRate >= 0.3 || completionRate >= 0.95) {
+      // Record play event only if meaningful playback occurred:
+      // - Track was played for at least 30% of its duration, OR
+      // - Track ended naturally (completion >= 95%)
+      if (completionRate >= 0.3) {
         await recordPlay({
           trackId: session.trackId,
           playContext: session.playContext,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Hook para detectar cuando el usuario llega al final de la página
@@ -9,6 +9,9 @@ import { useState, useEffect } from 'react';
  */
 export function usePageEndDetection(threshold: number = 120) {
   const [isMiniMode, setIsMiniMode] = useState(false);
+  // Use ref to track current state without triggering effect re-runs
+  const isMiniModeRef = useRef(isMiniMode);
+  isMiniModeRef.current = isMiniMode;
 
   useEffect(() => {
     let ticking = false;
@@ -62,7 +65,7 @@ export function usePageEndDetection(threshold: number = 120) {
 
           if (!hasRealScroll) {
             // Si no hay scroll suficiente, nunca activar mini mode
-            if (isMiniMode) {
+            if (isMiniModeRef.current) {
               setIsMiniMode(false);
             }
             ticking = false;
@@ -74,9 +77,9 @@ export function usePageEndDetection(threshold: number = 120) {
 
           // Si estamos a menos de threshold píxeles del bottom, activar mini mode
           // Si estamos a más de threshold + 100px, desactivar (hysteresis para evitar flickering)
-          if (distanceFromBottom <= threshold && !isMiniMode) {
+          if (distanceFromBottom <= threshold && !isMiniModeRef.current) {
             setIsMiniMode(true);
-          } else if (distanceFromBottom > threshold + 100 && isMiniMode) {
+          } else if (distanceFromBottom > threshold + 100 && isMiniModeRef.current) {
             setIsMiniMode(false);
           }
 
@@ -135,7 +138,7 @@ export function usePageEndDetection(threshold: number = 120) {
       window.removeEventListener('resize', handleScroll);
       observer.disconnect();
     };
-  }, [threshold, isMiniMode]);
+  }, [threshold]); // Note: isMiniMode removed - using ref instead to prevent effect re-runs
 
   return isMiniMode;
 }
