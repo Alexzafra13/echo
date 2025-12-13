@@ -240,10 +240,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTrack(track, withCrossfade);
     } else if (currentTrack && !radio.isRadioMode) {
       // Resume current track
-      audioElements.playActive();
+      audioElements.playActive().catch((error) => {
+        logger.error('[Player] Failed to resume playback:', error.message);
+      });
     } else if (radio.isRadioMode && radio.currentStation) {
       // Resume radio
-      radio.resumeRadio();
+      radio.resumeRadio().catch((error) => {
+        logger.error('[Player] Failed to resume radio:', error.message);
+      });
     }
   }, [playTrack, currentTrack, radio, audioElements]);
 
@@ -393,7 +397,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTracking.endPlaySession(false);
 
       if (queue.repeatMode === 'one') {
-        audioElements.playActive();
+        audioElements.playActive().catch((error) => {
+          logger.error('[Player] Failed to repeat track:', error.message);
+          setIsPlaying(false);
+        });
       } else if (queue.hasNext()) {
         handlePlayNext(false);
       } else {
