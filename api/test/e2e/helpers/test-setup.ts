@@ -180,10 +180,44 @@ export async function createUserAndLogin(
 
 /**
  * Limpia todas las tablas relacionadas con usuarios
+ * Orden: tablas dependientes primero, luego users
  */
 export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
-  // Eliminar en orden correcto por dependencias FK
+  // Tablas con FK a users (orden importa por dependencias)
+
+  // Federation (albumImportQueue depende de connectedServers)
+  await drizzle.db.delete(schema.albumImportQueue);
+  await drizzle.db.delete(schema.federationAccessTokens);
+  await drizzle.db.delete(schema.federationTokens);
+  await drizzle.db.delete(schema.connectedServers);
+
+  // Play queue tracks depende de play queues
+  await drizzle.db.delete(schema.playQueueTracks);
+  await drizzle.db.delete(schema.playQueues);
+
+  // Stats y historial
+  await drizzle.db.delete(schema.playHistory);
+  await drizzle.db.delete(schema.userPlayStats);
+  await drizzle.db.delete(schema.userStarred);
+  await drizzle.db.delete(schema.userRatings);
+
+  // Social
+  await drizzle.db.delete(schema.friendships);
+
+  // Shares y bookmarks
+  await drizzle.db.delete(schema.shares);
+  await drizzle.db.delete(schema.bookmarks);
+
+  // Radio
+  await drizzle.db.delete(schema.radioStations);
+
+  // Players
+  await drizzle.db.delete(schema.players);
+
+  // Stream tokens
   await drizzle.db.delete(schema.streamTokens);
+
+  // Finalmente users
   await drizzle.db.delete(schema.users);
 }
 
