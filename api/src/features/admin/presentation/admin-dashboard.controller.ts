@@ -13,7 +13,6 @@ import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { Public } from '@shared/decorators/public.decorator';
 import { GetDashboardStatsUseCase } from '../domain/use-cases';
 import { SystemHealthEventsService, HealthChangeEvent } from '../domain/services';
 import { GetDashboardStatsResponseDto } from './dtos';
@@ -79,7 +78,6 @@ export class AdminDashboardController {
   }
 
   @Sse('health/stream')
-  @Public()
   @ApiOperation({
     summary: 'Stream system health updates (SSE)',
     description: 'Real-time Server-Sent Events stream for system health changes. Sends events when database, redis, storage, or scanner status changes.',

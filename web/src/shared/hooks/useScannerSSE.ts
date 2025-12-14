@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLufsProgressStore, type LufsProgress } from '@shared/store/lufsProgressStore';
+import { useAuthStore } from '@shared/store/authStore';
 
 /**
  * Estados del escaneo
@@ -98,6 +99,11 @@ class ScannerSSEManager {
   private reconnectAttempts = 0;
   private isConnectedState = false;
   private connectionListeners: Set<(connected: boolean) => void> = new Set();
+  private currentToken: string | null = null;
+
+  setToken(token: string | null) {
+    this.currentToken = token;
+  }
 
   connect() {
     // Already connected
@@ -105,12 +111,21 @@ class ScannerSSEManager {
       return;
     }
 
+    // Don't connect without token (admin endpoints require auth)
+    if (!this.currentToken) {
+      if (import.meta.env.DEV) {
+        console.log('[ScannerSSE] No token available, skipping connection');
+      }
+      return;
+    }
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || '/api';
-      const sseUrl = `${baseUrl}/scanner/stream`;
+      // Send token as query parameter (EventSource can't send headers)
+      const sseUrl = `${baseUrl}/scanner/stream?token=${encodeURIComponent(this.currentToken)}`;
 
       if (import.meta.env.DEV) {
-        console.log('[ScannerSSE] Singleton connecting to:', sseUrl);
+        console.log('[ScannerSSE] Singleton connecting to:', `${baseUrl}/scanner/stream`);
       }
 
       this.eventSource = new EventSource(sseUrl);
@@ -288,8 +303,14 @@ export function useScannerSSE(scanId?: string | null) {
   const [libraryChanges, setLibraryChanges] = useState<LibraryChange[]>([]);
   const [isConnected, setIsConnected] = useState(scannerSSEManager.isConnected());
 
+  const accessToken = useAuthStore((state) => state.accessToken);
   const lufsProgress = useLufsProgressStore((state) => state.lufsProgress);
   const setLufsProgress = useLufsProgressStore((state) => state.setLufsProgress);
+
+  // Update token in manager when it changes
+  useEffect(() => {
+    scannerSSEManager.setToken(accessToken);
+  }, [accessToken]);
 
   const handleEvent = useCallback((event: ScannerEventData) => {
     switch (event.type) {
@@ -376,9 +397,15 @@ export function useScannerSSE(scanId?: string | null) {
  * Uses the shared singleton SSE connection
  */
 export function useLufsProgressSSE() {
+  const accessToken = useAuthStore((state) => state.accessToken);
   const lufsProgress = useLufsProgressStore((state) => state.lufsProgress);
   const setLufsProgress = useLufsProgressStore((state) => state.setLufsProgress);
   const [isConnected, setIsConnected] = useState(scannerSSEManager.isConnected());
+
+  // Update token in manager when it changes
+  useEffect(() => {
+    scannerSSEManager.setToken(accessToken);
+  }, [accessToken]);
 
   const handleEvent = useCallback((event: ScannerEventData) => {
     if (event.type === 'lufs') {

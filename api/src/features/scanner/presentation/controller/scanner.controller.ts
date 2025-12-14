@@ -25,7 +25,6 @@ import { FastifyRequest } from 'fastify';
 import { Observable, Subject, filter, map, finalize, merge } from 'rxjs';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { Public } from '@shared/decorators/public.decorator';
 import {
   StartScanUseCase,
   GetScanStatusUseCase,
@@ -121,7 +120,6 @@ export class ScannerController {
    * - library:change - File watcher changes
    */
   @Sse('stream')
-  @Public()
   @ApiOperation({ summary: 'Stream de eventos del scanner en tiempo real (SSE)' })
   @ApiResponse({
     status: 200,

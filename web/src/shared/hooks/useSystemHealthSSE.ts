@@ -48,7 +48,8 @@ export function useSystemHealthSSE(token: string | null, isAdmin: boolean) {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/admin/dashboard/health/stream`;
+      // Send token as query parameter (EventSource can't send headers)
+      const url = `${apiUrl}/admin/dashboard/health/stream?token=${encodeURIComponent(token)}`;
 
       const eventSource = new EventSource(url);
 
