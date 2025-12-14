@@ -127,6 +127,65 @@ export class FederationImportController {
   }
 
   /**
+   * GET /federation/import/events/stream
+   * SSE stream for real-time import progress
+   *
+   * IMPORTANT: This route MUST be defined before :id routes to avoid
+   * NestJS treating "events" as a dynamic parameter
+   */
+  @Get('events/stream')
+  @Sse()
+  @ApiOperation({
+    summary: 'Stream de progreso',
+    description: 'Server-Sent Events stream para recibir actualizaciones de progreso en tiempo real',
+  })
+  streamProgress(@CurrentUser() user: User): Observable<MessageEvent> {
+    this.logger.info({ userId: user.id }, 'Client connected to import progress SSE');
+
+    // Send initial connected event
+    const connectedEvent: MessageEvent = {
+      type: 'connected',
+      data: JSON.stringify({ connected: true, userId: user.id }),
+    };
+
+    // Create observable that filters events for this user
+    const progressEvents = this.progressSubject.pipe(
+      filter((event) => event.userId === user.id),
+      map((event): MessageEvent => ({
+        type: 'import_progress',
+        data: JSON.stringify(event),
+      })),
+    );
+
+    // Return stream starting with connected event
+    return new Observable((subscriber) => {
+      // Send connected event
+      subscriber.next(connectedEvent);
+
+      // Subscribe to progress events
+      const subscription = progressEvents.subscribe((event) => {
+        subscriber.next(event);
+      });
+
+      // Keepalive every 15 seconds to prevent connection timeout
+      // Browser/proxy default timeout is ~24-25 seconds, so 15s gives us safe margin
+      const keepalive = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: JSON.stringify({ timestamp: new Date().toISOString() }),
+        });
+      }, 15000);
+
+      // Cleanup on disconnect
+      return () => {
+        this.logger.info({ userId: user.id }, 'Client disconnected from import progress SSE');
+        clearInterval(keepalive);
+        subscription.unsubscribe();
+      };
+    });
+  }
+
+  /**
    * GET /federation/import/:id
    * Get import status
    */
@@ -185,61 +244,5 @@ export class FederationImportController {
 
     const success = await this.importService.cancelImport(id);
     return { success };
-  }
-
-  /**
-   * GET /federation/import/events/stream
-   * SSE stream for real-time import progress
-   */
-  @Get('events/stream')
-  @Sse()
-  @ApiOperation({
-    summary: 'Stream de progreso',
-    description: 'Server-Sent Events stream para recibir actualizaciones de progreso en tiempo real',
-  })
-  streamProgress(@CurrentUser() user: User): Observable<MessageEvent> {
-    this.logger.info({ userId: user.id }, 'Client connected to import progress SSE');
-
-    // Send initial connected event
-    const connectedEvent: MessageEvent = {
-      type: 'connected',
-      data: JSON.stringify({ connected: true, userId: user.id }),
-    };
-
-    // Create observable that filters events for this user
-    const progressEvents = this.progressSubject.pipe(
-      filter((event) => event.userId === user.id),
-      map((event): MessageEvent => ({
-        type: 'import_progress',
-        data: JSON.stringify(event),
-      })),
-    );
-
-    // Return stream starting with connected event
-    return new Observable((subscriber) => {
-      // Send connected event
-      subscriber.next(connectedEvent);
-
-      // Subscribe to progress events
-      const subscription = progressEvents.subscribe((event) => {
-        subscriber.next(event);
-      });
-
-      // Keepalive every 15 seconds to prevent connection timeout
-      // Browser/proxy default timeout is ~24-25 seconds, so 15s gives us safe margin
-      const keepalive = setInterval(() => {
-        subscriber.next({
-          type: 'keepalive',
-          data: JSON.stringify({ timestamp: new Date().toISOString() }),
-        });
-      }, 15000);
-
-      // Cleanup on disconnect
-      return () => {
-        this.logger.info({ userId: user.id }, 'Client disconnected from import progress SSE');
-        clearInterval(keepalive);
-        subscription.unsubscribe();
-      };
-    });
   }
 }
