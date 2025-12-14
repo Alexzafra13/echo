@@ -3,10 +3,10 @@ import { NotFoundException } from '@nestjs/common';
 import { StreamTrackUseCase } from './stream-track.use-case';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { Track } from '@features/tracks/domain/entities/track.entity';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 
-// Mock fs module
-jest.mock('fs');
+// Mock fs/promises module
+jest.mock('fs/promises');
 
 describe('StreamTrackUseCase', () => {
   let useCase: StreamTrackUseCase;
@@ -69,8 +69,7 @@ describe('StreamTrackUseCase', () => {
     it('debería retornar metadata del track para streaming', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
+      (fs.stat as jest.Mock).mockResolvedValue({
         isFile: () => true,
         size: 5242880, // 5 MB
       });
@@ -140,7 +139,7 @@ describe('StreamTrackUseCase', () => {
     it('debería lanzar NotFoundException si el archivo no existe', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      (fs.stat as jest.Mock).mockRejectedValue(new Error('ENOENT'));
 
       // Act & Assert
       await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(
@@ -151,8 +150,7 @@ describe('StreamTrackUseCase', () => {
     it('debería lanzar NotFoundException si el path no es un archivo', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
+      (fs.stat as jest.Mock).mockResolvedValue({
         isFile: () => false, // Es un directorio
       });
 
@@ -165,8 +163,7 @@ describe('StreamTrackUseCase', () => {
     it('debería detectar MIME type para MP3', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
+      (fs.stat as jest.Mock).mockResolvedValue({
         isFile: () => true,
         size: 5242880,
       });
@@ -185,8 +182,7 @@ describe('StreamTrackUseCase', () => {
         path: '/music/test-song.flac',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(flacTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
+      (fs.stat as jest.Mock).mockResolvedValue({
         isFile: () => true,
         size: 15728640,
       });
@@ -205,8 +201,7 @@ describe('StreamTrackUseCase', () => {
         path: '/music/test-song.xyz',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(unknownTrack);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
+      (fs.stat as jest.Mock).mockResolvedValue({
         isFile: () => true,
         size: 5242880,
       });
@@ -225,8 +220,7 @@ describe('StreamTrackUseCase', () => {
         path: '/var/music/library/rock/beatles/abbey-road/01-come-together.mp3',
       });
       (trackRepository.findById as jest.Mock).mockResolvedValue(trackWithLongPath);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({
+      (fs.stat as jest.Mock).mockResolvedValue({
         isFile: () => true,
         size: 5242880,
       });

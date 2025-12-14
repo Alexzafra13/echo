@@ -53,7 +53,9 @@ class AlbumImportSSEManager {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const url = `${apiUrl}/federation/import/events/stream`;
+      // EventSource cannot send Authorization headers, so we pass the token via query string
+      const token = useAuthStore.getState().accessToken;
+      const url = `${apiUrl}/federation/import/events/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
 
       this.eventSource = new EventSource(url, { withCredentials: true });
 
