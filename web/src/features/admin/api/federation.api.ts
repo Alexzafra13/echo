@@ -32,6 +32,8 @@ export interface InvitationToken {
   createdAt: string;
 }
 
+export type MutualFederationStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
 export interface AccessToken {
   id: string;
   serverName: string;
@@ -44,6 +46,7 @@ export interface AccessToken {
   isActive: boolean;
   lastUsedAt?: string;
   createdAt: string;
+  mutualStatus?: MutualFederationStatus;
 }
 
 export interface RemoteAlbum {
@@ -270,5 +273,32 @@ export const federationApi = {
       permissions
     );
     return response.data;
+  },
+
+  // ============================================
+  // Mutual Federation (Solicitudes de federación mutua)
+  // ============================================
+
+  /**
+   * Lista las solicitudes de federación mutua pendientes
+   */
+  async listPendingMutualRequests(): Promise<AccessToken[]> {
+    const response = await apiClient.get<AccessToken[]>('/federation/access-tokens/pending-mutual');
+    return response.data;
+  },
+
+  /**
+   * Aprueba una solicitud de federación mutua
+   */
+  async approveMutualRequest(id: string): Promise<ConnectedServer> {
+    const response = await apiClient.post<ConnectedServer>(`/federation/access-tokens/${id}/approve-mutual`);
+    return response.data;
+  },
+
+  /**
+   * Rechaza una solicitud de federación mutua
+   */
+  async rejectMutualRequest(id: string): Promise<void> {
+    await apiClient.post(`/federation/access-tokens/${id}/reject-mutual`);
   },
 };

@@ -18,6 +18,9 @@ import {
   Wifi,
   WifiOff,
   Activity,
+  Bell,
+  X,
+  UserPlus,
 } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import {
@@ -29,6 +32,9 @@ import {
   useSyncServer,
   useRevokeAccessToken,
   useCheckAllServersHealth,
+  usePendingMutualRequests,
+  useApproveMutualRequest,
+  useRejectMutualRequest,
 } from '../../hooks/useFederation';
 import { ConnectedServer, InvitationToken, AccessToken } from '../../api/federation.api';
 import { ConnectServerModal } from './ConnectServerModal';
@@ -58,6 +64,7 @@ export function FederationPanel() {
   const { data: servers, isLoading: serversLoading } = useConnectedServers();
   const { data: invitations, isLoading: invitationsLoading } = useInvitationTokens();
   const { data: accessTokens, isLoading: accessLoading } = useAccessTokens();
+  const { data: pendingMutualRequests = [] } = usePendingMutualRequests();
 
   // Mutations
   const disconnectMutation = useDisconnectFromServer();
@@ -65,6 +72,8 @@ export function FederationPanel() {
   const deleteInvitationMutation = useDeleteInvitation();
   const revokeAccessMutation = useRevokeAccessToken();
   const checkHealthMutation = useCheckAllServersHealth();
+  const approveMutualMutation = useApproveMutualRequest();
+  const rejectMutualMutation = useRejectMutualRequest();
 
   // Handlers
   const handleCopyToken = async (token: string) => {
@@ -128,6 +137,24 @@ export function FederationPanel() {
     }
   };
 
+  const handleApproveMutual = async (request: AccessToken) => {
+    try {
+      await approveMutualMutation.mutateAsync(request.id);
+      setNotification({ type: 'success', message: `Conectado con ${request.serverName}` });
+    } catch {
+      setNotification({ type: 'error', message: 'Error al aprobar solicitud' });
+    }
+  };
+
+  const handleRejectMutual = async (request: AccessToken) => {
+    try {
+      await rejectMutualMutation.mutateAsync(request.id);
+      setNotification({ type: 'success', message: 'Solicitud rechazada' });
+    } catch {
+      setNotification({ type: 'error', message: 'Error al rechazar solicitud' });
+    }
+  };
+
   const formatSize = (bytes: number): string => {
     if (bytes === 0) return '0';
     const k = 1024;
@@ -155,6 +182,55 @@ export function FederationPanel() {
           message={notification.message}
           onDismiss={() => setNotification(null)}
         />
+      )}
+
+      {/* Pending Mutual Requests Banner */}
+      {pendingMutualRequests.length > 0 && (
+        <div className={styles.mutualRequestsBanner}>
+          <div className={styles.mutualRequestsHeader}>
+            <Bell size={20} />
+            <span>
+              {pendingMutualRequests.length === 1
+                ? '1 servidor quiere conectarse contigo'
+                : `${pendingMutualRequests.length} servidores quieren conectarse contigo`}
+            </span>
+          </div>
+          <div className={styles.mutualRequestsList}>
+            {pendingMutualRequests.map((request) => (
+              <div key={request.id} className={styles.mutualRequestCard}>
+                <div className={styles.mutualRequestInfo}>
+                  <UserPlus size={18} />
+                  <div>
+                    <strong>{request.serverName}</strong>
+                    {request.serverUrl && (
+                      <span className={styles.mutualRequestUrl}>{request.serverUrl}</span>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.mutualRequestActions}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<Check size={14} />}
+                    onClick={() => handleApproveMutual(request)}
+                    disabled={approveMutualMutation.isPending}
+                  >
+                    Aceptar
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<X size={14} />}
+                    onClick={() => handleRejectMutual(request)}
+                    disabled={rejectMutualMutation.isPending}
+                  >
+                    Rechazar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Tabs */}

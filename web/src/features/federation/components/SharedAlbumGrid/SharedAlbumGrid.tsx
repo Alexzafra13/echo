@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Download, Check, Loader2 } from 'lucide-react';
+import { Download, Check, Loader2, Users, Plus } from 'lucide-react';
 import type { SharedAlbum } from '../../types';
-import { useStartImport } from '../../hooks/useSharedLibraries';
+import { useStartImport, useConnectedServers } from '../../hooks/useSharedLibraries';
 import styles from './SharedAlbumGrid.module.css';
 
 interface SharedAlbumGridProps {
@@ -13,6 +13,8 @@ interface SharedAlbumGridProps {
   mobileScroll?: boolean;
   showImportButton?: boolean;
   showServerBadge?: boolean;
+  /** Show empty state when no servers connected (for home page) */
+  showEmptyState?: boolean;
 }
 
 /**
@@ -27,11 +29,13 @@ export function SharedAlbumGrid({
   mobileScroll = false,
   showImportButton = true,
   showServerBadge = true,
+  showEmptyState = false,
 }: SharedAlbumGridProps) {
   const [, setLocation] = useLocation();
   const startImport = useStartImport();
   const [importingAlbums, setImportingAlbums] = useState<Set<string>>(new Set());
   const [importedAlbums, setImportedAlbums] = useState<Set<string>>(new Set());
+  const { data: servers } = useConnectedServers();
 
   const handleAlbumClick = (album: SharedAlbum) => {
     // Navigate to shared libraries page with server and album pre-selected
@@ -69,8 +73,44 @@ export function SharedAlbumGrid({
     }
   };
 
+  // Show empty state when enabled and no servers or no albums
   if (!albums || albums.length === 0) {
-    return null;
+    if (!showEmptyState) {
+      return null;
+    }
+
+    const hasServers = servers && servers.length > 0;
+
+    return (
+      <section className={styles.sharedAlbumGrid}>
+        {title && (
+          <div className={styles.sharedAlbumGrid__header}>
+            <h2 className={styles.sharedAlbumGrid__title}>{title}</h2>
+          </div>
+        )}
+        <div className={styles.sharedAlbumGrid__emptyState}>
+          <Users size={48} className={styles.sharedAlbumGrid__emptyIcon} />
+          {hasServers ? (
+            <>
+              <h3>Los servidores conectados no tienen álbums</h3>
+              <p>Los servidores a los que estás conectado aún no tienen música disponible.</p>
+            </>
+          ) : (
+            <>
+              <h3>Conecta con amigos</h3>
+              <p>Conecta con los servidores Echo de tus amigos para ver su música aquí.</p>
+              <button
+                className={styles.sharedAlbumGrid__emptyButton}
+                onClick={() => setLocation('/admin?tab=federation')}
+              >
+                <Plus size={18} />
+                Conectar servidor
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+    );
   }
 
   return (
