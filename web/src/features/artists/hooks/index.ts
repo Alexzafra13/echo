@@ -1,1 +1,9 @@
-export { useArtists, useArtist, useArtistSearch, useArtistAlbums } from './useArtists';
+export {
+  useArtists,
+  useArtist,
+  useArtistSearch,
+  useArtistAlbums,
+  useArtistStats,
+  useArtistTopTracks,
+  useRelatedArtists,
+} from './useArtists';

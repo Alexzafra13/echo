@@ -7,6 +7,7 @@ import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
 import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks, useRelatedArtists } from '../../hooks';
+import type { ArtistTopTrack, RelatedArtist } from '../../types';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
@@ -22,7 +23,7 @@ export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
-  const { play, addToQueue } = usePlayer();
+  const { play } = usePlayer();
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
@@ -64,10 +65,10 @@ export default function ArtistDetailPage() {
   const artistAlbums = artistAlbumsData?.data || [];
 
   // Get top tracks for this artist
-  const topTracks = topTracksData?.data || [];
+  const topTracks: ArtistTopTrack[] = topTracksData?.data || [];
 
   // Get related artists
-  const relatedArtists = relatedArtistsData?.data || [];
+  const relatedArtists: RelatedArtist[] = relatedArtistsData?.data || [];
 
   // Helper function to format duration (mm:ss)
   const formatDuration = (seconds: number | null) => {
