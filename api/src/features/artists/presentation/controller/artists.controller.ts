@@ -240,13 +240,63 @@ export class ArtistsController {
       };
     }
 
-    // 2. First try internal co-listening patterns
+    // 2. Check if Last.fm is enabled
+    const lastfmEnabled = this.lastfmAgent.isEnabled();
+
+    // 3. If Last.fm is enabled, use it to find similar artists filtered by library
+    if (lastfmEnabled) {
+      const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
+        artist.mbzArtistId || null,
+        artist.name,
+        50, // Get more from Last.fm so we can filter to local library
+      );
+
+      if (similarFromLastfm && similarFromLastfm.length > 0) {
+        const lastfmArtists: Array<{
+          id: string;
+          name: string;
+          albumCount: number;
+          songCount: number;
+          matchScore: number;
+        }> = [];
+
+        for (const similar of similarFromLastfm) {
+          if (lastfmArtists.length >= limitNum) break;
+
+          // Search for this artist in our library by name
+          const localArtist = await this.artistRepository.findByName(similar.name);
+          if (localArtist && localArtist.id !== artistId) {
+            lastfmArtists.push({
+              id: localArtist.id,
+              name: localArtist.name,
+              albumCount: localArtist.albumCount,
+              songCount: localArtist.songCount,
+              matchScore: Math.round(similar.match * 100),
+            });
+          }
+        }
+
+        if (lastfmArtists.length > 0) {
+          this.logger.log(`Found ${lastfmArtists.length} related artists from Last.fm for: ${artist.name}`);
+          return {
+            data: lastfmArtists,
+            artistId,
+            limit: limitNum,
+            source: 'lastfm',
+          };
+        }
+      }
+
+      this.logger.debug(`No Last.fm results in library, falling back to internal patterns for: ${artist.name}`);
+    }
+
+    // 4. Fallback: Use internal co-listening patterns
+    // (when Last.fm is disabled OR Last.fm returned no results in our library)
     const internalRelated = await this.playTrackingRepository.getRelatedArtists(
       artistId,
       limitNum,
     );
 
-    // Fetch artist details for internal results
     const internalArtists: Array<{
       id: string;
       name: string;
@@ -263,87 +313,20 @@ export class ArtistsController {
           name: relArtist.name,
           albumCount: relArtist.albumCount,
           songCount: relArtist.songCount,
-          matchScore: Math.round(stat.score), // Internal score
+          matchScore: Math.round(stat.score),
         });
       }
     }
-
-    // 3. If we have enough internal results (>= 3), use them
-    if (internalArtists.length >= 3) {
-      this.logger.log(`Found ${internalArtists.length} related artists from internal data for: ${artist.name}`);
-      return {
-        data: internalArtists.slice(0, limitNum),
-        artistId,
-        limit: limitNum,
-        source: 'internal',
-      };
-    }
-
-    // 4. Not enough internal data, try Last.fm as fallback
-    this.logger.debug(`Only ${internalArtists.length} internal results, trying Last.fm for: ${artist.name}`);
-
-    const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
-      artist.mbzArtistId || null,
-      artist.name,
-      50, // Get more from Last.fm so we can filter to local library
-    );
-
-    if (!similarFromLastfm || similarFromLastfm.length === 0) {
-      // Return whatever internal results we have
-      this.logger.debug(`No similar artists from Last.fm, returning ${internalArtists.length} internal results`);
-      return {
-        data: internalArtists,
-        artistId,
-        limit: limitNum,
-        source: internalArtists.length > 0 ? 'internal' : 'none',
-      };
-    }
-
-    // 5. Filter Last.fm results to only artists in our library
-    const internalArtistIds = new Set(internalArtists.map((a) => a.id));
-    const lastfmArtists: Array<{
-      id: string;
-      name: string;
-      albumCount: number;
-      songCount: number;
-      matchScore: number;
-    }> = [];
-
-    for (const similar of similarFromLastfm) {
-      if (internalArtists.length + lastfmArtists.length >= limitNum) break;
-
-      // Search for this artist in our library by name
-      const localArtist = await this.artistRepository.findByName(similar.name);
-      if (localArtist && localArtist.id !== artistId && !internalArtistIds.has(localArtist.id)) {
-        lastfmArtists.push({
-          id: localArtist.id,
-          name: localArtist.name,
-          albumCount: localArtist.albumCount,
-          songCount: localArtist.songCount,
-          matchScore: Math.round(similar.match * 100),
-        });
-      }
-    }
-
-    // 6. Combine internal + Last.fm results (internal first, they're more relevant)
-    const combinedResults = [...internalArtists, ...lastfmArtists].slice(0, limitNum);
-
-    const source = internalArtists.length > 0 && lastfmArtists.length > 0
-      ? 'mixed'
-      : lastfmArtists.length > 0
-        ? 'lastfm'
-        : 'internal';
 
     this.logger.log(
-      `Found ${combinedResults.length} related artists for ${artist.name} ` +
-      `(${internalArtists.length} internal, ${lastfmArtists.length} from Last.fm)`
+      `Found ${internalArtists.length} related artists from internal patterns for: ${artist.name}`
     );
 
     return {
-      data: combinedResults,
+      data: internalArtists,
       artistId,
       limit: limitNum,
-      source,
+      source: internalArtists.length > 0 ? 'internal' : 'none',
     };
   }
 
