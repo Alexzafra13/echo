@@ -10,6 +10,8 @@ import {
   LastFMArtistInfoResponse,
   LastFMTag,
   LastFMImage,
+  LastFMSimilarArtist,
+  LastFMSimilarArtistsResponse,
 } from './types';
 
 /**
@@ -18,6 +20,16 @@ import {
 export interface LastfmTag {
   name: string;
   count: number;
+}
+
+/**
+ * Similar artist from Last.fm (exported for external use)
+ */
+export interface LastfmSimilarArtist {
+  name: string;
+  mbid: string | null;
+  match: number; // 0-1 score
+  url: string | null;
 }
 
 /**
@@ -320,6 +332,94 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     }
 
     return data.artist || null;
+  }
+
+  /**
+   * Get similar artists from Last.fm
+   * Uses the artist.getSimilar API endpoint
+   *
+   * @param mbid MusicBrainz Artist ID
+   * @param name Artist name
+   * @param limit Max number of similar artists to return (default 30)
+   * @returns Array of similar artists sorted by match score, or null if not found
+   */
+  async getSimilarArtists(
+    mbid: string | null,
+    name: string,
+    limit: number = 30,
+  ): Promise<LastfmSimilarArtist[] | null> {
+    if (!this.enabled) {
+      this.logger.debug('Last.fm agent disabled, skipping getSimilarArtists');
+      return null;
+    }
+
+    try {
+      await this.rateLimiter.waitForRateLimit(this.name);
+
+      const params = new URLSearchParams({
+        method: 'artist.getsimilar',
+        api_key: this.apiKey,
+        format: 'json',
+        autocorrect: '1',
+        limit: limit.toString(),
+      });
+
+      // Prefer MBID lookup, fallback to name
+      if (mbid) {
+        params.append('mbid', mbid);
+      } else {
+        params.append('artist', name);
+      }
+
+      const url = `${this.baseUrl}?${params.toString()}`;
+      this.logger.debug(`Fetching Last.fm similar artists for: ${mbid || name}`);
+
+      const response = await fetchWithTimeout(url, {
+        timeout: 8000,
+        headers: {
+          'User-Agent': 'Echo-Music-Server/1.0.0',
+        },
+      });
+
+      if (!response.ok) {
+        throw new ExternalApiError('Last.fm', response.status, response.statusText);
+      }
+
+      const data: LastFMSimilarArtistsResponse = await response.json();
+
+      if (data.error) {
+        this.logger.debug(`Last.fm error for similar artists ${name}: ${data.message}`);
+        return null;
+      }
+
+      const artists = data.similarartists?.artist;
+      if (!artists) {
+        return null;
+      }
+
+      // Handle both array and single artist object
+      const artistArray: LastFMSimilarArtist[] = Array.isArray(artists) ? artists : [artists];
+
+      // Parse and return similar artists
+      const parsedArtists: LastfmSimilarArtist[] = artistArray
+        .filter((a) => a.name && typeof a.name === 'string')
+        .map((a) => ({
+          name: a.name.trim(),
+          mbid: a.mbid || null,
+          match: parseFloat(a.match || '0'),
+          url: a.url || null,
+        }))
+        .sort((a, b) => b.match - a.match);
+
+      this.logger.log(`Retrieved ${parsedArtists.length} similar artists for: ${name}`);
+      return parsedArtists;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching similar artists for ${name}: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+      return null;
+    }
   }
 
   /**
