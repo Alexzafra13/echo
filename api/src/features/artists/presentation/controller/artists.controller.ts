@@ -198,13 +198,13 @@ export class ArtistsController {
 
   /**
    * GET /artists/:id/related
-   * Obtener artistas relacionados usando Last.fm, filtrados por biblioteca local
+   * Obtener artistas relacionados - primero con datos internos, fallback a Last.fm
    */
   @Get(':id/related')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener artistas relacionados',
-    description: 'Retorna artistas similares de Last.fm que existen en tu biblioteca local'
+    description: 'Retorna artistas similares basado en patrones de escucha internos, con fallback a Last.fm'
   })
   @ApiParam({
     name: 'id',
@@ -229,7 +229,7 @@ export class ArtistsController {
   ) {
     const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
 
-    // 1. Get the artist from our database to get the name
+    // 1. Get the artist from our database
     const artist = await this.artistRepository.findById(artistId);
     if (!artist) {
       return {
@@ -240,7 +240,48 @@ export class ArtistsController {
       };
     }
 
-    // 2. Try to get similar artists from Last.fm
+    // 2. First try internal co-listening patterns
+    const internalRelated = await this.playTrackingRepository.getRelatedArtists(
+      artistId,
+      limitNum,
+    );
+
+    // Fetch artist details for internal results
+    const internalArtists: Array<{
+      id: string;
+      name: string;
+      albumCount: number;
+      songCount: number;
+      matchScore: number;
+    }> = [];
+
+    for (const stat of internalRelated) {
+      const relArtist = await this.artistRepository.findById(stat.artistId);
+      if (relArtist) {
+        internalArtists.push({
+          id: relArtist.id,
+          name: relArtist.name,
+          albumCount: relArtist.albumCount,
+          songCount: relArtist.songCount,
+          matchScore: Math.round(stat.score), // Internal score
+        });
+      }
+    }
+
+    // 3. If we have enough internal results (>= 3), use them
+    if (internalArtists.length >= 3) {
+      this.logger.log(`Found ${internalArtists.length} related artists from internal data for: ${artist.name}`);
+      return {
+        data: internalArtists.slice(0, limitNum),
+        artistId,
+        limit: limitNum,
+        source: 'internal',
+      };
+    }
+
+    // 4. Not enough internal data, try Last.fm as fallback
+    this.logger.debug(`Only ${internalArtists.length} internal results, trying Last.fm for: ${artist.name}`);
+
     const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
       artist.mbzArtistId || null,
       artist.name,
@@ -248,20 +289,19 @@ export class ArtistsController {
     );
 
     if (!similarFromLastfm || similarFromLastfm.length === 0) {
-      this.logger.debug(`No similar artists found from Last.fm for: ${artist.name}`);
+      // Return whatever internal results we have
+      this.logger.debug(`No similar artists from Last.fm, returning ${internalArtists.length} internal results`);
       return {
-        data: [],
+        data: internalArtists,
         artistId,
         limit: limitNum,
-        source: 'lastfm',
+        source: internalArtists.length > 0 ? 'internal' : 'none',
       };
     }
 
-    this.logger.debug(`Got ${similarFromLastfm.length} similar artists from Last.fm for: ${artist.name}`);
-
-    // 3. Filter to only artists that exist in our local library
-    // Search by name (case-insensitive)
-    const relatedArtists: Array<{
+    // 5. Filter Last.fm results to only artists in our library
+    const internalArtistIds = new Set(internalArtists.map((a) => a.id));
+    const lastfmArtists: Array<{
       id: string;
       name: string;
       albumCount: number;
@@ -270,12 +310,12 @@ export class ArtistsController {
     }> = [];
 
     for (const similar of similarFromLastfm) {
-      if (relatedArtists.length >= limitNum) break;
+      if (internalArtists.length + lastfmArtists.length >= limitNum) break;
 
       // Search for this artist in our library by name
       const localArtist = await this.artistRepository.findByName(similar.name);
-      if (localArtist && localArtist.id !== artistId) {
-        relatedArtists.push({
+      if (localArtist && localArtist.id !== artistId && !internalArtistIds.has(localArtist.id)) {
+        lastfmArtists.push({
           id: localArtist.id,
           name: localArtist.name,
           albumCount: localArtist.albumCount,
@@ -285,13 +325,25 @@ export class ArtistsController {
       }
     }
 
-    this.logger.log(`Found ${relatedArtists.length} related artists in local library for: ${artist.name}`);
+    // 6. Combine internal + Last.fm results (internal first, they're more relevant)
+    const combinedResults = [...internalArtists, ...lastfmArtists].slice(0, limitNum);
+
+    const source = internalArtists.length > 0 && lastfmArtists.length > 0
+      ? 'mixed'
+      : lastfmArtists.length > 0
+        ? 'lastfm'
+        : 'internal';
+
+    this.logger.log(
+      `Found ${combinedResults.length} related artists for ${artist.name} ` +
+      `(${internalArtists.length} internal, ${lastfmArtists.length} from Last.fm)`
+    );
 
     return {
-      data: relatedArtists,
+      data: combinedResults,
       artistId,
       limit: limitNum,
-      source: 'lastfm',
+      source,
     };
   }
 
