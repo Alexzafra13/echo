@@ -35,6 +35,7 @@ import { HealthModule } from './features/health/health.module';
 import { SetupModule } from './features/setup/setup.module';
 import { PublicProfilesModule } from './features/public-profiles/public-profiles.module';
 import { SocialModule } from './features/social/social.module';
+import { FederationModule } from './features/federation/federation.module';
 import { validateEnvironment } from './config/env.validation';
 import { SecuritySecretsModule } from './config/security-secrets.module';
 
@@ -116,6 +117,7 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
     ExploreModule,
     PublicProfilesModule,
     SocialModule,
+    FederationModule,
   ],
   controllers: [
     // SPA fallback is registered manually in main.ts (must be outside /api prefix)
