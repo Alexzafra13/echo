@@ -15,6 +15,7 @@ import { RadioStationCard } from '@features/radio/components/RadioStationCard/Ra
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { useRandomAlbums } from '@features/explore/hooks';
 import { toAlbum } from '@features/explore/utils/transform';
+import { useSharedAlbumsForHome, SharedAlbumGrid } from '@features/federation';
 import type { HomeSectionId } from '@features/settings/services';
 import type { Album, HeroItem } from '../../types';
 import type { RadioStation } from '@features/radio/types';
@@ -66,6 +67,10 @@ export default function HomePage() {
   const handleRefreshRandom = () => {
     queryClient.invalidateQueries({ queryKey: ['explore', 'random-albums'] });
   };
+
+  // Shared albums from connected servers
+  const { data: sharedAlbumsData } = useSharedAlbumsForHome(neededAlbums);
+  const sharedAlbums = sharedAlbumsData?.albums || [];
 
   // Get enabled sections sorted by order
   const enabledSections = useMemo(() => {
@@ -403,6 +408,17 @@ export default function HomePage() {
             </div>
             <AlbumGrid title="" albums={randomAlbums} />
           </section>
+        );
+      case 'shared-albums':
+        if (sharedAlbums.length === 0) return null;
+        return (
+          <SharedAlbumGrid
+            key="shared-albums"
+            title="Bibliotecas Compartidas"
+            albums={sharedAlbums}
+            showViewAll={true}
+            viewAllPath="/albums?source=shared"
+          />
         );
       default:
         return null;
