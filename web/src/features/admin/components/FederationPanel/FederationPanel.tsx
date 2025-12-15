@@ -280,7 +280,7 @@ export function FederationPanel() {
                             Última conexión: {formatDistanceToNow(new Date(server.lastOnlineAt))}
                           </span>
                         )}
-                        {server.lastSyncAt && (
+                        {!server.isOnline && server.lastSyncAt && (
                           <span className={styles.lastSync}>
                             Última sync: {formatDistanceToNow(new Date(server.lastSyncAt))}
                           </span>

@@ -19,6 +19,7 @@ export interface SharedAlbum {
 export interface SharedAlbumsResponse {
   albums: SharedAlbum[];
   total: number;
+  totalPages?: number;
   serverCount: number;
 }
 

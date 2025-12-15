@@ -6,12 +6,13 @@ import { useStartImport } from '../../hooks/useSharedLibraries';
 import styles from './SharedAlbumGrid.module.css';
 
 interface SharedAlbumGridProps {
-  title: string;
+  title?: string;
   albums: SharedAlbum[];
   showViewAll?: boolean;
   viewAllPath?: string;
   mobileScroll?: boolean;
   showImportButton?: boolean;
+  showServerBadge?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export function SharedAlbumGrid({
   viewAllPath = '/shared-libraries',
   mobileScroll = false,
   showImportButton = true,
+  showServerBadge = true,
 }: SharedAlbumGridProps) {
   const [, setLocation] = useLocation();
   const startImport = useStartImport();
@@ -73,17 +75,19 @@ export function SharedAlbumGrid({
 
   return (
     <section className={styles.sharedAlbumGrid}>
-      <div className={styles.sharedAlbumGrid__header}>
-        <h2 className={styles.sharedAlbumGrid__title}>{title}</h2>
-        {showViewAll && (
-          <button
-            className={styles.sharedAlbumGrid__viewAllButton}
-            onClick={handleViewAllClick}
-          >
-            Ver todos
-          </button>
-        )}
-      </div>
+      {title && (
+        <div className={styles.sharedAlbumGrid__header}>
+          <h2 className={styles.sharedAlbumGrid__title}>{title}</h2>
+          {showViewAll && (
+            <button
+              className={styles.sharedAlbumGrid__viewAllButton}
+              onClick={handleViewAllClick}
+            >
+              Ver todos
+            </button>
+          )}
+        </div>
+      )}
       <div className={`${styles.sharedAlbumGrid__grid} ${mobileScroll ? styles['sharedAlbumGrid__grid--mobileScroll'] : ''}`}>
         {albums.map((album) => {
           const albumKey = `${album.serverId}-${album.id}`;
@@ -114,9 +118,11 @@ export function SharedAlbumGrid({
                     <span>🎵</span>
                   </div>
                 )}
-                <div className={styles.sharedAlbumGrid__serverBadge}>
-                  {album.serverName}
-                </div>
+                {showServerBadge && (
+                  <div className={styles.sharedAlbumGrid__serverBadge}>
+                    {album.serverName}
+                  </div>
+                )}
                 {showImportButton && (
                   <button
                     className={`${styles.sharedAlbumGrid__importButton} ${isImported ? styles['sharedAlbumGrid__importButton--success'] : ''}`}

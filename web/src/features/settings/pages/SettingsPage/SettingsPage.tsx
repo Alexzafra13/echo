@@ -19,6 +19,7 @@ const SECTION_LABELS: Record<HomeSectionId, string> = {
   'top-played': 'Más Escuchados',
   'favorite-radios': 'Radios Favoritas',
   'surprise-me': 'Sorpréndeme',
+  'shared-albums': 'Bibliotecas Compartidas',
 };
 
 /**
