@@ -60,7 +60,7 @@ export class CachedArtistRepository
 
     if (artist) {
       // Cache the result
-      await this.cache.set(cacheKey, artist.toPlainObject(), this.searchTtl);
+      await this.cache.set(cacheKey, artist.toPrimitives(), this.searchTtl);
     }
 
     return artist;
