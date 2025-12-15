@@ -242,7 +242,7 @@ export class ArtistsController {
 
     // 2. Try to get similar artists from Last.fm
     const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
-      artist.musicbrainzId || null,
+      artist.mbzArtistId || null,
       artist.name,
       50, // Get more from Last.fm so we can filter to local library
     );
