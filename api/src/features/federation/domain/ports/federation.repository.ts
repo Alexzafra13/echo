@@ -32,6 +32,16 @@ export interface IFederationRepository {
   updateFederationToken(id: string, data: Partial<FederationToken>): Promise<FederationToken | null>;
   deleteFederationToken(id: string): Promise<boolean>;
   deleteExpiredFederationTokens(): Promise<number>;
+  /**
+   * Atomically use an invitation token - increments currentUses and returns token
+   * Returns null if token is invalid, expired, or max uses reached
+   * This prevents race conditions when multiple servers try to use the same token
+   */
+  useInvitationTokenAtomic(
+    token: string,
+    serverName: string,
+    ip?: string,
+  ): Promise<FederationToken | null>;
 
   // Federation Access Tokens (Long-lived tokens for connected servers)
   createFederationAccessToken(data: NewFederationAccessToken): Promise<FederationAccessToken>;

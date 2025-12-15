@@ -67,6 +67,7 @@ export class FederationTokenService {
 
   /**
    * Mark an invitation token as used and create access token for the connecting server
+   * Uses atomic update to prevent race conditions when multiple servers try to use the same token
    * @param mutualInvitationToken - Token provided by the connecting server for mutual federation
    */
   async useInvitationToken(
@@ -76,20 +77,18 @@ export class FederationTokenService {
     ip?: string,
     mutualInvitationToken?: string,
   ): Promise<FederationAccessToken | null> {
-    const federationToken = await this.validateInvitationToken(token);
+    // Use atomic update to prevent race condition
+    // This ensures that if two servers try to use the same token simultaneously,
+    // only one will succeed (the one that gets the row lock first)
+    const federationToken = await this.repository.useInvitationTokenAtomic(
+      token,
+      serverName,
+      ip,
+    );
 
     if (!federationToken) {
       return null;
     }
-
-    // Update token usage
-    await this.repository.updateFederationToken(federationToken.id, {
-      currentUses: federationToken.currentUses + 1,
-      isUsed: federationToken.currentUses + 1 >= federationToken.maxUses,
-      usedByServerName: serverName,
-      usedByIp: ip,
-      usedAt: new Date(),
-    });
 
     // Generate access token for the connecting server
     const accessToken = randomBytes(32).toString('hex');

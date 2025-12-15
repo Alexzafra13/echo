@@ -3,6 +3,7 @@ import { federationService, type SharedAlbumsParams } from '../services/federati
 
 /**
  * Hook to fetch connected servers
+ * Re-exported from this file to be available for SharedAlbumGrid component
  */
 export function useConnectedServers() {
   return useQuery({

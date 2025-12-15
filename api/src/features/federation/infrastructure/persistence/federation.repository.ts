@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, lt } from 'drizzle-orm';
+import { eq, and, lt, gt, sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import {
   connectedServers,
@@ -148,6 +148,36 @@ export class FederationRepository implements IFederationRepository {
       .where(lt(federationTokens.expiresAt, new Date()))
       .returning();
     return result.length;
+  }
+
+  async useInvitationTokenAtomic(
+    token: string,
+    serverName: string,
+    ip?: string,
+  ): Promise<FederationToken | null> {
+    const now = new Date();
+
+    // Atomic update with conditions - only updates if token is valid, not expired, and has uses left
+    // Uses SQL: UPDATE ... WHERE token = ? AND expiresAt > NOW() AND currentUses < maxUses
+    const [updated] = await this.drizzle.db
+      .update(federationTokens)
+      .set({
+        currentUses: sql`${federationTokens.currentUses} + 1`,
+        isUsed: sql`${federationTokens.currentUses} + 1 >= ${federationTokens.maxUses}`,
+        usedByServerName: serverName,
+        usedByIp: ip,
+        usedAt: now,
+      })
+      .where(
+        and(
+          eq(federationTokens.token, token),
+          gt(federationTokens.expiresAt, now),
+          sql`${federationTokens.currentUses} < ${federationTokens.maxUses}`,
+        ),
+      )
+      .returning();
+
+    return updated ?? null;
   }
 
   // ============================================
