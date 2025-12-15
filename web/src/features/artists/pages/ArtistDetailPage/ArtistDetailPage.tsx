@@ -1,14 +1,15 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Music, Users, Play, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistOptionsMenu } from '../../components';
 import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvatarSelectorModal';
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
-import { useArtist, useArtistAlbums } from '../../hooks';
+import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks, useRelatedArtists } from '../../hooks';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
+import { usePlayer } from '@features/player/context/PlayerContext';
 import { getArtistInitials } from '../../utils/artist-image.utils';
 import { logger } from '@shared/utils/logger';
 import styles from './ArtistDetailPage.module.css';
@@ -19,8 +20,9 @@ import styles from './ArtistDetailPage.module.css';
  */
 export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [, _setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const { play, addToQueue } = usePlayer();
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
@@ -40,6 +42,15 @@ export default function ArtistDetailPage() {
   // Fetch albums for this artist directly from the API
   const { data: artistAlbumsData } = useArtistAlbums(id);
 
+  // Fetch artist global stats (total plays, unique listeners)
+  const { data: artistStats } = useArtistStats(id);
+
+  // Fetch top tracks for this artist
+  const { data: topTracksData } = useArtistTopTracks(id, 10);
+
+  // Fetch related artists
+  const { data: relatedArtistsData } = useRelatedArtists(id, 8);
+
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
 
@@ -51,6 +62,40 @@ export default function ArtistDetailPage() {
 
   // Get albums for this artist
   const artistAlbums = artistAlbumsData?.data || [];
+
+  // Get top tracks for this artist
+  const topTracks = topTracksData?.data || [];
+
+  // Get related artists
+  const relatedArtists = relatedArtistsData?.data || [];
+
+  // Helper function to format duration (mm:ss)
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return '--:--';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to format play count
+  const formatPlayCount = (count: number) => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
+  };
+
+  // Handle playing a top track
+  const handlePlayTopTrack = (track: typeof topTracks[0]) => {
+    play({
+      id: track.trackId,
+      title: track.title,
+      artist: artist?.name || 'Unknown Artist',
+      albumId: track.albumId || undefined,
+      albumName: track.albumName || undefined,
+      duration: track.duration || 0,
+      coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
+    });
+  };
 
   // Get background image with tag-based cache busting (V2)
   // Determine which background image to show (most recently updated)
@@ -271,6 +316,14 @@ export default function ArtistDetailPage() {
                   <span>{artist.albumCount} {artist.albumCount === 1 ? 'álbum' : 'álbumes'}</span>
                   <span>•</span>
                   <span>{artist.songCount} {artist.songCount === 1 ? 'canción' : 'canciones'}</span>
+                  {artistStats && artistStats.totalPlays > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>{formatPlayCount(artistStats.totalPlays)} reproducciones</span>
+                      <span>•</span>
+                      <span>{artistStats.uniqueListeners} {artistStats.uniqueListeners === 1 ? 'oyente' : 'oyentes'}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -321,6 +374,106 @@ export default function ArtistDetailPage() {
               <p className={styles.artistDetailPage__biographyPlaceholder}>
                 No hay biografía disponible para este artista.
               </p>
+            </section>
+          )}
+
+          {/* Top Tracks Section */}
+          {topTracks.length > 0 && (
+            <section className={styles.artistDetailPage__topTracks}>
+              <div className={styles.artistDetailPage__sectionHeader}>
+                <TrendingUp size={24} className={styles.artistDetailPage__sectionIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Canciones populares</h2>
+              </div>
+              <div className={styles.artistDetailPage__topTracksList}>
+                {topTracks.map((track, index) => (
+                  <div
+                    key={track.trackId}
+                    className={styles.artistDetailPage__topTrack}
+                    onClick={() => handlePlayTopTrack(track)}
+                  >
+                    <span className={styles.artistDetailPage__topTrackRank}>{index + 1}</span>
+                    {track.albumId && (
+                      <img
+                        src={`/api/albums/${track.albumId}/cover`}
+                        alt={track.albumName || track.title}
+                        className={styles.artistDetailPage__topTrackCover}
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder-album.png';
+                        }}
+                      />
+                    )}
+                    {!track.albumId && (
+                      <div className={styles.artistDetailPage__topTrackCoverPlaceholder}>
+                        <Music size={16} />
+                      </div>
+                    )}
+                    <div className={styles.artistDetailPage__topTrackInfo}>
+                      <span className={styles.artistDetailPage__topTrackTitle}>{track.title}</span>
+                      {track.albumName && (
+                        <span className={styles.artistDetailPage__topTrackAlbum}>{track.albumName}</span>
+                      )}
+                    </div>
+                    <div className={styles.artistDetailPage__topTrackStats}>
+                      <span className={styles.artistDetailPage__topTrackPlays}>
+                        {formatPlayCount(track.playCount)} plays
+                      </span>
+                    </div>
+                    <span className={styles.artistDetailPage__topTrackDuration}>
+                      {formatDuration(track.duration)}
+                    </span>
+                    <button
+                      className={styles.artistDetailPage__topTrackPlay}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlayTopTrack(track);
+                      }}
+                      aria-label={`Reproducir ${track.title}`}
+                    >
+                      <Play size={16} fill="currentColor" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Related Artists Section */}
+          {relatedArtists.length > 0 && (
+            <section className={styles.artistDetailPage__relatedArtists}>
+              <div className={styles.artistDetailPage__sectionHeader}>
+                <Users size={24} className={styles.artistDetailPage__sectionIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Artistas similares</h2>
+              </div>
+              <div className={styles.artistDetailPage__relatedArtistsGrid}>
+                {relatedArtists.map((relArtist) => (
+                  <div
+                    key={relArtist.id}
+                    className={styles.artistDetailPage__relatedArtist}
+                    onClick={() => setLocation(`/artists/${relArtist.id}`)}
+                  >
+                    <div className={styles.artistDetailPage__relatedArtistAvatar}>
+                      <img
+                        src={getArtistImageUrl(relArtist.id, 'profile')}
+                        alt={relArtist.name}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                      <div className={styles.artistDetailPage__relatedArtistFallback} style={{ display: 'none' }}>
+                        {getArtistInitials(relArtist.name)}
+                      </div>
+                    </div>
+                    <div className={styles.artistDetailPage__relatedArtistInfo}>
+                      <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
+                      <span className={styles.artistDetailPage__relatedArtistMeta}>
+                        {relArtist.commonListeners} oyentes en común
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
