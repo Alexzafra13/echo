@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Socket } from 'socket.io-client';
 import WebSocketService from '../services/websocket.service';
 
-export type WebSocketNamespace = 'scanner' | 'metadata';
+export type WebSocketNamespace = 'scanner' | 'metadata' | 'federation';
 
 export interface WebSocketEventHandler {
   event: string;

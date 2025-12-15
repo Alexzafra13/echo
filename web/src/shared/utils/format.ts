@@ -134,3 +134,37 @@ export function formatDateCompact(dateString?: string): string {
     minute: '2-digit',
   });
 }
+
+/**
+ * Format relative time from now (e.g., "hace 2 días", "hace 5 minutos")
+ * @param date - Date object or timestamp
+ * @returns Formatted relative time string in Spanish
+ */
+export function formatDistanceToNow(date: Date | number): string {
+  const now = new Date();
+  const targetDate = date instanceof Date ? date : new Date(date);
+  const diffMs = now.getTime() - targetDate.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
+
+  if (diffSeconds < 60) {
+    return 'hace unos segundos';
+  } else if (diffMinutes < 60) {
+    return diffMinutes === 1 ? 'hace 1 minuto' : `hace ${diffMinutes} minutos`;
+  } else if (diffHours < 24) {
+    return diffHours === 1 ? 'hace 1 hora' : `hace ${diffHours} horas`;
+  } else if (diffDays < 7) {
+    return diffDays === 1 ? 'hace 1 día' : `hace ${diffDays} días`;
+  } else if (diffWeeks < 4) {
+    return diffWeeks === 1 ? 'hace 1 semana' : `hace ${diffWeeks} semanas`;
+  } else if (diffMonths < 12) {
+    return diffMonths === 1 ? 'hace 1 mes' : `hace ${diffMonths} meses`;
+  } else {
+    return diffYears === 1 ? 'hace 1 año' : `hace ${diffYears} años`;
+  }
+}
