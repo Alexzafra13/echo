@@ -1,9 +1,12 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
 import { parsePaginationParams } from '@shared/utils';
+import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
+import { ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
+import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 
 /**
  * ArtistsController - Controlador de artistas
@@ -24,6 +27,10 @@ export class ArtistsController {
     private readonly getArtistsUseCase: GetArtistsUseCase,
     private readonly getArtistAlbumsUseCase: GetArtistAlbumsUseCase,
     private readonly searchArtistsUseCase: SearchArtistsUseCase,
+    @Inject(PLAY_TRACKING_REPOSITORY)
+    private readonly playTrackingRepository: IPlayTrackingRepository,
+    @Inject(ARTIST_REPOSITORY)
+    private readonly artistRepository: IArtistRepository,
   ) {}
 
   /**
@@ -94,6 +101,156 @@ export class ArtistsController {
       skip: result.skip,
       take: result.take,
       hasMore: result.hasMore,
+    };
+  }
+
+  /**
+   * GET /artists/:id/top-tracks
+   * Obtener las canciones más escuchadas de un artista (globalmente entre todos los usuarios)
+   */
+  @Get(':id/top-tracks')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener top tracks del artista',
+    description: 'Retorna las canciones más escuchadas de un artista en toda la plataforma'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del artista',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de tracks a retornar (1-50)',
+    example: 10
+  })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    type: Number,
+    description: 'Filtrar por días recientes (opcional)',
+    example: 30
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Top tracks del artista obtenidos exitosamente'
+  })
+  async getArtistTopTracks(
+    @Param('id') artistId: string,
+    @Query('limit') limit?: string,
+    @Query('days') days?: string,
+  ) {
+    const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 50);
+    const daysNum = days ? parseInt(days, 10) : undefined;
+
+    const topTracks = await this.playTrackingRepository.getArtistTopTracks(
+      artistId,
+      limitNum,
+      daysNum,
+    );
+
+    return {
+      data: topTracks,
+      artistId,
+      limit: limitNum,
+      days: daysNum,
+    };
+  }
+
+  /**
+   * GET /artists/:id/stats
+   * Obtener estadísticas globales del artista
+   */
+  @Get(':id/stats')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener estadísticas del artista',
+    description: 'Retorna estadísticas globales de escuchas del artista en toda la plataforma'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del artista',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estadísticas del artista obtenidas exitosamente'
+  })
+  async getArtistStats(@Param('id') artistId: string) {
+    const stats = await this.playTrackingRepository.getArtistGlobalStats(artistId);
+
+    return {
+      artistId,
+      totalPlays: stats.totalPlays,
+      uniqueListeners: stats.uniqueListeners,
+      avgCompletionRate: Math.round(stats.avgCompletionRate * 100) / 100,
+      skipRate: Math.round(stats.skipRate * 100) / 100,
+    };
+  }
+
+  /**
+   * GET /artists/:id/related
+   * Obtener artistas relacionados basado en patrones de escucha
+   */
+  @Get(':id/related')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener artistas relacionados',
+    description: 'Retorna artistas similares basado en patrones de escucha de los usuarios'
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'UUID del artista',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número de artistas relacionados a retornar (1-20)',
+    example: 10
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Artistas relacionados obtenidos exitosamente'
+  })
+  async getRelatedArtists(
+    @Param('id') artistId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
+
+    const relatedArtistStats = await this.playTrackingRepository.getRelatedArtists(
+      artistId,
+      limitNum,
+    );
+
+    // Fetch artist details for each related artist
+    const relatedArtists = await Promise.all(
+      relatedArtistStats.map(async (stat) => {
+        const artist = await this.artistRepository.findById(stat.artistId);
+        if (!artist) return null;
+
+        return {
+          id: artist.id,
+          name: artist.name,
+          albumCount: artist.albumCount,
+          songCount: artist.songCount,
+          commonListeners: stat.commonListeners,
+          score: Math.round(stat.score * 100) / 100,
+        };
+      }),
+    );
+
+    return {
+      data: relatedArtists.filter((a) => a !== null),
+      artistId,
+      limit: limitNum,
     };
   }
 

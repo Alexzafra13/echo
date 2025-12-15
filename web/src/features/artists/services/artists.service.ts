@@ -1,6 +1,12 @@
 import { apiClient } from '@shared/services/api';
 import type { PaginatedResponse, PaginationParams } from '@shared/types';
-import type { ArtistDetail, PaginatedArtists } from '../types';
+import type {
+  ArtistDetail,
+  PaginatedArtists,
+  ArtistStats,
+  ArtistTopTracksResponse,
+  RelatedArtistsResponse,
+} from '../types';
 import type { Album } from '@features/home/types';
 
 /**
@@ -59,6 +65,38 @@ export const artistsService = {
       params: { skip, take },
     });
 
+    return response.data;
+  },
+
+  /**
+   * Get global statistics for an artist
+   */
+  async getStats(artistId: string): Promise<ArtistStats> {
+    const response = await apiClient.get<ArtistStats>(`/artists/${artistId}/stats`);
+    return response.data;
+  },
+
+  /**
+   * Get top tracks for an artist (most played across all users)
+   */
+  async getTopTracks(
+    artistId: string,
+    limit: number = 10,
+    days?: number,
+  ): Promise<ArtistTopTracksResponse> {
+    const response = await apiClient.get<ArtistTopTracksResponse>(`/artists/${artistId}/top-tracks`, {
+      params: { limit, days },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get related artists based on listening patterns
+   */
+  async getRelatedArtists(artistId: string, limit: number = 10): Promise<RelatedArtistsResponse> {
+    const response = await apiClient.get<RelatedArtistsResponse>(`/artists/${artistId}/related`, {
+      params: { limit },
+    });
     return response.data;
   },
 };
