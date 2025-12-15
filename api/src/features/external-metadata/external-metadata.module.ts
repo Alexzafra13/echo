@@ -188,6 +188,8 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     MbidAutoSearchService,
     MetadataEnrichmentGateway,
     EnrichmentQueueService,
+    // Agents (for direct use in other modules)
+    LastfmAgent,
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {

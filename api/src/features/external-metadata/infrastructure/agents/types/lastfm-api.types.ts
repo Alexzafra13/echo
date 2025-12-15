@@ -106,3 +106,24 @@ export interface LastFMAlbumInfoResponse {
   error?: number;
   message?: string;
 }
+
+// ============ Similar Artists Types ============
+
+export interface LastFMSimilarArtist {
+  name: string;
+  mbid?: string;
+  match?: string; // Match score 0-1 as string
+  url?: string;
+  image?: LastFMImage[];
+}
+
+export interface LastFMSimilarArtistsResponse {
+  similarartists?: {
+    artist?: LastFMSimilarArtist | LastFMSimilarArtist[];
+    '@attr'?: {
+      artist: string;
+    };
+  };
+  error?: number;
+  message?: string;
+}
