@@ -459,4 +459,154 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
         updated_at = NOW()
     `);
   }
+
+  // ===================================
+  // ARTIST GLOBAL STATS (for artist detail page)
+  // ===================================
+
+  async getArtistTopTracks(
+    artistId: string,
+    limit: number = 10,
+    days?: number,
+  ): Promise<{
+    trackId: string;
+    title: string;
+    albumId: string | null;
+    albumName: string | null;
+    duration: number | null;
+    playCount: number;
+    uniqueListeners: number;
+  }[]> {
+    let dateFilter = sql``;
+    if (days) {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      dateFilter = sql` AND ph.played_at >= ${since}`;
+    }
+
+    const result = await this.drizzle.db.execute<{
+      trackId: string;
+      title: string;
+      albumId: string | null;
+      albumName: string | null;
+      duration: string | null;
+      playCount: string;
+      uniqueListeners: string;
+    }>(sql`
+      SELECT
+        t.id as "trackId",
+        t.title as "title",
+        t.album_id as "albumId",
+        t.album_name as "albumName",
+        t.duration::text as "duration",
+        COUNT(ph.id)::text as "playCount",
+        COUNT(DISTINCT ph.user_id)::text as "uniqueListeners"
+      FROM tracks t
+      INNER JOIN play_history ph ON ph.track_id = t.id
+      WHERE t.artist_id = ${artistId}${dateFilter}
+      GROUP BY t.id, t.title, t.album_id, t.album_name, t.duration
+      ORDER BY COUNT(ph.id) DESC
+      LIMIT ${limit}
+    `);
+
+    return result.rows.map((row) => ({
+      trackId: row.trackId,
+      title: row.title,
+      albumId: row.albumId,
+      albumName: row.albumName,
+      duration: row.duration ? parseInt(row.duration, 10) : null,
+      playCount: parseInt(row.playCount, 10),
+      uniqueListeners: parseInt(row.uniqueListeners, 10),
+    }));
+  }
+
+  async getArtistGlobalStats(artistId: string): Promise<{
+    totalPlays: number;
+    uniqueListeners: number;
+    avgCompletionRate: number;
+    skipRate: number;
+  }> {
+    const result = await this.drizzle.db.execute<{
+      totalPlays: string;
+      uniqueListeners: string;
+      avgCompletionRate: string | null;
+      skips: string;
+    }>(sql`
+      SELECT
+        COUNT(ph.id)::text as "totalPlays",
+        COUNT(DISTINCT ph.user_id)::text as "uniqueListeners",
+        AVG(ph.completion_rate)::text as "avgCompletionRate",
+        COUNT(CASE WHEN ph.skipped = true THEN 1 END)::text as "skips"
+      FROM tracks t
+      INNER JOIN play_history ph ON ph.track_id = t.id
+      WHERE t.artist_id = ${artistId}
+    `);
+
+    const row = result.rows[0];
+    if (!row) {
+      return {
+        totalPlays: 0,
+        uniqueListeners: 0,
+        avgCompletionRate: 0,
+        skipRate: 0,
+      };
+    }
+
+    const totalPlays = parseInt(row.totalPlays, 10) || 0;
+    const skips = parseInt(row.skips, 10) || 0;
+
+    return {
+      totalPlays,
+      uniqueListeners: parseInt(row.uniqueListeners, 10) || 0,
+      avgCompletionRate: row.avgCompletionRate ? parseFloat(row.avgCompletionRate) : 0,
+      skipRate: totalPlays > 0 ? skips / totalPlays : 0,
+    };
+  }
+
+  async getRelatedArtists(
+    artistId: string,
+    limit: number = 10,
+  ): Promise<{ artistId: string; score: number; commonListeners: number }[]> {
+    // Find artists that share listeners with the target artist
+    // Score is based on how many users listen to both artists
+    const result = await this.drizzle.db.execute<{
+      artistId: string;
+      commonListeners: string;
+      score: string;
+    }>(sql`
+      WITH artist_listeners AS (
+        -- Users who listen to the target artist
+        SELECT DISTINCT ups.user_id
+        FROM user_play_stats ups
+        WHERE ups.item_id = ${artistId} AND ups.item_type = 'artist'
+      ),
+      other_artist_stats AS (
+        -- For each user who listens to target artist, find other artists they listen to
+        SELECT
+          ups.item_id as artist_id,
+          COUNT(DISTINCT ups.user_id) as common_listeners,
+          SUM(ups.weighted_play_count) as total_weighted_plays
+        FROM user_play_stats ups
+        INNER JOIN artist_listeners al ON ups.user_id = al.user_id
+        WHERE ups.item_type = 'artist'
+          AND ups.item_id != ${artistId}
+        GROUP BY ups.item_id
+      )
+      SELECT
+        artist_id as "artistId",
+        common_listeners::text as "commonListeners",
+        -- Score: combination of common listeners and their engagement
+        (common_listeners * LOG(total_weighted_plays + 1))::text as "score"
+      FROM other_artist_stats
+      WHERE common_listeners >= 1
+      ORDER BY score DESC
+      LIMIT ${limit}
+    `);
+
+    return result.rows.map((row) => ({
+      artistId: row.artistId,
+      commonListeners: parseInt(row.commonListeners, 10),
+      score: parseFloat(row.score),
+    }));
+  }
 }
