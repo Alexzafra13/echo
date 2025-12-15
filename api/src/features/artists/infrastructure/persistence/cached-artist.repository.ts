@@ -41,4 +41,28 @@ export class CachedArtistRepository
       Artist.reconstruct,
     );
   }
+
+  /**
+   * Find artist by exact name (case-insensitive)
+   * Cached with short TTL for similar artist lookups
+   */
+  async findByName(name: string): Promise<Artist | null> {
+    const cacheKey = `${this.config.keyPrefix}name:${name.toLowerCase()}`;
+
+    // Try cache first
+    const cached = await this.cache.get<Record<string, unknown>>(cacheKey);
+    if (cached) {
+      return this.reconstruct(cached);
+    }
+
+    // Cache miss - fetch from DB
+    const artist = await this.baseRepository.findByName(name);
+
+    if (artist) {
+      // Cache the result
+      await this.cache.set(cacheKey, artist.toPlainObject(), this.searchTtl);
+    }
+
+    return artist;
+  }
 }

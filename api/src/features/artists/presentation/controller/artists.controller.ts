@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
@@ -7,6 +7,7 @@ import { parsePaginationParams } from '@shared/utils';
 import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
 import { ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
+import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
 
 /**
  * ArtistsController - Controlador de artistas
@@ -22,6 +23,8 @@ import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 @ApiBearerAuth('JWT-auth')
 @Controller('artists')
 export class ArtistsController {
+  private readonly logger = new Logger(ArtistsController.name);
+
   constructor(
     private readonly getArtistUseCase: GetArtistUseCase,
     private readonly getArtistsUseCase: GetArtistsUseCase,
@@ -31,6 +34,7 @@ export class ArtistsController {
     private readonly playTrackingRepository: IPlayTrackingRepository,
     @Inject(ARTIST_REPOSITORY)
     private readonly artistRepository: IArtistRepository,
+    private readonly lastfmAgent: LastfmAgent,
   ) {}
 
   /**
@@ -194,13 +198,13 @@ export class ArtistsController {
 
   /**
    * GET /artists/:id/related
-   * Obtener artistas relacionados basado en patrones de escucha
+   * Obtener artistas relacionados usando Last.fm, filtrados por biblioteca local
    */
   @Get(':id/related')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener artistas relacionados',
-    description: 'Retorna artistas similares basado en patrones de escucha de los usuarios'
+    description: 'Retorna artistas similares de Last.fm que existen en tu biblioteca local'
   })
   @ApiParam({
     name: 'id',
@@ -225,32 +229,69 @@ export class ArtistsController {
   ) {
     const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
 
-    const relatedArtistStats = await this.playTrackingRepository.getRelatedArtists(
-      artistId,
-      limitNum,
+    // 1. Get the artist from our database to get the name
+    const artist = await this.artistRepository.findById(artistId);
+    if (!artist) {
+      return {
+        data: [],
+        artistId,
+        limit: limitNum,
+        source: 'none',
+      };
+    }
+
+    // 2. Try to get similar artists from Last.fm
+    const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
+      artist.musicbrainzId || null,
+      artist.name,
+      50, // Get more from Last.fm so we can filter to local library
     );
 
-    // Fetch artist details for each related artist
-    const relatedArtists = await Promise.all(
-      relatedArtistStats.map(async (stat) => {
-        const artist = await this.artistRepository.findById(stat.artistId);
-        if (!artist) return null;
+    if (!similarFromLastfm || similarFromLastfm.length === 0) {
+      this.logger.debug(`No similar artists found from Last.fm for: ${artist.name}`);
+      return {
+        data: [],
+        artistId,
+        limit: limitNum,
+        source: 'lastfm',
+      };
+    }
 
-        return {
-          id: artist.id,
-          name: artist.name,
-          albumCount: artist.albumCount,
-          songCount: artist.songCount,
-          commonListeners: stat.commonListeners,
-          score: Math.round(stat.score * 100) / 100,
-        };
-      }),
-    );
+    this.logger.debug(`Got ${similarFromLastfm.length} similar artists from Last.fm for: ${artist.name}`);
+
+    // 3. Filter to only artists that exist in our local library
+    // Search by name (case-insensitive)
+    const relatedArtists: Array<{
+      id: string;
+      name: string;
+      albumCount: number;
+      songCount: number;
+      matchScore: number;
+    }> = [];
+
+    for (const similar of similarFromLastfm) {
+      if (relatedArtists.length >= limitNum) break;
+
+      // Search for this artist in our library by name
+      const localArtist = await this.artistRepository.findByName(similar.name);
+      if (localArtist && localArtist.id !== artistId) {
+        relatedArtists.push({
+          id: localArtist.id,
+          name: localArtist.name,
+          albumCount: localArtist.albumCount,
+          songCount: localArtist.songCount,
+          matchScore: Math.round(similar.match * 100),
+        });
+      }
+    }
+
+    this.logger.log(`Found ${relatedArtists.length} related artists in local library for: ${artist.name}`);
 
     return {
-      data: relatedArtists.filter((a) => a !== null),
+      data: relatedArtists,
       artistId,
       limit: limitNum,
+      source: 'lastfm',
     };
   }
 

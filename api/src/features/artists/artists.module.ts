@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { CacheModule } from '@infrastructure/cache/cache.module';
 import { AlbumsModule } from '@features/albums/albums.module';
 import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
+import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { ArtistsController } from './presentation/controller/artists.controller';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from './domain/use-cases';
 import { DrizzleArtistRepository } from './infrastructure/persistence/artist.repository';
@@ -34,6 +35,7 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     CacheModule,
     forwardRef(() => AlbumsModule), // For GetArtistAlbumsUseCase
     PlayTrackingModule, // For artist global stats
+    ExternalMetadataModule, // For LastfmAgent (similar artists)
   ],
   controllers: [ArtistsController],
   providers: [

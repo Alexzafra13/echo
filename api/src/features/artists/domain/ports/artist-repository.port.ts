@@ -13,6 +13,11 @@ export interface IArtistRepository {
   findById(id: string): Promise<Artist | null>;
 
   /**
+   * Busca un artista por nombre exacto (case-insensitive)
+   */
+  findByName(name: string): Promise<Artist | null>;
+
+  /**
    * Obtiene todos los artistas con paginación
    */
   findAll(skip: number, take: number): Promise<Artist[]>;
