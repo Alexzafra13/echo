@@ -4,4 +4,9 @@ export type {
   PaginatedArtists,
   ArtistCardProps,
   ArtistGridProps,
+  ArtistTopTrack,
+  ArtistStats,
+  RelatedArtist,
+  ArtistTopTracksResponse,
+  RelatedArtistsResponse,
 } from './artist.types';
