@@ -30,6 +30,17 @@ export class DrizzleArtistRepository
     return result[0] ? ArtistMapper.toDomain(result[0]) : null;
   }
 
+  async findByName(name: string): Promise<Artist | null> {
+    // Case-insensitive exact match using LOWER()
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(sql`LOWER(${artists.name}) = LOWER(${name})`)
+      .limit(1);
+
+    return result[0] ? ArtistMapper.toDomain(result[0]) : null;
+  }
+
   async findAll(skip: number, take: number): Promise<Artist[]> {
     const result = await this.drizzle.db
       .select()

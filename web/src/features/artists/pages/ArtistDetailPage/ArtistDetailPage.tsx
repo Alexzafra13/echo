@@ -469,7 +469,7 @@ export default function ArtistDetailPage() {
                     <div className={styles.artistDetailPage__relatedArtistInfo}>
                       <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
                       <span className={styles.artistDetailPage__relatedArtistMeta}>
-                        {relArtist.commonListeners} oyentes en común
+                        {relArtist.matchScore}% similar
                       </span>
                     </div>
                   </div>

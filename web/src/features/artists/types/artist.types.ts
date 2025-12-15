@@ -80,15 +80,14 @@ export interface ArtistStats {
 }
 
 /**
- * Related artist data
+ * Related artist data (from Last.fm, filtered to local library)
  */
 export interface RelatedArtist {
   id: string;
   name: string;
   albumCount: number;
   songCount: number;
-  commonListeners: number;
-  score: number;
+  matchScore: number; // 0-100% match score from Last.fm
 }
 
 /**
