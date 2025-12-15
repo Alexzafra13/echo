@@ -410,14 +410,14 @@ export default function HomePage() {
           </section>
         );
       case 'shared-albums':
-        if (sharedAlbums.length === 0) return null;
         return (
           <SharedAlbumGrid
             key="shared-albums"
             title="Bibliotecas Compartidas"
             albums={sharedAlbums}
-            showViewAll={true}
+            showViewAll={sharedAlbums.length > 0}
             viewAllPath="/albums?source=shared"
+            showEmptyState={true}
           />
         );
       default:
