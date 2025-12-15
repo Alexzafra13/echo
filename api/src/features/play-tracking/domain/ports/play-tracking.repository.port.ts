@@ -40,4 +40,49 @@ export interface IPlayTrackingRepository {
 
   // Playback state (for social "listening now" feature)
   updatePlaybackState(userId: string, isPlaying: boolean, currentTrackId: string | null): Promise<void>;
+
+  // ===================================
+  // ARTIST GLOBAL STATS (for artist detail page)
+  // ===================================
+
+  /**
+   * Get top tracks for an artist across ALL users (global)
+   * Returns track details along with play statistics
+   */
+  getArtistTopTracks(
+    artistId: string,
+    limit?: number,
+    days?: number,
+  ): Promise<{
+    trackId: string;
+    title: string;
+    albumId: string | null;
+    albumName: string | null;
+    duration: number | null;
+    playCount: number;
+    uniqueListeners: number;
+  }[]>;
+
+  /**
+   * Get global statistics for an artist
+   */
+  getArtistGlobalStats(artistId: string): Promise<{
+    totalPlays: number;
+    uniqueListeners: number;
+    avgCompletionRate: number;
+    skipRate: number;
+  }>;
+
+  /**
+   * Get related artists based on co-listening patterns
+   * (users who listen to this artist also listen to...)
+   */
+  getRelatedArtists(
+    artistId: string,
+    limit?: number,
+  ): Promise<{
+    artistId: string;
+    score: number;
+    commonListeners: number;
+  }[]>;
 }

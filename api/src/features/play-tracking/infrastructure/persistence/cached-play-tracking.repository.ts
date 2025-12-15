@@ -301,6 +301,94 @@ export class CachedPlayTrackingRepository implements IPlayTrackingRepository {
   }
 
   // ===================================
+  // ARTIST GLOBAL STATS (for artist detail page)
+  // ===================================
+
+  /**
+   * Get top tracks for an artist across ALL users
+   * Cached with 15 min TTL - global data changes less frequently
+   */
+  async getArtistTopTracks(
+    artistId: string,
+    limit?: number,
+    days?: number,
+  ): Promise<{
+    trackId: string;
+    title: string;
+    albumId: string | null;
+    albumName: string | null;
+    duration: number | null;
+    playCount: number;
+    uniqueListeners: number;
+  }[]> {
+    const cacheKey = `${this.KEY_PREFIX}artist-top-tracks:${artistId}:${limit || 10}:${days || 'all'}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Artist top tracks cache hit');
+      return cached;
+    }
+
+    const result = await this.baseRepository.getArtistTopTracks(artistId, limit, days);
+
+    if (result.length > 0) {
+      await this.cache.set(cacheKey, result, this.TOP_ITEMS_TTL);
+    }
+
+    return result;
+  }
+
+  /**
+   * Get global statistics for an artist
+   * Cached with 15 min TTL
+   */
+  async getArtistGlobalStats(artistId: string): Promise<{
+    totalPlays: number;
+    uniqueListeners: number;
+    avgCompletionRate: number;
+    skipRate: number;
+  }> {
+    const cacheKey = `${this.KEY_PREFIX}artist-global-stats:${artistId}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Artist global stats cache hit');
+      return cached;
+    }
+
+    const result = await this.baseRepository.getArtistGlobalStats(artistId);
+
+    await this.cache.set(cacheKey, result, this.TOP_ITEMS_TTL);
+
+    return result;
+  }
+
+  /**
+   * Get related artists based on co-listening patterns
+   * Cached with 15 min TTL - relationships don't change quickly
+   */
+  async getRelatedArtists(
+    artistId: string,
+    limit?: number,
+  ): Promise<{ artistId: string; score: number; commonListeners: number }[]> {
+    const cacheKey = `${this.KEY_PREFIX}related-artists:${artistId}:${limit || 10}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      this.logger.debug({ cacheKey, type: 'HIT' }, 'Related artists cache hit');
+      return cached;
+    }
+
+    const result = await this.baseRepository.getRelatedArtists(artistId, limit);
+
+    if (result.length > 0) {
+      await this.cache.set(cacheKey, result, this.TOP_ITEMS_TTL);
+    }
+
+    return result;
+  }
+
+  // ===================================
   // CACHE INVALIDATION
   // ===================================
 

@@ -54,3 +54,58 @@ export interface ArtistGridProps {
   artists: Artist[];
   isLoading?: boolean;
 }
+
+/**
+ * Top track data for an artist (with full track details)
+ */
+export interface ArtistTopTrack {
+  trackId: string;
+  title: string;
+  albumId: string | null;
+  albumName: string | null;
+  duration: number | null;
+  playCount: number;
+  uniqueListeners: number;
+}
+
+/**
+ * Artist global statistics
+ */
+export interface ArtistStats {
+  artistId: string;
+  totalPlays: number;
+  uniqueListeners: number;
+  avgCompletionRate: number;
+  skipRate: number;
+}
+
+/**
+ * Related artist data
+ */
+export interface RelatedArtist {
+  id: string;
+  name: string;
+  albumCount: number;
+  songCount: number;
+  commonListeners: number;
+  score: number;
+}
+
+/**
+ * Response for artist top tracks
+ */
+export interface ArtistTopTracksResponse {
+  data: ArtistTopTrack[];
+  artistId: string;
+  limit: number;
+  days?: number;
+}
+
+/**
+ * Response for related artists
+ */
+export interface RelatedArtistsResponse {
+  data: RelatedArtist[];
+  artistId: string;
+  limit: number;
+}
