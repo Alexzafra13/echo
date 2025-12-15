@@ -355,6 +355,9 @@ export class RemoteServerService {
   // Private helpers
   // ============================================
 
+  /** Default timeout for HTTP requests (30 seconds) */
+  private static readonly REQUEST_TIMEOUT = 30000;
+
   private normalizeUrl(url: string): string {
     let normalized = url.trim();
     // Remove trailing slash
@@ -368,27 +371,72 @@ export class RemoteServerService {
     return normalized;
   }
 
+  /**
+   * Validate that a URL is well-formed and safe
+   * Throws an error if the URL is invalid
+   */
+  private validateUrl(url: string): void {
+    try {
+      const parsed = new URL(url);
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error(`Invalid protocol: ${parsed.protocol}`);
+      }
+      // Block localhost and private IPs in production (basic check)
+      const hostname = parsed.hostname.toLowerCase();
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+        this.logger.warn({ hostname }, 'Allowing localhost connection (development mode)');
+      }
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new HttpException(`Invalid URL format: ${url}`, HttpStatus.BAD_REQUEST);
+      }
+      throw error;
+    }
+  }
+
   private async makeRequest<T>(
     baseUrl: string,
     path: string,
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${baseUrl}${path}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Echo Music Server/1.0',
-        ...options.headers,
-      },
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    // Validate URL before making request
+    this.validateUrl(url);
+
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), RemoteServerService.REQUEST_TIMEOUT);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Echo Music Server/1.0',
+          ...options.headers,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new HttpException(
+          `Request to ${baseUrl} timed out after ${RemoteServerService.REQUEST_TIMEOUT / 1000}s`,
+          HttpStatus.GATEWAY_TIMEOUT,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    return response.json();
   }
 
   private async makeAuthenticatedRequest<T>(

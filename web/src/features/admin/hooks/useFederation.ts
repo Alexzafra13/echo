@@ -227,3 +227,50 @@ export function useUpdatePermissions() {
     },
   });
 }
+
+// ============================================
+// Mutual Federation Hooks
+// ============================================
+
+/**
+ * Hook para listar solicitudes de federación mutua pendientes
+ */
+export function usePendingMutualRequests() {
+  return useQuery({
+    queryKey: ['federation', 'pending-mutual'],
+    queryFn: () => federationApi.listPendingMutualRequests(),
+    // Refresh every 30 seconds to show new requests
+    refetchInterval: 30000,
+  });
+}
+
+/**
+ * Hook para aprobar una solicitud de federación mutua
+ */
+export function useApproveMutualRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => federationApi.approveMutualRequest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'pending-mutual'] });
+      queryClient.invalidateQueries({ queryKey: ['federation', 'servers'] });
+      queryClient.invalidateQueries({ queryKey: ['federation', 'access-tokens'] });
+    },
+  });
+}
+
+/**
+ * Hook para rechazar una solicitud de federación mutua
+ */
+export function useRejectMutualRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => federationApi.rejectMutualRequest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'pending-mutual'] });
+      queryClient.invalidateQueries({ queryKey: ['federation', 'access-tokens'] });
+    },
+  });
+}

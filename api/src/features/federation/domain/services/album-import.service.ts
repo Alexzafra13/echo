@@ -1,6 +1,6 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, ConflictException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { eq } from 'drizzle-orm';
+import { eq, and, ilike } from 'drizzle-orm';
 import * as fs from 'fs/promises';
 import * as fsSync from 'fs';
 import * as path from 'path';
@@ -134,7 +134,40 @@ export class AlbumImportService {
     // 1. Get album metadata from remote server
     const metadata = await this.fetchAlbumMetadata(server, remoteAlbumId);
 
-    // 2. Create import queue entry
+    // 2. Check for duplicate - album with same name and artist already exists
+    const existingAlbum = await this.checkForDuplicateAlbum(
+      metadata.album.name,
+      metadata.album.artistName,
+    );
+
+    if (existingAlbum) {
+      this.logger.warn(
+        { albumName: metadata.album.name, artistName: metadata.album.artistName },
+        'Album already exists in library',
+      );
+      throw new ConflictException(
+        `El álbum "${metadata.album.name}" de "${metadata.album.artistName}" ya existe en tu biblioteca`,
+      );
+    }
+
+    // 3. Check for existing pending import of the same album from same server
+    const existingImport = await this.checkForPendingImport(
+      userId,
+      server.id,
+      remoteAlbumId,
+    );
+
+    if (existingImport) {
+      this.logger.warn(
+        { importId: existingImport.id, albumName: metadata.album.name },
+        'Import already in progress',
+      );
+      throw new ConflictException(
+        `Ya hay una importación en progreso para "${metadata.album.name}"`,
+      );
+    }
+
+    // 4. Create import queue entry
     const importEntry = await this.repository.createAlbumImport({
       userId,
       connectedServerId: server.id,
@@ -195,6 +228,48 @@ export class AlbumImportService {
   // ============================================
   // Private methods
   // ============================================
+
+  /**
+   * Check if an album with the same name and artist already exists
+   */
+  private async checkForDuplicateAlbum(
+    albumName: string,
+    artistName: string,
+  ): Promise<{ id: string } | null> {
+    const [existing] = await this.drizzle.db
+      .select({ id: albums.id })
+      .from(albums)
+      .innerJoin(artists, eq(albums.albumArtistId, artists.id))
+      .where(
+        and(
+          ilike(albums.name, albumName),
+          ilike(artists.name, artistName),
+        ),
+      )
+      .limit(1);
+
+    return existing ?? null;
+  }
+
+  /**
+   * Check if there's already a pending/downloading import for this album
+   */
+  private async checkForPendingImport(
+    userId: string,
+    serverId: string,
+    remoteAlbumId: string,
+  ): Promise<AlbumImportQueue | null> {
+    const userImports = await this.repository.findAlbumImportsByUserId(userId);
+
+    const pendingImport = userImports.find(
+      (imp) =>
+        imp.connectedServerId === serverId &&
+        imp.remoteAlbumId === remoteAlbumId &&
+        (imp.status === 'pending' || imp.status === 'downloading'),
+    );
+
+    return pendingImport ?? null;
+  }
 
   /**
    * Fetch album metadata from remote server
