@@ -20,6 +20,7 @@ export * from './enrichment';
 export * from './settings';
 export * from './system';
 export * from './social';
+export * from './federation';
 
 // Relations
 export * from './relations';
