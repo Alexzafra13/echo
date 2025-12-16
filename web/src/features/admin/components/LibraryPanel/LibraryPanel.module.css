@@ -480,3 +480,73 @@
     justify-content: center;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .panel {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .panel:hover {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme="light"] .pathCard {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .browser {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .browserPath {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .browserPathValue {
+  background: rgba(31, 41, 55, 0.08);
+  color: var(--color-secondary-600, #0891b2);
+}
+
+:root[data-theme="light"] .navButton {
+  background: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .navButton:hover:not(:disabled) {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme="light"] .directoryList {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme="light"] .directoryButton {
+  background: rgba(31, 41, 55, 0.03);
+  border-color: rgba(31, 41, 55, 0.06);
+}
+
+:root[data-theme="light"] .directoryButton:hover:not(:disabled) {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme="light"] .browserClose {
+  background: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .browserClose:hover {
+  background: rgba(31, 41, 55, 0.1);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme="light"] .browserActions {
+  border-top-color: rgba(31, 41, 55, 0.1);
+}

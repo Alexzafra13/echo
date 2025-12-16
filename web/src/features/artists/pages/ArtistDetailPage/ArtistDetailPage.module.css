@@ -503,6 +503,20 @@
 }
 
 /* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .artistDetailPage {
+  background: var(--bg-base, #e5e7eb);
+  background-image: var(--gradient-textured);
+}
+
+/* Hero tiene fondo oscuro (imagen con brightness 0.4), texto debe ser blanco */
+:root[data-theme="light"] .artistDetailPage__name {
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .artistDetailPage__stats {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 :root[data-theme="light"] .artistDetailPage__biographyText__collapsed::after {
   background: linear-gradient(
     to bottom,

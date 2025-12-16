@@ -296,6 +296,23 @@
 
 /* ===== Light Theme Styles ===== */
 :root[data-theme="light"] .playlistDetailPage {
-  background: var(--bg-base);
+  background: var(--bg-base, #e5e7eb);
   background-image: var(--gradient-textured);
+}
+
+/* Hero de artistas tiene fondo oscuro (imagen con brightness 0.4), texto debe ser blanco */
+:root[data-theme="light"] .playlistDetailPage__hero--artist .playlistName {
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .playlistDetailPage__hero--artist .playlistType {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:root[data-theme="light"] .playlistDetailPage__hero--artist .playlistDescription {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:root[data-theme="light"] .playlistDetailPage__hero--artist .playlistMeta {
+  color: rgba(255, 255, 255, 0.8);
 }
