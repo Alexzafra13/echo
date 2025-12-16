@@ -379,3 +379,52 @@
     width: 100%;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .modal {
+  background: rgba(107, 114, 128, 0.85);
+}
+
+:root[data-theme="light"] .modalContent {
+  background: var(--bg-elevated, #d1d5db);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme="light"] .header {
+  border-bottom-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .tabs {
+  border-bottom-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .filterSection {
+  border-bottom-color: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme="light"] .filterSelect {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+  color: var(--color-text-primary, #1f2937);
+}
+
+:root[data-theme="light"] .filterSelect:hover {
+  border-color: rgba(31, 41, 55, 0.25);
+}
+
+:root[data-theme="light"] .avatarCard {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme="light"] .avatarCard:hover {
+  border-color: rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme="light"] .imageWrapper {
+  background: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme="light"] .footer {
+  border-top-color: rgba(31, 41, 55, 0.1);
+}
