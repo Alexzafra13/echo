@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   Query,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -13,6 +14,7 @@ import {
   ForbiddenException,
   Inject,
 } from '@nestjs/common';
+import { FastifyReply } from 'fastify';
 import {
   ApiTags,
   ApiOperation,
@@ -402,6 +404,10 @@ export class FederationController {
             ...album,
             serverId: result.value.server.id,
             serverName: result.value.server.name,
+            // Transform coverUrl to use local proxy endpoint
+            coverUrl: album.coverUrl
+              ? `/api/federation/servers/${result.value.server.id}/albums/${album.id}/cover`
+              : undefined,
           });
         }
       }
@@ -440,7 +446,17 @@ export class FederationController {
     @Query() query: PaginationQueryDto,
   ): Promise<RemoteLibraryResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
-    return this.remoteServerService.getRemoteLibrary(server, query.page, query.limit);
+    const library = await this.remoteServerService.getRemoteLibrary(server, query.page, query.limit);
+    // Transform coverUrls to use local proxy endpoint
+    return {
+      ...library,
+      albums: library.albums.map((album) => ({
+        ...album,
+        coverUrl: album.coverUrl
+          ? `/api/federation/servers/${id}/albums/${album.id}/cover`
+          : undefined,
+      })),
+    };
   }
 
   @Get('servers/:id/albums')
@@ -460,12 +476,22 @@ export class FederationController {
     @Query() query: PaginationQueryDto,
   ): Promise<{ albums: RemoteAlbumDto[]; total: number }> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
-    return this.remoteServerService.getRemoteAlbums(
+    const result = await this.remoteServerService.getRemoteAlbums(
       server,
       query.page,
       query.limit,
       query.search,
     );
+    // Transform coverUrls to use local proxy endpoint
+    return {
+      ...result,
+      albums: result.albums.map((album) => ({
+        ...album,
+        coverUrl: album.coverUrl
+          ? `/api/federation/servers/${id}/albums/${album.id}/cover`
+          : undefined,
+      })),
+    };
   }
 
   @Get('servers/:id/albums/:albumId')
@@ -482,7 +508,43 @@ export class FederationController {
     @Param('albumId') albumId: string,
   ) {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
-    return this.remoteServerService.getRemoteAlbum(server, albumId);
+    const album = await this.remoteServerService.getRemoteAlbum(server, albumId);
+    // Transform coverUrl to use local proxy endpoint
+    return {
+      ...album,
+      coverUrl: album.coverUrl
+        ? `/api/federation/servers/${id}/albums/${album.id}/cover`
+        : undefined,
+    };
+  }
+
+  @Get('servers/:id/albums/:albumId/cover')
+  @ApiOperation({
+    summary: 'Obtener carátula de álbum remoto',
+    description: 'Proxy para obtener la carátula de un álbum de un servidor federado',
+  })
+  @ApiParam({ name: 'id', description: 'ID del servidor' })
+  @ApiParam({ name: 'albumId', description: 'ID del álbum remoto' })
+  @ApiResponse({ status: 200, description: 'Carátula del álbum' })
+  @ApiResponse({ status: 404, description: 'Servidor o carátula no encontrada' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
+  async getRemoteAlbumCover(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Param('albumId') albumId: string,
+    @Res() res: FastifyReply,
+  ) {
+    const server = await this.getServerWithOwnershipCheck(id, user.id);
+    const cover = await this.remoteServerService.getRemoteAlbumCover(server, albumId);
+
+    if (!cover) {
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Cover not found' });
+      return;
+    }
+
+    res.header('Content-Type', cover.contentType);
+    res.header('Cache-Control', 'public, max-age=86400');
+    res.send(cover.buffer);
   }
 
   // ============================================
