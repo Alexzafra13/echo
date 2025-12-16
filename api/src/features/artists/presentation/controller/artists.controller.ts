@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
@@ -87,7 +87,7 @@ export class ArtistsController {
     description: 'Artista no encontrado'
   })
   async getArtistAlbums(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
   ) {
@@ -143,7 +143,7 @@ export class ArtistsController {
     description: 'Top tracks del artista obtenidos exitosamente'
   })
   async getArtistTopTracks(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
     @Query('days') days?: string,
   ) {
@@ -184,7 +184,7 @@ export class ArtistsController {
     status: 200,
     description: 'Estadísticas del artista obtenidas exitosamente'
   })
-  async getArtistStats(@Param('id') artistId: string) {
+  async getArtistStats(@Param('id', ParseUUIDPipe) artistId: string) {
     const stats = await this.playTrackingRepository.getArtistGlobalStats(artistId);
 
     return {
@@ -224,7 +224,7 @@ export class ArtistsController {
     description: 'Artistas relacionados obtenidos exitosamente'
   })
   async getRelatedArtists(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
   ) {
     const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
@@ -355,7 +355,7 @@ export class ArtistsController {
     status: 404,
     description: 'Artista no encontrado'
   })
-  async getArtist(@Param('id') id: string): Promise<ArtistResponseDto> {
+  async getArtist(@Param('id', ParseUUIDPipe) id: string): Promise<ArtistResponseDto> {
     const result = await this.getArtistUseCase.execute({ id });
     return ArtistResponseDto.fromDomain(result);
   }
