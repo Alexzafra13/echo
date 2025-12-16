@@ -222,3 +222,47 @@
     padding: 16px 20px;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .input {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+  color: var(--color-text-primary, #1f2937);
+}
+
+:root[data-theme="light"] .input:hover {
+  background: rgba(31, 41, 55, 0.08);
+  border-color: rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme="light"] .input:focus {
+  background: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .input::placeholder {
+  color: rgba(31, 41, 55, 0.5);
+}
+
+:root[data-theme="light"] .checkboxWrapper {
+  background: rgba(31, 41, 55, 0.04);
+  border-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .checkboxWrapper:hover {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme="light"] .checkbox {
+  border-color: rgba(31, 41, 55, 0.25);
+  background: rgba(31, 41, 55, 0.05);
+}
+
+:root[data-theme="light"] .checkbox:hover {
+  border-color: rgba(31, 41, 55, 0.35);
+  background: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme="light"] .actions {
+  border-top-color: rgba(31, 41, 55, 0.1);
+}
