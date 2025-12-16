@@ -429,6 +429,11 @@
 }
 
 /* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .playlistDetailPage {
+  background: var(--bg-base, #e5e7eb);
+  background-image: var(--gradient-textured);
+}
+
 :root[data-theme="light"] .playlistDetailPage__content {
   background: linear-gradient(180deg, rgba(237, 104, 66, 0.08) 0%, rgba(229, 231, 235, 1) 40%);
 }
