@@ -296,6 +296,6 @@
 
 /* ===== Light Theme Styles ===== */
 :root[data-theme="light"] .playlistDetailPage {
-  background: var(--bg-base);
+  background: var(--bg-base, #e5e7eb);
   background-image: var(--gradient-textured);
 }
