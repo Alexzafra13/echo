@@ -250,6 +250,11 @@ export class RemoteServerService {
     try {
       const url = `${server.baseUrl}/api/federation/albums/${albumId}/cover`;
 
+      this.logger.debug(
+        { url, serverId: server.id, albumId },
+        'Fetching remote album cover',
+      );
+
       // Validate URL before making request
       this.validateUrl(url);
 
@@ -267,6 +272,10 @@ export class RemoteServerService {
         });
 
         if (!response.ok) {
+          this.logger.warn(
+            { url, status: response.status, albumId },
+            'Remote server returned error for album cover',
+          );
           if (response.status === 404) {
             return null;
           }
@@ -275,6 +284,11 @@ export class RemoteServerService {
 
         const arrayBuffer = await response.arrayBuffer();
         const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+        this.logger.debug(
+          { albumId, contentType, size: arrayBuffer.byteLength },
+          'Successfully fetched remote album cover',
+        );
 
         return {
           buffer: Buffer.from(arrayBuffer),
