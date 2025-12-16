@@ -240,6 +240,59 @@ export class RemoteServerService {
   }
 
   /**
+   * Get album cover from a connected server
+   * Returns the image buffer and content type
+   */
+  async getRemoteAlbumCover(
+    server: ConnectedServer,
+    albumId: string,
+  ): Promise<{ buffer: Buffer; contentType: string } | null> {
+    try {
+      const url = `${server.baseUrl}/api/federation/albums/${albumId}/cover`;
+
+      // Validate URL before making request
+      this.validateUrl(url);
+
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), RemoteServerService.REQUEST_TIMEOUT);
+
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${server.authToken}`,
+            'User-Agent': 'Echo Music Server/1.0',
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+        return {
+          buffer: Buffer.from(arrayBuffer),
+          contentType,
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    } catch (error) {
+      this.logger.warn(
+        { serverId: server.id, albumId, error: error instanceof Error ? error.message : error },
+        'Failed to fetch remote album cover',
+      );
+      return null;
+    }
+  }
+
+  /**
    * Get stream URL for a track from a connected server
    */
   getRemoteStreamUrl(server: ConnectedServer, trackId: string): string {
