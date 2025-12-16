@@ -224,6 +224,19 @@
   border-right: 1px solid rgba(75, 85, 99, 0.15);
 }
 
+:root[data-theme="light"] .sidebar__navItem {
+  color: #1f2937; /* Texto más oscuro para mejor legibilidad */
+}
+
+:root[data-theme="light"] .sidebar__navItem:hover {
+  background: rgba(31, 41, 55, 0.1);
+  color: #111827; /* Aún más oscuro en hover */
+}
+
+:root[data-theme="light"] .sidebar__navItem--active {
+  color: var(--color-primary-600, #e04d28); /* Color primario más intenso */
+}
+
 :root[data-theme="light"] .sidebar__nav::-webkit-scrollbar-thumb {
   background: rgba(31, 41, 55, 0.2);
 }
