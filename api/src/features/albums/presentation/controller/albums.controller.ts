@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Res, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
@@ -384,7 +384,7 @@ export class AlbumsController {
     status: 404,
     description: 'Álbum no encontrado'
   })
-  async getAlbumTracks(@Param('id') albumId: string): Promise<TrackResponseDto[]> {
+  async getAlbumTracks(@Param('id', ParseUUIDPipe) albumId: string): Promise<TrackResponseDto[]> {
     const result = await this.getAlbumTracksUseCase.execute({ albumId });
     return result.tracks.map((track: Track) => TrackResponseDto.fromDomain(track));
   }
@@ -415,7 +415,7 @@ export class AlbumsController {
     description: 'Álbum no encontrado o sin cover art'
   })
   async getAlbumCover(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
     const result = await this.getAlbumCoverUseCase.execute({ albumId: id });
@@ -456,7 +456,7 @@ export class AlbumsController {
     status: 404,
     description: 'Álbum no encontrado'
   })
-  async getAlbum(@Param('id') id: string): Promise<AlbumResponseDto> {
+  async getAlbum(@Param('id', ParseUUIDPipe) id: string): Promise<AlbumResponseDto> {
     const result = await this.getAlbumUseCase.execute({ id });
     return AlbumResponseDto.fromDomain(result);
   }
