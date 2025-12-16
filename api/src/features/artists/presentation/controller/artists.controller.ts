@@ -198,13 +198,13 @@ export class ArtistsController {
 
   /**
    * GET /artists/:id/related
-   * Obtener artistas relacionados usando Last.fm, filtrados por biblioteca local
+   * Obtener artistas relacionados - primero con datos internos, fallback a Last.fm
    */
   @Get(':id/related')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener artistas relacionados',
-    description: 'Retorna artistas similares de Last.fm que existen en tu biblioteca local'
+    description: 'Retorna artistas similares basado en patrones de escucha internos, con fallback a Last.fm'
   })
   @ApiParam({
     name: 'id',
@@ -229,7 +229,7 @@ export class ArtistsController {
   ) {
     const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
 
-    // 1. Get the artist from our database to get the name
+    // 1. Get the artist from our database
     const artist = await this.artistRepository.findById(artistId);
     if (!artist) {
       return {
@@ -240,28 +240,64 @@ export class ArtistsController {
       };
     }
 
-    // 2. Try to get similar artists from Last.fm
-    const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
-      artist.mbzArtistId || null,
-      artist.name,
-      50, // Get more from Last.fm so we can filter to local library
-    );
+    // 2. Check if Last.fm is enabled
+    const lastfmEnabled = this.lastfmAgent.isEnabled();
 
-    if (!similarFromLastfm || similarFromLastfm.length === 0) {
-      this.logger.debug(`No similar artists found from Last.fm for: ${artist.name}`);
-      return {
-        data: [],
-        artistId,
-        limit: limitNum,
-        source: 'lastfm',
-      };
+    // 3. If Last.fm is enabled, use it to find similar artists filtered by library
+    if (lastfmEnabled) {
+      const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
+        artist.mbzArtistId || null,
+        artist.name,
+        50, // Get more from Last.fm so we can filter to local library
+      );
+
+      if (similarFromLastfm && similarFromLastfm.length > 0) {
+        const lastfmArtists: Array<{
+          id: string;
+          name: string;
+          albumCount: number;
+          songCount: number;
+          matchScore: number;
+        }> = [];
+
+        for (const similar of similarFromLastfm) {
+          if (lastfmArtists.length >= limitNum) break;
+
+          // Search for this artist in our library by name
+          const localArtist = await this.artistRepository.findByName(similar.name);
+          if (localArtist && localArtist.id !== artistId) {
+            lastfmArtists.push({
+              id: localArtist.id,
+              name: localArtist.name,
+              albumCount: localArtist.albumCount,
+              songCount: localArtist.songCount,
+              matchScore: Math.round(similar.match * 100),
+            });
+          }
+        }
+
+        if (lastfmArtists.length > 0) {
+          this.logger.log(`Found ${lastfmArtists.length} related artists from Last.fm for: ${artist.name}`);
+          return {
+            data: lastfmArtists,
+            artistId,
+            limit: limitNum,
+            source: 'lastfm',
+          };
+        }
+      }
+
+      this.logger.debug(`No Last.fm results in library, falling back to internal patterns for: ${artist.name}`);
     }
 
-    this.logger.debug(`Got ${similarFromLastfm.length} similar artists from Last.fm for: ${artist.name}`);
+    // 4. Fallback: Use internal co-listening patterns
+    // (when Last.fm is disabled OR Last.fm returned no results in our library)
+    const internalRelated = await this.playTrackingRepository.getRelatedArtists(
+      artistId,
+      limitNum,
+    );
 
-    // 3. Filter to only artists that exist in our local library
-    // Search by name (case-insensitive)
-    const relatedArtists: Array<{
+    const internalArtists: Array<{
       id: string;
       name: string;
       albumCount: number;
@@ -269,29 +305,28 @@ export class ArtistsController {
       matchScore: number;
     }> = [];
 
-    for (const similar of similarFromLastfm) {
-      if (relatedArtists.length >= limitNum) break;
-
-      // Search for this artist in our library by name
-      const localArtist = await this.artistRepository.findByName(similar.name);
-      if (localArtist && localArtist.id !== artistId) {
-        relatedArtists.push({
-          id: localArtist.id,
-          name: localArtist.name,
-          albumCount: localArtist.albumCount,
-          songCount: localArtist.songCount,
-          matchScore: Math.round(similar.match * 100),
+    for (const stat of internalRelated) {
+      const relArtist = await this.artistRepository.findById(stat.artistId);
+      if (relArtist) {
+        internalArtists.push({
+          id: relArtist.id,
+          name: relArtist.name,
+          albumCount: relArtist.albumCount,
+          songCount: relArtist.songCount,
+          matchScore: Math.round(stat.score),
         });
       }
     }
 
-    this.logger.log(`Found ${relatedArtists.length} related artists in local library for: ${artist.name}`);
+    this.logger.log(
+      `Found ${internalArtists.length} related artists from internal patterns for: ${artist.name}`
+    );
 
     return {
-      data: relatedArtists,
+      data: internalArtists,
       artistId,
       limit: limitNum,
-      source: 'lastfm',
+      source: internalArtists.length > 0 ? 'internal' : 'none',
     };
   }
 
