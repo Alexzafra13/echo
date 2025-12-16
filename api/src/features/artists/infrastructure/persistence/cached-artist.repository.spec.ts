@@ -26,6 +26,7 @@ describe('CachedArtistRepository', () => {
     // Mock base repository
     baseRepository = {
       findById: jest.fn(),
+      findByName: jest.fn(),
       findAll: jest.fn(),
       search: jest.fn(),
       count: jest.fn(),
