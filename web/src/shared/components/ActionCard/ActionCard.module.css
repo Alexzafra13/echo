@@ -178,3 +178,13 @@
     display: none;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+/* Los Action Cards tienen fondos oscuros, el texto debe permanecer blanco */
+:root[data-theme="light"] .actionCard {
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .actionCard__title {
+  color: #ffffff;
+}
