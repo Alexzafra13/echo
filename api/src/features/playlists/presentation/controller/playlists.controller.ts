@@ -11,6 +11,7 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -101,7 +102,7 @@ export class PlaylistsController {
     type: PlaylistResponseDto,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
-  async getPlaylist(@Param('id') id: string): Promise<PlaylistResponseDto> {
+  async getPlaylist(@Param('id', ParseUUIDPipe) id: string): Promise<PlaylistResponseDto> {
     const result = await this.getPlaylistUseCase.execute({ id });
     return PlaylistResponseDto.fromDomain(result);
   }
@@ -170,7 +171,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Datos inválidos' })
   async updatePlaylist(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePlaylistDto,
     @Req() req: RequestWithUser,
   ): Promise<PlaylistResponseDto> {
@@ -207,7 +208,7 @@ export class PlaylistsController {
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
   async deletePlaylist(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; message: string }> {
     const userId = req.user.id;
@@ -226,7 +227,7 @@ export class PlaylistsController {
     type: PlaylistTracksResponseDto,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
-  async getPlaylistTracks(@Param('id') id: string): Promise<PlaylistTracksResponseDto> {
+  async getPlaylistTracks(@Param('id', ParseUUIDPipe) id: string): Promise<PlaylistTracksResponseDto> {
     const result = await this.getPlaylistTracksUseCase.execute({ playlistId: id });
     return PlaylistTracksResponseDto.fromDomain(result);
   }
@@ -254,7 +255,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist o Track no encontrado' })
   @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Track ya existe en la playlist' })
   async addTrackToPlaylist(
-    @Param('id') playlistId: string,
+    @Param('id', ParseUUIDPipe) playlistId: string,
     @Body() dto: AddTrackToPlaylistDto,
     @Req() req: RequestWithUser,
   ): Promise<any> {
@@ -285,7 +286,7 @@ export class PlaylistsController {
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist o Track no encontrado' })
   async removeTrackFromPlaylist(
-    @Param('id') playlistId: string,
+    @Param('id', ParseUUIDPipe) playlistId: string,
     @Param('trackId') trackId: string,
     @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; message: string }> {
@@ -318,7 +319,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist o Track no encontrado' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Datos inválidos' })
   async reorderPlaylistTracks(
-    @Param('id') playlistId: string,
+    @Param('id', ParseUUIDPipe) playlistId: string,
     @Body() dto: ReorderTracksDto,
     @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; message: string; playlistId: string }> {
