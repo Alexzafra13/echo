@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase } from '../../domain/use-cases';
 import { TrackResponseDto, GetTracksResponseDto, SearchTracksResponseDto, ShuffledTracksResponseDto } from '../dtos';
@@ -108,7 +108,7 @@ export class TracksController {
     status: 404,
     description: 'Track no encontrado'
   })
-  async getTrack(@Param('id') id: string): Promise<TrackResponseDto> {
+  async getTrack(@Param('id', ParseUUIDPipe) id: string): Promise<TrackResponseDto> {
     const result = await this.getTrackUseCase.execute({ id });
     return TrackResponseDto.fromDomain(result);
   }
