@@ -639,3 +639,49 @@
     height: 16px;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .header__userDropdown {
+  background: rgba(240, 242, 245, 0.95);
+  box-shadow:
+    0 4px 6px -1px rgba(31, 41, 55, 0.1),
+    0 10px 25px -3px rgba(31, 41, 55, 0.15),
+    0 0 0 1px rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .header__userInfo {
+  border-bottom-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme="light"] .header__userDivider {
+  background: rgba(31, 41, 55, 0.15);
+}
+
+:root[data-theme="light"] .header__userMenuItem:hover {
+  background: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme="light"] .header__searchInput {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.12);
+}
+
+:root[data-theme="light"] .header__searchInput:focus {
+  background: rgba(31, 41, 55, 0.08);
+}
+
+:root[data-theme="light"] .header__themeToggle {
+  background: rgba(31, 41, 55, 0.06);
+}
+
+:root[data-theme="light"] .header__themeToggle:hover {
+  background: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .header__userButton {
+  background: rgba(31, 41, 55, 0.06);
+}
+
+:root[data-theme="light"] .header__userButton:hover {
+  background: rgba(31, 41, 55, 0.1);
+}
