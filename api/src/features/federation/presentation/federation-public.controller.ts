@@ -26,7 +26,8 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { eq, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { getAudioMimeType } from '@shared/utils/mime-type.util';
+import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util';
+import { CoverArtService } from '@shared/services';
 import {
   albums,
   tracks,
@@ -63,6 +64,7 @@ export class FederationPublicController {
     private readonly logger: PinoLogger,
     private readonly tokenService: FederationTokenService,
     private readonly drizzle: DrizzleService,
+    private readonly coverArtService: CoverArtService,
   ) {}
 
   // ============================================
@@ -445,13 +447,21 @@ export class FederationPublicController {
       .where(eq(albums.id, id))
       .limit(1);
 
-    if (!album?.coverArtPath || !fs.existsSync(album.coverArtPath)) {
+    if (!album?.coverArtPath) {
       res.status(HttpStatus.NOT_FOUND).send({ error: 'Cover not found' });
       return;
     }
 
-    const stream = fs.createReadStream(album.coverArtPath);
-    res.header('Content-Type', 'image/jpeg');
+    // Use CoverArtService to get the full path from the cached cover filename
+    const coverPath = this.coverArtService.getCoverPath(album.coverArtPath);
+    if (!coverPath) {
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Cover file not found' });
+      return;
+    }
+
+    const stream = fs.createReadStream(coverPath);
+    const mimeType = getImageMimeType(path.extname(coverPath));
+    res.header('Content-Type', mimeType);
     res.header('Cache-Control', 'public, max-age=86400');
     res.send(stream);
   }
