@@ -202,3 +202,28 @@
     flex: 1;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .modal__overlay {
+  background-color: rgba(107, 114, 128, 0.85);
+}
+
+:root[data-theme="light"] .modal__content {
+  background: var(--bg-elevated, #d1d5db);
+}
+
+:root[data-theme="light"] .modal__header {
+  border-bottom-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .modal__positionInfo {
+  background: rgba(31, 41, 55, 0.06);
+}
+
+:root[data-theme="light"] .modal__footer {
+  border-top-color: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .preview {
+  border-color: rgba(31, 41, 55, 0.2);
+}
