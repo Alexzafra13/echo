@@ -24,6 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User, ConnectedServer } from '@infrastructure/database/schema';
 import { FederationTokenService, RemoteServerService } from '../domain/services';
@@ -519,22 +520,28 @@ export class FederationController {
   }
 
   @Get('servers/:id/albums/:albumId/cover')
+  @Public()
   @ApiOperation({
     summary: 'Obtener carátula de álbum remoto',
-    description: 'Proxy para obtener la carátula de un álbum de un servidor federado',
+    description: 'Proxy para obtener la carátula de un álbum de un servidor federado. ' +
+      'Este endpoint es público ya que las carátulas no son datos sensibles.',
   })
   @ApiParam({ name: 'id', description: 'ID del servidor' })
   @ApiParam({ name: 'albumId', description: 'ID del álbum remoto' })
   @ApiResponse({ status: 200, description: 'Carátula del álbum' })
   @ApiResponse({ status: 404, description: 'Servidor o carátula no encontrada' })
-  @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async getRemoteAlbumCover(
-    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('albumId') albumId: string,
     @Res() res: FastifyReply,
   ) {
-    const server = await this.getServerWithOwnershipCheck(id, user.id);
+    // Get server directly (endpoint is public, covers are not sensitive data)
+    const server = await this.repository.findConnectedServerById(id);
+    if (!server) {
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Server not found' });
+      return;
+    }
+
     const cover = await this.remoteServerService.getRemoteAlbumCover(server, albumId);
 
     if (!cover) {
