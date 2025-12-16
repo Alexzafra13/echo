@@ -508,3 +508,17 @@
     text-transform: uppercase;
   }
 }
+
+/* ===== Light Theme Styles ===== */
+/* El hero tiene fondo oscuro, por lo que el texto debe permanecer blanco */
+:root[data-theme="light"] .heroSection__artistName {
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .heroSection__albumTitle {
+  color: var(--color-accent, #ff3333);
+}
+
+:root[data-theme="light"] .heroSection__meta {
+  color: rgba(255, 255, 255, 0.85); /* Año y metadata en blanco suave */
+}
