@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as os from 'os';
 import { SettingsService } from './settings.service';
 
 /**
@@ -31,6 +32,10 @@ export class StorageService {
     if (this.initialized) return;
 
     try {
+      // In test environment, use temp directory to avoid permission issues
+      const isTestEnv = process.env.NODE_ENV === 'test';
+      const tempBase = isTestEnv ? path.join(os.tmpdir(), 'echo-test-storage') : null;
+
       // Priority: ENV > DB > default
       const envStorageMode = this.config.get<string>('METADATA_STORAGE_MODE');
       const storageLocation = envStorageMode || await this.settings.getString(
@@ -41,7 +46,7 @@ export class StorageService {
       if (storageLocation === 'centralized') {
         // Priority: ENV > DB > default
         const envStoragePath = this.config.get<string>('METADATA_STORAGE_PATH');
-        const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+        const dataPath = tempBase || this.config.get<string>('DATA_PATH', '/app/data');
         const defaultPath = path.join(dataPath, 'metadata');
         const storagePath = envStoragePath || await this.settings.getString(
           'metadata.storage.path',
@@ -49,10 +54,14 @@ export class StorageService {
         );
         // Use absolute path if it starts with /, otherwise resolve relative to cwd
         this.basePath = storagePath.startsWith('/') ? storagePath : path.resolve(process.cwd(), storagePath);
+        // In test env, override to use temp
+        if (isTestEnv && !envStoragePath) {
+          this.basePath = path.join(tempBase!, 'metadata');
+        }
       } else {
         // Portable: use music library path
         const musicPath = this.config.get<string>('MUSIC_LIBRARY_PATH', '/music');
-        this.basePath = path.join(musicPath, '.echo-metadata');
+        this.basePath = isTestEnv ? path.join(tempBase!, 'metadata') : path.join(musicPath, '.echo-metadata');
       }
 
       // Ensure base directories exist
@@ -62,7 +71,7 @@ export class StorageService {
       await this.ensureDirectoryExists(path.join(this.basePath, 'defaults'));
 
       // User storage (separate from metadata)
-      const dataPath = this.config.get<string>('DATA_PATH', '/app/data');
+      const dataPath = tempBase || this.config.get<string>('DATA_PATH', '/app/data');
       const userStoragePath = path.join(dataPath, 'uploads', 'users');
       await this.ensureDirectoryExists(userStoragePath);
 
@@ -70,7 +79,7 @@ export class StorageService {
       await this.initializeDefaultImages();
 
       this.initialized = true;
-      this.logger.log(`Storage initialized at: ${this.basePath} (mode: ${storageLocation})`);
+      this.logger.log(`Storage initialized at: ${this.basePath} (mode: ${storageLocation}${isTestEnv ? ', test' : ''})`);
     } catch (error) {
       this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
       throw error;
