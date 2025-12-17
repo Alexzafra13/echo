@@ -32,7 +32,7 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(undefine
  */
 interface ThemeProviderProps {
   children: ReactNode;
-  defaultTheme?: Theme;
+  defaultTheme?: ThemePreference;
 }
 
 /**
@@ -52,12 +52,12 @@ function getSystemTheme(): Theme {
  *
  * @example
  * ```tsx
- * <ThemeProvider defaultTheme="dark">
+ * <ThemeProvider defaultTheme="auto">
  *   <App />
  * </ThemeProvider>
  * ```
  */
-export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProviderProps) {
+export function ThemeProvider({ children, defaultTheme = 'auto' }: ThemeProviderProps) {
   // User's preference: 'auto', 'light', or 'dark'
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() => {
     const saved = safeLocalStorage.getItem('theme-preference') as ThemePreference | null;
@@ -67,7 +67,7 @@ export function ThemeProvider({ children, defaultTheme = 'dark' }: ThemeProvider
       if (oldTheme) {
         return oldTheme; // Use the old explicit theme choice
       }
-      return 'auto'; // Default to auto for new users
+      return defaultTheme; // Default to auto for new users
     }
     return saved;
   });
