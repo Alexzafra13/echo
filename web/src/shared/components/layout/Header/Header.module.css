@@ -320,6 +320,18 @@
   padding: 12px 16px;
   border-bottom: 1px solid var(--white-10);
   margin-bottom: 4px;
+  width: 100%;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.header__userInfo:hover {
+  background: var(--white-05);
 }
 
 .header__userAvatarLarge {
