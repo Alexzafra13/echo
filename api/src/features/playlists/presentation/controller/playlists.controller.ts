@@ -26,6 +26,7 @@ import {
   CreatePlaylistUseCase,
   GetPlaylistUseCase,
   GetPlaylistsUseCase,
+  GetPlaylistsByArtistUseCase,
   UpdatePlaylistUseCase,
   DeletePlaylistUseCase,
   AddTrackToPlaylistUseCase,
@@ -52,6 +53,7 @@ export class PlaylistsController {
     private readonly createPlaylistUseCase: CreatePlaylistUseCase,
     private readonly getPlaylistUseCase: GetPlaylistUseCase,
     private readonly getPlaylistsUseCase: GetPlaylistsUseCase,
+    private readonly getPlaylistsByArtistUseCase: GetPlaylistsByArtistUseCase,
     private readonly updatePlaylistUseCase: UpdatePlaylistUseCase,
     private readonly deletePlaylistUseCase: DeletePlaylistUseCase,
     private readonly addTrackToPlaylistUseCase: AddTrackToPlaylistUseCase,
@@ -150,6 +152,45 @@ export class PlaylistsController {
     const result = await this.getPlaylistsUseCase.execute({
       ownerId: publicOnly ? undefined : userId,
       publicOnly: publicOnly ?? false,
+      skip: skip ? parseInt(skip.toString()) : 0,
+      take: take ? parseInt(take.toString()) : 20,
+    });
+
+    return PlaylistsListResponseDto.fromDomain(result);
+  }
+
+  /**
+   * GET /playlists/by-artist/:artistId
+   * Obtener playlists públicas que contienen canciones de un artista
+   */
+  @Get('by-artist/:artistId')
+  @ApiOperation({ summary: 'Obtener playlists públicas que contienen canciones de un artista' })
+  @ApiQuery({
+    name: 'skip',
+    required: false,
+    type: Number,
+    description: 'Número de registros a saltar',
+    example: 0,
+  })
+  @ApiQuery({
+    name: 'take',
+    required: false,
+    type: Number,
+    description: 'Número de registros a obtener',
+    example: 20,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de playlists públicas del artista',
+    type: PlaylistsListResponseDto,
+  })
+  async getPlaylistsByArtist(
+    @Param('artistId', ParseUUIDPipe) artistId: string,
+    @Query('skip') skip?: number,
+    @Query('take') take?: number,
+  ): Promise<PlaylistsListResponseDto> {
+    const result = await this.getPlaylistsByArtistUseCase.execute({
+      artistId,
       skip: skip ? parseInt(skip.toString()) : 0,
       take: take ? parseInt(take.toString()) : 20,
     });

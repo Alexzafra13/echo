@@ -150,3 +150,18 @@ export function useReorderPlaylistTracks() {
     },
   });
 }
+
+/**
+ * Hook to fetch public playlists containing tracks from a specific artist
+ */
+export function usePlaylistsByArtist(artistId: string | undefined, params?: {
+  skip?: number;
+  take?: number;
+}) {
+  return useQuery({
+    queryKey: ['playlists', 'by-artist', artistId, params],
+    queryFn: () => playlistsService.getPlaylistsByArtist(artistId!, params),
+    enabled: !!artistId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}

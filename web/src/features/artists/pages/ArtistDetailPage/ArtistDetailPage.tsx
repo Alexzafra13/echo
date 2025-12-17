@@ -9,7 +9,9 @@ import { BackgroundPositionModal } from '@features/admin/components/BackgroundPo
 import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks, useRelatedArtists } from '../../hooks';
 import type { ArtistTopTrack, RelatedArtist } from '../../types';
 import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAutoPlaylists } from '@features/home/hooks';
+import { usePlaylistsByArtist } from '@features/playlists/hooks/usePlaylists';
 import { PlaylistCover } from '@features/recommendations/components';
+import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { getArtistInitials } from '../../utils/artist-image.utils';
@@ -56,16 +58,22 @@ export default function ArtistDetailPage() {
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
 
-  // Fetch auto-playlists to find artist-related playlists
+  // Fetch auto-playlists to find artist-related playlists (Wave Mix)
   const { data: autoPlaylistsData } = useAutoPlaylists();
 
-  // Filter playlists for this artist
-  const artistPlaylists = useMemo(() => {
+  // Fetch user public playlists containing artist tracks
+  const { data: userPlaylistsData } = usePlaylistsByArtist(id, { take: 10 });
+
+  // Filter auto-playlists for this artist (Wave Mix)
+  const autoArtistPlaylists = useMemo(() => {
     if (!autoPlaylistsData || !id) return [];
     return autoPlaylistsData.filter(
       p => p.type === 'artist' && p.metadata.artistId === id
     );
   }, [autoPlaylistsData, id]);
+
+  // User public playlists containing this artist's tracks
+  const userPlaylists = userPlaylistsData?.items || [];
 
   // Check if artist has images
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
@@ -342,54 +350,6 @@ export default function ArtistDetailPage() {
             </div>
           </section>
 
-          {/* Biography Section */}
-          {artist.biography && (
-            <section className={styles.artistDetailPage__biography}>
-              <div className={styles.artistDetailPage__biographyHeader}>
-                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
-              </div>
-
-              <div className={styles.artistDetailPage__biographyContent}>
-                <div className={`${styles.artistDetailPage__biographyText} ${
-                  !isBioExpanded && artist.biography.length > 500 ? styles.artistDetailPage__biographyText__collapsed : ''
-                }`}>
-                  {formatBiographyWithDropCap(artist.biography)}
-                </div>
-
-                {artist.biography.length > 500 && (
-                  <button
-                    className={styles.artistDetailPage__biographyToggle}
-                    onClick={() => setIsBioExpanded(!isBioExpanded)}
-                  >
-                    {isBioExpanded ? 'Leer menos' : 'Leer más'}
-                  </button>
-                )}
-
-                {artist.biographySource && (
-                  <div className={styles.artistDetailPage__biographySource}>
-                    Fuente: {artist.biographySource === 'wikipedia' ? 'Wikipedia' :
-                            artist.biographySource === 'lastfm' ? 'Last.fm' :
-                            artist.biographySource}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* No Biography Placeholder */}
-          {!artist.biography && (
-            <section className={styles.artistDetailPage__biography}>
-              <div className={styles.artistDetailPage__biographyHeader}>
-                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
-              </div>
-              <p className={styles.artistDetailPage__biographyPlaceholder}>
-                No hay biografía disponible para este artista.
-              </p>
-            </section>
-          )}
-
           {/* Top Tracks Section */}
           {topTracks.length > 0 && (
             <section className={styles.artistDetailPage__topTracks}>
@@ -450,6 +410,132 @@ export default function ArtistDetailPage() {
             </section>
           )}
 
+          {/* Albums Section */}
+          {artistAlbums.length > 0 && (
+            <section className={styles.artistDetailPage__albums}>
+              <AlbumGrid
+                title={`Álbumes de ${artist.name}`}
+                albums={artistAlbums}
+              />
+            </section>
+          )}
+
+          {/* No Albums */}
+          {artistAlbums.length === 0 && (
+            <section className={styles.artistDetailPage__albums}>
+              <h2 className={styles.artistDetailPage__sectionTitle}>Álbumes</h2>
+              <p className={styles.artistDetailPage__emptyAlbums}>
+                No hay álbumes disponibles para este artista.
+              </p>
+            </section>
+          )}
+
+          {/* Playlists Section (Auto-generated + User public playlists) */}
+          {(autoArtistPlaylists.length > 0 || userPlaylists.length > 0) && (
+            <section className={styles.artistDetailPage__playlists}>
+              <div className={styles.artistDetailPage__sectionHeader}>
+                <ListMusic size={24} className={styles.artistDetailPage__sectionIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Playlists con {artist.name}</h2>
+              </div>
+              <div className={styles.artistDetailPage__playlistsGrid}>
+                {/* Auto-generated playlists (Wave Mix) */}
+                {autoArtistPlaylists.map((playlist) => (
+                  <div
+                    key={`auto-${playlist.id}`}
+                    className={styles.artistDetailPage__playlistCard}
+                    onClick={() => setLocation(`/playlists/auto/${playlist.id}`)}
+                  >
+                    <div className={styles.artistDetailPage__playlistCover}>
+                      <PlaylistCover
+                        type={playlist.type}
+                        name={playlist.name}
+                        coverColor={playlist.coverColor}
+                        coverImageUrl={playlist.coverImageUrl}
+                        artistName={playlist.metadata.artistName}
+                        size="medium"
+                      />
+                    </div>
+                    <div className={styles.artistDetailPage__playlistInfo}>
+                      <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
+                      <span className={styles.artistDetailPage__playlistMeta}>
+                        {playlist.tracks.length} canciones
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {/* User public playlists */}
+                {userPlaylists.map((playlist) => (
+                  <div
+                    key={`user-${playlist.id}`}
+                    className={styles.artistDetailPage__playlistCard}
+                    onClick={() => setLocation(`/playlists/${playlist.id}`)}
+                  >
+                    <div className={styles.artistDetailPage__playlistCover}>
+                      <PlaylistCoverMosaic
+                        albumIds={playlist.albumIds || []}
+                        playlistName={playlist.name}
+                      />
+                    </div>
+                    <div className={styles.artistDetailPage__playlistInfo}>
+                      <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
+                      <span className={styles.artistDetailPage__playlistMeta}>
+                        {playlist.songCount} canciones
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Biography Section */}
+          {artist.biography && (
+            <section className={styles.artistDetailPage__biography}>
+              <div className={styles.artistDetailPage__biographyHeader}>
+                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
+              </div>
+
+              <div className={styles.artistDetailPage__biographyContent}>
+                <div className={`${styles.artistDetailPage__biographyText} ${
+                  !isBioExpanded && artist.biography.length > 500 ? styles.artistDetailPage__biographyText__collapsed : ''
+                }`}>
+                  {formatBiographyWithDropCap(artist.biography)}
+                </div>
+
+                {artist.biography.length > 500 && (
+                  <button
+                    className={styles.artistDetailPage__biographyToggle}
+                    onClick={() => setIsBioExpanded(!isBioExpanded)}
+                  >
+                    {isBioExpanded ? 'Leer menos' : 'Leer más'}
+                  </button>
+                )}
+
+                {artist.biographySource && (
+                  <div className={styles.artistDetailPage__biographySource}>
+                    Fuente: {artist.biographySource === 'wikipedia' ? 'Wikipedia' :
+                            artist.biographySource === 'lastfm' ? 'Last.fm' :
+                            artist.biographySource}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* No Biography Placeholder */}
+          {!artist.biography && (
+            <section className={styles.artistDetailPage__biography}>
+              <div className={styles.artistDetailPage__biographyHeader}>
+                <BookOpen size={24} className={styles.artistDetailPage__biographyIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Biografía</h2>
+              </div>
+              <p className={styles.artistDetailPage__biographyPlaceholder}>
+                No hay biografía disponible para este artista.
+              </p>
+            </section>
+          )}
+
           {/* Related Artists Section */}
           {relatedArtists.length > 0 && (
             <section className={styles.artistDetailPage__relatedArtists}>
@@ -487,62 +573,6 @@ export default function ArtistDetailPage() {
                   </div>
                 ))}
               </div>
-            </section>
-          )}
-
-          {/* Artist Playlists Section */}
-          {artistPlaylists.length > 0 && (
-            <section className={styles.artistDetailPage__playlists}>
-              <div className={styles.artistDetailPage__sectionHeader}>
-                <ListMusic size={24} className={styles.artistDetailPage__sectionIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Playlists de {artist.name}</h2>
-              </div>
-              <div className={styles.artistDetailPage__playlistsGrid}>
-                {artistPlaylists.map((playlist) => (
-                  <div
-                    key={playlist.id}
-                    className={styles.artistDetailPage__playlistCard}
-                    onClick={() => setLocation(`/playlists/auto/${playlist.id}`)}
-                  >
-                    <div className={styles.artistDetailPage__playlistCover}>
-                      <PlaylistCover
-                        type={playlist.type}
-                        name={playlist.name}
-                        coverColor={playlist.coverColor}
-                        coverImageUrl={playlist.coverImageUrl}
-                        artistName={playlist.metadata.artistName}
-                        size="medium"
-                      />
-                    </div>
-                    <div className={styles.artistDetailPage__playlistInfo}>
-                      <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
-                      <span className={styles.artistDetailPage__playlistMeta}>
-                        {playlist.tracks.length} canciones
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Albums Section */}
-          {artistAlbums.length > 0 && (
-            <section className={styles.artistDetailPage__albums}>
-              <AlbumGrid
-                title={`Álbumes de ${artist.name}`}
-                albums={artistAlbums}
-              />
-            </section>
-          )}
-
-          {/* No Albums */}
-          {artistAlbums.length === 0 && (
-            <section className={styles.artistDetailPage__albums}>
-              <h2 className={styles.artistDetailPage__sectionTitle}>Álbumes</h2>
-              <p className={styles.artistDetailPage__emptyAlbums}>
-                No hay álbumes disponibles para este artista.
-              </p>
             </section>
           )}
         </div>
