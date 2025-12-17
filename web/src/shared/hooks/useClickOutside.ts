@@ -5,6 +5,8 @@ export interface UseClickOutsideOptions {
   enabled?: boolean;
   /** Animation duration in ms before calling onClose (default: 0) */
   animationDuration?: number;
+  /** Close on scroll (default: true) */
+  closeOnScroll?: boolean;
 }
 
 export interface UseClickOutsideReturn<T extends HTMLElement> {
@@ -43,7 +45,7 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   onClose: () => void,
   options: UseClickOutsideOptions = {}
 ): UseClickOutsideReturn<T> {
-  const { enabled = true, animationDuration = 0 } = options;
+  const { enabled = true, animationDuration = 0, closeOnScroll = true } = options;
 
   const ref = useRef<T>(null);
   const isClosingRef = useRef(false);
@@ -129,6 +131,22 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [enabled, close]);
+
+  // Close on scroll
+  useEffect(() => {
+    if (!enabled || !closeOnScroll) return;
+
+    const handleScroll = () => {
+      close();
+    };
+
+    // Listen to scroll on capture phase to catch all scroll events
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [enabled, closeOnScroll, close]);
 
   // Cleanup on unmount
   useEffect(() => {
