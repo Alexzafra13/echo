@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'wouter';
-import { Play, Shuffle, Music, Edit2, MoreHorizontal, Globe, Lock } from 'lucide-react';
+import { useParams, Link, useLocation } from 'wouter';
+import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
-import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist } from '../../hooks/usePlaylists';
+import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist } from '../../hooks/usePlaylists';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
-import { PlaylistCoverMosaic, EditPlaylistModal } from '../../components';
+import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { useAuthStore } from '@shared/store';
+import { logger } from '@shared/utils/logger';
 import styles from './PlaylistDetailPage.module.css';
 
 /**
@@ -21,15 +22,18 @@ import styles from './PlaylistDetailPage.module.css';
  */
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
   const { playQueue, currentTrack, setShuffle } = usePlayer();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
   const updatePlaylistMutation = useUpdatePlaylist();
+  const deletePlaylistMutation = useDeletePlaylist();
   const removeTrackMutation = useRemoveTrackFromPlaylist();
 
   // Extract dominant color from first album cover in playlist
@@ -106,6 +110,34 @@ export default function PlaylistDetailPage() {
       if (import.meta.env.DEV) {
         console.error('Error removing track from playlist:', error);
       }
+    }
+  };
+
+  const handleDeletePlaylist = async () => {
+    if (!id) return;
+    try {
+      await deletePlaylistMutation.mutateAsync(id);
+      setShowDeleteModal(false);
+      setLocation('/playlists');
+    } catch (error) {
+      logger.error('Error deleting playlist:', error);
+    }
+  };
+
+  const handleDownloadPlaylist = () => {
+    // TODO: Implement playlist download
+    logger.debug('Download playlist - to be implemented');
+  };
+
+  const handleToggleVisibility = async () => {
+    if (!playlist || !id) return;
+    try {
+      await updatePlaylistMutation.mutateAsync({
+        id,
+        dto: { public: !playlist.public }
+      });
+    } catch (error) {
+      logger.error('Error toggling playlist visibility:', error);
     }
   };
 
@@ -234,20 +266,13 @@ export default function PlaylistDetailPage() {
                 >
                   Aleatorio
                 </Button>
-                <button
-                  className={styles.playlistDetailPage__heroActionButton}
-                  aria-label="Edit playlist"
-                  title="Editar playlist"
-                  onClick={() => setShowEditModal(true)}
-                >
-                  <Edit2 size={20} />
-                </button>
-                <button
-                  className={styles.playlistDetailPage__heroMoreButton}
-                  aria-label="More options"
-                >
-                  <MoreHorizontal size={24} />
-                </button>
+                <PlaylistOptionsMenu
+                  onEdit={() => setShowEditModal(true)}
+                  onToggleVisibility={handleToggleVisibility}
+                  onDownload={handleDownloadPlaylist}
+                  onDelete={() => setShowDeleteModal(true)}
+                  isPublic={playlist.public}
+                />
               </div>
             </div>
           </div>
@@ -304,6 +329,16 @@ export default function PlaylistDetailPage() {
           onClose={() => setShowEditModal(false)}
           onSubmit={handleUpdatePlaylist}
           isLoading={updatePlaylistMutation.isPending}
+        />
+      )}
+
+      {/* Delete Playlist Modal */}
+      {showDeleteModal && playlist && (
+        <DeletePlaylistModal
+          playlistName={playlist.name}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeletePlaylist}
+          isLoading={deletePlaylistMutation.isPending}
         />
       )}
     </div>
