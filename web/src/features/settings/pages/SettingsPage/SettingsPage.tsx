@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { Settings, Eye, Lock, Palette, Globe, Check, ExternalLink, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical, Sun, Moon, Monitor } from 'lucide-react';
 import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { useAuth } from '@shared/hooks';
+import { useAuth, useTheme } from '@shared/hooks';
 import { usePrivacySettings, useUpdatePrivacySettings, useHomePreferences, useUpdateHomePreferences } from '../../hooks';
 import { usePlayer } from '@features/player';
 import type { HomeSectionConfig, HomeSectionId } from '../../services';
+import type { ThemePreference } from '@shared/contexts/ThemeContext';
 import styles from './SettingsPage.module.css';
 
 // Section labels for display
@@ -28,6 +29,7 @@ const SECTION_LABELS: Record<HomeSectionId, string> = {
  */
 export function SettingsPage() {
   const { user } = useAuth();
+  const { themePreference, setThemePreference, theme } = useTheme();
   const { data: privacySettings, isLoading } = usePrivacySettings();
   const { mutate: updatePrivacy, isPending: isSaving, isSuccess } = useUpdatePrivacySettings();
   const { data: homePreferences, isLoading: isLoadingHome } = useHomePreferences();
@@ -413,7 +415,7 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              {/* Appearance Card - Placeholder for future */}
+              {/* Appearance Card */}
               <div className={styles.settingsPage__card}>
                 <div className={styles.settingsPage__cardHeader}>
                   <h2>
@@ -427,13 +429,50 @@ export function SettingsPage() {
                     <div className={styles.settingsPage__toggleInfo}>
                       <span className={styles.settingsPage__toggleLabel}>Tema</span>
                       <p className={styles.settingsPage__toggleDescription}>
-                        El tema se configura automáticamente según las preferencias del sistema
+                        Elige cómo quieres que se vea la aplicación
                       </p>
                     </div>
-                    <span style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
-                      Oscuro
-                    </span>
                   </div>
+
+                  {/* Theme selector buttons */}
+                  <div className={styles.settingsPage__themeSelector}>
+                    <button
+                      type="button"
+                      className={`${styles.settingsPage__themeOption} ${themePreference === 'auto' ? styles['settingsPage__themeOption--active'] : ''}`}
+                      onClick={() => setThemePreference('auto')}
+                    >
+                      <Monitor size={20} />
+                      <span className={styles.settingsPage__themeOptionLabel}>Automático</span>
+                      <span className={styles.settingsPage__themeOptionDesc}>Según tu dispositivo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`${styles.settingsPage__themeOption} ${themePreference === 'light' ? styles['settingsPage__themeOption--active'] : ''}`}
+                      onClick={() => setThemePreference('light')}
+                    >
+                      <Sun size={20} />
+                      <span className={styles.settingsPage__themeOptionLabel}>Claro</span>
+                      <span className={styles.settingsPage__themeOptionDesc}>Tema claro siempre</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`${styles.settingsPage__themeOption} ${themePreference === 'dark' ? styles['settingsPage__themeOption--active'] : ''}`}
+                      onClick={() => setThemePreference('dark')}
+                    >
+                      <Moon size={20} />
+                      <span className={styles.settingsPage__themeOptionLabel}>Oscuro</span>
+                      <span className={styles.settingsPage__themeOptionDesc}>Tema oscuro siempre</span>
+                    </button>
+                  </div>
+
+                  {/* Current theme indicator when in auto mode */}
+                  {themePreference === 'auto' && (
+                    <p className={styles.settingsPage__themeNote}>
+                      Actualmente usando tema {theme === 'dark' ? 'oscuro' : 'claro'} según tu dispositivo
+                    </p>
+                  )}
                 </div>
               </div>
 
