@@ -38,8 +38,8 @@ export function SharedAlbumGrid({
   const { data: servers } = useConnectedServers();
 
   const handleAlbumClick = (album: SharedAlbum) => {
-    // Navigate to shared libraries page with server and album pre-selected
-    setLocation(`/shared-libraries?server=${album.serverId}&album=${album.id}`);
+    // Navigate to federation album detail page
+    setLocation(`/federation/album/${album.serverId}/${album.id}`);
   };
 
   const handleViewAllClick = () => {

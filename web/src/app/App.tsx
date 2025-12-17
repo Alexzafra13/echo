@@ -21,6 +21,7 @@ import { DailyRedirect } from '@features/recommendations/pages/DailyRedirect';
 import { ArtistPlaylistsPage } from '@features/recommendations/pages/ArtistPlaylistsPage';
 import { GenrePlaylistsPage } from '@features/recommendations/pages/GenrePlaylistsPage';
 import { SocialPage } from '@features/social';
+import { SharedAlbumPage } from '@features/federation';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 import { AdminRoute } from '@shared/components/AdminRoute';
 import { SetupGuard } from '@shared/components/SetupGuard';
@@ -174,6 +175,13 @@ function App() {
         <Route path="/social">
           <ProtectedRoute>
             <SocialPage />
+          </ProtectedRoute>
+        </Route>
+
+        {/* Federation Album Route (Protected) */}
+        <Route path="/federation/album/:serverId/:albumId">
+          <ProtectedRoute>
+            <SharedAlbumPage />
           </ProtectedRoute>
         </Route>
 
