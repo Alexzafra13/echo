@@ -744,6 +744,65 @@
   color: var(--color-text-tertiary, #6b7280);
 }
 
+/* ===== Artist Playlists Section ===== */
+.artistDetailPage__playlists {
+  margin-bottom: 48px;
+}
+
+.artistDetailPage__playlistsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.artistDetailPage__playlistCard {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: var(--white-02);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.artistDetailPage__playlistCard:hover {
+  background: var(--white-05);
+  transform: translateY(-2px);
+}
+
+.artistDetailPage__playlistCover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.artistDetailPage__playlistCover > * {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.artistDetailPage__playlistInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artistDetailPage__playlistName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artistDetailPage__playlistMeta {
+  font-size: 13px;
+  color: var(--color-text-tertiary, #6b7280);
+}
+
 /* ===== Responsive for new sections ===== */
 @media (max-width: 768px) {
   .artistDetailPage__topTrack {
@@ -788,6 +847,27 @@
   .artistDetailPage__relatedArtistFallback {
     font-size: 24px;
   }
+
+  .artistDetailPage__playlistsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .artistDetailPage__playlistCard {
+    padding: 10px;
+  }
+
+  .artistDetailPage__playlistCover {
+    margin-bottom: 10px;
+  }
+
+  .artistDetailPage__playlistName {
+    font-size: 14px;
+  }
+
+  .artistDetailPage__playlistMeta {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -801,6 +881,10 @@
   }
 
   .artistDetailPage__relatedArtistsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .artistDetailPage__playlistsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
