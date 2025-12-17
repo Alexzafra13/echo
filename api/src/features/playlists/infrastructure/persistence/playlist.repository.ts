@@ -325,4 +325,48 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
 
     return (result[0]?.count ?? 0) > 0;
   }
+
+  /**
+   * Find public playlists that contain tracks from a specific artist
+   */
+  async findPublicByArtistId(artistId: string, skip: number, take: number): Promise<Playlist[]> {
+    // Find all public playlists that have at least one track from this artist
+    const result = await this.drizzle.db
+      .selectDistinct({
+        playlist: playlists,
+      })
+      .from(playlists)
+      .innerJoin(playlistTracks, eq(playlists.id, playlistTracks.playlistId))
+      .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
+      .where(
+        and(
+          eq(playlists.public, true),
+          eq(tracks.artistId, artistId),
+        ),
+      )
+      .orderBy(desc(playlists.createdAt))
+      .offset(skip)
+      .limit(take);
+
+    return result.map(r => PlaylistMapper.toDomain(r.playlist));
+  }
+
+  /**
+   * Count public playlists that contain tracks from a specific artist
+   */
+  async countPublicByArtistId(artistId: string): Promise<number> {
+    const result = await this.drizzle.db
+      .selectDistinct({ id: playlists.id })
+      .from(playlists)
+      .innerJoin(playlistTracks, eq(playlists.id, playlistTracks.playlistId))
+      .innerJoin(tracks, eq(playlistTracks.trackId, tracks.id))
+      .where(
+        and(
+          eq(playlists.public, true),
+          eq(tracks.artistId, artistId),
+        ),
+      );
+
+    return result.length;
+  }
 }
