@@ -1,5 +1,5 @@
 import { apiClient } from '@shared/services/api';
-import type { SharedAlbumsResponse, ConnectedServer } from '../types';
+import type { SharedAlbumsResponse, ConnectedServer, RemoteAlbumWithTracks } from '../types';
 
 export interface SharedAlbumsParams {
   page?: number;
@@ -86,6 +86,16 @@ export const federationService = {
    */
   async cancelImport(importId: string): Promise<{ success: boolean }> {
     const response = await apiClient.delete<{ success: boolean }>(`/federation/import/${importId}`);
+    return response.data;
+  },
+
+  /**
+   * Get a specific album from a connected server (includes tracks)
+   */
+  async getRemoteAlbum(serverId: string, albumId: string): Promise<RemoteAlbumWithTracks> {
+    const response = await apiClient.get<RemoteAlbumWithTracks>(
+      `/federation/servers/${serverId}/albums/${albumId}`,
+    );
     return response.data;
   },
 };
