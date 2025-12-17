@@ -1,6 +1,6 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen, Music, Users, Play, TrendingUp } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { BookOpen, Music, Users, Play, TrendingUp, ListMusic } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistOptionsMenu } from '../../components';
@@ -8,7 +8,8 @@ import { ArtistAvatarSelectorModal } from '@features/admin/components/ArtistAvat
 import { BackgroundPositionModal } from '@features/admin/components/BackgroundPositionModal';
 import { useArtist, useArtistAlbums, useArtistStats, useArtistTopTracks, useRelatedArtists } from '../../hooks';
 import type { ArtistTopTrack, RelatedArtist } from '../../types';
-import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist } from '@features/home/hooks';
+import { useArtistImages, getArtistImageUrl, useAutoEnrichArtist, useAutoPlaylists } from '@features/home/hooks';
+import { PlaylistCover } from '@features/recommendations/components';
 import { useAuth, useArtistMetadataSync, useAlbumMetadataSync } from '@shared/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { getArtistInitials } from '../../utils/artist-image.utils';
@@ -54,6 +55,17 @@ export default function ArtistDetailPage() {
 
   // Fetch artist images from Fanart.tv
   const { data: artistImages } = useArtistImages(id);
+
+  // Fetch auto-playlists to find artist-related playlists
+  const { data: autoPlaylistsData } = useAutoPlaylists();
+
+  // Filter playlists for this artist
+  const artistPlaylists = useMemo(() => {
+    if (!autoPlaylistsData || !id) return [];
+    return autoPlaylistsData.filter(
+      p => p.type === 'artist' && p.metadata.artistId === id
+    );
+  }, [autoPlaylistsData, id]);
 
   // Check if artist has images
   const hasHeroImages = artistImages?.images.background?.exists || artistImages?.images.banner?.exists;
@@ -470,6 +482,42 @@ export default function ArtistDetailPage() {
                       <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
                       <span className={styles.artistDetailPage__relatedArtistMeta}>
                         {relArtist.matchScore}% similar
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Artist Playlists Section */}
+          {artistPlaylists.length > 0 && (
+            <section className={styles.artistDetailPage__playlists}>
+              <div className={styles.artistDetailPage__sectionHeader}>
+                <ListMusic size={24} className={styles.artistDetailPage__sectionIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Playlists de {artist.name}</h2>
+              </div>
+              <div className={styles.artistDetailPage__playlistsGrid}>
+                {artistPlaylists.map((playlist) => (
+                  <div
+                    key={playlist.id}
+                    className={styles.artistDetailPage__playlistCard}
+                    onClick={() => setLocation(`/playlists/auto/${playlist.id}`)}
+                  >
+                    <div className={styles.artistDetailPage__playlistCover}>
+                      <PlaylistCover
+                        type={playlist.type}
+                        name={playlist.name}
+                        coverColor={playlist.coverColor}
+                        coverImageUrl={playlist.coverImageUrl}
+                        artistName={playlist.metadata.artistName}
+                        size="medium"
+                      />
+                    </div>
+                    <div className={styles.artistDetailPage__playlistInfo}>
+                      <span className={styles.artistDetailPage__playlistName}>{playlist.name}</span>
+                      <span className={styles.artistDetailPage__playlistMeta}>
+                        {playlist.tracks.length} canciones
                       </span>
                     </div>
                   </div>
