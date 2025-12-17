@@ -29,17 +29,24 @@ export default function HomePage() {
   // Auto-refresh when scan completes
   useAutoRefreshOnScan();
 
+  // Responsive state for mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   // Calculate how many albums we need for 2 rows dynamically
-  const { itemsPerPage: neededAlbums } = useGridDimensions({
+  const { itemsPerPage: gridAlbums } = useGridDimensions({
     maxRows: 2,
     headerHeight: 450,
   });
 
   // Calculate how many playlists we need for 1 row dynamically
-  const { itemsPerPage: neededPlaylists } = useGridDimensions({
+  const { itemsPerPage: gridPlaylists } = useGridDimensions({
     maxRows: 1,
     headerHeight: 450,
   });
+
+  // On mobile, use more items for horizontal scroll (minimum 12)
+  const neededAlbums = isMobile ? Math.max(12, gridAlbums) : gridAlbums;
+  const neededPlaylists = isMobile ? Math.max(10, gridPlaylists) : gridPlaylists;
 
   const { data: featuredAlbum, isLoading: loadingFeatured } = useFeaturedAlbum();
   const { data: recentAlbums, isLoading: loadingRecent } = useRecentAlbums(
@@ -97,9 +104,6 @@ export default function HomePage() {
     setRefreshKey(Date.now());
     setCurrentHeroIndex(0); // Reset to first item
   }, []);
-
-  // Responsive state for mobile detection
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Helper: Check if album was released recently (within N days)
   const isRecentRelease = (album: Album, days: number = 90): boolean => {
