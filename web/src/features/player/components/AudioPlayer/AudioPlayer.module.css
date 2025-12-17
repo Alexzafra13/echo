@@ -733,6 +733,19 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: default; /* No clickable on mobile */
+    pointer-events: none; /* Prevent any interaction */
+  }
+
+  .trackAlbum:hover {
+    color: var(--text-tertiary); /* No highlight on mobile */
+    text-decoration: none; /* No underline on mobile */
+  }
+
+  /* Cover container not clickable on mobile */
+  .trackCoverContainer--clickable {
+    cursor: default;
+    pointer-events: none;
   }
 
   .trackMetadata {
@@ -839,6 +852,8 @@
 
   .trackAlbum {
     font-size: 10px;
+    cursor: default;
+    pointer-events: none;
   }
 
   .trackMetadata {
