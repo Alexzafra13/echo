@@ -9,6 +9,8 @@ import { formatDuration } from '../../types';
 import { TrackOptionsMenu } from '../TrackOptionsMenu/TrackOptionsMenu';
 import { RatingStars } from '@shared/components/ui/RatingStars';
 import { LikeDislikeButtons } from '@shared/components/ui/LikeDislikeButtons';
+import { downloadService } from '@shared/services/download.service';
+import { logger } from '@shared/utils/logger';
 import styles from './TrackList.module.css';
 
 /**
@@ -135,6 +137,15 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     setSelectedTrackForInfo(track);
   }, []);
 
+  const handleDownload = useCallback(async (track: Track) => {
+    try {
+      logger.info('Starting track download:', { trackId: track.id, title: track.title });
+      await downloadService.downloadTrack(track.id, `${track.title}.${track.suffix || 'mp3'}`);
+    } catch (error) {
+      logger.error('Failed to download track:', error);
+    }
+  }, []);
+
   // Helper function to render a single track row
   const renderTrackRow = (track: Track, index: number) => {
     const isPlaying = currentTrackId === track.id;
@@ -240,6 +251,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
             onGoToArtist={handleGoToArtist}
             onShowInfo={handleShowInfo}
             onRemoveFromPlaylist={onRemoveFromPlaylist}
+            onDownload={handleDownload}
           />
         )}
       </div>
