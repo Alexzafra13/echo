@@ -257,7 +257,7 @@ export default function AlbumsPage() {
                 </div>
               ) : filteredAlbums && filteredAlbums.length > 0 ? (
                 <div className={styles.albumsPage__gridWrapper}>
-                  <AlbumGrid title="" albums={filteredAlbums} />
+                  <AlbumGrid title="" albums={filteredAlbums} mobileLayout="grid" />
 
                   {/* Pagination Controls */}
                   <Pagination
