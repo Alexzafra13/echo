@@ -97,7 +97,11 @@ export function UserMenu({
           className={`${styles.header__userDropdown} ${isClosing ? styles['header__userDropdown--closing'] : ''}`}
           role="menu"
         >
-          <div className={styles.header__userInfo}>
+          <button
+            className={styles.header__userInfo}
+            onClick={(e) => handleNavigate(e, `/user/${user?.id}`)}
+            role="menuitem"
+          >
             <img
               src={avatarUrl}
               alt={user?.username || 'User'}
@@ -108,7 +112,7 @@ export function UserMenu({
               <p className={styles.header__userName}>{user?.username || 'User'}</p>
               <p className={styles.header__userRole}>{user?.isAdmin ? 'admin' : 'user'}</p>
             </div>
-          </div>
+          </button>
 
           <button
             className={styles.header__userMenuItem}
