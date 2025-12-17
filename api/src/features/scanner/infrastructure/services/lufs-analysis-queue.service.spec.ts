@@ -154,16 +154,17 @@ describe('LufsAnalysisQueueService', () => {
       expect(result.message).toContain('FFmpeg not available');
     });
 
-    it('should not start if already running', async () => {
+    it('should add new tracks to running queue', async () => {
       // Arrange - Start the queue first
       await service.startLufsAnalysisQueue();
 
-      // Act - Try to start again
+      // Act - Try to start again (should add new tracks to existing queue)
       const result = await service.startLufsAnalysisQueue();
 
-      // Assert
-      expect(result.started).toBe(false);
-      expect(result.message).toContain('already running');
+      // Assert - Now it adds tracks to running queue instead of rejecting
+      expect(result.started).toBe(true);
+      expect(result.message).toContain('Added');
+      expect(result.message).toContain('running LUFS queue');
     });
 
     it('should return early if no pending tracks', async () => {
