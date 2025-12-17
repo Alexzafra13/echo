@@ -173,6 +173,11 @@ export class TrackProcessingService {
       }
 
       // Prepare track data
+      // Note: ReplayGain values from file tags are only used if present in metadata.
+      // If not present (undefined), we don't include them in trackData to avoid
+      // overwriting LUFS-analyzed values during re-scans.
+      const hasEmbeddedReplayGain = metadata.rgTrackGain !== undefined;
+
       const trackData = {
         title: metadata.title || path.basename(filePath, path.extname(filePath)),
         artistName: metadata.artist || artist.name,
@@ -198,10 +203,16 @@ export class TrackProcessingService {
             ? metadata.comment
             : null,
         lyrics: metadata.lyrics,
-        rgTrackGain: metadata.rgTrackGain ?? null,
-        rgTrackPeak: metadata.rgTrackPeak ?? null,
-        rgAlbumGain: metadata.rgAlbumGain ?? null,
-        rgAlbumPeak: metadata.rgAlbumPeak ?? null,
+        // Only include ReplayGain values if embedded in file tags.
+        // This prevents overwriting LUFS-analyzed values during re-scans.
+        ...(hasEmbeddedReplayGain && {
+          rgTrackGain: metadata.rgTrackGain,
+          rgTrackPeak: metadata.rgTrackPeak ?? null,
+          rgAlbumGain: metadata.rgAlbumGain ?? null,
+          rgAlbumPeak: metadata.rgAlbumPeak ?? null,
+          // If file has embedded ReplayGain, mark as analyzed to skip LUFS analysis
+          lufsAnalyzedAt: new Date(),
+        }),
         mbzTrackId: metadata.musicBrainzTrackId,
         mbzAlbumId: mbzAlbumId,
         mbzArtistId: mbzArtistId,

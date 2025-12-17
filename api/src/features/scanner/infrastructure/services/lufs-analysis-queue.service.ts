@@ -108,6 +108,10 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
   /**
    * Start the LUFS analysis queue after a scan completes
+   *
+   * This method can be called multiple times:
+   * - If queue is not running, starts a new session
+   * - If queue is running, adds any new pending tracks to the existing queue
    */
   async startLufsAnalysisQueue(): Promise<{ started: boolean; pending: number; message: string }> {
     // Check if FFmpeg is available
@@ -117,15 +121,6 @@ export class LufsAnalysisQueueService implements OnModuleInit {
         started: false,
         pending: 0,
         message: 'FFmpeg not available. Skipping LUFS analysis.',
-      };
-    }
-
-    if (this.isRunning) {
-      const stats = await this.getQueueStats();
-      return {
-        started: false,
-        pending: stats.pendingTracks,
-        message: `LUFS analysis queue already running. ${stats.pendingTracks} tracks pending.`,
       };
     }
 
@@ -147,7 +142,29 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       };
     }
 
-    // Initialize session
+    // If queue is already running, add new tracks to the existing queue
+    if (this.isRunning) {
+      const newTracks = pendingTracks.length;
+      this.totalToProcess += newTracks;
+
+      this.logger.info(
+        `🎚️ Adding ${newTracks} new tracks to running LUFS queue (total: ${this.totalToProcess})`
+      );
+
+      // Enqueue the new tracks
+      await this.enqueueTracksInBatches(pendingTracks);
+
+      // Emit updated progress
+      this.emitProgress();
+
+      return {
+        started: true,
+        pending: pendingTracks.length,
+        message: `Added ${newTracks} tracks to running LUFS queue. Total: ${this.totalToProcess}`,
+      };
+    }
+
+    // Initialize new session
     this.isRunning = true;
     this.processedInSession = 0;
     this.totalToProcess = pendingTracks.length;
@@ -158,30 +175,7 @@ export class LufsAnalysisQueueService implements OnModuleInit {
     );
 
     // Enqueue ALL tracks at once - BullMQ will handle parallelism
-    const jobs = pendingTracks.map((track) => ({
-      name: LUFS_JOB,
-      data: {
-        trackId: track.id,
-        trackTitle: track.title,
-        filePath: track.path,
-      } as LufsAnalysisJob,
-      opts: {
-        attempts: 1,
-        removeOnComplete: true,
-        removeOnFail: true,
-      },
-    }));
-
-    // Add jobs in batches to avoid memory issues with large libraries
-    const BATCH_SIZE = 500;
-    for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
-      const batch = jobs.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        batch.map((job) =>
-          this.bullmq.addJob(LUFS_QUEUE, job.name, job.data, job.opts),
-        ),
-      );
-    }
+    await this.enqueueTracksInBatches(pendingTracks);
 
     const estimatedTime = this.formatDuration(
       (pendingTracks.length / this.concurrency) * this.averageProcessingTime
@@ -195,6 +189,37 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       pending: pendingTracks.length,
       message: `LUFS analysis started. Processing ${pendingTracks.length} tracks with ${this.concurrency} workers. ETA: ~${estimatedTime}`,
     };
+  }
+
+  /**
+   * Enqueue tracks in batches to avoid memory issues with large libraries
+   */
+  private async enqueueTracksInBatches(
+    tracksToEnqueue: Array<{ id: string; title: string; path: string }>
+  ): Promise<void> {
+    const jobs = tracksToEnqueue.map((track) => ({
+      name: LUFS_JOB,
+      data: {
+        trackId: track.id,
+        trackTitle: track.title,
+        filePath: track.path,
+      } as LufsAnalysisJob,
+      opts: {
+        attempts: 1,
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }));
+
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
+      const batch = jobs.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map((job) =>
+          this.bullmq.addJob(LUFS_QUEUE, job.name, job.data, job.opts),
+        ),
+      );
+    }
   }
 
   /**
@@ -301,6 +326,38 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
       // Check if queue is complete
       if (this.processedInSession >= this.totalToProcess) {
+        // Before finishing, check if there are any new pending tracks
+        // (could have been added during processing)
+        const remainingPending = await this.drizzle.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(tracks)
+          .where(isNull(tracks.lufsAnalyzedAt));
+
+        const remainingCount = remainingPending[0]?.count ?? 0;
+
+        if (remainingCount > 0) {
+          // There are new tracks to process - continue the queue
+          this.logger.info(
+            `🎚️ Found ${remainingCount} new tracks added during processing, continuing...`
+          );
+
+          // Re-fetch and enqueue the new tracks
+          const newPendingTracks = await this.drizzle.db
+            .select({
+              id: tracks.id,
+              title: tracks.title,
+              path: tracks.path,
+            })
+            .from(tracks)
+            .where(isNull(tracks.lufsAnalyzedAt));
+
+          this.totalToProcess += remainingCount;
+          await this.enqueueTracksInBatches(newPendingTracks);
+          this.emitProgress();
+          return; // Don't finish, continue processing
+        }
+
+        // Queue is truly complete
         const duration = this.sessionStartedAt
           ? Date.now() - this.sessionStartedAt.getTime()
           : 0;
@@ -337,9 +394,12 @@ export class LufsAnalysisQueueService implements OnModuleInit {
 
   /**
    * Emit current progress via WebSocket
+   * Uses internal counters for real-time updates (faster than DB queries)
    */
   private emitProgress(): void {
-    const pendingTracks = this.totalToProcess - this.processedInSession;
+    // Calculate pending based on internal counters
+    // This is more accurate for real-time updates since new tracks may be added dynamically
+    const pendingTracks = Math.max(0, this.totalToProcess - this.processedInSession);
     const estimatedTimeRemaining = this.isRunning && pendingTracks > 0
       ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
       : null;
