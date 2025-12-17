@@ -310,8 +310,8 @@
     width: 100%;
   }
 
-  /* Botones más cuadrados y prominentes en móvil */
-  .albumPage__heroActions button {
+  /* Botones más cuadrados y prominentes en móvil (excluye botón de opciones) */
+  .albumPage__heroActions > button {
     padding: 12px 24px;
     font-size: 15px;
     border-radius: 6px; /* Más cuadrado */
@@ -378,8 +378,8 @@
     gap: 10px;
   }
 
-  /* Botones cuadrados en móvil pequeño */
-  .albumPage__heroActions button {
+  /* Botones cuadrados en móvil pequeño (excluye botón de opciones) */
+  .albumPage__heroActions > button {
     padding: 10px 20px;
     font-size: 14px;
     border-radius: 6px;
