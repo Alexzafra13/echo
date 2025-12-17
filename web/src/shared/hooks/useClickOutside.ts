@@ -7,6 +7,10 @@ export interface UseClickOutsideOptions {
   animationDuration?: number;
   /** Close on scroll (default: true) */
   closeOnScroll?: boolean;
+  /** Delay in ms before closing on scroll - makes it more subtle (default: 100) */
+  scrollCloseDelay?: number;
+  /** Minimum scroll distance in px to trigger close (default: 20) */
+  scrollThreshold?: number;
 }
 
 export interface UseClickOutsideReturn<T extends HTMLElement> {
@@ -45,7 +49,13 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
   onClose: () => void,
   options: UseClickOutsideOptions = {}
 ): UseClickOutsideReturn<T> {
-  const { enabled = true, animationDuration = 0, closeOnScroll = true } = options;
+  const {
+    enabled = true,
+    animationDuration = 0,
+    closeOnScroll = true,
+    scrollCloseDelay = 100,
+    scrollThreshold = 20,
+  } = options;
 
   const ref = useRef<T>(null);
   const isClosingRef = useRef(false);
@@ -132,12 +142,31 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
     };
   }, [enabled, close]);
 
-  // Close on scroll
+  // Close on scroll with delay and threshold
   useEffect(() => {
     if (!enabled || !closeOnScroll) return;
 
+    let scrollStartY = window.scrollY;
+    let accumulatedScroll = 0;
+    let scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const handleScroll = () => {
-      close();
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - scrollStartY);
+      accumulatedScroll += scrollDelta;
+      scrollStartY = currentScrollY;
+
+      // Only trigger close if scroll exceeds threshold
+      if (accumulatedScroll >= scrollThreshold) {
+        // Clear any pending timeout
+        if (scrollTimeoutId) {
+          clearTimeout(scrollTimeoutId);
+        }
+        // Add delay before closing for smoother UX
+        scrollTimeoutId = setTimeout(() => {
+          close();
+        }, scrollCloseDelay);
+      }
     };
 
     // Listen to scroll on capture phase to catch all scroll events
@@ -145,8 +174,11 @@ export function useClickOutside<T extends HTMLElement = HTMLDivElement>(
 
     return () => {
       window.removeEventListener('scroll', handleScroll, true);
+      if (scrollTimeoutId) {
+        clearTimeout(scrollTimeoutId);
+      }
     };
-  }, [enabled, closeOnScroll, close]);
+  }, [enabled, closeOnScroll, close, scrollCloseDelay, scrollThreshold]);
 
   // Cleanup on unmount
   useEffect(() => {
