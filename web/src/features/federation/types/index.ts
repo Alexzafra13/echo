@@ -16,6 +16,35 @@ export interface SharedAlbum {
   createdAt?: string;
 }
 
+export interface RemoteTrack {
+  id: string;
+  title: string;
+  artistName: string;
+  artistId: string;
+  albumName: string;
+  albumId: string;
+  trackNumber?: number;
+  discNumber?: number;
+  duration: number;
+  size: number;
+  bitRate?: number;
+  format?: string;
+}
+
+export interface RemoteAlbumWithTracks {
+  id: string;
+  name: string;
+  artistName: string;
+  artistId: string;
+  year?: number;
+  songCount: number;
+  duration: number;
+  size: number;
+  coverUrl?: string;
+  genres?: string[];
+  tracks: RemoteTrack[];
+}
+
 export interface SharedAlbumsResponse {
   albums: SharedAlbum[];
   total: number;
