@@ -1,5 +1,5 @@
 import { useLocation } from 'wouter';
-import { Shield, Users } from 'lucide-react';
+import { Shield, Users, User, Settings } from 'lucide-react';
 import { useClickOutside } from '@shared/hooks';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import styles from './Header.module.css';
@@ -119,14 +119,16 @@ export function UserMenu({
             onClick={(e) => handleNavigate(e, '/profile')}
             role="menuitem"
           >
-            Profile
+            <User size={16} />
+            Perfil
           </button>
           <button
             className={styles.header__userMenuItem}
             onClick={(e) => handleNavigate(e, '/settings')}
             role="menuitem"
           >
-            Settings
+            <Settings size={16} />
+            Ajustes
           </button>
           <button
             className={styles.header__userMenuItem}
@@ -155,7 +157,7 @@ export function UserMenu({
             onClick={handleLogout}
             role="menuitem"
           >
-            Logout
+            Cerrar sesión
           </button>
         </div>
       )}
