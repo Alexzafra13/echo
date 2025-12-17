@@ -14,6 +14,7 @@ const VALID_SECTION_IDS: HomeSectionConfig['id'][] = [
   'top-played',
   'favorite-radios',
   'surprise-me',
+  'shared-albums',
 ];
 
 @Injectable()
@@ -30,10 +31,11 @@ export class UpdateHomePreferencesUseCase {
       throw new NotFoundError('User', input.userId);
     }
 
-    // 2. If no homeSections provided, return current settings
+    // 2. If no homeSections provided, return current settings (with migration for missing sections)
     if (!input.homeSections) {
+      const sections = this.ensureAllSections(user.homeSections || []);
       return {
-        homeSections: user.homeSections || this.getDefaultSections(),
+        homeSections: sections,
       };
     }
 
@@ -88,6 +90,27 @@ export class UpdateHomePreferencesUseCase {
       { id: 'top-played', enabled: false, order: 5 },
       { id: 'favorite-radios', enabled: false, order: 6 },
       { id: 'surprise-me', enabled: false, order: 7 },
+      { id: 'shared-albums', enabled: false, order: 8 },
     ];
+  }
+
+  /**
+   * Ensure all valid sections are present (migration helper for existing users)
+   * Adds any missing sections at the end with enabled: false
+   */
+  private ensureAllSections(sections: HomeSectionConfig[]): HomeSectionConfig[] {
+    const existingIds = new Set(sections.map(s => s.id));
+    const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
+
+    let nextOrder = maxOrder + 1;
+    const missingSections: HomeSectionConfig[] = [];
+
+    for (const id of VALID_SECTION_IDS) {
+      if (!existingIds.has(id)) {
+        missingSections.push({ id, enabled: false, order: nextOrder++ });
+      }
+    }
+
+    return [...sections, ...missingSections];
   }
 }
