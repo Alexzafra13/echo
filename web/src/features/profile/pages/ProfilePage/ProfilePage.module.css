@@ -576,18 +576,22 @@
   }
 
   .profilePage__header {
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
   }
 
   .profilePage__avatarContainer {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
   }
 
   .profilePage__header h1 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .profilePage__subtitle {
+    font-size: 14px;
   }
 
   .profilePage__card {

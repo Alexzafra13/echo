@@ -701,27 +701,26 @@
 
   .publicProfilePage__hero {
     padding: 100px 24px 32px;
-    min-height: 280px;
+    min-height: auto;
   }
 
   .publicProfilePage__heroContent {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    text-align: center;
+    gap: 20px;
   }
 
   .publicProfilePage__avatar,
   .publicProfilePage__avatarPlaceholder {
-    width: 160px;
-    height: 160px;
-    font-size: 3.5rem;
+    width: 120px;
+    height: 120px;
+    font-size: 2.8rem;
   }
 
   .publicProfilePage__listeningNow {
     max-width: 100%;
     margin-left: 0;
     margin-top: 16px;
-    align-self: center;
     transform: translateY(10px);
   }
 
@@ -736,23 +735,25 @@
   .publicProfilePage__heroInfo {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    min-width: 0;
+    flex: 1;
   }
 
   .publicProfilePage__name {
-    font-size: 32px;
+    font-size: 24px;
   }
 
   .publicProfilePage__meta {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .publicProfilePage__bio {
-    text-align: center;
+    text-align: left;
   }
 
   .publicProfilePage__actions {
-    justify-content: center;
+    justify-content: flex-start;
     padding: 20px 24px 28px;
   }
 
@@ -785,15 +786,23 @@
     padding: 90px 16px 24px;
   }
 
+  .publicProfilePage__heroContent {
+    gap: 16px;
+  }
+
   .publicProfilePage__avatar,
   .publicProfilePage__avatarPlaceholder {
-    width: 120px;
-    height: 120px;
-    font-size: 2.5rem;
+    width: 100px;
+    height: 100px;
+    font-size: 2.2rem;
   }
 
   .publicProfilePage__name {
-    font-size: 28px;
+    font-size: 20px;
+  }
+
+  .publicProfilePage__profileLabel {
+    font-size: 11px;
   }
 
   .publicProfilePage__actions {
