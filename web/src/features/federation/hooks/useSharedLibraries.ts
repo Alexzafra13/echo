@@ -75,3 +75,15 @@ export function useCancelImport() {
     },
   });
 }
+
+/**
+ * Hook to fetch a specific remote album with tracks
+ */
+export function useRemoteAlbum(serverId: string | undefined, albumId: string | undefined) {
+  return useQuery({
+    queryKey: ['federation', 'remote-album', serverId, albumId],
+    queryFn: () => federationService.getRemoteAlbum(serverId!, albumId!),
+    enabled: !!serverId && !!albumId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
