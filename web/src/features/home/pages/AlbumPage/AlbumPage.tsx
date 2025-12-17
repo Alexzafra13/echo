@@ -14,6 +14,7 @@ import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl, useArtistImages } from '../../hooks';
 import { logger } from '@shared/utils/logger';
+import { downloadService } from '@shared/services/download.service';
 import styles from './AlbumPage.module.css';
 
 /**
@@ -180,9 +181,14 @@ export default function AlbumPage() {
     logger.debug('Add album to playlist - to be implemented');
   };
 
-  const handleDownloadAlbum = () => {
-    // TODO: Implement download album
-    logger.debug('Download album - to be implemented');
+  const handleDownloadAlbum = async () => {
+    if (!album || !id) return;
+    try {
+      logger.info('Starting album download:', { albumId: id, title: album.title });
+      await downloadService.downloadAlbum(id, album.title, album.artist);
+    } catch (error) {
+      logger.error('Failed to download album:', error);
+    }
   };
 
   const handleChangeCover = () => {
