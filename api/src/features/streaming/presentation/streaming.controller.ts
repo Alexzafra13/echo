@@ -290,11 +290,13 @@ export class StreamingController implements OnModuleDestroy {
 
     const { filePath, fileName, fileSize, mimeType } = metadata;
 
-    // 2. Headers para descarga
-    res.header('Content-Type', mimeType);
-    res.header('Content-Length', fileSize.toString());
-    res.header('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.header('Cache-Control', 'public, max-age=31536000');
+    // 2. Headers para descarga - usar res.raw.writeHead para asegurar que se envían
+    res.raw.writeHead(200, {
+      'Content-Type': mimeType,
+      'Content-Length': fileSize.toString(),
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+      'Cache-Control': 'public, max-age=31536000',
+    });
 
     // 3. Stream del archivo
     const stream = fs.createReadStream(filePath);

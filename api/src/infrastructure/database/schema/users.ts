@@ -17,7 +17,7 @@ import {
 /** Configuration for a single home page section */
 export interface HomeSectionConfig {
   /** Unique identifier for the section */
-  id: 'recent-albums' | 'artist-mix' | 'genre-mix' | 'recently-played' | 'my-playlists' | 'top-played' | 'favorite-radios' | 'surprise-me';
+  id: 'recent-albums' | 'artist-mix' | 'genre-mix' | 'recently-played' | 'my-playlists' | 'top-played' | 'favorite-radios' | 'surprise-me' | 'shared-albums';
   /** Whether the section is visible */
   enabled: boolean;
   /** Display order (0 = first) */
@@ -62,6 +62,7 @@ export const users = pgTable(
       { id: 'top-played', enabled: false, order: 5 },
       { id: 'favorite-radios', enabled: false, order: 6 },
       { id: 'surprise-me', enabled: false, order: 7 },
+      { id: 'shared-albums', enabled: false, order: 8 },
     ]).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
