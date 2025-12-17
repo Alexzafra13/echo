@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { TracksModule } from '@features/tracks/tracks.module';
 import { StreamingController } from './presentation/streaming.controller';
 import { StreamTokenController } from './presentation/stream-token.controller';
+import { DownloadController } from './presentation/download.controller';
 import { StreamTrackUseCase } from './domain/use-cases';
 import { StreamTokenService } from './domain/stream-token.service';
 import { StreamTokenGuard } from './domain/stream-token.guard';
 import { StreamTokenCleanupService } from './domain/stream-token-cleanup.service';
+import { DownloadService } from './domain/download.service';
 
 /**
  * StreamingModule - Módulo de streaming de audio
@@ -17,7 +19,7 @@ import { StreamTokenCleanupService } from './domain/stream-token-cleanup.service
  * Responsabilidades:
  * - Streamear archivos de audio con soporte para ranges
  * - Proporcionar metadata de archivos
- * - Manejar descarga de archivos
+ * - Manejar descarga de archivos (tracks y álbumes como ZIP)
  * - Gestionar tokens de streaming para autenticación
  *
  * Dependencias:
@@ -26,8 +28,14 @@ import { StreamTokenCleanupService } from './domain/stream-token-cleanup.service
  */
 @Module({
   imports: [TracksModule],
-  controllers: [StreamingController, StreamTokenController],
-  providers: [StreamTrackUseCase, StreamTokenService, StreamTokenGuard, StreamTokenCleanupService],
+  controllers: [StreamingController, StreamTokenController, DownloadController],
+  providers: [
+    StreamTrackUseCase,
+    StreamTokenService,
+    StreamTokenGuard,
+    StreamTokenCleanupService,
+    DownloadService,
+  ],
   exports: [StreamTokenService],
 })
 export class StreamingModule {}
