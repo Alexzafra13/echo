@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Search, Sun, Moon } from 'lucide-react';
-import { useAuth, useTheme, useScrollDetection, useClickOutside } from '@shared/hooks';
+import { Search } from 'lucide-react';
+import { useAuth, useScrollDetection, useClickOutside } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
@@ -28,10 +28,11 @@ interface HeaderProps {
 
 /**
  * Header Component
- * Sticky header with search bar, theme toggle, and user menu
+ * Sticky header with search bar and user menu
  * Features: Transparent header that becomes glassmorphic on scroll
  * Supports admin mode with back navigation instead of search
  * Live search results with debouncing (300ms)
+ * Theme toggle moved to Settings page
  */
 export function Header({
   adminMode = false,
@@ -43,7 +44,6 @@ export function Header({
 }: HeaderProps) {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const accessToken = useAuthStore((state) => state.accessToken);
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
 
@@ -149,20 +149,10 @@ export function Header({
         {customContent}
       </div>
 
-      {/* Right section - Theme toggle, notifications, user menu */}
+      {/* Right section - Notifications, user menu */}
       <div className={styles.header__rightSection}>
         {/* LUFS analysis progress (global, solo visible cuando hay análisis) */}
         <LufsProgressIndicator />
-
-        {/* Theme toggle */}
-        <button
-          className={styles.header__themeToggle}
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
 
         {/* System health indicator (solo admin) */}
         <SystemHealthIndicator />
