@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { User, Lock, Calendar, Check, X } from 'lucide-react';
+import { User, Lock, Calendar, Check, X, Eye, ExternalLink } from 'lucide-react';
+import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useAuth } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
+import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings/hooks';
 // import { AvatarUpload } from '../../components/AvatarUpload'; // Available if needed
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
@@ -35,10 +37,52 @@ export function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [validationError, setValidationError] = useState('');
 
+  // Privacy settings
+  const { data: privacySettings, isLoading: isLoadingPrivacy } = usePrivacySettings();
+  const { mutate: updatePrivacy, isPending: isSavingPrivacy, isSuccess: privacySuccess } = useUpdatePrivacySettings();
+  const [isPublicProfile, setIsPublicProfile] = useState(false);
+  const [showTopTracks, setShowTopTracks] = useState(true);
+  const [showTopArtists, setShowTopArtists] = useState(true);
+  const [showTopAlbums, setShowTopAlbums] = useState(true);
+  const [showPlaylists, setShowPlaylists] = useState(true);
+  const [bio, setBio] = useState('');
+
   // Sync name with user
   useEffect(() => {
     setName(user?.name || '');
   }, [user?.name]);
+
+  // Sync privacy settings with server data
+  useEffect(() => {
+    if (privacySettings) {
+      setIsPublicProfile(privacySettings.isPublicProfile);
+      setShowTopTracks(privacySettings.showTopTracks);
+      setShowTopArtists(privacySettings.showTopArtists);
+      setShowTopAlbums(privacySettings.showTopAlbums);
+      setShowPlaylists(privacySettings.showPlaylists);
+      setBio(privacySettings.bio || '');
+    }
+  }, [privacySettings]);
+
+  const hasPrivacyChanges = privacySettings && (
+    isPublicProfile !== privacySettings.isPublicProfile ||
+    showTopTracks !== privacySettings.showTopTracks ||
+    showTopArtists !== privacySettings.showTopArtists ||
+    showTopAlbums !== privacySettings.showTopAlbums ||
+    showPlaylists !== privacySettings.showPlaylists ||
+    (bio.trim() || '') !== (privacySettings.bio || '')
+  );
+
+  const handleSavePrivacy = () => {
+    updatePrivacy({
+      isPublicProfile,
+      showTopTracks,
+      showTopArtists,
+      showTopAlbums,
+      showPlaylists,
+      bio: bio.trim() || null,
+    });
+  };
 
   const handleNameSave = () => {
     if (name.trim() === user?.name) {
@@ -230,6 +274,166 @@ export function ProfilePage() {
                   <span>{formatDate(user?.createdAt)}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Public Profile Card */}
+          <div className={styles.profilePage__card}>
+            <div className={styles.profilePage__cardHeader}>
+              <h2>
+                <Eye size={20} />
+                Perfil Público
+              </h2>
+            </div>
+
+            <div className={styles.profilePage__cardBody}>
+              {isLoadingPrivacy ? (
+                <div className={styles.profilePage__loading}>Cargando...</div>
+              ) : (
+                <>
+                  {/* Public Profile Toggle */}
+                  <div className={styles.profilePage__toggleItem}>
+                    <div className={styles.profilePage__toggleInfo}>
+                      <span className={styles.profilePage__toggleLabel}>Perfil público</span>
+                      <p className={styles.profilePage__toggleDescription}>
+                        Permite que otros usuarios vean tu perfil y estadísticas de escucha
+                      </p>
+                    </div>
+                    <label className={styles.profilePage__toggle}>
+                      <input
+                        type="checkbox"
+                        className={styles.profilePage__toggleInput}
+                        checked={isPublicProfile}
+                        onChange={(e) => setIsPublicProfile(e.target.checked)}
+                      />
+                      <span className={styles.profilePage__toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  {/* Conditional settings when profile is public */}
+                  {isPublicProfile && (
+                    <>
+                      <div className={styles.profilePage__toggleItem}>
+                        <div className={styles.profilePage__toggleInfo}>
+                          <span className={styles.profilePage__toggleLabel}>Mostrar top canciones</span>
+                          <p className={styles.profilePage__toggleDescription}>
+                            Muestra tus canciones más escuchadas en tu perfil
+                          </p>
+                        </div>
+                        <label className={styles.profilePage__toggle}>
+                          <input
+                            type="checkbox"
+                            className={styles.profilePage__toggleInput}
+                            checked={showTopTracks}
+                            onChange={(e) => setShowTopTracks(e.target.checked)}
+                          />
+                          <span className={styles.profilePage__toggleSlider}></span>
+                        </label>
+                      </div>
+
+                      <div className={styles.profilePage__toggleItem}>
+                        <div className={styles.profilePage__toggleInfo}>
+                          <span className={styles.profilePage__toggleLabel}>Mostrar top artistas</span>
+                          <p className={styles.profilePage__toggleDescription}>
+                            Muestra tus artistas más escuchados en tu perfil
+                          </p>
+                        </div>
+                        <label className={styles.profilePage__toggle}>
+                          <input
+                            type="checkbox"
+                            className={styles.profilePage__toggleInput}
+                            checked={showTopArtists}
+                            onChange={(e) => setShowTopArtists(e.target.checked)}
+                          />
+                          <span className={styles.profilePage__toggleSlider}></span>
+                        </label>
+                      </div>
+
+                      <div className={styles.profilePage__toggleItem}>
+                        <div className={styles.profilePage__toggleInfo}>
+                          <span className={styles.profilePage__toggleLabel}>Mostrar top álbumes</span>
+                          <p className={styles.profilePage__toggleDescription}>
+                            Muestra tus álbumes más escuchados en tu perfil
+                          </p>
+                        </div>
+                        <label className={styles.profilePage__toggle}>
+                          <input
+                            type="checkbox"
+                            className={styles.profilePage__toggleInput}
+                            checked={showTopAlbums}
+                            onChange={(e) => setShowTopAlbums(e.target.checked)}
+                          />
+                          <span className={styles.profilePage__toggleSlider}></span>
+                        </label>
+                      </div>
+
+                      <div className={styles.profilePage__toggleItem}>
+                        <div className={styles.profilePage__toggleInfo}>
+                          <span className={styles.profilePage__toggleLabel}>Mostrar playlists públicas</span>
+                          <p className={styles.profilePage__toggleDescription}>
+                            Muestra tus playlists marcadas como públicas en tu perfil
+                          </p>
+                        </div>
+                        <label className={styles.profilePage__toggle}>
+                          <input
+                            type="checkbox"
+                            className={styles.profilePage__toggleInput}
+                            checked={showPlaylists}
+                            onChange={(e) => setShowPlaylists(e.target.checked)}
+                          />
+                          <span className={styles.profilePage__toggleSlider}></span>
+                        </label>
+                      </div>
+
+                      {/* Bio */}
+                      <div className={styles.profilePage__toggleItem} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                        <div className={styles.profilePage__toggleInfo}>
+                          <span className={styles.profilePage__toggleLabel}>Biografía</span>
+                          <p className={styles.profilePage__toggleDescription}>
+                            Cuéntales a otros usuarios sobre tus gustos musicales
+                          </p>
+                        </div>
+                        <textarea
+                          className={styles.profilePage__textarea}
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value.slice(0, 500))}
+                          placeholder="Escribe algo sobre ti..."
+                          maxLength={500}
+                        />
+                        <div className={styles.profilePage__charCount}>
+                          {bio.length}/500
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Save button and success message */}
+                  {hasPrivacyChanges && (
+                    <button
+                      className={styles.profilePage__submitButton}
+                      onClick={handleSavePrivacy}
+                      disabled={isSavingPrivacy}
+                    >
+                      {isSavingPrivacy ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  )}
+
+                  {privacySuccess && !hasPrivacyChanges && (
+                    <div className={styles.profilePage__alert_success}>
+                      <Check size={18} />
+                      Configuración guardada
+                    </div>
+                  )}
+
+                  {/* Preview link */}
+                  {isPublicProfile && user && (
+                    <Link href={`/user/${user.id}`} className={styles.profilePage__previewLink}>
+                      <ExternalLink size={16} />
+                      Ver mi perfil público
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
