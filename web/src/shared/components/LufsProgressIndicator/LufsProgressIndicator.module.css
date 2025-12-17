@@ -8,6 +8,8 @@
   border-radius: 20px;
   font-size: 12px;
   white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
 }
 
 .icon {
@@ -16,7 +18,7 @@
 }
 
 .iconRunning {
-  color: var(--color-primary, #7c3aed);
+  color: var(--color-primary, #ff6b6b);
   flex-shrink: 0;
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -29,6 +31,8 @@
 .text {
   color: var(--color-text-secondary, #b8bcc8);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .percent {
@@ -52,7 +56,55 @@
 
 .progressFill {
   height: 100%;
-  background: var(--color-primary, #7c3aed);
+  background: var(--color-primary, #ff6b6b);
   border-radius: 2px;
   transition: width 0.5s ease-out;
+}
+
+/* Responsive - Tablet */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 160px;
+    padding: 5px 10px;
+    gap: 6px;
+  }
+
+  .eta {
+    display: none;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .container {
+    max-width: none;
+    width: auto;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  /* Hide text on mobile, only show icon + progress bar */
+  .text {
+    display: none;
+  }
+
+  .eta {
+    display: none;
+  }
+
+  .progressBar {
+    width: 32px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .container {
+    padding: 4px 8px;
+    border-radius: 16px;
+  }
+
+  .progressBar {
+    width: 24px;
+  }
 }
