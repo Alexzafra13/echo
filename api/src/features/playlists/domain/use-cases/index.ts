@@ -1,6 +1,7 @@
 export * from './create-playlist';
 export * from './get-playlist';
 export * from './get-playlists';
+export * from './get-playlists-by-artist';
 export * from './update-playlist';
 export * from './delete-playlist';
 export * from './add-track-to-playlist';
