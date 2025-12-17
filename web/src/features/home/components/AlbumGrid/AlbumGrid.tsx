@@ -5,6 +5,13 @@ import { albumsService } from '../../services';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import styles from './AlbumGrid.module.css';
 
+interface ExtendedAlbumGridProps extends AlbumGridProps {
+  showViewAll?: boolean;
+  viewAllPath?: string;
+  /** Mobile layout: 'carousel' (horizontal scroll) or 'grid' (keep grid). Default: 'carousel' */
+  mobileLayout?: 'carousel' | 'grid';
+}
+
 /**
  * AlbumGrid Component
  * Displays a grid of albums with a title
@@ -15,9 +22,16 @@ import styles from './AlbumGrid.module.css';
  *   albums={recentAlbums}
  *   showViewAll={true}
  *   viewAllPath="/albums"
+ *   mobileLayout="carousel" // or "grid" to keep grid on mobile
  * />
  */
-export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/albums' }: AlbumGridProps & { showViewAll?: boolean; viewAllPath?: string }) {
+export function AlbumGrid({
+  title,
+  albums,
+  showViewAll = false,
+  viewAllPath = '/albums',
+  mobileLayout = 'carousel',
+}: ExtendedAlbumGridProps) {
   const [, setLocation] = useLocation();
   const { playQueue } = usePlayer();
 
@@ -64,6 +78,10 @@ export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/
     return null;
   }
 
+  const gridClassName = mobileLayout === 'grid'
+    ? `${styles.albumGrid__grid} ${styles['albumGrid__grid--mobileGrid']}`
+    : styles.albumGrid__grid;
+
   return (
     <section className={styles.albumGrid}>
       <div className={styles.albumGrid__header}>
@@ -77,7 +95,7 @@ export function AlbumGrid({ title, albums, showViewAll = false, viewAllPath = '/
           </button>
         )}
       </div>
-      <div className={styles.albumGrid__grid}>
+      <div className={gridClassName}>
         {albums.map((album) => (
           <AlbumCard
             key={album.id}
