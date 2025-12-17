@@ -7,10 +7,10 @@
 
 .sharedAlbumGrid__header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   padding: 0 20px;
 }
 
@@ -202,43 +202,43 @@
   }
 }
 
-/* Mobile */
+/* Mobile - Horizontal scroll carousel */
 @media (max-width: 768px) {
   .sharedAlbumGrid {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
   .sharedAlbumGrid__header {
     padding: 0 16px;
+    margin-bottom: 12px;
   }
 
   .sharedAlbumGrid__title {
     font-size: 20px;
-    margin-bottom: 12px;
   }
 
   .sharedAlbumGrid__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-    padding: 0 16px;
-  }
-
-  /* Mobile horizontal scroll variant (opt-in) */
-  .sharedAlbumGrid__grid--mobileScroll {
     display: flex;
-    flex-wrap: nowrap;
+    flex-direction: row;
     overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 0 16px;
+    padding-bottom: 8px;
+
+    /* Hide scrollbar but keep functionality */
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .sharedAlbumGrid__grid--mobileScroll::-webkit-scrollbar {
+  .sharedAlbumGrid__grid::-webkit-scrollbar {
     display: none;
   }
 
-  .sharedAlbumGrid__grid--mobileScroll > * {
+  /* Fixed width for carousel items */
+  .sharedAlbumGrid__grid > * {
     flex-shrink: 0;
     width: 140px;
     scroll-snap-align: start;
@@ -260,18 +260,18 @@
     padding: 0 12px;
   }
 
-  .sharedAlbumGrid__grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
-    padding: 0 12px;
-  }
-
-  .sharedAlbumGrid__grid--mobileScroll > * {
-    width: 120px;
-  }
-
   .sharedAlbumGrid__title {
     font-size: 18px;
+  }
+
+  .sharedAlbumGrid__grid {
+    gap: 10px;
+    padding: 0 12px;
+    padding-bottom: 6px;
+  }
+
+  .sharedAlbumGrid__grid > * {
+    width: 130px;
   }
 
   .sharedAlbumGrid__albumTitle {

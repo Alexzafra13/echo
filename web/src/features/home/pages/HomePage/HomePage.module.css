@@ -161,10 +161,10 @@
 
 .homeSection__header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   padding: 0 20px;
 }
 
@@ -360,7 +360,7 @@
   }
 
   .homeSection {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
   .homeSection__header {
@@ -372,11 +372,35 @@
     font-size: 20px;
   }
 
+  /* Horizontal scroll carousel for grids */
   .playlistsGrid,
   .radiosGrid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
     gap: 12px;
     padding: 0 16px;
+    padding-bottom: 8px;
+
+    /* Hide scrollbar but keep functionality */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .playlistsGrid::-webkit-scrollbar,
+  .radiosGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fixed width for carousel items */
+  .playlistsGrid > *,
+  .radiosGrid > * {
+    flex-shrink: 0;
+    width: 140px;
+    scroll-snap-align: start;
   }
 
   .playlistCard {
@@ -436,9 +460,14 @@
 
   .playlistsGrid,
   .radiosGrid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 10px;
     padding: 0 12px;
+    padding-bottom: 6px;
+  }
+
+  .playlistsGrid > *,
+  .radiosGrid > * {
+    width: 130px;
   }
 
   .playlistCard__title {
