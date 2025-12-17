@@ -6,6 +6,8 @@ export interface IPlaylistRepository {
   findById(id: string): Promise<Playlist | null>;
   findByOwnerId(ownerId: string, skip: number, take: number): Promise<Playlist[]>;
   findPublic(skip: number, take: number): Promise<Playlist[]>;
+  findPublicByArtistId(artistId: string, skip: number, take: number): Promise<Playlist[]>;
+  countPublicByArtistId(artistId: string): Promise<number>;
   search(name: string, skip: number, take: number): Promise<Playlist[]>;
   count(): Promise<number>;
   countByOwnerId(ownerId: string): Promise<number>;
