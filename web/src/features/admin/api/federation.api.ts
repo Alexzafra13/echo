@@ -97,6 +97,7 @@ export interface ConnectToServerRequest {
   invitationToken: string;
   serverName?: string;
   localServerUrl?: string;
+  requestMutual?: boolean;
 }
 
 export interface UpdatePermissionsRequest {

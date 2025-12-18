@@ -140,10 +140,36 @@
 .sharedAlbumPage__heroActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   margin-top: 16px;
   position: relative;
   flex-wrap: wrap;
+}
+
+/* Play Button */
+.sharedAlbumPage__playButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary, #ed6842);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.4);
+}
+
+.sharedAlbumPage__playButton:hover {
+  transform: scale(1.05);
+  background: var(--color-primary-hover, #f5775a);
+  box-shadow: 0 6px 20px rgba(237, 104, 66, 0.5);
+}
+
+.sharedAlbumPage__playButton:active {
+  transform: scale(0.98);
 }
 
 /* Track Section */
@@ -176,9 +202,14 @@
   padding: 12px 16px;
   border-radius: 8px;
   transition: background 0.15s ease;
+  cursor: pointer;
 }
 
 .sharedAlbumPage__trackRow:hover {
+  background: var(--white-05);
+}
+
+.sharedAlbumPage__trackRow--active {
   background: var(--white-05);
 }
 
@@ -189,6 +220,34 @@
   font-size: 14px;
   color: var(--color-text-tertiary, #6b7280);
   font-variant-numeric: tabular-nums;
+  position: relative;
+}
+
+.sharedAlbumPage__trackNumberText {
+  transition: opacity 0.15s ease;
+}
+
+.sharedAlbumPage__trackPlayIcon {
+  color: var(--color-primary, #ed6842);
+}
+
+.sharedAlbumPage__trackPlayIconHover {
+  position: absolute;
+  opacity: 0;
+  color: var(--color-text-primary, #ffffff);
+  transition: opacity 0.15s ease;
+}
+
+.sharedAlbumPage__trackRow:hover .sharedAlbumPage__trackNumberText {
+  opacity: 0;
+}
+
+.sharedAlbumPage__trackRow:hover .sharedAlbumPage__trackPlayIconHover {
+  opacity: 1;
+}
+
+.sharedAlbumPage__trackRow--active .sharedAlbumPage__trackPlayIconHover {
+  display: none;
 }
 
 .sharedAlbumPage__trackInfo {
@@ -205,6 +264,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sharedAlbumPage__trackName--active {
+  color: var(--color-primary, #ed6842);
 }
 
 .sharedAlbumPage__trackArtist {

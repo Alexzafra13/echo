@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Server, Link2, AlertCircle } from 'lucide-react';
+import { X, Server, Link2, AlertCircle, Users } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useConnectToServer } from '../../hooks/useFederation';
 import styles from './FederationPanel.module.css';
@@ -13,6 +13,8 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
   const [serverUrl, setServerUrl] = useState('');
   const [invitationToken, setInvitationToken] = useState('');
   const [serverName, setServerName] = useState('');
+  const [requestMutual, setRequestMutual] = useState(false);
+  const [localServerUrl, setLocalServerUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const connectMutation = useConnectToServer();
@@ -31,12 +33,18 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
       return;
     }
 
+    if (requestMutual && !localServerUrl.trim()) {
+      setError('La URL de tu servidor es requerida para federación mutua');
+      return;
+    }
+
     try {
       await connectMutation.mutateAsync({
         serverUrl: serverUrl.trim(),
         invitationToken: invitationToken.trim(),
         serverName: serverName.trim() || undefined,
-        localServerUrl: window.location.origin, // Enviar nuestra URL para que el servidor remoto pueda identificarnos
+        localServerUrl: requestMutual ? localServerUrl.trim() : window.location.origin,
+        requestMutual,
       });
       onSuccess();
     } catch (err) {
@@ -107,6 +115,40 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
               Si no especificas un nombre, se usará el del servidor remoto
             </span>
           </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={requestMutual}
+                onChange={(e) => setRequestMutual(e.target.checked)}
+                className={styles.checkbox}
+              />
+              <Users size={16} />
+              <span>Solicitar federación mutua</span>
+            </label>
+            <span className={styles.hint}>
+              Si activas esta opción, el servidor remoto también podrá ver tu biblioteca musical.
+              Requiere aprobación del administrador del otro servidor.
+            </span>
+          </div>
+
+          {requestMutual && (
+            <div className={styles.formGroup}>
+              <label htmlFor="localServerUrl">URL pública de tu servidor *</label>
+              <input
+                id="localServerUrl"
+                type="text"
+                placeholder="https://tu-servidor.ejemplo.com"
+                value={localServerUrl}
+                onChange={(e) => setLocalServerUrl(e.target.value)}
+                className={styles.input}
+              />
+              <span className={styles.hint}>
+                La URL donde el otro servidor puede acceder a tu instancia de Echo
+              </span>
+            </div>
+          )}
 
           <div className={styles.modalActions}>
             <Button variant="secondary" onClick={onClose} type="button">
