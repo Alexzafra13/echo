@@ -102,7 +102,7 @@ export class RadioBrowserApiService {
       }
 
       const stations: RadioBrowserStation[] = await response.json();
-      this.logger.log(`Found ${stations.length} stations`);
+      this.logger.debug(`Found ${stations.length} stations`);
 
       return stations;
     } catch (error) {

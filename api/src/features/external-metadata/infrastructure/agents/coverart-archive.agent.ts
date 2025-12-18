@@ -90,7 +90,7 @@ export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
       const mediumUrl = frontCover.thumbnails?.['500'] || frontCover.image;
       const largeUrl = frontCover.thumbnails?.['1200'] || frontCover.image;
 
-      this.logger.log(`Retrieved cover art for: ${artist} - ${album}`);
+      this.logger.debug(`Retrieved cover art for: ${artist} - ${album}`);
 
       return new AlbumCover(
         smallUrl,
