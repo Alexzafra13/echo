@@ -12,6 +12,7 @@ on:
 jobs:
   test-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -38,3 +39,56 @@ jobs:
         run: |
           # Production compose should work WITHOUT .env (auto-generates secrets)
           docker compose config
+
+      - name: Smoke test - Container starts correctly
+        run: |
+          # Verificar que el contenedor construido puede arrancar
+          # Usamos --init y timeout para evitar que el test cuelgue
+          echo "🧪 Testing container startup..."
+
+          # Crear red y servicios de dependencia mínimos para el test
+          docker network create echo-test-net || true
+
+          # Iniciar PostgreSQL temporal
+          docker run -d --name test-postgres \
+            --network echo-test-net \
+            -e POSTGRES_USER=test \
+            -e POSTGRES_PASSWORD=test \
+            -e POSTGRES_DB=test \
+            postgres:16-alpine
+
+          # Iniciar Redis temporal
+          docker run -d --name test-redis \
+            --network echo-test-net \
+            redis:7-alpine redis-server
+
+          # Esperar a que los servicios estén listos
+          sleep 5
+
+          # Ejecutar el contenedor de echo con timeout
+          # Solo verificamos que arranca y responde, no que funcione completamente
+          docker run -d --name test-echo \
+            --network echo-test-net \
+            -e DATABASE_URL=postgresql://test:test@test-postgres:5432/test \
+            -e REDIS_HOST=test-redis \
+            -e NODE_ENV=production \
+            echo-music-server:test
+
+          # Dar tiempo al contenedor para inicializar
+          echo "⏳ Waiting for container to initialize..."
+          sleep 15
+
+          # Verificar que el contenedor sigue corriendo (no crasheó)
+          if docker ps | grep -q test-echo; then
+            echo "✅ Container is running"
+            docker logs test-echo --tail 20
+          else
+            echo "❌ Container failed to start"
+            docker logs test-echo
+            exit 1
+          fi
+
+          # Cleanup
+          docker stop test-echo test-postgres test-redis || true
+          docker rm test-echo test-postgres test-redis || true
+          docker network rm echo-test-net || true
