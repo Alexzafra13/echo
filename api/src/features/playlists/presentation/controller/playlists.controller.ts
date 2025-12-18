@@ -43,6 +43,7 @@ import {
   PlaylistsListResponseDto,
   PlaylistTracksResponseDto,
 } from '../dto';
+import { validatePagination } from '@shared/utils';
 
 @ApiTags('playlists')
 @ApiBearerAuth('JWT-auth')
@@ -149,11 +150,16 @@ export class PlaylistsController {
   ): Promise<PlaylistsListResponseDto> {
     const userId = req?.user?.id;
 
+    const { skip: skipNum, take: takeNum } = validatePagination(skip, take, {
+      maxTake: 100,
+      defaultTake: 20,
+    });
+
     const result = await this.getPlaylistsUseCase.execute({
       ownerId: publicOnly ? undefined : userId,
       publicOnly: publicOnly ?? false,
-      skip: skip ? parseInt(skip.toString()) : 0,
-      take: take ? parseInt(take.toString()) : 20,
+      skip: skipNum,
+      take: takeNum,
     });
 
     return PlaylistsListResponseDto.fromDomain(result);
@@ -189,10 +195,15 @@ export class PlaylistsController {
     @Query('skip') skip?: number,
     @Query('take') take?: number,
   ): Promise<PlaylistsListResponseDto> {
+    const { skip: skipNum, take: takeNum } = validatePagination(skip, take, {
+      maxTake: 100,
+      defaultTake: 20,
+    });
+
     const result = await this.getPlaylistsByArtistUseCase.execute({
       artistId,
-      skip: skip ? parseInt(skip.toString()) : 0,
-      take: take ? parseInt(take.toString()) : 20,
+      skip: skipNum,
+      take: takeNum,
     });
 
     return PlaylistsListResponseDto.fromDomain(result);
