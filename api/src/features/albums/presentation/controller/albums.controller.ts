@@ -72,9 +72,12 @@ export class AlbumsController {
     type: [AlbumResponseDto]
   })
   async getRecentAlbums(
-    @Query('take') take: string = '12',
+    @Query('take') take?: string,
   ): Promise<AlbumResponseDto[]> {
-    const takeNum = Math.max(1, parseInt(take, 10) || 12);
+    const { take: takeNum } = parsePaginationParams(undefined, take, {
+      defaultTake: 12,
+      maxTake: 50,
+    });
 
     const result = await this.getRecentAlbumsUseCase.execute({
       take: takeNum,
@@ -109,9 +112,12 @@ export class AlbumsController {
     type: [AlbumResponseDto]
   })
   async getTopPlayedAlbums(
-    @Query('take') take: string = '10',
+    @Query('take') take?: string,
   ): Promise<AlbumResponseDto[]> {
-    const takeNum = Math.max(1, parseInt(take, 10) || 10);
+    const { take: takeNum } = parsePaginationParams(undefined, take, {
+      defaultTake: 10,
+      maxTake: 50,
+    });
 
     const result = await this.getTopPlayedAlbumsUseCase.execute({
       take: takeNum,
