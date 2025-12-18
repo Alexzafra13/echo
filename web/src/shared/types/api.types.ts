@@ -70,3 +70,40 @@ export interface ApiSuccessResponse<T> {
   data: T;
   message?: string;
 }
+
+/**
+ * Standard API error response structure
+ * Used for error handling across the application
+ */
+export interface ApiErrorResponse {
+  message: string;
+  statusCode?: number;
+  error?: string;
+}
+
+/**
+ * Helper type for Axios errors with typed response data
+ */
+export interface ApiError {
+  response?: {
+    data?: ApiErrorResponse;
+    status?: number;
+  };
+  message?: string;
+}
+
+/**
+ * Extracts error message from an API error
+ * @param error - The error object from a failed API call
+ * @param fallback - Fallback message if no message is found
+ */
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const apiError = error as ApiError;
+    return apiError.response?.data?.message || fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
