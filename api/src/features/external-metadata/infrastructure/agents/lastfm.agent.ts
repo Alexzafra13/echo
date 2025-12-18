@@ -124,7 +124,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
           continue;
         }
 
-        this.logger.log(`Retrieved ${lang.toUpperCase()} biography for artist: ${name}`);
+        this.logger.debug(`Retrieved ${lang.toUpperCase()} biography for artist: ${name}`);
 
         return new ArtistBio(
           content,
@@ -180,7 +180,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
         return null;
       }
 
-      this.logger.log(`Retrieved ${parsedTags.length} tags for artist: ${name}`);
+      this.logger.debug(`Retrieved ${parsedTags.length} tags for artist: ${name}`);
       return parsedTags;
     } catch (error) {
       this.logger.error(
@@ -257,7 +257,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
         return null;
       }
 
-      this.logger.log(`Retrieved images for artist: ${name}`);
+      this.logger.debug(`Retrieved images for artist: ${name}`);
 
       return new ArtistImages(
         smallUrl,
@@ -411,7 +411,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
         }))
         .sort((a, b) => b.match - a.match);
 
-      this.logger.log(`Retrieved ${parsedArtists.length} similar artists for: ${name}`);
+      this.logger.debug(`Retrieved ${parsedArtists.length} similar artists for: ${name}`);
       return parsedArtists;
     } catch (error) {
       this.logger.error(

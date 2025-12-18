@@ -124,7 +124,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
         return null;
       }
 
-      this.logger.log(
+      this.logger.debug(
         `Retrieved Fanart.tv images for: ${name} ` +
         `(thumb: ${!!artistThumb}, bg: ${!!hdBackground}, banner: ${!!banner}, logo: ${!!logo})`
       );
@@ -224,7 +224,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
         return null;
       }
 
-      this.logger.log(
+      this.logger.debug(
         `Retrieved ${albumCovers.length} album covers from Fanart.tv for: ${artistName} - ${albumName}`
       );
 
@@ -294,7 +294,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
       }
 
       // Fanart.tv album covers come in one size, use it for all sizes
-      this.logger.log(
+      this.logger.debug(
         `Retrieved album cover from Fanart.tv for: ${artistName} - ${albumName}`
       );
 
@@ -369,7 +369,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
       const regularLogos = this.getAllImages(data.musiclogo);
       const logos = [...hdLogos, ...regularLogos];
 
-      this.logger.log(
+      this.logger.debug(
         `Retrieved ALL Fanart.tv variants for: ${name} ` +
         `(thumbs: ${artistthumbs.length}, backgrounds: ${backgrounds.length}, banners: ${banners.length}, logos: ${logos.length})`
       );
