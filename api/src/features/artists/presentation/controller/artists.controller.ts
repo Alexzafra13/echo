@@ -277,7 +277,7 @@ export class ArtistsController {
         }
 
         if (lastfmArtists.length > 0) {
-          this.logger.log(`Found ${lastfmArtists.length} related artists from Last.fm for: ${artist.name}`);
+          this.logger.debug(`Found ${lastfmArtists.length} related artists from Last.fm for: ${artist.name}`);
           return {
             data: lastfmArtists,
             artistId,
@@ -318,7 +318,7 @@ export class ArtistsController {
       }
     }
 
-    this.logger.log(
+    this.logger.debug(
       `Found ${internalArtists.length} related artists from internal patterns for: ${artist.name}`
     );
 
