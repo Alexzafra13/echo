@@ -55,10 +55,18 @@ services:
     restart: unless-stopped
     networks:
       - echo-network
+    # Evitar logs infinitos en disco
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   postgres:
     image: postgres:16-alpine
     container_name: echo-postgres
+    # Memoria compartida para mejor rendimiento con operaciones complejas
+    shm_size: 128mb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -73,6 +81,11 @@ services:
     restart: unless-stopped
     networks:
       - echo-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
@@ -88,6 +101,11 @@ services:
     restart: unless-stopped
     networks:
       - echo-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   echo-network:

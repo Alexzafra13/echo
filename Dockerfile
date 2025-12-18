@@ -21,8 +21,9 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY web/package.json ./web/
 COPY api/package.json ./api/
 
-# Install ALL dependencies (no cache to ensure fresh builds)
-RUN pnpm install --frozen-lockfile
+# Install ALL dependencies with BuildKit cache for faster rebuilds
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Build Frontend
 WORKDIR /build/web
