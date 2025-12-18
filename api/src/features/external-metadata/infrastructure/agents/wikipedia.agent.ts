@@ -89,7 +89,7 @@ export class WikipediaAgent implements IArtistBioRetriever {
         const bio = await this.getBioInLanguage(name, lang);
 
         if (bio) {
-          this.logger.log(`Retrieved biography for ${name} from Wikipedia (${lang})`);
+          this.logger.debug(`Retrieved biography for ${name} from Wikipedia (${lang})`);
           return bio;
         }
       } catch (error) {
