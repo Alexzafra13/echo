@@ -57,8 +57,20 @@ COPY api/package.json ./api/
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm --filter=echo-api deploy --prod --legacy /prod
 
-# Copy drizzle config for runtime migrations
-COPY api/drizzle.config.ts /prod/drizzle.config.ts
+# Clean up unnecessary files from node_modules (~20-30MB savings)
+RUN find /prod/node_modules -type f \( \
+    -name "*.md" -o \
+    -name "*.ts" -o \
+    -name "*.map" -o \
+    -name "LICENSE*" -o \
+    -name "CHANGELOG*" -o \
+    -name "README*" -o \
+    -name ".npmignore" -o \
+    -name ".eslintrc*" -o \
+    -name "tsconfig.json" \
+    \) -delete 2>/dev/null || true && \
+    find /prod/node_modules -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true && \
+    find /prod/node_modules -type d -empty -delete 2>/dev/null || true
 
 # ----------------------------------------
 # Stage 3: Minimal Production Runtime
@@ -94,17 +106,17 @@ WORKDIR /app
 # Copy production node_modules from deps stage
 COPY --from=deps --chown=echoapp:nodejs /prod/node_modules ./node_modules
 
-# Copy Drizzle config, schema and migrations for runtime
-COPY --from=deps --chown=echoapp:nodejs /prod/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder --chown=echoapp:nodejs /build/api/src/infrastructure/database/schema ./src/infrastructure/database/schema
+# Copy only migration SQL files (no TypeScript schemas needed at runtime)
+# This saves ~1MB and avoids shipping source code
 COPY --from=builder --chown=echoapp:nodejs /build/api/drizzle ./drizzle
 
 # Copy built application files
 COPY --from=builder --chown=echoapp:nodejs /build/api/dist ./dist
 COPY --from=builder --chown=echoapp:nodejs /build/web/dist ./web/dist
 
-# Copy scripts
+# Copy scripts (entrypoint + migration runner + admin reset)
 COPY --chown=echoapp:nodejs api/scripts/docker-entrypoint.sh /usr/local/bin/
+COPY --chown=echoapp:nodejs api/scripts/run-migrations.js ./scripts/
 COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 
 # Fix line endings and permissions

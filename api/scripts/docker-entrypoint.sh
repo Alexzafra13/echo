@@ -81,16 +81,9 @@ echo ""
 # ============================================
 # 3. Database Migrations (Drizzle)
 # ============================================
-echo "🔄 Running database migrations..."
-
-# Use drizzle-kit migrate to apply migration files
-# This is safer for production as it applies versioned migrations
-# and maintains a history of applied changes
-if npx drizzle-kit migrate --config=drizzle.config.ts; then
-  echo "✅ Database migrations applied!"
-else
-  echo "⚠️  Migration failed, but continuing..."
-fi
+# Use lightweight migration script (drizzle-orm only, no drizzle-kit needed)
+# This saves ~30MB in the Docker image
+node scripts/run-migrations.js
 
 # ============================================
 # 4. Check Setup Status
