@@ -72,21 +72,16 @@ export interface ApiSuccessResponse<T> {
 }
 
 /**
- * Standard API error response structure
- * Used for error handling across the application
- */
-export interface ApiErrorResponse {
-  message: string;
-  statusCode?: number;
-  error?: string;
-}
-
-/**
  * Helper type for Axios errors with typed response data
+ * Note: ApiError interface for API responses is defined in auth.types.ts
  */
-export interface ApiError {
+interface AxiosErrorWithResponse {
   response?: {
-    data?: ApiErrorResponse;
+    data?: {
+      message?: string;
+      statusCode?: number;
+      error?: string;
+    };
     status?: number;
   };
   message?: string;
@@ -99,8 +94,8 @@ export interface ApiError {
  */
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object' && 'response' in error) {
-    const apiError = error as ApiError;
-    return apiError.response?.data?.message || fallback;
+    const axiosError = error as AxiosErrorWithResponse;
+    return axiosError.response?.data?.message || fallback;
   }
   if (error instanceof Error) {
     return error.message;
