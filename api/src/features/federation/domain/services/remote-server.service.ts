@@ -314,6 +314,87 @@ export class RemoteServerService {
   }
 
   /**
+   * Stream a track from a connected server (proxy)
+   * Returns the response stream and headers for piping to the client
+   */
+  async streamRemoteTrack(
+    server: ConnectedServer,
+    trackId: string,
+    range?: string,
+  ): Promise<{
+    stream: NodeJS.ReadableStream;
+    headers: Record<string, string>;
+    statusCode: number;
+  } | null> {
+    const url = `${server.baseUrl}/api/federation/stream/${trackId}`;
+
+    try {
+      this.validateUrl(url);
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${server.authToken}`,
+        'User-Agent': 'Echo Music Server/1.0',
+      };
+
+      if (range) {
+        headers['Range'] = range;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for streaming
+
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers,
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        // Extract relevant headers for the response
+        const responseHeaders: Record<string, string> = {};
+        const headersToCopy = [
+          'content-type',
+          'content-length',
+          'content-range',
+          'accept-ranges',
+          'cache-control',
+        ];
+
+        for (const header of headersToCopy) {
+          const value = response.headers.get(header);
+          if (value) {
+            responseHeaders[header] = value;
+          }
+        }
+
+        // Convert Response body to Node.js ReadableStream
+        const { Readable } = await import('stream');
+        const nodeStream = Readable.fromWeb(response.body as any);
+
+        return {
+          stream: nodeStream,
+          headers: responseHeaders,
+          statusCode: response.status,
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    } catch (error) {
+      this.logger.error(
+        { serverId: server.id, trackId, error: error instanceof Error ? error.message : error },
+        'Failed to stream remote track',
+      );
+      return null;
+    }
+  }
+
+  /**
    * Get download URL for an album from a connected server
    */
   getRemoteAlbumDownloadUrl(server: ConnectedServer, albumId: string): string {

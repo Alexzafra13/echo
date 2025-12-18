@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { Download, Check, Loader2, Server } from 'lucide-react';
+import { Download, Check, Loader2, Server, Play, Pause } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { handleImageError } from '@shared/utils/cover.utils';
+import { usePlayer } from '@features/player/context/PlayerContext';
+import type { Track } from '@shared/types/track.types';
 import type { RemoteTrack } from '../../types';
 import styles from './SharedAlbumPage.module.css';
 
@@ -26,9 +28,82 @@ export default function SharedAlbumPage() {
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
+  const { playQueue, currentTrack, isPlaying, play, pause } = usePlayer();
 
   const server = servers?.find(s => s.id === serverId);
   const coverUrl = album?.coverUrl;
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+  /**
+   * Convert RemoteTrack to Track with proper stream URL for federated playback
+   */
+  const convertToPlayableTracks = useCallback((remoteTracks: RemoteTrack[]): Track[] => {
+    if (!serverId || !album) return [];
+
+    return remoteTracks.map((remoteTrack) => ({
+      id: `${serverId}-${remoteTrack.id}`, // Unique ID for player queue
+      title: remoteTrack.title,
+      artistName: remoteTrack.artistName,
+      artist: remoteTrack.artistName,
+      albumId: album.id,
+      albumName: album.name,
+      trackNumber: remoteTrack.trackNumber,
+      discNumber: remoteTrack.discNumber,
+      duration: remoteTrack.duration,
+      size: remoteTrack.size,
+      bitRate: remoteTrack.bitRate,
+      coverImage: coverUrl,
+      // Custom stream URL for federated tracks
+      streamUrl: `${API_BASE_URL}/federation/servers/${serverId}/tracks/${remoteTrack.id}/stream`,
+    }));
+  }, [serverId, album, coverUrl, API_BASE_URL]);
+
+  // Memoized playable tracks
+  const playableTracks = useMemo(() => {
+    if (!album?.tracks) return [];
+    return convertToPlayableTracks(album.tracks);
+  }, [album?.tracks, convertToPlayableTracks]);
+
+  // Check if current track is from this album
+  const isCurrentAlbumPlaying = useMemo(() => {
+    if (!currentTrack || !serverId) return false;
+    return currentTrack.id.startsWith(`${serverId}-`);
+  }, [currentTrack, serverId]);
+
+  // Get the index of the currently playing track
+  const currentPlayingIndex = useMemo(() => {
+    if (!currentTrack || !album?.tracks) return -1;
+    return album.tracks.findIndex(
+      (track) => currentTrack.id === `${serverId}-${track.id}`
+    );
+  }, [currentTrack, album?.tracks, serverId]);
+
+  /**
+   * Play all tracks starting from the beginning
+   */
+  const handlePlayAll = useCallback(() => {
+    if (playableTracks.length === 0) return;
+    playQueue(playableTracks, 0);
+  }, [playableTracks, playQueue]);
+
+  /**
+   * Play a specific track
+   */
+  const handlePlayTrack = useCallback((index: number) => {
+    if (playableTracks.length === 0 || index < 0 || index >= playableTracks.length) return;
+    playQueue(playableTracks, index);
+  }, [playableTracks, playQueue]);
+
+  /**
+   * Toggle play/pause for the current track
+   */
+  const handleTogglePlayPause = useCallback(() => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }, [isPlaying, play, pause]);
 
   // Extract dominant color from album cover
   useEffect(() => {
@@ -186,8 +261,24 @@ export default function SharedAlbumPage() {
 
               {/* Action buttons */}
               <div className={styles.sharedAlbumPage__heroActions}>
+                {/* Play button */}
+                {playableTracks.length > 0 && (
+                  <button
+                    className={styles.sharedAlbumPage__playButton}
+                    onClick={isCurrentAlbumPlaying && isPlaying ? handleTogglePlayPause : handlePlayAll}
+                    title={isCurrentAlbumPlaying && isPlaying ? 'Pausar' : 'Reproducir'}
+                  >
+                    {isCurrentAlbumPlaying && isPlaying ? (
+                      <Pause size={24} fill="currentColor" />
+                    ) : (
+                      <Play size={24} fill="currentColor" />
+                    )}
+                  </button>
+                )}
+
+                {/* Import button */}
                 <Button
-                  variant="primary"
+                  variant="secondary"
                   size="lg"
                   onClick={handleImport}
                   disabled={isImporting || isImported}
@@ -216,20 +307,47 @@ export default function SharedAlbumPage() {
                   <span className={styles.sharedAlbumPage__trackTitle}>Titulo</span>
                   <span className={styles.sharedAlbumPage__trackDuration}>Duracion</span>
                 </div>
-                {album.tracks.map((track: RemoteTrack, index: number) => (
-                  <div key={track.id} className={styles.sharedAlbumPage__trackRow}>
-                    <span className={styles.sharedAlbumPage__trackNumber}>
-                      {track.trackNumber || index + 1}
-                    </span>
-                    <div className={styles.sharedAlbumPage__trackInfo}>
-                      <span className={styles.sharedAlbumPage__trackName}>{track.title}</span>
-                      <span className={styles.sharedAlbumPage__trackArtist}>{track.artistName}</span>
+                {album.tracks.map((track: RemoteTrack, index: number) => {
+                  const isCurrentTrack = currentPlayingIndex === index;
+                  const isTrackPlaying = isCurrentTrack && isPlaying;
+
+                  return (
+                    <div
+                      key={track.id}
+                      className={`${styles.sharedAlbumPage__trackRow} ${isCurrentTrack ? styles['sharedAlbumPage__trackRow--active'] : ''}`}
+                      onClick={() => isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          isTrackPlaying ? handleTogglePlayPause() : handlePlayTrack(index);
+                        }
+                      }}
+                    >
+                      <span className={styles.sharedAlbumPage__trackNumber}>
+                        {isTrackPlaying ? (
+                          <Pause size={14} className={styles.sharedAlbumPage__trackPlayIcon} />
+                        ) : isCurrentTrack ? (
+                          <Play size={14} className={styles.sharedAlbumPage__trackPlayIcon} />
+                        ) : (
+                          <span className={styles.sharedAlbumPage__trackNumberText}>
+                            {track.trackNumber || index + 1}
+                          </span>
+                        )}
+                        <Play size={14} className={styles.sharedAlbumPage__trackPlayIconHover} />
+                      </span>
+                      <div className={styles.sharedAlbumPage__trackInfo}>
+                        <span className={`${styles.sharedAlbumPage__trackName} ${isCurrentTrack ? styles['sharedAlbumPage__trackName--active'] : ''}`}>
+                          {track.title}
+                        </span>
+                        <span className={styles.sharedAlbumPage__trackArtist}>{track.artistName}</span>
+                      </div>
+                      <span className={styles.sharedAlbumPage__trackDuration}>
+                        {formatDuration(track.duration)}
+                      </span>
                     </div>
-                    <span className={styles.sharedAlbumPage__trackDuration}>
-                      {formatDuration(track.duration)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className={styles.sharedAlbumPage__emptyTracks}>

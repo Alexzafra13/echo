@@ -63,6 +63,7 @@ export interface Track {
   // Player/playlist context
   coverImage?: string; // Direct cover URL (for player UI)
   playlistOrder?: number; // Order in playlist (when track is from a playlist)
+  streamUrl?: string; // Custom stream URL (for federated/remote tracks)
 
   // Timestamps
   createdAt?: Date | string;

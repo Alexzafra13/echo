@@ -177,8 +177,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   /**
    * Build stream URL for a track
+   * Uses custom streamUrl if available (for federated/remote tracks)
    */
   const getStreamUrl = useCallback((track: Track): string | null => {
+    // If track has a custom stream URL (e.g., federated track), use it directly
+    if (track.streamUrl) {
+      return track.streamUrl;
+    }
+
     if (!streamTokenData?.token) {
       logger.error('[Player] Stream token not available');
       return null;
