@@ -6,6 +6,42 @@ import * as schema from './schema';
 
 export type DrizzleDB = NodePgDatabase<typeof schema>;
 
+/**
+ * Custom Drizzle logger that formats SQL queries more concisely
+ * - Truncates long queries to avoid console spam
+ * - Shows compact parameter representation
+ * - Only logs in development mode
+ */
+class CompactDrizzleLogger {
+  private readonly MAX_QUERY_LENGTH = 200;
+  private readonly MAX_PARAMS_LENGTH = 100;
+
+  constructor(private readonly pinoLogger: PinoLogger) {}
+
+  logQuery(query: string, params: unknown[]): void {
+    // Compact query: remove extra whitespace and truncate if too long
+    const compactQuery = query.replace(/\s+/g, ' ').trim();
+    const displayQuery = compactQuery.length > this.MAX_QUERY_LENGTH
+      ? `${compactQuery.substring(0, this.MAX_QUERY_LENGTH)}...`
+      : compactQuery;
+
+    // Compact params: stringify and truncate
+    const paramsStr = params.length > 0
+      ? JSON.stringify(params)
+      : '';
+    const displayParams = paramsStr.length > this.MAX_PARAMS_LENGTH
+      ? `${paramsStr.substring(0, this.MAX_PARAMS_LENGTH)}...`
+      : paramsStr;
+
+    // Log as debug level with compact format
+    if (displayParams) {
+      this.pinoLogger.debug(`SQL: ${displayQuery} | params: ${displayParams}`);
+    } else {
+      this.pinoLogger.debug(`SQL: ${displayQuery}`);
+    }
+  }
+}
+
 @Injectable()
 export class DrizzleService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
@@ -19,9 +55,11 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
       connectionString: process.env.DATABASE_URL,
     });
 
+    // Use custom compact logger in development, no logging in production
+    const isDev = process.env.NODE_ENV === 'development';
     this._db = drizzle(this.pool, {
       schema,
-      logger: process.env.NODE_ENV === 'development',
+      logger: isDev ? new CompactDrizzleLogger(this.logger) : false,
     });
   }
 
