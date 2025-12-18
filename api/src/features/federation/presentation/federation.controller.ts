@@ -7,6 +7,7 @@ import {
   Body,
   Query,
   Res,
+  Headers,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -552,6 +553,59 @@ export class FederationController {
     res.header('Content-Type', cover.contentType);
     res.header('Cache-Control', 'public, max-age=86400');
     res.send(cover.buffer);
+  }
+
+  @Get('servers/:id/tracks/:trackId/stream')
+  @ApiOperation({
+    summary: 'Stream de track desde servidor remoto',
+    description: 'Proxy para hacer streaming de un track desde un servidor federado. ' +
+      'Este endpoint requiere autenticación y verifica que el usuario tenga acceso al servidor.',
+  })
+  @ApiParam({ name: 'id', description: 'ID del servidor' })
+  @ApiParam({ name: 'trackId', description: 'ID del track remoto' })
+  @ApiResponse({ status: 200, description: 'Stream de audio' })
+  @ApiResponse({ status: 404, description: 'Servidor o track no encontrado' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
+  async streamRemoteTrack(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Param('trackId') trackId: string,
+    @Headers('range') range: string | undefined,
+    @Res() res: FastifyReply,
+  ) {
+    const server = await this.getServerWithOwnershipCheck(id, user.id);
+
+    try {
+      const streamResult = await this.remoteServerService.streamRemoteTrack(
+        server,
+        trackId,
+        range,
+      );
+
+      if (!streamResult) {
+        res.status(HttpStatus.NOT_FOUND).send({ error: 'Track not found' });
+        return;
+      }
+
+      // Set headers from remote response
+      for (const [key, value] of Object.entries(streamResult.headers)) {
+        if (value) {
+          res.header(key, value);
+        }
+      }
+
+      // Set appropriate status code
+      res.status(streamResult.statusCode);
+
+      // Pipe the stream to response
+      streamResult.stream.pipe(res.raw);
+    } catch (error) {
+      this.logger.error(
+        { serverId: id, trackId, error: error instanceof Error ? error.message : error },
+        'Failed to stream remote track',
+      );
+      res.status(HttpStatus.BAD_GATEWAY).send({ error: 'Failed to stream from remote server' });
+    }
   }
 
   // ============================================

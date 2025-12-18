@@ -748,6 +748,24 @@
   margin-top: 6px;
 }
 
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #ffffff);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary, #ed6842);
+  cursor: pointer;
+}
+
 .errorMessage {
   display: flex;
   align-items: center;
