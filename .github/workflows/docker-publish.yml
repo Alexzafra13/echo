@@ -18,6 +18,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
@@ -69,8 +70,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # NO CACHE - always rebuild fresh to ensure frontend changes are included
-          no-cache: true
+          # Cache inteligente: usa GHA cache para acelerar builds multi-arch
+          # El lockfile y fuentes en el contexto aseguran que cambios se detecten
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
             VCS_REF=${{ github.sha }}
