@@ -93,7 +93,7 @@ export default function LoginPage() {
             <Input
               {...register('username')}
               type="text"
-              label="Username"
+              label="Usuario"
               placeholder=""
               error={errors.username?.message}
               leftIcon={<User size={20} />}
@@ -103,7 +103,7 @@ export default function LoginPage() {
             <Input
               {...register('password')}
               type="password"
-              label="Password"
+              label="Contraseña"
               placeholder=""
               error={errors.password?.message}
               leftIcon={<Lock size={20} />}
@@ -118,7 +118,7 @@ export default function LoginPage() {
               loading={isLoggingIn}
               rightIcon={<ArrowRight size={20} />}
             >
-              Sing In
+              Iniciar Sesión
             </Button>
           </form>
         </div>
