@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { Download, Check, Loader2, Server, Play, Pause } from 'lucide-react';
+import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks';
-import { Button } from '@shared/components/ui';
+import { Button, Portal } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { useDropdownMenu } from '@shared/hooks';
 import type { Track } from '@shared/types/track.types';
 import type { RemoteTrack } from '../../types';
 import styles from './SharedAlbumPage.module.css';
@@ -28,11 +29,22 @@ export default function SharedAlbumPage() {
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
   const { data: servers } = useConnectedServers();
   const startImport = useStartImport();
-  const { playQueue, currentTrack, isPlaying, play, pause } = usePlayer();
+  const { playQueue, currentTrack, isPlaying, play, pause, setShuffle } = usePlayer();
 
   const server = servers?.find(s => s.id === serverId);
   const coverUrl = album?.coverUrl;
   const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+  // Dropdown menu for options
+  const {
+    isOpen: isMenuOpen,
+    isClosing: isMenuClosing,
+    triggerRef: menuTriggerRef,
+    dropdownRef: menuDropdownRef,
+    effectivePosition: menuPosition,
+    toggleMenu,
+    handleOptionClick,
+  } = useDropdownMenu({ offset: 8 });
 
   /**
    * Convert RemoteTrack to Track with proper stream URL for federated playback
@@ -64,12 +76,6 @@ export default function SharedAlbumPage() {
     return convertToPlayableTracks(album.tracks);
   }, [album?.tracks, convertToPlayableTracks]);
 
-  // Check if current track is from this album
-  const isCurrentAlbumPlaying = useMemo(() => {
-    if (!currentTrack || !serverId) return false;
-    return currentTrack.id.startsWith(`${serverId}-`);
-  }, [currentTrack, serverId]);
-
   // Get the index of the currently playing track
   const currentPlayingIndex = useMemo(() => {
     if (!currentTrack || !album?.tracks) return -1;
@@ -83,8 +89,24 @@ export default function SharedAlbumPage() {
    */
   const handlePlayAll = useCallback(() => {
     if (playableTracks.length === 0) return;
+    setShuffle(false);
     playQueue(playableTracks, 0);
-  }, [playableTracks, playQueue]);
+  }, [playableTracks, playQueue, setShuffle]);
+
+  /**
+   * Shuffle play all tracks
+   */
+  const handleShufflePlay = useCallback(() => {
+    if (playableTracks.length === 0) return;
+    setShuffle(true);
+    // Shuffle the tracks array using Fisher-Yates algorithm
+    const shuffledTracks = [...playableTracks];
+    for (let i = shuffledTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+    }
+    playQueue(shuffledTracks, 0);
+  }, [playableTracks, playQueue, setShuffle]);
 
   /**
    * Play a specific track
@@ -262,38 +284,76 @@ export default function SharedAlbumPage() {
               {/* Action buttons */}
               <div className={styles.sharedAlbumPage__heroActions}>
                 {/* Play button */}
-                {playableTracks.length > 0 && (
-                  <button
-                    className={styles.sharedAlbumPage__playButton}
-                    onClick={isCurrentAlbumPlaying && isPlaying ? handleTogglePlayPause : handlePlayAll}
-                    title={isCurrentAlbumPlaying && isPlaying ? 'Pausar' : 'Reproducir'}
-                  >
-                    {isCurrentAlbumPlaying && isPlaying ? (
-                      <Pause size={24} fill="currentColor" />
-                    ) : (
-                      <Play size={24} fill="currentColor" />
-                    )}
-                  </button>
-                )}
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handlePlayAll}
+                  leftIcon={<Play size={20} fill="currentColor" />}
+                  disabled={playableTracks.length === 0}
+                >
+                  Reproducir
+                </Button>
 
-                {/* Import button */}
+                {/* Shuffle button */}
                 <Button
                   variant="secondary"
                   size="lg"
-                  onClick={handleImport}
-                  disabled={isImporting || isImported}
-                  leftIcon={
-                    isImporting ? (
-                      <Loader2 size={20} className={styles.sharedAlbumPage__spinner} />
-                    ) : isImported ? (
-                      <Check size={20} />
-                    ) : (
-                      <Download size={20} />
-                    )
-                  }
+                  onClick={handleShufflePlay}
+                  leftIcon={<Shuffle size={20} />}
+                  disabled={playableTracks.length === 0}
                 >
-                  {isImported ? 'Importado' : isImporting ? 'Importando...' : 'Importar'}
+                  Aleatorio
                 </Button>
+
+                {/* Options menu */}
+                <div className={styles.sharedAlbumPage__optionsMenu}>
+                  <button
+                    ref={menuTriggerRef}
+                    className={styles.sharedAlbumPage__optionsTrigger}
+                    onClick={toggleMenu}
+                    aria-label="Opciones del álbum"
+                    aria-expanded={isMenuOpen}
+                    title="Más opciones"
+                  >
+                    <MoreHorizontal size={20} />
+                  </button>
+                </div>
+
+                {isMenuOpen && menuPosition && (
+                  <Portal>
+                    <div
+                      ref={menuDropdownRef}
+                      className={`${styles.sharedAlbumPage__optionsDropdown} ${isMenuClosing ? styles['sharedAlbumPage__optionsDropdown--closing'] : ''}`}
+                      style={{
+                        position: 'fixed',
+                        top: menuPosition.top !== undefined ? `${menuPosition.top}px` : undefined,
+                        bottom: menuPosition.bottom !== undefined ? `${menuPosition.bottom}px` : undefined,
+                        right: menuPosition.right !== undefined ? `${menuPosition.right}px` : undefined,
+                        left: menuPosition.left !== undefined ? `${menuPosition.left}px` : undefined,
+                        maxHeight: `${menuPosition.maxHeight}px`,
+                        pointerEvents: isMenuClosing ? 'none' : 'auto',
+                      }}
+                      data-placement={menuPosition.placement}
+                    >
+                      <button
+                        className={styles.sharedAlbumPage__optionsOption}
+                        onClick={(e) => handleOptionClick(e, handleImport)}
+                        disabled={isImporting || isImported}
+                      >
+                        {isImporting ? (
+                          <Loader2 size={16} className={styles.sharedAlbumPage__spinner} />
+                        ) : isImported ? (
+                          <Check size={16} />
+                        ) : (
+                          <Download size={16} />
+                        )}
+                        <span>
+                          {isImported ? 'Álbum importado' : isImporting ? 'Importando...' : 'Importar a mi servidor'}
+                        </span>
+                      </button>
+                    </div>
+                  </Portal>
+                )}
               </div>
             </div>
           </div>
