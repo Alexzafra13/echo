@@ -86,9 +86,6 @@ importers:
       class-validator:
         specifier: ^0.14.2
         version: 0.14.2
-      drizzle-kit:
-        specifier: ^0.31.7
-        version: 0.31.7
       drizzle-orm:
         specifier: ^0.44.7
         version: 0.44.7(@electric-sql/pglite@0.3.2)(@prisma/client@7.0.0(prisma@7.0.0(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(mysql2@3.15.3)(pg@8.16.3)(postgres@3.4.7)(prisma@7.0.0(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))
@@ -183,6 +180,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
+      drizzle-kit:
+        specifier: ^0.31.7
+        version: 0.31.7
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
