@@ -830,12 +830,25 @@
     height: 28px;
   }
 
+  /* Similar artists horizontal scroll on mobile */
   .artistDetailPage__relatedArtistsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    margin: 0 -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .artistDetailPage__relatedArtistsGrid::-webkit-scrollbar {
+    display: none;
   }
 
   .artistDetailPage__relatedArtist {
+    flex-shrink: 0;
+    width: 140px;
     padding: 16px 12px;
   }
 
@@ -880,8 +893,11 @@
     font-size: 14px;
   }
 
+  /* Update margins for 480px padding */
   .artistDetailPage__relatedArtistsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .artistDetailPage__playlistsGrid {
