@@ -488,7 +488,47 @@ export default function ArtistDetailPage() {
             </section>
           )}
 
-          {/* Biography Section */}
+          {/* Related Artists Section */}
+          {relatedArtists.length > 0 && (
+            <section className={styles.artistDetailPage__relatedArtists}>
+              <div className={styles.artistDetailPage__sectionHeader}>
+                <Users size={24} className={styles.artistDetailPage__sectionIcon} />
+                <h2 className={styles.artistDetailPage__sectionTitle}>Artistas similares</h2>
+              </div>
+              <div className={styles.artistDetailPage__relatedArtistsGrid}>
+                {relatedArtists.map((relArtist) => (
+                  <div
+                    key={relArtist.id}
+                    className={styles.artistDetailPage__relatedArtist}
+                    onClick={() => setLocation(`/artists/${relArtist.id}`)}
+                  >
+                    <div className={styles.artistDetailPage__relatedArtistAvatar}>
+                      <img
+                        src={getArtistImageUrl(relArtist.id, 'profile')}
+                        alt={relArtist.name}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                      <div className={styles.artistDetailPage__relatedArtistFallback} style={{ display: 'none' }}>
+                        {getArtistInitials(relArtist.name)}
+                      </div>
+                    </div>
+                    <div className={styles.artistDetailPage__relatedArtistInfo}>
+                      <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
+                      <span className={styles.artistDetailPage__relatedArtistMeta}>
+                        {relArtist.matchScore}% similar
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Biography Section - at the end */}
           {artist.biography && (
             <section className={styles.artistDetailPage__biography}>
               <div className={styles.artistDetailPage__biographyHeader}>
@@ -533,46 +573,6 @@ export default function ArtistDetailPage() {
               <p className={styles.artistDetailPage__biographyPlaceholder}>
                 No hay biografía disponible para este artista.
               </p>
-            </section>
-          )}
-
-          {/* Related Artists Section */}
-          {relatedArtists.length > 0 && (
-            <section className={styles.artistDetailPage__relatedArtists}>
-              <div className={styles.artistDetailPage__sectionHeader}>
-                <Users size={24} className={styles.artistDetailPage__sectionIcon} />
-                <h2 className={styles.artistDetailPage__sectionTitle}>Artistas similares</h2>
-              </div>
-              <div className={styles.artistDetailPage__relatedArtistsGrid}>
-                {relatedArtists.map((relArtist) => (
-                  <div
-                    key={relArtist.id}
-                    className={styles.artistDetailPage__relatedArtist}
-                    onClick={() => setLocation(`/artists/${relArtist.id}`)}
-                  >
-                    <div className={styles.artistDetailPage__relatedArtistAvatar}>
-                      <img
-                        src={getArtistImageUrl(relArtist.id, 'profile')}
-                        alt={relArtist.name}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
-                      />
-                      <div className={styles.artistDetailPage__relatedArtistFallback} style={{ display: 'none' }}>
-                        {getArtistInitials(relArtist.name)}
-                      </div>
-                    </div>
-                    <div className={styles.artistDetailPage__relatedArtistInfo}>
-                      <span className={styles.artistDetailPage__relatedArtistName}>{relArtist.name}</span>
-                      <span className={styles.artistDetailPage__relatedArtistMeta}>
-                        {relArtist.matchScore}% similar
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </section>
           )}
         </div>
