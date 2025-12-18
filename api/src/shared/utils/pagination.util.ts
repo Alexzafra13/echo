@@ -68,13 +68,31 @@ export function parsePaginationParams(
   };
 }
 
+/**
+ * validatePagination - Valida parámetros de paginación numéricos
+ *
+ * Similar a parsePaginationParams pero para cuando los params ya son números.
+ * Útil cuando NestJS ya transformó los query params a números.
+ *
+ * @param skip - Offset numérico
+ * @param take - Límite numérico
+ * @param options - maxTake (default: 100), defaultTake (default: 10)
+ */
 export function validatePagination(
   skip?: number,
   take?: number,
-  maxTake: number = 100,
+  options: { maxTake?: number; defaultTake?: number } | number = {},
 ): PaginationParams {
+  // Backwards compatibility: si options es un número, es maxTake
+  const opts = typeof options === 'number'
+    ? { maxTake: options, defaultTake: 10 }
+    : options;
+
+  const maxTake = opts.maxTake ?? 100;
+  const defaultTake = opts.defaultTake ?? 10;
+
   return {
     skip: Math.max(0, skip ?? 0),
-    take: Math.min(maxTake, Math.max(1, take ?? 10)),
+    take: Math.min(maxTake, Math.max(1, take ?? defaultTake)),
   };
 }
