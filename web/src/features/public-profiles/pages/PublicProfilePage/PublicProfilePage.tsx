@@ -56,27 +56,124 @@ const formatPlayCount = (count: number): string => {
   return count.toString();
 };
 
+// Default colors for profiles without avatar
+const DEFAULT_COLORS = [
+  '#4a3470', // Purple
+  '#1e3a5f', // Blue
+  '#3d4f2f', // Green
+  '#5c3d2e', // Brown
+  '#4a4458', // Gray-purple
+  '#2d4a4a', // Teal
+  '#4a2d2d', // Dark red
+  '#3d3d5c', // Blue-gray
+];
+
 /**
- * Extracts a dominant color from an image URL (simplified version)
- * In production, you'd use a library like color-thief or vibrant.js
+ * Generate a consistent color based on a string (userId)
+ * Returns the same color for the same input
  */
-const getHeroColor = (coverUrl?: string): string => {
-  // Default colors for profiles without album art
-  const defaultColors = [
-    '#4a3470', // Purple
-    '#1e3a5f', // Blue
-    '#3d4f2f', // Green
-    '#5c3d2e', // Brown
-    '#4a4458', // Gray-purple
-  ];
-
-  if (!coverUrl) {
-    // Return a consistent color based on the URL hash (or random for new profiles)
-    return defaultColors[Math.floor(Math.random() * defaultColors.length)];
+const getColorFromString = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
+  return DEFAULT_COLORS[Math.abs(hash) % DEFAULT_COLORS.length];
+};
 
-  // For now, return a nice purple. In production, extract from image.
-  return '#4a3470';
+/**
+ * Extract dominant color from an image using canvas
+ * Samples the image and finds the most common color
+ */
+const extractColorFromImage = (img: HTMLImageElement): string => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return DEFAULT_COLORS[0];
+
+  // Use small size for performance
+  const size = 50;
+  canvas.width = size;
+  canvas.height = size;
+
+  try {
+    ctx.drawImage(img, 0, 0, size, size);
+    const imageData = ctx.getImageData(0, 0, size, size);
+    const data = imageData.data;
+
+    let r = 0, g = 0, b = 0, count = 0;
+
+    // Sample pixels and calculate average color
+    for (let i = 0; i < data.length; i += 16) { // Skip pixels for performance
+      const red = data[i];
+      const green = data[i + 1];
+      const blue = data[i + 2];
+      const alpha = data[i + 3];
+
+      // Skip transparent pixels
+      if (alpha < 128) continue;
+
+      // Skip very light or very dark pixels
+      const brightness = (red + green + blue) / 3;
+      if (brightness < 30 || brightness > 220) continue;
+
+      r += red;
+      g += green;
+      b += blue;
+      count++;
+    }
+
+    if (count === 0) return DEFAULT_COLORS[0];
+
+    // Calculate average and darken slightly for better hero background
+    r = Math.floor((r / count) * 0.6);
+    g = Math.floor((g / count) * 0.6);
+    b = Math.floor((b / count) * 0.6);
+
+    return `rgb(${r}, ${g}, ${b})`;
+  } catch {
+    // Canvas tainted by CORS or other error
+    return DEFAULT_COLORS[0];
+  }
+};
+
+/**
+ * Hook to extract dominant color from an image URL
+ */
+const useImageColor = (imageUrl?: string, fallbackId?: string): string => {
+  const fallbackColor = useMemo(
+    () => fallbackId ? getColorFromString(fallbackId) : DEFAULT_COLORS[0],
+    [fallbackId]
+  );
+  const [color, setColor] = useState(fallbackColor);
+
+  useEffect(() => {
+    if (!imageUrl) {
+      setColor(fallbackColor);
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      const extractedColor = extractColorFromImage(img);
+      setColor(extractedColor);
+    };
+
+    img.onerror = () => {
+      setColor(fallbackColor);
+    };
+
+    img.src = imageUrl;
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [imageUrl, fallbackColor]);
+
+  return color;
 };
 
 // =============================================================================
@@ -404,11 +501,8 @@ export function PublicProfilePage() {
     }
   };
 
-  // Compute hero color based on top album
-  const heroColor = useMemo(() => {
-    const topAlbumCover = profile?.topAlbums?.[0]?.coverUrl;
-    return getHeroColor(topAlbumCover);
-  }, [profile?.topAlbums]);
+  // Extract hero color from user avatar (or fallback to consistent color based on userId)
+  const heroColor = useImageColor(profile?.user.avatarUrl, userId);
 
   // Loading state
   if (isLoading) {
