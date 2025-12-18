@@ -11,7 +11,6 @@ import {
   CountrySelectButton,
   CountrySelectModal,
   GenreSelectModal,
-  type Genre
 } from '../../components';
 import {
   useUserCountry,
@@ -25,49 +24,12 @@ import {
   useRadioCountries
 } from '../../hooks';
 import { radioService } from '../../services';
+import { POPULAR_COUNTRIES, GENRES } from '../../constants';
 import type { RadioStation, RadioBrowserStation } from '../../types';
 import type { Country } from '../../components/CountrySelect/CountrySelect';
 import { getCountryFlag, getCountryName } from '../../utils/country.utils';
 import { Radio, Music2 } from 'lucide-react';
 import styles from './RadioPage.module.css';
-
-// Países populares con banderas
-const POPULAR_COUNTRIES: Country[] = [
-  { code: 'ES', name: 'España', flag: '🇪🇸' },
-  { code: 'US', name: 'Estados Unidos', flag: '🇺🇸' },
-  { code: 'GB', name: 'Reino Unido', flag: '🇬🇧' },
-  { code: 'FR', name: 'Francia', flag: '🇫🇷' },
-  { code: 'DE', name: 'Alemania', flag: '🇩🇪' },
-  { code: 'IT', name: 'Italia', flag: '🇮🇹' },
-  { code: 'MX', name: 'México', flag: '🇲🇽' },
-  { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
-  { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
-  { code: 'JP', name: 'Japón', flag: '🇯🇵' },
-];
-
-// Géneros disponibles
-const GENRES: Genre[] = [
-  { id: 'top', label: 'Top', icon: '🔥' },
-  { id: 'all', label: 'Todas', icon: '🌐' },
-  { id: 'rock', label: 'Rock', icon: '🎸' },
-  { id: 'pop', label: 'Pop', icon: '🎤' },
-  { id: 'news', label: 'News', icon: '📰' },
-  { id: 'jazz', label: 'Jazz', icon: '🎷' },
-  { id: 'dance', label: 'Dance', icon: '💃' },
-  { id: 'electronic', label: 'Electronic', icon: '🎹' },
-  { id: 'classical', label: 'Clásica', icon: '🎻' },
-  { id: 'country', label: 'Country', icon: '🤠' },
-  { id: 'metal', label: 'Metal', icon: '🤘' },
-  { id: 'hip hop', label: 'Hip Hop', icon: '🎤' },
-  { id: 'reggae', label: 'Reggae', icon: '🌴' },
-  { id: 'blues', label: 'Blues', icon: '🎺' },
-  { id: 'folk', label: 'Folk', icon: '🪕' },
-  { id: 'latin', label: 'Latina', icon: '💃' },
-  { id: 'ambient', label: 'Ambient', icon: '🌊' },
-  { id: 'techno', label: 'Techno', icon: '🔊' },
-  { id: 'house', label: 'House', icon: '🏠' },
-  { id: 'indie', label: 'Indie', icon: '🎧' },
-];
 
 export default function RadioPage() {
   // Player context
