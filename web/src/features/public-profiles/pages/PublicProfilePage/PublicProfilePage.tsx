@@ -676,39 +676,7 @@ export function PublicProfilePage() {
 
           {/* Content Sections */}
           <div className={styles.publicProfilePage__contentInner}>
-            {/* Top Artists */}
-            {settings.showTopArtists && topArtists && topArtists.length > 0 && (
-              <section className={styles.publicProfilePage__section}>
-                <div className={styles.publicProfilePage__sectionHeader}>
-                  <h2 className={styles.publicProfilePage__sectionTitle}>
-                    Artistas más escuchados
-                  </h2>
-                </div>
-                <div className={styles.publicProfilePage__artistsGrid}>
-                  {topArtists.map((artist) => (
-                    <ArtistCard key={artist.id} artist={artist} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Top Albums */}
-            {settings.showTopAlbums && topAlbums && topAlbums.length > 0 && (
-              <section className={styles.publicProfilePage__section}>
-                <div className={styles.publicProfilePage__sectionHeader}>
-                  <h2 className={styles.publicProfilePage__sectionTitle}>
-                    Álbumes más escuchados
-                  </h2>
-                </div>
-                <div className={styles.publicProfilePage__albumsGrid}>
-                  {topAlbums.map((album) => (
-                    <AlbumCard key={album.id} album={album} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Top Tracks */}
+            {/* Top Tracks - First */}
             {settings.showTopTracks && topTracks && topTracks.length > 0 && (
               <section className={styles.publicProfilePage__section}>
                 <div className={styles.publicProfilePage__sectionHeader}>
@@ -724,7 +692,39 @@ export function PublicProfilePage() {
               </section>
             )}
 
-            {/* Playlists */}
+            {/* Top Artists - Second */}
+            {settings.showTopArtists && topArtists && topArtists.length > 0 && (
+              <section className={styles.publicProfilePage__section}>
+                <div className={styles.publicProfilePage__sectionHeader}>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>
+                    Artistas más escuchados
+                  </h2>
+                </div>
+                <div className={styles.publicProfilePage__artistsGrid}>
+                  {topArtists.map((artist) => (
+                    <ArtistCard key={artist.id} artist={artist} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Top Albums - Third */}
+            {settings.showTopAlbums && topAlbums && topAlbums.length > 0 && (
+              <section className={styles.publicProfilePage__section}>
+                <div className={styles.publicProfilePage__sectionHeader}>
+                  <h2 className={styles.publicProfilePage__sectionTitle}>
+                    Álbumes más escuchados
+                  </h2>
+                </div>
+                <div className={styles.publicProfilePage__albumsGrid}>
+                  {topAlbums.map((album) => (
+                    <AlbumCard key={album.id} album={album} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Playlists - Fourth */}
             {settings.showPlaylists && playlists && playlists.length > 0 && (
               <section className={styles.publicProfilePage__section}>
                 <div className={styles.publicProfilePage__sectionHeader}>

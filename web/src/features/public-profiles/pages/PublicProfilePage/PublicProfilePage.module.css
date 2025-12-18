@@ -761,16 +761,32 @@
     padding: 0 24px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
+  /* Horizontal scroll for grids on mobile */
   .publicProfilePage__artistsGrid,
   .publicProfilePage__albumsGrid,
   .publicProfilePage__playlistGrid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    display: flex;
+    overflow-x: auto;
     gap: 16px;
+    padding-bottom: 8px;
+    margin: 0 -24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .publicProfilePage__artistsGrid::-webkit-scrollbar,
+  .publicProfilePage__albumsGrid::-webkit-scrollbar,
+  .publicProfilePage__playlistGrid::-webkit-scrollbar {
+    display: none;
   }
 
   .publicProfilePage__artistCard,
   .publicProfilePage__albumCard,
   .publicProfilePage__playlistCard {
+    flex-shrink: 0;
+    width: 140px;
     padding: 12px;
   }
 
@@ -817,10 +833,19 @@
     font-size: 20px;
   }
 
+  /* Adjust horizontal scroll padding for smaller screens */
   .publicProfilePage__artistsGrid,
   .publicProfilePage__albumsGrid,
   .publicProfilePage__playlistGrid {
-    grid-template-columns: repeat(2, 1fr);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
     gap: 12px;
+  }
+
+  .publicProfilePage__artistCard,
+  .publicProfilePage__albumCard,
+  .publicProfilePage__playlistCard {
+    width: 130px;
   }
 }
