@@ -15,6 +15,7 @@ import { parsePaginationParams } from '@shared/utils';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators';
 import { JwtUser } from '@shared/types/request.types';
+import { CacheControl } from '@shared/interceptors';
 
 /**
  * AlbumsController - Controlador de álbumes
@@ -55,6 +56,7 @@ export class AlbumsController {
    */
   @Get('recent')
   @HttpCode(HttpStatus.OK)
+  @CacheControl(60) // 1 minute cache
   @ApiOperation({
     summary: 'Obtener álbumes recientes',
     description: 'Retorna los álbumes más recientemente agregados a la librería'
@@ -95,6 +97,7 @@ export class AlbumsController {
    */
   @Get('top-played')
   @HttpCode(HttpStatus.OK)
+  @CacheControl(300) // 5 minute cache (stats based)
   @ApiOperation({
     summary: 'Obtener álbumes más reproducidos',
     description: 'Retorna los álbumes con más reproducciones basado en estadísticas reales de reproducción del usuario'
@@ -346,6 +349,7 @@ export class AlbumsController {
    */
   @Get('featured')
   @HttpCode(HttpStatus.OK)
+  @CacheControl(300) // 5 minute cache
   @ApiOperation({
     summary: 'Obtener álbum destacado',
     description: 'Retorna el álbum destacado para mostrar en la sección hero (generalmente el más reproducido o más reciente)'
@@ -477,6 +481,7 @@ export class AlbumsController {
    */
   @Get()
   @HttpCode(HttpStatus.OK)
+  @CacheControl(60) // 1 minute cache
   @ApiOperation({
     summary: 'Listar álbumes',
     description: 'Retorna una lista paginada de todos los álbumes disponibles en el servidor'
@@ -524,6 +529,7 @@ export class AlbumsController {
    */
   @Get('search/:query')
   @HttpCode(HttpStatus.OK)
+  @CacheControl(30) // 30 second cache for search
   @ApiOperation({
     summary: 'Buscar álbumes',
     description: 'Busca álbumes por nombre (mínimo 2 caracteres). La búsqueda es case-insensitive y busca coincidencias parciales'

@@ -7,7 +7,7 @@ import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { appConfig } from './config/app.config';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
-import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
+import { LoggingInterceptor, CacheControlInterceptor } from './shared/interceptors';
 import { DrizzleModule } from './infrastructure/database/drizzle.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
@@ -137,6 +137,11 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    // Global Cache-Control Interceptor (adds cache headers via @CacheControl decorator)
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheControlInterceptor,
     },
   ],
 })

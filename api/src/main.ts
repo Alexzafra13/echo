@@ -36,6 +36,15 @@ async function bootstrap() {
     },
   });
 
+  // Compression for JSON responses (60-80% size reduction)
+  // Don't compress already-compressed content (audio, images)
+  await app.register(require('@fastify/compress'), {
+    encodings: ['gzip', 'deflate'],
+    threshold: 1024, // Only compress responses > 1KB
+    // Skip compression for audio/video/images (already compressed)
+    customTypes: /^(?!audio\/|video\/|image\/).*$/,
+  });
+
   // Security: Helmet - Protection against common web vulnerabilities
   await app.register(require('@fastify/helmet'), {
     contentSecurityPolicy: {
