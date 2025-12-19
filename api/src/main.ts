@@ -91,43 +91,47 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new MustChangePasswordGuard(reflector));
 
-  // Swagger Configuration
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Echo Music Server API')
-    .setDescription(
-      'API REST para servidor de música con streaming, gestión de álbumes, artistas y playlists. ' +
-      'Construido con arquitectura hexagonal y NestJS.'
-    )
-    .setVersion('1.0.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addTag('auth', 'Autenticación y autorización')
-    .addTag('users', 'Gestión de perfil de usuario')
-    .addTag('admin', 'Administración de usuarios')
-    .addTag('albums', 'Gestión de álbumes')
-    .addTag('tracks', 'Gestión de tracks y canciones')
-    .addTag('artists', 'Gestión de artistas')
-    .addTag('streaming', 'Streaming y descarga de audio')
-    .addTag('playlists', 'Gestión de playlists y listas de reproducción')
-    .build();
+  // Swagger Configuration (Development only)
+  // In production, API docs are not needed and we save memory
+  if (process.env.NODE_ENV !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Echo Music Server API')
+      .setDescription(
+        'API REST para servidor de música con streaming, gestión de álbumes, artistas y playlists. ' +
+        'Construido con arquitectura hexagonal y NestJS.'
+      )
+      .setVersion('1.0.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'JWT-auth',
+      )
+      .addTag('auth', 'Autenticación y autorización')
+      .addTag('users', 'Gestión de perfil de usuario')
+      .addTag('admin', 'Administración de usuarios')
+      .addTag('albums', 'Gestión de álbumes')
+      .addTag('tracks', 'Gestión de tracks y canciones')
+      .addTag('artists', 'Gestión de artistas')
+      .addTag('streaming', 'Streaming y descarga de audio')
+      .addTag('playlists', 'Gestión de playlists y listas de reproducción')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      tagsSorter: 'alpha',
-      operationsSorter: 'alpha',
-    },
-  });
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+      },
+    });
+    logger.log('Swagger documentation enabled at /api/docs');
+  }
 
   // Serve Frontend Static Files (Production)
   // Similar to Jellyfin/Navidrome: single container serves both API and frontend
@@ -208,7 +212,7 @@ Node.js: ${process.version}
    Local:    http://localhost:${appConfig.port}${networkIPs.length > 0 ? `\n   Network:  ${networkIPs.map(ip => `http://${ip}:${appConfig.port}`).join('\n             ')}` : ''}
 
 📚 API Documentation:
-   Swagger:  http://localhost:${appConfig.port}/api/docs
+   Swagger:  ${isProd ? '❌ Disabled in production' : `http://localhost:${appConfig.port}/api/docs`}
    Health:   http://localhost:${appConfig.port}/api/health
 
 🔒 Security:
