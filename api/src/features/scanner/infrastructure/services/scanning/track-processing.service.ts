@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import * as path from 'path';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { tracks } from '@infrastructure/database/schema';
+import { tracks, albums, artists } from '@infrastructure/database/schema';
 import { FileScannerService } from '../file-scanner.service';
 import { MetadataExtractorService } from '../metadata-extractor.service';
 import { MbidAutoSearchService } from '@features/external-metadata/infrastructure/services/mbid-auto-search.service';
@@ -219,9 +219,9 @@ export class TrackProcessingService {
         mbzAlbumArtistId: mbzAlbumArtistId,
       };
 
-      // Check if track exists
+      // Check if track exists (need albumId to detect album changes)
       const existingTrackResult = await this.drizzle.db
-        .select()
+        .select({ id: tracks.id, albumId: tracks.albumId })
         .from(tracks)
         .where(eq(tracks.path, filePath))
         .limit(1);
@@ -230,14 +230,28 @@ export class TrackProcessingService {
       let result: ProcessFileResult;
 
       if (existingTrack) {
+        // Track exists - check if album changed (metadata correction)
+        const oldAlbumId = existingTrack.albumId;
+        const albumChanged = oldAlbumId !== album.id;
+
         // Update existing track
+        // Clear missingAt if file reappeared (was marked as missing before)
         await this.drizzle.db
           .update(tracks)
-          .set({ ...trackData, updatedAt: new Date() })
+          .set({
+            ...trackData,
+            missingAt: null, // Clear missing status - file exists again
+            updatedAt: new Date(),
+          })
           .where(eq(tracks.id, existingTrack.id));
 
         await this.trackGenres.saveTrackGenres(existingTrack.id, metadata.genre);
         await this.libraryStats.updateStats(album.id, artist.id);
+
+        // If album changed, check if old album is now orphaned
+        if (albumChanged && oldAlbumId) {
+          await this.cleanupOrphanedAlbum(oldAlbumId);
+        }
 
         result = 'updated';
       } else {
@@ -320,5 +334,69 @@ export class TrackProcessingService {
     }
 
     return false;
+  }
+
+  /**
+   * Clean up an album if it has no more tracks (orphaned)
+   * Also cleans up the artist if they have no more albums
+   *
+   * This is called when a track changes album (metadata correction)
+   * to avoid leaving empty albums in the database.
+   */
+  private async cleanupOrphanedAlbum(albumId: string): Promise<void> {
+    try {
+      // Check if album has any remaining tracks
+      const remainingTracks = await this.drizzle.db
+        .select({ id: tracks.id })
+        .from(tracks)
+        .where(eq(tracks.albumId, albumId))
+        .limit(1);
+
+      if (remainingTracks.length > 0) {
+        // Album still has tracks, nothing to clean up
+        return;
+      }
+
+      // Get artist ID before deleting album
+      const album = await this.drizzle.db
+        .select({ id: albums.id, name: albums.name, artistId: albums.artistId })
+        .from(albums)
+        .where(eq(albums.id, albumId))
+        .limit(1);
+
+      if (!album[0]) {
+        return;
+      }
+
+      const artistId = album[0].artistId;
+
+      // Delete orphaned album
+      await this.drizzle.db.delete(albums).where(eq(albums.id, albumId));
+      this.logger.info(`🗑️  Álbum huérfano eliminado: "${album[0].name}"`);
+
+      // Check if artist has any remaining albums
+      if (artistId) {
+        const remainingAlbums = await this.drizzle.db
+          .select({ id: albums.id })
+          .from(albums)
+          .where(eq(albums.artistId, artistId))
+          .limit(1);
+
+        if (remainingAlbums.length === 0) {
+          // Get artist name for logging
+          const artist = await this.drizzle.db
+            .select({ name: artists.name })
+            .from(artists)
+            .where(eq(artists.id, artistId))
+            .limit(1);
+
+          // Delete orphaned artist
+          await this.drizzle.db.delete(artists).where(eq(artists.id, artistId));
+          this.logger.info(`🗑️  Artista huérfano eliminado: "${artist[0]?.name}"`);
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Error limpiando álbum huérfano ${albumId}:`, error);
+    }
   }
 }
