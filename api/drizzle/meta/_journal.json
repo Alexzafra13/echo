@@ -64,6 +64,13 @@
       "when": 1765352776840,
       "tag": "0008_federation",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1766106891150,
+      "tag": "0009_aromatic_gargoyle",
+      "breakpoints": true
     }
   ]
 }

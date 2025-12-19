@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, albums } from '@infrastructure/database/schema';
 import { CoverArtService } from '@shared/services';
-import { generateUuid, normalizeForSorting } from '@shared/utils';
+import { generateUuid, normalizeForSorting, generateAlbumPid } from '@shared/utils';
 
 export interface ArtistResult {
   id: string;
@@ -22,7 +22,7 @@ export interface AlbumResult {
 
 /**
  * Service for creating and finding artists and albums
- * Implements atomic find-or-create pattern following Navidrome's approach
+ * Implements atomic find-or-create pattern with PID-based identification
  */
 @Injectable()
 export class EntityCreationService {
@@ -84,9 +84,11 @@ export class EntityCreationService {
   /**
    * Find or create an album atomically
    *
-   * Searches by normalized name AND artist to:
-   * - Handle Unicode variations (different hyphens, quotes, etc.)
-   * - Prevent different artists' albums with same name from merging (e.g., "Greatest Hits")
+   * Uses PID (Persistent ID) for stable identification:
+   * - MusicBrainz Album ID if available (most reliable)
+   * - Otherwise, hash of artistId + normalized name + year
+   *
+   * Falls back to orderAlbumName + artistId for legacy albums without PID.
    */
   async findOrCreateAlbum(
     albumName: string,
@@ -102,8 +104,11 @@ export class EntityCreationService {
     const normalizedName = (albumName || 'Unknown Album').trim();
     const orderName = normalizeForSorting(normalizedName);
 
-    // Search by normalized name AND artist to prevent cross-artist merging
-    const existingAlbum = await this.drizzle.db
+    // Generate PID for this album
+    const pid = generateAlbumPid(metadata.mbzAlbumId, artistId, normalizedName, metadata.year);
+
+    // Strategy 1: Search by PID (most reliable, handles metadata changes)
+    let existingAlbum = await this.drizzle.db
       .select({
         id: albums.id,
         name: albums.name,
@@ -111,10 +116,28 @@ export class EntityCreationService {
         coverArtPath: albums.coverArtPath,
         year: albums.year,
         mbzAlbumId: albums.mbzAlbumId,
+        pid: albums.pid,
       })
       .from(albums)
-      .where(and(eq(albums.orderAlbumName, orderName), eq(albums.artistId, artistId)))
+      .where(eq(albums.pid, pid))
       .limit(1);
+
+    // Strategy 2: Fallback to orderAlbumName + artistId (for legacy or different PID)
+    if (!existingAlbum[0]) {
+      existingAlbum = await this.drizzle.db
+        .select({
+          id: albums.id,
+          name: albums.name,
+          artistId: albums.artistId,
+          coverArtPath: albums.coverArtPath,
+          year: albums.year,
+          mbzAlbumId: albums.mbzAlbumId,
+          pid: albums.pid,
+        })
+        .from(albums)
+        .where(and(eq(albums.orderAlbumName, orderName), eq(albums.artistId, artistId)))
+        .limit(1);
+    }
 
     if (existingAlbum[0]) {
       let coverExtracted = false;
@@ -125,11 +148,18 @@ export class EntityCreationService {
         `coverArtPath: ${existingAlbum[0].coverArtPath === null ? 'NULL' : `"${existingAlbum[0].coverArtPath}"`}`
       );
 
-      // Update MBID if provided and album doesn't have one
+      // Update MBID and PID if provided and album doesn't have one
       if (metadata.mbzAlbumId && !existingAlbum[0].mbzAlbumId) {
         updates.mbzAlbumId = metadata.mbzAlbumId;
         updates.mbzAlbumArtistId = metadata.mbzAlbumArtistId || null;
+        // Regenerate PID with MusicBrainz ID (more stable)
+        updates.pid = generateAlbumPid(metadata.mbzAlbumId, artistId, normalizedName, metadata.year);
         this.logger.debug(`Updated MBID for album "${existingAlbum[0].name}": ${metadata.mbzAlbumId}`);
+      }
+
+      // Set PID for legacy albums that don't have one
+      if (!existingAlbum[0].pid) {
+        updates.pid = pid;
       }
 
       // Extract cover if missing
@@ -182,6 +212,7 @@ export class EntityCreationService {
       .insert(albums)
       .values({
         id: albumId,
+        pid: pid,
         name: normalizedName,
         artistId: artistId,
         albumArtistId: artistId,
