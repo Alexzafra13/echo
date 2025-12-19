@@ -7,4 +7,5 @@ export * from './fetch-with-timeout';
 export * from './search.util';
 export * from './file-upload.util';
 export * from './file-system.util';
-export * from './mime-type.util'; 
+export * from './mime-type.util';
+export * from './pid.util'; 
