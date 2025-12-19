@@ -19,6 +19,10 @@ export const albums = pgTable(
   'albums',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    // Persistent ID (PID) - Navidrome-style stable identifier
+    // Uses: mbzAlbumId if available, otherwise hash(artistId + name + year)
+    // Enables: stable identity when metadata changes, preserves ratings/plays
+    pid: varchar('pid', { length: 64 }).unique(),
     name: varchar('name', { length: 255 }).notNull(),
     albumArtistId: uuid('album_artist_id').references(() => artists.id, { onDelete: 'set null' }),
     artistId: uuid('artist_id').references(() => artists.id, { onDelete: 'set null' }),
@@ -50,6 +54,7 @@ export const albums = pgTable(
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
+    index('idx_albums_pid').on(table.pid),
     index('idx_albums_artist').on(table.artistId),
     index('idx_albums_album_artist').on(table.albumArtistId),
     index('idx_albums_year').on(table.year),
