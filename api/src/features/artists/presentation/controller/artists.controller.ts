@@ -8,6 +8,7 @@ import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/pla
 import { ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
 import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
+import { CacheControl } from '@shared/interceptors';
 
 /**
  * ArtistsController - Controlador de artistas
@@ -366,6 +367,7 @@ export class ArtistsController {
    */
   @Get()
   @HttpCode(HttpStatus.OK)
+  @CacheControl(60) // 1 minute cache
   @ApiOperation({
     summary: 'Listar artistas',
     description: 'Retorna una lista paginada de todos los artistas disponibles en el servidor'
