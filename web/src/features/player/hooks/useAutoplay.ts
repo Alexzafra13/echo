@@ -69,10 +69,11 @@ export function useAutoplay() {
 
     try {
       // 1. Get related artists
+      logger.debug('[Autoplay] Fetching related artists for:', currentArtistId);
       const relatedResponse = await artistsService.getRelatedArtists(currentArtistId, MAX_ARTISTS_TO_TRY);
 
       if (!relatedResponse.data || relatedResponse.data.length === 0) {
-        logger.debug('[Autoplay] No related artists found');
+        logger.info('[Autoplay] No related artists found for artist:', currentArtistId);
         return { tracks: [], sourceArtistName: null };
       }
 
