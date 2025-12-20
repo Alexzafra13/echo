@@ -558,6 +558,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Track state
       currentTrack,
       queue: queue.queue,
+      currentIndex: queue.currentIndex,
       isPlaying,
       volume: userVolume,
       currentTime,
@@ -615,6 +616,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     [
       currentTrack,
       queue.queue,
+      queue.currentIndex,
       queue.isShuffle,
       queue.repeatMode,
       queue.addToQueue,

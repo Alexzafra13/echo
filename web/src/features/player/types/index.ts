@@ -21,6 +21,7 @@ export interface PlayerState {
   // Track playback
   currentTrack: Track | null;
   queue: Track[];
+  currentIndex: number;
   isPlaying: boolean;
   volume: number;
   currentTime: number;
