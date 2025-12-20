@@ -69,8 +69,13 @@ export function useAutoplay() {
 
     try {
       // 1. Get related artists
-      logger.debug('[Autoplay] Fetching related artists for:', currentArtistId);
+      logger.info('[Autoplay] Fetching related artists for:', currentArtistId);
       const relatedResponse = await artistsService.getRelatedArtists(currentArtistId, MAX_ARTISTS_TO_TRY);
+      logger.info('[Autoplay] Related artists response:', {
+        source: relatedResponse.source,
+        count: relatedResponse.data?.length || 0,
+        artists: relatedResponse.data?.map(a => a.name) || [],
+      });
 
       if (!relatedResponse.data || relatedResponse.data.length === 0) {
         logger.info('[Autoplay] No related artists found for artist:', currentArtistId);
@@ -89,10 +94,12 @@ export function useAutoplay() {
 
         try {
           // Get smart playlist for this artist
+          logger.debug(`[Autoplay] Getting smart playlist for ${relatedArtist.name} (${relatedArtist.id})`);
           const playlist = await getSmartPlaylistByArtist(
             relatedArtist.id,
             AUTOPLAY_BATCH_SIZE - newTracks.length
           );
+          logger.debug(`[Autoplay] Smart playlist for ${relatedArtist.name}: ${playlist.tracks?.length || 0} tracks`);
 
           if (playlist.tracks && playlist.tracks.length > 0) {
             // Filter out already played tracks
