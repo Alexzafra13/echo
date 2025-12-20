@@ -44,7 +44,7 @@ interface ShuffleState {
 }
 
 export function useShufflePlay(): UseShufflePlayReturn {
-  const { playQueue, addToQueue, queue, isShuffle, toggleShuffle } = usePlayer();
+  const { playQueue, addToQueue, queue, currentIndex, isShuffle, toggleShuffle } = usePlayer();
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
@@ -256,12 +256,15 @@ export function useShufflePlay(): UseShufflePlayReturn {
     }
   }, [isLoading, isShuffle, toggleShuffle, playQueue]);
 
-  // Auto-prefetch when queue is low
+  // Auto-prefetch when remaining tracks in queue is low
+  // Calculate how many tracks are left to play from current position
+  const remainingTracks = currentIndex >= 0 ? queue.length - currentIndex - 1 : queue.length;
+
   useEffect(() => {
-    if (shuffleRef.current.seed && hasMore && !shuffleRef.current.loading && queue.length <= PREFETCH_THRESHOLD) {
+    if (shuffleRef.current.seed && hasMore && !shuffleRef.current.loading && remainingTracks <= PREFETCH_THRESHOLD) {
       loadMoreTracks();
     }
-  }, [queue.length, hasMore, loadMoreTracks]);
+  }, [remainingTracks, hasMore, loadMoreTracks]);
 
   return { shufflePlay, isLoading, loadMoreTracks, hasMore };
 }
