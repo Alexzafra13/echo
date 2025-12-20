@@ -37,6 +37,8 @@ export function SettingsPage() {
     setNormalizationEnabled,
     setNormalizationTargetLufs,
     setNormalizationPreventClipping,
+    autoplay,
+    setAutoplayEnabled,
   } = usePlayer();
 
   // Local state for home sections
@@ -410,6 +412,25 @@ export function SettingsPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Autoplay Toggle */}
+                  <div className={styles.settingsPage__toggleItem}>
+                    <div className={styles.settingsPage__toggleInfo}>
+                      <span className={styles.settingsPage__toggleLabel}>Reproducción automática</span>
+                      <p className={styles.settingsPage__toggleDescription}>
+                        Cuando termina un álbum o playlist, continúa automáticamente con artistas similares
+                      </p>
+                    </div>
+                    <label className={styles.settingsPage__toggle}>
+                      <input
+                        type="checkbox"
+                        className={styles.settingsPage__toggleInput}
+                        checked={autoplay.enabled}
+                        onChange={(e) => setAutoplayEnabled(e.target.checked)}
+                      />
+                      <span className={styles.settingsPage__toggleSlider}></span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </>
