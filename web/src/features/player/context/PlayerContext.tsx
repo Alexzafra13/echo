@@ -412,13 +412,23 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Record completed play (not skipped)
       playTracking.endPlaySession(false);
 
+      logger.debug('[Player] Track ended', {
+        repeatMode: queue.repeatMode,
+        hasNext: queue.hasNext(),
+        currentIndex: queue.currentIndex,
+        queueLength: queue.queue.length,
+        autoplayEnabled: autoplaySettings.enabled,
+        hasArtistId: !!currentTrack?.artistId,
+        isRadioMode: radio.isRadioMode,
+      });
+
       if (queue.repeatMode === 'one') {
         audioElements.playActive();
       } else if (queue.hasNext()) {
         handlePlayNext(false);
       } else if (autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode) {
         // No more tracks in queue - try autoplay with similar artists
-        logger.debug('[Player] Queue ended, attempting autoplay...');
+        logger.info('[Player] Queue ended, attempting autoplay for artist:', currentTrack.artistId);
 
         const currentQueueIds = new Set(queue.queue.map(t => t.id));
         const result = await autoplay.loadSimilarArtistTracks(
@@ -431,10 +441,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           setIsAutoplayActive(true);
           setAutoplaySourceArtist(result.sourceArtistName);
 
+          // Calculate next index BEFORE adding to queue (to avoid race with async setState)
+          const nextIndex = queue.queue.length;
           // Add tracks to queue and play
           queue.addToQueue(result.tracks);
-          // Move to the first new track
-          const nextIndex = queue.queue.length; // Index after current queue
           queue.setCurrentIndex(nextIndex);
           playTrack(result.tracks[0], crossfadeSettings.enabled);
         } else {
