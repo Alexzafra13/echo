@@ -173,8 +173,9 @@ export async function getSmartPlaylistByArtist(
   limit: number = 20
 ): Promise<SmartPlaylist> {
   const response = await apiClient.post('/recommendations/smart-playlist', {
+    name: 'Autoplay',
     artistId,
-    limit,
+    maxTracks: limit,
   });
   return response.data;
 }
@@ -183,12 +184,13 @@ export async function getSmartPlaylistByArtist(
  * Generate smart playlist by genre
  */
 export async function getSmartPlaylistByGenre(
-  genre: string,
+  genreId: string,
   limit: number = 20
 ): Promise<SmartPlaylist> {
   const response = await apiClient.post('/recommendations/smart-playlist', {
-    genre,
-    limit,
+    name: 'Genre Mix',
+    genreId,
+    maxTracks: limit,
   });
   return response.data;
 }
