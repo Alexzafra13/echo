@@ -68,11 +68,11 @@ export function useAutoplay() {
     state.loading = true;
 
     try {
-      // 1. Get related artists
-      logger.info('[Autoplay] Searching for related artists for:', currentArtistId);
+      // 1. Get related artists (using warn level to show in production)
+      logger.warn('[Autoplay] Searching for related artists for:', currentArtistId);
       const relatedResponse = await artistsService.getRelatedArtists(currentArtistId, MAX_ARTISTS_TO_TRY);
 
-      logger.info('[Autoplay] Related artists response:', {
+      logger.warn('[Autoplay] Related artists response:', {
         source: relatedResponse.source,
         count: relatedResponse.data?.length || 0,
         artists: relatedResponse.data?.map((a: { name: string }) => a.name) || [],
@@ -83,7 +83,7 @@ export function useAutoplay() {
         return { tracks: [], sourceArtistName: null };
       }
 
-      logger.info(`[Autoplay] Found ${relatedResponse.data.length} related artists from ${relatedResponse.source}`);
+      logger.warn(`[Autoplay] Found ${relatedResponse.data.length} related artists from ${relatedResponse.source}`);
 
       // 2. Try to get tracks from similar artists (in order of match score)
       const allExcluded = new Set([...excludeTrackIds, ...state.playedTrackIds]);
@@ -95,13 +95,13 @@ export function useAutoplay() {
 
         try {
           // Get smart playlist for this artist
-          logger.info(`[Autoplay] Getting tracks for artist: ${relatedArtist.name} (${relatedArtist.id})`);
+          logger.warn(`[Autoplay] Getting tracks for artist: ${relatedArtist.name} (${relatedArtist.id})`);
           const playlist = await getSmartPlaylistByArtist(
             relatedArtist.id,
             AUTOPLAY_BATCH_SIZE - newTracks.length
           );
 
-          logger.info(`[Autoplay] Smart playlist result for ${relatedArtist.name}:`, {
+          logger.warn(`[Autoplay] Smart playlist result for ${relatedArtist.name}:`, {
             totalTracks: playlist.tracks?.length || 0,
           });
 
