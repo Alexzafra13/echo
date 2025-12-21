@@ -509,6 +509,24 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     };
   }, [audioElements, crossfade.isCrossfading, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, triggerAutoplay, crossfadeSettings.enabled]);
 
+  // ========== AUTOPLAY PREFETCH ==========
+  // Prefetch similar artist tracks when nearing end of queue for instant playback
+  useEffect(() => {
+    if (!autoplaySettings.enabled || radio.isRadioMode || !currentTrack?.artistId) {
+      return;
+    }
+
+    const tracksRemaining = queue.queue.length - queue.currentIndex - 1;
+    const threshold = autoplay.getPrefetchThreshold();
+
+    // Start prefetch when we're within threshold of queue end
+    if (tracksRemaining <= threshold && tracksRemaining >= 0) {
+      logger.debug(`[Player] ${tracksRemaining} tracks remaining, prefetching autoplay tracks`);
+      const currentQueueIds = new Set(queue.queue.map(t => t.id));
+      autoplay.prefetchSimilarArtistTracks(currentTrack.artistId, currentQueueIds);
+    }
+  }, [autoplaySettings.enabled, radio.isRadioMode, currentTrack, queue.currentIndex, queue.queue, autoplay]);
+
   // ========== MEDIA SESSION API (for mobile background playback) ==========
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
