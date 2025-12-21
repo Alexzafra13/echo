@@ -107,4 +107,5 @@ export interface RelatedArtistsResponse {
   data: RelatedArtist[];
   artistId: string;
   limit: number;
+  source: 'lastfm' | 'internal' | 'none';
 }
