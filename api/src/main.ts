@@ -36,14 +36,24 @@ async function bootstrap() {
     },
   });
 
-  // Compression for JSON responses (60-80% size reduction)
-  // Don't compress already-compressed content (audio, images)
-  await app.register(require('@fastify/compress'), {
-    encodings: ['gzip', 'deflate'],
-    threshold: 1024, // Only compress responses > 1KB
-    // Skip compression for audio/video/images (already compressed)
-    customTypes: /^(?!audio\/|video\/|image\/).*$/,
-  });
+  // Compression for JSON responses
+  // In production, compression should be handled by the reverse proxy (nginx)
+  // to avoid double-compression which causes ERR_CONTENT_DECODING_FAILED errors
+  // Like Navidrome/Jellyfin: backend doesn't compress, proxy does
+  const enableCompression = process.env.NODE_ENV !== 'production' &&
+    process.env.DISABLE_COMPRESSION !== 'true';
+
+  if (enableCompression) {
+    await app.register(require('@fastify/compress'), {
+      encodings: ['gzip', 'deflate'],
+      threshold: 1024, // Only compress responses > 1KB
+      // Skip compression for audio/video/images (already compressed)
+      customTypes: /^(?!audio\/|video\/|image\/).*$/,
+    });
+    logger.log('Compression enabled (development mode)');
+  } else {
+    logger.log('Compression disabled - handled by reverse proxy');
+  }
 
   // Security: Helmet - Protection against common web vulnerabilities
   await app.register(require('@fastify/helmet'), {
@@ -179,7 +189,13 @@ async function bootstrap() {
       }
 
       // Serve index.html for SPA client-side routing
-      reply.type('text/html').send(indexHtml);
+      // Add cache-control headers to prevent browser caching issues
+      reply
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .header('Pragma', 'no-cache')
+        .header('Expires', '0')
+        .type('text/html')
+        .send(indexHtml);
     });
 
     logger.log('Frontend static assets configured');
