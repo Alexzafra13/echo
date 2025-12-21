@@ -37,37 +37,22 @@ async function bootstrap() {
   });
 
   // Compression for JSON responses
-  // Auto-detects if running behind a reverse proxy (nginx) and skips compression
+  // In production, compression should be handled by the reverse proxy (nginx)
   // to avoid double-compression which causes ERR_CONTENT_DECODING_FAILED errors
-  const forceDisableCompression = process.env.DISABLE_COMPRESSION === 'true';
+  // Like Navidrome/Jellyfin: backend doesn't compress, proxy does
+  const enableCompression = process.env.NODE_ENV !== 'production' &&
+    process.env.DISABLE_COMPRESSION !== 'true';
 
-  if (!forceDisableCompression) {
-    // Register compression plugin
+  if (enableCompression) {
     await app.register(require('@fastify/compress'), {
       encodings: ['gzip', 'deflate'],
       threshold: 1024, // Only compress responses > 1KB
       // Skip compression for audio/video/images (already compressed)
       customTypes: /^(?!audio\/|video\/|image\/).*$/,
     });
-
-    // Add hook to disable compression when behind a reverse proxy
-    // This prevents double-compression (nginx + Fastify) which corrupts responses
-    const fastifyInstance = app.getHttpAdapter().getInstance();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fastifyInstance.addHook('onRequest', async (request: any, reply: any) => {
-      // If request has X-Forwarded-For or X-Forwarded-Proto, it's behind a proxy
-      // Disable Fastify compression and let the proxy handle it
-      if (request.headers['x-forwarded-for'] || request.headers['x-forwarded-proto']) {
-        // reply.compress is added by @fastify/compress plugin
-        if (typeof reply.compress === 'function') {
-          reply.compress(false);
-        }
-      }
-    });
-
-    logger.log('Compression enabled (auto-disabled when behind reverse proxy)');
+    logger.log('Compression enabled (development mode)');
   } else {
-    logger.log('Compression disabled (DISABLE_COMPRESSION=true)');
+    logger.log('Compression disabled - handled by reverse proxy');
   }
 
   // Security: Helmet - Protection against common web vulnerabilities
