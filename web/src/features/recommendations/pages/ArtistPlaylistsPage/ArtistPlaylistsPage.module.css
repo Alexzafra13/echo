@@ -331,15 +331,27 @@
   }
 
   .artistPlaylistsPage__hero {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    background: transparent;
   }
 
   .artistPlaylistsPage__heroContent {
     flex-direction: column;
+    gap: 1rem;
   }
 
   .artistPlaylistsPage__heroTitle {
     font-size: 1.5rem;
+  }
+
+  .artistPlaylistsPage__heroDescription {
+    font-size: 0.875rem;
+  }
+
+  .artistPlaylistsPage__heroMeta {
+    font-size: 0.75rem;
   }
 
   .artistPlaylistsPage__refreshButton {
@@ -368,8 +380,16 @@
     padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
+  .artistPlaylistsPage__hero {
+    margin-bottom: 1rem;
+  }
+
   .artistPlaylistsPage__heroTitle {
     font-size: 1.25rem;
+  }
+
+  .artistPlaylistsPage__heroDescription {
+    font-size: 0.8125rem;
   }
 
   .artistPlaylistsPage__grid {
