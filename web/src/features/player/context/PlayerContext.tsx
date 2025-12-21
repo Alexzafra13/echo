@@ -425,21 +425,28 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Record completed play (not skipped)
       playTracking.endPlaySession(false);
 
-      logger.debug('[Player] Track ended', {
+      const hasNextTrack = queue.hasNext();
+      const canAutoplay = autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode;
+
+      logger.info('[Player] Track ended - checking next action', {
         repeatMode: queue.repeatMode,
-        hasNext: queue.hasNext(),
+        hasNext: hasNextTrack,
         currentIndex: queue.currentIndex,
         queueLength: queue.queue.length,
         autoplayEnabled: autoplaySettings.enabled,
-        hasArtistId: !!currentTrack?.artistId,
+        artistId: currentTrack?.artistId || 'MISSING',
+        artistName: currentTrack?.artist || 'MISSING',
         isRadioMode: radio.isRadioMode,
+        willAutoplay: !hasNextTrack && canAutoplay,
       });
 
       if (queue.repeatMode === 'one') {
+        logger.info('[Player] Repeat one - replaying current track');
         audioElements.playActive();
-      } else if (queue.hasNext()) {
+      } else if (hasNextTrack) {
+        logger.info('[Player] Playing next track in queue');
         handlePlayNext(false);
-      } else if (autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode) {
+      } else if (canAutoplay) {
         // No more tracks in queue - try autoplay with similar artists
         logger.info('[Player] Queue ended, attempting autoplay for artist:', currentTrack.artistId);
 
