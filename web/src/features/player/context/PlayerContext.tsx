@@ -428,7 +428,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       const hasNextTrack = queue.hasNext();
       const canAutoplay = autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode;
 
-      logger.info('[Player] Track ended - checking next action', {
+      // Using warn level so it shows in production for debugging
+      logger.warn('[Player] Track ended - checking next action', {
         repeatMode: queue.repeatMode,
         hasNext: hasNextTrack,
         currentIndex: queue.currentIndex,
@@ -441,14 +442,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       });
 
       if (queue.repeatMode === 'one') {
-        logger.info('[Player] Repeat one - replaying current track');
+        logger.warn('[Player] Repeat one - replaying current track');
         audioElements.playActive();
       } else if (hasNextTrack) {
-        logger.info('[Player] Playing next track in queue');
+        logger.debug('[Player] Playing next track in queue');
         handlePlayNext(false);
       } else if (canAutoplay && currentTrack?.artistId) {
         // No more tracks in queue - try autoplay with similar artists
-        logger.info('[Player] Queue ended, attempting autoplay for artist:', currentTrack.artistId);
+        logger.warn('[Player] Queue ended, attempting autoplay for artist:', currentTrack.artistId);
 
         const currentQueueIds = new Set(queue.queue.map(t => t.id));
         const result = await autoplay.loadSimilarArtistTracks(
