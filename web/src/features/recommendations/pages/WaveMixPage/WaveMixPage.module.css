@@ -326,68 +326,142 @@
 
   .waveMixPage__content {
     overflow-y: auto; /* Permitir scroll vertical */
+    overflow-x: hidden; /* Evitar scroll horizontal en contenedor principal */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
+    padding: 100px 0 calc(60px + var(--player-bottom-spacer, 0px)); /* Sin padding horizontal para permitir scroll edge-to-edge */
   }
 
   .waveMixPage__hero {
-    border-radius: 12px; /* iOS rounded */
-  }
-
-  .waveMixPage__heroTitle {
-    font-size: 2.5rem;
-  }
-
-  .waveMixPage__refreshButton {
-    border-radius: 20px; /* iOS rounded button */
-  }
-
-  .waveMixPage__viewAllButton {
-    border-radius: 20px; /* iOS rounded button */
-  }
-
-  .waveMixPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .playlistCard {
-    border-radius: 12px; /* iOS rounded */
-  }
-}
-
-@media (max-width: 480px) {
-  .waveMixPage__main {
-    margin-left: 0;
-    padding-top: 0;
-  }
-
-  .waveMixPage__content {
-    padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    margin-bottom: 1.5rem;
+    padding: 0 16px 1.5rem;
+    border-bottom: none;
+    background: transparent;
   }
 
   .waveMixPage__heroTitle {
     font-size: 2rem;
   }
 
+  .waveMixPage__heroDescription {
+    font-size: 0.875rem;
+  }
+
+  .waveMixPage__refreshButton {
+    border-radius: 20px; /* iOS rounded button */
+  }
+
+  .waveMixPage__section {
+    margin-bottom: 2rem;
+    padding: 0 16px;
+  }
+
+  .waveMixPage__sectionTitle {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .waveMixPage__viewAllButtonWrapper {
+    margin-bottom: 1rem;
+  }
+
+  .waveMixPage__viewAllButton {
+    border-radius: 20px; /* iOS rounded button */
+  }
+
+  /* Horizontal scroll carousel for grids on mobile */
   .waveMixPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit para mostrar 2+ columnas */
-    gap: 10px;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 0 16px;
+    padding-bottom: 8px;
+    margin: 0 -16px; /* Compensar padding de section para scroll edge-to-edge */
+
+    /* Hide scrollbar but keep functionality */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .waveMixPage__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fixed width for carousel items */
+  .waveMixPage__grid > * {
+    flex-shrink: 0;
+    width: 140px;
+    scroll-snap-align: start;
   }
 
   .playlistCard {
-    padding: 0.75rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+
+  .playlistCard:hover {
+    transform: none;
+    box-shadow: none;
   }
 
   .playlistCard__name {
-    font-size: 14px;
+    font-size: 13px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .playlistCard__description {
-    font-size: 12px;
+    display: none; /* Ocultar descripción en carousel móvil */
   }
 
   .playlistCard__meta {
     font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .waveMixPage__content {
+    padding: 90px 0 calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño */
+  }
+
+  .waveMixPage__hero {
+    padding: 0 12px 1rem;
+  }
+
+  .waveMixPage__heroTitle {
+    font-size: 1.75rem;
+  }
+
+  .waveMixPage__section {
+    padding: 0 12px;
+  }
+
+  .waveMixPage__sectionTitle {
+    font-size: 1.125rem;
+  }
+
+  .waveMixPage__grid {
+    gap: 10px;
+    padding: 0 12px;
+    margin: 0 -12px;
+  }
+
+  .waveMixPage__grid > * {
+    width: 120px;
+  }
+
+  .playlistCard__name {
+    font-size: 12px;
+  }
+
+  .playlistCard__meta {
+    font-size: 10px;
   }
 }
