@@ -36,14 +36,39 @@ async function bootstrap() {
     },
   });
 
-  // Compression for JSON responses (60-80% size reduction)
-  // Don't compress already-compressed content (audio, images)
-  await app.register(require('@fastify/compress'), {
-    encodings: ['gzip', 'deflate'],
-    threshold: 1024, // Only compress responses > 1KB
-    // Skip compression for audio/video/images (already compressed)
-    customTypes: /^(?!audio\/|video\/|image\/).*$/,
-  });
+  // Compression for JSON responses
+  // Auto-detects if running behind a reverse proxy (nginx) and skips compression
+  // to avoid double-compression which causes ERR_CONTENT_DECODING_FAILED errors
+  const forceDisableCompression = process.env.DISABLE_COMPRESSION === 'true';
+
+  if (!forceDisableCompression) {
+    // Register compression plugin
+    await app.register(require('@fastify/compress'), {
+      encodings: ['gzip', 'deflate'],
+      threshold: 1024, // Only compress responses > 1KB
+      // Skip compression for audio/video/images (already compressed)
+      customTypes: /^(?!audio\/|video\/|image\/).*$/,
+    });
+
+    // Add hook to disable compression when behind a reverse proxy
+    // This prevents double-compression (nginx + Fastify) which corrupts responses
+    const fastifyInstance = app.getHttpAdapter().getInstance();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fastifyInstance.addHook('onRequest', async (request: any, reply: any) => {
+      // If request has X-Forwarded-For or X-Forwarded-Proto, it's behind a proxy
+      // Disable Fastify compression and let the proxy handle it
+      if (request.headers['x-forwarded-for'] || request.headers['x-forwarded-proto']) {
+        // reply.compress is added by @fastify/compress plugin
+        if (typeof reply.compress === 'function') {
+          reply.compress(false);
+        }
+      }
+    });
+
+    logger.log('Compression enabled (auto-disabled when behind reverse proxy)');
+  } else {
+    logger.log('Compression disabled (DISABLE_COMPRESSION=true)');
+  }
 
   // Security: Helmet - Protection against common web vulnerabilities
   await app.register(require('@fastify/helmet'), {
@@ -179,7 +204,13 @@ async function bootstrap() {
       }
 
       // Serve index.html for SPA client-side routing
-      reply.type('text/html').send(indexHtml);
+      // Add cache-control headers to prevent browser caching issues
+      reply
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .header('Pragma', 'no-cache')
+        .header('Expires', '0')
+        .type('text/html')
+        .send(indexHtml);
     });
 
     logger.log('Frontend static assets configured');
