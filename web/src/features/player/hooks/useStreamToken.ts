@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@shared/services/api';
 import { useAuthStore } from '@shared/store';
+import { useCallback } from 'react';
 
 interface StreamTokenResponse {
   token: string;
@@ -14,8 +15,9 @@ interface StreamTokenResponse {
  */
 export function useStreamToken() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['stream-token'],
     queryFn: async (): Promise<StreamTokenResponse> => {
       const response = await apiClient.get('/stream-token');
@@ -26,4 +28,41 @@ export function useStreamToken() {
     retry: 3,
     enabled: isAuthenticated, // Only fetch when authenticated
   });
+
+  /**
+   * Ensures the stream token is available, waiting for it if necessary
+   * Returns the token or null if it fails to load
+   */
+  const ensureToken = useCallback(async (): Promise<string | null> => {
+    // If we already have data, return it
+    if (query.data?.token) {
+      return query.data.token;
+    }
+
+    // If not authenticated, can't get token
+    if (!isAuthenticated) {
+      return null;
+    }
+
+    // Try to fetch/wait for the token
+    try {
+      const data = await queryClient.fetchQuery({
+        queryKey: ['stream-token'],
+        queryFn: async (): Promise<StreamTokenResponse> => {
+          const response = await apiClient.get('/stream-token');
+          return response.data;
+        },
+        staleTime: 1000 * 60 * 60 * 24,
+      });
+      return data.token;
+    } catch {
+      return null;
+    }
+  }, [query.data?.token, isAuthenticated, queryClient]);
+
+  return {
+    ...query,
+    ensureToken,
+    isTokenReady: !!query.data?.token,
+  };
 }
