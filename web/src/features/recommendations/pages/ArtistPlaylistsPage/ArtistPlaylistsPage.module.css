@@ -192,7 +192,7 @@
 /* Grid */
 .artistPlaylistsPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
   /* NO min-height aquí - el grid debe ocupar solo lo necesario */
@@ -331,15 +331,27 @@
   }
 
   .artistPlaylistsPage__hero {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    background: transparent;
   }
 
   .artistPlaylistsPage__heroContent {
     flex-direction: column;
+    gap: 1rem;
   }
 
   .artistPlaylistsPage__heroTitle {
     font-size: 1.5rem;
+  }
+
+  .artistPlaylistsPage__heroDescription {
+    font-size: 0.875rem;
+  }
+
+  .artistPlaylistsPage__heroMeta {
+    font-size: 0.75rem;
   }
 
   .artistPlaylistsPage__refreshButton {
@@ -347,7 +359,7 @@
   }
 
   .artistPlaylistsPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
     min-height: 0; /* Eliminar min-height en mobile para flujo natural */
   }
@@ -368,8 +380,16 @@
     padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
+  .artistPlaylistsPage__hero {
+    margin-bottom: 1rem;
+  }
+
   .artistPlaylistsPage__heroTitle {
     font-size: 1.25rem;
+  }
+
+  .artistPlaylistsPage__heroDescription {
+    font-size: 0.8125rem;
   }
 
   .artistPlaylistsPage__grid {
