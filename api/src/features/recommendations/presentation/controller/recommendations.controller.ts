@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -44,6 +45,8 @@ import { WaveMixService } from '../../domain/services/wave-mix.service';
 @UseGuards(JwtAuthGuard)
 @Controller('recommendations')
 export class RecommendationsController {
+  private readonly logger = new Logger(RecommendationsController.name);
+
   constructor(
     private readonly calculateTrackScoreUseCase: CalculateTrackScoreUseCase,
     private readonly generateDailyMixUseCase: GenerateDailyMixUseCase,
