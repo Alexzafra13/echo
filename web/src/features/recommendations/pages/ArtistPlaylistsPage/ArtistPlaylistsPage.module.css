@@ -192,7 +192,7 @@
 /* Grid */
 .artistPlaylistsPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
   /* NO min-height aquí - el grid debe ocupar solo lo necesario */
@@ -359,7 +359,7 @@
   }
 
   .artistPlaylistsPage__grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
     min-height: 0; /* Eliminar min-height en mobile para flujo natural */
   }
