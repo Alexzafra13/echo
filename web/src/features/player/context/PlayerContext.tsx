@@ -323,9 +323,53 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== QUEUE OPERATIONS ==========
 
   /**
+   * Trigger autoplay with similar artists
+   * @returns true if autoplay was triggered, false otherwise
+   */
+  const triggerAutoplay = useCallback(async (useCrossfade: boolean = false): Promise<boolean> => {
+    const canAutoplay = autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode;
+
+    if (!canAutoplay || !currentTrack?.artistId) {
+      logger.debug('[Player] Cannot autoplay - conditions not met');
+      setIsPlaying(false);
+      setIsAutoplayActive(false);
+      setAutoplaySourceArtist(null);
+      return false;
+    }
+
+    logger.warn('[Player] Triggering autoplay for artist:', currentTrack.artistId);
+
+    const currentQueueIds = new Set(queue.queue.map(t => t.id));
+    const result = await autoplay.loadSimilarArtistTracks(
+      currentTrack.artistId,
+      currentQueueIds
+    );
+
+    if (result.tracks.length > 0) {
+      logger.warn(`[Player] Autoplay: loaded ${result.tracks.length} tracks from similar artists`);
+      setIsAutoplayActive(true);
+      setAutoplaySourceArtist(result.sourceArtistName);
+
+      // Calculate next index BEFORE adding to queue
+      const nextIndex = queue.queue.length;
+      // Add tracks to queue and play
+      queue.addToQueue(result.tracks);
+      queue.setCurrentIndex(nextIndex);
+      playTrack(result.tracks[0], useCrossfade);
+      return true;
+    } else {
+      logger.debug('[Player] Autoplay: no similar tracks found');
+      setIsPlaying(false);
+      setIsAutoplayActive(false);
+      setAutoplaySourceArtist(null);
+      return false;
+    }
+  }, [autoplaySettings.enabled, currentTrack, radio.isRadioMode, queue, autoplay, playTrack]);
+
+  /**
    * Handle playing next track
    */
-  const handlePlayNext = useCallback((useCrossfade: boolean = false) => {
+  const handlePlayNext = useCallback(async (useCrossfade: boolean = false) => {
     if (queue.queue.length === 0) return;
 
     // End current session as skipped if there's an active session
@@ -334,14 +378,20 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
 
     const nextIndex = queue.getNextIndex();
-    if (nextIndex === -1) return;
+
+    // No next track - try autoplay
+    if (nextIndex === -1) {
+      logger.warn('[Player] No next track, attempting autoplay via next button');
+      await triggerAutoplay(useCrossfade);
+      return;
+    }
 
     queue.setCurrentIndex(nextIndex);
     const nextTrack = queue.getTrackAt(nextIndex);
     if (nextTrack) {
       playTrack(nextTrack, useCrossfade);
     }
-  }, [queue, playTracking, playTrack]);
+  }, [queue, playTracking, playTrack, triggerAutoplay]);
 
   // Update ref for crossfade callback
   useEffect(() => {
@@ -426,7 +476,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       playTracking.endPlaySession(false);
 
       const hasNextTrack = queue.hasNext();
-      const canAutoplay = autoplaySettings.enabled && currentTrack?.artistId && !radio.isRadioMode;
 
       // Using warn level so it shows in production for debugging
       logger.warn('[Player] Track ended - checking next action', {
@@ -438,7 +487,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         artistId: currentTrack?.artistId || 'MISSING',
         artistName: currentTrack?.artist || 'MISSING',
         isRadioMode: radio.isRadioMode,
-        willAutoplay: !hasNextTrack && canAutoplay,
       });
 
       if (queue.repeatMode === 'one') {
@@ -447,37 +495,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       } else if (hasNextTrack) {
         logger.debug('[Player] Playing next track in queue');
         handlePlayNext(false);
-      } else if (canAutoplay && currentTrack?.artistId) {
-        // No more tracks in queue - try autoplay with similar artists
-        logger.warn('[Player] Queue ended, attempting autoplay for artist:', currentTrack.artistId);
-
-        const currentQueueIds = new Set(queue.queue.map(t => t.id));
-        const result = await autoplay.loadSimilarArtistTracks(
-          currentTrack.artistId,
-          currentQueueIds
-        );
-
-        if (result.tracks.length > 0) {
-          logger.info(`[Player] Autoplay: loaded ${result.tracks.length} tracks from similar artists`);
-          setIsAutoplayActive(true);
-          setAutoplaySourceArtist(result.sourceArtistName);
-
-          // Calculate next index BEFORE adding to queue (to avoid race with async setState)
-          const nextIndex = queue.queue.length;
-          // Add tracks to queue and play
-          queue.addToQueue(result.tracks);
-          queue.setCurrentIndex(nextIndex);
-          playTrack(result.tracks[0], crossfadeSettings.enabled);
-        } else {
-          logger.debug('[Player] Autoplay: no similar tracks found');
-          setIsPlaying(false);
-          setIsAutoplayActive(false);
-          setAutoplaySourceArtist(null);
-        }
       } else {
-        setIsPlaying(false);
-        setIsAutoplayActive(false);
-        setAutoplaySourceArtist(null);
+        // No more tracks in queue - try autoplay
+        await triggerAutoplay(crossfadeSettings.enabled);
       }
     };
 
@@ -487,7 +507,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audioA.removeEventListener('ended', handleEnded);
       audioB.removeEventListener('ended', handleEnded);
     };
-  }, [audioElements, crossfade.isCrossfading, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, autoplay, radio.isRadioMode, playTrack, crossfadeSettings.enabled]);
+  }, [audioElements, crossfade.isCrossfading, playTracking, queue, handlePlayNext, autoplaySettings.enabled, currentTrack, radio.isRadioMode, triggerAutoplay, crossfadeSettings.enabled]);
 
   // ========== MEDIA SESSION API (for mobile background playback) ==========
   useEffect(() => {
