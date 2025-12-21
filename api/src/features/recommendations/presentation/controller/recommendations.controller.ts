@@ -166,7 +166,13 @@ export class RecommendationsController {
   })
   async generateSmartPlaylist(@Body() config: SmartPlaylistConfigDto, @Req() req: RequestWithUser): Promise<SmartPlaylistDto> {
     const userId = req.user.id;
+
+    // Log for autoplay debugging
+    this.logger.log(`[SmartPlaylist] Generating playlist: artistId=${config.artistId}, name=${config.name}`);
+
     const result = await this.generateSmartPlaylistUseCase.execute(userId, config as any);
+
+    this.logger.log(`[SmartPlaylist] Generated ${result.tracks.length} tracks for artistId=${config.artistId}`);
 
     // Use helper method to fetch and map tracks
     const trackIds = result.tracks.map((t) => t.trackId);
