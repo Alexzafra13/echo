@@ -37,7 +37,7 @@ interface PlayerProviderProps {
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== EXTERNAL HOOKS ==========
-  const { data: streamTokenData } = useStreamToken();
+  const { data: streamTokenData, ensureToken } = useStreamToken();
   const {
     settings: crossfadeSettings,
     setEnabled: setCrossfadeEnabledStorage,
@@ -187,27 +187,40 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Build stream URL for a track
    * Uses custom streamUrl if available (for federated/remote tracks)
+   * Now async to wait for token if not yet available
    */
-  const getStreamUrl = useCallback((track: Track): string | null => {
+  const getStreamUrl = useCallback(async (track: Track): Promise<string | null> => {
     // If track has a custom stream URL (e.g., federated track), use it directly
     if (track.streamUrl) {
       return track.streamUrl;
     }
 
-    if (!streamTokenData?.token) {
-      logger.error('[Player] Stream token not available');
+    // Try to get token from cache first
+    let token: string | null = streamTokenData?.token ?? null;
+
+    // If no token in cache, wait for it to load
+    if (!token) {
+      logger.debug('[Player] Token not in cache, waiting for it...');
+      token = await ensureToken();
+    }
+
+    if (!token) {
+      logger.error('[Player] Stream token not available after waiting');
       return null;
     }
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${streamTokenData.token}`;
-  }, [streamTokenData?.token]);
+    return `${API_BASE_URL}/tracks/${track.id}/stream?token=${token}`;
+  }, [streamTokenData?.token, ensureToken]);
 
   /**
    * Play a track with optional crossfade
    */
   const playTrack = useCallback(async (track: Track, withCrossfade: boolean = false) => {
-    const streamUrl = getStreamUrl(track);
-    if (!streamUrl) return;
+    const streamUrl = await getStreamUrl(track);
+    if (!streamUrl) {
+      logger.warn('[Player] Cannot play track: stream URL unavailable');
+      return;
+    }
 
     // Exit radio mode if active
     if (radio.isRadioMode) {
