@@ -252,6 +252,10 @@ export class ArtistsController {
         50, // Get more from Last.fm so we can filter to local library
       );
 
+      this.logger.info(
+        `[Autoplay] Last.fm returned ${similarFromLastfm?.length || 0} similar artists for: ${artist.name}`
+      );
+
       if (similarFromLastfm && similarFromLastfm.length > 0) {
         const lastfmArtists: Array<{
           id: string;
@@ -260,6 +264,8 @@ export class ArtistsController {
           songCount: number;
           matchScore: number;
         }> = [];
+
+        const notFoundInLibrary: string[] = [];
 
         for (const similar of similarFromLastfm) {
           if (lastfmArtists.length >= limitNum) break;
@@ -274,11 +280,21 @@ export class ArtistsController {
               songCount: localArtist.songCount,
               matchScore: Math.round(similar.match * 100),
             });
+          } else if (!localArtist) {
+            notFoundInLibrary.push(similar.name);
           }
         }
 
+        if (notFoundInLibrary.length > 0) {
+          this.logger.info(
+            `[Autoplay] Similar artists NOT in library: ${notFoundInLibrary.slice(0, 10).join(', ')}${notFoundInLibrary.length > 10 ? '...' : ''}`
+          );
+        }
+
         if (lastfmArtists.length > 0) {
-          this.logger.debug(`Found ${lastfmArtists.length} related artists from Last.fm for: ${artist.name}`);
+          this.logger.info(
+            `[Autoplay] Found ${lastfmArtists.length} related artists IN library: ${lastfmArtists.map(a => a.name).join(', ')}`
+          );
           return {
             data: lastfmArtists,
             artistId,
@@ -288,7 +304,7 @@ export class ArtistsController {
         }
       }
 
-      this.logger.debug(`No Last.fm results in library, falling back to internal patterns for: ${artist.name}`);
+      this.logger.info(`[Autoplay] No Last.fm similar artists found in library for: ${artist.name}, trying internal patterns`);
     }
 
     // 4. Fallback: Use internal co-listening patterns
