@@ -446,7 +446,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       } else if (hasNextTrack) {
         logger.info('[Player] Playing next track in queue');
         handlePlayNext(false);
-      } else if (canAutoplay) {
+      } else if (canAutoplay && currentTrack?.artistId) {
         // No more tracks in queue - try autoplay with similar artists
         logger.info('[Player] Queue ended, attempting autoplay for artist:', currentTrack.artistId);
 
