@@ -189,63 +189,63 @@
   display: none;
 }
 
-/* Grid */
+/* Grid - Same as AlbumGrid */
 .genrePlaylistsPage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  /* NO min-height aquí - el grid debe ocupar solo lo necesario */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 0;
 }
 
+/* Playlist Card - matches AlbumCard styling */
 .playlistCard {
-  background: var(--background-secondary);
-  border-radius: 0.75rem;
-  border: 1px solid var(--border-color);
-  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.3s ease;
+  padding: 8px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
 }
 
 .playlistCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px var(--black-20);
-  border-color: var(--accent-primary);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .playlistCard__info {
-  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .playlistCard__name {
-  font-size: 1rem;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  color: var(--color-text-primary);
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .playlistCard__description {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.75rem 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-height: 1.4;
 }
 
 .playlistCard__meta {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
 /* States */
@@ -359,25 +359,31 @@
   }
 
   .genrePlaylistsPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    min-height: 0; /* Eliminar min-height en mobile para flujo natural */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
   }
 
   .playlistCard {
-    padding: 1rem;
-    border-radius: 12px; /* iOS rounded */
+    gap: 8px;
+    padding: 0;
+  }
+
+  .playlistCard__name {
+    font-size: 14px;
+  }
+
+  .playlistCard__description {
+    font-size: 12px;
+  }
+
+  .playlistCard__meta {
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
-  .genrePlaylistsPage__main {
-    margin-left: 0;
-    padding-top: 0;
-  }
-
   .genrePlaylistsPage__content {
-    padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .genrePlaylistsPage__hero {
@@ -393,20 +399,16 @@
   }
 
   .genrePlaylistsPage__grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Auto-fit para mostrar 2+ columnas */
-    gap: 10px;
-  }
-
-  .playlistCard {
-    padding: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
   }
 
   .playlistCard__name {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .playlistCard__description {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .playlistCard__meta {
