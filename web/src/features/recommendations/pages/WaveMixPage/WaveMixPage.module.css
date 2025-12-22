@@ -334,7 +334,6 @@
 
   .waveMixPage__content {
     overflow-y: auto; /* Permitir scroll vertical */
-    overflow-x: hidden; /* Evitar scroll horizontal en contenedor principal */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 0 calc(60px + var(--player-bottom-spacer, 0px)); /* Sin padding horizontal para permitir scroll edge-to-edge */
   }
