@@ -8,6 +8,7 @@ import { FederationAccessGuard } from './domain/services/federation-access.guard
 import { FederationRepository } from './infrastructure/persistence/federation.repository';
 import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
 import { CoverArtService } from '@shared/services';
+import { StreamingModule } from '@features/streaming/streaming.module';
 
 /**
  * FederationModule - Módulo de federación entre servidores Echo
@@ -31,6 +32,7 @@ import { CoverArtService } from '@shared/services';
  * - Permisos granulares (browse, stream, download)
  */
 @Module({
+  imports: [StreamingModule],
   controllers: [FederationController, FederationPublicController, FederationImportController],
   providers: [
     // Services
