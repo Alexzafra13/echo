@@ -100,12 +100,16 @@ export function PlaylistDetailPage() {
   const handleShufflePlay = () => {
     if (!playlist || playlist.tracks.length === 0) {
       logger.warn('[PlaylistDetail] No playlist or empty tracks', { playlist: !!playlist, tracksLength: playlist?.tracks?.length });
+      alert(`Error: No hay playlist o tracks vacíos. Tracks: ${playlist?.tracks?.length || 0}`);
       return;
     }
     const tracks = convertToPlayerTracks(playlist);
     logger.debug('[PlaylistDetail] Shuffle play', { originalTracks: playlist.tracks.length, convertedTracks: tracks.length });
     if (tracks.length === 0) {
       logger.warn('[PlaylistDetail] No tracks after conversion - check if track data is populated');
+      // Check first track to see what's missing
+      const firstTrack = playlist.tracks[0];
+      alert(`Error: Los tracks no tienen datos completos. Track 1: ${JSON.stringify(firstTrack?.track ? 'tiene datos' : 'NO tiene datos')}. TrackId: ${firstTrack?.trackId || 'no trackId'}`);
       return;
     }
     // Enable shuffle mode
