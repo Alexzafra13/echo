@@ -381,16 +381,16 @@
 
   /* Horizontal scroll carousel for grids on mobile */
   .waveMixPage__grid {
-    display: flex;
+    display: flex !important;
     flex-direction: row;
-    overflow-x: auto;
+    flex-wrap: nowrap;
+    overflow-x: scroll;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 12px;
     padding: 0 16px;
     padding-bottom: 8px;
-    margin: 0; /* No negative margin - grid handles its own padding */
 
     /* Hide scrollbar but keep functionality */
     scrollbar-width: none;
@@ -403,8 +403,8 @@
 
   /* Fixed width for carousel items */
   .waveMixPage__grid > * {
-    flex-shrink: 0;
-    width: 140px;
+    flex: 0 0 140px;
+    min-width: 140px;
     scroll-snap-align: start;
   }
 
@@ -466,11 +466,11 @@
   .waveMixPage__grid {
     gap: 10px;
     padding: 0 12px;
-    margin: 0; /* No negative margin */
   }
 
   .waveMixPage__grid > * {
-    width: 120px;
+    flex: 0 0 120px;
+    min-width: 120px;
   }
 
   .playlistCard__name {
