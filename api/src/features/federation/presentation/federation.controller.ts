@@ -13,6 +13,7 @@ import {
   HttpStatus,
   NotFoundException,
   ForbiddenException,
+  UnauthorizedException,
   Inject,
 } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
@@ -22,6 +23,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
@@ -30,6 +32,7 @@ import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User, ConnectedServer } from '@infrastructure/database/schema';
 import { FederationTokenService, RemoteServerService } from '../domain/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
+import { StreamTokenService } from '@features/streaming/domain/stream-token.service';
 import {
   CreateInvitationTokenDto,
   ConnectToServerDto,
@@ -65,6 +68,7 @@ export class FederationController {
     private readonly remoteServerService: RemoteServerService,
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
+    private readonly streamTokenService: StreamTokenService,
   ) {}
 
   /**
@@ -556,24 +560,49 @@ export class FederationController {
   }
 
   @Get('servers/:id/tracks/:trackId/stream')
+  @Public()
   @ApiOperation({
     summary: 'Stream de track desde servidor remoto',
     description: 'Proxy para hacer streaming de un track desde un servidor federado. ' +
-      'Este endpoint requiere autenticación y verifica que el usuario tenga acceso al servidor.',
+      'Este endpoint acepta autenticación via stream token en query parameter (para HTML5 audio) ' +
+      'o via JWT header.',
   })
   @ApiParam({ name: 'id', description: 'ID del servidor' })
   @ApiParam({ name: 'trackId', description: 'ID del track remoto' })
+  @ApiQuery({ name: 'token', description: 'Stream token for authentication', required: true })
   @ApiResponse({ status: 200, description: 'Stream de audio' })
+  @ApiResponse({ status: 401, description: 'Token inválido o no proporcionado' })
   @ApiResponse({ status: 404, description: 'Servidor o track no encontrado' })
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async streamRemoteTrack(
-    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('trackId') trackId: string,
+    @Query('token') token: string | undefined,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
   ) {
-    const server = await this.getServerWithOwnershipCheck(id, user.id);
+    // Validate stream token
+    if (!token) {
+      res.status(HttpStatus.UNAUTHORIZED).send({ error: 'Stream token is required' });
+      return;
+    }
+
+    const userId = await this.streamTokenService.validateToken(token);
+    if (!userId) {
+      res.status(HttpStatus.UNAUTHORIZED).send({ error: 'Invalid or expired stream token' });
+      return;
+    }
+
+    // Get server and verify ownership
+    const server = await this.repository.findConnectedServerById(id);
+    if (!server) {
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Server not found' });
+      return;
+    }
+    if (server.userId !== userId) {
+      res.status(HttpStatus.FORBIDDEN).send({ error: 'You do not have access to this server' });
+      return;
+    }
 
     try {
       const streamResult = await this.remoteServerService.streamRemoteTrack(
