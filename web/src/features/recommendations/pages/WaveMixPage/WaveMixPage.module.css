@@ -327,21 +327,25 @@
 
 /* Mobile - iOS Style with Bottom Nav */
 @media (max-width: 768px) {
+  .waveMixPage {
+    overflow: visible; /* Allow child elements to scroll horizontally */
+  }
+
   .waveMixPage__main {
     margin-left: 0; /* No sidebar en mobile */
+    max-width: 100vw;
     padding-top: 0;
   }
 
   .waveMixPage__content {
-    overflow-y: auto; /* Permitir scroll vertical */
-    overflow-x: hidden; /* Prevent horizontal page scroll */
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 0 calc(60px + var(--player-bottom-spacer, 0px)); /* Sin padding horizontal para permitir scroll edge-to-edge */
+    padding: 100px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    overflow-x: hidden; /* Solo content tiene overflow-x hidden */
   }
 
   .waveMixPage__hero {
     margin-bottom: 1.5rem;
-    padding: 0 16px 1.5rem;
+    padding-bottom: 1.5rem;
     border-bottom: none;
     background: transparent;
   }
@@ -360,19 +364,21 @@
 
   .waveMixPage__section {
     margin-bottom: 2rem;
-    padding: 0; /* Remove section padding - let children handle it */
-    overflow: visible; /* Ensure carousel can scroll */
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 0;
+    overflow: visible;
   }
 
   .waveMixPage__sectionTitle {
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
-    padding: 0 16px; /* Title has its own padding */
+    padding: 0 16px;
   }
 
   .waveMixPage__viewAllButtonWrapper {
     margin-bottom: 1rem;
-    padding: 0 16px; /* Button wrapper has its own padding */
+    padding: 0 16px;
   }
 
   .waveMixPage__viewAllButton {
@@ -381,16 +387,18 @@
 
   /* Horizontal scroll carousel for grids on mobile */
   .waveMixPage__grid {
-    display: flex !important;
+    display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 12px;
     padding: 0 16px;
     padding-bottom: 8px;
+    width: 100%;
+    max-width: 100%;
 
     /* Hide scrollbar but keep functionality */
     scrollbar-width: none;
@@ -439,11 +447,11 @@
 
 @media (max-width: 480px) {
   .waveMixPage__content {
-    padding: 90px 0 calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño */
+    padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .waveMixPage__hero {
-    padding: 0 12px 1rem;
+    padding-bottom: 1rem;
   }
 
   .waveMixPage__heroTitle {
@@ -451,16 +459,17 @@
   }
 
   .waveMixPage__section {
-    padding: 0; /* Remove section padding */
+    margin-left: -12px;
+    margin-right: -12px;
   }
 
   .waveMixPage__sectionTitle {
     font-size: 1.125rem;
-    padding: 0 12px; /* Title handles its own padding */
+    padding: 0 12px;
   }
 
   .waveMixPage__viewAllButtonWrapper {
-    padding: 0 12px; /* Button wrapper handles its own padding */
+    padding: 0 12px;
   }
 
   .waveMixPage__grid {
