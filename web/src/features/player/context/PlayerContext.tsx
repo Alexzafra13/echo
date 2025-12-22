@@ -190,11 +190,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Now async to wait for token if not yet available
    */
   const getStreamUrl = useCallback(async (track: Track): Promise<string | null> => {
-    // If track has a custom stream URL (e.g., federated track), use it directly
-    if (track.streamUrl) {
-      return track.streamUrl;
-    }
-
     // Try to get token from cache first
     let token: string | null = streamTokenData?.token ?? null;
 
@@ -208,6 +203,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       logger.error('[Player] Stream token not available after waiting');
       return null;
     }
+
+    // If track has a custom stream URL (e.g., federated track), add token to it
+    if (track.streamUrl) {
+      const separator = track.streamUrl.includes('?') ? '&' : '?';
+      return `${track.streamUrl}${separator}token=${token}`;
+    }
+
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
     return `${API_BASE_URL}/tracks/${track.id}/stream?token=${token}`;
   }, [streamTokenData?.token, ensureToken]);
