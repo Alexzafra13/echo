@@ -98,38 +98,22 @@ export function PlaylistDetailPage() {
   };
 
   const handleShufflePlay = () => {
-    try {
-      // Debug: first line to verify function is being called
-      console.log('[PlaylistDetail] handleShufflePlay called');
+    if (!playlist || playlist.tracks.length === 0) return;
 
-      if (!playlist || playlist.tracks.length === 0) {
-        logger.warn('[PlaylistDetail] No playlist or empty tracks', { playlist: !!playlist, tracksLength: playlist?.tracks?.length });
-        return;
-      }
+    const playerTracks = convertToPlayerTracks(playlist);
+    if (playerTracks.length === 0) return;
 
-      const playerTracks = convertToPlayerTracks(playlist);
-      console.log('[PlaylistDetail] Converted tracks:', playerTracks.length);
+    // Enable shuffle mode
+    setShuffle(true);
 
-      if (playerTracks.length === 0) {
-        logger.warn('[PlaylistDetail] No tracks after conversion');
-        return;
-      }
-
-      // Enable shuffle mode
-      setShuffle(true);
-
-      // Shuffle the tracks array using Fisher-Yates algorithm
-      const shuffledTracks = [...playerTracks];
-      for (let i = shuffledTracks.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
-      }
-
-      console.log('[PlaylistDetail] Playing shuffled queue:', shuffledTracks.length, 'tracks');
-      playQueue(shuffledTracks, 0);
-    } catch (error) {
-      console.error('[PlaylistDetail] Error in handleShufflePlay:', error);
+    // Shuffle the tracks array using Fisher-Yates algorithm
+    const shuffledTracks = [...playerTracks];
+    for (let i = shuffledTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
     }
+
+    playQueue(shuffledTracks, 0);
   };
 
   const handlePlayTrack = (track: HomeTrack) => {
