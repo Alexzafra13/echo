@@ -98,30 +98,38 @@ export function PlaylistDetailPage() {
   };
 
   const handleShufflePlay = () => {
-    if (!playlist || playlist.tracks.length === 0) {
-      logger.warn('[PlaylistDetail] No playlist or empty tracks', { playlist: !!playlist, tracksLength: playlist?.tracks?.length });
-      alert(`Error: No hay playlist o tracks vacíos. Tracks: ${playlist?.tracks?.length || 0}`);
-      return;
+    try {
+      // Debug: first line to verify function is being called
+      console.log('[PlaylistDetail] handleShufflePlay called');
+
+      if (!playlist || playlist.tracks.length === 0) {
+        logger.warn('[PlaylistDetail] No playlist or empty tracks', { playlist: !!playlist, tracksLength: playlist?.tracks?.length });
+        return;
+      }
+
+      const playerTracks = convertToPlayerTracks(playlist);
+      console.log('[PlaylistDetail] Converted tracks:', playerTracks.length);
+
+      if (playerTracks.length === 0) {
+        logger.warn('[PlaylistDetail] No tracks after conversion');
+        return;
+      }
+
+      // Enable shuffle mode
+      setShuffle(true);
+
+      // Shuffle the tracks array using Fisher-Yates algorithm
+      const shuffledTracks = [...playerTracks];
+      for (let i = shuffledTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
+      }
+
+      console.log('[PlaylistDetail] Playing shuffled queue:', shuffledTracks.length, 'tracks');
+      playQueue(shuffledTracks, 0);
+    } catch (error) {
+      console.error('[PlaylistDetail] Error in handleShufflePlay:', error);
     }
-    const tracks = convertToPlayerTracks(playlist);
-    logger.debug('[PlaylistDetail] Shuffle play', { originalTracks: playlist.tracks.length, convertedTracks: tracks.length });
-    if (tracks.length === 0) {
-      logger.warn('[PlaylistDetail] No tracks after conversion - check if track data is populated');
-      // Check first track to see what's missing
-      const firstTrack = playlist.tracks[0];
-      alert(`Error: Los tracks no tienen datos completos. Track 1: ${JSON.stringify(firstTrack?.track ? 'tiene datos' : 'NO tiene datos')}. TrackId: ${firstTrack?.trackId || 'no trackId'}`);
-      return;
-    }
-    // Enable shuffle mode
-    setShuffle(true);
-    // Shuffle the tracks array using Fisher-Yates algorithm
-    const shuffledTracks = [...tracks];
-    for (let i = shuffledTracks.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
-    }
-    alert(`DEBUG: Llamando playQueue con ${shuffledTracks.length} tracks. Primer track: ${shuffledTracks[0]?.title}`);
-    playQueue(shuffledTracks, 0);
   };
 
   const handlePlayTrack = (track: HomeTrack) => {
