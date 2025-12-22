@@ -17,7 +17,9 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiBody,
+  ApiProperty,
 } from '@nestjs/swagger';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
@@ -29,7 +31,14 @@ import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/fe
  * DTO for starting an album import
  */
 class StartImportDto {
+  @ApiProperty({ description: 'ID of the connected server' })
+  @IsString()
+  @IsNotEmpty()
   serverId!: string;
+
+  @ApiProperty({ description: 'ID of the album on the remote server' })
+  @IsString()
+  @IsNotEmpty()
   remoteAlbumId!: string;
 }
 
