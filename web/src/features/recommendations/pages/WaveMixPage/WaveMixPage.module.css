@@ -334,6 +334,7 @@
 
   .waveMixPage__content {
     overflow-y: auto; /* Permitir scroll vertical */
+    overflow-x: hidden; /* Prevent horizontal page scroll */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 100px 0 calc(60px + var(--player-bottom-spacer, 0px)); /* Sin padding horizontal para permitir scroll edge-to-edge */
   }
@@ -359,16 +360,19 @@
 
   .waveMixPage__section {
     margin-bottom: 2rem;
-    padding: 0 16px;
+    padding: 0; /* Remove section padding - let children handle it */
+    overflow: visible; /* Ensure carousel can scroll */
   }
 
   .waveMixPage__sectionTitle {
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
+    padding: 0 16px; /* Title has its own padding */
   }
 
   .waveMixPage__viewAllButtonWrapper {
     margin-bottom: 1rem;
+    padding: 0 16px; /* Button wrapper has its own padding */
   }
 
   .waveMixPage__viewAllButton {
@@ -386,7 +390,7 @@
     gap: 12px;
     padding: 0 16px;
     padding-bottom: 8px;
-    margin: 0 -16px; /* Compensar padding de section para scroll edge-to-edge */
+    margin: 0; /* No negative margin - grid handles its own padding */
 
     /* Hide scrollbar but keep functionality */
     scrollbar-width: none;
@@ -447,17 +451,22 @@
   }
 
   .waveMixPage__section {
-    padding: 0 12px;
+    padding: 0; /* Remove section padding */
   }
 
   .waveMixPage__sectionTitle {
     font-size: 1.125rem;
+    padding: 0 12px; /* Title handles its own padding */
+  }
+
+  .waveMixPage__viewAllButtonWrapper {
+    padding: 0 12px; /* Button wrapper handles its own padding */
   }
 
   .waveMixPage__grid {
     gap: 10px;
     padding: 0 12px;
-    margin: 0 -12px;
+    margin: 0; /* No negative margin */
   }
 
   .waveMixPage__grid > * {
