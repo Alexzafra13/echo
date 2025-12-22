@@ -26,6 +26,12 @@
   height: 240px;
 }
 
+/* Responsive size - fills container width with square aspect ratio */
+.responsive {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
 .colorCover {
   width: 100%;
   height: 100%;

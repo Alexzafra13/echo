@@ -190,7 +190,7 @@ export function WaveMixPage() {
                           coverColor={playlist.coverColor}
                           coverImageUrl={playlist.coverImageUrl}
                           artistName={playlist.metadata.artistName}
-                          size="medium"
+                          size="responsive"
                         />
                         <div className={styles.playlistCard__info}>
                           <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
@@ -234,7 +234,7 @@ export function WaveMixPage() {
                           coverColor={playlist.coverColor}
                           coverImageUrl={playlist.coverImageUrl}
                           artistName={playlist.metadata.artistName}
-                          size="medium"
+                          size="responsive"
                         />
                         <div className={styles.playlistCard__info}>
                           <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
@@ -275,7 +275,7 @@ export function WaveMixPage() {
                           name={playlist.name}
                           coverColor={playlist.coverColor}
                           coverImageUrl={playlist.coverImageUrl}
-                          size="medium"
+                          size="responsive"
                         />
                         <div className={styles.playlistCard__info}>
                           <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
