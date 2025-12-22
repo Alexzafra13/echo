@@ -98,8 +98,16 @@ export function PlaylistDetailPage() {
   };
 
   const handleShufflePlay = () => {
-    if (!playlist || playlist.tracks.length === 0) return;
+    if (!playlist || playlist.tracks.length === 0) {
+      logger.warn('[PlaylistDetail] No playlist or empty tracks', { playlist: !!playlist, tracksLength: playlist?.tracks?.length });
+      return;
+    }
     const tracks = convertToPlayerTracks(playlist);
+    logger.debug('[PlaylistDetail] Shuffle play', { originalTracks: playlist.tracks.length, convertedTracks: tracks.length });
+    if (tracks.length === 0) {
+      logger.warn('[PlaylistDetail] No tracks after conversion - check if track data is populated');
+      return;
+    }
     // Enable shuffle mode
     setShuffle(true);
     // Shuffle the tracks array using Fisher-Yates algorithm
