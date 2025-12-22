@@ -209,7 +209,7 @@ export function ArtistPlaylistsPage() {
                       coverColor={playlist.coverColor}
                       coverImageUrl={playlist.coverImageUrl}
                       artistName={playlist.metadata.artistName}
-                      size="large"
+                      size="responsive"
                     />
                     <div className={styles.playlistCard__info}>
                       <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
