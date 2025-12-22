@@ -24,10 +24,12 @@ export function WaveMixPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Calculate items for 2 rows based on screen size (same as HomePage)
-  const { itemsPerPage: neededItems } = useGridDimensions({
+  // Use at least 10 items for mobile carousel scroll
+  const { itemsPerPage: gridItems } = useGridDimensions({
     maxRows: 2,
     headerHeight: 450,
   });
+  const neededItems = Math.max(gridItems, 10);
 
   const loadPlaylists = async () => {
     setIsLoading(true);
