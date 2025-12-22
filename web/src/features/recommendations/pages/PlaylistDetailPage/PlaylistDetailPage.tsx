@@ -120,6 +120,7 @@ export function PlaylistDetailPage() {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledTracks[i], shuffledTracks[j]] = [shuffledTracks[j], shuffledTracks[i]];
     }
+    alert(`DEBUG: Llamando playQueue con ${shuffledTracks.length} tracks. Primer track: ${shuffledTracks[0]?.title}`);
     playQueue(shuffledTracks, 0);
   };
 
