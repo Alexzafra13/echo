@@ -154,6 +154,8 @@
   padding-bottom: 2rem;
   border-bottom: 1px solid var(--border-color);
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2; /* Ensure buttons are above hero background */
 }
 
 .playlistDetailPage__actions button {
@@ -163,6 +165,8 @@
 /* Track List */
 .playlistDetailPage__tracks {
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 2; /* Ensure tracks are above hero background */
 }
 
 /* Empty State */
