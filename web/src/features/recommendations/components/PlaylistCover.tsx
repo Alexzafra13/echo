@@ -8,7 +8,7 @@ interface PlaylistCoverProps {
   coverColor?: string;
   coverImageUrl?: string;
   artistName?: string; // For artist playlists
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'responsive';
   className?: string;
 }
 
@@ -87,7 +87,7 @@ export function PlaylistCover({
             // Default: Waves icon
             <>
               <div className={styles.iconContainer}>
-                <Waves size={size === 'large' ? 80 : size === 'medium' ? 48 : 32} />
+                <Waves size={size === 'large' ? 80 : size === 'small' ? 32 : 48} />
               </div>
               {type === 'wave-mix' && (
                 <div className={styles.coverText}>
