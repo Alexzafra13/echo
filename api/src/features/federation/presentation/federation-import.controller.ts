@@ -9,6 +9,7 @@ import {
   Inject,
   NotFoundException,
   ForbiddenException,
+  BadGatewayException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -84,6 +85,7 @@ export class FederationImportController {
   })
   @ApiResponse({ status: 404, description: 'Servidor no encontrado' })
   @ApiResponse({ status: 403, description: 'No tienes permiso para descargar de este servidor' })
+  @ApiResponse({ status: 502, description: 'Error al conectar con el servidor remoto' })
   async startImport(
     @CurrentUser() user: User,
     @Body() dto: StartImportDto,
@@ -105,7 +107,28 @@ export class FederationImportController {
       'Starting album import',
     );
 
-    return this.importService.startImport(user.id, server, dto.remoteAlbumId);
+    try {
+      return await this.importService.startImport(user.id, server, dto.remoteAlbumId);
+    } catch (error) {
+      // Handle network/connection errors
+      if (error instanceof Error && error.message.includes('Cannot connect to remote server')) {
+        this.logger.error(
+          { userId: user.id, serverId: dto.serverId, error: error.message },
+          'Failed to connect to remote server for import',
+        );
+        throw new BadGatewayException(error.message);
+      }
+      // Handle fetch errors
+      if (error instanceof Error && error.message.includes('Failed to fetch album metadata')) {
+        this.logger.error(
+          { userId: user.id, serverId: dto.serverId, error: error.message },
+          'Failed to fetch album metadata from remote server',
+        );
+        throw new BadGatewayException(error.message);
+      }
+      // Re-throw other errors (like ConflictException for duplicates)
+      throw error;
+    }
   }
 
   /**

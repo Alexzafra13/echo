@@ -278,21 +278,42 @@ export class AlbumImportService {
     server: ConnectedServer,
     albumId: string,
   ): Promise<ExportedAlbumMetadata> {
-    const response = await fetch(
-      `${server.baseUrl}/api/federation/albums/${albumId}/export`,
-      {
+    const url = `${server.baseUrl}/api/federation/albums/${albumId}/export`;
+
+    this.logger.info(
+      { serverId: server.id, albumId, url },
+      'Fetching album metadata from remote server',
+    );
+
+    try {
+      const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${server.authToken}`,
           'Content-Type': 'application/json',
         },
-      },
-    );
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch album metadata: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'No response body');
+        this.logger.error(
+          { serverId: server.id, albumId, status: response.status, error: errorText },
+          'Failed to fetch album metadata from remote server',
+        );
+        throw new Error(`Failed to fetch album metadata: ${response.status} - ${errorText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Failed to fetch album metadata')) {
+        throw error;
+      }
+      // Network error or other fetch failure
+      this.logger.error(
+        { serverId: server.id, albumId, error: error instanceof Error ? error.message : error },
+        'Network error fetching album metadata',
+      );
+      throw new Error(`Cannot connect to remote server: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    return response.json();
   }
 
   /**
