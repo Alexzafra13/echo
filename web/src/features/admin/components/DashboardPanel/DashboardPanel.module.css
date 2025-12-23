@@ -1,16 +1,16 @@
-/* DashboardPanel Component Styles */
+/* DashboardPanel Component Styles - Enhanced Design */
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--white-10);
 }
 
@@ -21,76 +21,91 @@
   color: var(--color-text-primary, #ffffff);
 }
 
+.headerLeft > svg {
+  color: var(--color-primary, #ed6842);
+}
+
 .title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   color: var(--color-text-primary, #ffffff);
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
   font-size: 14px;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--color-text-tertiary, #6b7280);
   margin: 4px 0 0 0;
+  font-weight: 500;
 }
 
 .refreshButton {
-  padding: 10px 20px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 8px;
-  color: var(--color-primary, #ff6b6b);
+  padding: 12px 22px;
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.12) 0%, rgba(237, 104, 66, 0.06) 100%);
+  border: 1px solid rgba(237, 104, 66, 0.25);
+  border-radius: 10px;
+  color: var(--color-primary, #ed6842);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .refreshButton:hover {
-  background: rgba(255, 107, 107, 0.15);
-  border-color: rgba(255, 107, 107, 0.5);
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.1) 100%);
+  border-color: rgba(237, 104, 66, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.2);
+}
+
+.refreshButton:active {
+  transform: translateY(0);
 }
 
 /* Stats Grid */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
 }
 
 /* Stats Row (for smaller cards) */
 .statsRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
 }
 
 /* Charts Row (for timeline and storage) */
 .chartsRow {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 18px;
 }
 
 /* Card */
 .card {
-  background: var(--white-03);
+  background: linear-gradient(135deg, var(--white-04) 0%, var(--white-02) 100%);
   border: 1px solid var(--white-08);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  background: var(--white-05);
-  border-color: var(--white-12);
+  background: linear-gradient(135deg, var(--white-06) 0%, var(--white-04) 100%);
+  border-color: var(--white-15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .cardTitle {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary, #ffffff);
-  margin: 0 0 16px 0;
+  margin: 0 0 18px 0;
+  letter-spacing: -0.2px;
 }
 
 /* Activity Stats */
