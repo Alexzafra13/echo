@@ -335,44 +335,111 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .providerHeader {
-    flex-direction: column;
+  .container {
+    gap: 20px;
+  }
+
+  .section {
     gap: 12px;
   }
 
-  /* Larger provider icons on mobile for better visibility */
+  .sectionTitle {
+    font-size: 16px;
+  }
+
+  .sectionDescription {
+    font-size: 13px;
+  }
+
+  /* Provider cards - improved mobile layout */
+  .providerCard {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .providerHeader {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Provider icon with background on mobile */
   .providerIcon {
-    width: 32px;
-    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, rgba(237, 104, 66, 0.15) 0%, rgba(237, 104, 66, 0.05) 100%);
+    border-radius: 12px;
+    flex-shrink: 0;
   }
 
   .providerIcon svg {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .providerInfo {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .providerName {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+
+  .providerDescription {
+    font-size: 12px;
+    line-height: 1.4;
   }
 
   .statusBadgeEnabled {
-    align-self: flex-start;
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 8px;
   }
 
   .statusBadgeEnabled svg {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .providerBody {
+    gap: 10px;
   }
 
   .providerActions {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
   }
 
-  .actions {
+  .providerLink {
+    text-align: center;
+    padding: 10px;
+    background: var(--white-03);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  /* Toggle row */
+  .toggleRow {
+    padding: 14px 16px;
+  }
+
+  .toggleLabel {
+    font-size: 13px;
+  }
+
+  /* Info box */
+  .infoBox {
     flex-direction: column;
-  }
-
-  .validationMessage svg {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
+    gap: 12px;
+    padding: 16px;
   }
 
   .infoIcon {
@@ -383,5 +450,37 @@
   .infoIcon svg {
     width: 24px;
     height: 24px;
+  }
+
+  .infoTitle {
+    font-size: 13px;
+  }
+
+  .infoText {
+    font-size: 12px;
+  }
+
+  /* Validation messages */
+  .validationMessage {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .validationMessage svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Actions */
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .saveSuccess,
+  .saveError {
+    justify-content: center;
+    font-size: 13px;
   }
 }
