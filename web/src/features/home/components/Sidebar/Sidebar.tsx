@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -27,21 +27,11 @@ export function Sidebar() {
   // Detectar cuando el usuario llega al final de la página para mostrar mini-player
   const isMiniMode = usePageEndDetection(120);
 
-  // Refs for animated indicator
+  // Animated indicator state
   const navRef = useRef<HTMLElement>(null);
-  const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
   const isFirstRender = useRef(true);
   const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number } | null>(null);
   const [canAnimate, setCanAnimate] = useState(false);
-
-  // Store ref callback
-  const setItemRef = useCallback((path: string, element: HTMLAnchorElement | null) => {
-    if (element) {
-      itemRefs.current.set(path, element);
-    } else {
-      itemRefs.current.delete(path);
-    }
-  }, []);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -69,11 +59,13 @@ export function Sidebar() {
   useEffect(() => {
     if (!activePath || !navRef.current) return;
 
-    const activeElement = itemRefs.current.get(activePath);
-    const navContainer = navRef.current;
+    // Query DOM directly - more reliable than ref callbacks
+    const activeElement = navRef.current.querySelector(
+      `[data-nav-path="${activePath}"]`
+    ) as HTMLElement | null;
 
-    if (activeElement && navContainer) {
-      const navRect = navContainer.getBoundingClientRect();
+    if (activeElement) {
+      const navRect = navRef.current.getBoundingClientRect();
       const itemRect = activeElement.getBoundingClientRect();
 
       setIndicatorStyle({
@@ -84,8 +76,7 @@ export function Sidebar() {
       // First render: enable animations after browser paints initial position
       if (isFirstRender.current) {
         isFirstRender.current = false;
-        const timer = setTimeout(() => setCanAnimate(true), 50);
-        return () => clearTimeout(timer);
+        setTimeout(() => setCanAnimate(true), 50);
       }
     }
   }, [activePath, navItems.length]);
@@ -120,7 +111,7 @@ export function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              ref={(el: HTMLAnchorElement | null) => setItemRef(item.path, el)}
+              data-nav-path={item.path}
               className={`${styles.sidebar__navItem} ${
                 isActive(item.path) ? styles['sidebar__navItem--active'] : ''
               }`}
