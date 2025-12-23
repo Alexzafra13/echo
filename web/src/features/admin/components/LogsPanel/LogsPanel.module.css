@@ -288,25 +288,21 @@
 
 /* Log Details (Expandable) */
 .logDetails {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.2s ease,
-              margin-top 0.3s ease;
-  opacity: 0;
-  margin-top: 0;
-}
-
-.logDetails > * {
-  overflow: hidden;
-}
-
-.logDetailsOpen {
-  grid-template-rows: 1fr;
-  opacity: 1;
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--white-08);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .detailRow {

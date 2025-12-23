@@ -253,31 +253,33 @@ export function LogsPanel() {
 
               <div className={styles.logMessage}>{log.message}</div>
 
-              <div className={`${styles.logDetails} ${expandedLog === log.id ? styles.logDetailsOpen : ''}`}>
-                {log.entityId && (
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Entity ID</span>
-                    <span className={styles.detailValue}>
-                      {log.entityId}
-                      {log.entityType && <span className={styles.entityType}>{log.entityType}</span>}
-                    </span>
-                  </div>
-                )}
+              {expandedLog === log.id && (
+                <div className={styles.logDetails}>
+                  {log.entityId && (
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Entity ID</span>
+                      <span className={styles.detailValue}>
+                        {log.entityId}
+                        {log.entityType && <span className={styles.entityType}>{log.entityType}</span>}
+                      </span>
+                    </div>
+                  )}
 
-                {log.details && (
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Detalles</span>
-                    <pre className={styles.detailsJson}>{formatDetails(log.details)}</pre>
-                  </div>
-                )}
+                  {log.details && (
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Detalles</span>
+                      <pre className={styles.detailsJson}>{formatDetails(log.details)}</pre>
+                    </div>
+                  )}
 
-                {log.stackTrace && (
-                  <div className={styles.detailRow}>
-                    <span className={styles.detailLabel}>Stack Trace</span>
-                    <pre className={styles.stackTrace}>{log.stackTrace}</pre>
-                  </div>
-                )}
-              </div>
+                  {log.stackTrace && (
+                    <div className={styles.detailRow}>
+                      <span className={styles.detailLabel}>Stack Trace</span>
+                      <pre className={styles.stackTrace}>{log.stackTrace}</pre>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
