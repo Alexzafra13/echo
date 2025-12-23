@@ -5,6 +5,10 @@
   display: flex;
   flex-direction: column;
   gap: 36px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* Statistics Section */
@@ -325,10 +329,25 @@
   border-radius: 16px;
   border: 1px solid var(--white-08);
   background: linear-gradient(135deg, var(--white-02) 0%, transparent 100%);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Hide scrollbar but allow scroll */
+.tableContainer::-webkit-scrollbar {
+  height: 0;
+  display: none;
+}
+
+.tableContainer {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
 }
 

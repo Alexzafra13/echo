@@ -121,6 +121,10 @@
 .tabContent {
   animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 @keyframes fadeIn {
@@ -165,6 +169,23 @@
     white-space: nowrap;
     padding: 10px 16px;
     font-size: 13px;
+  }
+
+  /* Larger icons on mobile */
+  .tabButton svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  /* Hide scrollbar but allow scroll */
+  .tabNav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabNav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 }
 
