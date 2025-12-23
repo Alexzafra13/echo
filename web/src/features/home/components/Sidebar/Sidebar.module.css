@@ -46,7 +46,7 @@
   position: relative;
 }
 
-/* Animated sliding indicator */
+/* Sliding indicator - no transition on first render */
 .sidebar__indicator {
   position: absolute;
   left: 12px;
@@ -54,12 +54,15 @@
   background: linear-gradient(135deg, rgba(237, 104, 66, 0.2) 0%, rgba(237, 104, 66, 0.08) 100%);
   border: 1px solid rgba(237, 104, 66, 0.25);
   border-radius: 10px;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.2s ease;
   pointer-events: none;
   z-index: 0;
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.15);
+}
+
+/* Enable animation after first render */
+.sidebar__indicator--animated {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Glowing left bar on the indicator */
