@@ -31,6 +31,7 @@ export function Sidebar() {
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
   const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0, opacity: 0 });
+  const [isAnimated, setIsAnimated] = useState(false);
 
   // Store ref callback
   const setItemRef = useCallback((path: string, element: HTMLAnchorElement | null) => {
@@ -79,8 +80,16 @@ export function Sidebar() {
         height: itemRect.height,
         opacity: 1,
       });
+
+      // Enable animations after initial position is set
+      if (!isAnimated) {
+        // Small delay to ensure position is set before enabling transitions
+        requestAnimationFrame(() => {
+          setIsAnimated(true);
+        });
+      }
     }
-  }, [activePath, navItems.length]);
+  }, [activePath, navItems.length, isAnimated]);
 
   return (
     <aside className={styles.sidebar}>
@@ -97,7 +106,7 @@ export function Sidebar() {
       <nav className={styles.sidebar__nav} ref={navRef}>
         {/* Animated sliding indicator */}
         <div
-          className={styles.sidebar__indicator}
+          className={`${styles.sidebar__indicator} ${isAnimated ? styles['sidebar__indicator--animated'] : ''}`}
           style={{
             transform: `translateY(${indicatorStyle.top}px)`,
             height: indicatorStyle.height,
