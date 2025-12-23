@@ -24,7 +24,7 @@ export function HistoryTab() {
   // Filters and pagination
   const [filters, setFilters] = useState<ListEnrichmentLogsFilters>({
     skip: 0,
-    take: 25,
+    take: 10,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [statsPeriod, setStatsPeriod] = useState<'today' | 'week' | 'month' | 'all'>('week');
@@ -40,7 +40,7 @@ export function HistoryTab() {
 
   const logs = logsData?.logs || [];
   const total = logsData?.total || 0;
-  const pageSize = filters.take || 25;
+  const pageSize = filters.take || 10;
   const totalPages = Math.ceil(total / pageSize);
 
   // Handlers
