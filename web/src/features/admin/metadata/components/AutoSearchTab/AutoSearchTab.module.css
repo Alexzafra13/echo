@@ -47,7 +47,62 @@
   font-size: 14px;
   color: var(--color-text-secondary, #b8bcc8);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+/* Providers Tab Container */
+.providersTab {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Setting Row - Card style for settings */
+.settingRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--white-03) 0%, transparent 100%);
+  border: 1px solid var(--white-08);
+  border-radius: 14px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settingRow:hover {
+  border-color: var(--white-12);
+}
+
+.settingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settingLabel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  cursor: pointer;
+}
+
+.settingLabel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-primary, #ed6842);
+  cursor: pointer;
+}
+
+.settingDescription {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+  line-height: 1.6;
+  padding-left: 34px;
 }
 
 /* Toggle Row */
@@ -442,8 +497,40 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .container {
-    gap: 24px;
+  .container,
+  .providersTab {
+    gap: 20px;
+  }
+
+  .section {
+    gap: 16px;
+  }
+
+  .sectionHeader {
+    margin-bottom: 0;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+  }
+
+  .sectionDescription {
+    font-size: 13px;
+  }
+
+  /* Settings on mobile */
+  .settingRow {
+    padding: 16px 18px;
+  }
+
+  .settingLabel {
+    font-size: 14px;
+    gap: 12px;
+  }
+
+  .settingDescription {
+    font-size: 13px;
+    padding-left: 32px;
   }
 
   .providerHeader {
@@ -471,5 +558,18 @@
 
   .statValue {
     font-size: 28px;
+  }
+
+  .thresholdBox {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .thresholdBox:hover {
+    transform: none;
+  }
+
+  .infoBoxSpacing {
+    margin-top: 20px;
   }
 }
