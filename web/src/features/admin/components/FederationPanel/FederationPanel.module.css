@@ -549,6 +549,25 @@
   background: var(--error-10);
 }
 
+.actionButtonSuccess {
+  border-color: var(--success-30);
+  color: var(--color-success);
+}
+
+.actionButtonSuccess:hover {
+  background: var(--success-10);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.accessActions {
+  display: flex;
+  gap: 8px;
+}
+
 /* Empty State */
 .emptyState {
   display: flex;
