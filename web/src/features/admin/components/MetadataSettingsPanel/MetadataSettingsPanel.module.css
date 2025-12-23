@@ -72,6 +72,20 @@
   background: var(--white-03);
   border-radius: 14px;
   border: 1px solid var(--white-08);
+  position: relative;
+}
+
+/* Animated sliding indicator */
+.tabIndicator {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #d85a38 100%);
+  border-radius: 10px;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.35);
+  z-index: 0;
 }
 
 .tabButton {
@@ -86,41 +100,21 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
-}
-
-.tabButton::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.15) 0%, rgba(237, 104, 66, 0.05) 100%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  border-radius: 10px;
+  z-index: 1;
 }
 
 .tabButton:hover {
   color: var(--color-text-primary, #ffffff);
 }
 
-.tabButton:hover::before {
-  opacity: 0.5;
-}
-
 .tabButtonActive {
-  color: var(--color-primary, #ed6842);
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.08) 100%);
-  box-shadow: 0 2px 12px rgba(237, 104, 66, 0.2), inset 0 0 0 1px rgba(237, 104, 66, 0.2);
+  color: #ffffff;
 }
 
 .tabButtonActive svg {
-  filter: drop-shadow(0 0 6px rgba(237, 104, 66, 0.5));
-}
-
-.tabButtonActive:hover::before {
-  opacity: 0;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
 }
 
 /* Tab Content */
@@ -191,9 +185,21 @@
 }
 
 :root[data-theme="light"] .tabNav {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .tabIndicator {
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.25);
+}
+
+:root[data-theme="light"] .tabButton {
+  color: #4b5563;
+}
+
+:root[data-theme="light"] .tabButton:hover {
+  color: #1f2937;
 }
 
 :root[data-theme="light"] .tabButtonActive {
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.12) 0%, rgba(237, 104, 66, 0.04) 100%);
+  color: #ffffff;
 }
