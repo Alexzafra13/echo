@@ -616,15 +616,20 @@ export class FederationController {
         return;
       }
 
-      // Set headers from remote response
-      for (const [key, value] of Object.entries(streamResult.headers)) {
-        if (value) {
-          res.header(key, value);
-        }
-      }
+      // Use res.raw.writeHead for proper streaming with Fastify
+      // This ensures headers are sent correctly before the stream starts
+      res.raw.writeHead(streamResult.statusCode, streamResult.headers);
 
-      // Set appropriate status code
-      res.status(streamResult.statusCode);
+      // Handle stream errors
+      streamResult.stream.on('error', (error) => {
+        this.logger.error(
+          { serverId: id, trackId, error: error instanceof Error ? error.message : error },
+          'Stream error from remote server',
+        );
+        if (!res.raw.destroyed) {
+          res.raw.destroy();
+        }
+      });
 
       // Pipe the stream to response
       streamResult.stream.pipe(res.raw);
