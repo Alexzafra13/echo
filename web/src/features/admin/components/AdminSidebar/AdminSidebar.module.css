@@ -155,7 +155,7 @@
     right: 0;
     top: auto;
     bottom: 0;
-    position: fixed; /* Asegurar que siempre esté fijo */
+    position: fixed;
     flex-direction: row;
     padding: 0;
     background: rgba(30, 41, 59, 0.85);
@@ -163,13 +163,13 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-right: none;
     border-top: 1px solid var(--white-08);
-    z-index: 9999; /* Z-index muy alto para estar siempre visible */
+    z-index: 9999;
     /* iOS safe area */
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   .sidebar__logoContainer {
-    display: none; /* Hide logo in bottom nav */
+    display: none;
   }
 
   .sidebar__nav {
@@ -192,8 +192,16 @@
     border-radius: 0;
     min-width: 0;
     text-align: center;
-    /* iOS tab bar height */
     min-height: 50px;
+  }
+
+  /* Disable desktop effects on mobile */
+  .sidebar__navItem::before {
+    display: none;
+  }
+
+  .sidebar__navItem:hover {
+    transform: none;
   }
 
   .sidebar__navIcon {
@@ -215,6 +223,8 @@
   /* Active state more prominent iOS style */
   .sidebar__navItem--active {
     background: transparent;
+    box-shadow: none;
+    border: none;
   }
 
   .sidebar__navItem--active .sidebar__navIcon {
