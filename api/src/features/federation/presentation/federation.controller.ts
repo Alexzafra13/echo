@@ -676,18 +676,20 @@ export class FederationController {
   @Delete('access-tokens/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Revocar acceso de servidor',
-    description: 'Revoca el acceso de un servidor a tu biblioteca',
+    summary: 'Revocar o eliminar acceso de servidor',
+    description: 'Revoca el acceso de un servidor a tu biblioteca. Con ?permanent=true elimina permanentemente.',
   })
   @ApiParam({ name: 'id', description: 'ID del token de acceso' })
-  @ApiResponse({ status: 204, description: 'Acceso revocado' })
+  @ApiQuery({ name: 'permanent', required: false, description: 'Si es true, elimina permanentemente el token' })
+  @ApiResponse({ status: 204, description: 'Acceso revocado/eliminado' })
   @ApiResponse({ status: 404, description: 'Token no encontrado' })
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
-  async revokeAccessToken(
+  async revokeOrDeleteAccessToken(
     @CurrentUser() user: User,
     @Param('id') id: string,
+    @Query('permanent') permanent?: string,
   ): Promise<void> {
-    // Verify ownership before revoking
+    // Verify ownership before revoking/deleting
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
       throw new NotFoundException('Access token not found');
@@ -695,8 +697,58 @@ export class FederationController {
     if (accessToken.ownerId !== user.id) {
       throw new ForbiddenException('You do not have access to this token');
     }
-    await this.tokenService.revokeAccessToken(id);
-    this.logger.info({ userId: user.id, tokenId: id }, 'Access token revoked');
+
+    if (permanent === 'true') {
+      await this.tokenService.deleteAccessToken(id);
+      this.logger.info({ userId: user.id, tokenId: id }, 'Access token permanently deleted');
+    } else {
+      await this.tokenService.revokeAccessToken(id);
+      this.logger.info({ userId: user.id, tokenId: id }, 'Access token revoked');
+    }
+  }
+
+  @Post('access-tokens/:id/reactivate')
+  @ApiOperation({
+    summary: 'Reactivar acceso de servidor',
+    description: 'Reactiva el acceso de un servidor que fue revocado previamente',
+  })
+  @ApiParam({ name: 'id', description: 'ID del token de acceso' })
+  @ApiResponse({
+    status: 200,
+    description: 'Acceso reactivado',
+    type: AccessTokenResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Token no encontrado' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al token' })
+  async reactivateAccessToken(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<AccessTokenResponseDto> {
+    // Verify ownership before reactivating
+    const accessToken = await this.repository.findFederationAccessTokenById(id);
+    if (!accessToken) {
+      throw new NotFoundException('Access token not found');
+    }
+    if (accessToken.ownerId !== user.id) {
+      throw new ForbiddenException('You do not have access to this token');
+    }
+
+    const updated = await this.tokenService.reactivateAccessToken(id);
+    if (!updated) {
+      throw new NotFoundException('Access token not found');
+    }
+
+    this.logger.info({ userId: user.id, tokenId: id }, 'Access token reactivated');
+
+    return {
+      id: updated.id,
+      serverName: updated.serverName,
+      serverUrl: updated.serverUrl ?? undefined,
+      permissions: updated.permissions,
+      isActive: updated.isActive,
+      lastUsedAt: updated.lastUsedAt ?? undefined,
+      createdAt: updated.createdAt,
+    };
   }
 
   @Patch('access-tokens/:id/permissions')
