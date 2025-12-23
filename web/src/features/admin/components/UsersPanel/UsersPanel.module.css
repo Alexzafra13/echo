@@ -1,7 +1,7 @@
-/* UsersPanel Component Styles */
+/* UsersPanel Component Styles - Enhanced Design */
 
 .panel {
-  background: var(--white-03);
+  background: linear-gradient(135deg, var(--white-04) 0%, var(--white-02) 100%);
   border-radius: 16px;
   padding: 32px;
   border: 1px solid var(--white-08);
@@ -9,11 +9,11 @@
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .panel:hover {
-  background: var(--white-05);
+  background: linear-gradient(135deg, var(--white-05) 0%, var(--white-03) 100%);
   border-color: var(--white-12);
 }
 
@@ -22,7 +22,9 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--white-08);
 }
 
 .headerLeft {
@@ -30,17 +32,19 @@
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   color: var(--color-text-primary, #ffffff);
   margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
 }
 
 .description {
   font-size: 14px;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--color-text-tertiary, #6b7280);
   margin: 0;
   line-height: 1.5;
+  font-weight: 500;
 }
 
 /* Search and Filters */
@@ -194,15 +198,22 @@
 .userInfo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .userAvatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
+  border: 2px solid var(--white-15);
+  transition: all 0.25s ease;
+}
+
+.table tbody tr:hover .userAvatar {
+  border-color: var(--color-primary, #ed6842);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
 }
 
 .userAvatarImage {
@@ -218,71 +229,76 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 107, 107, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.25) 0%, rgba(237, 104, 66, 0.12) 100%);
   color: var(--color-text-primary, #ffffff);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
 .userDetails {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
 .userName {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary, #ffffff);
+  font-size: 14px;
 }
 
 .userEmail {
-  font-size: 13px;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 12px;
+  color: var(--color-text-tertiary, #6b7280);
+  font-weight: 500;
 }
 
 /* Badge Styles */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
 }
 
 .badgeAdmin {
-  background: var(--primary-15);
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.1) 100%);
   color: var(--color-primary, #ed6842);
-  border: 1px solid var(--primary-30);
+  border: 1px solid rgba(237, 104, 66, 0.3);
+  box-shadow: 0 2px 8px rgba(237, 104, 66, 0.1);
 }
 
 .badgeSystemAdmin {
-  background: rgba(255, 215, 0, 0.15);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
   color: #ffd700;
   border: 1px solid rgba(255, 215, 0, 0.4);
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.15);
 }
 
 .badgeUser {
-  background: var(--info-10);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, rgba(34, 211, 238, 0.08) 100%);
   color: var(--color-info);
-  border: 1px solid var(--info-30);
+  border: 1px solid rgba(34, 211, 238, 0.25);
 }
 
 .badgeActive {
-  background: var(--success-15);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.1) 100%);
   color: var(--color-success);
-  border: 1px solid var(--success-30);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badgeInactive {
-  background: var(--error-10);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%);
   color: var(--color-error);
-  border: 1px solid var(--error-30);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 /* Actions Cell */
@@ -293,56 +309,66 @@
 }
 
 .actionButton {
-  padding: 6px 10px;
-  border: 1px solid var(--white-10);
-  border-radius: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--white-12);
+  border-radius: 8px;
   background: var(--white-05);
   color: var(--color-text-secondary, #b8bcc8);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .actionButton:hover {
-  background: var(--white-08);
+  background: var(--white-10);
   border-color: var(--white-20);
   color: var(--color-text-primary, #ffffff);
+  transform: translateY(-1px);
+}
+
+.actionButton:active {
+  transform: translateY(0);
 }
 
 .actionButton:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+  transform: none;
 }
 
 .actionButtonWarning {
-  border-color: var(--warning-20);
+  border-color: rgba(245, 158, 11, 0.25);
   color: var(--color-warning);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .actionButtonWarning:hover:not(:disabled) {
-  background: var(--warning-10);
-  border-color: var(--warning-20);
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
   color: var(--color-warning);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
 }
 
 .actionButtonWarning:disabled {
-  border-color: var(--warning-10);
-  color: var(--warning-20);
+  border-color: rgba(245, 158, 11, 0.1);
+  color: rgba(245, 158, 11, 0.4);
 }
 
 .actionButtonDanger {
-  border-color: var(--error-30);
+  border-color: rgba(239, 68, 68, 0.25);
   color: var(--color-error);
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .actionButtonDanger:hover:not(:disabled) {
-  background: var(--error-10);
-  border-color: var(--error-30);
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
   color: var(--color-error);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
 }
 
 /* Pagination */
