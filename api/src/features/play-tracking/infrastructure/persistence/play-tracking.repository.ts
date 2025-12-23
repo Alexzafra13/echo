@@ -448,13 +448,20 @@ export class DrizzlePlayTrackingRepository implements IPlayTrackingRepository {
     isPlaying: boolean,
     currentTrackId: string | null,
   ): Promise<void> {
+    // Validate that currentTrackId is a valid UUID (federated tracks use composite IDs like "serverId-trackId")
+    // If it's not a valid UUID, store null to avoid database errors
+    const isValidUuid = currentTrackId
+      ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentTrackId)
+      : true;
+    const trackIdToStore = isValidUuid ? currentTrackId : null;
+
     // Use upsert: insert if not exists, update if exists
     await this.drizzle.db.execute(sql`
       INSERT INTO play_queue (user_id, current_track_id, is_playing, updated_at)
-      VALUES (${userId}, ${currentTrackId}, ${isPlaying}, NOW())
+      VALUES (${userId}, ${trackIdToStore}, ${isPlaying}, NOW())
       ON CONFLICT (user_id)
       DO UPDATE SET
-        current_track_id = ${currentTrackId},
+        current_track_id = ${trackIdToStore},
         is_playing = ${isPlaying},
         updated_at = NOW()
     `);
