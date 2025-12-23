@@ -1,4 +1,3 @@
-import { Shield } from 'lucide-react';
 import { MiniPlayer } from '@features/player/components/MiniPlayer';
 import { usePageEndDetection } from '@features/player/hooks/usePageEndDetection';
 import styles from './AdminSidebar.module.css';
@@ -29,15 +28,13 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
 
   return (
     <aside className={styles.sidebar}>
-      {/* Logo/Header - Hidden on mobile */}
+      {/* Logo - Same as main sidebar */}
       <div className={styles.sidebar__logoContainer}>
-        <div className={styles.header}>
-          <Shield size={24} />
-          <div>
-            <h2 className={styles.title}>Admin</h2>
-            <p className={styles.subtitle}>Panel</p>
-          </div>
-        </div>
+        <img
+          src="/images/logos/echo-icon-sidebar-white.png"
+          alt="Echo"
+          className={styles.sidebar__logo}
+        />
       </div>
 
       {/* Navigation */}
