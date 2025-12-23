@@ -35,6 +35,7 @@ import {
   usePendingMutualRequests,
   useApproveMutualRequest,
   useRejectMutualRequest,
+  useUpdatePermissions,
 } from '../../hooks/useFederation';
 import { ConnectedServer, InvitationToken, AccessToken } from '../../api/federation.api';
 import { ConnectServerModal } from './ConnectServerModal';
@@ -74,6 +75,7 @@ export function FederationPanel() {
   const checkHealthMutation = useCheckAllServersHealth();
   const approveMutualMutation = useApproveMutualRequest();
   const rejectMutualMutation = useRejectMutualRequest();
+  const updatePermissionsMutation = useUpdatePermissions();
 
   // Handlers
   const handleCopyToken = async (token: string) => {
@@ -152,6 +154,23 @@ export function FederationPanel() {
       setNotification({ type: 'success', message: 'Solicitud rechazada' });
     } catch {
       setNotification({ type: 'error', message: 'Error al rechazar solicitud' });
+    }
+  };
+
+  const handleTogglePermission = async (
+    token: AccessToken,
+    permission: 'canBrowse' | 'canStream' | 'canDownload'
+  ) => {
+    try {
+      await updatePermissionsMutation.mutateAsync({
+        id: token.id,
+        permissions: {
+          [permission]: !token.permissions[permission],
+        },
+      });
+      setNotification({ type: 'success', message: 'Permisos actualizados' });
+    } catch {
+      setNotification({ type: 'error', message: 'Error al actualizar permisos' });
     }
   };
 
@@ -508,18 +527,33 @@ export function FederationPanel() {
                     </div>
 
                     <div className={styles.permissions}>
-                      <div className={`${styles.permission} ${token.permissions.canBrowse ? styles.permissionEnabled : ''}`}>
+                      <button
+                        className={`${styles.permission} ${styles.permissionToggle} ${token.permissions.canBrowse ? styles.permissionEnabled : ''}`}
+                        onClick={() => handleTogglePermission(token, 'canBrowse')}
+                        disabled={updatePermissionsMutation.isPending}
+                        title={token.permissions.canBrowse ? 'Desactivar permiso' : 'Activar permiso'}
+                      >
                         <Eye size={14} />
                         <span>Ver biblioteca</span>
-                      </div>
-                      <div className={`${styles.permission} ${token.permissions.canStream ? styles.permissionEnabled : ''}`}>
+                      </button>
+                      <button
+                        className={`${styles.permission} ${styles.permissionToggle} ${token.permissions.canStream ? styles.permissionEnabled : ''}`}
+                        onClick={() => handleTogglePermission(token, 'canStream')}
+                        disabled={updatePermissionsMutation.isPending}
+                        title={token.permissions.canStream ? 'Desactivar permiso' : 'Activar permiso'}
+                      >
                         <Radio size={14} />
                         <span>Reproducir</span>
-                      </div>
-                      <div className={`${styles.permission} ${token.permissions.canDownload ? styles.permissionEnabled : ''}`}>
+                      </button>
+                      <button
+                        className={`${styles.permission} ${styles.permissionToggle} ${token.permissions.canDownload ? styles.permissionEnabled : ''}`}
+                        onClick={() => handleTogglePermission(token, 'canDownload')}
+                        disabled={updatePermissionsMutation.isPending}
+                        title={token.permissions.canDownload ? 'Desactivar permiso' : 'Activar permiso'}
+                      >
                         <Download size={14} />
                         <span>Descargar</span>
-                      </div>
+                      </button>
                     </div>
 
                     <div className={styles.accessFooter}>

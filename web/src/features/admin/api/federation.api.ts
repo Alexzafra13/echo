@@ -269,7 +269,7 @@ export const federationApi = {
    * Actualiza los permisos de un servidor conectado
    */
   async updatePermissions(id: string, permissions: UpdatePermissionsRequest): Promise<AccessToken> {
-    const response = await apiClient.put<AccessToken>(
+    const response = await apiClient.patch<AccessToken>(
       `/federation/access-tokens/${id}/permissions`,
       permissions
     );
