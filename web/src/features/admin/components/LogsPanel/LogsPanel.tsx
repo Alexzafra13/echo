@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Shield, Globe, HardDrive, Trash2, FileText } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Shield, Globe, HardDrive, Trash2, FileText } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatDateWithTime } from '@shared/utils/format';
@@ -53,7 +53,7 @@ export function LogsPanel() {
   const [total, setTotal] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [limit] = useState(50);
+  const [limit] = useState(10);
   const [offset, setOffset] = useState(0);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -147,10 +147,6 @@ export function LogsPanel() {
       {/* Header */}
       <div className={styles.header}>
         <h2 className={styles.title}>Logs del Sistema</h2>
-        <Button onClick={loadLogs} disabled={isLoading}>
-          <RefreshCw size={16} className={isLoading ? styles.spinning : ''} />
-          Actualizar
-        </Button>
       </div>
 
       {/* Error notification */}
