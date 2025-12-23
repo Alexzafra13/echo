@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -696,6 +697,59 @@ export class FederationController {
     }
     await this.tokenService.revokeAccessToken(id);
     this.logger.info({ userId: user.id, tokenId: id }, 'Access token revoked');
+  }
+
+  @Patch('access-tokens/:id/permissions')
+  @ApiOperation({
+    summary: 'Actualizar permisos de un servidor',
+    description: 'Actualiza los permisos (browse, stream, download) de un servidor que tiene acceso a tu biblioteca',
+  })
+  @ApiParam({ name: 'id', description: 'ID del token de acceso' })
+  @ApiResponse({
+    status: 200,
+    description: 'Permisos actualizados',
+    type: AccessTokenResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Token no encontrado' })
+  @ApiResponse({ status: 403, description: 'Sin acceso al token' })
+  async updateAccessTokenPermissions(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() dto: UpdatePermissionsDto,
+  ): Promise<AccessTokenResponseDto> {
+    // Verify ownership before updating
+    const accessToken = await this.repository.findFederationAccessTokenById(id);
+    if (!accessToken) {
+      throw new NotFoundException('Access token not found');
+    }
+    if (accessToken.ownerId !== user.id) {
+      throw new ForbiddenException('You do not have access to this token');
+    }
+
+    const updated = await this.tokenService.updateAccessTokenPermissions(id, {
+      canBrowse: dto.canBrowse,
+      canStream: dto.canStream,
+      canDownload: dto.canDownload,
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Access token not found');
+    }
+
+    this.logger.info(
+      { userId: user.id, tokenId: id, permissions: dto },
+      'Access token permissions updated',
+    );
+
+    return {
+      id: updated.id,
+      serverName: updated.serverName,
+      serverUrl: updated.serverUrl ?? undefined,
+      permissions: updated.permissions,
+      isActive: updated.isActive,
+      lastUsedAt: updated.lastUsedAt ?? undefined,
+      createdAt: updated.createdAt,
+    };
   }
 
   // ============================================
