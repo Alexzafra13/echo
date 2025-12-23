@@ -9,34 +9,29 @@
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
   border: 1px solid var(--white-08);
   border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.panelExpanded {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+.panel:hover {
+  border-color: var(--white-12);
+  transform: translateY(-2px);
 }
 
-.panelCollapsed {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(30, 41, 59, 0.2) 100%);
-}
-
-/* Collapsible Header */
-.collapsibleHeader {
+/* Header */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1.5rem;
   padding: 1.5rem 2rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--white-08);
 }
 
-.collapsibleHeader:hover {
-  background: var(--white-03);
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .headerIcon {
@@ -45,54 +40,9 @@
   flex-shrink: 0;
 }
 
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.checkBadge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
-  border: 1px solid var(--success-30);
-  border-radius: 50%;
-  color: var(--color-success);
-}
-
-.chevronIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.chevronRotated {
-  transform: rotate(180deg);
-}
-
-/* Collapsible Content */
-.collapsibleContent {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.collapsibleContent > * {
-  overflow: hidden;
-}
-
-.contentExpanded {
-  grid-template-rows: 1fr;
-}
-
-.contentExpanded > * {
-  padding: 0 2rem 2rem 2rem;
+/* Content */
+.content {
+  padding: 2rem;
 }
 
 /* Back Button */
@@ -837,10 +787,11 @@
     padding: 1rem 1.25rem;
   }
 
-  /* Collapsible header mobile */
-  .collapsibleHeader {
+  /* Header mobile */
+  .header {
     padding: 1.25rem 1.5rem;
     gap: 1rem;
+    flex-wrap: wrap;
   }
 
   .headerIcon {
@@ -864,18 +815,8 @@
     font-size: 1.25rem;
   }
 
-  .checkBadge {
-    width: 32px;
-    height: 32px;
-  }
-
-  .checkBadge svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .contentExpanded > * {
-    padding: 0 1.5rem 1.5rem 1.5rem;
+  .content {
+    padding: 1.5rem;
   }
 }
 
@@ -884,12 +825,8 @@
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
 }
 
-:root[data-theme="light"] .panelCollapsed {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(248, 250, 252, 0.4) 100%);
-}
-
-:root[data-theme="light"] .collapsibleHeader:hover {
-  background: rgba(0, 0, 0, 0.03);
+:root[data-theme="light"] .header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
 }
 
 :root[data-theme="light"] .title {
@@ -897,8 +834,4 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-:root[data-theme="light"] .chevronIcon {
-  color: #4b5563;
 }
