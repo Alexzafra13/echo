@@ -1,112 +1,171 @@
-/* HealthPanel Component Styles */
+/* HealthPanel Component Styles - Enhanced Design */
 
 .container {
-  background: var(--white-03);
+  background: linear-gradient(135deg, var(--white-04) 0%, var(--white-02) 100%);
   border: 1px solid var(--white-08);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   color: var(--color-text-primary, #ffffff);
 }
 
+.header svg {
+  color: var(--color-primary, #ed6842);
+}
+
 .title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
 }
 
 .healthItem {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  background: var(--white-02);
-  border: 1px solid var(--white-06);
-  border-radius: 8px;
+  gap: 12px;
+  padding: 18px;
+  background: linear-gradient(135deg, var(--white-03) 0%, var(--white-02) 100%);
+  border: 1px solid var(--white-08);
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.healthItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+  transition: background 0.2s ease;
+}
+
+.healthItem:hover {
+  background: linear-gradient(135deg, var(--white-05) 0%, var(--white-03) 100%);
+  border-color: var(--white-12);
+  transform: translateY(-2px);
 }
 
 .healthHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--color-text-secondary, #b8bcc8);
 }
 
 .healthLabel {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .healthStatus {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 14px;
-  font-weight: 600;
-  margin-top: 4px;
+  font-weight: 700;
+  margin-top: 2px;
 }
 
+/* Healthy State */
 .iconHealthy {
   color: var(--color-success);
 }
 
+.healthItem:has(.iconHealthy)::before {
+  background: linear-gradient(90deg, var(--color-success) 0%, transparent 100%);
+}
+
+/* Warning State */
 .iconWarning {
   color: var(--color-warning);
 }
 
+.healthItem:has(.iconWarning)::before {
+  background: linear-gradient(90deg, var(--color-warning) 0%, transparent 100%);
+}
+
+/* Error State */
 .iconError {
+  color: var(--color-error);
+}
+
+.healthItem:has(.iconError)::before {
+  background: linear-gradient(90deg, var(--color-error) 0%, transparent 100%);
+}
+
+/* Status text colors */
+.healthStatus .iconHealthy + span,
+.healthStatus:has(.iconHealthy) span {
+  color: var(--color-success);
+}
+
+.healthStatus .iconWarning + span,
+.healthStatus:has(.iconWarning) span {
+  color: var(--color-warning);
+}
+
+.healthStatus .iconError + span,
+.healthStatus:has(.iconError) span {
   color: var(--color-error);
 }
 
 /* Alerts Section */
 .alertsSection {
-  padding-top: 16px;
+  padding-top: 20px;
   border-top: 1px solid var(--white-08);
 }
 
 .alertsHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--color-warning);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .alertsTitle {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
 }
 
 .alertsList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .alert {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--warning-10);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 6px;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--warning-10) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--color-warning);
 }
 
@@ -119,34 +178,36 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 10px 12px;
-  background: var(--warning-10);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 6px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--warning-10) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--color-warning);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   font-family: inherit;
 }
 
 .alertButton:hover {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.5);
-  transform: translateX(2px);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
 }
 
 .alertButton:active {
-  transform: translateX(4px);
+  transform: translateX(6px);
 }
 
 .alertContent {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex: 1;
 }
 
@@ -156,18 +217,28 @@
 
 .alertChevron {
   flex-shrink: 0;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
+  opacity: 0.5;
+  transition: all 0.2s ease;
 }
 
 .alertButton:hover .alertChevron {
   opacity: 1;
+  transform: translateX(2px);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
   .grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .healthItem {
+    padding: 14px;
   }
 }
 
@@ -175,4 +246,17 @@
   .grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Light Theme */
+:root[data-theme="light"] .container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+:root[data-theme="light"] .healthItem {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
+}
+
+:root[data-theme="light"] .healthItem:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
 }
