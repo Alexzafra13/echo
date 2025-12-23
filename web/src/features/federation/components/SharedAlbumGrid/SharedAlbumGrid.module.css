@@ -283,6 +283,66 @@
   }
 }
 
+/* ===== Error Banner ===== */
+.sharedAlbumGrid__errorBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  margin: 0 20px 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #fca5a5;
+}
+
+.sharedAlbumGrid__errorBanner > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sharedAlbumGrid__errorContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.sharedAlbumGrid__errorMessage {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #fecaca;
+}
+
+.sharedAlbumGrid__errorClose {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: #fca5a5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sharedAlbumGrid__errorClose:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .sharedAlbumGrid__errorBanner {
+    margin: 0 16px 12px;
+    padding: 12px 16px;
+  }
+
+  .sharedAlbumGrid__errorMessage {
+    font-size: 13px;
+  }
+}
+
 /* ===== Empty State ===== */
 .sharedAlbumGrid__emptyState {
   display: flex;
