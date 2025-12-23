@@ -29,7 +29,6 @@ export function Sidebar() {
 
   // Animated indicator
   const navRef = useRef<HTMLElement>(null);
-  const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
   const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number } | null>(null);
 
   const baseNavItems = [
@@ -51,48 +50,34 @@ export function Sidebar() {
     return location === path || location.startsWith(path + '/');
   };
 
-  // Find active path
-  const activePath = navItems.find(item => isActive(item.path))?.path;
+  // Find active index
+  const activeIndex = navItems.findIndex(item => isActive(item.path));
 
-  // Update indicator position when location changes
+  // Update indicator position - uses DOM query for reliability
   useEffect(() => {
-    if (!activePath) return;
+    if (activeIndex === -1 || !navRef.current) return;
 
-    const activeItem = itemRefs.current.get(activePath);
-    const navContainer = navRef.current;
+    const updatePosition = () => {
+      if (!navRef.current) return;
 
-    if (activeItem && navContainer) {
-      const navRect = navContainer.getBoundingClientRect();
-      const itemRect = activeItem.getBoundingClientRect();
+      const links = navRef.current.querySelectorAll('a');
+      const activeLink = links[activeIndex] as HTMLElement;
 
-      setIndicatorStyle({
-        top: itemRect.top - navRect.top,
-        height: itemRect.height,
-      });
-    }
-  }, [activePath]);
-
-  // Initial indicator position with delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!activePath) return;
-
-      const activeItem = itemRefs.current.get(activePath);
-      const navContainer = navRef.current;
-
-      if (activeItem && navContainer) {
-        const navRect = navContainer.getBoundingClientRect();
-        const itemRect = activeItem.getBoundingClientRect();
+      if (activeLink) {
+        const navRect = navRef.current.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
 
         setIndicatorStyle({
-          top: itemRect.top - navRect.top,
-          height: itemRect.height,
+          top: linkRect.top - navRect.top,
+          height: linkRect.height,
         });
       }
-    }, 50);
+    };
 
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(updatePosition, 10);
     return () => clearTimeout(timer);
-  }, []);
+  }, [activeIndex, navItems.length]);
 
   return (
     <aside className={styles.sidebar}>
@@ -107,7 +92,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className={styles.sidebar__nav} ref={navRef}>
-        {/* Animated sliding indicator - only render when position is known */}
+        {/* Animated sliding indicator */}
         {indicatorStyle && (
           <div
             className={styles.sidebar__indicator}
@@ -124,9 +109,6 @@ export function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              ref={(el: HTMLAnchorElement | null) => {
-                if (el) itemRefs.current.set(item.path, el);
-              }}
               className={`${styles.sidebar__navItem} ${
                 isActive(item.path) ? styles['sidebar__navItem--active'] : ''
               }`}
