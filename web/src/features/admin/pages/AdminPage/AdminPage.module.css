@@ -11,7 +11,7 @@
 
 .adminPage__main {
   flex: 1;
-  margin-left: 220px; /* Compensate for fixed sidebar width */
+  margin-left: 200px; /* Compensate for fixed sidebar width */
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
@@ -106,7 +106,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .adminPage__main {
-    margin-left: 200px; /* Adjusted for tablet sidebar width */
+    margin-left: 180px; /* Adjusted for tablet sidebar width */
   }
 
   .adminPage__content {
