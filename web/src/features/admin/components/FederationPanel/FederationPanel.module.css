@@ -461,6 +461,27 @@
   color: var(--color-success);
 }
 
+.permissionToggle {
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.permissionToggle:hover {
+  background: var(--white-10);
+  border-color: var(--white-15);
+}
+
+.permissionToggle.permissionEnabled:hover {
+  background: var(--success-15);
+  border-color: var(--success-30);
+}
+
+.permissionToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .accessFooter {
   display: flex;
   justify-content: space-between;
