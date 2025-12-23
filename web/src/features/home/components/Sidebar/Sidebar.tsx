@@ -27,10 +27,10 @@ export function Sidebar() {
   // Detectar cuando el usuario llega al final de la página para mostrar mini-player
   const isMiniMode = usePageEndDetection(120);
 
-  // Animated indicator - same pattern as MetadataSettingsPanel
+  // Animated indicator
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
-  const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0 });
+  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number } | null>(null);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -107,14 +107,16 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className={styles.sidebar__nav} ref={navRef}>
-        {/* Animated sliding indicator */}
-        <div
-          className={styles.sidebar__indicator}
-          style={{
-            transform: `translateY(${indicatorStyle.top}px)`,
-            height: indicatorStyle.height,
-          }}
-        />
+        {/* Animated sliding indicator - only render when position is known */}
+        {indicatorStyle && (
+          <div
+            className={styles.sidebar__indicator}
+            style={{
+              transform: `translateY(${indicatorStyle.top}px)`,
+              height: indicatorStyle.height,
+            }}
+          />
+        )}
 
         {navItems.map((item) => {
           const Icon = item.icon;
