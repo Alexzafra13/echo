@@ -340,8 +340,24 @@
     gap: 12px;
   }
 
+  /* Larger provider icons on mobile for better visibility */
+  .providerIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .providerIcon svg {
+    width: 32px;
+    height: 32px;
+  }
+
   .statusBadgeEnabled {
     align-self: flex-start;
+  }
+
+  .statusBadgeEnabled svg {
+    width: 18px;
+    height: 18px;
   }
 
   .providerActions {
@@ -351,5 +367,21 @@
 
   .actions {
     flex-direction: column;
+  }
+
+  .validationMessage svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .infoIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .infoIcon svg {
+    width: 24px;
+    height: 24px;
   }
 }

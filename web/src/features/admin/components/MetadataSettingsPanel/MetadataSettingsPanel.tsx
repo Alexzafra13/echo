@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Settings, History, Search } from 'lucide-react';
 import { ProvidersTab } from '../../metadata/components/ProvidersTab';
 import { AutoSearchTab } from '../../metadata/components/AutoSearchTab';
@@ -17,6 +17,9 @@ type Tab = 'providers' | 'autosearch' | 'history';
  */
 export function MetadataSettingsPanel() {
   const [activeTab, setActiveTab] = useState<Tab>('providers');
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+  const tabNavRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<Tab, HTMLButtonElement>>(new Map());
 
   const tabs = [
     {
@@ -39,6 +42,42 @@ export function MetadataSettingsPanel() {
     },
   ];
 
+  // Update indicator position when active tab changes
+  useEffect(() => {
+    const activeButton = tabRefs.current.get(activeTab);
+    const navContainer = tabNavRef.current;
+
+    if (activeButton && navContainer) {
+      const navRect = navContainer.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+
+      setIndicatorStyle({
+        left: buttonRect.left - navRect.left,
+        width: buttonRect.width,
+      });
+    }
+  }, [activeTab]);
+
+  // Initial indicator position
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const activeButton = tabRefs.current.get(activeTab);
+      const navContainer = tabNavRef.current;
+
+      if (activeButton && navContainer) {
+        const navRect = navContainer.getBoundingClientRect();
+        const buttonRect = activeButton.getBoundingClientRect();
+
+        setIndicatorStyle({
+          left: buttonRect.left - navRect.left,
+          width: buttonRect.width,
+        });
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className={styles.panel}>
       {/* Header */}
@@ -52,10 +91,21 @@ export function MetadataSettingsPanel() {
       </div>
 
       {/* Tab Navigation */}
-      <div className={styles.tabNav}>
+      <div className={styles.tabNav} ref={tabNavRef}>
+        {/* Animated indicator */}
+        <div
+          className={styles.tabIndicator}
+          style={{
+            transform: `translateX(${indicatorStyle.left}px)`,
+            width: `${indicatorStyle.width}px`,
+          }}
+        />
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            ref={(el) => {
+              if (el) tabRefs.current.set(tab.id, el);
+            }}
             className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ''}`}
             onClick={() => setActiveTab(tab.id)}
             title={tab.description}
