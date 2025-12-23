@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Image, Shield, Globe, HardDrive, Trash2, FileText } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { RefreshCw, AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, ChevronDown, Search, Database, Shield, Globe, HardDrive, Trash2, FileText } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatDateWithTime } from '@shared/utils/format';
@@ -33,7 +34,7 @@ const LEVEL_CONFIG = {
   debug: { icon: Bug, color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.15)', label: 'DEBUG' },
 };
 
-const CATEGORY_CONFIG: Record<string, { icon: React.ComponentType<{ size?: number }>; color: string; bgColor: string }> = {
+const CATEGORY_CONFIG: Record<string, { icon: LucideIcon; color: string; bgColor: string }> = {
   scanner: { icon: Search, color: '#22d3ee', bgColor: 'rgba(34, 211, 238, 0.15)' },
   metadata: { icon: Database, color: '#a855f7', bgColor: 'rgba(168, 85, 247, 0.15)' },
   auth: { icon: Shield, color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.15)' },
