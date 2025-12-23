@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal } from 'lucide-react';
+import { Download, Check, Loader2, Server, Play, Pause, Shuffle, MoreHorizontal, AlertTriangle, X } from 'lucide-react';
+import { AxiosError } from 'axios';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { useRemoteAlbum, useConnectedServers, useStartImport } from '../../hooks';
@@ -25,6 +26,7 @@ export default function SharedAlbumPage() {
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isImported, setIsImported] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const { data: album, isLoading, error } = useRemoteAlbum(serverId, albumId);
   const { data: servers } = useConnectedServers();
@@ -152,12 +154,33 @@ export default function SharedAlbumPage() {
   const handleImport = async () => {
     if (!serverId || !albumId || isImporting || isImported) return;
 
+    setImportError(null);
     setIsImporting(true);
     try {
       await startImport.mutateAsync({ serverId, remoteAlbumId: albumId });
       setIsImported(true);
-    } catch (error) {
-      console.error('Failed to start import:', error);
+    } catch (err) {
+      console.error('Failed to start import:', err);
+
+      // Parse error to show user-friendly message
+      let errorMessage = 'Error al importar el álbum';
+
+      if (err instanceof AxiosError && err.response) {
+        const status = err.response.status;
+        const data = err.response.data as { message?: string };
+
+        if (status === 403 && data?.message?.includes('Download permission')) {
+          errorMessage = `El servidor "${server?.name || 'remoto'}" no te ha dado permiso para descargar. Pídele que active el permiso "Descargar" en su panel de federación.`;
+        } else if (status === 403) {
+          errorMessage = `No tienes permiso para importar desde "${server?.name || 'este servidor'}"`;
+        } else if (status === 404) {
+          errorMessage = 'El álbum ya no está disponible en el servidor remoto';
+        } else if (data?.message) {
+          errorMessage = data.message;
+        }
+      }
+
+      setImportError(errorMessage);
     } finally {
       setIsImporting(false);
     }
@@ -357,6 +380,23 @@ export default function SharedAlbumPage() {
               </div>
             </div>
           </div>
+
+          {/* Error banner */}
+          {importError && (
+            <div className={styles.sharedAlbumPage__errorBanner}>
+              <AlertTriangle size={20} />
+              <div className={styles.sharedAlbumPage__errorContent}>
+                <span className={styles.sharedAlbumPage__errorMessage}>{importError}</span>
+              </div>
+              <button
+                className={styles.sharedAlbumPage__errorClose}
+                onClick={() => setImportError(null)}
+                aria-label="Cerrar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
           {/* Track listing */}
           <div className={styles.sharedAlbumPage__trackSection}>
