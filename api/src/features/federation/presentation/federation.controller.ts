@@ -726,11 +726,13 @@ export class FederationController {
       throw new ForbiddenException('You do not have access to this token');
     }
 
-    const updated = await this.tokenService.updateAccessTokenPermissions(id, {
-      canBrowse: dto.canBrowse,
-      canStream: dto.canStream,
-      canDownload: dto.canDownload,
-    });
+    // Only include defined values to allow partial updates
+    const permissionsToUpdate: Partial<{ canBrowse: boolean; canStream: boolean; canDownload: boolean }> = {};
+    if (dto.canBrowse !== undefined) permissionsToUpdate.canBrowse = dto.canBrowse;
+    if (dto.canStream !== undefined) permissionsToUpdate.canStream = dto.canStream;
+    if (dto.canDownload !== undefined) permissionsToUpdate.canDownload = dto.canDownload;
+
+    const updated = await this.tokenService.updateAccessTokenPermissions(id, permissionsToUpdate);
 
     if (!updated) {
       throw new NotFoundException('Access token not found');
