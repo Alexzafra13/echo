@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -30,9 +30,9 @@ export function Sidebar() {
   // Refs for animated indicator
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
-  const hasInitialized = useRef(false);
-  const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0, opacity: 0 });
-  const [isAnimated, setIsAnimated] = useState(false);
+  const isFirstRender = useRef(true);
+  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number } | null>(null);
+  const [canAnimate, setCanAnimate] = useState(false);
 
   // Store ref callback
   const setItemRef = useCallback((path: string, element: HTMLAnchorElement | null) => {
@@ -65,8 +65,8 @@ export function Sidebar() {
   // Find active path for indicator
   const activePath = navItems.find(item => isActive(item.path))?.path;
 
-  // Set initial position synchronously to avoid flash
-  useLayoutEffect(() => {
+  // Calculate indicator position when active path changes
+  useEffect(() => {
     if (!activePath || !navRef.current) return;
 
     const activeElement = itemRefs.current.get(activePath);
@@ -79,26 +79,16 @@ export function Sidebar() {
       setIndicatorStyle({
         top: itemRect.top - navRect.top,
         height: itemRect.height,
-        opacity: 1,
       });
+
+      // First render: enable animations after browser paints initial position
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        const timer = setTimeout(() => setCanAnimate(true), 50);
+        return () => clearTimeout(timer);
+      }
     }
   }, [activePath, navItems.length]);
-
-  // Enable animations only after first render is complete
-  useEffect(() => {
-    if (!hasInitialized.current && indicatorStyle.opacity === 1) {
-      hasInitialized.current = true;
-      // Double requestAnimationFrame ensures browser has painted the initial position
-      // First RAF: browser calculates styles, Second RAF: browser has painted
-      let rafId: number;
-      rafId = requestAnimationFrame(() => {
-        rafId = requestAnimationFrame(() => {
-          setIsAnimated(true);
-        });
-      });
-      return () => cancelAnimationFrame(rafId);
-    }
-  }, [indicatorStyle.opacity]);
 
   return (
     <aside className={styles.sidebar}>
@@ -113,15 +103,16 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className={styles.sidebar__nav} ref={navRef}>
-        {/* Animated sliding indicator */}
-        <div
-          className={`${styles.sidebar__indicator} ${isAnimated ? styles['sidebar__indicator--animated'] : ''}`}
-          style={{
-            transform: `translateY(${indicatorStyle.top}px)`,
-            height: indicatorStyle.height,
-            opacity: indicatorStyle.opacity,
-          }}
-        />
+        {/* Animated sliding indicator - only render when position is calculated */}
+        {indicatorStyle && (
+          <div
+            className={`${styles.sidebar__indicator} ${canAnimate ? styles['sidebar__indicator--animated'] : ''}`}
+            style={{
+              transform: `translateY(${indicatorStyle.top}px)`,
+              height: indicatorStyle.height,
+            }}
+          />
+        )}
 
         {navItems.map((item) => {
           const Icon = item.icon;
