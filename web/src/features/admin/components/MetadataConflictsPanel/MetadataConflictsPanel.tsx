@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { AlertCircle, Check, ChevronDown, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, Sparkles } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import {
   useMetadataConflicts,
@@ -10,7 +10,7 @@ import styles from './MetadataConflictsPanel.module.css';
 
 /**
  * MetadataConflictsPanel Component
- * Collapsible panel - expanded when there are suggestions, collapsed when empty
+ * Only renders when there are pending suggestions
  */
 export function MetadataConflictsPanel() {
   const filters = {
@@ -22,17 +22,11 @@ export function MetadataConflictsPanel() {
 
   const conflicts = data?.conflicts || [];
   const total = data?.total || 0;
-  const hasSuggestions = conflicts.length > 0;
 
-  // Panel is expanded by default only if there are suggestions
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  // Auto-expand when suggestions are loaded
-  useEffect(() => {
-    if (!isLoading && hasSuggestions) {
-      setIsExpanded(true);
-    }
-  }, [isLoading, hasSuggestions]);
+  // Don't render anything if loading or no suggestions
+  if (isLoading || conflicts.length === 0) {
+    return null;
+  }
 
   const groupedConflicts = conflicts.reduce(
     (groups, conflict) => {
@@ -60,65 +54,39 @@ export function MetadataConflictsPanel() {
 
   const selectedConflicts = selectedArtist ? groupedConflicts[selectedArtist] || [] : [];
 
+  // Handle error state
+  if (error) {
+    return (
+      <div className={styles.panel}>
+        <div className={styles.errorState}>
+          <AlertCircle size={24} />
+          <p>Error al cargar conflictos</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`${styles.panel} ${isExpanded ? styles.panelExpanded : styles.panelCollapsed}`}>
-      {/* Collapsible Header */}
-      <button
-        className={styles.collapsibleHeader}
-        onClick={() => setIsExpanded(!isExpanded)}
-        aria-expanded={isExpanded}
-      >
+    <div className={styles.panel}>
+      {/* Header */}
+      <div className={styles.header}>
         <div className={styles.headerLeft}>
           <Sparkles size={22} className={styles.headerIcon} />
           <div>
             <h2 className={styles.title}>Sugerencias de Metadatos</h2>
             <p className={styles.description}>
-              {isLoading
-                ? 'Cargando...'
-                : hasSuggestions
-                  ? `${total} sugerencias pendientes de revisar`
-                  : 'Todo al día - no hay sugerencias pendientes'}
+              {total} sugerencias pendientes de revisar
             </p>
           </div>
         </div>
-        <div className={styles.headerRight}>
-          {hasSuggestions && (
-            <div className={styles.badge}>
-              <span className={styles.badgeCount}>{total}</span>
-            </div>
-          )}
-          {!hasSuggestions && !isLoading && (
-            <div className={styles.checkBadge}>
-              <Check size={18} />
-            </div>
-          )}
-          <div className={`${styles.chevronIcon} ${isExpanded ? styles.chevronRotated : ''}`}>
-            <ChevronDown size={20} />
-          </div>
+        <div className={styles.badge}>
+          <span className={styles.badgeCount}>{total}</span>
         </div>
-      </button>
+      </div>
 
-      {/* Collapsible Content */}
-      <div className={`${styles.collapsibleContent} ${isExpanded ? styles.contentExpanded : ''}`}>
-        {isLoading ? (
-          <div className={styles.loadingState}>
-            <p>Cargando conflictos...</p>
-          </div>
-        ) : error ? (
-          <div className={styles.errorState}>
-            <AlertCircle size={24} />
-            <p>Error al cargar conflictos</p>
-          </div>
-        ) : conflicts.length === 0 ? (
-          <div className={styles.emptyState}>
-            <Check size={48} className={styles.emptyIcon} />
-            <h3 className={styles.emptyTitle}>¡Todo al día!</h3>
-            <p className={styles.emptyMessage}>
-              No hay sugerencias de metadatos pendientes de revisar
-            </p>
-          </div>
-        ) : (
-          <div className={styles.contentLayout}>
+      {/* Content */}
+      <div className={styles.content}>
+        <div className={styles.contentLayout}>
             <aside className={styles.sidebar}>
               <div className={styles.sidebarHeader}>
                 <h3 className={styles.sidebarTitle}>Artistas</h3>
@@ -160,7 +128,6 @@ export function MetadataConflictsPanel() {
               )}
             </main>
           </div>
-        )}
 
         <CollapsibleInfo title="Sobre las sugerencias" defaultExpanded={false}>
           <ul>
