@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -30,6 +30,7 @@ export function Sidebar() {
   // Refs for animated indicator
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+  const hasInitialized = useRef(false);
   const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0, opacity: 0 });
   const [isAnimated, setIsAnimated] = useState(false);
 
@@ -64,8 +65,8 @@ export function Sidebar() {
   // Find active path for indicator
   const activePath = navItems.find(item => isActive(item.path))?.path;
 
-  // Update indicator position when location changes
-  useEffect(() => {
+  // Set initial position synchronously to avoid flash
+  useLayoutEffect(() => {
     if (!activePath || !navRef.current) return;
 
     const activeElement = itemRefs.current.get(activePath);
@@ -80,16 +81,24 @@ export function Sidebar() {
         height: itemRect.height,
         opacity: 1,
       });
+    }
+  }, [activePath, navItems.length]);
 
-      // Enable animations after initial position is set
-      if (!isAnimated) {
-        // Small delay to ensure position is set before enabling transitions
-        requestAnimationFrame(() => {
+  // Enable animations only after first render is complete
+  useEffect(() => {
+    if (!hasInitialized.current && indicatorStyle.opacity === 1) {
+      hasInitialized.current = true;
+      // Double requestAnimationFrame ensures browser has painted the initial position
+      // First RAF: browser calculates styles, Second RAF: browser has painted
+      let rafId: number;
+      rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
           setIsAnimated(true);
         });
-      }
+      });
+      return () => cancelAnimationFrame(rafId);
     }
-  }, [activePath, navItems.length, isAnimated]);
+  }, [indicatorStyle.opacity]);
 
   return (
     <aside className={styles.sidebar}>
