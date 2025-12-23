@@ -49,6 +49,7 @@
 /* Sliding indicator - no transition on first render */
 .sidebar__indicator {
   position: absolute;
+  top: 0;
   left: 12px;
   right: 12px;
   background: linear-gradient(135deg, rgba(237, 104, 66, 0.2) 0%, rgba(237, 104, 66, 0.08) 100%);
