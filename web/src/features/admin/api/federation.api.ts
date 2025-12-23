@@ -266,6 +266,21 @@ export const federationApi = {
   },
 
   /**
+   * Elimina permanentemente un token de acceso
+   */
+  async deleteAccessToken(id: string): Promise<void> {
+    await apiClient.delete(`/federation/access-tokens/${id}?permanent=true`);
+  },
+
+  /**
+   * Reactiva el acceso de un servidor que fue revocado
+   */
+  async reactivateAccessToken(id: string): Promise<AccessToken> {
+    const response = await apiClient.post<AccessToken>(`/federation/access-tokens/${id}/reactivate`);
+    return response.data;
+  },
+
+  /**
    * Actualiza los permisos de un servidor conectado
    */
   async updatePermissions(id: string, permissions: UpdatePermissionsRequest): Promise<AccessToken> {

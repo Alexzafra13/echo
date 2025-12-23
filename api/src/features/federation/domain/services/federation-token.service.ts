@@ -179,6 +179,20 @@ export class FederationTokenService {
   }
 
   /**
+   * Reactivate a revoked access token
+   */
+  async reactivateAccessToken(id: string): Promise<FederationAccessToken | null> {
+    return this.repository.updateFederationAccessToken(id, { isActive: true });
+  }
+
+  /**
+   * Delete an access token permanently
+   */
+  async deleteAccessToken(id: string): Promise<boolean> {
+    return this.repository.deleteFederationAccessToken(id);
+  }
+
+  /**
    * Delete an invitation token
    */
   async deleteInvitationToken(id: string): Promise<boolean> {

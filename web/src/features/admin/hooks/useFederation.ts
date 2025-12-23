@@ -214,6 +214,34 @@ export function useRevokeAccessToken() {
 }
 
 /**
+ * Hook para eliminar permanentemente un token de acceso
+ */
+export function useDeleteAccessToken() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => federationApi.deleteAccessToken(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'access-tokens'] });
+    },
+  });
+}
+
+/**
+ * Hook para reactivar un token de acceso revocado
+ */
+export function useReactivateAccessToken() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => federationApi.reactivateAccessToken(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['federation', 'access-tokens'] });
+    },
+  });
+}
+
+/**
  * Hook para actualizar permisos de un servidor
  */
 export function useUpdatePermissions() {
