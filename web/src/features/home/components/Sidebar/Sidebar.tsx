@@ -27,10 +27,10 @@ export function Sidebar() {
   // Detectar cuando el usuario llega al final de la página para mostrar mini-player
   const isMiniMode = usePageEndDetection(120);
 
-  // Animated indicator
+  // Animated indicator - same pattern as MetadataSettingsPanel
   const navRef = useRef<HTMLElement>(null);
-  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number } | null>(null);
-  const [canAnimate, setCanAnimate] = useState(false);
+  const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+  const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0 });
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -51,46 +51,48 @@ export function Sidebar() {
     return location === path || location.startsWith(path + '/');
   };
 
-  // Find active index
-  const activeIndex = navItems.findIndex(item => isActive(item.path));
+  // Find active path
+  const activePath = navItems.find(item => isActive(item.path))?.path;
 
-  // Calculate indicator position
+  // Update indicator position when location changes
   useEffect(() => {
-    if (activeIndex === -1 || !navRef.current) return;
+    if (!activePath) return;
 
-    const updatePosition = () => {
-      if (!navRef.current) return;
+    const activeItem = itemRefs.current.get(activePath);
+    const navContainer = navRef.current;
 
-      // Get all nav link elements
-      const links = navRef.current.querySelectorAll('a');
-      const activeLink = links[activeIndex] as HTMLElement;
+    if (activeItem && navContainer) {
+      const navRect = navContainer.getBoundingClientRect();
+      const itemRect = activeItem.getBoundingClientRect();
 
-      if (activeLink) {
-        const navRect = navRef.current.getBoundingClientRect();
-        const linkRect = activeLink.getBoundingClientRect();
+      setIndicatorStyle({
+        top: itemRect.top - navRect.top,
+        height: itemRect.height,
+      });
+    }
+  }, [activePath]);
 
-        const newTop = linkRect.top - navRect.top;
-        const newHeight = linkRect.height;
+  // Initial indicator position with delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!activePath) return;
 
-        // Only update if position actually changed
-        setIndicatorStyle(prev => {
-          if (prev && prev.top === newTop && prev.height === newHeight) {
-            return prev;
-          }
-          return { top: newTop, height: newHeight };
+      const activeItem = itemRefs.current.get(activePath);
+      const navContainer = navRef.current;
+
+      if (activeItem && navContainer) {
+        const navRect = navContainer.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+
+        setIndicatorStyle({
+          top: itemRect.top - navRect.top,
+          height: itemRect.height,
         });
       }
-    };
+    }, 50);
 
-    // Initial calculation
-    updatePosition();
-
-    // Enable animations after first position is set
-    if (!canAnimate) {
-      const timer = setTimeout(() => setCanAnimate(true), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [activeIndex, canAnimate, navItems.length]);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <aside className={styles.sidebar}>
@@ -106,15 +108,13 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className={styles.sidebar__nav} ref={navRef}>
         {/* Animated sliding indicator */}
-        {indicatorStyle && (
-          <div
-            className={`${styles.sidebar__indicator} ${canAnimate ? styles['sidebar__indicator--animated'] : ''}`}
-            style={{
-              transform: `translateY(${indicatorStyle.top}px)`,
-              height: indicatorStyle.height,
-            }}
-          />
-        )}
+        <div
+          className={styles.sidebar__indicator}
+          style={{
+            transform: `translateY(${indicatorStyle.top}px)`,
+            height: indicatorStyle.height,
+          }}
+        />
 
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -122,6 +122,9 @@ export function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
+              ref={(el: HTMLAnchorElement | null) => {
+                if (el) itemRefs.current.set(item.path, el);
+              }}
               className={`${styles.sidebar__navItem} ${
                 isActive(item.path) ? styles['sidebar__navItem--active'] : ''
               }`}
