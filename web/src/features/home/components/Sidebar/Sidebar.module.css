@@ -43,6 +43,37 @@
   gap: 8px;
   padding: 0 12px;
   overflow-y: auto;
+  position: relative;
+}
+
+/* Animated sliding indicator */
+.sidebar__indicator {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.2) 0%, rgba(237, 104, 66, 0.08) 100%);
+  border: 1px solid rgba(237, 104, 66, 0.25);
+  border-radius: 10px;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 0;
+  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.15);
+}
+
+/* Glowing left bar on the indicator */
+.sidebar__indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  background: var(--color-primary, #ed6842);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 12px rgba(237, 104, 66, 0.6);
 }
 
 .sidebar__navItem {
@@ -55,50 +86,23 @@
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
-  overflow: hidden;
-}
-
-/* Subtle left indicator line */
-.sidebar__navItem::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%) scaleY(0);
-  width: 3px;
-  height: 24px;
-  background: var(--color-primary, #ed6842);
-  border-radius: 0 3px 3px 0;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
 }
 
 .sidebar__navItem:hover {
-  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
   transform: translateX(4px);
 }
 
-.sidebar__navItem:hover::before {
-  transform: translateY(-50%) scaleY(0.5);
-}
-
 .sidebar__navItem--active {
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.08) 100%);
   color: var(--color-primary, #ed6842);
-  box-shadow: 0 2px 12px rgba(237, 104, 66, 0.15);
-  border: 1px solid rgba(237, 104, 66, 0.2);
-}
-
-.sidebar__navItem--active::before {
-  transform: translateY(-50%) scaleY(1);
-  box-shadow: 0 0 12px rgba(237, 104, 66, 0.5);
 }
 
 .sidebar__navItem--active:hover {
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.22) 0%, rgba(237, 104, 66, 0.12) 100%);
   transform: translateX(4px);
 }
 
@@ -192,8 +196,8 @@
     min-height: 50px;
   }
 
-  /* Disable desktop effects on mobile */
-  .sidebar__navItem::before {
+  /* Hide animated indicator on mobile */
+  .sidebar__indicator {
     display: none;
   }
 
@@ -217,8 +221,8 @@
     max-width: 100%;
   }
 
-  /* Only show first 6 items in bottom nav */
-  .sidebar__navItem:nth-child(n+7) {
+  /* Only show first 6 nav items in bottom nav (indicator is first child) */
+  .sidebar__navItem:nth-child(n+8) {
     display: none;
   }
 
@@ -287,9 +291,13 @@
 }
 
 :root[data-theme="light"] .sidebar__navItem--active {
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.15) 0%, rgba(237, 104, 66, 0.05) 100%);
   color: var(--color-primary-600, #e04d28);
-  border-color: rgba(237, 104, 66, 0.25);
+}
+
+:root[data-theme="light"] .sidebar__indicator {
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.08) 100%);
+  border-color: rgba(237, 104, 66, 0.2);
+  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.1);
 }
 
 :root[data-theme="light"] .sidebar__navItem--active .sidebar__navIcon {
