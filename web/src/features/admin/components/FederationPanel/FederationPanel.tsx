@@ -21,6 +21,7 @@ import {
   Bell,
   X,
   UserPlus,
+  RotateCcw,
 } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
 import {
@@ -31,6 +32,8 @@ import {
   useDisconnectFromServer,
   useSyncServer,
   useRevokeAccessToken,
+  useDeleteAccessToken,
+  useReactivateAccessToken,
   useCheckAllServersHealth,
   usePendingMutualRequests,
   useApproveMutualRequest,
@@ -56,6 +59,7 @@ export function FederationPanel() {
   const [serverToDisconnect, setServerToDisconnect] = useState<ConnectedServer | null>(null);
   const [invitationToDelete, setInvitationToDelete] = useState<InvitationToken | null>(null);
   const [accessToRevoke, setAccessToRevoke] = useState<AccessToken | null>(null);
+  const [accessToDelete, setAccessToDelete] = useState<AccessToken | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   // Notifications
@@ -76,6 +80,8 @@ export function FederationPanel() {
   const approveMutualMutation = useApproveMutualRequest();
   const rejectMutualMutation = useRejectMutualRequest();
   const updatePermissionsMutation = useUpdatePermissions();
+  const deleteAccessMutation = useDeleteAccessToken();
+  const reactivateAccessMutation = useReactivateAccessToken();
 
   // Handlers
   const handleCopyToken = async (token: string) => {
@@ -136,6 +142,26 @@ export function FederationPanel() {
       setNotification({ type: 'success', message: 'Acceso revocado' });
     } catch {
       setNotification({ type: 'error', message: 'Error al revocar acceso' });
+    }
+  };
+
+  const handleDeleteAccess = async () => {
+    if (!accessToDelete) return;
+    try {
+      await deleteAccessMutation.mutateAsync(accessToDelete.id);
+      setAccessToDelete(null);
+      setNotification({ type: 'success', message: 'Acceso eliminado permanentemente' });
+    } catch {
+      setNotification({ type: 'error', message: 'Error al eliminar acceso' });
+    }
+  };
+
+  const handleReactivateAccess = async (token: AccessToken) => {
+    try {
+      await reactivateAccessMutation.mutateAsync(token.id);
+      setNotification({ type: 'success', message: `Acceso de "${token.serverName}" reactivado` });
+    } catch {
+      setNotification({ type: 'error', message: 'Error al reactivar acceso' });
     }
   };
 
@@ -562,15 +588,35 @@ export function FederationPanel() {
                           Último uso: {formatDistanceToNow(new Date(token.lastUsedAt))}
                         </span>
                       )}
-                      {token.isActive && (
-                        <button
-                          className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                          onClick={() => setAccessToRevoke(token)}
-                        >
-                          <Trash2 size={14} />
-                          Revocar acceso
-                        </button>
-                      )}
+                      <div className={styles.accessActions}>
+                        {token.isActive ? (
+                          <button
+                            className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+                            onClick={() => setAccessToRevoke(token)}
+                          >
+                            <Trash2 size={14} />
+                            Revocar acceso
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              className={`${styles.actionButton} ${styles.actionButtonSuccess}`}
+                              onClick={() => handleReactivateAccess(token)}
+                              disabled={reactivateAccessMutation.isPending}
+                            >
+                              <RotateCcw size={14} />
+                              Reactivar
+                            </button>
+                            <button
+                              className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+                              onClick={() => setAccessToDelete(token)}
+                            >
+                              <Trash2 size={14} />
+                              Eliminar
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -637,6 +683,17 @@ export function FederationPanel() {
           onConfirm={handleRevokeAccess}
           onCancel={() => setAccessToRevoke(null)}
           isLoading={revokeAccessMutation.isPending}
+        />
+      )}
+
+      {accessToDelete && (
+        <ConfirmDialog
+          title="Eliminar acceso permanentemente"
+          message={`¿Estás seguro de que quieres eliminar permanentemente el acceso de "${accessToDelete.serverName}"? Esta acción no se puede deshacer.`}
+          confirmText="Eliminar"
+          onConfirm={handleDeleteAccess}
+          onCancel={() => setAccessToDelete(null)}
+          isLoading={deleteAccessMutation.isPending}
         />
       )}
     </div>
