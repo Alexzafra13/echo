@@ -17,7 +17,7 @@ import {
  */
 function getAvatarUrl(userId: string, avatarPath: string | null): string | null {
   if (!avatarPath) return null;
-  return `/api/users/${userId}/avatar`;
+  return `/api/images/users/${userId}/avatar`;
 }
 
 /**
