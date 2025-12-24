@@ -382,13 +382,9 @@ export default function ArtistDetailPage() {
                     )}
                     <div className={styles.artistDetailPage__topTrackInfo}>
                       <span className={styles.artistDetailPage__topTrackTitle}>{track.title}</span>
-                      {track.albumName && (
-                        <span className={styles.artistDetailPage__topTrackAlbum}>{track.albumName}</span>
-                      )}
-                    </div>
-                    <div className={styles.artistDetailPage__topTrackStats}>
-                      <span className={styles.artistDetailPage__topTrackPlays}>
-                        {formatPlayCount(track.playCount)} plays
+                      <span className={styles.artistDetailPage__topTrackMeta}>
+                        {track.albumName && <>{track.albumName} • </>}
+                        {formatPlayCount(track.playCount)} reproducciones
                       </span>
                     </div>
                     <span className={styles.artistDetailPage__topTrackDuration}>
