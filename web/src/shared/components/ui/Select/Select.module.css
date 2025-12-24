@@ -21,7 +21,9 @@
   gap: 12px;
   padding: 10px 16px;
   min-width: 220px;
-  background: var(--white-05);
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--white-10);
   border-radius: 12px;
   color: var(--color-text-primary, #ffffff);
@@ -33,20 +35,20 @@
 }
 
 .select__trigger:hover {
-  background: var(--white-08);
+  background: rgba(30, 41, 59, 0.55);
   border-color: var(--white-20);
 }
 
 .select__trigger:focus,
 .select__trigger:focus-visible {
-  background: var(--white-08);
+  background: rgba(30, 41, 59, 0.55);
   border-color: rgba(237, 104, 66, 0.5);
   box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
   outline: none;
 }
 
 .select__trigger--open {
-  background: var(--white-08);
+  background: rgba(30, 41, 59, 0.6);
   border-color: rgba(237, 104, 66, 0.5);
   box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
 }
@@ -87,15 +89,15 @@
   margin: 0;
   padding: 6px;
   list-style: none;
-  background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--white-10);
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 10px 20px -5px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 4px 6px -1px rgba(0, 0, 0, 0.15),
+    0 10px 25px -5px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   z-index: 1000;
   animation: selectDropdownIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
