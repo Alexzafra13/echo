@@ -363,7 +363,7 @@ export default function AlbumPage() {
                     cover={otherAlbum.coverImage}
                     title={otherAlbum.title}
                     artist={otherAlbum.artist}
-                    onClick={() => setLocation(`/albums/${otherAlbum.id}`)}
+                    onClick={() => setLocation(`/album/${otherAlbum.id}`)}
                   />
                 ))}
               </div>
