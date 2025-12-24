@@ -430,19 +430,15 @@
   background: var(--white-03);
   border-radius: 8px;
   overflow: hidden;
-  max-width: 450px;
 }
 
 .settingsPage__sectionItem {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
   padding: 12px 16px;
   background: var(--white-03);
   transition: background 0.2s ease;
-  width: fit-content;
-  min-width: 100%;
 }
 
 .settingsPage__sectionItem:hover {
@@ -461,6 +457,7 @@
 }
 
 .settingsPage__sectionInfo {
+  flex: 1;
   min-width: 0;
 }
 
@@ -533,14 +530,6 @@
   .settingsPage__saveButton {
     width: 100%;
     border-radius: 20px;
-  }
-
-  .settingsPage__sectionsList {
-    max-width: none;
-  }
-
-  .settingsPage__sectionInfo {
-    flex: 1;
   }
 }
 
