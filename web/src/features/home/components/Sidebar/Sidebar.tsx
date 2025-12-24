@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -24,8 +24,11 @@ export function Sidebar() {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.isAdmin === true;
   const isMiniMode = usePageEndDetection(120);
+
+  // Animated indicator - same pattern as MetadataSettingsPanel
+  const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 0 });
   const navRef = useRef<HTMLElement>(null);
-  const isFirstUpdate = useRef(true);
+  const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -45,40 +48,47 @@ export function Sidebar() {
     return location === path || location.startsWith(path + '/');
   };
 
-  const activeIndex = navItems.findIndex(item => isActive(item.path));
+  const activePath = navItems.find(item => isActive(item.path))?.path;
 
-  // Update indicator position
+  // Update indicator position when active path changes
   useEffect(() => {
-    const nav = navRef.current;
-    if (activeIndex === -1 || !nav) return;
+    if (!activePath) return;
 
-    const links = nav.querySelectorAll('a');
-    const activeLink = links[activeIndex] as HTMLElement;
-    const indicator = nav.querySelector('[class*="sidebar__indicator"]') as HTMLElement;
+    const activeItem = itemRefs.current.get(activePath);
+    const navContainer = navRef.current;
 
-    if (activeLink && indicator) {
-      const navRect = nav.getBoundingClientRect();
-      const linkRect = activeLink.getBoundingClientRect();
-      const newY = linkRect.top - navRect.top;
-      const newHeight = linkRect.height;
+    if (activeItem && navContainer) {
+      const navRect = navContainer.getBoundingClientRect();
+      const itemRect = activeItem.getBoundingClientRect();
 
-      if (isFirstUpdate.current) {
-        // First time: disable transition, set position, force reflow, re-enable
-        indicator.style.transition = 'none';
-        nav.style.setProperty('--indicator-y', `${newY}px`);
-        nav.style.setProperty('--indicator-height', `${newHeight}px`);
-        // Force reflow so the position is applied immediately
-        void indicator.offsetHeight;
-        // Re-enable transition
-        indicator.style.transition = '';
-        isFirstUpdate.current = false;
-      } else {
-        // Subsequent updates: just set position, CSS transition handles animation
-        nav.style.setProperty('--indicator-y', `${newY}px`);
-        nav.style.setProperty('--indicator-height', `${newHeight}px`);
-      }
+      setIndicatorStyle({
+        top: itemRect.top - navRect.top,
+        height: itemRect.height,
+      });
     }
-  }, [activeIndex]);
+  }, [activePath]);
+
+  // Initial indicator position with delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!activePath) return;
+
+      const activeItem = itemRefs.current.get(activePath);
+      const navContainer = navRef.current;
+
+      if (activeItem && navContainer) {
+        const navRect = navContainer.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+
+        setIndicatorStyle({
+          top: itemRect.top - navRect.top,
+          height: itemRect.height,
+        });
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <aside className={styles.sidebar}>
@@ -91,8 +101,14 @@ export function Sidebar() {
       </div>
 
       <nav className={styles.sidebar__nav} ref={navRef}>
-        {/* Indicator positioned via CSS custom properties */}
-        <div className={styles.sidebar__indicator} />
+        {/* Animated indicator */}
+        <div
+          className={styles.sidebar__indicator}
+          style={{
+            transform: `translateY(${indicatorStyle.top}px)`,
+            height: `${indicatorStyle.height}px`,
+          }}
+        />
 
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -100,6 +116,9 @@ export function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
+              ref={(el: HTMLAnchorElement | null) => {
+                if (el) itemRefs.current.set(item.path, el);
+              }}
               className={`${styles.sidebar__navItem} ${
                 isActive(item.path) ? styles['sidebar__navItem--active'] : ''
               }`}
