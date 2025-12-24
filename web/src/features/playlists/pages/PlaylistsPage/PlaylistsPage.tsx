@@ -6,7 +6,7 @@ import { useGridDimensions } from '@features/home/hooks';
 import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
 import { formatDuration } from '@shared/utils/format';
-import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist } from '../../hooks/usePlaylists';
+import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import styles from './PlaylistsPage.module.css';
@@ -36,6 +36,7 @@ export default function PlaylistsPage() {
   const createPlaylistMutation = useCreatePlaylist();
   const deletePlaylistMutation = useDeletePlaylist();
   const updatePlaylistMutation = useUpdatePlaylist();
+  const addTrackMutation = useAddTrackToPlaylist();
 
   const allPlaylists = playlistsData?.items || [];
   const total = playlistsData?.total || 0;
@@ -60,11 +61,20 @@ export default function PlaylistsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleCreatePlaylist = async (name: string) => {
-    await createPlaylistMutation.mutateAsync({
+  const handleCreatePlaylist = async (name: string, trackIds: string[]) => {
+    // Create the playlist
+    const newPlaylist = await createPlaylistMutation.mutateAsync({
       name,
       public: false,
     });
+
+    // Add all selected tracks to the new playlist
+    for (const trackId of trackIds) {
+      await addTrackMutation.mutateAsync({
+        playlistId: newPlaylist.id,
+        dto: { trackId },
+      });
+    }
   };
 
   const handleDeleteClick = (playlistId: string, playlistName: string) => {
@@ -246,7 +256,7 @@ export default function PlaylistsPage() {
         <CreatePlaylistModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreatePlaylist}
-          isLoading={createPlaylistMutation.isPending}
+          isLoading={createPlaylistMutation.isPending || addTrackMutation.isPending}
         />
       )}
 
