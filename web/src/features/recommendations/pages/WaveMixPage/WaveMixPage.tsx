@@ -88,6 +88,26 @@ export function WaveMixPage() {
   const artistPlaylists = filteredPlaylists.filter(p => p.type === 'artist');
   const genrePlaylists = filteredPlaylists.filter(p => p.type === 'genre');
 
+  // Helper to get a random album cover from playlist tracks
+  const getPlaylistCoverUrl = (playlist: AutoPlaylist): string | undefined => {
+    if (playlist.coverImageUrl) return playlist.coverImageUrl;
+
+    // Get album IDs from tracks
+    const albumIds = new Set<string>();
+    for (const scoredTrack of playlist.tracks || []) {
+      if (scoredTrack.track?.albumId) {
+        albumIds.add(scoredTrack.track.albumId);
+      }
+    }
+
+    const albumIdArray = Array.from(albumIds);
+    if (albumIdArray.length === 0) return undefined;
+
+    // Pick a random album cover
+    const randomAlbumId = albumIdArray[Math.floor(Math.random() * albumIdArray.length)];
+    return `/api/albums/${randomAlbumId}/cover`;
+  };
+
   return (
     <div className={styles.waveMixPage}>
       <Sidebar />
@@ -188,7 +208,7 @@ export function WaveMixPage() {
                         title={playlist.name}
                         onClick={() => handlePlaylistClick(playlist)}
                         customGradient={['#2d1f3d', '#1a1a2e']}
-                        backgroundCoverUrl={playlist.coverImageUrl}
+                        backgroundCoverUrl={getPlaylistCoverUrl(playlist)}
                       />
                     ))}
                   </div>
