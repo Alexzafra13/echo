@@ -408,13 +408,9 @@ export class FederationController {
         totalCount += result.value.total;
         for (const album of result.value.albums) {
           allAlbums.push({
-            ...album,
+            ...this.transformAlbumCoverUrl(album, result.value.server.id),
             serverId: result.value.server.id,
             serverName: result.value.server.name,
-            // Transform coverUrl to use local proxy endpoint
-            coverUrl: album.coverUrl
-              ? `/api/federation/servers/${result.value.server.id}/albums/${album.id}/cover`
-              : undefined,
           });
         }
       }
@@ -454,15 +450,9 @@ export class FederationController {
   ): Promise<RemoteLibraryResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     const library = await this.remoteServerService.getRemoteLibrary(server, query.page, query.limit);
-    // Transform coverUrls to use local proxy endpoint
     return {
       ...library,
-      albums: library.albums.map((album) => ({
-        ...album,
-        coverUrl: album.coverUrl
-          ? `/api/federation/servers/${id}/albums/${album.id}/cover`
-          : undefined,
-      })),
+      albums: this.transformAlbumsCoverUrls(library.albums, id),
     };
   }
 
@@ -489,15 +479,9 @@ export class FederationController {
       query.limit,
       query.search,
     );
-    // Transform coverUrls to use local proxy endpoint
     return {
       ...result,
-      albums: result.albums.map((album) => ({
-        ...album,
-        coverUrl: album.coverUrl
-          ? `/api/federation/servers/${id}/albums/${album.id}/cover`
-          : undefined,
-      })),
+      albums: this.transformAlbumsCoverUrls(result.albums, id),
     };
   }
 
@@ -516,13 +500,7 @@ export class FederationController {
   ) {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     const album = await this.remoteServerService.getRemoteAlbum(server, albumId);
-    // Transform coverUrl to use local proxy endpoint
-    return {
-      ...album,
-      coverUrl: album.coverUrl
-        ? `/api/federation/servers/${id}/albums/${album.id}/cover`
-        : undefined,
-    };
+    return this.transformAlbumCoverUrl(album, id);
   }
 
   @Get('servers/:id/albums/:albumId/cover')
@@ -918,7 +896,32 @@ export class FederationController {
   // Private helpers
   // ============================================
 
-  private mapServerToResponse(server: any): ConnectedServerResponseDto {
+  /**
+   * Transforms a remote album's coverUrl to use the local proxy endpoint
+   */
+  private transformAlbumCoverUrl<T extends { id: string; coverUrl?: string }>(
+    album: T,
+    serverId: string,
+  ): T & { coverUrl?: string } {
+    return {
+      ...album,
+      coverUrl: album.coverUrl
+        ? `/api/federation/servers/${serverId}/albums/${album.id}/cover`
+        : undefined,
+    };
+  }
+
+  /**
+   * Transforms an array of remote albums' coverUrls to use the local proxy endpoint
+   */
+  private transformAlbumsCoverUrls<T extends { id: string; coverUrl?: string }>(
+    albums: T[],
+    serverId: string,
+  ): (T & { coverUrl?: string })[] {
+    return albums.map((album) => this.transformAlbumCoverUrl(album, serverId));
+  }
+
+  private mapServerToResponse(server: ConnectedServer): ConnectedServerResponseDto {
     return {
       id: server.id,
       name: server.name,
