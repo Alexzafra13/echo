@@ -436,10 +436,13 @@
 .settingsPage__sectionItem {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 12px 16px;
   background: var(--white-03);
   transition: background 0.2s ease;
+  width: fit-content;
+  min-width: 100%;
 }
 
 .settingsPage__sectionItem:hover {
