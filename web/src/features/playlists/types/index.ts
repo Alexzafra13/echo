@@ -55,6 +55,11 @@ export interface AddTrackToPlaylistDto {
   trackId: string;
 }
 
+export interface TrackOrderDto {
+  trackId: string;
+  order: number;
+}
+
 export interface ReorderTracksDto {
-  trackIds: string[];
+  trackOrders: TrackOrderDto[];
 }
