@@ -42,6 +42,19 @@ export class DrizzleSocialRepository implements ISocialRepository {
     return this.mapFriendship(friendship);
   }
 
+  async createDirectFriendship(userId1: string, userId2: string): Promise<Friendship> {
+    const [friendship] = await this.drizzle.db
+      .insert(friendships)
+      .values({
+        requesterId: userId1,
+        addresseeId: userId2,
+        status: 'accepted',
+      })
+      .returning();
+
+    return this.mapFriendship(friendship);
+  }
+
   async acceptFriendRequest(friendshipId: string, userId: string): Promise<Friendship> {
     const [friendship] = await this.drizzle.db
       .update(friendships)
