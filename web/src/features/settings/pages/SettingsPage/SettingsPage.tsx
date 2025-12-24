@@ -137,7 +137,7 @@ export function SettingsPage() {
 
                         <div className={styles.settingsPage__sectionInfo}>
                           <span className={styles.settingsPage__sectionLabel}>
-                            {SECTION_LABELS[section.id]}
+                            {SECTION_LABELS[section.id] || section.id}
                           </span>
                         </div>
 
