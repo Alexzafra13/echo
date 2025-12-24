@@ -218,11 +218,20 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
               {selectedTracks.map(track => (
                 <div key={track.id} className={styles.selectedItem}>
                   {track.albumId ? (
-                    <img
-                      src={`/api/albums/${track.albumId}/cover`}
-                      alt={track.title}
-                      className={styles.selectedCover}
-                    />
+                    <>
+                      <img
+                        src={`/api/albums/${track.albumId}/cover`}
+                        alt=""
+                        className={styles.selectedCover}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          (e.currentTarget.nextElementSibling as HTMLElement)?.style.setProperty('display', 'flex');
+                        }}
+                      />
+                      <div className={styles.selectedCoverPlaceholder} style={{ display: 'none' }}>
+                        <Music size={12} />
+                      </div>
+                    </>
                   ) : (
                     <div className={styles.selectedCoverPlaceholder}>
                       <Music size={12} />
