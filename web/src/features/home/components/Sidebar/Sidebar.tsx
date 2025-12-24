@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -23,15 +23,8 @@ export function Sidebar() {
   const [location] = useLocation();
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.isAdmin === true;
-
-  // Detectar cuando el usuario llega al final de la página para mostrar mini-player
   const isMiniMode = usePageEndDetection(120);
-
-  // Animated indicator
   const navRef = useRef<HTMLElement>(null);
-  const [indicatorTop, setIndicatorTop] = useState(0);
-  const [indicatorHeight, setIndicatorHeight] = useState(0);
-  const [isReady, setIsReady] = useState(false);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -43,7 +36,6 @@ export function Sidebar() {
     { icon: Users, label: 'Social', path: '/social' },
   ];
 
-  // Add Admin item if user is admin
   const navItems = isAdmin
     ? [...baseNavItems, { icon: Shield, label: 'Admin', path: '/admin' }]
     : baseNavItems;
@@ -52,36 +44,36 @@ export function Sidebar() {
     return location === path || location.startsWith(path + '/');
   };
 
-  // Find active index
   const activeIndex = navItems.findIndex(item => isActive(item.path));
 
-  // Update indicator position
+  // Update CSS custom properties directly - like the jh3yy example
   useEffect(() => {
     const nav = navRef.current;
     if (activeIndex === -1 || !nav) return;
 
-    const links = nav.querySelectorAll('a');
-    const activeLink = links[activeIndex];
+    const updateIndicator = () => {
+      const links = nav.querySelectorAll('a');
+      const activeLink = links[activeIndex] as HTMLElement;
 
-    if (activeLink) {
-      const navRect = nav.getBoundingClientRect();
-      const linkRect = activeLink.getBoundingClientRect();
+      if (activeLink) {
+        const navRect = nav.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
 
-      setIndicatorTop(linkRect.top - navRect.top);
-      setIndicatorHeight(linkRect.height);
+        nav.style.setProperty('--indicator-y', `${linkRect.top - navRect.top}px`);
+        nav.style.setProperty('--indicator-height', `${linkRect.height}px`);
 
-      // Mark as ready after first position is set
-      if (!isReady) {
+        // Enable transitions after first position is set
         requestAnimationFrame(() => {
-          setIsReady(true);
+          nav.classList.add(styles['sidebar__nav--ready']);
         });
       }
-    }
-  }, [activeIndex, isReady]);
+    };
+
+    updateIndicator();
+  }, [activeIndex]);
 
   return (
     <aside className={styles.sidebar}>
-      {/* Logo */}
       <div className={styles.sidebar__logoContainer}>
         <img
           src="/images/logos/echo-icon-sidebar-white.png"
@@ -90,16 +82,9 @@ export function Sidebar() {
         />
       </div>
 
-      {/* Navigation */}
       <nav className={styles.sidebar__nav} ref={navRef}>
-        {/* Animated sliding indicator */}
-        <div
-          className={`${styles.sidebar__indicator} ${isReady ? styles['sidebar__indicator--ready'] : ''}`}
-          style={{
-            transform: `translateY(${indicatorTop}px)`,
-            height: indicatorHeight,
-          }}
-        />
+        {/* Indicator positioned via CSS custom properties */}
+        <div className={styles.sidebar__indicator} />
 
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -118,7 +103,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Mini Player - se muestra al final de la página */}
       <MiniPlayer isVisible={isMiniMode} />
     </aside>
   );
