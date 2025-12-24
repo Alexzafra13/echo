@@ -251,7 +251,8 @@
   .modal__content {
     max-width: 100%;
     width: 100%;
-    max-height: 100vh;
+    height: calc(100vh - 70px);
+    max-height: calc(100vh - 70px);
     border-radius: 0 0 20px 20px;
     animation: slideDownMobile 0.3s ease-out;
   }
@@ -268,27 +269,35 @@
   }
 
   .modal__header {
-    padding: 20px;
+    padding: 16px;
   }
 
   .modal__title {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .modal__search {
-    margin: 0 20px 0;
+    margin: 0 16px;
+    padding: 10px 16px;
   }
 
   .modal__body {
-    padding: 16px 20px 20px;
+    padding: 8px 0 20px;
+    flex: 1;
+    min-height: 0;
   }
 
   .modal__grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 16px;
   }
 
   .genreOption {
-    padding: 12px 14px;
+    width: 100%;
+    padding: 14px 16px;
+    margin: 0;
   }
 
   .genreOption:hover {
@@ -302,19 +311,25 @@
 
 @media (max-width: 480px) {
   .modal__header {
-    padding: 16px;
+    padding: 14px 16px;
   }
 
   .modal__search {
-    margin: 0 16px 0;
+    margin: 0 16px;
+    padding: 10px 14px;
   }
 
   .modal__body {
-    padding: 12px 16px 16px;
+    padding: 8px 0 16px;
+  }
+
+  .modal__grid {
+    padding: 0 16px;
+    gap: 6px;
   }
 
   .genreOption {
-    padding: 10px 12px;
-    font-size: 14px;
+    padding: 12px 14px;
+    font-size: 15px;
   }
 }
