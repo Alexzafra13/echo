@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearch, useLocation } from 'wouter';
 import { Search, X, Library, Server } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
-import { Pagination } from '@shared/components/ui';
+import { Pagination, Select } from '@shared/components/ui';
 import { Sidebar, AlbumGrid } from '../../components';
 import {
   useRecentAlbums,
@@ -214,24 +214,20 @@ export default function AlbumsPage() {
           {librarySource === 'local' && (
             <>
               {/* Sort Filter */}
-              <div className={styles.albumsPage__filterWrapper}>
-                <label htmlFor="album-sort" className={styles.albumsPage__filterLabel}>
-                  Ordenar por:
-                </label>
-                <select
-                  id="album-sort"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as AlbumSortOption)}
-                  className={styles.albumsPage__filterSelect}
-                >
-                  <option value="recent">Añadidos recientemente</option>
-                  <option value="alphabetical">Por nombre (A-Z)</option>
-                  <option value="artist">Por artista (A-Z)</option>
-                  <option value="recently-played">Reproducidos recientemente</option>
-                  <option value="top-played">Los más reproducidos</option>
-                  <option value="favorites">Mis favoritos</option>
-                </select>
-              </div>
+              <Select
+                label="Ordenar por:"
+                value={sortBy}
+                onChange={(value) => setSortBy(value as AlbumSortOption)}
+                options={[
+                  { value: 'recent', label: 'Añadidos recientemente' },
+                  { value: 'alphabetical', label: 'Por nombre (A-Z)' },
+                  { value: 'artist', label: 'Por artista (A-Z)' },
+                  { value: 'recently-played', label: 'Reproducidos recientemente' },
+                  { value: 'top-played', label: 'Los más reproducidos' },
+                  { value: 'favorites', label: 'Mis favoritos' },
+                ]}
+                className={styles.albumsPage__filterWrapper}
+              />
 
               {/* Top Pagination - Mobile Only */}
               {!isLoading && !error && filteredAlbums && filteredAlbums.length > 0 && totalPages > 1 && (
@@ -291,24 +287,19 @@ export default function AlbumsPage() {
             <>
               {/* Server Filter */}
               {connectedServers.length > 1 && (
-                <div className={styles.albumsPage__filterWrapper}>
-                  <label htmlFor="server-filter" className={styles.albumsPage__filterLabel}>
-                    Servidor:
-                  </label>
-                  <select
-                    id="server-filter"
-                    value={selectedServerId || ''}
-                    onChange={(e) => setSelectedServerId(e.target.value || undefined)}
-                    className={styles.albumsPage__filterSelect}
-                  >
-                    <option value="">Todos los servidores</option>
-                    {connectedServers.map((server) => (
-                      <option key={server.id} value={server.id}>
-                        {server.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label="Servidor:"
+                  value={selectedServerId || ''}
+                  onChange={(value) => setSelectedServerId(value || undefined)}
+                  options={[
+                    { value: '', label: 'Todos los servidores' },
+                    ...connectedServers.map((server) => ({
+                      value: server.id,
+                      label: server.name,
+                    })),
+                  ]}
+                  className={styles.albumsPage__filterWrapper}
+                />
               )}
 
               {/* Top Pagination - Mobile Only */}
@@ -344,6 +335,7 @@ export default function AlbumsPage() {
                   <SharedAlbumGrid
                     albums={sharedAlbums}
                     showServerBadge={!selectedServerId}
+                    mobileLayout="grid"
                   />
 
                   {/* Pagination Controls */}
