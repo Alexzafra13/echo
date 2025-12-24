@@ -131,7 +131,7 @@ export function UserMenu({
             Ajustes
           </button>
           <button
-            className={styles.header__userMenuItem}
+            className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--mobileOnly']}`}
             onClick={(e) => handleNavigate(e, '/social')}
             role="menuitem"
           >
@@ -141,7 +141,7 @@ export function UserMenu({
 
           {user?.isAdmin && (
             <button
-              className={styles.header__userMenuItem}
+              className={`${styles.header__userMenuItem} ${styles['header__userMenuItem--mobileOnly']}`}
               onClick={(e) => handleNavigate(e, '/admin')}
               role="menuitem"
             >
