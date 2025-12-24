@@ -91,7 +91,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
         id: trackId,
         title: trackData.title,
         artistName: trackData.artistName,
-        albumId: trackData.albumId,
+        albumId: 'albumId' in trackData ? (trackData.albumId as string | undefined) : undefined,
       }]);
     }
     setError('');
@@ -300,10 +300,7 @@ function TrackItem({ track, isSelected, onToggle }: TrackItemProps) {
   const trackData = isRecentlyPlayed && (track as RecentlyPlayed).track
     ? (track as RecentlyPlayed).track!
     : track as Track;
-  const trackId = isRecentlyPlayed
-    ? (track as RecentlyPlayed).trackId
-    : (track as Track).id;
-  const albumId = trackData.albumId;
+  const albumId = 'albumId' in trackData ? (trackData.albumId as string | undefined) : undefined;
 
   return (
     <button
