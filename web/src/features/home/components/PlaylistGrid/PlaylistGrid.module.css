@@ -131,7 +131,6 @@
   .playlistGrid__header {
     padding: 0 16px;
     margin-bottom: 12px;
-    justify-content: space-between;
   }
 
   .playlistGrid__title {
