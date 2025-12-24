@@ -4,7 +4,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  z-index: 25;
+  z-index: 100;
 }
 
 .menuButton {
@@ -33,17 +33,17 @@
 
 .menuDropdown {
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 8px);
   right: 0;
-  margin-bottom: 8px;
-  background: rgba(20, 20, 20, 0.98);
+  background: rgba(15, 15, 15, 0.98);
   border: 1px solid var(--white-15);
-  border-radius: 6px;
-  padding: 4px;
-  min-width: 180px;
-  box-shadow: 0 8px 24px var(--black-50);
-  backdrop-filter: blur(12px);
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 200px;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
   animation: menuFadeIn 0.15s ease;
+  z-index: 1000;
 }
 
 @keyframes menuFadeIn {
