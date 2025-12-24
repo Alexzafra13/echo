@@ -12,6 +12,8 @@ interface SharedAlbumGridProps {
   showViewAll?: boolean;
   viewAllPath?: string;
   mobileScroll?: boolean;
+  /** Mobile layout: 'scroll' for horizontal carousel, 'grid' for standard grid */
+  mobileLayout?: 'scroll' | 'grid';
   showImportButton?: boolean;
   showServerBadge?: boolean;
   /** Show empty state when no servers connected (for home page) */
@@ -28,6 +30,7 @@ export function SharedAlbumGrid({
   showViewAll = false,
   viewAllPath = '/shared-libraries',
   mobileScroll = false,
+  mobileLayout = 'scroll',
   showImportButton = true,
   showServerBadge = true,
   showEmptyState = false,
@@ -170,7 +173,7 @@ export function SharedAlbumGrid({
         </div>
       )}
 
-      <div className={`${styles.sharedAlbumGrid__grid} ${mobileScroll ? styles['sharedAlbumGrid__grid--mobileScroll'] : ''}`}>
+      <div className={`${styles.sharedAlbumGrid__grid} ${mobileScroll ? styles['sharedAlbumGrid__grid--mobileScroll'] : ''} ${mobileLayout === 'grid' ? styles['sharedAlbumGrid__grid--mobileGrid'] : ''}`}>
         {albums.map((album) => {
           const albumKey = `${album.serverId}-${album.id}`;
           const isImporting = importingAlbums.has(albumKey);

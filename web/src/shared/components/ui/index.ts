@@ -21,3 +21,6 @@ export type { NotificationType } from './InlineNotification';
 
 export { Modal } from './Modal';
 export type { ModalProps } from './Modal';
+
+export { Select } from './Select';
+export type { SelectProps, SelectOption } from './Select';
