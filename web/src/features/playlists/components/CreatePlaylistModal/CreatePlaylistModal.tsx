@@ -160,9 +160,9 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
                   <span>Buscando...</span>
                 </div>
               ) : searchResults && searchResults.length > 0 ? (
-                searchResults.map(track => (
+                searchResults.map((track, index) => (
                   <TrackItem
-                    key={track.id}
+                    key={`search-${track.id}-${index}`}
                     track={track}
                     isSelected={isTrackSelected(track.id)}
                     onToggle={() => toggleTrack(track)}
@@ -189,9 +189,9 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
                   <span>Cargando sugerencias...</span>
                 </div>
               ) : filteredRecent.length > 0 ? (
-                filteredRecent.slice(0, 6).map(recent => (
+                filteredRecent.slice(0, 6).map((recent, index) => (
                   <TrackItem
-                    key={recent.trackId}
+                    key={`recent-${recent.trackId}-${index}`}
                     track={recent}
                     isSelected={isTrackSelected(recent.trackId)}
                     onToggle={() => toggleTrack(recent)}
