@@ -20,21 +20,30 @@
 
 .textarea {
   padding: 14px 16px;
-  background: var(--color-bg-base);
-  border: 2px solid var(--white-10);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius-md);
   font-size: var(--font-size-base);
-  color: var(--color-text-primary);
+  color: var(--text-primary, #ffffff);
   font-family: inherit;
   transition: all var(--transition-fast);
   resize: vertical;
   min-height: 80px;
+  outline: none;
+  box-shadow: none;
 }
 
-.textarea:focus {
+.textarea:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.textarea:focus,
+.textarea:focus-visible {
+  border-color: var(--color-primary, #ed6842);
+  background: rgba(255, 255, 255, 0.08);
   outline: none;
-  border-color: var(--color-primary);
-  background: var(--white-05);
+  box-shadow: none;
 }
 
 .textarea::placeholder {
