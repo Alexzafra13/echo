@@ -419,12 +419,10 @@
   background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #e85a32 100%);
   border: none;
   color: white;
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.3);
 }
 
 .actions button:last-child:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(237, 104, 66, 0.4);
+  background: linear-gradient(135deg, #f07650 0%, #ed6842 100%);
 }
 
 .actions button:last-child:disabled {
