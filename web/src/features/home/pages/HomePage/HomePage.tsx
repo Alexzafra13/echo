@@ -338,7 +338,7 @@ export default function HomePage() {
                 className={styles.homeSection__viewAll}
                 onClick={() => setLocation('/playlists')}
               >
-                Ver todo
+                Ver todo →
               </button>
             </div>
             <div className={styles.playlistsGrid}>
@@ -375,7 +375,7 @@ export default function HomePage() {
                 className={styles.homeSection__viewAll}
                 onClick={() => setLocation('/radio')}
               >
-                Ver todo
+                Ver todo →
               </button>
             </div>
             <div className={styles.radiosGrid}>
