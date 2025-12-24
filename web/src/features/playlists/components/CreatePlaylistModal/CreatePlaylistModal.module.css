@@ -3,21 +3,25 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
-/* Custom input styling for the modal */
-.form :global(.wrapper) {
+/* Input groups */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.form :global(.label) {
-  color: var(--text-secondary, #9ca3af);
+.label {
   font-size: 14px;
   font-weight: 500;
+  color: var(--text-secondary, #9ca3af);
 }
 
-.form :global(.input) {
+.input {
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
@@ -25,22 +29,332 @@
   font-size: 15px;
   padding: 14px 16px;
   transition: all 0.2s ease;
+  outline: none;
+  width: 100%;
 }
 
-.form :global(.input)::placeholder {
+.input::placeholder {
   color: var(--text-tertiary, #6b7280);
 }
 
-.form :global(.input):hover:not(:disabled) {
+.input:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.07);
 }
 
-.form :global(.input):focus {
+.input:focus {
   border-color: var(--color-primary, #ed6842);
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
+}
+
+/* Search input with icon */
+.searchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-tertiary, #6b7280);
+  pointer-events: none;
+}
+
+.searchInput {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text-primary, #ffffff);
+  font-size: 15px;
+  padding: 12px 40px 12px 42px;
+  transition: all 0.2s ease;
   outline: none;
+  width: 100%;
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary, #6b7280);
+}
+
+.searchInput:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary, #ed6842);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
+}
+
+.clearSearch {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-tertiary, #6b7280);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clearSearch:hover {
+  color: var(--text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Track sections */
+.trackSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary, #6b7280);
+}
+
+.trackList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.trackList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.trackList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trackList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.trackList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Track item */
+.trackItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.trackItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.trackItemSelected {
+  background: rgba(237, 104, 66, 0.12);
+  border-color: rgba(237, 104, 66, 0.3);
+}
+
+.trackItemSelected:hover {
+  background: rgba(237, 104, 66, 0.18);
+}
+
+.trackCover {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.trackCoverPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary, #6b7280);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.trackInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trackTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackArtist {
+  font-size: 12px;
+  color: var(--text-tertiary, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackAction {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plusIcon {
+  color: var(--text-tertiary, #6b7280);
+  transition: color 0.2s ease;
+}
+
+.trackItem:hover .plusIcon {
+  color: var(--text-primary, #ffffff);
+}
+
+.checkIcon {
+  color: var(--color-primary, #ed6842);
+}
+
+/* Selected tracks section */
+.selectedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(237, 104, 66, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(237, 104, 66, 0.2);
+}
+
+.selectedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selectedItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  max-width: 200px;
+}
+
+.selectedInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.selectedTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selectedArtist {
+  font-size: 10px;
+  color: var(--text-tertiary, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.removeButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary, #9ca3af);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.removeButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Loading and empty states */
+.loadingState,
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--text-tertiary, #6b7280);
+  font-size: 13px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.emptyHint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Error message */
+.error {
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #ef4444;
+  font-size: 13px;
 }
 
 /* Actions buttons */
@@ -48,6 +362,8 @@
   display: flex;
   gap: 12px;
   margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .actions button {
@@ -90,4 +406,19 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .form {
+    gap: 16px;
+  }
+
+  .trackList {
+    max-height: 160px;
+  }
+
+  .selectedItem {
+    max-width: 160px;
+  }
 }
