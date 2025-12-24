@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Waves, RefreshCw, Sparkles, Search, X } from 'lucide-react';
+import { Waves, RefreshCw, Sparkles, Search, X, Calendar } from 'lucide-react';
 import { Sidebar } from '@features/home/components';
 import { Header } from '@shared/components/layout/Header';
 import { Button } from '@shared/components/ui';
+import { ActionCard } from '@shared/components/ActionCard';
 import { PlaylistCover } from '../../components/PlaylistCover';
 import { getAutoPlaylists, refreshWaveMix, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
@@ -179,33 +180,16 @@ export function WaveMixPage() {
               {dailyPlaylists.length > 0 && (
                 <div className={styles.waveMixPage__section}>
                   <h2 className={styles.waveMixPage__sectionTitle}>Recomendaciones Diarias</h2>
-                  <div className={styles.waveMixPage__grid}>
+                  <div className={styles.waveMixPage__dailyCards}>
                     {dailyPlaylists.map((playlist) => (
-                      <div
+                      <ActionCard
                         key={playlist.id}
-                        className={styles.playlistCard}
+                        icon={<Calendar size={22} />}
+                        title={playlist.name}
                         onClick={() => handlePlaylistClick(playlist)}
-                      >
-                        <PlaylistCover
-                          type={playlist.type}
-                          name={playlist.name}
-                          coverColor={playlist.coverColor}
-                          coverImageUrl={playlist.coverImageUrl}
-                          artistName={playlist.metadata.artistName}
-                          size="responsive"
-                        />
-                        <div className={styles.playlistCard__info}>
-                          <h3 className={styles.playlistCard__name}>{playlist.name}</h3>
-                          <p className={styles.playlistCard__description}>
-                            {playlist.description}
-                          </p>
-                          <div className={styles.playlistCard__meta}>
-                            <span>{playlist.metadata.totalTracks} canciones</span>
-                            <span className={styles.separator}>•</span>
-                            <span>Actualizado hoy</span>
-                          </div>
-                        </div>
-                      </div>
+                        customGradient={['#2d1f3d', '#1a1a2e']}
+                        backgroundCoverUrl={playlist.coverImageUrl}
+                      />
                     ))}
                   </div>
                 </div>

@@ -179,6 +179,14 @@
   color: var(--accent-color);
 }
 
+/* Daily Cards - ActionCard row */
+.waveMixPage__dailyCards {
+  display: flex;
+  gap: 16px;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
 /* Grid - Same as HomePage */
 .waveMixPage__grid {
   display: grid;
@@ -385,6 +393,13 @@
     border-radius: 20px; /* iOS rounded button */
   }
 
+  /* Daily cards row on mobile */
+  .waveMixPage__dailyCards {
+    gap: 12px;
+    padding: 0 16px;
+    margin-bottom: 0.75rem;
+  }
+
   /* Horizontal scroll carousel for grids on mobile */
   .waveMixPage__grid {
     display: flex;
@@ -469,6 +484,11 @@
   }
 
   .waveMixPage__viewAllButtonWrapper {
+    padding: 0 12px;
+  }
+
+  .waveMixPage__dailyCards {
+    gap: 8px;
     padding: 0 12px;
   }
 
