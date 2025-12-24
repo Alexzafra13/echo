@@ -458,7 +458,6 @@
 }
 
 .settingsPage__sectionInfo {
-  flex: 1;
   min-width: 0;
 }
 
@@ -535,6 +534,10 @@
 
   .settingsPage__sectionsList {
     max-width: none;
+  }
+
+  .settingsPage__sectionInfo {
+    flex: 1;
   }
 }
 
