@@ -23,13 +23,14 @@
 
 .input {
   background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   color: var(--text-primary, #ffffff);
   font-size: 15px;
   padding: 14px 16px;
   transition: all 0.2s ease;
-  outline: none;
+  outline: none !important;
+  box-shadow: none !important;
   width: 100%;
 }
 
@@ -38,13 +39,16 @@
 }
 
 .input:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.07);
 }
 
-.input:focus {
+.input:focus,
+.input:focus-visible {
   border-color: var(--color-primary, #ed6842);
   background: rgba(255, 255, 255, 0.08);
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Search input with icon */
@@ -63,13 +67,14 @@
 
 .searchInput {
   background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   color: var(--text-primary, #ffffff);
   font-size: 15px;
   padding: 12px 40px 12px 42px;
   transition: all 0.2s ease;
-  outline: none;
+  outline: none !important;
+  box-shadow: none !important;
   width: 100%;
 }
 
@@ -78,13 +83,16 @@
 }
 
 .searchInput:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.07);
 }
 
-.searchInput:focus {
+.searchInput:focus,
+.searchInput:focus-visible {
   border-color: var(--color-primary, #ed6842);
   background: rgba(255, 255, 255, 0.08);
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .clearSearch {
@@ -269,10 +277,30 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px 6px 12px;
+  padding: 6px 8px 6px 6px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  max-width: 200px;
+  border-radius: 8px;
+  max-width: 220px;
+}
+
+.selectedCover {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.selectedCoverPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary, #6b7280);
 }
 
 .selectedInfo {
