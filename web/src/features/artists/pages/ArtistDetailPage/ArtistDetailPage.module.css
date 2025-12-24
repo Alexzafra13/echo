@@ -548,16 +548,16 @@
 }
 
 .artistDetailPage__topTracksList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 24px;
 }
 
 .artistDetailPage__topTrack {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 10px 14px;
   background: var(--white-02);
   border-radius: 8px;
   cursor: pointer;
@@ -618,6 +618,14 @@
 }
 
 .artistDetailPage__topTrackAlbum {
+  font-size: 13px;
+  color: var(--color-text-tertiary, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artistDetailPage__topTrackMeta {
   font-size: 13px;
   color: var(--color-text-tertiary, #6b7280);
   white-space: nowrap;
@@ -805,6 +813,10 @@
 
 /* ===== Responsive for new sections ===== */
 @media (max-width: 768px) {
+  .artistDetailPage__topTracksList {
+    grid-template-columns: 1fr;
+  }
+
   .artistDetailPage__topTrack {
     padding: 10px 12px;
     gap: 12px;
