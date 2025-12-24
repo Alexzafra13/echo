@@ -57,9 +57,8 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
     setLocation('/daily');
   };
 
-  // TODO: Implement social features
   const handleSocial = () => {
-    console.log('Social clicked');
+    setLocation('/social');
   };
 
   return (

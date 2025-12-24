@@ -115,7 +115,6 @@ export function useShufflePlay(): UseShufflePlayReturn {
           // We've reached the end of the library
           if (state.seenTrackIds.size >= state.totalTracks) {
             // All tracks have been played - reset for a new cycle
-            console.log('[ShufflePlay] Completed full library cycle, resetting...');
             state.seenTrackIds.clear();
             state.seed = Math.random(); // New seed for fresh order
             state.skip = 0;
@@ -212,7 +211,6 @@ export function useShufflePlay(): UseShufflePlayReturn {
           // Reached end of library
           if (state.seenTrackIds.size + newTracks.length >= state.totalTracks && newTracks.length < BATCH_SIZE) {
             // We've gone through all tracks - reset and get fresh ones
-            console.log('[ShufflePlay] All tracks seen, resetting for new cycle...');
             state.seenTrackIds.clear();
             currentSeed = Math.random();
             currentSkip = 0;
