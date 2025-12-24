@@ -706,6 +706,7 @@
 
   .publicProfilePage__heroContent {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     gap: 20px;
   }
@@ -717,11 +718,21 @@
     font-size: 2.8rem;
   }
 
+  .publicProfilePage__heroInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    flex: 1;
+  }
+
   .publicProfilePage__listeningNow {
+    width: 100%;
     max-width: 100%;
     margin-left: 0;
-    margin-top: 16px;
+    margin-top: 8px;
     transform: translateY(10px);
+    order: 3;
   }
 
   .publicProfilePage__listeningNow--visible {
@@ -730,14 +741,6 @@
 
   .publicProfilePage__listeningNow--hidden {
     transform: translateY(-10px);
-  }
-
-  .publicProfilePage__heroInfo {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    min-width: 0;
-    flex: 1;
   }
 
   .publicProfilePage__name {
