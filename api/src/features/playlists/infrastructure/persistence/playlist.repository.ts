@@ -295,21 +295,35 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
       return true;
     }
 
-    // Build CASE/WHEN clause for bulk update (single query instead of N queries)
-    // Each WHEN clause is properly parameterized to prevent SQL injection
-    const trackIds = trackOrders.map((item) => item.trackId);
-    const caseWhenClauses = trackOrders.map(
-      (item) => sql`WHEN ${item.trackId} THEN ${item.order}`,
-    );
+    // Use transaction with two-step update to avoid unique constraint violations
+    // Step 1: Offset all track orders to temporary high values
+    // Step 2: Update to final values
+    return await this.drizzle.db.transaction(async (tx) => {
+      const trackIds = trackOrders.map((item) => item.trackId);
+      const offset = 100000; // Large offset to avoid conflicts
 
-    await this.drizzle.db.execute(sql`
-      UPDATE playlist_tracks
-      SET track_order = CASE track_id ${sql.join(caseWhenClauses, sql` `)} ELSE track_order END
-      WHERE playlist_id = ${playlistId}
-        AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
-    `);
+      // Step 1: Add offset to all tracks being reordered
+      await tx.execute(sql`
+        UPDATE playlist_tracks
+        SET track_order = track_order + ${offset}
+        WHERE playlist_id = ${playlistId}
+          AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
+      `);
 
-    return true;
+      // Step 2: Update to final values
+      const caseWhenClauses = trackOrders.map(
+        (item) => sql`WHEN ${item.trackId} THEN ${item.order}`,
+      );
+
+      await tx.execute(sql`
+        UPDATE playlist_tracks
+        SET track_order = CASE track_id ${sql.join(caseWhenClauses, sql` `)} ELSE track_order END
+        WHERE playlist_id = ${playlistId}
+          AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
+      `);
+
+      return true;
+    });
   }
 
   async isTrackInPlaylist(playlistId: string, trackId: string): Promise<boolean> {
