@@ -4,7 +4,7 @@ import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
-import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist } from '../../hooks/usePlaylists';
+import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist, useReorderPlaylistTracks } from '../../hooks/usePlaylists';
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
@@ -35,6 +35,7 @@ export default function PlaylistDetailPage() {
   const updatePlaylistMutation = useUpdatePlaylist();
   const deletePlaylistMutation = useDeletePlaylist();
   const removeTrackMutation = useRemoveTrackFromPlaylist();
+  const reorderTracksMutation = useReorderPlaylistTracks();
 
   // Extract dominant color from first album cover in playlist
   useEffect(() => {
@@ -138,6 +139,44 @@ export default function PlaylistDetailPage() {
       });
     } catch (error) {
       logger.error('Error toggling playlist visibility:', error);
+    }
+  };
+
+  const handleMoveTrackUp = async (_track: any, index: number) => {
+    if (!id || index === 0) return;
+    const currentTracks = playlistTracks?.tracks || [];
+    if (currentTracks.length < 2) return;
+
+    // Create new order: swap with previous track
+    const newOrder = currentTracks.map(t => t.id);
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+
+    try {
+      await reorderTracksMutation.mutateAsync({
+        playlistId: id,
+        dto: { trackIds: newOrder },
+      });
+    } catch (error) {
+      logger.error('Error reordering tracks:', error);
+    }
+  };
+
+  const handleMoveTrackDown = async (_track: any, index: number) => {
+    if (!id) return;
+    const currentTracks = playlistTracks?.tracks || [];
+    if (index >= currentTracks.length - 1) return;
+
+    // Create new order: swap with next track
+    const newOrder = currentTracks.map(t => t.id);
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+
+    try {
+      await reorderTracksMutation.mutateAsync({
+        playlistId: id,
+        dto: { trackIds: newOrder },
+      });
+    } catch (error) {
+      logger.error('Error reordering tracks:', error);
     }
   };
 
@@ -289,6 +328,8 @@ export default function PlaylistDetailPage() {
                 onTrackPlay={handleTrackPlay}
                 currentTrackId={currentTrack?.id}
                 onRemoveFromPlaylist={handleRemoveTrack}
+                onMoveUp={handleMoveTrackUp}
+                onMoveDown={handleMoveTrackDown}
               />
             ) : (
               <div className={styles.playlistDetailPage__emptyTracks}>

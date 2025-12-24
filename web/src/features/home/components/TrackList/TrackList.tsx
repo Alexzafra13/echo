@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Play, Disc, Ghost } from 'lucide-react';
+import { Play, Disc, Ghost, ChevronUp, ChevronDown } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
@@ -41,6 +41,8 @@ interface TrackListProps {
   hideGoToAlbum?: boolean; // Hide "Go to Album" option when already in album view
   hideAlbumCover?: boolean; // Hide album cover icon when in album view (only useful in playlists)
   onRemoveFromPlaylist?: (track: Track) => void; // Handler to remove track from playlist (only in playlist view)
+  onMoveUp?: (track: Track, index: number) => void; // Handler to move track up (for playlist reordering)
+  onMoveDown?: (track: Track, index: number) => void; // Handler to move track down (for playlist reordering)
 }
 
 /**
@@ -53,7 +55,8 @@ interface TrackListProps {
  *   onTrackPlay={(track) => play(track.id)}
  * />
  */
-export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false, onRemoveFromPlaylist }: TrackListProps) {
+export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false, onRemoveFromPlaylist, onMoveUp, onMoveDown }: TrackListProps) {
+  const canReorder = !!(onMoveUp && onMoveDown);
   const [, setLocation] = useLocation();
   const { addToQueue } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
@@ -159,6 +162,7 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
       styles.trackList__track,
       isPlaying ? styles['trackList__track--active'] : '',
       isMissingTrack ? styles['trackList__track--missing'] : '',
+      canReorder ? styles['trackList__track--reorderable'] : '',
     ].filter(Boolean).join(' ');
 
     // Handle click - don't play if track is missing
@@ -197,6 +201,36 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
             </>
           )}
         </div>
+
+        {/* Reorder buttons (only when reordering is enabled) */}
+        {canReorder && (
+          <div className={styles.trackList__reorderButtons}>
+            <button
+              className={styles.trackList__reorderButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveUp?.(track, index);
+              }}
+              disabled={index === 0}
+              aria-label="Mover arriba"
+              title="Mover arriba"
+            >
+              <ChevronUp size={16} />
+            </button>
+            <button
+              className={styles.trackList__reorderButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveDown?.(track, index);
+              }}
+              disabled={index === tracks.length - 1}
+              aria-label="Mover abajo"
+              title="Mover abajo"
+            >
+              <ChevronDown size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Track info (cover + title + artist) */}
         <div className={styles.trackList__trackInfo}>
@@ -279,8 +313,9 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
   return (
     <div className={styles.trackList}>
-      <div className={styles.trackList__header}>
+      <div className={`${styles.trackList__header} ${canReorder ? styles['trackList__header--reorderable'] : ''}`}>
         <span className={styles.trackList__headerNumber}>#</span>
+        {canReorder && <span className={styles.trackList__headerReorder}>Orden</span>}
         <span className={styles.trackList__headerTitle}>Título</span>
         <span className={styles.trackList__headerFormat}>Formato</span>
         <span className={styles.trackList__headerDuration}>Duración</span>
