@@ -283,20 +283,22 @@
   }
 
   .modal__body {
-    padding: 4px 16px 32px;
+    padding: 4px 16px 16px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   .modal__grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 8px;
   }
 
   .genreOption {
+    display: flex;
     padding: 14px 16px;
     width: 100%;
+    box-sizing: border-box;
   }
 
   .genreOption:hover {
@@ -319,7 +321,7 @@
   }
 
   .modal__body {
-    padding: 4px 16px 40px;
+    padding: 4px 16px 16px;
   }
 
   .genreOption {
