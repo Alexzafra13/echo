@@ -281,6 +281,38 @@
   .sharedAlbumGrid__artist {
     font-size: 12px;
   }
+
+  /* Keep grid layout on mobile when modifier is applied */
+  .sharedAlbumGrid__grid--mobileGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+
+  .sharedAlbumGrid__grid--mobileGrid > * {
+    width: auto;
+    flex-shrink: unset;
+    scroll-snap-align: unset;
+  }
+}
+
+/* Keep grid layout on mobile (768px) when modifier is applied */
+@media (max-width: 768px) {
+  .sharedAlbumGrid__grid--mobileGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+
+  .sharedAlbumGrid__grid--mobileGrid > * {
+    width: auto;
+    flex-shrink: unset;
+    scroll-snap-align: unset;
+  }
 }
 
 /* ===== Error Banner ===== */
