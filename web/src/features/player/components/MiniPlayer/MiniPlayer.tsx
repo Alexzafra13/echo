@@ -116,9 +116,35 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         <div className={styles.artist}>{artist}</div>
       </div>
 
-      {/* Controls reorganizados */}
+      {/* Progress bar - Debajo del artista (Solo para tracks) */}
+      {!isRadioMode && (
+        <div className={styles.progressContainer}>
+          <div
+            className={styles.progressBar}
+            onClick={handleProgressClick}
+          >
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className={styles.timeDisplay}>
+            <span className={styles.timeText}>{formatDuration(currentTime)}</span>
+            <span className={styles.timeText}>{formatDuration(duration)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Indicador EN VIVO para radio */}
+      {isRadioMode && (
+        <div className={styles.liveIndicator}>
+          <Radio size={12} className={styles.liveIcon} />
+          <span className={styles.liveText}>EN VIVO</span>
+        </div>
+      )}
+
+      {/* Play controls */}
       <div className={styles.controls}>
-        {/* Play controls centrados */}
         <div className={styles.playControls}>
           {!isRadioMode && (
             <button
@@ -147,45 +173,9 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
               <SkipForward size={16} />
             </button>
           )}
-
-          {/* Indicador EN VIVO para radio */}
-          {isRadioMode && (
-            <div className={styles.liveIndicator}>
-              <Radio size={12} className={styles.liveIcon} />
-              <span className={styles.liveText}>EN VIVO</span>
-            </div>
-          )}
         </div>
 
-        {/* Volume control a la derecha con hover desplegable */}
-        <div className={styles.volumeContainer}>
-          <button
-            className={styles.volumeButton}
-            onClick={toggleMute}
-            title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
-          >
-            {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-          </button>
-          <div className={styles.volumeSliderContainer}>
-            <div className={styles.volumeSlider}>
-              <div
-                className={styles.volumeFill}
-                style={{ height: `${volume * 100}%` }}
-              />
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={handleVolumeChange}
-              className={styles.volumeInput}
-            />
-          </div>
-        </div>
-
-        {/* Menú de opciones junto al volumen */}
+        {/* Menú de opciones */}
         <PlayerMenu
           isOpen={isMenuOpen}
           onToggle={() => setIsMenuOpen(!isMenuOpen)}
@@ -195,24 +185,33 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         />
       </div>
 
-      {/* Progress bar - Solo para tracks */}
-      {!isRadioMode && (
-        <div className={styles.progressContainer}>
-          <div
-            className={styles.progressBar}
-            onClick={handleProgressClick}
-          >
+      {/* Volume bar horizontal */}
+      <div className={styles.volumeSection}>
+        <button
+          className={styles.volumeButton}
+          onClick={toggleMute}
+          title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
+        >
+          {volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
+        </button>
+        <div className={styles.volumeBarContainer}>
+          <div className={styles.volumeBarTrack}>
             <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
+              className={styles.volumeBarFill}
+              style={{ width: `${volume * 100}%` }}
             />
           </div>
-          <div className={styles.timeDisplay}>
-            <span className={styles.timeText}>{formatDuration(currentTime)}</span>
-            <span className={styles.timeText}>{formatDuration(duration)}</span>
-          </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={handleVolumeChange}
+            className={styles.volumeBarInput}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }
