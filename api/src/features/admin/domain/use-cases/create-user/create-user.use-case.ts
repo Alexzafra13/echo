@@ -61,10 +61,11 @@ export class CreateUserUseCase {
         await this.socialRepository.createDirectFriendship(input.adminId, savedUser.id);
       } catch (error) {
         // Log error but don't fail user creation if friendship fails
-        await this.logService.warn(
+        await this.logService.error(
           LogCategory.AUTH,
           `Failed to create automatic friendship for new user: ${savedUser.username}`,
-          { userId: savedUser.id, adminId: input.adminId, error: String(error) },
+          error instanceof Error ? error : new Error(String(error)),
+          { userId: savedUser.id, adminId: input.adminId },
         );
       }
     }
