@@ -352,51 +352,63 @@
     border-radius: 8px; /* iOS rounded */
   }
 
-  /* Mobile reorderable track - hide reorder buttons, use simpler approach */
+  /* Mobile reorderable track */
   .trackList__track--reorderable {
-    grid-template-columns: 40px 1fr auto 72px 40px; /* play | info | duración | reorder | menú */
+    grid-template-columns: 40px 1fr auto 36px 40px;
+    /* Explicit grid positions for visual reordering */
   }
 
-  .trackList__track--reorderable .trackList__numberCell {
+  .trackList__track--reorderable > .trackList__numberCell {
     grid-column: 1;
+    grid-row: 1;
   }
 
-  .trackList__track--reorderable .trackList__trackInfo {
-    grid-column: 2;
-  }
-
-  .trackList__track--reorderable .trackList__trackDuration {
-    grid-column: 3;
-  }
-
-  .trackList__track--reorderable .trackList__reorderButtons {
+  .trackList__track--reorderable > .trackList__reorderButtons {
     grid-column: 4;
-    flex-direction: row;
-    gap: 6px;
+    grid-row: 1;
+    flex-direction: column;
+    gap: 0;
   }
 
-  .trackList__track--reorderable .trackList__menuButton {
+  .trackList__track--reorderable > .trackList__trackInfo {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .trackList__track--reorderable > .trackList__trackDuration {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .trackList__track--reorderable > .trackList__menuButton {
     grid-column: 5;
+    grid-row: 1;
+  }
+
+  /* Hide format/rating columns on mobile reorderable */
+  .trackList__track--reorderable > .trackList__trackFormat,
+  .trackList__track--reorderable > .trackList__trackRating {
+    display: none;
   }
 
   .trackList__reorderButton {
-    padding: 6px;
-    width: 32px;
-    height: 32px;
-    min-width: unset;
-    min-height: unset;
-    background: var(--white-10, rgba(255, 255, 255, 0.1));
-    border-radius: 6px;
+    padding: 4px;
+    width: 28px;
+    height: 18px;
+    background: transparent;
+    border-radius: 4px;
   }
 
   .trackList__reorderButton:disabled {
-    opacity: 0.3;
-    background: transparent;
+    opacity: 0.25;
+  }
+
+  .trackList__reorderButton:not(:disabled) {
+    color: var(--color-text-secondary, #b8bcc8);
   }
 
   .trackList__reorderButton:active:not(:disabled) {
-    background: var(--color-primary, #ed6842);
-    color: white;
+    color: var(--color-primary, #ed6842);
   }
 
   .trackList__reorderButton svg {
@@ -482,13 +494,13 @@
 
   /* Small mobile reorderable track */
   .trackList__track--reorderable {
-    grid-template-columns: 36px 1fr auto 64px 36px; /* play | info | duración | reorder | menú */
+    grid-template-columns: 36px 1fr auto 32px 36px;
   }
 
   .trackList__reorderButton {
-    width: 28px;
-    height: 28px;
-    padding: 4px;
+    width: 24px;
+    height: 16px;
+    padding: 2px;
   }
 
   .trackList__reorderButton svg {
