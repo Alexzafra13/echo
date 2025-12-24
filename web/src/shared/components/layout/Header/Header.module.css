@@ -399,6 +399,11 @@
   color: #ff5252;
 }
 
+/* Mobile-only menu items - hidden on desktop where sidebar shows these */
+.header__userMenuItem--mobileOnly {
+  display: none;
+}
+
 /* ===== Responsive Design ===== */
 
 /* Tablet */
@@ -598,6 +603,11 @@
   .header__userMenuItem:active {
     transform: scale(0.98);
     background: var(--white-10);
+  }
+
+  /* Show mobile-only items on mobile */
+  .header__userMenuItem--mobileOnly {
+    display: flex;
   }
 
   .header__userDivider {
