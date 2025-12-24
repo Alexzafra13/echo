@@ -76,7 +76,6 @@ export function GenreSelectModal({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.modal__searchInput}
-            autoFocus
           />
           {searchQuery && (
             <button
@@ -100,9 +99,7 @@ export function GenreSelectModal({
               >
                 {genre.icon && <span className={styles.genreOption__icon}>{genre.icon}</span>}
                 <span className={styles.genreOption__label}>{genre.label}</span>
-                {selectedGenre === genre.id && (
-                  <span className={styles.genreOption__check}>✓</span>
-                )}
+                <span className={styles.genreOption__check}>✓</span>
               </button>
             ))}
           </div>
