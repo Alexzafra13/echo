@@ -47,6 +47,15 @@
   text-align: center;
 }
 
+.trackList__headerReorder {
+  text-align: center;
+}
+
+/* Header with reorder column */
+.trackList__header--reorderable {
+  grid-template-columns: 40px 50px 1fr 140px 80px 200px 40px;
+}
+
 /* Tracks Container */
 .trackList__tracks {
   margin-top: 8px;
@@ -102,6 +111,43 @@
 
 .trackList__track:hover {
   background: var(--white-05);
+}
+
+/* Track row with reorder column */
+.trackList__track--reorderable {
+  grid-template-columns: 40px 50px 1fr 140px 80px 200px 40px;
+}
+
+/* Reorder buttons container */
+.trackList__reorderButtons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.trackList__reorderButton {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--color-text-tertiary, #6b7280);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.trackList__reorderButton:hover:not(:disabled) {
+  color: var(--color-primary, #ed6842);
+  background: var(--white-10);
+}
+
+.trackList__reorderButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .trackList__track:hover .trackList__trackNumber {
@@ -304,6 +350,24 @@
     gap: 10px; /* Reducido de 14px */
     padding: 8px 12px; /* Reducido de 12px 16px */
     border-radius: 8px; /* iOS rounded */
+  }
+
+  /* Mobile reorderable track */
+  .trackList__track--reorderable {
+    grid-template-columns: 40px 36px 1fr auto 40px; /* 5 columnas: play | reorder | info | duración | menú */
+  }
+
+  .trackList__reorderButtons {
+    gap: 0;
+  }
+
+  .trackList__reorderButton {
+    padding: 1px;
+  }
+
+  .trackList__reorderButton svg {
+    width: 14px;
+    height: 14px;
   }
 
   .trackList__numberCell {
