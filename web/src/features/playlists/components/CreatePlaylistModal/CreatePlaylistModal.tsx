@@ -72,8 +72,15 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
   };
 
   const toggleTrack = (track: Track | RecentlyPlayed) => {
-    const trackData = 'track' in track && track.track ? track.track : track as Track;
-    const trackId = 'trackId' in track ? track.trackId : trackData.id;
+    if (!track || typeof track !== 'object') return;
+
+    const isRecentlyPlayed = 'trackId' in track;
+    const trackData = isRecentlyPlayed && (track as RecentlyPlayed).track
+      ? (track as RecentlyPlayed).track!
+      : track as Track;
+    const trackId = isRecentlyPlayed
+      ? (track as RecentlyPlayed).trackId
+      : (track as Track).id;
 
     const isSelected = selectedTracks.some(t => t.id === trackId);
 
@@ -84,7 +91,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
         id: trackId,
         title: trackData.title,
         artistName: trackData.artistName,
-        albumId: trackData.albumId || (trackData as any).albumName,
+        albumId: trackData.albumId,
       }]);
     }
     setError('');
@@ -263,9 +270,20 @@ interface TrackItemProps {
 }
 
 function TrackItem({ track, isSelected, onToggle }: TrackItemProps) {
-  const trackData = 'track' in track && track.track ? track.track : track as Track;
-  const trackId = 'trackId' in track ? track.trackId : trackData.id;
-  const albumId = trackData.albumId || (trackData as any).albumName;
+  // Guard against invalid data
+  if (!track || typeof track !== 'object') {
+    return null;
+  }
+
+  // Check if this is a RecentlyPlayed (has trackId) or Track (has id directly)
+  const isRecentlyPlayed = 'trackId' in track;
+  const trackData = isRecentlyPlayed && (track as RecentlyPlayed).track
+    ? (track as RecentlyPlayed).track!
+    : track as Track;
+  const trackId = isRecentlyPlayed
+    ? (track as RecentlyPlayed).trackId
+    : (track as Track).id;
+  const albumId = trackData.albumId;
 
   return (
     <button
