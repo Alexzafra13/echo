@@ -40,38 +40,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 0 12px;
+  gap: 6px;
+  padding: 0 14px;
   overflow-y: auto;
-  position: relative;
-}
-
-/* Sliding indicator - no animation */
-.sidebar__indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.2) 0%, rgba(237, 104, 66, 0.08) 100%);
-  border: 1px solid rgba(237, 104, 66, 0.25);
-  border-radius: 10px;
-  pointer-events: none;
-  z-index: 0;
-  box-shadow: 0 4px 16px rgba(237, 104, 66, 0.15);
-}
-
-/* Glowing left bar on the indicator */
-.sidebar__indicator::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 24px;
-  background: var(--color-primary, #ed6842);
-  border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 12px rgba(237, 104, 66, 0.6);
 }
 
 .sidebar__navItem {
@@ -84,23 +55,50 @@
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
-  z-index: 1;
+  overflow: hidden;
+}
+
+/* Subtle left indicator line */
+.sidebar__navItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 24px;
+  background: var(--color-primary, #ed6842);
+  border-radius: 0 3px 3px 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar__navItem:hover {
+  background: var(--white-05);
   color: var(--color-text-primary, #ffffff);
   transform: translateX(4px);
 }
 
+.sidebar__navItem:hover::before {
+  transform: translateY(-50%) scaleY(0.5);
+}
+
 .sidebar__navItem--active {
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.08) 100%);
   color: var(--color-primary, #ed6842);
+  box-shadow: 0 2px 12px rgba(237, 104, 66, 0.15);
+  border: 1px solid rgba(237, 104, 66, 0.2);
+}
+
+.sidebar__navItem--active::before {
+  transform: translateY(-50%) scaleY(1);
+  box-shadow: 0 0 12px rgba(237, 104, 66, 0.5);
 }
 
 .sidebar__navItem--active:hover {
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.22) 0%, rgba(237, 104, 66, 0.12) 100%);
   transform: translateX(4px);
 }
 
@@ -194,8 +192,8 @@
     min-height: 50px;
   }
 
-  /* Hide animated indicator on mobile */
-  .sidebar__indicator {
+  /* Disable desktop effects on mobile */
+  .sidebar__navItem::before {
     display: none;
   }
 
@@ -290,12 +288,6 @@
 
 :root[data-theme="light"] .sidebar__navItem--active {
   color: var(--color-primary-600, #e04d28);
-}
-
-:root[data-theme="light"] .sidebar__indicator {
-  background: linear-gradient(135deg, rgba(237, 104, 66, 0.18) 0%, rgba(237, 104, 66, 0.08) 100%);
-  border-color: rgba(237, 104, 66, 0.2);
-  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.1);
 }
 
 :root[data-theme="light"] .sidebar__navItem--active .sidebar__navIcon {
