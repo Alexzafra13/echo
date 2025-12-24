@@ -154,7 +154,7 @@ export default function PlaylistDetailPage() {
     try {
       await reorderTracksMutation.mutateAsync({
         playlistId: id,
-        dto: { trackIds: newOrder },
+        dto: { trackOrders: newOrder.map((trackId, idx) => ({ trackId, order: idx })) },
       });
     } catch (error) {
       logger.error('Error reordering tracks:', error);
@@ -173,7 +173,7 @@ export default function PlaylistDetailPage() {
     try {
       await reorderTracksMutation.mutateAsync({
         playlistId: id,
-        dto: { trackIds: newOrder },
+        dto: { trackOrders: newOrder.map((trackId, idx) => ({ trackId, order: idx })) },
       });
     } catch (error) {
       logger.error('Error reordering tracks:', error);
