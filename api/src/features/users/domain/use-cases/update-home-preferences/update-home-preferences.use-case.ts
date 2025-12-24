@@ -95,22 +95,38 @@ export class UpdateHomePreferencesUseCase {
   }
 
   /**
-   * Ensure all valid sections are present (migration helper for existing users)
-   * Adds any missing sections at the end with enabled: false
+   * Normalize and ensure all valid sections are present (migration helper for existing users)
+   * - Filters out invalid section IDs
+   * - Removes duplicates (keeps first occurrence)
+   * - Adds missing sections with enabled: false
+   * - Re-numbers orders sequentially (0 to n-1)
    */
   private ensureAllSections(sections: HomeSectionConfig[]): HomeSectionConfig[] {
-    const existingIds = new Set(sections.map(s => s.id));
-    const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
+    // 1. Filter to only valid IDs and remove duplicates (keep first occurrence)
+    const seenIds = new Set<HomeSectionConfig['id']>();
+    const validSections: HomeSectionConfig[] = [];
 
-    let nextOrder = maxOrder + 1;
-    const missingSections: HomeSectionConfig[] = [];
+    // Sort by order first to preserve user's ordering preference
+    const sortedSections = [...sections].sort((a, b) => a.order - b.order);
 
-    for (const id of VALID_SECTION_IDS) {
-      if (!existingIds.has(id)) {
-        missingSections.push({ id, enabled: false, order: nextOrder++ });
+    for (const section of sortedSections) {
+      if (VALID_SECTION_IDS.includes(section.id) && !seenIds.has(section.id)) {
+        seenIds.add(section.id);
+        validSections.push(section);
       }
     }
 
-    return [...sections, ...missingSections];
+    // 2. Add missing sections
+    for (const id of VALID_SECTION_IDS) {
+      if (!seenIds.has(id)) {
+        validSections.push({ id, enabled: false, order: validSections.length });
+      }
+    }
+
+    // 3. Re-number orders sequentially (0 to n-1)
+    return validSections.map((section, index) => ({
+      ...section,
+      order: index,
+    }));
   }
 }
