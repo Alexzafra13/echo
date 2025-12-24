@@ -283,22 +283,27 @@
   }
 
   .modal__body {
-    padding: 4px 16px 16px;
+    padding: 4px 0 20px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    min-height: 0;
   }
 
   .modal__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
+    display: block;
+    padding: 0 16px;
   }
 
   .genreOption {
     display: flex;
-    padding: 14px 16px;
     width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 8px;
     box-sizing: border-box;
+  }
+
+  .genreOption:last-child {
+    margin-bottom: 0;
   }
 
   .genreOption:hover {
@@ -321,7 +326,11 @@
   }
 
   .modal__body {
-    padding: 4px 16px 16px;
+    padding: 4px 0 20px;
+  }
+
+  .modal__grid {
+    padding: 0 16px;
   }
 
   .genreOption {
