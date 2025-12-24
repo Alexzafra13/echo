@@ -39,7 +39,15 @@ export function Sidebar() {
     : baseNavItems;
 
   const isActive = (path: string) => {
-    return location === path || location.startsWith(path + '/');
+    // Direct match or starts with path
+    if (location === path || location.startsWith(path + '/')) {
+      return true;
+    }
+    // Federated album routes should highlight Albums
+    if (path === '/albums' && location.startsWith('/federation/album/')) {
+      return true;
+    }
+    return false;
   };
 
   return (
