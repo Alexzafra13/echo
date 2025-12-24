@@ -184,7 +184,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
         onClick={handlePrevious}
         aria-label="Previous featured item"
       >
-        <ChevronLeft size={32} />
+        <ChevronLeft size={24} />
       </button>
 
       <button
@@ -192,7 +192,7 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
         onClick={handleNext}
         aria-label="Next featured item"
       >
-        <ChevronRight size={32} />
+        <ChevronRight size={24} />
       </button>
 
       <div className={styles.heroSection__content}>
