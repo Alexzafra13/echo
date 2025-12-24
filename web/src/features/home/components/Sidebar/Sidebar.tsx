@@ -46,30 +46,21 @@ export function Sidebar() {
 
   const activeIndex = navItems.findIndex(item => isActive(item.path));
 
-  // Update CSS custom properties directly - like the jh3yy example
+  // Update CSS custom properties directly
   useEffect(() => {
     const nav = navRef.current;
     if (activeIndex === -1 || !nav) return;
 
-    const updateIndicator = () => {
-      const links = nav.querySelectorAll('a');
-      const activeLink = links[activeIndex] as HTMLElement;
+    const links = nav.querySelectorAll('a');
+    const activeLink = links[activeIndex] as HTMLElement;
 
-      if (activeLink) {
-        const navRect = nav.getBoundingClientRect();
-        const linkRect = activeLink.getBoundingClientRect();
+    if (activeLink) {
+      const navRect = nav.getBoundingClientRect();
+      const linkRect = activeLink.getBoundingClientRect();
 
-        nav.style.setProperty('--indicator-y', `${linkRect.top - navRect.top}px`);
-        nav.style.setProperty('--indicator-height', `${linkRect.height}px`);
-
-        // Enable transitions after first position is set
-        requestAnimationFrame(() => {
-          nav.classList.add(styles['sidebar__nav--ready']);
-        });
-      }
-    };
-
-    updateIndicator();
+      nav.style.setProperty('--indicator-y', `${linkRect.top - navRect.top}px`);
+      nav.style.setProperty('--indicator-height', `${linkRect.height}px`);
+    }
   }, [activeIndex]);
 
   return (
