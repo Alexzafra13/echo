@@ -430,7 +430,6 @@
   background: var(--white-03);
   border-radius: 8px;
   overflow: hidden;
-  max-width: 450px;
 }
 
 .settingsPage__sectionItem {
@@ -458,6 +457,7 @@
 }
 
 .settingsPage__sectionInfo {
+  flex: 1;
   min-width: 0;
 }
 
@@ -530,14 +530,6 @@
   .settingsPage__saveButton {
     width: 100%;
     border-radius: 20px;
-  }
-
-  .settingsPage__sectionsList {
-    max-width: none;
-  }
-
-  .settingsPage__sectionInfo {
-    flex: 1;
   }
 }
 
