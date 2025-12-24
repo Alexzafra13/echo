@@ -354,20 +354,48 @@
 
   /* Mobile reorderable track */
   .trackList__track--reorderable {
-    grid-template-columns: 40px 36px 1fr auto 40px; /* 5 columnas: play | reorder | info | duración | menú */
+    grid-template-columns: 40px 1fr auto 44px 40px; /* play | info | duración | reorder | menú */
   }
 
-  .trackList__reorderButtons {
-    gap: 0;
+  .trackList__track--reorderable .trackList__numberCell {
+    grid-column: 1;
+  }
+
+  .trackList__track--reorderable .trackList__trackInfo {
+    grid-column: 2;
+  }
+
+  .trackList__track--reorderable .trackList__trackDuration {
+    grid-column: 3;
+  }
+
+  .trackList__track--reorderable .trackList__reorderButtons {
+    grid-column: 4;
+    gap: 4px;
+    flex-direction: row; /* Horizontal on mobile */
+  }
+
+  .trackList__track--reorderable .trackList__menuButton {
+    grid-column: 5;
   }
 
   .trackList__reorderButton {
-    padding: 1px;
+    padding: 8px;
+    min-width: 36px;
+    min-height: 36px;
+    background: var(--white-5, rgba(255, 255, 255, 0.05));
+    border-radius: 8px;
+  }
+
+  .trackList__reorderButton:active:not(:disabled) {
+    background: var(--color-primary, #ed6842);
+    color: white;
+    transform: scale(0.95);
   }
 
   .trackList__reorderButton svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
 
   .trackList__numberCell {
@@ -448,12 +476,26 @@
 
   /* Small mobile reorderable track */
   .trackList__track--reorderable {
-    grid-template-columns: 36px 32px 1fr auto 36px; /* 5 columnas: play | reorder | info | duración | menú */
+    grid-template-columns: 36px 1fr auto 40px 36px; /* play | info | duración | reorder | menú */
+  }
+
+  .trackList__track--reorderable .trackList__reorderButtons {
+    grid-column: 4;
+  }
+
+  .trackList__track--reorderable .trackList__menuButton {
+    grid-column: 5;
+  }
+
+  .trackList__reorderButton {
+    padding: 6px;
+    min-width: 32px;
+    min-height: 32px;
   }
 
   .trackList__reorderButton svg {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
   }
 
   .trackList__numberCell {
