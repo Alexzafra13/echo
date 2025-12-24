@@ -186,6 +186,12 @@ export default function AlbumsPage() {
           {/* Source Tabs */}
           {connectedServers.length > 0 && (
             <div className={styles.albumsPage__sourceTabs}>
+              {/* Animated sliding indicator */}
+              <div
+                className={`${styles.albumsPage__sourceIndicator} ${
+                  librarySource === 'shared' ? styles['albumsPage__sourceIndicator--shared'] : ''
+                }`}
+              />
               <button
                 className={`${styles.albumsPage__sourceTab} ${librarySource === 'local' ? styles['albumsPage__sourceTab--active'] : ''}`}
                 onClick={() => handleSourceChange('local')}
