@@ -35,6 +35,30 @@ function SingleCoverImage({ albumId, playlistName }: { albumId: string; playlist
 }
 
 /**
+ * GridCoverImage - Grid image component with fallback placeholder
+ */
+function GridCoverImage({ albumId, alt }: { albumId: string; alt: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className={styles.mosaic__gridPlaceholder}>
+        <Music size={24} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`/api/albums/${albumId}/cover`}
+      alt={alt}
+      className={styles.mosaic__gridImage}
+      onError={() => setHasError(true)}
+    />
+  );
+}
+
+/**
  * PlaylistCoverMosaic Component
  * Displays a mosaic of up to 4 album covers from the playlist, like Spotify
  */
@@ -71,13 +95,9 @@ export function PlaylistCoverMosaic({ albumIds, playlistName }: PlaylistCoverMos
       <div className={`${styles.mosaic__grid} ${styles[gridClass]}`}>
         {uniqueAlbumIds.map((albumId, index) => (
           <div key={albumId} className={styles.mosaic__gridItem}>
-            <img
-              src={`/api/albums/${albumId}/cover`}
+            <GridCoverImage
+              albumId={albumId}
               alt={`${playlistName} - Album ${index + 1}`}
-              className={styles.mosaic__gridImage}
-              onError={(e) => {
-                e.currentTarget.src = '/placeholder-album.png';
-              }}
             />
           </div>
         ))}
