@@ -29,7 +29,9 @@ export function Sidebar() {
 
   // Animated indicator
   const navRef = useRef<HTMLElement>(null);
-  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number } | null>(null);
+  const [indicatorTop, setIndicatorTop] = useState(0);
+  const [indicatorHeight, setIndicatorHeight] = useState(0);
+  const [isReady, setIsReady] = useState(false);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -53,31 +55,29 @@ export function Sidebar() {
   // Find active index
   const activeIndex = navItems.findIndex(item => isActive(item.path));
 
-  // Update indicator position - uses DOM query for reliability
+  // Update indicator position
   useEffect(() => {
-    if (activeIndex === -1 || !navRef.current) return;
+    const nav = navRef.current;
+    if (activeIndex === -1 || !nav) return;
 
-    const updatePosition = () => {
-      if (!navRef.current) return;
+    const links = nav.querySelectorAll('a');
+    const activeLink = links[activeIndex];
 
-      const links = navRef.current.querySelectorAll('a');
-      const activeLink = links[activeIndex] as HTMLElement;
+    if (activeLink) {
+      const navRect = nav.getBoundingClientRect();
+      const linkRect = activeLink.getBoundingClientRect();
 
-      if (activeLink) {
-        const navRect = navRef.current.getBoundingClientRect();
-        const linkRect = activeLink.getBoundingClientRect();
+      setIndicatorTop(linkRect.top - navRect.top);
+      setIndicatorHeight(linkRect.height);
 
-        setIndicatorStyle({
-          top: linkRect.top - navRect.top,
-          height: linkRect.height,
+      // Mark as ready after first position is set
+      if (!isReady) {
+        requestAnimationFrame(() => {
+          setIsReady(true);
         });
       }
-    };
-
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(updatePosition, 10);
-    return () => clearTimeout(timer);
-  }, [activeIndex, navItems.length]);
+    }
+  }, [activeIndex, isReady]);
 
   return (
     <aside className={styles.sidebar}>
@@ -93,15 +93,13 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className={styles.sidebar__nav} ref={navRef}>
         {/* Animated sliding indicator */}
-        {indicatorStyle && (
-          <div
-            className={styles.sidebar__indicator}
-            style={{
-              transform: `translateY(${indicatorStyle.top}px)`,
-              height: indicatorStyle.height,
-            }}
-          />
-        )}
+        <div
+          className={`${styles.sidebar__indicator} ${isReady ? styles['sidebar__indicator--ready'] : ''}`}
+          style={{
+            transform: `translateY(${indicatorTop}px)`,
+            height: indicatorHeight,
+          }}
+        />
 
         {navItems.map((item) => {
           const Icon = item.icon;
