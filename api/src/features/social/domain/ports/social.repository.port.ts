@@ -17,6 +17,11 @@ export interface ISocialRepository {
   sendFriendRequest(requesterId: string, addresseeId: string): Promise<Friendship>;
 
   /**
+   * Create a direct friendship (already accepted) - used by admin when creating users
+   */
+  createDirectFriendship(userId1: string, userId2: string): Promise<Friendship>;
+
+  /**
    * Accept a friend request
    */
   acceptFriendRequest(friendshipId: string, userId: string): Promise<Friendship>;

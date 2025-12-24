@@ -5,6 +5,7 @@ import {
   PASSWORD_SERVICE,
   IPasswordService,
 } from '@features/auth/domain/ports';
+import { ISocialRepository, SOCIAL_REPOSITORY } from '@features/social/domain/ports';
 import { User } from '@features/auth/domain/entities/user.entity';
 import { ConflictError, ValidationError } from '@shared/errors';
 import { PasswordUtil } from '@shared/utils/password.util';
@@ -18,6 +19,8 @@ export class CreateUserUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    @Inject(SOCIAL_REPOSITORY)
+    private readonly socialRepository: ISocialRepository,
     private readonly logService: LogService,
   ) {}
 
@@ -52,7 +55,21 @@ export class CreateUserUseCase {
     // 5. Persistir
     const savedUser = await this.userRepository.create(user);
 
-    // 6. Log user creation
+    // 6. Create automatic friendship between admin and new user
+    if (input.adminId) {
+      try {
+        await this.socialRepository.createDirectFriendship(input.adminId, savedUser.id);
+      } catch (error) {
+        // Log error but don't fail user creation if friendship fails
+        await this.logService.warn(
+          LogCategory.AUTH,
+          `Failed to create automatic friendship for new user: ${savedUser.username}`,
+          { userId: savedUser.id, adminId: input.adminId, error: String(error) },
+        );
+      }
+    }
+
+    // 7. Log user creation
     await this.logService.info(
       LogCategory.AUTH,
       `User created by admin: ${savedUser.username}`,
@@ -64,7 +81,7 @@ export class CreateUserUseCase {
       },
     );
 
-    // 7. Retornar credenciales
+    // 8. Retornar credenciales
     return {
       user: {
         id: savedUser.id,
