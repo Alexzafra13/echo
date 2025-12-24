@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX } from 'lucide-react';
+import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX, UserCheck } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
-import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser } from '../../hooks/useUsers';
+import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
 import { EditUserModal } from './EditUserModal';
@@ -23,6 +23,7 @@ export function UsersPanel() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [userToPermanentlyDelete, setUserToPermanentlyDelete] = useState<User | null>(null);
   const [userToResetPassword, setUserToResetPassword] = useState<User | null>(null);
+  const [userToReactivate, setUserToReactivate] = useState<User | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +42,7 @@ export function UsersPanel() {
   const deleteUserMutation = useDeleteUser();
   const permanentlyDeleteUserMutation = usePermanentlyDeleteUser();
   const resetPasswordMutation = useResetPassword();
+  const updateUserMutation = useUpdateUser();
 
   // Handlers
   const handleCreateSuccess = (username: string, password: string) => {
@@ -109,6 +111,28 @@ export function UsersPanel() {
         console.error('Error resetting password:', err);
       }
       setNotification({ type: 'error', message: 'Error al resetear contraseña. Por favor intenta de nuevo.' });
+    }
+  };
+
+  const handleReactivateClick = (user: User) => {
+    setUserToReactivate(user);
+  };
+
+  const handleReactivateConfirm = async () => {
+    if (!userToReactivate) return;
+
+    try {
+      await updateUserMutation.mutateAsync({
+        id: userToReactivate.id,
+        data: { isActive: true },
+      });
+      setUserToReactivate(null);
+      setNotification({ type: 'success', message: 'Usuario reactivado correctamente' });
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Error reactivating user:', err);
+      }
+      setNotification({ type: 'error', message: 'Error al reactivar usuario. Por favor intenta de nuevo.' });
     }
   };
 
@@ -376,15 +400,26 @@ export function UsersPanel() {
                         <Key size={14} />
                         Reset
                       </button>
-                      <button
-                        className={`${styles.actionButton} ${styles.actionButtonWarning}`}
-                        onClick={() => handleDeleteClick(user)}
-                        title={user.isSystemAdmin ? "No se puede desactivar al administrador principal" : "Desactivar usuario (acción reversible)"}
-                        disabled={!user.isActive || user.isSystemAdmin}
-                      >
-                        <UserX size={14} />
-                        Desactivar
-                      </button>
+                      {user.isActive ? (
+                        <button
+                          className={`${styles.actionButton} ${styles.actionButtonWarning}`}
+                          onClick={() => handleDeleteClick(user)}
+                          title={user.isSystemAdmin ? "No se puede desactivar al administrador principal" : "Desactivar usuario (acción reversible)"}
+                          disabled={user.isSystemAdmin}
+                        >
+                          <UserX size={14} />
+                          Desactivar
+                        </button>
+                      ) : (
+                        <button
+                          className={`${styles.actionButton} ${styles.actionButtonSuccess}`}
+                          onClick={() => handleReactivateClick(user)}
+                          title="Reactivar usuario"
+                        >
+                          <UserCheck size={14} />
+                          Reactivar
+                        </button>
+                      )}
                       <button
                         className={`${styles.actionButton} ${styles.actionButtonDanger}`}
                         onClick={() => handlePermanentlyDeleteClick(user)}
@@ -523,6 +558,17 @@ export function UsersPanel() {
           onConfirm={handlePermanentlyDeleteConfirm}
           onCancel={() => setUserToPermanentlyDelete(null)}
           isLoading={permanentlyDeleteUserMutation.isPending}
+        />
+      )}
+
+      {userToReactivate && (
+        <ConfirmDialog
+          title="Reactivar Usuario"
+          message={`¿Estás seguro de que quieres reactivar al usuario "${userToReactivate.name || userToReactivate.username}"? El usuario podrá volver a iniciar sesión.`}
+          confirmText="Reactivar"
+          onConfirm={handleReactivateConfirm}
+          onCancel={() => setUserToReactivate(null)}
+          isLoading={updateUserMutation.isPending}
         />
       )}
     </div>
