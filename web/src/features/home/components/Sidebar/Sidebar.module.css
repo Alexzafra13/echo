@@ -16,8 +16,8 @@
   left: 0;
   top: 0;
   z-index: 100;
-  /* Necesario para posicionar el mini-player absolutamente dentro */
-  overflow: hidden;
+  /* Permitir que los menús del MiniPlayer se muestren fuera */
+  overflow: visible;
 }
 
 .sidebar__logoContainer {
