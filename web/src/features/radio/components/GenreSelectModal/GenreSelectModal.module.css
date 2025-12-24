@@ -297,7 +297,9 @@
   }
 
   .genreOption {
-    width: 100%;
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
     padding: 14px 16px;
     margin: 0;
     border-radius: 0;
@@ -305,10 +307,29 @@
     border-right: none;
     border-top: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-sizing: border-box;
+    text-align: left;
   }
 
   .genreOption:last-child {
     border-bottom: none;
+  }
+
+  .genreOption__icon,
+  .genreOption__label,
+  .genreOption__check {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .genreOption__label {
+    margin-left: 12px;
+    flex: none;
+  }
+
+  .genreOption__check {
+    float: right;
+    margin-top: 2px;
   }
 
   .genreOption:hover {
