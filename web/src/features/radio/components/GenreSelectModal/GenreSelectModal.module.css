@@ -251,8 +251,8 @@
   .modal__content {
     max-width: 100%;
     width: 100%;
-    height: calc(100vh - 70px);
-    max-height: calc(100vh - 70px);
+    height: calc(100vh - 56px);
+    max-height: calc(100vh - 56px);
     border-radius: 0 0 20px 20px;
     animation: slideDownMobile 0.3s ease-out;
   }
@@ -277,12 +277,14 @@
   }
 
   .modal__search {
-    margin: 0 16px;
-    padding: 10px 16px;
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 
   .modal__body {
-    padding: 8px 0 20px;
+    padding: 8px 0 16px;
     flex: 1;
     min-height: 0;
   }
@@ -290,14 +292,23 @@
   .modal__grid {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 0 16px;
+    gap: 0;
+    padding: 0;
   }
 
   .genreOption {
     width: 100%;
     padding: 14px 16px;
     margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .genreOption:last-child {
+    border-bottom: none;
   }
 
   .genreOption:hover {
@@ -314,22 +325,12 @@
     padding: 14px 16px;
   }
 
-  .modal__search {
-    margin: 0 16px;
-    padding: 10px 14px;
-  }
-
   .modal__body {
-    padding: 8px 0 16px;
-  }
-
-  .modal__grid {
-    padding: 0 16px;
-    gap: 6px;
+    padding: 8px 0 12px;
   }
 
   .genreOption {
-    padding: 12px 14px;
+    padding: 12px 16px;
     font-size: 15px;
   }
 }
