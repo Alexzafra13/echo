@@ -247,6 +247,12 @@
   .radioPage__section {
     margin-bottom: 32px;
   }
+
+  .radioPage__genreButton {
+    width: 100%;
+    justify-content: center;
+    border-radius: 16px;
+  }
 }
 
 /* Small Mobile */
