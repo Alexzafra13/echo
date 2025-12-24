@@ -31,7 +31,7 @@ export function Sidebar() {
     { icon: ListMusic, label: 'Playlists', path: '/playlists' },
     { icon: Radio, label: 'Radio', path: '/radio' },
     { icon: Waves, label: 'Wave Mix', path: '/wave-mix' },
-    { icon: Users, label: 'Social', path: '/social' },
+    { icon: Users, label: 'Social', path: '/social', hiddenOnMobile: true },
   ];
 
   const navItems = isAdmin
@@ -63,13 +63,17 @@ export function Sidebar() {
       <nav className={styles.sidebar__nav}>
         {navItems.map((item) => {
           const Icon = item.icon;
+          const itemClasses = [
+            styles.sidebar__navItem,
+            isActive(item.path) ? styles['sidebar__navItem--active'] : '',
+            'hiddenOnMobile' in item && item.hiddenOnMobile ? styles['sidebar__navItem--hiddenMobile'] : '',
+          ].filter(Boolean).join(' ');
+
           return (
             <Link
               key={item.path}
               href={item.path}
-              className={`${styles.sidebar__navItem} ${
-                isActive(item.path) ? styles['sidebar__navItem--active'] : ''
-              }`}
+              className={itemClasses}
             >
               <Icon size={20} className={styles.sidebar__navIcon} />
               <span className={styles.sidebar__navLabel}>{item.label}</span>
