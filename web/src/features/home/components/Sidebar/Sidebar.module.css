@@ -217,7 +217,12 @@
     max-width: 100%;
   }
 
-  /* Only show first 6 nav items in bottom nav (indicator is first child) */
+  /* Hide items marked as hiddenOnMobile */
+  .sidebar__navItem--hiddenMobile {
+    display: none;
+  }
+
+  /* Also hide Admin in mobile bottom nav */
   .sidebar__navItem:nth-child(n+8) {
     display: none;
   }
