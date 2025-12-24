@@ -143,46 +143,46 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
         </div>
       )}
 
-      {/* Play controls */}
+      {/* Play controls - centrados */}
       <div className={styles.controls}>
-        <div className={styles.playControls}>
-          {!isRadioMode && (
-            <button
-              className={styles.controlBtn}
-              onClick={playPrevious}
-              title="Anterior"
-            >
-              <SkipBack size={16} />
-            </button>
-          )}
-
+        {!isRadioMode && (
           <button
-            className={styles.playBtn}
-            onClick={togglePlayPause}
-            title={isPlaying ? 'Pausar' : 'Reproducir'}
+            className={styles.controlBtn}
+            onClick={playPrevious}
+            title="Anterior"
           >
-            {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+            <SkipBack size={18} />
           </button>
+        )}
 
-          {!isRadioMode && (
-            <button
-              className={styles.controlBtn}
-              onClick={playNext}
-              title="Siguiente"
-            >
-              <SkipForward size={16} />
-            </button>
-          )}
+        <button
+          className={styles.playBtn}
+          onClick={togglePlayPause}
+          title={isPlaying ? 'Pausar' : 'Reproducir'}
+        >
+          {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+        </button>
+
+        {!isRadioMode && (
+          <button
+            className={styles.controlBtn}
+            onClick={playNext}
+            title="Siguiente"
+          >
+            <SkipForward size={18} />
+          </button>
+        )}
+
+        {/* Menú de opciones - posicionado absoluto */}
+        <div className={styles.menuWrapper}>
+          <PlayerMenu
+            isOpen={isMenuOpen}
+            onToggle={() => setIsMenuOpen(!isMenuOpen)}
+            onClose={() => setIsMenuOpen(false)}
+            menuRef={menuRef}
+            size={14}
+          />
         </div>
-
-        {/* Menú de opciones */}
-        <PlayerMenu
-          isOpen={isMenuOpen}
-          onToggle={() => setIsMenuOpen(!isMenuOpen)}
-          onClose={() => setIsMenuOpen(false)}
-          menuRef={menuRef}
-          size={14}
-        />
       </div>
 
       {/* Volume bar horizontal */}
