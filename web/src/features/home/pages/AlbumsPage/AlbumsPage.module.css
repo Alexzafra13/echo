@@ -330,11 +330,13 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
-.albumsPage__filterSelect:focus {
+.albumsPage__filterSelect:focus,
+.albumsPage__filterSelect:focus-visible {
   background-color: var(--white-08);
   border-color: rgba(237, 104, 66, 0.5);
   box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ed6842' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  outline: none;
 }
 
 .albumsPage__filterSelect option {
@@ -390,6 +392,12 @@
   z-index: 1;
   flex: 1;
   justify-content: center;
+}
+
+.albumsPage__sourceTab svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .albumsPage__sourceTab:hover {
