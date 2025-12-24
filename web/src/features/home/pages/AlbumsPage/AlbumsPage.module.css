@@ -303,7 +303,7 @@
 }
 
 .albumsPage__filterSelect {
-  padding: 10px 16px;
+  padding: 10px 40px 10px 16px;
   background: var(--white-05);
   border: 1px solid var(--white-10);
   border-radius: 12px;
@@ -311,19 +311,30 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   min-width: 220px;
+  /* Custom dropdown arrow */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b8bcc8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
 }
 
 .albumsPage__filterSelect:hover {
-  background: var(--white-08);
+  background-color: var(--white-08);
   border-color: var(--white-20);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .albumsPage__filterSelect:focus {
-  background: var(--white-08);
-  border-color: var(--color-primary, #ff6b6b);
+  background-color: var(--white-08);
+  border-color: rgba(237, 104, 66, 0.5);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ed6842' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .albumsPage__filterSelect option {
@@ -457,6 +468,6 @@
 
   .albumsPage__filterSelect {
     font-size: 13px;
-    padding: 8px 12px;
+    padding: 8px 36px 8px 12px;
   }
 }
