@@ -62,10 +62,7 @@
   pointer-events: none;
   z-index: 0;
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.15);
-}
-
-/* Enable transitions only after nav is ready */
-.sidebar__nav--ready .sidebar__indicator {
+  /* Always enable transition - test if animation works at all */
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
