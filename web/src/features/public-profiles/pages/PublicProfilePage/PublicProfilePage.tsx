@@ -429,13 +429,11 @@ function TrackItem({ track, index }: TrackItemProps) {
       )}
       <div className={styles.publicProfilePage__trackInfo}>
         <h3 className={styles.publicProfilePage__trackTitle}>{track.title}</h3>
-        {track.artistName && (
-          <p className={styles.publicProfilePage__trackArtist}>{track.artistName}</p>
-        )}
+        <p className={styles.publicProfilePage__trackMeta}>
+          {track.artistName && <>{track.artistName} • </>}
+          {formatPlayCount(track.playCount)} reproducciones
+        </p>
       </div>
-      <span className={styles.publicProfilePage__trackPlays}>
-        {formatPlayCount(track.playCount)}
-      </span>
     </Link>
   );
 }
