@@ -50,29 +50,11 @@ export function Sidebar() {
 
   const activePath = navItems.find(item => isActive(item.path))?.path;
 
-  // Update indicator position when active path changes
+  // Update indicator position
   useEffect(() => {
     if (!activePath) return;
 
-    const activeItem = itemRefs.current.get(activePath);
-    const navContainer = navRef.current;
-
-    if (activeItem && navContainer) {
-      const navRect = navContainer.getBoundingClientRect();
-      const itemRect = activeItem.getBoundingClientRect();
-
-      setIndicatorStyle({
-        top: itemRect.top - navRect.top,
-        height: itemRect.height,
-      });
-    }
-  }, [activePath]);
-
-  // Initial indicator position with delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!activePath) return;
-
+    const updatePosition = () => {
       const activeItem = itemRefs.current.get(activePath);
       const navContainer = navRef.current;
 
@@ -85,10 +67,12 @@ export function Sidebar() {
           height: itemRect.height,
         });
       }
-    }, 50);
+    };
 
+    // Small delay to ensure refs are populated
+    const timer = setTimeout(updatePosition, 10);
     return () => clearTimeout(timer);
-  }, []);
+  }, [activePath]);
 
   return (
     <aside className={styles.sidebar}>
