@@ -44,25 +44,20 @@
   padding: 0 12px;
   overflow-y: auto;
   position: relative;
-  --indicator-y: 0;
-  --indicator-height: 44px;
 }
 
-/* Sliding indicator - uses CSS custom properties */
+/* Animated sliding indicator - same pattern as tabIndicator */
 .sidebar__indicator {
   position: absolute;
   top: 0;
-  left: 12px;
-  right: 12px;
-  transform: translateY(var(--indicator-y));
-  height: var(--indicator-height);
+  left: 0;
+  right: 0;
   background: linear-gradient(135deg, rgba(237, 104, 66, 0.2) 0%, rgba(237, 104, 66, 0.08) 100%);
   border: 1px solid rgba(237, 104, 66, 0.25);
   border-radius: 10px;
   pointer-events: none;
   z-index: 0;
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.15);
-  /* Always enable transition - test if animation works at all */
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
