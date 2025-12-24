@@ -25,6 +25,7 @@ export function Sidebar() {
   const isAdmin = user?.isAdmin === true;
   const isMiniMode = usePageEndDetection(120);
   const navRef = useRef<HTMLElement>(null);
+  const isFirstUpdate = useRef(true);
 
   const baseNavItems = [
     { icon: Home, label: 'Inicio', path: '/home' },
@@ -46,20 +47,36 @@ export function Sidebar() {
 
   const activeIndex = navItems.findIndex(item => isActive(item.path));
 
-  // Update CSS custom properties directly
+  // Update indicator position
   useEffect(() => {
     const nav = navRef.current;
     if (activeIndex === -1 || !nav) return;
 
     const links = nav.querySelectorAll('a');
     const activeLink = links[activeIndex] as HTMLElement;
+    const indicator = nav.querySelector('[class*="sidebar__indicator"]') as HTMLElement;
 
-    if (activeLink) {
+    if (activeLink && indicator) {
       const navRect = nav.getBoundingClientRect();
       const linkRect = activeLink.getBoundingClientRect();
+      const newY = linkRect.top - navRect.top;
+      const newHeight = linkRect.height;
 
-      nav.style.setProperty('--indicator-y', `${linkRect.top - navRect.top}px`);
-      nav.style.setProperty('--indicator-height', `${linkRect.height}px`);
+      if (isFirstUpdate.current) {
+        // First time: disable transition, set position, force reflow, re-enable
+        indicator.style.transition = 'none';
+        nav.style.setProperty('--indicator-y', `${newY}px`);
+        nav.style.setProperty('--indicator-height', `${newHeight}px`);
+        // Force reflow so the position is applied immediately
+        void indicator.offsetHeight;
+        // Re-enable transition
+        indicator.style.transition = '';
+        isFirstUpdate.current = false;
+      } else {
+        // Subsequent updates: just set position, CSS transition handles animation
+        nav.style.setProperty('--indicator-y', `${newY}px`);
+        nav.style.setProperty('--indicator-height', `${newHeight}px`);
+      }
     }
   }, [activeIndex]);
 
