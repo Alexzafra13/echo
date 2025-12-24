@@ -42,12 +42,12 @@
 .heroSection__navButton {
   position: absolute;
   top: 50%;
-  left: 12px;
+  left: 8px;
   transform: translateY(-50%);
   z-index: 50;
-  width: 44px;
-  height: 72px;
-  border-radius: 22px;
+  width: 36px;
+  height: 56px;
+  border-radius: 18px;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.12) 0%,
@@ -104,7 +104,7 @@
 
 .heroSection__navButton--next {
   left: auto;
-  right: 12px;
+  right: 8px;
 }
 
 .heroSection__content {
@@ -356,9 +356,9 @@
 
   /* Nav buttons slightly smaller on tablet */
   .heroSection__navButton {
-    width: 40px;
-    height: 64px;
-    border-radius: 20px;
+    width: 32px;
+    height: 48px;
+    border-radius: 16px;
   }
 }
 
