@@ -303,8 +303,8 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     );
 
     await this.drizzle.db.execute(sql`
-      UPDATE ${playlistTracks}
-      SET track_order = CASE track_id ${sql.join(caseWhenClauses, sql` `)} END
+      UPDATE playlist_tracks
+      SET track_order = CASE track_id ${sql.join(caseWhenClauses, sql` `)} ELSE track_order END
       WHERE playlist_id = ${playlistId}
         AND track_id IN (${sql.join(trackIds.map(id => sql`${id}`), sql`, `)})
     `);
