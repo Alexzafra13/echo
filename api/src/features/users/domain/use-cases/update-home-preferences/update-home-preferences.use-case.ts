@@ -67,7 +67,7 @@ export class UpdateHomePreferencesUseCase {
       throw new BadRequestException('Duplicate section IDs are not allowed');
     }
 
-    // Check that all 8 sections are present
+    // Check that all 9 sections are present
     if (sections.length !== VALID_SECTION_IDS.length) {
       throw new BadRequestException(`All ${VALID_SECTION_IDS.length} sections must be provided`);
     }
