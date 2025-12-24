@@ -46,7 +46,7 @@
   position: relative;
 }
 
-/* Sliding indicator with smooth animation */
+/* Sliding indicator - starts without transition */
 .sidebar__indicator {
   position: absolute;
   top: 0;
@@ -58,6 +58,10 @@
   pointer-events: none;
   z-index: 0;
   box-shadow: 0 4px 16px rgba(237, 104, 66, 0.15);
+}
+
+/* Enable transition only after initial position is set */
+.sidebar__indicator--ready {
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
