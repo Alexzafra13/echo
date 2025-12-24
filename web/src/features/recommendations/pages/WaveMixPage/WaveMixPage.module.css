@@ -150,7 +150,7 @@
 .waveMixPage__sectionHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -378,10 +378,15 @@
     overflow: visible;
   }
 
+  .waveMixPage__sectionHeader {
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+
   .waveMixPage__sectionTitle {
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
-    padding: 0 16px;
+    padding: 0;
   }
 
   .waveMixPage__viewAllButtonWrapper {
