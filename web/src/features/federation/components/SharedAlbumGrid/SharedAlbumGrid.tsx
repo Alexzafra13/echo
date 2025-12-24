@@ -150,7 +150,7 @@ export function SharedAlbumGrid({
               className={styles.sharedAlbumGrid__viewAllButton}
               onClick={handleViewAllClick}
             >
-              Ver todos
+              Ver todos →
             </button>
           )}
         </div>
