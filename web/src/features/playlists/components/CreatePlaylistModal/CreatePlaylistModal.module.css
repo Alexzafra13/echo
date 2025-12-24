@@ -1,16 +1,93 @@
-/* CreatePlaylistModal Styles - Simplified (Modal and Input handle styling) */
+/* CreatePlaylistModal Styles */
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 24px;
 }
 
+/* Custom input styling for the modal */
+.form :global(.wrapper) {
+  gap: 8px;
+}
+
+.form :global(.label) {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form :global(.input) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text-primary, #ffffff);
+  font-size: 15px;
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.form :global(.input)::placeholder {
+  color: var(--text-tertiary, #6b7280);
+}
+
+.form :global(.input):hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.form :global(.input):focus {
+  border-color: var(--color-primary, #ed6842);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(237, 104, 66, 0.15);
+  outline: none;
+}
+
+/* Actions buttons */
 .actions {
   display: flex;
-  gap: var(--spacing-md);
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .actions button {
   flex: 1;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+/* Cancel button styling */
+.actions button:first-child {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary, #9ca3af);
+}
+
+.actions button:first-child:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary, #ffffff);
+}
+
+/* Create button styling */
+.actions button:last-child {
+  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, #e85a32 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(237, 104, 66, 0.3);
+}
+
+.actions button:last-child:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(237, 104, 66, 0.4);
+}
+
+.actions button:last-child:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
