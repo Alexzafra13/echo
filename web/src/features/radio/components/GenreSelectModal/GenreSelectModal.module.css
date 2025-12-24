@@ -300,7 +300,6 @@
   .genreOption {
     display: flex;
     align-items: center;
-    width: auto;
     padding: 14px 16px;
     margin: 0;
     border-radius: 0;
@@ -308,7 +307,6 @@
     border-right: none;
     border-top: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    box-sizing: border-box;
   }
 
   .genreOption:last-child {
