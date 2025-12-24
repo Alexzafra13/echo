@@ -49,20 +49,19 @@
 }
 
 .secondary {
-  background: var(--color-secondary-400);
-  color: var(--color-slate-900);
-  box-shadow: var(--button-shadow);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--color-secondary-500);
-  box-shadow: var(--button-shadow-hover);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
 }
 
 .secondary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: var(--button-shadow);
 }
 
 .outline {
