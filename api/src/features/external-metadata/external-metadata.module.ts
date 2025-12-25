@@ -74,7 +74,7 @@ import { MbidAutoSearchController } from './presentation/mbid-auto-search.contro
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
 // Domain ports
-import { STORAGE_SERVICE } from './domain/ports';
+import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
 
 // DrizzleService is provided globally via DrizzleModule
 
@@ -135,6 +135,7 @@ import { STORAGE_SERVICE } from './domain/ports';
 
     // Persistence
     SettingsRepository,
+    { provide: SETTINGS_REPOSITORY, useClass: SettingsRepository },
 
     // Agents
     CoverArtArchiveAgent,
