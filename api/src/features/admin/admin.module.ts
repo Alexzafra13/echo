@@ -19,24 +19,24 @@ import {
   DeleteUserUseCase,
   ResetUserPasswordUseCase,
   PermanentlyDeleteUserUseCase,
-  ListEnrichmentLogsUseCase,
-  GetEnrichmentStatsUseCase,
   GetDashboardStatsUseCase,
 } from './domain/use-cases';
-import { SearchAlbumCoversUseCase } from './domain/use-cases/search-album-covers';
-import { ApplyAlbumCoverUseCase } from './domain/use-cases/apply-album-cover';
-import { SearchArtistAvatarsUseCase } from './domain/use-cases/search-artist-avatars';
-import { ApplyArtistAvatarUseCase } from './domain/use-cases/apply-artist-avatar';
-import { UpdateArtistBackgroundPositionUseCase } from './domain/use-cases/update-artist-background-position';
-import { ManageArtistBannersUseCase } from './domain/use-cases/manage-artist-banners';
-import { UploadCustomArtistImageUseCase } from './domain/use-cases/upload-custom-artist-image';
-import { ListCustomArtistImagesUseCase } from './domain/use-cases/list-custom-artist-images';
-import { DeleteCustomArtistImageUseCase } from './domain/use-cases/delete-custom-artist-image';
-import { ApplyCustomArtistImageUseCase } from './domain/use-cases/apply-custom-artist-image';
-import { UploadCustomAlbumCoverUseCase } from './domain/use-cases/upload-custom-album-cover';
-import { ListCustomAlbumCoversUseCase } from './domain/use-cases/list-custom-album-covers';
-import { DeleteCustomAlbumCoverUseCase } from './domain/use-cases/delete-custom-album-cover';
-import { ApplyCustomAlbumCoverUseCase } from './domain/use-cases/apply-custom-album-cover';
+import { ListEnrichmentLogsUseCase } from './infrastructure/use-cases/list-enrichment-logs';
+import { GetEnrichmentStatsUseCase } from './infrastructure/use-cases/get-enrichment-stats';
+import { SearchAlbumCoversUseCase } from './infrastructure/use-cases/search-album-covers';
+import { ApplyAlbumCoverUseCase } from './infrastructure/use-cases/apply-album-cover';
+import { SearchArtistAvatarsUseCase } from './infrastructure/use-cases/search-artist-avatars';
+import { ApplyArtistAvatarUseCase } from './infrastructure/use-cases/apply-artist-avatar';
+import { UpdateArtistBackgroundPositionUseCase } from './infrastructure/use-cases/update-artist-background-position';
+import { ManageArtistBannersUseCase } from './infrastructure/use-cases/manage-artist-banners';
+import { UploadCustomArtistImageUseCase } from './infrastructure/use-cases/upload-custom-artist-image';
+import { ListCustomArtistImagesUseCase } from './infrastructure/use-cases/list-custom-artist-images';
+import { DeleteCustomArtistImageUseCase } from './infrastructure/use-cases/delete-custom-artist-image';
+import { ApplyCustomArtistImageUseCase } from './infrastructure/use-cases/apply-custom-artist-image';
+import { UploadCustomAlbumCoverUseCase } from './infrastructure/use-cases/upload-custom-album-cover';
+import { ListCustomAlbumCoversUseCase } from './infrastructure/use-cases/list-custom-album-covers';
+import { DeleteCustomAlbumCoverUseCase } from './infrastructure/use-cases/delete-custom-album-cover';
+import { ApplyCustomAlbumCoverUseCase } from './infrastructure/use-cases/apply-custom-album-cover';
 import {
   LibraryStatsService,
   StorageBreakdownService,
@@ -45,7 +45,7 @@ import {
   ActivityStatsService,
   ScanStatsService,
   AlertsService,
-} from './domain/services';
+} from './infrastructure/services';
 
 @Module({
   imports: [AuthModule, ExternalMetadataModule, HealthModule, SocialModule],

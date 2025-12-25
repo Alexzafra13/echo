@@ -7,7 +7,7 @@ import { ImageDownloadService } from '@features/external-metadata/infrastructure
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
-import { getArtistImageTypeConfig } from '../../config/artist-image-type.config';
+import { getArtistImageTypeConfig } from '../../../domain/config/artist-image-type.config';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
