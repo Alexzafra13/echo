@@ -15,10 +15,10 @@ import { MultipartFile } from '@fastify/multipart';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { UploadCustomAlbumCoverUseCase } from '../domain/use-cases/upload-custom-album-cover';
-import { ListCustomAlbumCoversUseCase } from '../domain/use-cases/list-custom-album-covers';
-import { DeleteCustomAlbumCoverUseCase } from '../domain/use-cases/delete-custom-album-cover';
-import { ApplyCustomAlbumCoverUseCase } from '../domain/use-cases/apply-custom-album-cover';
+import { UploadCustomAlbumCoverUseCase } from '../infrastructure/use-cases/upload-custom-album-cover';
+import { ListCustomAlbumCoversUseCase } from '../infrastructure/use-cases/list-custom-album-covers';
+import { DeleteCustomAlbumCoverUseCase } from '../infrastructure/use-cases/delete-custom-album-cover';
+import { ApplyCustomAlbumCoverUseCase } from '../infrastructure/use-cases/apply-custom-album-cover';
 
 @ApiTags('Admin - Custom Album Covers')
 @ApiBearerAuth()
