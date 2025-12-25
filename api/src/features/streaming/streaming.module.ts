@@ -4,7 +4,7 @@ import { StreamingController } from './presentation/streaming.controller';
 import { StreamTokenController } from './presentation/stream-token.controller';
 import { DownloadController } from './presentation/download.controller';
 import { StreamTrackUseCase } from './domain/use-cases';
-import { StreamTokenGuard } from './domain/stream-token.guard';
+import { StreamTokenGuard } from './presentation/guards';
 import { StreamTokenService } from './infrastructure/services/stream-token.service';
 import { StreamTokenCleanupService } from './infrastructure/services/stream-token-cleanup.service';
 import { DownloadService } from './infrastructure/services/download.service';

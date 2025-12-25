@@ -1,13 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import {
-  LibraryStatsService,
-  StorageBreakdownService,
-  SystemHealthService,
-  EnrichmentStatsService,
-  ActivityStatsService,
-  ScanStatsService,
-  AlertsService,
-} from '../../../infrastructure/services';
+  ILibraryStatsProvider,
+  IStorageBreakdownProvider,
+  ISystemHealthChecker,
+  IEnrichmentStatsProvider,
+  IActivityStatsProvider,
+  IScanStatsProvider,
+  IAlertsProvider,
+  LIBRARY_STATS_PROVIDER,
+  STORAGE_BREAKDOWN_PROVIDER,
+  SYSTEM_HEALTH_CHECKER,
+  ENRICHMENT_STATS_PROVIDER,
+  ACTIVITY_STATS_PROVIDER,
+  SCAN_STATS_PROVIDER,
+  ALERTS_PROVIDER,
+} from '../../ports';
 import { GetDashboardStatsInput, GetDashboardStatsOutput } from './get-dashboard-stats.dto';
 
 /**
@@ -21,13 +28,20 @@ export class GetDashboardStatsUseCase {
   private readonly logger = new Logger(GetDashboardStatsUseCase.name);
 
   constructor(
-    private readonly libraryStats: LibraryStatsService,
-    private readonly storageBreakdown: StorageBreakdownService,
-    private readonly systemHealth: SystemHealthService,
-    private readonly enrichmentStats: EnrichmentStatsService,
-    private readonly activityStats: ActivityStatsService,
-    private readonly scanStats: ScanStatsService,
-    private readonly alerts: AlertsService,
+    @Inject(LIBRARY_STATS_PROVIDER)
+    private readonly libraryStats: ILibraryStatsProvider,
+    @Inject(STORAGE_BREAKDOWN_PROVIDER)
+    private readonly storageBreakdown: IStorageBreakdownProvider,
+    @Inject(SYSTEM_HEALTH_CHECKER)
+    private readonly systemHealth: ISystemHealthChecker,
+    @Inject(ENRICHMENT_STATS_PROVIDER)
+    private readonly enrichmentStats: IEnrichmentStatsProvider,
+    @Inject(ACTIVITY_STATS_PROVIDER)
+    private readonly activityStats: IActivityStatsProvider,
+    @Inject(SCAN_STATS_PROVIDER)
+    private readonly scanStats: IScanStatsProvider,
+    @Inject(ALERTS_PROVIDER)
+    private readonly alerts: IAlertsProvider,
   ) {}
 
   async execute(_input: GetDashboardStatsInput): Promise<GetDashboardStatsOutput> {

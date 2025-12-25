@@ -31,7 +31,7 @@ import { CoverArtService } from '@shared/services';
 import { albums, tracks, artists } from '@infrastructure/database/schema';
 import { FederationAccessToken } from '../domain/types';
 import { FederationTokenService } from '../domain/services';
-import { FederationAccessGuard } from '../domain/services/federation-access.guard';
+import { FederationAccessGuard } from './guards';
 import {
   AcceptConnectionDto,
   ConnectionResponseDto,
