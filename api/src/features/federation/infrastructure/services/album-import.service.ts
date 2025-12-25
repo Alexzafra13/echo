@@ -7,15 +7,9 @@ import * as path from 'path';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import {
-  albums,
-  artists,
-  tracks,
-  settings,
-  AlbumImportQueue,
-  ConnectedServer,
-} from '@infrastructure/database/schema';
+import { albums, artists, tracks, settings } from '@infrastructure/database/schema';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
+import { AlbumImportQueue, ConnectedServer } from '../../domain/types';
 import { FederationGateway } from '../../presentation/federation.gateway';
 
 /**

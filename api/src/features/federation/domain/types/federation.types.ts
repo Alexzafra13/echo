@@ -154,4 +154,9 @@ export interface NewAlbumImportQueue {
   albumName: string;
   artistName?: string | null;
   status?: ImportStatus;
+  progress?: number;
+  totalTracks?: number;
+  downloadedTracks?: number;
+  totalSize?: number;
+  downloadedSize?: number;
 }
