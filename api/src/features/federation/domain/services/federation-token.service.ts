@@ -6,7 +6,7 @@ import {
   FederationAccessToken,
   FederationPermissions,
   MutualFederationStatus,
-} from '@infrastructure/database/schema';
+} from '../types';
 
 @Injectable()
 export class FederationTokenService {

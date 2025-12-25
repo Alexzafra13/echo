@@ -1,8 +1,8 @@
 import { Injectable, Inject, HttpException, HttpStatus, forwardRef } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../ports/federation.repository';
-import { ConnectedServer } from '@infrastructure/database/schema';
-import { FederationTokenService } from './federation-token.service';
+import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
+import { ConnectedServer } from '../../domain/types';
+import { FederationTokenService } from '../../domain/services/federation-token.service';
 
 /**
  * DTOs for remote server responses

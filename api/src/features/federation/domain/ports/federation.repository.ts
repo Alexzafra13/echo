@@ -9,7 +9,7 @@ import {
   NewAlbumImportQueue,
   ImportStatus,
   MutualFederationStatus,
-} from '@infrastructure/database/schema';
+} from '../types';
 
 /**
  * Port for federation data access
