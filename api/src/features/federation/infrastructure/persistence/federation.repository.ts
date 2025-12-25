@@ -6,6 +6,11 @@ import {
   federationTokens,
   federationAccessTokens,
   albumImportQueue,
+} from '@infrastructure/database/schema';
+import {
+  IFederationRepository,
+} from '../../domain/ports/federation.repository';
+import {
   ConnectedServer,
   NewConnectedServer,
   FederationToken,
@@ -16,12 +21,29 @@ import {
   NewAlbumImportQueue,
   ImportStatus,
   MutualFederationStatus,
-} from '@infrastructure/database/schema';
-import { IFederationRepository } from '../../domain/ports/federation.repository';
+} from '../../domain/types';
 
 @Injectable()
 export class FederationRepository implements IFederationRepository {
   constructor(private readonly drizzle: DrizzleService) {}
+
+  // ============================================
+  // Type Mappers (Drizzle returns string, domain expects union types)
+  // ============================================
+
+  private mapToAlbumImportQueue(record: typeof albumImportQueue.$inferSelect): AlbumImportQueue {
+    return {
+      ...record,
+      status: record.status as ImportStatus,
+    };
+  }
+
+  private mapToFederationAccessToken(record: typeof federationAccessTokens.$inferSelect): FederationAccessToken {
+    return {
+      ...record,
+      mutualStatus: record.mutualStatus as MutualFederationStatus,
+    };
+  }
 
   // ============================================
   // Connected Servers
@@ -191,7 +213,7 @@ export class FederationRepository implements IFederationRepository {
       .insert(federationAccessTokens)
       .values(data)
       .returning();
-    return token;
+    return this.mapToFederationAccessToken(token);
   }
 
   async findFederationAccessTokenByToken(token: string): Promise<FederationAccessToken | null> {
@@ -205,7 +227,7 @@ export class FederationRepository implements IFederationRepository {
         ),
       )
       .limit(1);
-    return result ?? null;
+    return result ? this.mapToFederationAccessToken(result) : null;
   }
 
   async findFederationAccessTokenById(id: string): Promise<FederationAccessToken | null> {
@@ -214,14 +236,15 @@ export class FederationRepository implements IFederationRepository {
       .from(federationAccessTokens)
       .where(eq(federationAccessTokens.id, id))
       .limit(1);
-    return result ?? null;
+    return result ? this.mapToFederationAccessToken(result) : null;
   }
 
   async findFederationAccessTokensByOwnerId(ownerId: string): Promise<FederationAccessToken[]> {
-    return this.drizzle.db
+    const results = await this.drizzle.db
       .select()
       .from(federationAccessTokens)
       .where(eq(federationAccessTokens.ownerId, ownerId));
+    return results.map((r) => this.mapToFederationAccessToken(r));
   }
 
   async updateFederationAccessToken(
@@ -233,7 +256,7 @@ export class FederationRepository implements IFederationRepository {
       .set({ ...data, updatedAt: new Date() })
       .where(eq(federationAccessTokens.id, id))
       .returning();
-    return token ?? null;
+    return token ? this.mapToFederationAccessToken(token) : null;
   }
 
   async deleteFederationAccessToken(id: string): Promise<boolean> {
@@ -262,7 +285,7 @@ export class FederationRepository implements IFederationRepository {
       .insert(albumImportQueue)
       .values(data)
       .returning();
-    return importItem;
+    return this.mapToAlbumImportQueue(importItem);
   }
 
   async findAlbumImportById(id: string): Promise<AlbumImportQueue | null> {
@@ -271,21 +294,23 @@ export class FederationRepository implements IFederationRepository {
       .from(albumImportQueue)
       .where(eq(albumImportQueue.id, id))
       .limit(1);
-    return result ?? null;
+    return result ? this.mapToAlbumImportQueue(result) : null;
   }
 
   async findAlbumImportsByUserId(userId: string): Promise<AlbumImportQueue[]> {
-    return this.drizzle.db
+    const results = await this.drizzle.db
       .select()
       .from(albumImportQueue)
       .where(eq(albumImportQueue.userId, userId));
+    return results.map((r) => this.mapToAlbumImportQueue(r));
   }
 
   async findPendingAlbumImports(): Promise<AlbumImportQueue[]> {
-    return this.drizzle.db
+    const results = await this.drizzle.db
       .select()
       .from(albumImportQueue)
       .where(eq(albumImportQueue.status, 'pending'));
+    return results.map((r) => this.mapToAlbumImportQueue(r));
   }
 
   async updateAlbumImport(
@@ -297,7 +322,7 @@ export class FederationRepository implements IFederationRepository {
       .set({ ...data, updatedAt: new Date() })
       .where(eq(albumImportQueue.id, id))
       .returning();
-    return importItem ?? null;
+    return importItem ? this.mapToAlbumImportQueue(importItem) : null;
   }
 
   async updateAlbumImportStatus(
@@ -305,7 +330,7 @@ export class FederationRepository implements IFederationRepository {
     status: ImportStatus,
     errorMessage?: string,
   ): Promise<AlbumImportQueue | null> {
-    const updateData: Partial<AlbumImportQueue> = {
+    const updateData: Record<string, unknown> = {
       status,
       updatedAt: new Date(),
     };
@@ -325,7 +350,7 @@ export class FederationRepository implements IFederationRepository {
       .set(updateData)
       .where(eq(albumImportQueue.id, id))
       .returning();
-    return importItem ?? null;
+    return importItem ? this.mapToAlbumImportQueue(importItem) : null;
   }
 
   async deleteAlbumImport(id: string): Promise<boolean> {
@@ -341,7 +366,7 @@ export class FederationRepository implements IFederationRepository {
   // ============================================
 
   async findPendingMutualRequests(ownerId: string): Promise<FederationAccessToken[]> {
-    return this.drizzle.db
+    const results = await this.drizzle.db
       .select()
       .from(federationAccessTokens)
       .where(
@@ -351,6 +376,7 @@ export class FederationRepository implements IFederationRepository {
           eq(federationAccessTokens.isActive, true),
         ),
       );
+    return results.map((r) => this.mapToFederationAccessToken(r));
   }
 
   async updateMutualStatus(
@@ -366,6 +392,6 @@ export class FederationRepository implements IFederationRepository {
       })
       .where(eq(federationAccessTokens.id, id))
       .returning();
-    return token ?? null;
+    return token ? this.mapToFederationAccessToken(token) : null;
   }
 }
