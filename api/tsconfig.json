@@ -24,7 +24,8 @@
       "@config/*": ["src/config/*"],
       "@shared/*": ["src/shared/*"],
       "@infrastructure/*": ["src/infrastructure/*"],
-      "@features/*": ["src/features/*"]
+      "@features/*": ["src/features/*"],
+      "@test/*": ["test/*"]
     }
   },
   "include": ["src", "test"],
