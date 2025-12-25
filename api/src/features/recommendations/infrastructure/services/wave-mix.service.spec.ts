@@ -1,16 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PinoLogger } from 'nestjs-pino';
 import { WaveMixService } from './wave-mix.service';
-import { ScoringService } from './scoring.service';
+import { ScoringService } from '../../domain/services/scoring.service';
 import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import {
-  PlaylistShuffleService,
-  PlaylistCoverService,
-  ArtistPlaylistService,
-  GenrePlaylistService,
-} from './playlists';
+import { PlaylistShuffleService } from '../../domain/services/playlists';
+import { PlaylistCoverService } from './playlists/playlist-cover.service';
+import { ArtistPlaylistService } from './playlists/artist-playlist.service';
+import { GenrePlaylistService } from './playlists/genre-playlist.service';
 
 /**
  * WaveMixService Unit Tests

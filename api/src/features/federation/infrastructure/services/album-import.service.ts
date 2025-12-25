@@ -15,7 +15,7 @@ import {
   AlbumImportQueue,
   ConnectedServer,
 } from '@infrastructure/database/schema';
-import { IFederationRepository, FEDERATION_REPOSITORY } from '../ports/federation.repository';
+import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
 import { FederationGateway } from '../../presentation/federation.gateway';
 
 /**
