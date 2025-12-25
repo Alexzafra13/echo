@@ -3,7 +3,7 @@ import { gte } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { enrichmentLogs } from '@infrastructure/database/schema';
-import { EnrichmentStats } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import { EnrichmentStats } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 interface PeriodStats {
   total: number;

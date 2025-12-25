@@ -3,7 +3,7 @@ import { sum } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { tracks, artists, users } from '@infrastructure/database/schema';
-import { StorageBreakdown } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import { StorageBreakdown } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class StorageBreakdownService {

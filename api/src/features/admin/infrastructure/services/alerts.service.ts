@@ -8,7 +8,7 @@ import {
   libraryScans,
   tracks,
 } from '@infrastructure/database/schema';
-import { ActiveAlerts, StorageBreakdown } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import { ActiveAlerts, StorageBreakdown } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class AlertsService {

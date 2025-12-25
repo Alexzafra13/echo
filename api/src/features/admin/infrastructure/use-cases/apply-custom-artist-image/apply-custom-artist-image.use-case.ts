@@ -5,7 +5,7 @@ import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { MetadataEnrichmentGateway } from '@features/external-metadata/presentation/metadata-enrichment.gateway';
-import { getArtistImageTypeBasicConfig } from '../../config/artist-image-type.config';
+import { getArtistImageTypeBasicConfig } from '../../../domain/config/artist-image-type.config';
 import {
   ApplyCustomArtistImageInput,
   ApplyCustomArtistImageOutput,
