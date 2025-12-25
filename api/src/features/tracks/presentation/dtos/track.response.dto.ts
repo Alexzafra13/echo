@@ -1,115 +1,125 @@
 import { Expose } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { Track, TrackProps } from '../../domain/entities/track.entity';
+
+/**
+ * Tipo para datos de track que pueden venir de la entidad o de una query
+ */
+type TrackData = Track | TrackProps;
 
 /**
  * TrackResponseDto - DTO de respuesta para UN track
  */
 export class TrackResponseDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({ description: 'UUID del track', example: '123e4567-e89b-12d3-a456-426614174000' })
   @Expose()
   id!: string;
 
-  @ApiProperty({ example: 'Come Together' })
+  @ApiProperty({ description: 'Título del track', example: 'Come Together' })
   @Expose()
   title!: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001', required: false })
+  @ApiPropertyOptional({ description: 'UUID del álbum', example: '123e4567-e89b-12d3-a456-426614174001' })
   @Expose()
   albumId?: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174002', required: false })
+  @ApiPropertyOptional({ description: 'UUID del artista', example: '123e4567-e89b-12d3-a456-426614174002' })
   @Expose()
   artistId?: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174003', required: false })
+  @ApiPropertyOptional({ description: 'UUID del artista del álbum', example: '123e4567-e89b-12d3-a456-426614174003' })
   @Expose()
   albumArtistId?: string;
 
-  @ApiProperty({ example: 1, required: false })
+  @ApiPropertyOptional({ description: 'Número de pista', example: 1 })
   @Expose()
   trackNumber?: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ description: 'Número de disco', example: 1 })
   @Expose()
   discNumber!: number;
 
-  @ApiProperty({ example: 1969, required: false })
+  @ApiPropertyOptional({ description: 'Año de lanzamiento', example: 1969 })
   @Expose()
   year?: number;
 
-  @ApiProperty({ example: 259, description: 'Duration in seconds', required: false })
+  @ApiPropertyOptional({ description: 'Duración en segundos', example: 259 })
   @Expose()
   duration?: number;
 
-  @ApiProperty({ example: '/music/beatles/abbey-road/01-come-together.mp3' })
+  @ApiProperty({ description: 'Ruta del archivo', example: '/music/beatles/abbey-road/01-come-together.mp3' })
   @Expose()
   path!: string;
 
-  @ApiProperty({ example: 320000, description: 'Bit rate in bps', required: false })
+  @ApiPropertyOptional({ description: 'Bit rate en bps', example: 320000 })
   @Expose()
   bitRate?: number;
 
-  @ApiProperty({ example: 10485760, description: 'File size in bytes', required: false })
+  @ApiPropertyOptional({ description: 'Tamaño en bytes', example: 10485760 })
   @Expose()
   size?: number;
 
-  @ApiProperty({ example: 'mp3', required: false })
+  @ApiPropertyOptional({ description: 'Extensión del archivo', example: 'mp3' })
   @Expose()
   suffix?: string;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ description: 'Letra de la canción' })
   @Expose()
   lyrics?: string;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ description: 'Comentario' })
   @Expose()
   comment?: string;
 
-  @ApiProperty({ example: 'Abbey Road', required: false })
+  @ApiPropertyOptional({ description: 'Nombre del álbum', example: 'Abbey Road' })
   @Expose()
   albumName?: string;
 
-  @ApiProperty({ example: 'The Beatles', required: false })
+  @ApiPropertyOptional({ description: 'Nombre del artista', example: 'The Beatles' })
   @Expose()
   artistName?: string;
 
-  @ApiProperty({ example: 'The Beatles', required: false })
+  @ApiPropertyOptional({ description: 'Nombre del artista del álbum', example: 'The Beatles' })
   @Expose()
   albumArtistName?: string;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({ description: 'Es compilación', example: false })
   @Expose()
   compilation!: boolean;
 
-  @ApiProperty({ example: -3.5, description: 'ReplayGain track gain in dB', required: false })
+  @ApiPropertyOptional({ description: 'ReplayGain track gain en dB', example: -3.5 })
   @Expose()
   rgTrackGain?: number;
 
-  @ApiProperty({ example: 0.95, description: 'ReplayGain track peak (0-1)', required: false })
+  @ApiPropertyOptional({ description: 'ReplayGain track peak (0-1)', example: 0.95 })
   @Expose()
   rgTrackPeak?: number;
 
-  @ApiProperty({ example: -4.2, description: 'ReplayGain album gain in dB', required: false })
+  @ApiPropertyOptional({ description: 'ReplayGain album gain en dB', example: -4.2 })
   @Expose()
   rgAlbumGain?: number;
 
-  @ApiProperty({ example: 0.98, description: 'ReplayGain album peak (0-1)', required: false })
+  @ApiPropertyOptional({ description: 'ReplayGain album peak (0-1)', example: 0.98 })
   @Expose()
   rgAlbumPeak?: number;
 
-  @ApiProperty({ example: false, description: 'Whether the file is missing from disk' })
+  @ApiProperty({ description: 'Archivo falta en disco', example: false })
   @Expose()
   isMissing!: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Fecha de creación' })
   @Expose()
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Última actualización' })
   @Expose()
   updatedAt!: Date;
 
-  static fromDomain(track: any): TrackResponseDto {
+  /**
+   * Convierte una entidad de dominio Track a DTO de respuesta
+   * @param track - Entidad Track o objeto con propiedades del track
+   */
+  static fromDomain(track: TrackData): TrackResponseDto {
     // Convert to primitives if it's a Track entity (has toPrimitives method)
     const data = track.toPrimitives ? track.toPrimitives() : track;
 
