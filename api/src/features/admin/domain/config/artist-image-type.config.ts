@@ -77,7 +77,7 @@ const ARTIST_IMAGE_TYPE_CONFIGS: Record<ArtistImageType, ArtistImageTypeFullConf
 
 /**
  * Get full configuration for an artist image type
- * Throws BadRequestException if type is invalid
+ * Throws ValidationError if type is invalid
  *
  * @param type - The image type (profile, background, banner, logo)
  * @returns Full configuration including all field mappings

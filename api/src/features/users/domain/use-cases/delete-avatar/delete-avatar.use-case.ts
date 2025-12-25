@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
-import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
+import { IStorageService, STORAGE_SERVICE } from '@features/external-metadata/domain/ports';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { NotFoundError } from '@shared/errors';
 import { DeleteAvatarInput } from './delete-avatar.dto';
@@ -13,7 +13,8 @@ export class DeleteAvatarUseCase {
     private readonly logger: PinoLogger,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-    private readonly storageService: StorageService,
+    @Inject(STORAGE_SERVICE)
+    private readonly storageService: IStorageService,
     private readonly imageService: ImageService,
   ) {}
 

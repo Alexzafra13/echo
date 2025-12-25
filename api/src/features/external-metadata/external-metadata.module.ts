@@ -73,6 +73,9 @@ import { MusicBrainzSearchController } from './presentation/musicbrainz-search.c
 import { MbidAutoSearchController } from './presentation/mbid-auto-search.controller';
 import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.gateway';
 
+// Domain ports
+import { STORAGE_SERVICE } from './domain/ports';
+
 // DrizzleService is provided globally via DrizzleModule
 
 /**
@@ -116,6 +119,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     RateLimiterService,
     SettingsService,
     StorageService,
+    { provide: STORAGE_SERVICE, useClass: StorageService },
     ImageDownloadService,
     CleanupService,
     OrphanedFileCleanerService,
@@ -183,6 +187,7 @@ import { MetadataEnrichmentGateway } from './presentation/metadata-enrichment.ga
     MbidSearchCacheService,
     SettingsService,
     StorageService,
+    STORAGE_SERVICE,
     ImageDownloadService,
     MetadataConflictService,
     MbidAutoSearchService,
