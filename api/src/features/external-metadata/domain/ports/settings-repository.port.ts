@@ -1,5 +1,8 @@
 import { Setting, CreateSettingData } from '../entities/setting.entity';
 
+// Re-export types for convenience
+export type { Setting, CreateSettingData };
+
 /**
  * ISettingsRepository Port - Contract for settings persistence
  *
