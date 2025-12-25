@@ -28,12 +28,8 @@ import { eq, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util';
 import { CoverArtService } from '@shared/services';
-import {
-  albums,
-  tracks,
-  artists,
-  FederationAccessToken,
-} from '@infrastructure/database/schema';
+import { albums, tracks, artists } from '@infrastructure/database/schema';
+import { FederationAccessToken } from '../domain/types';
 import { FederationTokenService } from '../domain/services';
 import { FederationAccessGuard } from '../domain/services/federation-access.guard';
 import {

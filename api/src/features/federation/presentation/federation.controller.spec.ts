@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { FederationController } from './federation.controller';
-import { FederationTokenService, RemoteServerService } from '../domain/services';
+import { FederationTokenService } from '../domain/services';
+import { RemoteServerService } from '../infrastructure/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 import { StreamTokenService } from '@features/streaming/infrastructure/services/stream-token.service';
 import { getLoggerToken } from 'nestjs-pino';
-import { User, ConnectedServer, FederationToken, FederationAccessToken } from '@infrastructure/database/schema';
+import { User } from '@infrastructure/database/schema';
+import { ConnectedServer, FederationToken, FederationAccessToken } from '../domain/types';
 
 describe('FederationController', () => {
   let controller: FederationController;
