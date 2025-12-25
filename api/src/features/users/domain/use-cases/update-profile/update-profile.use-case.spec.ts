@@ -4,7 +4,7 @@ import {
   MockUserRepository,
   createMockUserRepository,
 } from '@shared/testing/mock.types';
-import { UserFactory } from '@test/factories/user.factory';
+import { UserFactory } from '../../../../../../test/factories/user.factory';
 
 describe('UpdateProfileUseCase', () => {
   let useCase: UpdateProfileUseCase;

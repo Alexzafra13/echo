@@ -8,7 +8,7 @@ import {
   createMockPasswordService,
   createMockLogService,
 } from '@shared/testing/mock.types';
-import { UserFactory } from '@test/factories/user.factory';
+import { UserFactory } from '../../../../../../test/factories/user.factory';
 
 describe('ChangePasswordUseCase', () => {
   let useCase: ChangePasswordUseCase;
