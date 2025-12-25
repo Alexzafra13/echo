@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PinoLogger } from 'nestjs-pino';
 import { WaveMixSchedulerService } from './wave-mix-scheduler.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
-import { WaveMixService } from '../../domain/services/wave-mix.service';
+import { WaveMixService } from '../services/wave-mix.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 
 describe('WaveMixSchedulerService', () => {

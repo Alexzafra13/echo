@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
-import { WaveMixService } from '../../domain/services/wave-mix.service';
+import { WaveMixService } from '../services/wave-mix.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { users } from '@infrastructure/database/schema';
 

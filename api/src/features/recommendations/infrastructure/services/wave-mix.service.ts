@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { AutoPlaylist, WaveMixConfig, TrackScore } from '../entities/track-score.entity';
-import { ScoringService } from './scoring.service';
+import { AutoPlaylist, WaveMixConfig, TrackScore } from '../../domain/entities/track-score.entity';
+import { ScoringService } from '../../domain/services/scoring.service';
 import {
   IPlayTrackingRepository,
   PLAY_TRACKING_REPOSITORY,
@@ -10,12 +10,10 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { inArray } from 'drizzle-orm';
 import { tracks } from '@infrastructure/database/schema';
-import {
-  PlaylistShuffleService,
-  PlaylistCoverService,
-  ArtistPlaylistService,
-  GenrePlaylistService,
-} from './playlists';
+import { PlaylistShuffleService } from '../../domain/services/playlists';
+import { PlaylistCoverService } from './playlists/playlist-cover.service';
+import { ArtistPlaylistService } from './playlists/artist-playlist.service';
+import { GenrePlaylistService } from './playlists/genre-playlist.service';
 
 // Wave Mix Configuration
 const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
