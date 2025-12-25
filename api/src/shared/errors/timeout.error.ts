@@ -11,7 +11,7 @@ export class TimeoutError extends BaseError {
     const message = operation
       ? `${operation} timed out after ${timeoutMs}ms`
       : `Request timed out after ${timeoutMs}ms`;
-    super('TIMEOUT_ERROR', message, 504);
+    super('TIMEOUT_ERROR', message);
     Object.setPrototypeOf(this, TimeoutError.prototype);
   }
 }

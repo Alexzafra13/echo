@@ -1,21 +1,12 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
 import { NotFoundError } from '@shared/errors';
-import { HomeSectionConfig } from '@infrastructure/database/schema/users';
+import {
+  HomeSectionConfig,
+  VALID_HOME_SECTION_IDS,
+  DEFAULT_HOME_SECTIONS,
+} from '@shared/types/home-section.types';
 import { UpdateHomePreferencesInput, UpdateHomePreferencesOutput } from './update-home-preferences.dto';
-
-// Valid section IDs
-const VALID_SECTION_IDS: HomeSectionConfig['id'][] = [
-  'recent-albums',
-  'artist-mix',
-  'genre-mix',
-  'recently-played',
-  'my-playlists',
-  'top-played',
-  'favorite-radios',
-  'surprise-me',
-  'shared-albums',
-];
 
 @Injectable()
 export class UpdateHomePreferencesUseCase {
@@ -55,7 +46,7 @@ export class UpdateHomePreferencesUseCase {
   private validateSections(sections: HomeSectionConfig[]): void {
     // Check that all provided section IDs are valid
     const providedIds = sections.map(s => s.id);
-    const invalidIds = providedIds.filter(id => !VALID_SECTION_IDS.includes(id));
+    const invalidIds = providedIds.filter(id => !VALID_HOME_SECTION_IDS.includes(id));
 
     if (invalidIds.length > 0) {
       throw new BadRequestException(`Invalid section IDs: ${invalidIds.join(', ')}`);
@@ -68,8 +59,8 @@ export class UpdateHomePreferencesUseCase {
     }
 
     // Check that all 9 sections are present
-    if (sections.length !== VALID_SECTION_IDS.length) {
-      throw new BadRequestException(`All ${VALID_SECTION_IDS.length} sections must be provided`);
+    if (sections.length !== VALID_HOME_SECTION_IDS.length) {
+      throw new BadRequestException(`All ${VALID_HOME_SECTION_IDS.length} sections must be provided`);
     }
 
     // Check orders are valid (0 to n-1)
@@ -81,17 +72,7 @@ export class UpdateHomePreferencesUseCase {
   }
 
   private getDefaultSections(): HomeSectionConfig[] {
-    return [
-      { id: 'recent-albums', enabled: true, order: 0 },
-      { id: 'artist-mix', enabled: true, order: 1 },
-      { id: 'genre-mix', enabled: false, order: 2 },
-      { id: 'recently-played', enabled: false, order: 3 },
-      { id: 'my-playlists', enabled: false, order: 4 },
-      { id: 'top-played', enabled: false, order: 5 },
-      { id: 'favorite-radios', enabled: false, order: 6 },
-      { id: 'surprise-me', enabled: false, order: 7 },
-      { id: 'shared-albums', enabled: false, order: 8 },
-    ];
+    return [...DEFAULT_HOME_SECTIONS];
   }
 
   /**
@@ -110,14 +91,14 @@ export class UpdateHomePreferencesUseCase {
     const sortedSections = [...sections].sort((a, b) => a.order - b.order);
 
     for (const section of sortedSections) {
-      if (VALID_SECTION_IDS.includes(section.id) && !seenIds.has(section.id)) {
+      if (VALID_HOME_SECTION_IDS.includes(section.id) && !seenIds.has(section.id)) {
         seenIds.add(section.id);
         validSections.push(section);
       }
     }
 
     // 2. Add missing sections
-    for (const id of VALID_SECTION_IDS) {
+    for (const id of VALID_HOME_SECTION_IDS) {
       if (!seenIds.has(id)) {
         validSections.push({ id, enabled: false, order: validSections.length });
       }
