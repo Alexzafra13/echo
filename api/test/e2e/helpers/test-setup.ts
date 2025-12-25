@@ -1,6 +1,7 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
 import { eq } from 'drizzle-orm';
@@ -23,7 +24,7 @@ class NoOpThrottlerGuard extends ThrottlerGuard {
  * con ThrottlerGuard deshabilitado
  */
 export async function createTestApp(): Promise<{
-  app: INestApplication;
+  app: NestFastifyApplication;
   module: TestingModule;
   drizzle: DrizzleService;
 }> {
@@ -34,7 +35,9 @@ export async function createTestApp(): Promise<{
     .useClass(NoOpThrottlerGuard)
     .compile();
 
-  const app = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication<NestFastifyApplication>(
+    new FastifyAdapter(),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -47,6 +50,7 @@ export async function createTestApp(): Promise<{
   app.setGlobalPrefix('api');
 
   await app.init();
+  await app.getHttpAdapter().getInstance().ready();
 
   const drizzle = moduleFixture.get<DrizzleService>(DrizzleService);
 

@@ -1,11 +1,11 @@
 import { GetDashboardStatsUseCase } from './get-dashboard-stats.use-case';
-import { LibraryStatsService } from '../../services/library-stats.service';
-import { StorageBreakdownService } from '../../services/storage-breakdown.service';
-import { SystemHealthService } from '../../services/system-health.service';
-import { EnrichmentStatsService } from '../../services/enrichment-stats.service';
-import { ActivityStatsService } from '../../services/activity-stats.service';
-import { ScanStatsService } from '../../services/scan-stats.service';
-import { AlertsService } from '../../services/alerts.service';
+import { LibraryStatsService } from '../../../infrastructure/services/library-stats.service';
+import { StorageBreakdownService } from '../../../infrastructure/services/storage-breakdown.service';
+import { SystemHealthService } from '../../../infrastructure/services/system-health.service';
+import { EnrichmentStatsService } from '../../../infrastructure/services/enrichment-stats.service';
+import { ActivityStatsService } from '../../../infrastructure/services/activity-stats.service';
+import { ScanStatsService } from '../../../infrastructure/services/scan-stats.service';
+import { AlertsService } from '../../../infrastructure/services/alerts.service';
 
 describe('GetDashboardStatsUseCase', () => {
   let useCase: GetDashboardStatsUseCase;
