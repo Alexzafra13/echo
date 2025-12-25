@@ -1,64 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ExternalApiError } from '@shared/errors';
+import {
+  IRadioBrowserApiClient,
+  RadioBrowserStation,
+  SearchStationsParams,
+  RadioTag,
+  RadioCountry,
+} from '../../domain/ports';
 
 /**
- * Interfaz que representa una estación de radio de la API
- */
-export interface RadioBrowserStation {
-  stationuuid: string;
-  name: string;
-  url: string;
-  url_resolved: string;
-  homepage: string;
-  favicon: string;
-  tags: string;
-  country: string;
-  countrycode: string;
-  state: string;
-  language: string;
-  languagecodes: string;
-  votes: number;
-  codec: string;
-  bitrate: number;
-  hls: boolean;
-  lastcheckok: boolean;
-  lastchecktime: string;
-  clickcount: number;
-  clicktrend: number;
-  geo_lat: number;
-  geo_long: number;
-}
-
-/**
- * Parámetros de búsqueda para estaciones
- */
-export interface SearchStationsParams {
-  name?: string;
-  country?: string;
-  countrycode?: string;
-  state?: string;
-  language?: string;
-  tag?: string;
-  tagList?: string;
-  codec?: string;
-  bitrateMin?: number;
-  bitrateMax?: number;
-  order?: 'name' | 'url' | 'homepage' | 'favicon' | 'tags' | 'country' | 'state' |
-           'language' | 'votes' | 'codec' | 'bitrate' | 'lastcheckok' | 'lastchecktime' |
-           'clicktimestamp' | 'clickcount' | 'clicktrend' | 'changetimestamp' | 'random';
-  reverse?: boolean;
-  offset?: number;
-  limit?: number;
-  hidebroken?: boolean;
-  removeDuplicates?: boolean;
-}
-
-/**
- * Servicio nativo para interactuar con Radio Browser API
- * No usa librerías externas, solo fetch nativo de Node.js
+ * Implementación del cliente de Radio Browser API
+ * Usa fetch nativo de Node.js para las llamadas HTTP
  */
 @Injectable()
-export class RadioBrowserApiService {
+export class RadioBrowserApiService implements IRadioBrowserApiClient {
   private readonly logger = new Logger(RadioBrowserApiService.name);
   // Servidores disponibles: de1, nl1, at1 - usar el que responda mejor
   private readonly BASE_URL = 'https://all.api.radio-browser.info';
@@ -188,7 +143,7 @@ export class RadioBrowserApiService {
   /**
    * Obtener todos los tags/géneros disponibles
    */
-  async getTags(limit: number = 100): Promise<Array<{ name: string; stationcount: number }>> {
+  async getTags(limit: number = 100): Promise<RadioTag[]> {
     try {
       const url = `${this.BASE_URL}/json/tags?limit=${limit}&order=stationcount&reverse=true`;
 
@@ -213,7 +168,7 @@ export class RadioBrowserApiService {
   /**
    * Obtener todos los países disponibles
    */
-  async getCountries(): Promise<Array<{ name: string; iso_3166_1: string; stationcount: number }>> {
+  async getCountries(): Promise<RadioCountry[]> {
     try {
       const url = `${this.BASE_URL}/json/countries?order=stationcount&reverse=true`;
 

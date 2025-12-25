@@ -1,21 +1,23 @@
 import { GetDashboardStatsUseCase } from './get-dashboard-stats.use-case';
-import { LibraryStatsService } from '../../../infrastructure/services/library-stats.service';
-import { StorageBreakdownService } from '../../../infrastructure/services/storage-breakdown.service';
-import { SystemHealthService } from '../../../infrastructure/services/system-health.service';
-import { EnrichmentStatsService } from '../../../infrastructure/services/enrichment-stats.service';
-import { ActivityStatsService } from '../../../infrastructure/services/activity-stats.service';
-import { ScanStatsService } from '../../../infrastructure/services/scan-stats.service';
-import { AlertsService } from '../../../infrastructure/services/alerts.service';
+import {
+  ILibraryStatsProvider,
+  IStorageBreakdownProvider,
+  ISystemHealthChecker,
+  IEnrichmentStatsProvider,
+  IActivityStatsProvider,
+  IScanStatsProvider,
+  IAlertsProvider,
+} from '../../ports';
 
 describe('GetDashboardStatsUseCase', () => {
   let useCase: GetDashboardStatsUseCase;
-  let mockLibraryStats: jest.Mocked<LibraryStatsService>;
-  let mockStorageBreakdown: jest.Mocked<StorageBreakdownService>;
-  let mockSystemHealth: jest.Mocked<SystemHealthService>;
-  let mockEnrichmentStats: jest.Mocked<EnrichmentStatsService>;
-  let mockActivityStats: jest.Mocked<ActivityStatsService>;
-  let mockScanStats: jest.Mocked<ScanStatsService>;
-  let mockAlerts: jest.Mocked<AlertsService>;
+  let mockLibraryStats: jest.Mocked<ILibraryStatsProvider>;
+  let mockStorageBreakdown: jest.Mocked<IStorageBreakdownProvider>;
+  let mockSystemHealth: jest.Mocked<ISystemHealthChecker>;
+  let mockEnrichmentStats: jest.Mocked<IEnrichmentStatsProvider>;
+  let mockActivityStats: jest.Mocked<IActivityStatsProvider>;
+  let mockScanStats: jest.Mocked<IScanStatsProvider>;
+  let mockAlerts: jest.Mocked<IAlertsProvider>;
 
   const libraryStatsData = {
     totalTracks: 1000,

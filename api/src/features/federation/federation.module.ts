@@ -5,7 +5,7 @@ import { FederationImportController } from './presentation/federation-import.con
 import { FederationGateway } from './presentation/federation.gateway';
 import { FederationTokenService } from './domain/services';
 import { RemoteServerService, AlbumImportService } from './infrastructure/services';
-import { FederationAccessGuard } from './domain/services/federation-access.guard';
+import { FederationAccessGuard } from './presentation/guards';
 import { FederationRepository } from './infrastructure/persistence/federation.repository';
 import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
 import { CoverArtService } from '@shared/services';

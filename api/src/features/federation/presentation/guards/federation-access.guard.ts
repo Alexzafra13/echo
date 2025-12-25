@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { UnauthorizedError } from '@shared/errors';
-import { FederationTokenService } from './federation-token.service';
+import { FederationTokenService } from '../../domain/services/federation-token.service';
 
 /**
  * Guard that validates federation access tokens
