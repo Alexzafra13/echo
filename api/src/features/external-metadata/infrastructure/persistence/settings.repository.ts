@@ -1,14 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { eq, asc, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-import { settings, Setting } from '@infrastructure/database/schema';
+import { settings } from '@infrastructure/database/schema';
+import {
+  ISettingsRepository,
+  Setting,
+  CreateSettingData,
+} from '../../domain/ports';
 
 /**
  * Settings Repository
  * Handles database operations for settings
+ * Implements ISettingsRepository port
  */
 @Injectable()
-export class SettingsRepository {
+export class SettingsRepository implements ISettingsRepository {
   private readonly logger = new Logger(SettingsRepository.name);
 
   constructor(private readonly drizzle: DrizzleService) {}
@@ -65,14 +71,7 @@ export class SettingsRepository {
   /**
    * Create a new setting
    */
-  async create(data: {
-    key: string;
-    value: string;
-    category: string;
-    type?: string;
-    description?: string;
-    isPublic?: boolean;
-  }): Promise<Setting> {
+  async create(data: CreateSettingData): Promise<Setting> {
     const result = await this.drizzle.db
       .insert(settings)
       .values({
@@ -104,14 +103,7 @@ export class SettingsRepository {
   /**
    * Upsert a setting (create or update)
    */
-  async upsert(data: {
-    key: string;
-    value: string;
-    category: string;
-    type?: string;
-    description?: string;
-    isPublic?: boolean;
-  }): Promise<Setting> {
+  async upsert(data: CreateSettingData): Promise<Setting> {
     // Check if exists
     const existing = await this.findOne(data.key);
 
