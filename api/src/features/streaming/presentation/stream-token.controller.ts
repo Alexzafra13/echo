@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Delete, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { StreamTokenService } from '../domain/stream-token.service';
+import { StreamTokenService } from '../infrastructure/services/stream-token.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { JwtUser } from '@shared/types/request.types';
