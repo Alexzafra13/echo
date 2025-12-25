@@ -6,7 +6,7 @@ import {
   createMockUserRepository,
   createMockPinoLogger,
 } from '@shared/testing/mock.types';
-import { UserFactory } from '../../../../../../test/factories/user.factory';
+import { UserFactory } from '@shared/testing/factories/user.factory';
 
 describe('UploadAvatarUseCase', () => {
   let useCase: UploadAvatarUseCase;
