@@ -46,6 +46,15 @@ import {
   ScanStatsService,
   AlertsService,
 } from './infrastructure/services';
+import {
+  LIBRARY_STATS_PROVIDER,
+  STORAGE_BREAKDOWN_PROVIDER,
+  SYSTEM_HEALTH_CHECKER,
+  ENRICHMENT_STATS_PROVIDER,
+  ACTIVITY_STATS_PROVIDER,
+  SCAN_STATS_PROVIDER,
+  ALERTS_PROVIDER,
+} from './domain/ports';
 
 @Module({
   imports: [AuthModule, ExternalMetadataModule, HealthModule, SocialModule],
@@ -61,14 +70,14 @@ import {
     CustomAlbumCoversController,
   ],
   providers: [
-    // Dashboard services
-    LibraryStatsService,
-    StorageBreakdownService,
-    SystemHealthService,
-    EnrichmentStatsService,
-    ActivityStatsService,
-    ScanStatsService,
-    AlertsService,
+    // Dashboard services (implementing domain ports)
+    { provide: LIBRARY_STATS_PROVIDER, useClass: LibraryStatsService },
+    { provide: STORAGE_BREAKDOWN_PROVIDER, useClass: StorageBreakdownService },
+    { provide: SYSTEM_HEALTH_CHECKER, useClass: SystemHealthService },
+    { provide: ENRICHMENT_STATS_PROVIDER, useClass: EnrichmentStatsService },
+    { provide: ACTIVITY_STATS_PROVIDER, useClass: ActivityStatsService },
+    { provide: SCAN_STATS_PROVIDER, useClass: ScanStatsService },
+    { provide: ALERTS_PROVIDER, useClass: AlertsService },
     // Use cases
     CreateUserUseCase,
     ListUsersUseCase,

@@ -5,9 +5,9 @@ import { GetUserFavoritesUseCase } from './domain/use-cases/get-user-favorites/g
 import { DeleteFavoriteStationUseCase } from './domain/use-cases/delete-favorite-station/delete-favorite-station.use-case';
 import { SearchStationsUseCase } from './domain/use-cases/search-stations/search-stations.use-case';
 import { DrizzleRadioStationRepository } from './infrastructure/persistence/radio-station.repository';
-import { RadioBrowserApiService } from './domain/services/radio-browser-api.service';
+import { RadioBrowserApiService } from './infrastructure/services/radio-browser-api.service';
 import { IcyMetadataService } from './domain/services/icy-metadata.service';
-import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repository.port';
+import { RADIO_STATION_REPOSITORY, RADIO_BROWSER_API_CLIENT } from './domain/ports';
 
 /**
  * RadioModule - Módulo de gestión de radio
@@ -39,17 +39,20 @@ import { RADIO_STATION_REPOSITORY } from './domain/ports/radio-station-repositor
     DeleteFavoriteStationUseCase,
     SearchStationsUseCase,
 
-    // Services
-    RadioBrowserApiService,
+    // Services (domain)
     IcyMetadataService,
 
     // Repositories
     DrizzleRadioStationRepository,
 
-    // Implementación del port
+    // Port implementations
     {
       provide: RADIO_STATION_REPOSITORY,
       useClass: DrizzleRadioStationRepository,
+    },
+    {
+      provide: RADIO_BROWSER_API_CLIENT,
+      useClass: RadioBrowserApiService,
     },
   ],
   exports: [RADIO_STATION_REPOSITORY],

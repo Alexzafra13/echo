@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { UnauthorizedError } from '@shared/errors';
-import { StreamTokenService } from '../infrastructure/services/stream-token.service';
+import { StreamTokenService } from '../../infrastructure/services/stream-token.service';
 
 /**
  * Guard to validate stream tokens from query parameters
