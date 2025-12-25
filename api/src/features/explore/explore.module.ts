@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ExploreController } from './presentation/controller/explore.controller';
-import { ExploreService } from './domain/services/explore.service';
+import { ExploreService } from './infrastructure/services/explore.service';
 
 /**
  * DrizzleService is provided globally via DrizzleModule

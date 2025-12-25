@@ -12,7 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastructure/websocket';
 import { IsString } from 'class-validator';
-import { AlbumImportProgressEvent } from '../domain/services/album-import.service';
+import { AlbumImportProgressEvent } from '../infrastructure/services/album-import.service';
 
 /**
  * DTO for subscribing to import progress
