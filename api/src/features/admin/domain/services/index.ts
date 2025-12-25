@@ -1,7 +1,3 @@
-export * from './library-stats.service';
-export * from './storage-breakdown.service';
-export * from './system-health.service';
-export * from './enrichment-stats.service';
-export * from './activity-stats.service';
-export * from './scan-stats.service';
-export * from './alerts.service';
+// Services moved to infrastructure/services
+// Re-exporting for backwards compatibility
+export * from '../../infrastructure/services';
