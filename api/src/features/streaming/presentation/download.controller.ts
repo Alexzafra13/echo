@@ -15,7 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
-import { DownloadService } from '../domain/download.service';
+import { DownloadService } from '../infrastructure/services/download.service';
 import { StreamTokenGuard } from '../domain/stream-token.guard';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 

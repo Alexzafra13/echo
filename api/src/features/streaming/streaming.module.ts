@@ -4,10 +4,10 @@ import { StreamingController } from './presentation/streaming.controller';
 import { StreamTokenController } from './presentation/stream-token.controller';
 import { DownloadController } from './presentation/download.controller';
 import { StreamTrackUseCase } from './domain/use-cases';
-import { StreamTokenService } from './domain/stream-token.service';
 import { StreamTokenGuard } from './domain/stream-token.guard';
-import { StreamTokenCleanupService } from './domain/stream-token-cleanup.service';
-import { DownloadService } from './domain/download.service';
+import { StreamTokenService } from './infrastructure/services/stream-token.service';
+import { StreamTokenCleanupService } from './infrastructure/services/stream-token-cleanup.service';
+import { DownloadService } from './infrastructure/services/download.service';
 
 /**
  * StreamingModule - Módulo de streaming de audio

@@ -33,7 +33,7 @@ import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User, ConnectedServer } from '@infrastructure/database/schema';
 import { FederationTokenService, RemoteServerService } from '../domain/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
-import { StreamTokenService } from '@features/streaming/domain/stream-token.service';
+import { StreamTokenService } from '@features/streaming/infrastructure/services/stream-token.service';
 import {
   CreateInvitationTokenDto,
   ConnectToServerDto,
