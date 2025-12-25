@@ -38,7 +38,7 @@ import {
   AutoPlaylistDto,
   SmartPlaylistDto,
 } from '../dtos/recommendations-response.dto';
-import { WaveMixService } from '../../domain/services/wave-mix.service';
+import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
 
 @ApiTags('recommendations')
 @ApiBearerAuth('JWT-auth')

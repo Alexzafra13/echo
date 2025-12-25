@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LibraryStatsService } from '../../services/library-stats.service';
-import { StorageBreakdownService } from '../../services/storage-breakdown.service';
-import { SystemHealthService } from '../../services/system-health.service';
-import { EnrichmentStatsService } from '../../services/enrichment-stats.service';
-import { ActivityStatsService } from '../../services/activity-stats.service';
-import { ScanStatsService } from '../../services/scan-stats.service';
-import { AlertsService } from '../../services/alerts.service';
+import {
+  LibraryStatsService,
+  StorageBreakdownService,
+  SystemHealthService,
+  EnrichmentStatsService,
+  ActivityStatsService,
+  ScanStatsService,
+  AlertsService,
+} from '../../../infrastructure/services';
 import { GetDashboardStatsInput, GetDashboardStatsOutput } from './get-dashboard-stats.dto';
 
 /**

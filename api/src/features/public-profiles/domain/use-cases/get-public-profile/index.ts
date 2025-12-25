@@ -1,4 +1,4 @@
-export { GetPublicProfileUseCase } from './get-public-profile.use-case';
+export { GetPublicProfileUseCase } from '../../../infrastructure/services/get-public-profile.service';
 export type {
   GetPublicProfileInput,
   GetPublicProfileOutput,
@@ -10,4 +10,4 @@ export type {
   FriendshipStatus,
   ProfileStats,
   ListeningNow,
-} from './get-public-profile.dto';
+} from '../../../infrastructure/services/get-public-profile.dto';

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { WaveMixService } from '../services/wave-mix.service';
+import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
 import { AutoPlaylist } from '../entities/track-score.entity';
 
 @Injectable()
