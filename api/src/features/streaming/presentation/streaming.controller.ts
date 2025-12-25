@@ -21,7 +21,7 @@ import {
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
-import { StreamTokenGuard } from '../domain/stream-token.guard';
+import { StreamTokenGuard } from './guards';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 import * as fs from 'fs';
 import { ReadStream } from 'fs';

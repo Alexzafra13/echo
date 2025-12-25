@@ -1,7 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { IRadioStationRepository, RADIO_STATION_REPOSITORY } from '../../ports/radio-station-repository.port';
+import {
+  IRadioStationRepository,
+  RADIO_STATION_REPOSITORY,
+  IRadioBrowserApiClient,
+  RADIO_BROWSER_API_CLIENT,
+} from '../../ports';
 import { RadioStation } from '../../entities/radio-station.entity';
-import { RadioBrowserApiService } from '../../services/radio-browser-api.service';
 
 interface SaveFavoriteStationInput {
   userId: string;
@@ -34,7 +38,8 @@ export class SaveFavoriteStationUseCase {
   constructor(
     @Inject(RADIO_STATION_REPOSITORY)
     private readonly repository: IRadioStationRepository,
-    private readonly radioBrowserApi: RadioBrowserApiService,
+    @Inject(RADIO_BROWSER_API_CLIENT)
+    private readonly radioBrowserApi: IRadioBrowserApiClient,
   ) {}
 
   async execute(input: SaveFavoriteStationInput): Promise<RadioStation> {

@@ -1,12 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { RadioBrowserApiService, SearchStationsParams, RadioBrowserStation } from '../../services/radio-browser-api.service';
+import { Injectable, Inject } from '@nestjs/common';
+import {
+  IRadioBrowserApiClient,
+  RADIO_BROWSER_API_CLIENT,
+  SearchStationsParams,
+  RadioBrowserStation,
+  RadioTag,
+  RadioCountry,
+} from '../../ports';
 
 /**
  * Use case: Buscar emisoras en Radio Browser API
  */
 @Injectable()
 export class SearchStationsUseCase {
-  constructor(private readonly radioBrowserApi: RadioBrowserApiService) {}
+  constructor(
+    @Inject(RADIO_BROWSER_API_CLIENT)
+    private readonly radioBrowserApi: IRadioBrowserApiClient,
+  ) {}
 
   async execute(params: SearchStationsParams): Promise<RadioBrowserStation[]> {
     return this.radioBrowserApi.searchStations(params);
@@ -32,11 +42,11 @@ export class SearchStationsUseCase {
     return this.radioBrowserApi.searchByName(name, limit);
   }
 
-  async getTags(limit: number = 100): Promise<Array<{ name: string; stationcount: number }>> {
+  async getTags(limit: number = 100): Promise<RadioTag[]> {
     return this.radioBrowserApi.getTags(limit);
   }
 
-  async getCountries(): Promise<Array<{ name: string; iso_3166_1: string; stationcount: number }>> {
+  async getCountries(): Promise<RadioCountry[]> {
     return this.radioBrowserApi.getCountries();
   }
 }
