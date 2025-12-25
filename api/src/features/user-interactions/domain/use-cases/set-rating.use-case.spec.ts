@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import { SetRatingUseCase } from './set-rating.use-case';
 import { ItemType, UserRating } from '../entities/user-interaction.entity';
 
@@ -71,7 +71,7 @@ describe('SetRatingUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 0),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 0),
       ).rejects.toThrow('Rating must be an integer between 1 and 5');
@@ -83,7 +83,7 @@ describe('SetRatingUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 6),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 6),
       ).rejects.toThrow('Rating must be an integer between 1 and 5');
@@ -95,7 +95,7 @@ describe('SetRatingUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', -1),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
@@ -104,7 +104,7 @@ describe('SetRatingUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 3.5),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 3.5),
       ).rejects.toThrow('Rating must be an integer between 1 and 5');
@@ -116,7 +116,7 @@ describe('SetRatingUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 0),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
 
       expect(mockRepository.setRating).not.toHaveBeenCalled();
     });
@@ -155,14 +155,14 @@ describe('SetRatingUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 2.9),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
     });
 
     it('debería rechazar rating de 4.1 (no es entero)', async () => {
       // Act & Assert
       await expect(
         useCase.execute('user-123', 'track-456', 'track', 4.1),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
     });
   });
 });

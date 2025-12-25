@@ -2,9 +2,9 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
+import { UnauthorizedError } from '@shared/errors';
 import { FederationTokenService } from './federation-token.service';
 
 /**
@@ -31,13 +31,13 @@ export class FederationAccessGuard implements CanActivate {
     }
 
     if (!token) {
-      throw new UnauthorizedException('Federation access token required');
+      throw new UnauthorizedError('Federation access token required');
     }
 
     const accessToken = await this.tokenService.validateAccessToken(token);
 
     if (!accessToken) {
-      throw new UnauthorizedException('Invalid or expired federation access token');
+      throw new UnauthorizedError('Invalid or expired federation access token');
     }
 
     // Attach token info to request for use in controllers

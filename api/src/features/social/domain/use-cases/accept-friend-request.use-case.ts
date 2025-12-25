@@ -1,4 +1,5 @@
-import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
 import { Friendship } from '../entities/friendship.entity';
 
@@ -13,16 +14,16 @@ export class AcceptFriendRequestUseCase {
     const friendship = await this.socialRepository.getFriendshipById(friendshipId);
 
     if (!friendship) {
-      throw new NotFoundException('Friend request not found');
+      throw new NotFoundError('Friend request');
     }
 
     // Only the addressee can accept
     if (friendship.addresseeId !== userId) {
-      throw new ForbiddenException('You cannot accept this friend request');
+      throw new ForbiddenError('You cannot accept this friend request');
     }
 
     if (friendship.status !== 'pending') {
-      throw new ForbiddenException('This friend request cannot be accepted');
+      throw new ForbiddenError('This friend request cannot be accepted');
     }
 
     return this.socialRepository.acceptFriendRequest(friendshipId, userId);

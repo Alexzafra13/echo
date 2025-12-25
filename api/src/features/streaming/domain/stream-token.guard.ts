@@ -1,4 +1,5 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { UnauthorizedError } from '@shared/errors';
 import { StreamTokenService } from '../infrastructure/services/stream-token.service';
 
 /**
@@ -16,14 +17,14 @@ export class StreamTokenGuard implements CanActivate {
     const token = request.query?.token;
 
     if (!token || typeof token !== 'string') {
-      throw new UnauthorizedException('Stream token is required');
+      throw new UnauthorizedError('Stream token is required');
     }
 
     // Validate token
     const userId = await this.streamTokenService.validateToken(token);
 
     if (!userId) {
-      throw new UnauthorizedException('Invalid or expired stream token');
+      throw new UnauthorizedError('Invalid or expired stream token');
     }
 
     // Attach user info to request for use in controller

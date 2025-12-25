@@ -1,5 +1,6 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { NotFoundError } from '@shared/errors';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports';
 import { CoverArtService } from '@shared/services';
 import { getImageMimeType } from '@shared/utils';
@@ -34,19 +35,19 @@ export class GetAlbumCoverUseCase {
   async execute(input: GetAlbumCoverInput): Promise<GetAlbumCoverOutput> {
     // 1. Validar input
     if (!input.albumId || input.albumId.trim() === '') {
-      throw new NotFoundException('Album ID is required');
+      throw new NotFoundError('Album', 'ID is required');
     }
 
     // 2. Buscar el álbum
     const album = await this.albumRepository.findById(input.albumId);
     if (!album) {
-      throw new NotFoundException(`Album with ID ${input.albumId} not found`);
+      throw new NotFoundError('Album', input.albumId);
     }
 
     // 3. Obtener ruta absoluta del cover desde el caché
     const coverPath = this.coverArtService.getCoverPath(album.coverArtPath);
     if (!coverPath) {
-      throw new NotFoundException('No cover art found for this album');
+      throw new NotFoundError('Cover art', 'for this album');
     }
 
     try {
@@ -67,7 +68,7 @@ export class GetAlbumCoverUseCase {
         { albumId: input.albumId, coverPath, error: error instanceof Error ? error.message : error },
         'Error reading cover art file',
       );
-      throw new NotFoundException('Could not read cover art file');
+      throw new NotFoundError('Cover art file', 'could not be read');
     }
   }
 }

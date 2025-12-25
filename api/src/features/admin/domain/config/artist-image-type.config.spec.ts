@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import {
   getArtistImageTypeConfig,
   getArtistImageTypeBasicConfig,
@@ -43,13 +43,13 @@ describe('artist-image-type.config', () => {
       expect(config.externalPathField).toBe('externalLogoPath');
     });
 
-    it('should throw BadRequestException for invalid type', () => {
-      expect(() => getArtistImageTypeConfig('invalid')).toThrow(BadRequestException);
+    it('should throw ValidationError for invalid type', () => {
+      expect(() => getArtistImageTypeConfig('invalid')).toThrow(ValidationError);
       expect(() => getArtistImageTypeConfig('invalid')).toThrow('Invalid image type: invalid');
     });
 
     it('should throw for empty string', () => {
-      expect(() => getArtistImageTypeConfig('')).toThrow(BadRequestException);
+      expect(() => getArtistImageTypeConfig('')).toThrow(ValidationError);
     });
   });
 

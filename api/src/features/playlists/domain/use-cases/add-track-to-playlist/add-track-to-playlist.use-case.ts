@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
@@ -17,34 +18,34 @@ export class AddTrackToPlaylistUseCase {
   async execute(input: AddTrackToPlaylistInput): Promise<AddTrackToPlaylistOutput> {
     // 1. Validar input
     if (!input.playlistId || input.playlistId.trim() === '') {
-      throw new BadRequestException('Playlist ID is required');
+      throw new ValidationError('Playlist ID is required');
     }
 
     if (!input.trackId || input.trackId.trim() === '') {
-      throw new BadRequestException('Track ID is required');
+      throw new ValidationError('Track ID is required');
     }
 
     // 2. Verificar que la playlist existe
     const playlist = await this.playlistRepository.findById(input.playlistId);
     if (!playlist) {
-      throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
+      throw new NotFoundError('Playlist', input.playlistId);
     }
 
     // 3. SEGURIDAD: Verificar que el usuario es el propietario
     if (playlist.ownerId !== input.userId) {
-      throw new ForbiddenException('You do not have permission to modify this playlist');
+      throw new ForbiddenError('You do not have permission to modify this playlist');
     }
 
     // 4. Verificar que el track existe
     const track = await this.trackRepository.findById(input.trackId);
     if (!track) {
-      throw new NotFoundException(`Track with ID ${input.trackId} not found`);
+      throw new NotFoundError('Track', input.trackId);
     }
 
     // 4. Verificar que el track no está ya en la playlist
     const isInPlaylist = await this.playlistRepository.isTrackInPlaylist(input.playlistId, input.trackId);
     if (isInPlaylist) {
-      throw new ConflictException('Esta canción ya está en la playlist');
+      throw new ConflictError('Esta canción ya está en la playlist');
     }
 
     // 5. Agregar track con auto-asignación de orden (race condition safe)

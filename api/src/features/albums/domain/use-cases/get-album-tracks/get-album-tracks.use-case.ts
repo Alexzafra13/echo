@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError } from '@shared/errors';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { GetAlbumTracksInput, GetAlbumTracksOutput } from './get-album-tracks.dto';
@@ -27,13 +28,13 @@ export class GetAlbumTracksUseCase {
   async execute(input: GetAlbumTracksInput): Promise<GetAlbumTracksOutput> {
     // 1. Validar input
     if (!input.albumId || input.albumId.trim() === '') {
-      throw new NotFoundException('Album ID is required');
+      throw new NotFoundError('Album', 'ID is required');
     }
 
     // 2. Verificar que el álbum existe
     const album = await this.albumRepository.findById(input.albumId);
     if (!album) {
-      throw new NotFoundException(`Album with ID ${input.albumId} not found`);
+      throw new NotFoundError('Album', input.albumId);
     }
 
     // 3. Obtener tracks del álbum (ya vienen ordenados por trackNumber)

@@ -1,4 +1,5 @@
-import { Inject, Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ValidationError, ConflictError } from '@shared/errors';
 import { ISocialRepository, SOCIAL_REPOSITORY } from '../ports';
 import { Friendship } from '../entities/friendship.entity';
 
@@ -12,7 +13,7 @@ export class SendFriendRequestUseCase {
   async execute(requesterId: string, addresseeId: string): Promise<Friendship> {
     // Cannot send request to yourself
     if (requesterId === addresseeId) {
-      throw new BadRequestException('Cannot send friend request to yourself');
+      throw new ValidationError('Cannot send friend request to yourself');
     }
 
     // Check if friendship already exists
@@ -20,17 +21,17 @@ export class SendFriendRequestUseCase {
 
     if (existing) {
       if (existing.status === 'accepted') {
-        throw new ConflictException('You are already friends with this user');
+        throw new ConflictError('You are already friends with this user');
       }
       if (existing.status === 'pending') {
         // If they sent us a request, accept it instead
         if (existing.addresseeId === requesterId) {
           return this.socialRepository.acceptFriendRequest(existing.id, requesterId);
         }
-        throw new ConflictException('Friend request already sent');
+        throw new ConflictError('Friend request already sent');
       }
       if (existing.status === 'blocked') {
-        throw new BadRequestException('Cannot send friend request to this user');
+        throw new ValidationError('Cannot send friend request to this user');
       }
     }
 
