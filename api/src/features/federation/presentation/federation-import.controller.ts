@@ -24,8 +24,9 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
-import { User, AlbumImportQueue } from '@infrastructure/database/schema';
-import { AlbumImportService } from '../domain/services';
+import { User } from '@infrastructure/database/schema';
+import { AlbumImportQueue } from '../domain/types';
+import { AlbumImportService } from '../infrastructure/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 
 /**

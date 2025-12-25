@@ -30,8 +30,10 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
-import { User, ConnectedServer } from '@infrastructure/database/schema';
-import { FederationTokenService, RemoteServerService } from '../domain/services';
+import { User } from '@infrastructure/database/schema';
+import { ConnectedServer } from '../domain/types';
+import { FederationTokenService } from '../domain/services';
+import { RemoteServerService } from '../infrastructure/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 import { StreamTokenService } from '@features/streaming/infrastructure/services/stream-token.service';
 import {
