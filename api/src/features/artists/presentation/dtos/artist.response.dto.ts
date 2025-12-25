@@ -1,11 +1,18 @@
 import { Expose } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { Artist } from '../../domain/entities/artist.entity';
+import type { ArtistProps } from '../../domain/entities/artist.entity';
+
+/**
+ * Tipo para datos de artista que pueden venir de la entidad o de una query
+ */
+type ArtistData = Artist | ArtistProps;
 
 /**
  * ArtistResponseDto - DTO de respuesta para UN artista
  */
 export class ArtistResponseDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiProperty({ description: 'UUID del artista', example: '123e4567-e89b-12d3-a456-426614174000' })
   @Expose()
   id!: string;
 
@@ -69,7 +76,11 @@ export class ArtistResponseDto {
   @Expose()
   updatedAt!: Date;
 
-  static fromDomain(data: any): ArtistResponseDto {
+  /**
+   * Convierte una entidad de dominio Artist a DTO de respuesta
+   * @param data - Entidad Artist o objeto con propiedades del artista
+   */
+  static fromDomain(data: ArtistData): ArtistResponseDto {
     const dto = new ArtistResponseDto();
     dto.id = data.id;
     dto.name = data.name;

@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, Logger, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
 import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
@@ -24,9 +25,9 @@ import { CacheControl } from '@shared/interceptors';
 @ApiBearerAuth('JWT-auth')
 @Controller('artists')
 export class ArtistsController {
-  private readonly logger = new Logger(ArtistsController.name);
-
   constructor(
+    @InjectPinoLogger(ArtistsController.name)
+    private readonly logger: PinoLogger,
     private readonly getArtistUseCase: GetArtistUseCase,
     private readonly getArtistsUseCase: GetArtistsUseCase,
     private readonly getArtistAlbumsUseCase: GetArtistAlbumsUseCase,
