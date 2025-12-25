@@ -9,7 +9,7 @@ export class ScannerError extends BaseError {
     public readonly details?: string,
   ) {
     const message = ScannerError.buildMessage(reason, details);
-    super('SCANNER_ERROR', message, 409);
+    super('SCANNER_ERROR', message);
     Object.setPrototypeOf(this, ScannerError.prototype);
   }
 

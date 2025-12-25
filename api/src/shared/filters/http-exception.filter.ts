@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
-import { BaseError } from '@shared/errors/base.error';
+import { BaseError, getHttpStatusForError } from '@shared/errors/base.error';
 
 /**
  * HttpExceptionFilter - Maneja todas las excepciones HTTP de forma global
@@ -36,7 +36,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof BaseError) {
       // Custom domain errors (UnauthorizedError, ValidationError, etc.)
-      status = exception.statusCode;
+      // Map error code to HTTP status using the centralized mapping
+      status = getHttpStatusForError(exception.code);
     } else if (exception instanceof HttpException) {
       // NestJS HTTP exceptions
       status = exception.getStatus();

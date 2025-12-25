@@ -9,7 +9,7 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
-import { BaseError } from '@shared/errors/base.error';
+import { BaseError, getHttpStatusForError } from '@shared/errors/base.error';
 
 /**
  * LoggingInterceptor
@@ -39,7 +39,7 @@ export class LoggingInterceptor implements NestInterceptor {
         if (error instanceof HttpException) {
           statusCode = error.getStatus();
         } else if (error instanceof BaseError) {
-          statusCode = error.statusCode;
+          statusCode = getHttpStatusForError(error.code);
         } else {
           statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
         }

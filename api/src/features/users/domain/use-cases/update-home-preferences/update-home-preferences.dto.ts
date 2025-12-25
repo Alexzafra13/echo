@@ -1,4 +1,4 @@
-import { HomeSectionConfig } from '@infrastructure/database/schema/users';
+import { HomeSectionConfig } from '@shared/types/home-section.types';
 
 export interface UpdateHomePreferencesInput {
   userId: string;
