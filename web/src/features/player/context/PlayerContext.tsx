@@ -25,8 +25,8 @@ import { useAutoplaySettings } from '../hooks/useAutoplaySettings';
 import { useAutoplay } from '../hooks/useAutoplay';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
-import { updatePlaybackState } from '@shared/services/play-tracking.service';
-import { useAuthStore } from '@shared/store';
+import { useMediaSession } from '../hooks/useMediaSession';
+import { useSocialSync } from '../hooks/useSocialSync';
 import type { RadioBrowserStation } from '@shared/types/radio.types';
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
@@ -530,86 +530,27 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [autoplaySettings.enabled, radio.isRadioMode, currentTrack, queue.currentIndex, queue.queue, autoplay]);
 
   // ========== MEDIA SESSION API (for mobile background playback) ==========
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-
-    // Update metadata when track changes
-    if (currentTrack) {
-      const artwork = currentTrack.coverImage || currentTrack.albumId
-        ? [{ src: currentTrack.coverImage || `/api/albums/${currentTrack.albumId}/cover`, sizes: '512x512', type: 'image/jpeg' }]
-        : [];
-
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentTrack.title,
-        artist: currentTrack.artist || 'Unknown Artist',
-        album: currentTrack.albumName || '',
-        artwork,
-      });
-    } else if (radio.isRadioMode && radio.currentStation) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: radio.metadata?.title || radio.currentStation.name,
-        artist: radio.metadata?.artist || 'Radio',
-        album: radio.currentStation.name,
-        artwork: radio.currentStation.favicon
-          ? [{ src: radio.currentStation.favicon, sizes: '512x512', type: 'image/png' }]
-          : [],
-      });
-    }
-  }, [currentTrack, radio.isRadioMode, radio.currentStation, radio.metadata]);
-
-  // Set up Media Session action handlers
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-
-    const actionHandlers: [MediaSessionAction, MediaSessionActionHandler][] = [
-      ['play', () => { play(); }],
-      ['pause', () => { pause(); }],
-      ['previoustrack', () => { playPrevious(); }],
-      ['nexttrack', () => { playNext(); }],
-      ['seekto', (details) => { if (details.seekTime !== undefined) seek(details.seekTime); }],
-    ];
-
-    for (const [action, handler] of actionHandlers) {
-      try {
-        navigator.mediaSession.setActionHandler(action, handler);
-      } catch {
-        // Some actions may not be supported
-      }
-    }
-
-    return () => {
-      for (const [action] of actionHandlers) {
-        try {
-          navigator.mediaSession.setActionHandler(action, null);
-        } catch {
-          // Ignore cleanup errors
-        }
-      }
-    };
-  }, [play, pause, playPrevious, playNext, seek]);
-
-  // Update playback state for Media Session
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-  }, [isPlaying]);
+  useMediaSession({
+    currentTrack,
+    radio: {
+      isRadioMode: radio.isRadioMode,
+      currentStation: radio.currentStation,
+      metadata: radio.metadata,
+    },
+    isPlaying,
+    play,
+    pause,
+    playPrevious,
+    playNext,
+    seek,
+  });
 
   // ========== SOCIAL "LISTENING NOW" SYNC ==========
-  // Update playback state in backend for friends to see
-  useEffect(() => {
-    // Only sync for track playback (not radio)
-    if (radio.isRadioMode) return;
-
-    // Check if user is authenticated before syncing
-    const isAuthenticated = useAuthStore.getState().isAuthenticated;
-    if (!isAuthenticated) return;
-
-    // Send playback state to backend (fire and forget, errors are handled silently)
-    updatePlaybackState({
-      isPlaying,
-      currentTrackId: isPlaying && currentTrack ? currentTrack.id : null,
-    });
-  }, [isPlaying, currentTrack?.id, radio.isRadioMode]);
+  useSocialSync({
+    isPlaying,
+    currentTrackId: currentTrack?.id ?? null,
+    isRadioMode: radio.isRadioMode,
+  });
 
   // ========== RADIO OPERATIONS ==========
 
