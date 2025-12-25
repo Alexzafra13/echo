@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { IWaveMixGenerator, WAVE_MIX_GENERATOR } from '../ports';
 import { AutoPlaylist, WaveMixConfig } from '../entities/track-score.entity';
 
 @Injectable()
 export class GenerateWaveMixUseCase {
-  constructor(private readonly waveMixService: WaveMixService) {}
+  constructor(
+    @Inject(WAVE_MIX_GENERATOR)
+    private readonly waveMixService: IWaveMixGenerator,
+  ) {}
 
   async execute(userId: string, config?: Partial<WaveMixConfig>): Promise<AutoPlaylist> {
     return await this.waveMixService.generateWaveMix(userId, config);

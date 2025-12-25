@@ -18,6 +18,7 @@ import {
   GenerateSmartPlaylistUseCase,
   GetAutoPlaylistsUseCase,
 } from './domain/use-cases';
+import { SMART_PLAYLIST_GENERATOR, WAVE_MIX_GENERATOR } from './domain/ports';
 import { RecommendationsController } from './presentation/controller/recommendations.controller';
 import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-scheduler.service';
 
@@ -35,11 +36,17 @@ import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-schedule
     SmartPlaylistService,
     WaveMixSchedulerService,
 
+    // Port implementations
+    { provide: WAVE_MIX_GENERATOR, useClass: WaveMixService },
+    { provide: SMART_PLAYLIST_GENERATOR, useClass: SmartPlaylistService },
+
     // Playlist Services (SRP extraction)
     PlaylistShuffleService,
     PlaylistCoverService,
     ArtistPlaylistService,
     GenrePlaylistService,
+
+    // Use Cases
     CalculateTrackScoreUseCase,
     GenerateWaveMixUseCase,
     {
@@ -49,6 +56,6 @@ import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-schedule
     GenerateSmartPlaylistUseCase,
     GetAutoPlaylistsUseCase,
   ],
-  exports: [ScoringService, WaveMixService, SmartPlaylistService],
+  exports: [ScoringService, WaveMixService, SmartPlaylistService, WAVE_MIX_GENERATOR, SMART_PLAYLIST_GENERATOR],
 })
 export class RecommendationsModule {}
