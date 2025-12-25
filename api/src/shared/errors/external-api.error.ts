@@ -12,7 +12,7 @@ export class ExternalApiError extends BaseError {
     public readonly url?: string,
   ) {
     const message = `${provider} API error: HTTP ${httpStatus} ${httpStatusText}`;
-    super('EXTERNAL_API_ERROR', message, 502);
+    super('EXTERNAL_API_ERROR', message);
     Object.setPrototypeOf(this, ExternalApiError.prototype);
   }
 }

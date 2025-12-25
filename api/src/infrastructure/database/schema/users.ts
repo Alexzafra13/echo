@@ -9,20 +9,13 @@ import {
   index,
   jsonb,
 } from 'drizzle-orm/pg-core';
+import {
+  HomeSectionConfig,
+  DEFAULT_HOME_SECTIONS,
+} from '@shared/types/home-section.types';
 
-// ============================================
-// Types
-// ============================================
-
-/** Configuration for a single home page section */
-export interface HomeSectionConfig {
-  /** Unique identifier for the section */
-  id: 'recent-albums' | 'artist-mix' | 'genre-mix' | 'recently-played' | 'my-playlists' | 'top-played' | 'favorite-radios' | 'surprise-me' | 'shared-albums';
-  /** Whether the section is visible */
-  enabled: boolean;
-  /** Display order (0 = first) */
-  order: number;
-}
+// Re-export for backwards compatibility
+export type { HomeSectionConfig } from '@shared/types/home-section.types';
 
 // ============================================
 // User
@@ -53,17 +46,7 @@ export const users = pgTable(
     showPlaylists: boolean('show_playlists').default(true).notNull(),
     bio: text('bio'),
     // Home page customization
-    homeSections: jsonb('home_sections').$type<HomeSectionConfig[]>().default([
-      { id: 'recent-albums', enabled: true, order: 0 },
-      { id: 'artist-mix', enabled: true, order: 1 },
-      { id: 'genre-mix', enabled: false, order: 2 },
-      { id: 'recently-played', enabled: false, order: 3 },
-      { id: 'my-playlists', enabled: false, order: 4 },
-      { id: 'top-played', enabled: false, order: 5 },
-      { id: 'favorite-radios', enabled: false, order: 6 },
-      { id: 'surprise-me', enabled: false, order: 7 },
-      { id: 'shared-albums', enabled: false, order: 8 },
-    ]).notNull(),
+    homeSections: jsonb('home_sections').$type<HomeSectionConfig[]>().default(DEFAULT_HOME_SECTIONS).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

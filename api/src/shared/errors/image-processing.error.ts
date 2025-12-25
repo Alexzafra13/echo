@@ -9,7 +9,7 @@ export class ImageProcessingError extends BaseError {
     public readonly details?: string,
   ) {
     const message = ImageProcessingError.buildMessage(reason, details);
-    super('IMAGE_PROCESSING_ERROR', message, 422);
+    super('IMAGE_PROCESSING_ERROR', message);
     Object.setPrototypeOf(this, ImageProcessingError.prototype);
   }
 

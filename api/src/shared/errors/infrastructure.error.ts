@@ -9,7 +9,7 @@ export class InfrastructureError extends BaseError {
     public readonly reason: string,
   ) {
     const message = `${component} error: ${reason}`;
-    super('INFRASTRUCTURE_ERROR', message, 503);
+    super('INFRASTRUCTURE_ERROR', message);
     Object.setPrototypeOf(this, InfrastructureError.prototype);
   }
 }
@@ -25,7 +25,7 @@ export class RepositoryError extends BaseError {
     public readonly reason: string,
   ) {
     const message = `Repository ${operation} failed: ${reason}`;
-    super('REPOSITORY_ERROR', message, 500);
+    super('REPOSITORY_ERROR', message);
     Object.setPrototypeOf(this, RepositoryError.prototype);
   }
 }
