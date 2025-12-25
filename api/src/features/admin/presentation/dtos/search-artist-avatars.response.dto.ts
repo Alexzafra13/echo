@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { SearchArtistAvatarsOutput } from '../../domain/use-cases/search-artist-avatars';
+import { SearchArtistAvatarsOutput } from '../../infrastructure/use-cases/search-artist-avatars';
 
 export class AvatarOptionDto {
   @Expose()
