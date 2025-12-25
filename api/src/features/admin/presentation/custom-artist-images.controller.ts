@@ -16,10 +16,10 @@ import { MultipartFile } from '@fastify/multipart';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
-import { UploadCustomArtistImageUseCase } from '../domain/use-cases/upload-custom-artist-image';
-import { ListCustomArtistImagesUseCase } from '../domain/use-cases/list-custom-artist-images';
-import { DeleteCustomArtistImageUseCase } from '../domain/use-cases/delete-custom-artist-image';
-import { ApplyCustomArtistImageUseCase } from '../domain/use-cases/apply-custom-artist-image';
+import { UploadCustomArtistImageUseCase } from '../infrastructure/use-cases/upload-custom-artist-image';
+import { ListCustomArtistImagesUseCase } from '../infrastructure/use-cases/list-custom-artist-images';
+import { DeleteCustomArtistImageUseCase } from '../infrastructure/use-cases/delete-custom-artist-image';
+import { ApplyCustomArtistImageUseCase } from '../infrastructure/use-cases/apply-custom-artist-image';
 
 @ApiTags('Admin - Custom Artist Images')
 @ApiBearerAuth()

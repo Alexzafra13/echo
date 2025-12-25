@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { ApplyArtistAvatarOutput } from '../../domain/use-cases/apply-artist-avatar';
+import { ApplyArtistAvatarOutput } from '../../infrastructure/use-cases/apply-artist-avatar';
 
 export class ApplyArtistAvatarResponseDto {
   @Expose()
