@@ -4,7 +4,7 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { HealthCheckService } from '@features/health/health-check.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { libraryScans } from '@infrastructure/database/schema';
-import { SystemHealth, StorageBreakdown } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import { SystemHealth, StorageBreakdown } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class SystemHealthService {

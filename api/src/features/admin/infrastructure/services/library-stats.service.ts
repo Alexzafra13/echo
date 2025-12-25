@@ -3,7 +3,7 @@ import { count, sum, gte } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { tracks, albums, artists, genres } from '@infrastructure/database/schema';
-import { LibraryStats } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import { LibraryStats } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class LibraryStatsService {
