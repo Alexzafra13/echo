@@ -5,7 +5,7 @@ import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { StorageService } from '@features/external-metadata/infrastructure/services/storage.service';
 import { ImageService } from '@features/external-metadata/application/services/image.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
-import { getArtistImageTypeBasicConfig } from '../../config/artist-image-type.config';
+import { getArtistImageTypeBasicConfig } from '../../../domain/config/artist-image-type.config';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { desc, inArray } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { libraryScans } from '@infrastructure/database/schema';
-import { ScanStats } from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+import { ScanStats } from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class ScanStatsService {

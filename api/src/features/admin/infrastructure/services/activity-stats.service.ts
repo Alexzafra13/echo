@@ -7,7 +7,7 @@ import {
   ActivityStats,
   ActivityTimelineDay,
   RecentActivity,
-} from '../use-cases/get-dashboard-stats/get-dashboard-stats.dto';
+} from '../../domain/use-cases/get-dashboard-stats/get-dashboard-stats.dto';
 
 @Injectable()
 export class ActivityStatsService {
