@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { NotFoundError, ValidationError, ConflictError } from '@shared/errors';
 import { AddTrackToPlaylistUseCase } from './add-track-to-playlist.use-case';
 import { IPlaylistRepository } from '../../ports';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
@@ -156,7 +152,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow(ValidationError);
       await expect(useCase.execute(input)).rejects.toThrow('Playlist ID is required');
       expect(playlistRepository.findById).not.toHaveBeenCalled();
     });
@@ -170,7 +166,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow(ValidationError);
       await expect(useCase.execute(input)).rejects.toThrow('Track ID is required');
     });
 
@@ -185,8 +181,8 @@ describe('AddTrackToPlaylistUseCase', () => {
       playlistRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(input)).rejects.toThrow('Playlist with ID non-existent not found');
+      await expect(useCase.execute(input)).rejects.toThrow(NotFoundError);
+      await expect(useCase.execute(input)).rejects.toThrow('Playlist with id non-existent not found');
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
@@ -202,8 +198,8 @@ describe('AddTrackToPlaylistUseCase', () => {
       trackRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(input)).rejects.toThrow('Track with ID non-existent not found');
+      await expect(useCase.execute(input)).rejects.toThrow(NotFoundError);
+      await expect(useCase.execute(input)).rejects.toThrow('Track with id non-existent not found');
       expect(playlistRepository.isTrackInPlaylist).not.toHaveBeenCalled();
     });
 
@@ -220,7 +216,7 @@ describe('AddTrackToPlaylistUseCase', () => {
       playlistRepository.isTrackInPlaylist.mockResolvedValue(true); // Already in playlist
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
+      await expect(useCase.execute(input)).rejects.toThrow(ConflictError);
       await expect(useCase.execute(input)).rejects.toThrow(
         'Esta canción ya está en la playlist',
       );

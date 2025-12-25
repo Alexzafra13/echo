@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError, ValidationError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { IUserRepository, USER_REPOSITORY } from '@features/auth/domain/ports/user-repository.port';
 import { GetPlaylistInput, GetPlaylistOutput } from './get-playlist.dto';
@@ -15,14 +16,14 @@ export class GetPlaylistUseCase {
   async execute(input: GetPlaylistInput): Promise<GetPlaylistOutput> {
     // 1. Validar input
     if (!input.id || input.id.trim() === '') {
-      throw new BadRequestException('Playlist ID is required');
+      throw new ValidationError('Playlist ID is required');
     }
 
     // 2. Buscar playlist
     const playlist = await this.playlistRepository.findById(input.id);
 
     if (!playlist) {
-      throw new NotFoundException(`Playlist with ID ${input.id} not found`);
+      throw new NotFoundError('Playlist', input.id);
     }
 
     // 3. Obtener información del usuario owner (name/username y hasAvatar)

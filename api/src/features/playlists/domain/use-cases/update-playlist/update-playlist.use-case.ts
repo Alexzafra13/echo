@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { UpdatePlaylistInput, UpdatePlaylistOutput } from './update-playlist.dto';
 
@@ -12,18 +13,18 @@ export class UpdatePlaylistUseCase {
   async execute(input: UpdatePlaylistInput): Promise<UpdatePlaylistOutput> {
     // 1. Validar input
     if (!input.id || input.id.trim() === '') {
-      throw new BadRequestException('Playlist ID is required');
+      throw new ValidationError('Playlist ID is required');
     }
 
     // 2. Verificar que la playlist existe
     const existing = await this.playlistRepository.findById(input.id);
     if (!existing) {
-      throw new NotFoundException(`Playlist with ID ${input.id} not found`);
+      throw new NotFoundError('Playlist', input.id);
     }
 
     // 3. SEGURIDAD: Verificar que el usuario es el propietario
     if (existing.ownerId !== input.userId) {
-      throw new ForbiddenException('You do not have permission to modify this playlist');
+      throw new ForbiddenError('You do not have permission to modify this playlist');
     }
 
     // 3. Preparar datos para actualizar
@@ -31,7 +32,7 @@ export class UpdatePlaylistUseCase {
 
     if (input.name !== undefined) {
       if (input.name.trim() === '') {
-        throw new BadRequestException('Playlist name cannot be empty');
+        throw new ValidationError('Playlist name cannot be empty');
       }
       updates.name = input.name.trim();
       existing.updateName(updates.name);
@@ -56,7 +57,7 @@ export class UpdatePlaylistUseCase {
     const updated = await this.playlistRepository.update(input.id, existing);
 
     if (!updated) {
-      throw new NotFoundException(`Playlist with ID ${input.id} not found`);
+      throw new NotFoundError('Playlist', input.id);
     }
 
     // 5. Retornar output

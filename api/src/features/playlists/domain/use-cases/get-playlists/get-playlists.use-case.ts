@@ -1,4 +1,5 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import { validatePagination } from '@shared/utils';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { GetPlaylistsInput, GetPlaylistsOutput, PlaylistListItem } from './get-playlists.dto';
@@ -23,7 +24,7 @@ export class GetPlaylistsUseCase {
       playlists = await this.playlistRepository.findPublic(skip, take);
       total = await this.playlistRepository.count();
     } else {
-      throw new BadRequestException('Must specify ownerId or publicOnly filter');
+      throw new ValidationError('Must specify ownerId or publicOnly filter');
     }
 
     const playlistIds = playlists.map(p => p.id);

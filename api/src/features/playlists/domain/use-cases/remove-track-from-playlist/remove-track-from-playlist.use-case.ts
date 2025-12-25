@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { TRACK_REPOSITORY } from '@features/tracks/domain/ports/track-repository.port';
 import { ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
@@ -16,41 +17,41 @@ export class RemoveTrackFromPlaylistUseCase {
   async execute(input: RemoveTrackFromPlaylistInput): Promise<RemoveTrackFromPlaylistOutput> {
     // 1. Validar input
     if (!input.playlistId || input.playlistId.trim() === '') {
-      throw new BadRequestException('Playlist ID is required');
+      throw new ValidationError('Playlist ID is required');
     }
 
     if (!input.trackId || input.trackId.trim() === '') {
-      throw new BadRequestException('Track ID is required');
+      throw new ValidationError('Track ID is required');
     }
 
     // 2. Verificar que la playlist existe
     const playlist = await this.playlistRepository.findById(input.playlistId);
     if (!playlist) {
-      throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
+      throw new NotFoundError('Playlist', input.playlistId);
     }
 
     // 3. SEGURIDAD: Verificar que el usuario es el propietario
     if (playlist.ownerId !== input.userId) {
-      throw new ForbiddenException('You do not have permission to modify this playlist');
+      throw new ForbiddenError('You do not have permission to modify this playlist');
     }
 
     // 4. Verificar que el track existe
     const track = await this.trackRepository.findById(input.trackId);
     if (!track) {
-      throw new NotFoundException(`Track with ID ${input.trackId} not found`);
+      throw new NotFoundError('Track', input.trackId);
     }
 
     // 4. Verificar que el track está en la playlist
     const isInPlaylist = await this.playlistRepository.isTrackInPlaylist(input.playlistId, input.trackId);
     if (!isInPlaylist) {
-      throw new NotFoundException(`Track ${input.trackId} is not in playlist ${input.playlistId}`);
+      throw new NotFoundError('Track', `${input.trackId} is not in playlist ${input.playlistId}`);
     }
 
     // 5. Remover track de la playlist
     const removed = await this.playlistRepository.removeTrack(input.playlistId, input.trackId);
 
     if (!removed) {
-      throw new NotFoundException(`Failed to remove track ${input.trackId} from playlist ${input.playlistId}`);
+      throw new NotFoundError('Track', `Failed to remove ${input.trackId} from playlist ${input.playlistId}`);
     }
 
     // 6. Actualizar metadata de la playlist (duration, size, songCount)

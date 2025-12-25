@@ -1,4 +1,4 @@
-import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { UpdatePlaylistUseCase } from './update-playlist.use-case';
 import { Playlist } from '../../entities';
 
@@ -101,7 +101,7 @@ describe('UpdatePlaylistUseCase', () => {
           userId: 'user-123',
           name: 'New Name',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           id: '',
@@ -122,7 +122,7 @@ describe('UpdatePlaylistUseCase', () => {
           userId: 'user-123',
           name: 'New Name',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('debería lanzar error si usuario no es el propietario', async () => {
@@ -139,7 +139,7 @@ describe('UpdatePlaylistUseCase', () => {
           userId: 'user-123', // Different from owner
           name: 'New Name',
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
       await expect(
         useCase.execute({
           id: 'playlist-123',
@@ -161,7 +161,7 @@ describe('UpdatePlaylistUseCase', () => {
           userId: 'user-123',
           name: '',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           id: 'playlist-123',
@@ -183,7 +183,7 @@ describe('UpdatePlaylistUseCase', () => {
           userId: 'user-123',
           name: '   ',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
     });
 
     it('debería trimear el nombre', async () => {
@@ -243,7 +243,7 @@ describe('UpdatePlaylistUseCase', () => {
           userId: 'user-123',
           name: 'New Name',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });

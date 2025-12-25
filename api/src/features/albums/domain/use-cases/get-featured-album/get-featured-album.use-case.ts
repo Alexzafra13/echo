@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError } from '@shared/errors';
 import { ALBUM_REPOSITORY, IAlbumRepository } from '../../ports/album-repository.port';
 import { GetFeaturedAlbumOutput } from './get-featured-album.dto';
 
@@ -72,6 +73,6 @@ export class GetFeaturedAlbumUseCase {
     }
 
     // 4. Si no hay álbumes en la BD, lanzar excepción
-    throw new NotFoundException('No albums found in the library');
+    throw new NotFoundError('Album', 'No albums found in the library');
   }
 }

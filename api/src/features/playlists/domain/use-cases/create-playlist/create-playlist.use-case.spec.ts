@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import { CreatePlaylistUseCase } from './create-playlist.use-case';
 import { IPlaylistRepository } from '../../ports';
 import { Playlist } from '../../entities';
@@ -165,7 +165,7 @@ describe('CreatePlaylistUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(
-        new BadRequestException('Playlist name is required'),
+        new ValidationError('Playlist name is required'),
       );
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });
@@ -179,7 +179,7 @@ describe('CreatePlaylistUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow(ValidationError);
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });
 
@@ -193,7 +193,7 @@ describe('CreatePlaylistUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(
-        new BadRequestException('Owner ID is required'),
+        new ValidationError('Owner ID is required'),
       );
       expect(playlistRepository.create).not.toHaveBeenCalled();
     });

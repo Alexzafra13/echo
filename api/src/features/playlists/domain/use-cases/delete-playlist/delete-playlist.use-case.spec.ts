@@ -1,4 +1,4 @@
-import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { DeletePlaylistUseCase } from './delete-playlist.use-case';
 import { Playlist } from '../../entities';
 
@@ -64,7 +64,7 @@ describe('DeletePlaylistUseCase', () => {
           id: '',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           id: '',
@@ -80,7 +80,7 @@ describe('DeletePlaylistUseCase', () => {
           id: '   ',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
     });
 
     it('debería lanzar error si playlist no existe', async () => {
@@ -93,13 +93,13 @@ describe('DeletePlaylistUseCase', () => {
           id: 'nonexistent',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           id: 'nonexistent',
           userId: 'user-123',
         }),
-      ).rejects.toThrow('Playlist with ID nonexistent not found');
+      ).rejects.toThrow('Playlist with id nonexistent not found');
     });
 
     it('debería lanzar error si usuario no es el propietario', async () => {
@@ -115,7 +115,7 @@ describe('DeletePlaylistUseCase', () => {
           id: 'playlist-123',
           userId: 'user-123', // Different from owner
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
       await expect(
         useCase.execute({
           id: 'playlist-123',
@@ -136,7 +136,7 @@ describe('DeletePlaylistUseCase', () => {
           id: 'playlist-123',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('debería permitir al propietario eliminar su playlist', async () => {

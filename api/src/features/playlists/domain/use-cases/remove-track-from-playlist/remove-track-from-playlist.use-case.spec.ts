@@ -1,4 +1,4 @@
-import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { RemoveTrackFromPlaylistUseCase } from './remove-track-from-playlist.use-case';
 import { Playlist } from '../../entities';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -99,7 +99,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: 'track-456',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           playlistId: '',
@@ -117,7 +117,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: '',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
@@ -138,14 +138,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: 'track-456',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           playlistId: 'nonexistent',
           trackId: 'track-456',
           userId: 'user-123',
         }),
-      ).rejects.toThrow('Playlist with ID nonexistent not found');
+      ).rejects.toThrow('Playlist with id nonexistent not found');
     });
 
     it('debería lanzar error si usuario no es el propietario', async () => {
@@ -162,7 +162,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: 'track-456',
           userId: 'user-123', // Different from owner
         }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(ForbiddenError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
@@ -185,14 +185,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: 'nonexistent-track',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
           trackId: 'nonexistent-track',
           userId: 'user-123',
         }),
-      ).rejects.toThrow('Track with ID nonexistent-track not found');
+      ).rejects.toThrow('Track with id nonexistent-track not found');
     });
 
     it('debería lanzar error si el track no está en la playlist', async () => {
@@ -210,14 +210,14 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: 'track-456',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
       await expect(
         useCase.execute({
           playlistId: 'playlist-123',
           trackId: 'track-456',
           userId: 'user-123',
         }),
-      ).rejects.toThrow('Track track-456 is not in playlist playlist-123');
+      ).rejects.toThrow('track-456 is not in playlist playlist-123');
     });
 
     it('debería actualizar metadata de la playlist después de eliminar', async () => {
@@ -264,7 +264,7 @@ describe('RemoveTrackFromPlaylistUseCase', () => {
           trackId: 'track-456',
           userId: 'user-123',
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
   });
 });

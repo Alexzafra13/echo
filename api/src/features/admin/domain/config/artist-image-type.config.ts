@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 
 /**
  * Types of artist images supported by the system
@@ -86,7 +86,7 @@ export function getArtistImageTypeConfig(type: string): ArtistImageTypeFullConfi
   const config = ARTIST_IMAGE_TYPE_CONFIGS[type as ArtistImageType];
 
   if (!config) {
-    throw new BadRequestException(`Invalid image type: ${type}`);
+    throw new ValidationError(`Invalid image type: ${type}`);
   }
 
   return config;

@@ -1,5 +1,6 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { NotFoundError } from '@shared/errors';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { getAudioMimeType } from '@shared/utils';
 import { StreamTrackInput, StreamTrackOutput } from './stream-track.dto';
@@ -27,27 +28,27 @@ export class StreamTrackUseCase {
   async execute(input: StreamTrackInput): Promise<StreamTrackOutput> {
     // 1. Validar trackId
     if (!input.trackId || input.trackId.trim() === '') {
-      throw new NotFoundException('Track ID is required');
+      throw new NotFoundError('Track', 'ID is required');
     }
 
     // 2. Buscar track en BD
     const track = await this.trackRepository.findById(input.trackId);
 
     if (!track) {
-      throw new NotFoundException(`Track with ID ${input.trackId} not found`);
+      throw new NotFoundError('Track', input.trackId);
     }
 
     // 3. Obtener path del archivo
     const filePath = track.path;
 
     if (!filePath) {
-      throw new NotFoundException(`Track ${input.trackId} has no file path`);
+      throw new NotFoundError('Track', `${input.trackId} has no file path`);
     }
 
     // 4. Verificar que el archivo existe
     if (!fs.existsSync(filePath)) {
       this.logger.error({ trackId: input.trackId, filePath }, 'Audio file not found');
-      throw new NotFoundException(`Audio file not found: ${filePath}`);
+      throw new NotFoundError('Audio file', filePath);
     }
 
     // 5. Obtener stats del archivo
@@ -55,7 +56,7 @@ export class StreamTrackUseCase {
 
     if (!stats.isFile()) {
       this.logger.error({ trackId: input.trackId, filePath }, 'Path is not a file');
-      throw new NotFoundException(`Path is not a file: ${filePath}`);
+      throw new NotFoundError('File', filePath);
     }
 
     // 6. Detectar MIME type basado en extensión usando utilidad compartida
