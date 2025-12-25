@@ -1,6 +1,6 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { USER_REPOSITORY, IUserRepository } from '@features/auth/domain/ports';
-import { NotFoundError } from '@shared/errors';
+import { NotFoundError, ValidationError } from '@shared/errors';
 import {
   HomeSectionConfig,
   VALID_HOME_SECTION_IDS,
@@ -49,25 +49,25 @@ export class UpdateHomePreferencesUseCase {
     const invalidIds = providedIds.filter(id => !VALID_HOME_SECTION_IDS.includes(id));
 
     if (invalidIds.length > 0) {
-      throw new BadRequestException(`Invalid section IDs: ${invalidIds.join(', ')}`);
+      throw new ValidationError(`Invalid section IDs: ${invalidIds.join(', ')}`);
     }
 
     // Check for duplicate section IDs
     const uniqueIds = new Set(providedIds);
     if (uniqueIds.size !== providedIds.length) {
-      throw new BadRequestException('Duplicate section IDs are not allowed');
+      throw new ValidationError('Duplicate section IDs are not allowed');
     }
 
     // Check that all 9 sections are present
     if (sections.length !== VALID_HOME_SECTION_IDS.length) {
-      throw new BadRequestException(`All ${VALID_HOME_SECTION_IDS.length} sections must be provided`);
+      throw new ValidationError(`All ${VALID_HOME_SECTION_IDS.length} sections must be provided`);
     }
 
     // Check orders are valid (0 to n-1)
     const orders = sections.map(s => s.order).sort((a, b) => a - b);
     const expectedOrders = Array.from({ length: sections.length }, (_, i) => i);
     if (JSON.stringify(orders) !== JSON.stringify(expectedOrders)) {
-      throw new BadRequestException('Section orders must be sequential starting from 0');
+      throw new ValidationError('Section orders must be sequential starting from 0');
     }
   }
 

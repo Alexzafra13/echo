@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import { IUserInteractionsRepository, USER_INTERACTIONS_REPOSITORY } from '../ports';
 import { ItemType, UserRating } from '../entities/user-interaction.entity';
 
@@ -12,7 +13,7 @@ export class SetRatingUseCase {
   async execute(userId: string, itemId: string, itemType: ItemType, rating: number): Promise<UserRating> {
     // Validate rating (1-5 stars)
     if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-      throw new BadRequestException('Rating must be an integer between 1 and 5');
+      throw new ValidationError('Rating must be an integer between 1 and 5');
     }
 
     return await this.repository.setRating(userId, itemId, itemType, rating);

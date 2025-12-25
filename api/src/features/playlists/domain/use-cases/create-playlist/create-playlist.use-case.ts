@@ -1,4 +1,5 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { Playlist } from '../../entities';
 import { CreatePlaylistInput, CreatePlaylistOutput } from './create-playlist.dto';
@@ -13,11 +14,11 @@ export class CreatePlaylistUseCase {
   async execute(input: CreatePlaylistInput): Promise<CreatePlaylistOutput> {
     // 1. Validar input
     if (!input.name || input.name.trim() === '') {
-      throw new BadRequestException('Playlist name is required');
+      throw new ValidationError('Playlist name is required');
     }
 
     if (!input.ownerId || input.ownerId.trim() === '') {
-      throw new BadRequestException('Owner ID is required');
+      throw new ValidationError('Owner ID is required');
     }
 
     // 2. Crear entidad Playlist

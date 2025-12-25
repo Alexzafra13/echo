@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ValidationError } from '@shared/errors';
 import { GetPlaylistsUseCase } from './get-playlists.use-case';
 import { IPlaylistRepository } from '../../ports';
 import { Playlist } from '../../entities';
@@ -237,7 +237,7 @@ describe('GetPlaylistsUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(input)).rejects.toThrow(ValidationError);
       await expect(useCase.execute(input)).rejects.toThrow('Must specify ownerId or publicOnly filter');
     });
 
