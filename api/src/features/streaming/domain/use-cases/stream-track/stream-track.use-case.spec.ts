@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundError } from '@shared/errors';
 import { StreamTrackUseCase } from './stream-track.use-case';
 import { TRACK_REPOSITORY, ITrackRepository } from '@features/tracks/domain/ports/track-repository.port';
 import { Track } from '@features/tracks/domain/entities/track.entity';
@@ -89,34 +89,34 @@ describe('StreamTrackUseCase', () => {
       });
     });
 
-    it('debería lanzar NotFoundException si trackId está vacío', async () => {
+    it('debería lanzar NotFoundError si trackId está vacío', async () => {
       // Act & Assert
       await expect(useCase.execute({ trackId: '' })).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
-    it('debería lanzar NotFoundException si trackId es solo espacios', async () => {
+    it('debería lanzar NotFoundError si trackId es solo espacios', async () => {
       // Act & Assert
       await expect(useCase.execute({ trackId: '   ' })).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
       expect(trackRepository.findById).not.toHaveBeenCalled();
     });
 
-    it('debería lanzar NotFoundException si el track no existe', async () => {
+    it('debería lanzar NotFoundError si el track no existe', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(null);
 
       // Act & Assert
       await expect(useCase.execute({ trackId: 'nonexistent' })).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
       expect(trackRepository.findById).toHaveBeenCalledWith('nonexistent');
     });
 
-    it('debería lanzar NotFoundException si el track no tiene path', async () => {
+    it('debería lanzar NotFoundError si el track no tiene path', async () => {
       // Arrange
       const trackWithoutPath = Track.reconstruct({
         id: 'track-2',
@@ -131,22 +131,22 @@ describe('StreamTrackUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute({ trackId: 'track-2' })).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
-    it('debería lanzar NotFoundException si el archivo no existe', async () => {
+    it('debería lanzar NotFoundError si el archivo no existe', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
       // Act & Assert
       await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
-    it('debería lanzar NotFoundException si el path no es un archivo', async () => {
+    it('debería lanzar NotFoundError si el path no es un archivo', async () => {
       // Arrange
       (trackRepository.findById as jest.Mock).mockResolvedValue(mockTrack);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
@@ -156,7 +156,7 @@ describe('StreamTrackUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute({ trackId: 'track-1' })).rejects.toThrow(
-        NotFoundException,
+        NotFoundError,
       );
     });
 

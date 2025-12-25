@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError, ValidationError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { GetPlaylistTracksInput, GetPlaylistTracksOutput, TrackItem } from './get-playlist-tracks.dto';
 
@@ -12,13 +13,13 @@ export class GetPlaylistTracksUseCase {
   async execute(input: GetPlaylistTracksInput): Promise<GetPlaylistTracksOutput> {
     // 1. Validar input
     if (!input.playlistId || input.playlistId.trim() === '') {
-      throw new BadRequestException('Playlist ID is required');
+      throw new ValidationError('Playlist ID is required');
     }
 
     // 2. Verificar que la playlist existe
     const playlist = await this.playlistRepository.findById(input.playlistId);
     if (!playlist) {
-      throw new NotFoundException(`Playlist with ID ${input.playlistId} not found`);
+      throw new NotFoundError('Playlist', input.playlistId);
     }
 
     // 3. Obtener tracks de la playlist

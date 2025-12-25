@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { IRadioStationRepository, RADIO_STATION_REPOSITORY } from '../../ports/radio-station-repository.port';
 
 interface DeleteFavoriteStationInput {
@@ -23,12 +24,12 @@ export class DeleteFavoriteStationUseCase {
     const station = await this.repository.findById(stationId);
 
     if (!station) {
-      throw new NotFoundException(`Radio station with id ${stationId} not found`);
+      throw new NotFoundError('Radio station', stationId);
     }
 
     // Verificar que pertenece al usuario
     if (station.userId !== userId) {
-      throw new ForbiddenException('You can only delete your own favorite stations');
+      throw new ForbiddenError('You can only delete your own favorite stations');
     }
 
     // Eliminar
