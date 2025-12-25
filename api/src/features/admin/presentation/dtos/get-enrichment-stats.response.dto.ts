@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { GetEnrichmentStatsOutput, ProviderStats } from '../../domain/use-cases/get-enrichment-stats';
+import { GetEnrichmentStatsOutput, ProviderStats } from '../../infrastructure/use-cases/get-enrichment-stats';
 
 export class ProviderStatsDto {
   @Expose()
