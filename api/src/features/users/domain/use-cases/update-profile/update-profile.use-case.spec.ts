@@ -1,10 +1,10 @@
 import { NotFoundError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
 import { UpdateProfileUseCase } from './update-profile.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
 } from '@shared/testing/mock.types';
+import { UserFactory } from '@test/factories/user.factory';
 
 describe('UpdateProfileUseCase', () => {
   let useCase: UpdateProfileUseCase;
@@ -19,49 +19,24 @@ describe('UpdateProfileUseCase', () => {
   describe('execute', () => {
     it('debería actualizar nombre correctamente', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Old',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const updatedUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Updated',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ name: 'Juan Old' });
+      const updatedUser = UserFactory.create({ name: 'Juan Updated' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         name: 'Juan Updated',
       });
 
       // Assert
-      expect(result.id).toBe('user-123');
-      expect(result.username).toBe('juan');
+      expect(result.id).toBe(mockUser.id);
+      expect(result.username).toBe(mockUser.username);
       expect(result.name).toBe('Juan Updated');
-      expect(mockUserRepository.findById).toHaveBeenCalledWith('user-123');
-      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith(mockUser.id, {
         name: 'Juan Updated',
       });
     });
@@ -81,18 +56,8 @@ describe('UpdateProfileUseCase', () => {
 
     it('NO debería incluir campos sensibles en la respuesta', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
+      const mockUser = UserFactory.create({
         passwordHash: '$2b$12$super_secret_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
@@ -100,7 +65,7 @@ describe('UpdateProfileUseCase', () => {
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         name: 'Juan Updated',
       });
 
@@ -113,40 +78,15 @@ describe('UpdateProfileUseCase', () => {
 
     it('debería preservar username (no debe cambiar)', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const updatedUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan Updated',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ username: 'juan', name: 'Juan' });
+      const updatedUser = UserFactory.create({ username: 'juan', name: 'Juan Updated' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(updatedUser);
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         name: 'Juan Updated',
       });
 

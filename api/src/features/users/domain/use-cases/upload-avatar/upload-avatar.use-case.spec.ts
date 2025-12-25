@@ -1,12 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 import { NotFoundError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
 import { UploadAvatarUseCase } from './upload-avatar.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
   createMockPinoLogger,
 } from '@shared/testing/mock.types';
+import { UserFactory } from '@test/factories/user.factory';
 
 describe('UploadAvatarUseCase', () => {
   let useCase: UploadAvatarUseCase;
@@ -20,27 +20,6 @@ describe('UploadAvatarUseCase', () => {
     invalidateUserAvatarCache: jest.Mock;
   };
   let mockLogger: ReturnType<typeof createMockPinoLogger>;
-
-  const createMockUser = (overrides = {}): User => {
-    return User.reconstruct({
-      id: 'user-123',
-      username: 'testuser',
-      passwordHash: '$2b$12$hashed',
-      name: 'Test User',
-      isActive: true,
-      isAdmin: false,
-      mustChangePassword: false,
-      theme: 'dark',
-      language: 'es',
-      avatarPath: undefined,
-      avatarMimeType: undefined,
-      avatarSize: undefined,
-      avatarUpdatedAt: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...overrides,
-    });
-  };
 
   const createMockFile = (overrides = {}) => ({
     buffer: Buffer.from('fake-image-data'),
@@ -72,7 +51,7 @@ describe('UploadAvatarUseCase', () => {
   describe('execute', () => {
     it('debería subir un avatar correctamente', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const mockFile = createMockFile();
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
@@ -82,7 +61,7 @@ describe('UploadAvatarUseCase', () => {
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         file: mockFile as any,
       });
 
@@ -94,18 +73,18 @@ describe('UploadAvatarUseCase', () => {
         '/avatars/user-123.jpg',
         mockFile.buffer,
       );
-      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
+      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith(mockUser.id, {
         avatarPath: '/avatars/user-123.jpg',
         avatarMimeType: 'image/jpeg',
         avatarSize: 1024,
         avatarUpdatedAt: expect.any(Date),
       });
-      expect(mockImageService.invalidateUserAvatarCache).toHaveBeenCalledWith('user-123');
+      expect(mockImageService.invalidateUserAvatarCache).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('debería eliminar el avatar anterior si existe', async () => {
       // Arrange
-      const mockUser = createMockUser({
+      const mockUser = UserFactory.create({
         avatarPath: '/avatars/user-123-old.jpg',
       });
       const mockFile = createMockFile();
@@ -118,7 +97,7 @@ describe('UploadAvatarUseCase', () => {
 
       // Act
       await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         file: mockFile as any,
       });
 
@@ -128,7 +107,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería continuar si falla al eliminar el avatar anterior', async () => {
       // Arrange
-      const mockUser = createMockUser({
+      const mockUser = UserFactory.create({
         avatarPath: '/avatars/user-123-old.jpg',
       });
       const mockFile = createMockFile();
@@ -141,7 +120,7 @@ describe('UploadAvatarUseCase', () => {
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         file: mockFile as any,
       });
 
@@ -168,7 +147,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería lanzar error si el archivo es muy grande (>5MB)', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const largeFile = createMockFile({
         size: 6 * 1024 * 1024, // 6MB
       });
@@ -178,13 +157,13 @@ describe('UploadAvatarUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           file: largeFile as any,
         }),
       ).rejects.toThrow(BadRequestException);
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           file: largeFile as any,
         }),
       ).rejects.toThrow('File size exceeds 5MB limit');
@@ -194,7 +173,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería lanzar error si el tipo MIME no es válido', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const invalidFile = createMockFile({
         mimetype: 'image/gif', // Not allowed
       });
@@ -204,13 +183,13 @@ describe('UploadAvatarUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           file: invalidFile as any,
         }),
       ).rejects.toThrow(BadRequestException);
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           file: invalidFile as any,
         }),
       ).rejects.toThrow('Invalid file type');
@@ -220,7 +199,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería aceptar imagen PNG', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const pngFile = createMockFile({
         mimetype: 'image/png',
       });
@@ -232,7 +211,7 @@ describe('UploadAvatarUseCase', () => {
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         file: pngFile as any,
       });
 
@@ -242,7 +221,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería aceptar imagen WebP', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const webpFile = createMockFile({
         mimetype: 'image/webp',
       });
@@ -254,7 +233,7 @@ describe('UploadAvatarUseCase', () => {
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         file: webpFile as any,
       });
 
@@ -264,7 +243,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería rechazar archivos PDF', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const pdfFile = createMockFile({
         mimetype: 'application/pdf',
       });
@@ -274,7 +253,7 @@ describe('UploadAvatarUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           file: pdfFile as any,
         }),
       ).rejects.toThrow(BadRequestException);
@@ -282,7 +261,7 @@ describe('UploadAvatarUseCase', () => {
 
     it('debería permitir exactamente 5MB', async () => {
       // Arrange
-      const mockUser = createMockUser();
+      const mockUser = UserFactory.create();
       const exactSizeFile = createMockFile({
         size: 5 * 1024 * 1024, // Exactamente 5MB
       });
@@ -294,7 +273,7 @@ describe('UploadAvatarUseCase', () => {
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         file: exactSizeFile as any,
       });
 

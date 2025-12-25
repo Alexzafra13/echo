@@ -1,10 +1,10 @@
 import { NotFoundError, ValidationError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
 import { ChangeLanguageUseCase } from './change-language.use-case';
 import {
   MockUserRepository,
   createMockUserRepository,
 } from '@shared/testing/mock.types';
+import { UserFactory } from '@test/factories/user.factory';
 
 describe('ChangeLanguageUseCase', () => {
   let useCase: ChangeLanguageUseCase;
@@ -19,82 +19,46 @@ describe('ChangeLanguageUseCase', () => {
   describe('execute', () => {
     it('debería cambiar idioma a español', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'en',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'en' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
 
       // Act
       await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         language: 'es',
       });
 
       // Assert
-      expect(mockUserRepository.findById).toHaveBeenCalledWith('user-123');
-      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith(mockUser.id, {
         language: 'es',
       });
     });
 
     it('debería cambiar idioma a inglés', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'es' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
 
       // Act
       await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         language: 'en',
       });
 
       // Assert
-      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
+      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith(mockUser.id, {
         language: 'en',
       });
     });
 
     it('debería permitir establecer el mismo idioma actual', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'es' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -102,7 +66,7 @@ describe('ChangeLanguageUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           language: 'es',
         })
       ).resolves.not.toThrow();
@@ -123,32 +87,20 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería lanzar error si idioma no es válido', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'es' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           language: 'fr',
         })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           language: 'fr',
         })
       ).rejects.toThrow('Invalid language. Must be one of: es, en');
@@ -156,26 +108,14 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería lanzar error para idioma vacío', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'es' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           language: '',
         })
       ).rejects.toThrow(ValidationError);
@@ -183,26 +123,14 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería lanzar error para idioma con mayúsculas', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'es' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           language: 'ES',
         })
       ).rejects.toThrow(ValidationError);
@@ -225,19 +153,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería rechazar códigos de idioma con región', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'es' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
@@ -247,7 +163,7 @@ describe('ChangeLanguageUseCase', () => {
       for (const code of regionalCodes) {
         await expect(
           useCase.execute({
-            userId: 'user-123',
+            userId: mockUser.id,
             language: code,
           })
         ).rejects.toThrow(ValidationError);
@@ -256,26 +172,14 @@ describe('ChangeLanguageUseCase', () => {
 
     it('NO debería retornar nada (void)', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'en',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ language: 'en' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
 
       // Act
       const result = await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         language: 'es',
       });
 
@@ -285,19 +189,7 @@ describe('ChangeLanguageUseCase', () => {
 
     it('debería funcionar para usuarios inactivos', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$hashed',
-        name: 'Juan',
-        isActive: false,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'en',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.createInactive({ language: 'en' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.updatePartial.mockResolvedValue(undefined);
@@ -305,7 +197,7 @@ describe('ChangeLanguageUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           language: 'es',
         })
       ).resolves.not.toThrow();
