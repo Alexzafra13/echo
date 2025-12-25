@@ -1,5 +1,4 @@
 import { NotFoundError, ValidationError, UnauthorizedError } from '@shared/errors';
-import { User } from '@features/auth/domain/entities/user.entity';
 import { ChangePasswordUseCase } from './change-password.use-case';
 import {
   MockUserRepository,
@@ -9,6 +8,7 @@ import {
   createMockPasswordService,
   createMockLogService,
 } from '@shared/testing/mock.types';
+import { UserFactory } from '@test/factories/user.factory';
 
 describe('ChangePasswordUseCase', () => {
   let useCase: ChangePasswordUseCase;
@@ -31,19 +31,7 @@ describe('ChangePasswordUseCase', () => {
   describe('execute', () => {
     it('debería cambiar contraseña correctamente', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
@@ -54,38 +42,28 @@ describe('ChangePasswordUseCase', () => {
 
       // Act
       await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         currentPassword: 'OldPass123!',
         newPassword: 'NewPass456!',
       });
 
       // Assert
-      expect(mockUserRepository.findById).toHaveBeenCalledWith('user-123');
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(mockUser.id);
       expect(mockPasswordService.compare).toHaveBeenCalledWith(
         'OldPass123!',
         '$2b$12$old_password_hash'
       );
       expect(mockPasswordService.hash).toHaveBeenCalledWith('NewPass456!');
       expect(mockUserRepository.updatePassword).toHaveBeenCalledWith(
-        'user-123',
+        mockUser.id,
         '$2b$12$new_password_hash'
       );
     });
 
     it('debería quitar mustChangePassword si era primer login', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
+      const mockUser = UserFactory.createWithMustChangePassword({
         passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: true,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
@@ -98,32 +76,20 @@ describe('ChangePasswordUseCase', () => {
 
       // Act
       await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         currentPassword: 'TempPass123',
         newPassword: 'NewPass456!',
       });
 
       // Assert
-      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith('user-123', {
+      expect(mockUserRepository.updatePartial).toHaveBeenCalledWith(mockUser.id, {
         mustChangePassword: false,
       });
     });
 
     it('NO debería llamar updatePartial si mustChangePassword ya era false', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
@@ -134,7 +100,7 @@ describe('ChangePasswordUseCase', () => {
 
       // Act
       await useCase.execute({
-        userId: 'user-123',
+        userId: mockUser.id,
         currentPassword: 'OldPass123!',
         newPassword: 'NewPass456!',
       });
@@ -177,19 +143,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería lanzar error si contraseña actual es incorrecta', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(false);
@@ -197,14 +151,14 @@ describe('ChangePasswordUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           currentPassword: 'WrongPassword',
           newPassword: 'NewPass456!',
         })
       ).rejects.toThrow(UnauthorizedError);
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           currentPassword: 'WrongPassword',
           newPassword: 'NewPass456!',
         })
@@ -213,19 +167,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería lanzar error si nueva contraseña es igual a la actual', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ passwordHash: '$2b$12$password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare.mockResolvedValue(true);
@@ -233,14 +175,14 @@ describe('ChangePasswordUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           currentPassword: 'SamePass123!',
           newPassword: 'SamePass123!',
         })
       ).rejects.toThrow(ValidationError);
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           currentPassword: 'SamePass123!',
           newPassword: 'SamePass123!',
         })
@@ -249,19 +191,7 @@ describe('ChangePasswordUseCase', () => {
 
     it('debería permitir contraseña con exactamente 8 caracteres', async () => {
       // Arrange
-      const mockUser = User.reconstruct({
-        id: 'user-123',
-        username: 'juan',
-        passwordHash: '$2b$12$old_password_hash',
-        name: 'Juan',
-        isActive: true,
-        isAdmin: false,
-        mustChangePassword: false,
-        theme: 'dark',
-        language: 'es',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const mockUser = UserFactory.create({ passwordHash: '$2b$12$old_password_hash' });
 
       mockUserRepository.findById.mockResolvedValue(mockUser);
       mockPasswordService.compare
@@ -273,7 +203,7 @@ describe('ChangePasswordUseCase', () => {
       // Act & Assert
       await expect(
         useCase.execute({
-          userId: 'user-123',
+          userId: mockUser.id,
           currentPassword: 'OldPass123!',
           newPassword: '12345678',
         })
