@@ -71,6 +71,7 @@ module.exports = {
     '^@shared/(.*)$': '<rootDir>/shared/$1',
     '^@infrastructure/(.*)$': '<rootDir>/infrastructure/$1',
     '^@features/(.*)$': '<rootDir>/features/$1',
+    '^@test/(.*)$': '<rootDir>/../test/$1',
     '^test/(.*)$': '<rootDir>/../test/$1',
     // Prisma 7: generated client is in src/generated/prisma
     '^(\\.\\./)+generated/prisma$': '<rootDir>/generated/prisma',
