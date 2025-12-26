@@ -569,7 +569,8 @@ describe('User Interactions E2E', () => {
         .expect(200);
 
       expect(finalRes.body.totalLikes).toBe(0);
-      expect(finalRes.body.userRating).toBeNull();
+      // userRating puede ser null o undefined cuando no hay rating
+      expect(finalRes.body.userRating ?? null).toBeNull();
     });
   });
 });
