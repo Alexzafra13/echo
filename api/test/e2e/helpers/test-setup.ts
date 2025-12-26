@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerStorage, ThrottlerStorageRecord } from '@nestjs/throttler';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
@@ -16,6 +16,19 @@ import request from 'supertest';
 class NoOpThrottlerGuard extends ThrottlerGuard {
   protected override async shouldSkip(): Promise<boolean> {
     return true; // Siempre skip throttling en tests
+  }
+
+  protected override async handleRequest(): Promise<boolean> {
+    return true; // Siempre permitir
+  }
+}
+
+/**
+ * Mock ThrottlerStorage que nunca bloquea (para E2E tests)
+ */
+class NoOpThrottlerStorage implements ThrottlerStorage {
+  async increment(): Promise<ThrottlerStorageRecord> {
+    return { totalHits: 0, timeToExpire: 0, isBlocked: false, timeToBlockExpire: 0 };
   }
 }
 
@@ -33,6 +46,8 @@ export async function createTestApp(): Promise<{
   })
     .overrideGuard(ThrottlerGuard)
     .useClass(NoOpThrottlerGuard)
+    .overrideProvider(ThrottlerStorage)
+    .useClass(NoOpThrottlerStorage)
     .compile();
 
   const app = moduleFixture.createNestApplication<NestFastifyApplication>(
