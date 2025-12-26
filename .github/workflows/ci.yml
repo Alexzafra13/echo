@@ -73,6 +73,9 @@ jobs:
         # Instalar desde la raíz para usar el workspace completo
         run: pnpm install --frozen-lockfile
 
+      - name: Create music directory for scanner tests
+        run: sudo mkdir -p /music && sudo chmod 777 /music
+
       - name: Create test databases
         env:
           PGPASSWORD: music_password
