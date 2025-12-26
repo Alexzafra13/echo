@@ -23,8 +23,10 @@ import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from './guards';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
+import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import * as fs from 'fs';
 import { ReadStream } from 'fs';
+import { ServerResponse } from 'http';
 
 /**
  * StreamingController - Controlador de streaming de audio
@@ -56,7 +58,7 @@ export class StreamingController implements OnModuleDestroy {
   /**
    * Cleanup: Destruir todos los streams activos al cerrar el módulo
    */
-  onModuleDestroy() {
+  onModuleDestroy(): void {
     this.logger.info({ activeStreams: this.activeStreams.size }, 'Cleaning up active streams');
 
     for (const stream of this.activeStreams) {
@@ -69,10 +71,50 @@ export class StreamingController implements OnModuleDestroy {
   }
 
   /**
+   * Crea un stream con manejo automático de cleanup y errores
+   */
+  private createManagedStream(
+    filePath: string,
+    trackId: string,
+    res: ServerResponse,
+    options?: { start?: number; end?: number },
+  ): ReadStream {
+    const stream = fs.createReadStream(filePath, options);
+
+    this.activeStreams.add(stream);
+
+    const cleanup = (): void => {
+      this.activeStreams.delete(stream);
+    };
+
+    stream.on('error', (error) => {
+      cleanup();
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : error,
+          trackId,
+          ...(options && { start: options.start, end: options.end }),
+        },
+        options ? 'Error reading file (range request)' : 'Error reading file (full stream)',
+      );
+      if (!res.destroyed) {
+        res.destroy();
+      }
+    });
+
+    stream.on('close', cleanup);
+    stream.on('end', cleanup);
+
+    return stream;
+  }
+
+  /**
    * HEAD /tracks/:id/stream
    * Obtener metadata del archivo sin descargar contenido
    */
   @Head(':id/stream')
+  @ApiCommonErrors()
+  @ApiNotFoundError('Track')
   @ApiOperation({
     summary: 'Obtener metadata del audio',
     description:
@@ -100,8 +142,6 @@ export class StreamingController implements OnModuleDestroy {
       'Accept-Ranges': { description: 'Soporte de rangos', schema: { type: 'string' } },
     },
   })
-  @ApiResponse({ status: 401, description: 'Invalid or missing stream token' })
-  @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   async getStreamMetadata(
     @Param('id') trackId: string,
     @Res() res: FastifyReply,
@@ -124,6 +164,8 @@ export class StreamingController implements OnModuleDestroy {
    * Streamear audio con soporte para HTTP Range requests
    */
   @Get(':id/stream')
+  @ApiCommonErrors()
+  @ApiNotFoundError('Track')
   @ApiOperation({
     summary: 'Streamear audio',
     description:
@@ -156,26 +198,21 @@ export class StreamingController implements OnModuleDestroy {
     status: 206,
     description: 'Streaming parcial (Partial Content)',
   })
-  @ApiResponse({ status: 401, description: 'Invalid or missing stream token' })
-  @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   @ApiResponse({ status: 416, description: 'Range no satisfacible' })
   async streamTrack(
     @Param('id') trackId: string,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
   ): Promise<void> {
-    // 1. Obtener metadata del track
     const metadata = await this.streamTrackUseCase.execute({ trackId, range });
-
     const { filePath, fileSize, mimeType } = metadata;
 
-    // 2. Si hay Range header, manejar partial content
     if (range) {
+      // Manejar partial content (Range request)
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-      // Validar rango
       if (start >= fileSize || end >= fileSize || start > end) {
         res.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
         res.header('Content-Range', `bytes */${fileSize}`);
@@ -185,8 +222,6 @@ export class StreamingController implements OnModuleDestroy {
 
       const chunkSize = end - start + 1;
 
-      // Para streaming con Fastify, necesitamos usar res.raw directamente
-      // y configurar headers en el objeto raw de Node.js
       res.raw.writeHead(HttpStatus.PARTIAL_CONTENT, {
         'Content-Type': mimeType,
         'Content-Length': chunkSize.toString(),
@@ -195,36 +230,10 @@ export class StreamingController implements OnModuleDestroy {
         'Cache-Control': 'public, max-age=31536000',
       });
 
-      // Stream del rango solicitado
-      const stream = fs.createReadStream(filePath, { start, end });
-
-      // Track stream for cleanup
-      this.activeStreams.add(stream);
-
-      // Cleanup on finish/close/error
-      const cleanup = () => {
-        this.activeStreams.delete(stream);
-      };
-
-      stream.on('error', (error) => {
-        cleanup();
-        this.logger.error(
-          { error: error instanceof Error ? error.message : error, trackId, start, end },
-          'Error reading file (range request)'
-        );
-        if (!res.raw.destroyed) {
-          res.raw.destroy();
-        }
-      });
-
-      stream.on('close', cleanup);
-      stream.on('end', cleanup);
-
+      const stream = this.createManagedStream(filePath, trackId, res.raw, { start, end });
       stream.pipe(res.raw);
     } else {
-      // 3. Sin Range header, enviar archivo completo
-      // Para streaming con Fastify, necesitamos usar res.raw directamente
-      // y configurar headers en el objeto raw de Node.js
+      // Enviar archivo completo
       res.raw.writeHead(HttpStatus.OK, {
         'Content-Type': mimeType,
         'Content-Length': fileSize.toString(),
@@ -232,31 +241,7 @@ export class StreamingController implements OnModuleDestroy {
         'Cache-Control': 'public, max-age=31536000',
       });
 
-      // Stream del archivo completo
-      const stream = fs.createReadStream(filePath);
-
-      // Track stream for cleanup
-      this.activeStreams.add(stream);
-
-      // Cleanup on finish/close/error
-      const cleanup = () => {
-        this.activeStreams.delete(stream);
-      };
-
-      stream.on('error', (error) => {
-        cleanup();
-        this.logger.error(
-          { error: error instanceof Error ? error.message : error, trackId },
-          'Error reading file (full stream)'
-        );
-        if (!res.raw.destroyed) {
-          res.raw.destroy();
-        }
-      });
-
-      stream.on('close', cleanup);
-      stream.on('end', cleanup);
-
+      const stream = this.createManagedStream(filePath, trackId, res.raw);
       stream.pipe(res.raw);
     }
   }
@@ -266,6 +251,8 @@ export class StreamingController implements OnModuleDestroy {
    * Descargar track completo
    */
   @Get(':id/download')
+  @ApiCommonErrors()
+  @ApiNotFoundError('Track')
   @ApiOperation({
     summary: 'Descargar track',
     description: 'Descarga el archivo de audio completo',
@@ -280,26 +267,21 @@ export class StreamingController implements OnModuleDestroy {
     status: 200,
     description: 'Descarga iniciada exitosamente',
   })
-  @ApiResponse({ status: 404, description: 'Track o archivo no encontrado' })
   async downloadTrack(
     @Param('id') trackId: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
-    // 1. Obtener metadata del track
     const metadata = await this.streamTrackUseCase.execute({ trackId });
-
     const { filePath, fileName, fileSize, mimeType } = metadata;
 
-    // 2. Headers para descarga - usar res.raw.writeHead para asegurar que se envían
-    res.raw.writeHead(200, {
+    res.raw.writeHead(HttpStatus.OK, {
       'Content-Type': mimeType,
       'Content-Length': fileSize.toString(),
       'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
       'Cache-Control': 'public, max-age=31536000',
     });
 
-    // 3. Stream del archivo
-    const stream = fs.createReadStream(filePath);
+    const stream = this.createManagedStream(filePath, trackId, res.raw);
     stream.pipe(res.raw);
   }
 }
