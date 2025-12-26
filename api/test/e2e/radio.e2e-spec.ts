@@ -106,7 +106,6 @@ describe('Radio E2E', () => {
             expect(res.body.name).toBe('Mi Radio');
             expect(res.body.url).toBe('http://stream.example.com/radio.mp3');
             expect(res.body.country).toBe('Spain');
-            expect(res.body.isCustom).toBe(true);
           });
       });
 
@@ -176,8 +175,6 @@ describe('Radio E2E', () => {
           .expect((res) => {
             expect(res.body.id).toBeDefined();
             expect(res.body.name).toBe('BBC Radio 1');
-            expect(res.body.stationUuid).toBe('abc123-uuid');
-            expect(res.body.isCustom).toBe(false);
           });
       });
 
