@@ -260,7 +260,7 @@ export class ArtistsController {
         50, // Get more from Last.fm so we can filter to local library
       );
 
-      this.logger.log(
+      this.logger.info(
         `[Autoplay] Last.fm returned ${similarFromLastfm?.length || 0} similar artists for: ${artist.name}`
       );
 
@@ -287,13 +287,13 @@ export class ArtistsController {
         }
 
         if (notFoundInLibrary.length > 0) {
-          this.logger.log(
+          this.logger.info(
             `[Autoplay] Similar artists NOT in library: ${notFoundInLibrary.slice(0, 10).join(', ')}${notFoundInLibrary.length > 10 ? '...' : ''}`
           );
         }
 
         if (lastfmArtists.length > 0) {
-          this.logger.log(
+          this.logger.info(
             `[Autoplay] Found ${lastfmArtists.length} related artists IN library: ${lastfmArtists.map(a => a.name).join(', ')}`
           );
           return GetRelatedArtistsResponseDto.create({
@@ -305,7 +305,7 @@ export class ArtistsController {
         }
       }
 
-      this.logger.log(`[Autoplay] No Last.fm similar artists found in library for: ${artist.name}, trying internal patterns`);
+      this.logger.info(`[Autoplay] No Last.fm similar artists found in library for: ${artist.name}, trying internal patterns`);
     }
 
     // 4. Fallback: Use internal co-listening patterns
