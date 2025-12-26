@@ -4,9 +4,31 @@ import type { Album } from '../../domain/entities/album.entity';
 import type { AlbumProps } from '../../domain/entities/album.entity';
 
 /**
- * Tipo para datos de álbum que pueden venir de la entidad o de una query con campos extra
+ * Tipo base para datos parciales de álbum (usado por queries que no traen todos los campos)
  */
-type AlbumData = Album | (AlbumProps & { externalInfoUpdatedAt?: Date });
+interface PartialAlbumData {
+  id: string;
+  name: string;
+  artistId?: string;
+  artistName?: string;
+  albumArtistId?: string;
+  coverArtPath?: string;
+  year?: number;
+  releaseDate?: Date;
+  compilation?: boolean;
+  songCount: number;
+  duration: number;
+  size?: number;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  externalInfoUpdatedAt?: Date;
+}
+
+/**
+ * Tipo para datos de álbum que pueden venir de la entidad, AlbumProps, o una query parcial
+ */
+type AlbumData = Album | AlbumProps | PartialAlbumData;
 
 /**
  * AlbumResponseDto - DTO de respuesta para UN álbum
@@ -53,8 +75,8 @@ export class AlbumResponseDto {
   releaseDate?: Date;
 
   @Expose()
-  @ApiProperty({ description: 'Es una compilación', example: false })
-  compilation!: boolean;
+  @ApiPropertyOptional({ description: 'Es una compilación', example: false })
+  compilation?: boolean;
 
   @Expose()
   @ApiProperty({ description: 'Número de canciones', example: 17 })
@@ -69,8 +91,8 @@ export class AlbumResponseDto {
   duration!: number;
 
   @Expose()
-  @ApiProperty({ description: 'Tamaño en bytes' })
-  size!: bigint;
+  @ApiPropertyOptional({ description: 'Tamaño en bytes' })
+  size?: number;
 
   @Expose()
   @ApiPropertyOptional({ description: 'Descripción del álbum' })
@@ -107,7 +129,8 @@ export class AlbumResponseDto {
 
     if (data.id) {
       // Prefer externalInfoUpdatedAt (updates when cover changes) over updatedAt (updates on any change)
-      const timestamp = data.externalInfoUpdatedAt || data.updatedAt;
+      const dataWithExternal = data as AlbumProps & { externalInfoUpdatedAt?: Date };
+      const timestamp = dataWithExternal.externalInfoUpdatedAt || data.updatedAt;
       if (timestamp) {
         const version = new Date(timestamp).getTime();
         coverUrl = `/api/images/albums/${data.id}/cover?v=${version}`;
@@ -118,11 +141,11 @@ export class AlbumResponseDto {
     dto.coverImage = coverUrl; // Alias for frontend compatibility
     dto.year = data.year;
     dto.releaseDate = data.releaseDate;
-    dto.compilation = data.compilation;
+    dto.compilation = 'compilation' in data ? data.compilation : false;
     dto.songCount = data.songCount;
     dto.totalTracks = data.songCount; // Alias for frontend
     dto.duration = data.duration;
-    dto.size = data.size;
+    dto.size = 'size' in data ? data.size : undefined;
     dto.description = data.description;
     dto.createdAt = data.createdAt;
     dto.addedAt = data.createdAt; // Alias for frontend
