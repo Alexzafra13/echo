@@ -199,6 +199,11 @@ export async function createUserAndLogin(
  */
 export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
   // Eliminar en orden correcto por dependencias FK
+  await drizzle.db.delete(schema.radioStations);
+  await drizzle.db.delete(schema.playHistory);
+  await drizzle.db.delete(schema.userPlayStats);
+  await drizzle.db.delete(schema.userStarred);
+  await drizzle.db.delete(schema.userRatings);
   await drizzle.db.delete(schema.streamTokens);
   await drizzle.db.delete(schema.users);
 }
@@ -207,16 +212,20 @@ export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
  * Limpia tablas de contenido (albums, artists, tracks)
  */
 export async function cleanContentTables(drizzle: DrizzleService): Promise<void> {
-  // Tablas dependientes primero
+  // Tablas dependientes primero (junction tables y relaciones)
   await drizzle.db.delete(schema.playlistTracks);
   await drizzle.db.delete(schema.playlists);
   await drizzle.db.delete(schema.trackArtists);
+  await drizzle.db.delete(schema.trackGenres);
   await drizzle.db.delete(schema.tracks);
+  await drizzle.db.delete(schema.albumGenres);
   await drizzle.db.delete(schema.customAlbumCovers);
   await drizzle.db.delete(schema.albums);
+  await drizzle.db.delete(schema.artistGenres);
   await drizzle.db.delete(schema.customArtistImages);
   await drizzle.db.delete(schema.artistBanners);
   await drizzle.db.delete(schema.artists);
+  await drizzle.db.delete(schema.genres);
 }
 
 /**
