@@ -105,9 +105,13 @@ jobs:
           done
 
       # Unit tests: Fast, use mocks, NO DB connection needed
-      - name: Run unit tests
+      # Run with coverage to track test quality
+      - name: Run unit tests with coverage
         working-directory: api
-        run: pnpm test:unit
+        run: pnpm test:unit --coverage --coverageReporters=text --coverageReporters=lcov
+        env:
+          # Coverage thresholds (fail if below these)
+          JEST_COVERAGE_THRESHOLD: '{"global":{"branches":60,"functions":60,"lines":60,"statements":60}}'
 
       # Integration tests: Test real DB/Redis operations
       - name: Run integration tests
@@ -134,3 +138,12 @@ jobs:
       - name: Build project
         working-directory: api
         run: pnpm build
+
+      # Upload coverage report as artifact
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: api/coverage/
+          retention-days: 7
