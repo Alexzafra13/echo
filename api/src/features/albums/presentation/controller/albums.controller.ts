@@ -7,13 +7,20 @@ import { GetAlbumsAlphabeticallyUseCase } from '../../domain/use-cases/get-album
 import { GetAlbumsByArtistUseCase } from '../../domain/use-cases/get-albums-by-artist/get-albums-by-artist.use-case';
 import { GetRecentlyPlayedAlbumsUseCase } from '../../domain/use-cases/get-recently-played-albums/get-recently-played-albums.use-case';
 import { GetFavoriteAlbumsUseCase } from '../../domain/use-cases/get-favorite-albums/get-favorite-albums.use-case';
-import { AlbumResponseDto, GetAlbumsResponseDto, SearchAlbumsResponseDto } from '../dtos';
+import {
+  AlbumResponseDto,
+  GetAlbumsResponseDto,
+  SearchAlbumsResponseDto,
+  GetAlbumsPaginatedResponseDto,
+  GetRecentlyPlayedAlbumsResponseDto,
+  GetFavoriteAlbumsResponseDto,
+} from '../dtos';
 import { AlbumsPaginationQueryDto, AlbumsLimitQueryDto } from '../dtos/albums-sort.query.dto';
 import { TrackResponseDto } from '@features/tracks/presentation/dtos';
 import { Track } from '@features/tracks/domain/entities/track.entity';
 import { parsePaginationParams } from '@shared/utils';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
-import { CurrentUser } from '@shared/decorators';
+import { CurrentUser, ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import { JwtUser } from '@shared/types/request.types';
 import { CacheControl } from '@shared/interceptors';
 
@@ -162,7 +169,8 @@ export class AlbumsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de álbumes ordenados alfabéticamente obtenida exitosamente'
+    description: 'Lista de álbumes ordenados alfabéticamente obtenida exitosamente',
+    type: GetAlbumsPaginatedResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -170,19 +178,19 @@ export class AlbumsController {
   })
   async getAlbumsAlphabetically(
     @Query() query: AlbumsPaginationQueryDto,
-  ) {
+  ): Promise<GetAlbumsPaginatedResponseDto> {
     const result = await this.getAlbumsAlphabeticallyUseCase.execute({
       page: query.page || 1,
       limit: query.limit || 20,
     });
 
-    return {
+    return GetAlbumsPaginatedResponseDto.create({
       albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
       total: result.total,
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
-    };
+    });
   }
 
   /**
@@ -218,7 +226,8 @@ export class AlbumsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de álbumes ordenados por artista obtenida exitosamente'
+    description: 'Lista de álbumes ordenados por artista obtenida exitosamente',
+    type: GetAlbumsPaginatedResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -226,19 +235,19 @@ export class AlbumsController {
   })
   async getAlbumsByArtist(
     @Query() query: AlbumsPaginationQueryDto,
-  ) {
+  ): Promise<GetAlbumsPaginatedResponseDto> {
     const result = await this.getAlbumsByArtistUseCase.execute({
       page: query.page || 1,
       limit: query.limit || 20,
     });
 
-    return {
+    return GetAlbumsPaginatedResponseDto.create({
       albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
       total: result.total,
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
-    };
+    });
   }
 
   /**
@@ -266,7 +275,8 @@ export class AlbumsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de álbumes reproducidos recientemente obtenida exitosamente'
+    description: 'Lista de álbumes reproducidos recientemente obtenida exitosamente',
+    type: GetRecentlyPlayedAlbumsResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -275,15 +285,15 @@ export class AlbumsController {
   async getRecentlyPlayedAlbums(
     @CurrentUser() user: JwtUser,
     @Query() query: AlbumsLimitQueryDto,
-  ) {
+  ): Promise<GetRecentlyPlayedAlbumsResponseDto> {
     const result = await this.getRecentlyPlayedAlbumsUseCase.execute({
       userId: user.id,
       limit: query.limit || 20,
     });
 
-    return {
+    return GetRecentlyPlayedAlbumsResponseDto.create({
       albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
-    };
+    });
   }
 
   /**
@@ -319,7 +329,8 @@ export class AlbumsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de álbumes favoritos obtenida exitosamente'
+    description: 'Lista de álbumes favoritos obtenida exitosamente',
+    type: GetFavoriteAlbumsResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -328,19 +339,19 @@ export class AlbumsController {
   async getFavoriteAlbums(
     @CurrentUser() user: JwtUser,
     @Query() query: AlbumsPaginationQueryDto,
-  ) {
+  ): Promise<GetFavoriteAlbumsResponseDto> {
     const result = await this.getFavoriteAlbumsUseCase.execute({
       userId: user.id,
       page: query.page || 1,
       limit: query.limit || 20,
     });
 
-    return {
+    return GetFavoriteAlbumsResponseDto.create({
       albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
-    };
+    });
   }
 
   /**
@@ -350,6 +361,8 @@ export class AlbumsController {
   @Get('featured')
   @HttpCode(HttpStatus.OK)
   @CacheControl(300) // 5 minute cache
+  @ApiCommonErrors()
+  @ApiNotFoundError('Álbum destacado')
   @ApiOperation({
     summary: 'Obtener álbum destacado',
     description: 'Retorna el álbum destacado para mostrar en la sección hero (generalmente el más reproducido o más reciente)'
@@ -358,10 +371,6 @@ export class AlbumsController {
     status: 200,
     description: 'Álbum destacado obtenido exitosamente',
     type: AlbumResponseDto
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'No hay álbumes en la librería'
   })
   async getFeaturedAlbum(): Promise<AlbumResponseDto> {
     const result = await this.getFeaturedAlbumUseCase.execute();
@@ -375,6 +384,8 @@ export class AlbumsController {
    */
   @Get(':id/tracks')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Álbum')
   @ApiOperation({
     summary: 'Obtener canciones del álbum',
     description: 'Retorna todas las canciones (tracks) de un álbum específico, ordenadas por disco y número de pista'
@@ -390,10 +401,6 @@ export class AlbumsController {
     description: 'Lista de canciones obtenida exitosamente',
     type: [TrackResponseDto]
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Álbum no encontrado'
-  })
   async getAlbumTracks(@Param('id', ParseUUIDPipe) albumId: string): Promise<TrackResponseDto[]> {
     const result = await this.getAlbumTracksUseCase.execute({ albumId });
     return result.tracks.map((track: Track) => TrackResponseDto.fromDomain(track));
@@ -405,6 +412,8 @@ export class AlbumsController {
    * IMPORTANTE: Debe ir ANTES de @Get(':id') para que el router lo capture correctamente
    */
   @Get(':id/cover')
+  @ApiCommonErrors()
+  @ApiNotFoundError('Álbum')
   @ApiOperation({
     summary: 'Obtener cover art del álbum',
     description: 'Sirve la imagen de portada del álbum desde el caché'
@@ -447,6 +456,8 @@ export class AlbumsController {
    */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Álbum')
   @ApiOperation({
     summary: 'Obtener álbum por ID',
     description: 'Retorna la información completa de un álbum específico por su identificador UUID'
@@ -461,10 +472,6 @@ export class AlbumsController {
     status: 200,
     description: 'Álbum encontrado exitosamente',
     type: AlbumResponseDto
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Álbum no encontrado'
   })
   async getAlbum(@Param('id', ParseUUIDPipe) id: string): Promise<AlbumResponseDto> {
     const result = await this.getAlbumUseCase.execute({ id });

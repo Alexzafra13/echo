@@ -2,9 +2,19 @@ import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, ParseUUIDP
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
-import { ArtistResponseDto, GetArtistsResponseDto, SearchArtistsResponseDto } from '../dtos';
+import {
+  ArtistResponseDto,
+  GetArtistsResponseDto,
+  SearchArtistsResponseDto,
+  GetArtistAlbumsResponseDto,
+  GetArtistTopTracksResponseDto,
+  GetArtistStatsResponseDto,
+  GetRelatedArtistsResponseDto,
+  RelatedArtistDto,
+} from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
 import { parsePaginationParams } from '@shared/utils';
+import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
 import { ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
 import { IArtistRepository } from '../../domain/ports/artist-repository.port';
@@ -46,6 +56,8 @@ export class ArtistsController {
    */
   @Get(':id/albums')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Artista')
   @ApiOperation({
     summary: 'Obtener álbumes del artista',
     description: 'Retorna todos los álbumes de un artista específico, ordenados por fecha de creación'
@@ -73,26 +85,13 @@ export class ArtistsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de álbumes del artista obtenida exitosamente',
-    schema: {
-      type: 'object',
-      properties: {
-        data: { type: 'array', items: { $ref: '#/components/schemas/AlbumResponseDto' } },
-        total: { type: 'number' },
-        skip: { type: 'number' },
-        take: { type: 'number' },
-        hasMore: { type: 'boolean' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Artista no encontrado'
+    type: GetArtistAlbumsResponseDto,
   })
   async getArtistAlbums(
     @Param('id', ParseUUIDPipe) artistId: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ) {
+  ): Promise<GetArtistAlbumsResponseDto> {
     const { skip: skipNum, take: takeNum } = parsePaginationParams(skip, take, { defaultTake: 100 });
 
     const result = await this.getArtistAlbumsUseCase.execute({
@@ -101,13 +100,13 @@ export class ArtistsController {
       take: takeNum,
     });
 
-    return {
+    return GetArtistAlbumsResponseDto.create({
       data: result.data.map((album) => AlbumResponseDto.fromDomain(album)),
       total: result.total,
       skip: result.skip,
       take: result.take,
       hasMore: result.hasMore,
-    };
+    });
   }
 
   /**
@@ -116,6 +115,8 @@ export class ArtistsController {
    */
   @Get(':id/top-tracks')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Artista')
   @ApiOperation({
     summary: 'Obtener top tracks del artista',
     description: 'Retorna las canciones más escuchadas de un artista en toda la plataforma'
@@ -142,13 +143,14 @@ export class ArtistsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Top tracks del artista obtenidos exitosamente'
+    description: 'Top tracks del artista obtenidos exitosamente',
+    type: GetArtistTopTracksResponseDto,
   })
   async getArtistTopTracks(
     @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
     @Query('days') days?: string,
-  ) {
+  ): Promise<GetArtistTopTracksResponseDto> {
     const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 50);
     const daysNum = days ? parseInt(days, 10) : undefined;
 
@@ -158,12 +160,12 @@ export class ArtistsController {
       daysNum,
     );
 
-    return {
+    return GetArtistTopTracksResponseDto.create({
       data: topTracks,
       artistId,
       limit: limitNum,
       days: daysNum,
-    };
+    });
   }
 
   /**
@@ -172,6 +174,8 @@ export class ArtistsController {
    */
   @Get(':id/stats')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Artista')
   @ApiOperation({
     summary: 'Obtener estadísticas del artista',
     description: 'Retorna estadísticas globales de escuchas del artista en toda la plataforma'
@@ -184,18 +188,19 @@ export class ArtistsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Estadísticas del artista obtenidas exitosamente'
+    description: 'Estadísticas del artista obtenidas exitosamente',
+    type: GetArtistStatsResponseDto,
   })
-  async getArtistStats(@Param('id', ParseUUIDPipe) artistId: string) {
+  async getArtistStats(@Param('id', ParseUUIDPipe) artistId: string): Promise<GetArtistStatsResponseDto> {
     const stats = await this.playTrackingRepository.getArtistGlobalStats(artistId);
 
-    return {
+    return GetArtistStatsResponseDto.create({
       artistId,
       totalPlays: stats.totalPlays,
       uniqueListeners: stats.uniqueListeners,
       avgCompletionRate: Math.round(stats.avgCompletionRate * 100) / 100,
       skipRate: Math.round(stats.skipRate * 100) / 100,
-    };
+    });
   }
 
   /**
@@ -204,6 +209,7 @@ export class ArtistsController {
    */
   @Get(':id/related')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
   @ApiOperation({
     summary: 'Obtener artistas relacionados',
     description: 'Retorna artistas similares basado en patrones de escucha internos, con fallback a Last.fm'
@@ -223,23 +229,24 @@ export class ArtistsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Artistas relacionados obtenidos exitosamente'
+    description: 'Artistas relacionados obtenidos exitosamente',
+    type: GetRelatedArtistsResponseDto,
   })
   async getRelatedArtists(
     @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
-  ) {
+  ): Promise<GetRelatedArtistsResponseDto> {
     const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
 
     // 1. Get the artist from our database
     const artist = await this.artistRepository.findById(artistId);
     if (!artist) {
-      return {
+      return GetRelatedArtistsResponseDto.create({
         data: [],
         artistId,
         limit: limitNum,
         source: 'none',
-      };
+      });
     }
 
     // 2. Check if Last.fm is enabled
@@ -258,14 +265,7 @@ export class ArtistsController {
       );
 
       if (similarFromLastfm && similarFromLastfm.length > 0) {
-        const lastfmArtists: Array<{
-          id: string;
-          name: string;
-          albumCount: number;
-          songCount: number;
-          matchScore: number;
-        }> = [];
-
+        const lastfmArtists: RelatedArtistDto[] = [];
         const notFoundInLibrary: string[] = [];
 
         for (const similar of similarFromLastfm) {
@@ -296,12 +296,12 @@ export class ArtistsController {
           this.logger.log(
             `[Autoplay] Found ${lastfmArtists.length} related artists IN library: ${lastfmArtists.map(a => a.name).join(', ')}`
           );
-          return {
+          return GetRelatedArtistsResponseDto.create({
             data: lastfmArtists,
             artistId,
             limit: limitNum,
             source: 'lastfm',
-          };
+          });
         }
       }
 
@@ -315,13 +315,7 @@ export class ArtistsController {
       limitNum,
     );
 
-    const internalArtists: Array<{
-      id: string;
-      name: string;
-      albumCount: number;
-      songCount: number;
-      matchScore: number;
-    }> = [];
+    const internalArtists: RelatedArtistDto[] = [];
 
     for (const stat of internalRelated) {
       const relArtist = await this.artistRepository.findById(stat.artistId);
@@ -340,12 +334,12 @@ export class ArtistsController {
       `Found ${internalArtists.length} related artists from internal patterns for: ${artist.name}`
     );
 
-    return {
+    return GetRelatedArtistsResponseDto.create({
       data: internalArtists,
       artistId,
       limit: limitNum,
       source: internalArtists.length > 0 ? 'internal' : 'none',
-    };
+    });
   }
 
   /**
@@ -354,6 +348,8 @@ export class ArtistsController {
    */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Artista')
   @ApiOperation({
     summary: 'Obtener artista por ID',
     description: 'Retorna la información completa de un artista específico por su identificador UUID'
@@ -368,10 +364,6 @@ export class ArtistsController {
     status: 200,
     description: 'Artista encontrado exitosamente',
     type: ArtistResponseDto
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Artista no encontrado'
   })
   async getArtist(@Param('id', ParseUUIDPipe) id: string): Promise<ArtistResponseDto> {
     const result = await this.getArtistUseCase.execute({ id });
