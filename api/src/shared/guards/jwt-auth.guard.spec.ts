@@ -91,7 +91,7 @@ describe('JwtAuthGuard', () => {
       expect(() => guard.handleRequest(null, null, null)).toThrow(
         UnauthorizedException,
       );
-      expect(() => guard.handleRequest(null, null, null)).toThrow('Invalid token');
+      expect(() => guard.handleRequest(null, null, null)).toThrow('Invalid or expired token');
     });
 
     it('debería lanzar el error original si hay un error', () => {
