@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth }
 import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase } from '../../domain/use-cases';
 import { TrackResponseDto, GetTracksResponseDto, SearchTracksResponseDto, ShuffledTracksResponseDto } from '../dtos';
 import { parsePaginationParams } from '@shared/utils';
+import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 
 /**
  * TracksController - Controlador de tracks
@@ -89,6 +90,8 @@ export class TracksController {
    */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiCommonErrors()
+  @ApiNotFoundError('Track')
   @ApiOperation({
     summary: 'Obtener track por ID',
     description: 'Retorna la información completa de un track específico por su identificador UUID'
@@ -103,10 +106,6 @@ export class TracksController {
     status: 200,
     description: 'Track encontrado exitosamente',
     type: TrackResponseDto
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Track no encontrado'
   })
   async getTrack(@Param('id', ParseUUIDPipe) id: string): Promise<TrackResponseDto> {
     const result = await this.getTrackUseCase.execute({ id });
