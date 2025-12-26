@@ -121,7 +121,10 @@ export class TrackResponseDto {
    */
   static fromDomain(track: TrackData): TrackResponseDto {
     // Convert to primitives if it's a Track entity (has toPrimitives method)
-    const data = track.toPrimitives ? track.toPrimitives() : track;
+    const trackAsEntity = track as Track;
+    const data = typeof trackAsEntity.toPrimitives === 'function'
+      ? trackAsEntity.toPrimitives()
+      : (track as TrackProps);
 
     const dto = new TrackResponseDto();
     dto.id = data.id;

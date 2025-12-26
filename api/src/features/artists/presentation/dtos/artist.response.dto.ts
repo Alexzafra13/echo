@@ -66,7 +66,7 @@ export class ArtistResponseDto {
 
   @ApiProperty({ example: 1073741824, description: 'Tamaño total en bytes' })
   @Expose()
-  size!: bigint;
+  size!: number;
 
   @ApiProperty()
   @Expose()
