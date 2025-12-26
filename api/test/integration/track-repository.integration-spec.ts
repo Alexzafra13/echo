@@ -703,8 +703,8 @@ describe('TrackRepository Integration', () => {
   });
 
   describe('edge cases', () => {
-    it('debería manejar títulos muy largos', async () => {
-      const longTitle = 'A'.repeat(500);
+    it('debería manejar títulos muy largos (hasta 255 chars)', async () => {
+      const longTitle = 'A'.repeat(255); // Máximo permitido por varchar(255)
       const track = Track.create({
         title: longTitle,
         path: '/music/long.mp3',
