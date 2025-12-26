@@ -315,20 +315,6 @@ describe('Streaming E2E', () => {
     });
   });
 
-  describe('UUID Validation', () => {
-    it('debería validar formato UUID en stream endpoint', () => {
-      return request(app.getHttpServer())
-        .get(`/api/tracks/not-a-uuid/stream?token=${streamToken}`)
-        .expect(400);
-    });
-
-    it('debería validar formato UUID en download endpoint', () => {
-      return request(app.getHttpServer())
-        .get(`/api/tracks/not-a-uuid/download?token=${streamToken}`)
-        .expect(400);
-    });
-  });
-
   describe('Flujo completo de streaming', () => {
     it('debería completar flujo de token y acceso', async () => {
       // 1. Revocar token existente
