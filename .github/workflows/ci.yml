@@ -80,8 +80,14 @@ jobs:
         env:
           PGPASSWORD: music_password
         run: |
+          # Verificar conexión y mostrar usuarios disponibles
+          echo "=== Checking PostgreSQL connection ==="
+          psql -h localhost -U music_admin -d postgres -c "SELECT current_user, version();"
+          psql -h localhost -U music_admin -d postgres -c "SELECT usename FROM pg_user;"
+
+          # Crear bases de datos de test
           for i in {1..4}; do
-            psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;"
+            psql -h localhost -U music_admin -d postgres -c "CREATE DATABASE music_server_test_$i;" || true
           done
 
       - name: Apply database schema
