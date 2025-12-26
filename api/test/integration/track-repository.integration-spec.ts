@@ -4,7 +4,7 @@ import { DrizzleService } from '../../src/infrastructure/database/drizzle.servic
 import { DrizzleTrackRepository } from '../../src/features/tracks/infrastructure/persistence/track.repository';
 import { Track } from '../../src/features/tracks/domain/entities/track.entity';
 import * as schema from '../../src/infrastructure/database/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * TrackRepository Integration Tests
@@ -71,6 +71,32 @@ describe('TrackRepository Integration', () => {
       })
       .returning();
     return album;
+  };
+
+  // Helper para marcar un track como missing (usando SQL raw para evitar problemas de tipo)
+  const markTrackAsMissing = async (trackId: string) => {
+    await drizzle.db
+      .update(schema.tracks)
+      .set({ missingAt: sql`NOW()` })
+      .where(eq(schema.tracks.id, trackId));
+  };
+
+  // Helper para crear track missing (con opciones adicionales)
+  const createMissingTrack = async (
+    title: string,
+    path: string,
+    options?: { albumId?: string; artistId?: string },
+  ) => {
+    const track = await repository.create(Track.create({
+      title,
+      path,
+      discNumber: 1,
+      compilation: false,
+      albumId: options?.albumId,
+      artistId: options?.artistId,
+    }));
+    await markTrackAsMissing(track.id);
+    return track;
   };
 
   beforeAll(async () => {
@@ -296,14 +322,8 @@ describe('TrackRepository Integration', () => {
         compilation: false,
       }));
 
-      // Crear track missing directamente en BD
-      await drizzle.db.insert(schema.tracks).values({
-        title: 'Missing Track',
-        path: '/music/missing.mp3',
-        discNumber: 1,
-        compilation: false,
-        missingAt: new Date(),
-      });
+      // Crear track missing
+      await createMissingTrack('Missing Track', '/music/missing.mp3');
 
       const all = await repository.findAll(0, 10);
 
@@ -463,14 +483,7 @@ describe('TrackRepository Integration', () => {
       }));
 
       // Track missing
-      await drizzle.db.insert(schema.tracks).values({
-        title: 'Missing Track',
-        path: '/music/missing.mp3',
-        albumId: testAlbumId,
-        discNumber: 1,
-        compilation: false,
-        missingAt: new Date(),
-      });
+      await createMissingTrack('Missing Track', '/music/missing.mp3', { albumId: testAlbumId });
 
       const tracks = await repository.findByAlbumId(testAlbumId, true);
       expect(tracks).toHaveLength(2);
@@ -485,14 +498,7 @@ describe('TrackRepository Integration', () => {
         compilation: false,
       }));
 
-      await drizzle.db.insert(schema.tracks).values({
-        title: 'Missing Track',
-        path: '/music/missing.mp3',
-        albumId: testAlbumId,
-        discNumber: 1,
-        compilation: false,
-        missingAt: new Date(),
-      });
+      await createMissingTrack('Missing Track', '/music/missing.mp3', { albumId: testAlbumId });
 
       const tracks = await repository.findByAlbumId(testAlbumId, false);
       expect(tracks).toHaveLength(1);
@@ -546,14 +552,7 @@ describe('TrackRepository Integration', () => {
         compilation: false,
       }));
 
-      await drizzle.db.insert(schema.tracks).values({
-        title: 'Missing',
-        path: '/music/missing.mp3',
-        artistId: testArtistId,
-        discNumber: 1,
-        compilation: false,
-        missingAt: new Date(),
-      });
+      await createMissingTrack('Missing', '/music/missing.mp3', { artistId: testArtistId });
 
       const tracks = await repository.findByArtistId(testArtistId, 0, 10);
 
@@ -585,13 +584,7 @@ describe('TrackRepository Integration', () => {
         compilation: false,
       }));
 
-      await drizzle.db.insert(schema.tracks).values({
-        title: 'Missing',
-        path: '/music/missing.mp3',
-        discNumber: 1,
-        compilation: false,
-        missingAt: new Date(),
-      });
+      await createMissingTrack('Missing', '/music/missing.mp3');
 
       const count = await repository.count();
 
