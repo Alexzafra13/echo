@@ -33,18 +33,18 @@ describe('PlaylistRepository Integration', () => {
   let testAlbumId: string;
   let testTrackIds: string[] = [];
 
-  // Helper para limpiar tablas
+  // Helper para limpiar tablas usando TRUNCATE CASCADE
   const cleanTables = async () => {
-    try {
-      await drizzle.db.delete(schema.playlistTracks);
-      await drizzle.db.delete(schema.playlists);
-      await drizzle.db.delete(schema.tracks);
-      await drizzle.db.delete(schema.albums);
-      await drizzle.db.delete(schema.artists);
-      await drizzle.db.delete(schema.users);
-    } catch {
-      // Ignorar errores de constraints
-    }
+    await drizzle.client.query(`
+      TRUNCATE TABLE
+        playlist_tracks,
+        playlists,
+        tracks,
+        albums,
+        artists,
+        users
+      RESTART IDENTITY CASCADE
+    `);
   };
 
   // Helper para crear usuario de prueba

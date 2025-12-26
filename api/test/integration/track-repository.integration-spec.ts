@@ -31,15 +31,15 @@ describe('TrackRepository Integration', () => {
   let testArtistId: string;
   let testAlbumId: string;
 
-  // Helper para limpiar tablas
+  // Helper para limpiar tablas usando TRUNCATE CASCADE
   const cleanTables = async () => {
-    try {
-      await drizzle.db.delete(schema.tracks);
-      await drizzle.db.delete(schema.albums);
-      await drizzle.db.delete(schema.artists);
-    } catch {
-      // Ignorar errores de constraints
-    }
+    await drizzle.client.query(`
+      TRUNCATE TABLE
+        tracks,
+        albums,
+        artists
+      RESTART IDENTITY CASCADE
+    `);
   };
 
   // Helper para crear artista de prueba
