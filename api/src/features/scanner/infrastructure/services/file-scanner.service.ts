@@ -29,6 +29,13 @@ export class FileScannerService {
   ): Promise<string[]> {
     const files: string[] = [];
 
+    // Verificar si el directorio existe antes de escanear
+    const exists = await this.pathExists(rootPath);
+    if (!exists) {
+      this.logger.warn({ rootPath }, 'Scan directory does not exist, returning empty list');
+      return files;
+    }
+
     try {
       await this.scanRecursive(rootPath, files, recursive);
     } catch (error) {
