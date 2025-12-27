@@ -46,6 +46,35 @@ module.exports = {
   ],
   coverageDirectory: '../coverage',
 
+  // Coverage thresholds - fail if below these values
+  coverageThreshold: {
+    global: {
+      branches: 40,
+      functions: 40,
+      lines: 45,
+      statements: 45,
+    },
+    // Critical modules require higher coverage
+    './shared/guards/*.ts': {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+    './features/auth/**/*.ts': {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+    './features/health/**/*.ts': {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+  },
+
   // Configuración de transform
   transform: {
     '^.+\\.ts$': [
