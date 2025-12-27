@@ -116,9 +116,23 @@ describe('Security E2E', () => {
           .expect(403);
       });
 
-      // TODO: Implementar verificación de usuario activo en cada request
-      // Actualmente el token sigue siendo válido aunque el usuario se desactive
-      it.todo('debería rechazar token de usuario desactivado');
+      it('debería rechazar token de usuario desactivado', async () => {
+        const { eq } = require('drizzle-orm');
+        // Crear y loguear usuario
+        const { accessToken, user } = await createUserAndLogin(drizzle, app);
+
+        // Desactivar usuario directamente en BD
+        await drizzle.db
+          .update(schema.users)
+          .set({ isActive: false })
+          .where(eq(schema.users.id, user.id));
+
+        // Intentar usar el token - debería ser rechazado
+        return request(app.getHttpServer())
+          .get('/api/tracks')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(401);
+      });
     });
   });
 
