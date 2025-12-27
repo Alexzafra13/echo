@@ -5,6 +5,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { Reflector } from '@nestjs/core';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
+import { JwtAuthGuard } from '../../../src/shared/guards/jwt-auth.guard';
 import { MustChangePasswordGuard } from '../../../src/shared/guards/must-change-password.guard';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
@@ -66,9 +67,13 @@ export async function createTestApp(): Promise<{
 
   app.setGlobalPrefix('api');
 
-  // Apply MustChangePasswordGuard globally (same as in main.ts)
+  // Apply global guards in order (JwtAuthGuard must run BEFORE MustChangePasswordGuard)
+  // JwtAuthGuard populates request.user, MustChangePasswordGuard checks user.mustChangePassword
   const reflector = moduleFixture.get(Reflector);
-  app.useGlobalGuards(new MustChangePasswordGuard(reflector));
+  app.useGlobalGuards(
+    new JwtAuthGuard(reflector),
+    new MustChangePasswordGuard(reflector),
+  );
 
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
