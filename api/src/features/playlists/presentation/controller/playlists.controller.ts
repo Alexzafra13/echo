@@ -105,8 +105,15 @@ export class PlaylistsController {
     type: PlaylistResponseDto,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
-  async getPlaylist(@Param('id', ParseUUIDPipe) id: string): Promise<PlaylistResponseDto> {
-    const result = await this.getPlaylistUseCase.execute({ id });
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'No tienes acceso a esta playlist' })
+  async getPlaylist(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: RequestWithUser,
+  ): Promise<PlaylistResponseDto> {
+    const result = await this.getPlaylistUseCase.execute({
+      id,
+      requesterId: req.user.id,
+    });
     return PlaylistResponseDto.fromDomain(result);
   }
 

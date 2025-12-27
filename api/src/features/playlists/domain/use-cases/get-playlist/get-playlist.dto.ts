@@ -1,5 +1,6 @@
 export interface GetPlaylistInput {
   id: string;
+  requesterId?: string; // ID del usuario que solicita (para verificar acceso)
 }
 
 export interface GetPlaylistOutput {

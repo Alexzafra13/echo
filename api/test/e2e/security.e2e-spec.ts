@@ -259,10 +259,7 @@ describe('Security E2E', () => {
     });
 
     describe('Playlists Isolation', () => {
-      // BUG CONOCIDO: GetPlaylistUseCase no verifica si la playlist es pública
-      // o si el usuario es el dueño. Cualquier usuario puede ver cualquier playlist por ID.
-      // TODO: Agregar verificación de acceso en GetPlaylistUseCase
-      it.skip('usuario NO debería poder ver playlists privadas de otro usuario', async () => {
+      it('usuario NO debería poder ver playlists privadas de otro usuario', async () => {
         // User1 crea playlist privada
         const playlistRes = await request(app.getHttpServer())
           .post('/api/playlists')
@@ -272,13 +269,11 @@ describe('Security E2E', () => {
 
         const playlistId = playlistRes.body.id;
 
-        // User2 intenta acceder - debería ser 403 o 404
+        // User2 intenta acceder - debería ser 403 (forbidden)
         return request(app.getHttpServer())
           .get(`/api/playlists/${playlistId}`)
           .set('Authorization', `Bearer ${user2Token}`)
-          .expect((res) => {
-            expect([403, 404]).toContain(res.status);
-          });
+          .expect(403);
       });
 
       it('usuario SÍ debería poder ver playlists públicas de otro usuario', async () => {
