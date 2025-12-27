@@ -140,7 +140,10 @@ describe('GetPlaylistUseCase', () => {
       mockPlaylistRepo.findById.mockResolvedValue(minimalPlaylist);
       mockUserRepo.findById.mockResolvedValue(mockUser);
 
-      const result = await useCase.execute({ id: 'playlist-minimal' });
+      const result = await useCase.execute({
+        id: 'playlist-minimal',
+        requesterId: 'user-123', // Owner can access private playlist
+      });
 
       expect(result.description).toBeUndefined();
       expect(result.coverImageUrl).toBeUndefined();
