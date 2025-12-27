@@ -202,9 +202,19 @@ describe('Security E2E', () => {
           .expect(403);
       });
 
-      // TODO: Implementar endpoint de dashboard admin
-      it.todo('admin debería poder acceder al dashboard');
-      it.todo('usuario normal NO debería poder acceder al dashboard');
+      it('admin debería poder acceder al dashboard', () => {
+        return request(app.getHttpServer())
+          .get('/api/admin/dashboard/stats')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200);
+      });
+
+      it('usuario normal NO debería poder acceder al dashboard', () => {
+        return request(app.getHttpServer())
+          .get('/api/admin/dashboard/stats')
+          .set('Authorization', `Bearer ${userToken}`)
+          .expect(403);
+      });
     });
 
     describe('Scanner Endpoints', () => {
@@ -362,17 +372,14 @@ describe('Security E2E', () => {
       it('usuario NO debería poder cambiar contraseña de otro', async () => {
         // Intentar cambiar contraseña (el endpoint solo debería cambiar la propia)
         // Este test verifica que el endpoint usa el token, no un ID pasado
-        const changeRes = await request(app.getHttpServer())
-          .patch('/api/auth/password')
+        await request(app.getHttpServer())
+          .put('/api/users/password')
           .set('Authorization', `Bearer ${user1Token}`)
           .send({
             currentPassword: 'User123!',
             newPassword: 'NewPass123!',
-          });
-
-        // El endpoint puede ser /api/auth/password o /api/users/password
-        // Aceptamos 200 o 404 (si endpoint no existe)
-        expect([200, 404]).toContain(changeRes.status);
+          })
+          .expect(204);
 
         // User2 aún debería poder loguearse con su contraseña original
         const loginRes = await request(app.getHttpServer())
@@ -431,21 +438,38 @@ describe('Security E2E', () => {
         .send({ username: 'must_change', password: 'Temp123!' })
         .expect(200);
 
-      // Intentar cambiar contraseña - el endpoint puede variar
-      const res = await request(app.getHttpServer())
-        .patch('/api/auth/password')
+      // Cambiar contraseña usando el endpoint correcto PUT /api/users/password
+      return request(app.getHttpServer())
+        .put('/api/users/password')
         .set('Authorization', `Bearer ${loginRes.body.accessToken}`)
         .send({
           currentPassword: 'Temp123!',
           newPassword: 'NewSecure123!',
-        });
-
-      // Aceptamos 200 (éxito) o 404 (endpoint diferente)
-      expect([200, 404]).toContain(res.status);
+        })
+        .expect(204);
     });
 
-    // TODO: Implementar guard que bloquee acceso cuando mustChangePassword=true
-    it.todo('usuario con mustChangePassword NO debería poder acceder a otros endpoints');
+    it('usuario con mustChangePassword NO debería poder acceder a otros endpoints', async () => {
+      await createTestUser(drizzle, {
+        username: 'must_change_blocked',
+        password: 'Temp123!',
+        mustChangePassword: true,
+      });
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ username: 'must_change_blocked', password: 'Temp123!' })
+        .expect(200);
+
+      // Intentar acceder a un endpoint que NO está permitido
+      return request(app.getHttpServer())
+        .get('/api/playlists')
+        .set('Authorization', `Bearer ${loginRes.body.accessToken}`)
+        .expect(403)
+        .expect((res) => {
+          expect(res.body.mustChangePassword).toBe(true);
+        });
+    });
   });
 
   describe('Input Validation Security', () => {
