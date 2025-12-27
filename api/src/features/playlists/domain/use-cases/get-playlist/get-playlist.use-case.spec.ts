@@ -3,7 +3,7 @@ import { IPlaylistRepository } from '../../ports';
 import { IUserRepository } from '@features/auth/domain/ports/user-repository.port';
 import { Playlist } from '../../entities';
 import { User } from '@features/auth/domain/entities/user.entity';
-import { NotFoundError, ValidationError } from '@shared/errors';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 
 describe('GetPlaylistUseCase', () => {
   let useCase: GetPlaylistUseCase;
@@ -155,6 +155,67 @@ describe('GetPlaylistUseCase', () => {
 
       expect(result.ownerName).toBeUndefined();
       expect(result.ownerHasAvatar).toBe(false);
+    });
+  });
+
+  describe('access control', () => {
+    const privatePlaylist = Playlist.fromPrimitives({
+      id: 'private-playlist',
+      name: 'Private Playlist',
+      duration: 0,
+      size: 0,
+      ownerId: 'user-123',
+      public: false,
+      songCount: 0,
+      sync: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    it('should allow owner to access private playlist', async () => {
+      mockPlaylistRepo.findById.mockResolvedValue(privatePlaylist);
+      mockUserRepo.findById.mockResolvedValue(mockUser);
+
+      const result = await useCase.execute({
+        id: 'private-playlist',
+        requesterId: 'user-123', // Same as ownerId
+      });
+
+      expect(result.id).toBe('private-playlist');
+    });
+
+    it('should throw ForbiddenError when non-owner accesses private playlist', async () => {
+      mockPlaylistRepo.findById.mockResolvedValue(privatePlaylist);
+
+      await expect(
+        useCase.execute({
+          id: 'private-playlist',
+          requesterId: 'other-user', // Different from ownerId
+        }),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('should allow anyone to access public playlist', async () => {
+      mockPlaylistRepo.findById.mockResolvedValue(mockPlaylist); // public: true
+      mockUserRepo.findById.mockResolvedValue(mockUser);
+
+      const result = await useCase.execute({
+        id: 'playlist-123',
+        requesterId: 'other-user', // Different from ownerId
+      });
+
+      expect(result.id).toBe('playlist-123');
+    });
+
+    it('should throw ForbiddenError when no requesterId for private playlist', async () => {
+      mockPlaylistRepo.findById.mockResolvedValue(privatePlaylist);
+
+      await expect(
+        useCase.execute({
+          id: 'private-playlist',
+          // No requesterId
+        }),
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 });
