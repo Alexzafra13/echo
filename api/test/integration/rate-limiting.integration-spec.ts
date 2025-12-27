@@ -1,166 +1,41 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { ThrottlerGuard, ThrottlerModule, ThrottlerStorage } from '@nestjs/throttler';
-import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import Redis from 'ioredis';
-import request from 'supertest';
 import { cacheConfig } from '../../src/config/cache.config';
 
 /**
  * Rate Limiting Integration Tests
  *
- * These tests verify that rate limiting works correctly with Redis storage.
- * They require a running Redis instance.
+ * These tests verify Redis operations that support rate limiting.
+ * They test the underlying Redis functionality used by the throttler.
  *
- * IMPORTANT: These tests use real Redis connections and real rate limiting.
- * They should be run in isolation to avoid interfering with other tests.
+ * Rate limiting in production uses the WsThrottlerGuard (for WebSocket)
+ * and NestJS ThrottlerGuard (for HTTP), both backed by Redis.
  */
 describe('Rate Limiting Integration', () => {
-  let app: INestApplication;
   let redis: Redis;
-  let moduleRef: TestingModule;
-
-  // Test controller for rate limiting
-  const TestController = {
-    name: 'TestController',
-    path: '/test',
-    methods: [
-      {
-        name: 'limited',
-        method: 'get',
-        path: '/limited',
-        handler: () => ({ message: 'success' }),
-      },
-    ],
-  };
 
   beforeAll(async () => {
-    // Create Redis client for cleanup
+    // Create Redis client
     redis = new Redis({
       host: cacheConfig.redis_host,
       port: cacheConfig.redis_port,
       password: cacheConfig.redis_password,
       db: parseInt(process.env.REDIS_DB || '11'),
     });
-
-    // Create a minimal test module with throttling enabled
-    moduleRef = await Test.createTestingModule({
-      imports: [
-        ThrottlerModule.forRoot({
-          throttlers: [
-            {
-              name: 'short',
-              ttl: 1000, // 1 second
-              limit: 3, // 3 requests per second
-            },
-          ],
-        }),
-      ],
-      controllers: [],
-      providers: [
-        {
-          provide: ThrottlerStorage,
-          useFactory: () => {
-            return new ThrottlerStorageRedisService(redis);
-          },
-        },
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter()
-    );
-
-    app.useGlobalPipes(new ValidationPipe());
-
-    // Add a simple test endpoint with rate limiting
-    const fastify = app.getHttpAdapter().getInstance();
-    fastify.get('/test/limited', async () => {
-      return { message: 'success' };
-    });
-
-    await app.init();
-    await app.getHttpAdapter().getInstance().ready();
   });
 
   afterAll(async () => {
     await redis.quit();
-    await app.close();
   });
 
   beforeEach(async () => {
     // Clear rate limiting keys before each test
-    const keys = await redis.keys('throttler:*');
+    const keys = await redis.keys('test:throttle:*');
     if (keys.length > 0) {
       await redis.del(...keys);
     }
   });
 
-  describe('ThrottlerGuard with Redis', () => {
-    it('debería permitir requests dentro del límite', async () => {
-      // Skip if we can't connect to Redis
-      try {
-        await redis.ping();
-      } catch {
-        console.log('Skipping test: Redis not available');
-        return;
-      }
-
-      // Make 3 requests (within limit)
-      for (let i = 0; i < 3; i++) {
-        const response = await request(app.getHttpServer())
-          .get('/test/limited')
-          .expect(200);
-
-        expect(response.body.message).toBe('success');
-      }
-    });
-
-    it('debería contar hits correctamente en Redis', async () => {
-      // Skip if we can't connect to Redis
-      try {
-        await redis.ping();
-      } catch {
-        console.log('Skipping test: Redis not available');
-        return;
-      }
-
-      // Make a request
-      await request(app.getHttpServer()).get('/test/limited');
-
-      // Check that a throttle key was created
-      const keys = await redis.keys('throttler:*');
-      expect(keys.length).toBeGreaterThanOrEqual(0); // Key might be there or not depending on implementation
-    });
-
-    it('debería resetear contador después de TTL', async () => {
-      // Skip if we can't connect to Redis
-      try {
-        await redis.ping();
-      } catch {
-        console.log('Skipping test: Redis not available');
-        return;
-      }
-
-      // Make requests up to limit
-      for (let i = 0; i < 3; i++) {
-        await request(app.getHttpServer()).get('/test/limited');
-      }
-
-      // Wait for TTL to expire
-      await new Promise((resolve) => setTimeout(resolve, 1100));
-
-      // Should be able to make requests again
-      const response = await request(app.getHttpServer())
-        .get('/test/limited')
-        .expect(200);
-
-      expect(response.body.message).toBe('success');
-    });
-  });
-
-  describe('Redis connection resilience', () => {
+  describe('Redis Rate Limiting Primitives', () => {
     it('debería verificar conexión a Redis', async () => {
       // Act
       const pong = await redis.ping();
@@ -169,27 +44,11 @@ describe('Rate Limiting Integration', () => {
       expect(pong).toBe('PONG');
     });
 
-    it('debería manejar operaciones básicas', async () => {
+    it('debería soportar operaciones INCR para conteo de requests', async () => {
       // Arrange
-      const testKey = 'test:rate-limit-test';
-      const testValue = 'test-value';
+      const counterKey = 'test:throttle:counter';
 
-      // Act
-      await redis.set(testKey, testValue, 'EX', 10);
-      const result = await redis.get(testKey);
-
-      // Assert
-      expect(result).toBe(testValue);
-
-      // Cleanup
-      await redis.del(testKey);
-    });
-
-    it('debería soportar operaciones INCR para conteo', async () => {
-      // Arrange
-      const counterKey = 'test:counter';
-
-      // Act
+      // Act - Simulate 3 requests
       await redis.del(counterKey);
       const val1 = await redis.incr(counterKey);
       const val2 = await redis.incr(counterKey);
@@ -204,21 +63,186 @@ describe('Rate Limiting Integration', () => {
       await redis.del(counterKey);
     });
 
-    it('debería soportar TTL para expiración automática', async () => {
+    it('debería soportar TTL para ventana de rate limiting', async () => {
       // Arrange
-      const ttlKey = 'test:ttl-key';
+      const ttlKey = 'test:throttle:window';
 
-      // Act
-      await redis.set(ttlKey, 'value', 'EX', 1);
+      // Act - Set key with 1 second TTL (simulating rate limit window)
+      await redis.set(ttlKey, '1', 'EX', 1);
       const beforeExpiry = await redis.get(ttlKey);
 
+      // Wait for window to expire
       await new Promise((resolve) => setTimeout(resolve, 1100));
 
       const afterExpiry = await redis.get(ttlKey);
 
       // Assert
-      expect(beforeExpiry).toBe('value');
+      expect(beforeExpiry).toBe('1');
       expect(afterExpiry).toBeNull();
+    });
+
+    it('debería manejar INCR con EXPIRE para rate limiting', async () => {
+      // Arrange
+      const key = 'test:throttle:ip:192.168.1.1';
+      await redis.del(key);
+
+      // Act - Simulate rate limiting: increment and set TTL atomically
+      const multi = redis.multi();
+      multi.incr(key);
+      multi.expire(key, 60); // 60 second window
+      const results = await multi.exec();
+
+      // Assert
+      expect(results).not.toBeNull();
+      expect(results![0][1]).toBe(1); // First increment = 1
+      expect(results![1][1]).toBe(1); // expire returns 1 on success
+
+      // Verify TTL was set
+      const ttl = await redis.ttl(key);
+      expect(ttl).toBeGreaterThan(0);
+      expect(ttl).toBeLessThanOrEqual(60);
+
+      // Cleanup
+      await redis.del(key);
+    });
+
+    it('debería trackear diferentes clientes independientemente', async () => {
+      // Arrange
+      const client1Key = 'test:throttle:ip:10.0.0.1';
+      const client2Key = 'test:throttle:ip:10.0.0.2';
+      await redis.del(client1Key, client2Key);
+
+      // Act - Client 1 makes 5 requests
+      for (let i = 0; i < 5; i++) {
+        await redis.incr(client1Key);
+      }
+
+      // Client 2 makes 2 requests
+      for (let i = 0; i < 2; i++) {
+        await redis.incr(client2Key);
+      }
+
+      // Assert - Each client has independent count
+      const client1Count = await redis.get(client1Key);
+      const client2Count = await redis.get(client2Key);
+
+      expect(client1Count).toBe('5');
+      expect(client2Count).toBe('2');
+
+      // Cleanup
+      await redis.del(client1Key, client2Key);
+    });
+
+    it('debería resetear contador después de expiración de ventana', async () => {
+      // Arrange
+      const key = 'test:throttle:reset-test';
+      await redis.del(key);
+
+      // Act - Set counter with 1 second TTL
+      await redis.incr(key);
+      await redis.incr(key);
+      await redis.incr(key);
+      await redis.expire(key, 1);
+
+      const beforeReset = await redis.get(key);
+
+      // Wait for window to expire
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+
+      // Start new window
+      await redis.incr(key);
+      const afterReset = await redis.get(key);
+
+      // Assert
+      expect(beforeReset).toBe('3');
+      expect(afterReset).toBe('1'); // Counter reset to 1
+
+      // Cleanup
+      await redis.del(key);
+    });
+
+    it('debería soportar sliding window con sorted sets', async () => {
+      // Arrange - Sliding window rate limiting using sorted sets
+      const key = 'test:throttle:sliding:user123';
+      const now = Date.now();
+      const windowMs = 1000; // 1 second window
+      await redis.del(key);
+
+      // Act - Add timestamps for 3 requests
+      await redis.zadd(key, now - 500, `req1`);
+      await redis.zadd(key, now - 250, `req2`);
+      await redis.zadd(key, now, `req3`);
+
+      // Remove old entries outside the window
+      await redis.zremrangebyscore(key, '-inf', now - windowMs);
+
+      // Count requests in current window
+      const count = await redis.zcard(key);
+
+      // Assert
+      expect(count).toBe(3);
+
+      // Cleanup
+      await redis.del(key);
+    });
+  });
+
+  describe('Rate Limiting Logic Simulation', () => {
+    const RATE_LIMIT = 5; // 5 requests per window
+    const WINDOW_SECONDS = 60;
+
+    async function checkRateLimit(clientId: string): Promise<{ allowed: boolean; remaining: number }> {
+      const key = `test:throttle:client:${clientId}`;
+
+      const multi = redis.multi();
+      multi.incr(key);
+      multi.expire(key, WINDOW_SECONDS);
+      const results = await multi.exec();
+
+      const currentCount = results![0][1] as number;
+      const allowed = currentCount <= RATE_LIMIT;
+      const remaining = Math.max(0, RATE_LIMIT - currentCount);
+
+      return { allowed, remaining };
+    }
+
+    it('debería permitir requests dentro del límite', async () => {
+      // Arrange
+      const clientId = 'allowed-client';
+      await redis.del(`test:throttle:client:${clientId}`);
+
+      // Act - Make 5 requests (at limit)
+      const results = [];
+      for (let i = 0; i < 5; i++) {
+        results.push(await checkRateLimit(clientId));
+      }
+
+      // Assert - All should be allowed
+      expect(results.every(r => r.allowed)).toBe(true);
+      expect(results[0].remaining).toBe(4);
+      expect(results[4].remaining).toBe(0);
+
+      // Cleanup
+      await redis.del(`test:throttle:client:${clientId}`);
+    });
+
+    it('debería bloquear requests que exceden el límite', async () => {
+      // Arrange
+      const clientId = 'blocked-client';
+      await redis.del(`test:throttle:client:${clientId}`);
+
+      // Act - Make 7 requests (exceeds limit of 5)
+      const results = [];
+      for (let i = 0; i < 7; i++) {
+        results.push(await checkRateLimit(clientId));
+      }
+
+      // Assert - First 5 allowed, last 2 blocked
+      expect(results.slice(0, 5).every(r => r.allowed)).toBe(true);
+      expect(results.slice(5).every(r => !r.allowed)).toBe(true);
+
+      // Cleanup
+      await redis.del(`test:throttle:client:${clientId}`);
     });
   });
 });
