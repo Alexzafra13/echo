@@ -136,10 +136,13 @@ describe('PlaylistsController', () => {
       getPlaylistUseCase.execute.mockResolvedValue(mockPlaylist);
 
       // Act
-      const result = await controller.getPlaylist('playlist-1');
+      const result = await controller.getPlaylist('playlist-1', mockRequestWithUser as any);
 
       // Assert
-      expect(getPlaylistUseCase.execute).toHaveBeenCalledWith({ id: 'playlist-1' });
+      expect(getPlaylistUseCase.execute).toHaveBeenCalledWith({
+        id: 'playlist-1',
+        requesterId: 'user-1',
+      });
       expect(result.id).toBe('playlist-1');
     });
   });
