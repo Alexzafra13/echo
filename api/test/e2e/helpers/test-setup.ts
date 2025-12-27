@@ -2,8 +2,10 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerStorage, ThrottlerStorageRecord } from '@nestjs/throttler';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { Reflector } from '@nestjs/core';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
+import { MustChangePasswordGuard } from '../../../src/shared/guards/must-change-password.guard';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
@@ -63,6 +65,10 @@ export async function createTestApp(): Promise<{
   );
 
   app.setGlobalPrefix('api');
+
+  // Apply MustChangePasswordGuard globally (same as in main.ts)
+  const reflector = moduleFixture.get(Reflector);
+  app.useGlobalGuards(new MustChangePasswordGuard(reflector));
 
   await app.init();
   await app.getHttpAdapter().getInstance().ready();

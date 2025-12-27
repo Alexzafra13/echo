@@ -237,11 +237,12 @@ describe('Security E2E', () => {
           .expect(403);
       });
 
-      it('usuario normal SÍ debería poder ver historial de escaneo', () => {
+      it('usuario normal NO debería poder ver historial de escaneo', () => {
+        // Scanner controller completo requiere AdminGuard
         return request(app.getHttpServer())
           .get('/api/scanner')
           .set('Authorization', `Bearer ${userToken}`)
-          .expect(200);
+          .expect(403);
       });
     });
   });
