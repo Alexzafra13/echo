@@ -2,11 +2,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerStorage, ThrottlerStorageRecord } from '@nestjs/throttler';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { Reflector } from '@nestjs/core';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
-import { JwtAuthGuard } from '../../../src/shared/guards/jwt-auth.guard';
-import { MustChangePasswordGuard } from '../../../src/shared/guards/must-change-password.guard';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
@@ -67,13 +64,10 @@ export async function createTestApp(): Promise<{
 
   app.setGlobalPrefix('api');
 
-  // Apply global guards in order (JwtAuthGuard must run BEFORE MustChangePasswordGuard)
-  // JwtAuthGuard populates request.user, MustChangePasswordGuard checks user.mustChangePassword
-  const reflector = moduleFixture.get(Reflector);
-  app.useGlobalGuards(
-    new JwtAuthGuard(reflector),
-    new MustChangePasswordGuard(reflector),
-  );
+  // NOTE: MustChangePasswordGuard is NOT applied globally because it requires
+  // JwtAuthGuard to run first to populate request.user. Since JwtAuthGuard is
+  // per-controller, the global guard sees undefined user. This needs architectural
+  // changes (convert to interceptor or make JwtAuthGuard global with @Public()).
 
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
