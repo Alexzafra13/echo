@@ -10,6 +10,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { MustChangePasswordGuard } from '@shared/guards/must-change-password.guard';
 import { WebSocketAdapter } from '@infrastructure/websocket';
 import { join } from 'path';
@@ -106,9 +107,13 @@ async function bootstrap() {
     return this.toString();
   };
 
-  // MustChangePasswordGuard Global
+  // Global Guards (order matters!)
+  // JwtAuthGuard must run BEFORE MustChangePasswordGuard to populate request.user
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new MustChangePasswordGuard(reflector));
+  app.useGlobalGuards(
+    new JwtAuthGuard(reflector),
+    new MustChangePasswordGuard(reflector),
+  );
 
   // Swagger Configuration (Development only)
   // In production, API docs are not needed and we save memory
