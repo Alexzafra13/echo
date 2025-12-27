@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { NotFoundError, ValidationError } from '@shared/errors';
+import { NotFoundError, ValidationError, ForbiddenError } from '@shared/errors';
 import { IPlaylistRepository, PLAYLIST_REPOSITORY } from '../../ports';
 import { IUserRepository, USER_REPOSITORY } from '@features/auth/domain/ports/user-repository.port';
 import { GetPlaylistInput, GetPlaylistOutput } from './get-playlist.dto';
@@ -26,7 +26,13 @@ export class GetPlaylistUseCase {
       throw new NotFoundError('Playlist', input.id);
     }
 
-    // 3. Obtener información del usuario owner (name/username y hasAvatar)
+    // 3. Verificar acceso: playlist pública O usuario es el dueño
+    const isOwner = input.requesterId && playlist.ownerId === input.requesterId;
+    if (!playlist.public && !isOwner) {
+      throw new ForbiddenError('No tienes acceso a esta playlist');
+    }
+
+    // 4. Obtener información del usuario owner (name/username y hasAvatar)
     const owner = await this.userRepository.findById(playlist.ownerId);
     const ownerName = owner?.name || owner?.username;
     const ownerHasAvatar = owner?.avatarPath ? true : false;
