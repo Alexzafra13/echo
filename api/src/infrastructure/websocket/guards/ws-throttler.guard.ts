@@ -1,11 +1,11 @@
 import {
   ExecutionContext,
   Injectable,
-  Logger,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
 
 /**
@@ -36,7 +36,6 @@ interface ClientRateState {
  */
 @Injectable()
 export class WsThrottlerGuard implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(WsThrottlerGuard.name);
   private readonly clients = new Map<string, ClientRateState>();
   private readonly trackedClients = new Set<string>();
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -46,12 +45,17 @@ export class WsThrottlerGuard implements OnModuleInit, OnModuleDestroy {
   private readonly windowMs = 1000; // Ventana de 1 segundo
   private readonly cleanupIntervalMs = 5 * 60 * 1000; // Limpieza cada 5 minutos
 
+  constructor(
+    @InjectPinoLogger(WsThrottlerGuard.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   onModuleInit(): void {
     this.cleanupInterval = setInterval(() => {
       this.cleanupStaleEntries();
     }, this.cleanupIntervalMs);
 
-    this.logger.log('WsThrottlerGuard inicializado con Fixed Window Counter');
+    this.logger.info('WsThrottlerGuard inicializado con Fixed Window Counter');
   }
 
   onModuleDestroy(): void {

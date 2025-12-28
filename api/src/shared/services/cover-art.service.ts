@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { parseFile } from 'music-metadata';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -16,7 +17,6 @@ import { existsSync } from 'fs';
  */
 @Injectable()
 export class CoverArtService {
-  private readonly logger = new Logger(CoverArtService.name);
   private readonly coversPath: string;
 
   // Common cover file names (ordered by priority)
@@ -34,7 +34,11 @@ export class CoverArtService {
     'Album.jpg',
   ];
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(CoverArtService.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     // Directory where covers will be cached
     // Priority: COVERS_PATH > DATA_PATH/uploads/covers > UPLOAD_PATH/covers > ./uploads/covers
     const coversPath = this.configService.get<string>('COVERS_PATH');
@@ -49,7 +53,7 @@ export class CoverArtService {
         this.coversPath = path.join(uploadPath, 'covers');
       }
     }
-    this.logger.log(`Covers cache directory: ${this.coversPath}`);
+    this.logger.info(`Covers cache directory: ${this.coversPath}`);
     this.ensureCoversDirectory();
   }
 
@@ -60,7 +64,7 @@ export class CoverArtService {
     try {
       if (!existsSync(this.coversPath)) {
         await fs.mkdir(this.coversPath, { recursive: true });
-        this.logger.log(`Covers directory created: ${this.coversPath}`);
+        this.logger.info(`Covers directory created: ${this.coversPath}`);
       }
     } catch (error) {
       this.logger.error(`Error creating covers directory:`, error);

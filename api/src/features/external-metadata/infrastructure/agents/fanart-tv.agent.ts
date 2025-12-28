@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IArtistImageRetriever, IAlbumCoverRetriever } from '../../domain/interfaces';
 import { ArtistImages, AlbumCover } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
@@ -21,13 +22,13 @@ import { FanartImage, FanartImageArray, FanartArtistResponse } from './types';
 export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetriever, OnModuleInit {
   readonly name = 'fanart';
   readonly priority = 20; // Secondary source for covers (after Cover Art Archive)
-
-  private readonly logger = new Logger(FanartTvAgent.name);
   private readonly baseUrl = 'https://webservice.fanart.tv/v3/music';
   private apiKey: string = '';
   private enabled: boolean = false;
 
   constructor(
+    @InjectPinoLogger(FanartTvAgent.name)
+    private readonly logger: PinoLogger,
     private readonly rateLimiter: RateLimiterService,
     private readonly settingsService: SettingsService,
   ) {}
@@ -52,7 +53,7 @@ export class FanartTvAgent implements IArtistImageRetriever, IAlbumCoverRetrieve
     if (!this.apiKey) {
       this.logger.warn('Fanart.tv API key not configured. Agent will be disabled.');
     } else {
-      this.logger.log(`Fanart.tv agent initialized (enabled: ${this.enabled})`);
+      this.logger.info(`Fanart.tv agent initialized (enabled: ${this.enabled})`);
     }
   }
 

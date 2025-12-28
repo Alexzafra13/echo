@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
 
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 /**
  * Rate Limiter Service
  * Implements token bucket algorithm for respecting external API rate limits
@@ -9,7 +10,10 @@ import { Injectable, Logger } from '@nestjs/common';
  */
 @Injectable()
 export class RateLimiterService {
-  private readonly logger = new Logger(RateLimiterService.name);
+  constructor(
+    @InjectPinoLogger(RateLimiterService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   // Map of service name to last request timestamp
   private readonly lastRequestTime = new Map<string, number>();
@@ -51,7 +55,7 @@ export class RateLimiterService {
   setRateLimit(serviceName: string, requestsPerSecond: number): void {
     const minDelay = Math.ceil(1000 / requestsPerSecond);
     this.minDelays.set(serviceName.toLowerCase(), minDelay);
-    this.logger.log(
+    this.logger.info(
       `Set rate limit for ${serviceName}: ${requestsPerSecond} req/s (${minDelay}ms delay)`
     );
   }
@@ -80,7 +84,7 @@ export class RateLimiterService {
    */
   resetAll(): void {
     this.lastRequestTime.clear();
-    this.logger.log('Reset all rate limiters');
+    this.logger.info('Reset all rate limiters');
   }
 
   /**

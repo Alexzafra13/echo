@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, lte, sql } from 'drizzle-orm';
 import { mbidSearchCache } from '@infrastructure/database/schema';
@@ -36,10 +37,11 @@ export interface MbidSearchCacheEntry {
  */
 @Injectable()
 export class MbidSearchCacheService {
-  private readonly logger = new Logger(MbidSearchCacheService.name);
   private readonly DEFAULT_TTL_DAYS = 7;
 
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(@InjectPinoLogger(MbidSearchCacheService.name)
+    private readonly logger: PinoLogger,
+    private readonly drizzle: DrizzleService) {}
 
   /**
    * Normaliza el texto de búsqueda para cache key
@@ -231,7 +233,7 @@ export class MbidSearchCacheService {
         .returning();
 
       const count = deleted.length;
-      this.logger.log(`Cleaned up ${count} expired cache entries`);
+      this.logger.info(`Cleaned up ${count} expired cache entries`);
       return count;
     } catch (error) {
       this.logger.error(

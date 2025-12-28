@@ -6,6 +6,7 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Server, Socket } from 'socket.io';
 
 /**
@@ -30,21 +31,23 @@ import { Server, Socket } from 'socket.io';
   transports: ['websocket', 'polling'],
 })
 export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  constructor(
+    @InjectPinoLogger(MetadataEnrichmentGateway.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   @WebSocketServer()
   server!: Server;
-
-  private readonly logger = new Logger(MetadataEnrichmentGateway.name);
-
   afterInit(server: Server) {
-    this.logger.log('🔌 MetadataEnrichmentGateway initialized');
+    this.logger.info('🔌 MetadataEnrichmentGateway initialized');
   }
 
   handleConnection(client: Socket) {
-    this.logger.log(`Client connected to metadata namespace: ${client.id}`);
+    this.logger.info(`Client connected to metadata namespace: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected from metadata namespace: ${client.id}`);
+    this.logger.info(`Client disconnected from metadata namespace: ${client.id}`);
   }
 
   /**
@@ -101,7 +104,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       ...data,
       timestamp: new Date().toISOString(),
     });
-    this.logger.log(
+    this.logger.info(
       `Enrichment completed: ${data.entityName} in ${data.duration}ms ` +
       `(bio: ${data.bioUpdated}, images: ${data.imagesUpdated}, cover: ${data.coverUpdated})`
     );
@@ -134,7 +137,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       ...data,
       timestamp: new Date().toISOString(),
     });
-    this.logger.log(`Batch enrichment started: ${data.total} ${data.entityType}s`);
+    this.logger.info(`Batch enrichment started: ${data.total} ${data.entityType}s`);
   }
 
   /**
@@ -170,7 +173,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       ...data,
       timestamp: new Date().toISOString(),
     });
-    this.logger.log(
+    this.logger.info(
       `Batch enrichment completed: ${data.successful}/${data.total} successful ` +
       `(${data.failed} failed) in ${data.duration}ms`
     );
@@ -197,7 +200,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     // Emit to specific artist room (if clients are subscribed)
     this.server.to(`artist:${data.artistId}`).emit('artist:images:updated', payload);
 
-    this.logger.log(
+    this.logger.info(
       `Artist images updated: ${data.artistName} (${data.imageType}) - notified via WebSocket`
     );
   }
@@ -226,7 +229,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     // Also emit to artist room (album cover affects artist detail page)
     this.server.to(`artist:${data.artistId}`).emit('album:cover:updated', payload);
 
-    this.logger.log(
+    this.logger.info(
       `Album cover updated: ${data.albumName} - notified via WebSocket`
     );
   }
@@ -268,7 +271,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       ...data,
       timestamp: new Date().toISOString(),
     });
-    this.logger.log(`Queue started: ${data.totalPending} items pending`);
+    this.logger.info(`Queue started: ${data.totalPending} items pending`);
   }
 
   /**
@@ -279,7 +282,7 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       ...data,
       timestamp: new Date().toISOString(),
     });
-    this.logger.log(`Queue stopped: ${data.processedInSession} items processed`);
+    this.logger.info(`Queue stopped: ${data.processedInSession} items processed`);
   }
 
   /**
@@ -325,6 +328,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
       ...data,
       timestamp: new Date().toISOString(),
     });
-    this.logger.log(`Queue completed: ${data.processedInSession} items in ${data.duration}`);
+    this.logger.info(`Queue completed: ${data.processedInSession} items in ${data.duration}`);
   }
 }

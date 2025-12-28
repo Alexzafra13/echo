@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../storage.service';
 import { eq, or, isNotNull, count, sum } from 'drizzle-orm';
@@ -32,9 +33,9 @@ export interface IntegrityResult {
  */
 @Injectable()
 export class StorageStatsService {
-  private readonly logger = new Logger(StorageStatsService.name);
-
   constructor(
+    @InjectPinoLogger(StorageStatsService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
   ) {}
@@ -108,7 +109,7 @@ export class StorageStatsService {
     };
 
     try {
-      this.logger.log('Recalculating storage sizes...');
+      this.logger.info('Recalculating storage sizes...');
 
       // Get all artists with external metadata
       const artistsWithMetadata = await this.drizzle.db
@@ -144,7 +145,7 @@ export class StorageStatsService {
         }
       }
 
-      this.logger.log(`Storage sizes recalculated for ${result.updated} artists`);
+      this.logger.info(`Storage sizes recalculated for ${result.updated} artists`);
 
       return result;
     } catch (error) {
@@ -168,7 +169,7 @@ export class StorageStatsService {
     };
 
     try {
-      this.logger.log('Verifying file integrity...');
+      this.logger.info('Verifying file integrity...');
 
       // Verify artist images
       await this.verifyArtistImages(result);
@@ -176,7 +177,7 @@ export class StorageStatsService {
       // Verify album covers
       await this.verifyAlbumCovers(result);
 
-      this.logger.log(
+      this.logger.info(
         `Integrity check completed: ${result.totalChecked} files checked, ${result.missing.length} missing`,
       );
 

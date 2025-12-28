@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ExternalApiError } from '@shared/errors';
 import {
   IRadioBrowserApiClient,
@@ -14,7 +15,11 @@ import {
  */
 @Injectable()
 export class RadioBrowserApiService implements IRadioBrowserApiClient {
-  private readonly logger = new Logger(RadioBrowserApiService.name);
+  constructor(
+    @InjectPinoLogger(RadioBrowserApiService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   // Servidores disponibles: de1, nl1, at1 - usar el que responda mejor
   private readonly BASE_URL = 'https://all.api.radio-browser.info';
   private readonly USER_AGENT = 'Echo-Music-Server/1.0';
@@ -203,7 +208,7 @@ export class RadioBrowserApiService implements IRadioBrowserApiClient {
         },
       });
 
-      this.logger.log(`Registered click for station ${stationUuid}`);
+      this.logger.info(`Registered click for station ${stationUuid}`);
     } catch (error) {
       this.logger.error('Error registering click:', error);
       // No lanzamos error porque esto es opcional

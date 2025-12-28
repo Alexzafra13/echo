@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ArtistEnrichmentService, ArtistEnrichmentResult } from './services/artist-enrichment.service';
 import { AlbumEnrichmentService, AlbumEnrichmentResult } from './services/album-enrichment.service';
 
@@ -15,9 +16,9 @@ import { AlbumEnrichmentService, AlbumEnrichmentResult } from './services/album-
  */
 @Injectable()
 export class ExternalMetadataService {
-  private readonly logger = new Logger(ExternalMetadataService.name);
-
   constructor(
+    @InjectPinoLogger(ExternalMetadataService.name)
+    private readonly logger: PinoLogger,
     private readonly artistEnrichment: ArtistEnrichmentService,
     private readonly albumEnrichment: AlbumEnrichmentService,
   ) {}

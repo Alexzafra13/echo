@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -31,7 +32,10 @@ export interface LocalArtistImages {
  */
 @Injectable()
 export class LocalImageProvider {
-  private readonly logger = new Logger(LocalImageProvider.name);
+  constructor(
+    @InjectPinoLogger(LocalImageProvider.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   // Naming conventions (orden de prioridad)
   private readonly PROFILE_IMAGE_NAMES = [
@@ -130,7 +134,7 @@ export class LocalImageProvider {
         .map(([type]) => type);
 
       if (foundTypes.length > 0) {
-        this.logger.log(
+        this.logger.info(
           `Found local images for ${path.basename(artistFolderPath)}: ${foundTypes.join(', ')}`
         );
       } else {

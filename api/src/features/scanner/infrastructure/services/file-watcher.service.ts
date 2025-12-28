@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import chokidar, { FSWatcher } from 'chokidar';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
@@ -21,7 +22,6 @@ import { stat } from 'fs/promises';
  */
 @Injectable()
 export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(FileWatcherService.name);
   private watcher?: FSWatcher;
   private pendingFiles = new Set<string>();
   private debounceTimer?: NodeJS.Timeout;
@@ -29,6 +29,8 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
   private readonly SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.m4a', '.ogg', '.wav', '.opus'];
 
   constructor(
+    @InjectPinoLogger(FileWatcherService.name)
+    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly bullmq: BullmqService,
     private readonly settingsService: SettingsService,
@@ -46,7 +48,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
     const autoScanEnabled = dbEnabled && envEnabled;
 
     if (!autoScanEnabled) {
-      this.logger.log('Auto-scan disabled via settings');
+      this.logger.info('Auto-scan disabled via settings');
       return;
     }
 
@@ -76,7 +78,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
    */
   private async startWatching(path: string): Promise<void> {
     try {
-      this.logger.log(`Starting file watcher on: ${path}`);
+      this.logger.info(`Starting file watcher on: ${path}`);
 
       this.watcher = chokidar.watch(path, {
         ignored: [
@@ -114,7 +116,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
    */
   private async stopWatching(): Promise<void> {
     if (this.watcher) {
-      this.logger.log('Stopping file watcher...');
+      this.logger.info('Stopping file watcher...');
       await this.watcher.close();
       this.watcher = undefined;
     }
@@ -156,7 +158,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.log(`👻 File deletion detected: ${filePath}`);
+    this.logger.info(`👻 File deletion detected: ${filePath}`);
 
     try {
       // Handle missing file (mark or delete based on settings)
@@ -200,9 +202,9 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
    * Watcher ready and monitoring
    */
   private handleReady(path: string): void {
-    this.logger.log(`File watcher active, monitoring: ${path}`);
-    this.logger.log(`Supported extensions: ${this.SUPPORTED_EXTENSIONS.join(', ')}`);
-    this.logger.log(`Debounce: ${this.DEBOUNCE_MS / 1000}s after last change`);
+    this.logger.info(`File watcher active, monitoring: ${path}`);
+    this.logger.info(`Supported extensions: ${this.SUPPORTED_EXTENSIONS.join(', ')}`);
+    this.logger.info(`Debounce: ${this.DEBOUNCE_MS / 1000}s after last change`);
   }
 
   /**
@@ -240,7 +242,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
     const files = Array.from(this.pendingFiles);
     this.pendingFiles.clear();
 
-    this.logger.log(`Processing ${files.length} detected file(s)...`);
+    this.logger.info(`Processing ${files.length} detected file(s)...`);
 
     try {
       // Verify files exist (they could have been deleted)
@@ -255,7 +257,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
       }
 
       if (existingFiles.length === 0) {
-        this.logger.log('No valid files to process');
+        this.logger.info('No valid files to process');
         return;
       }
 
@@ -270,7 +272,7 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
         },
       );
 
-      this.logger.log(`${existingFiles.length} file(s) added to scan queue`);
+      this.logger.info(`${existingFiles.length} file(s) added to scan queue`);
     } catch (error) {
       this.logger.error(`Error processing pending files:`, error);
     }
@@ -292,14 +294,14 @@ export class FileWatcherService implements OnModuleInit, OnModuleDestroy {
    */
   async pause(): Promise<void> {
     await this.stopWatching();
-    this.logger.log('⏸️ File watcher pausado');
+    this.logger.info('⏸️ File watcher pausado');
   }
 
   async resume(): Promise<void> {
     const musicPath = this.configService.get<string>('UPLOAD_PATH');
     if (musicPath) {
       await this.startWatching(musicPath);
-      this.logger.log('▶️ File watcher reanudado');
+      this.logger.info('▶️ File watcher reanudado');
     }
   }
 }

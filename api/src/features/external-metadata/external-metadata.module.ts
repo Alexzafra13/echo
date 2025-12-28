@@ -1,4 +1,5 @@
-import { Module, OnModuleInit, Logger } from '@nestjs/common';
+import { Module, OnModuleInit} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigModule } from '@nestjs/config';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 
@@ -199,9 +200,9 @@ import { STORAGE_SERVICE, SETTINGS_REPOSITORY } from './domain/ports';
   ],
 })
 export class ExternalMetadataModule implements OnModuleInit {
-  private readonly logger = new Logger(ExternalMetadataModule.name);
-
   constructor(
+    @InjectPinoLogger(ExternalMetadataModule.name)
+    private readonly logger: PinoLogger,
     private readonly agentRegistry: AgentRegistryService,
     private readonly storageService: StorageService,
     private readonly coverArtAgent: CoverArtArchiveAgent,
@@ -215,7 +216,7 @@ export class ExternalMetadataModule implements OnModuleInit {
    * Register all agents when module initializes
    */
   async onModuleInit() {
-    this.logger.log('Initializing External Metadata Module...');
+    this.logger.info('Initializing External Metadata Module...');
 
     // Initialize storage
     try {
@@ -235,17 +236,17 @@ export class ExternalMetadataModule implements OnModuleInit {
     const allAgents = this.agentRegistry.getAllAgents();
     const enabledAgents = allAgents.filter(agent => agent.isEnabled());
 
-    this.logger.log(
+    this.logger.info(
       `Registered ${allAgents.length} agents (${enabledAgents.length} enabled):`
     );
 
     allAgents.forEach(agent => {
       const status = agent.isEnabled() ? '✓' : '✗';
-      this.logger.log(
+      this.logger.info(
         `  ${status} ${agent.name.padEnd(15)} (priority: ${agent.priority})`
       );
     });
 
-    this.logger.log('External Metadata Module initialized successfully');
+    this.logger.info('External Metadata Module initialized successfully');
   }
 }

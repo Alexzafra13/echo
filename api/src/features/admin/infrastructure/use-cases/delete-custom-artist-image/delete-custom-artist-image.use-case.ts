@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists, customArtistImages } from '@infrastructure/database/schema';
@@ -19,9 +20,9 @@ import {
  */
 @Injectable()
 export class DeleteCustomArtistImageUseCase {
-  private readonly logger = new Logger(DeleteCustomArtistImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteCustomArtistImageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
@@ -58,7 +59,7 @@ export class DeleteCustomArtistImageUseCase {
       throw new BadRequestException('Artist ID mismatch');
     }
 
-    this.logger.log(
+    this.logger.info(
       `Deleting custom ${customImage.imageType} image for artist: ${customImage.artist.name} (ID: ${input.customImageId})`,
     );
 
@@ -99,7 +100,7 @@ export class DeleteCustomArtistImageUseCase {
       .delete(customArtistImages)
       .where(eq(customArtistImages.id, input.customImageId));
 
-    this.logger.log(
+    this.logger.info(
       `✅ Successfully deleted custom ${customImage.imageType} image for ${customImage.artist.name}`,
     );
 

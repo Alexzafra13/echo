@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { EventEmitter } from 'events';
 import { Parser as IcecastParser } from 'icecast-parser';
 
@@ -17,7 +18,11 @@ export interface RadioMetadata {
  */
 @Injectable()
 export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(IcyMetadataService.name);
+  constructor(
+    @InjectPinoLogger(IcyMetadataService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   private activeStreams = new Map<string, IcecastParser>();
   private streamListeners = new Map<string, Set<EventEmitter>>();
 
@@ -48,7 +53,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     // Register as the first handler to catch icecast-parser errors before they crash the app
     process.prependListener('uncaughtException', this.uncaughtErrorHandler);
-    this.logger.log('IcyMetadataService initialized with global error safety net');
+    this.logger.info('IcyMetadataService initialized with global error safety net');
   }
 
   /**
@@ -78,7 +83,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       this.createStreamParser(stationUuid, streamUrl);
     }
 
-    this.logger.log(
+    this.logger.info(
       `Client subscribed to ${stationUuid}. Active listeners: ${this.streamListeners.get(stationUuid)!.size}`,
     );
 
@@ -94,7 +99,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
     if (listeners) {
       listeners.delete(emitter);
 
-      this.logger.log(
+      this.logger.info(
         `Client unsubscribed from ${stationUuid}. Active listeners: ${listeners.size}`,
       );
 
@@ -119,7 +124,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
     let radioStation: IcecastParser | null = null;
 
     try {
-      this.logger.log(`Creating ICY parser for ${stationUuid}: ${streamUrl}`);
+      this.logger.info(`Creating ICY parser for ${stationUuid}: ${streamUrl}`);
 
       // For HTTPS streams, we need to handle SSL certificate issues gracefully
       // Many radio streams use self-signed or invalid certificates
@@ -214,7 +219,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       // Store active stream
       this.activeStreams.set(stationUuid, radioStation);
 
-      this.logger.log(`ICY parser created successfully for ${stationUuid}`);
+      this.logger.info(`ICY parser created successfully for ${stationUuid}`);
     } catch (error) {
       this.logger.error(
         `Failed to create ICY parser for ${stationUuid}:`,
@@ -263,7 +268,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       this.activeStreams.delete(stationUuid);
       this.streamListeners.delete(stationUuid);
 
-      this.logger.log(`Stream closed for ${stationUuid}`);
+      this.logger.info(`Stream closed for ${stationUuid}`);
     }
   }
 
@@ -312,7 +317,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
   ): void {
     const listeners = this.streamListeners.get(stationUuid);
     if (listeners) {
-      this.logger.log(
+      this.logger.info(
         `Broadcasting metadata for ${stationUuid} to ${listeners.size} listeners: ${metadata.title}`,
       );
 
@@ -338,7 +343,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
    * Cleanup all active streams and global handlers on service shutdown
    */
   onModuleDestroy(): void {
-    this.logger.log('Cleaning up IcyMetadataService...');
+    this.logger.info('Cleaning up IcyMetadataService...');
 
     // Remove global error handler
     process.removeListener('uncaughtException', this.uncaughtErrorHandler);
@@ -348,7 +353,7 @@ export class IcyMetadataService implements OnModuleInit, OnModuleDestroy {
       this.closeStream(stationUuid);
     });
 
-    this.logger.log('IcyMetadataService cleanup complete');
+    this.logger.info('IcyMetadataService cleanup complete');
   }
 
   /**

@@ -9,8 +9,8 @@ import {
   UseGuards,
   Req,
   Inject,
-  Logger,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -45,9 +45,9 @@ import { WaveMixService } from '../../infrastructure/services/wave-mix.service';
 @UseGuards(JwtAuthGuard)
 @Controller('recommendations')
 export class RecommendationsController {
-  private readonly logger = new Logger(RecommendationsController.name);
-
   constructor(
+    @InjectPinoLogger(RecommendationsController.name)
+    private readonly logger: PinoLogger,
     private readonly calculateTrackScoreUseCase: CalculateTrackScoreUseCase,
     private readonly generateDailyMixUseCase: GenerateDailyMixUseCase,
     private readonly generateSmartPlaylistUseCase: GenerateSmartPlaylistUseCase,
@@ -171,11 +171,11 @@ export class RecommendationsController {
     const userId = req.user.id;
 
     // Log for autoplay debugging
-    this.logger.log(`[SmartPlaylist] Generating playlist: artistId=${config.artistId}, name=${config.name}`);
+    this.logger.info(`[SmartPlaylist] Generating playlist: artistId=${config.artistId}, name=${config.name}`);
 
     const result = await this.generateSmartPlaylistUseCase.execute(userId, config as any);
 
-    this.logger.log(`[SmartPlaylist] Generated ${result.tracks.length} tracks for artistId=${config.artistId}`);
+    this.logger.info(`[SmartPlaylist] Generated ${result.tracks.length} tracks for artistId=${config.artistId}`);
 
     // Use helper method to fetch and map tracks
     const trackIds = result.tracks.map((t) => t.trackId);
