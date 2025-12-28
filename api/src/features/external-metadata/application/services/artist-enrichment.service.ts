@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists } from '@infrastructure/database/schema';
@@ -24,9 +25,9 @@ export interface ArtistEnrichmentResult {
  */
 @Injectable()
 export class ArtistEnrichmentService {
-  private readonly logger = new Logger(ArtistEnrichmentService.name);
-
   constructor(
+    @InjectPinoLogger(ArtistEnrichmentService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly conflictService: MetadataConflictService,
@@ -62,7 +63,7 @@ export class ArtistEnrichmentService {
         throw new NotFoundError('Artist', artistId);
       }
 
-      this.logger.log(`Enriching artist: ${artist.name} (ID: ${artistId})`);
+      this.logger.info(`Enriching artist: ${artist.name} (ID: ${artistId})`);
 
       // Step 1: Handle MBID search if missing
       const mbzArtistId = await this.ensureMbid(artistId, artist, errors);
@@ -164,7 +165,7 @@ export class ArtistEnrichmentService {
    * Handle MBID search and auto-apply or create conflict
    */
   private async handleMbidSearch(artistId: string, artistName: string, errors: string[]): Promise<void> {
-    this.logger.log(`Artist "${artistName}" missing MBID, searching MusicBrainz...`);
+    this.logger.info(`Artist "${artistName}" missing MBID, searching MusicBrainz...`);
     try {
       const mbMatches = await this.mbidSearch.searchArtist(artistName);
 
@@ -177,13 +178,13 @@ export class ArtistEnrichmentService {
           await this.createMbidConflict(artistId, artistName, mbMatches);
           await this.markMbidSearched(artistId);
         } else {
-          this.logger.log(
+          this.logger.info(
             `Low confidence matches for "${artistName}" (best: ${topMatch.score}), skipping MBID assignment`
           );
           await this.markMbidSearched(artistId);
         }
       } else {
-        this.logger.log(`No MusicBrainz matches found for "${artistName}"`);
+        this.logger.info(`No MusicBrainz matches found for "${artistName}"`);
         await this.markMbidSearched(artistId);
       }
     } catch (error) {
@@ -209,7 +210,7 @@ export class ArtistEnrichmentService {
         updatedAt: new Date(),
       })
       .where(eq(artists.id, artistId));
-    this.logger.log(
+    this.logger.info(
       `Auto-applied MBID for "${artistName}": ${match.mbid} (score: ${match.score})`
     );
   }
@@ -242,7 +243,7 @@ export class ArtistEnrichmentService {
         allSuggestions: suggestions,
       },
     });
-    this.logger.log(
+    this.logger.info(
       `Created MBID conflict for "${artistName}": score ${topMatch.score}, needs manual review`
     );
   }
@@ -263,7 +264,7 @@ export class ArtistEnrichmentService {
         artistName
       );
       if (genresAdded > 0) {
-        this.logger.log(`Added ${genresAdded} genres for artist: ${artistName}`);
+        this.logger.info(`Added ${genresAdded} genres for artist: ${artistName}`);
       }
     } catch (error) {
       this.logger.warn(`Error enriching genres for "${artistName}": ${(error as Error).message}`);

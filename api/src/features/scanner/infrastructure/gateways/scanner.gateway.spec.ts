@@ -1,9 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
 import { ScannerGateway } from './scanner.gateway';
 import { Server, Socket } from 'socket.io';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { WsJwtGuard } from '../../../../infrastructure/websocket/guards/ws-jwt.guard';
 import { WsThrottlerGuard } from '../../../../infrastructure/websocket/guards/ws-throttler.guard';
+import { WsLoggingInterceptor } from '../../../../infrastructure/websocket/interceptors/ws-logging.interceptor';
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('ScannerGateway', () => {
   let gateway: ScannerGateway;
@@ -30,7 +43,12 @@ describe('ScannerGateway', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ScannerGateway],
+      providers: [
+        ScannerGateway,
+        WsLoggingInterceptor,
+        { provide: getLoggerToken(ScannerGateway.name), useValue: mockLogger },
+        { provide: getLoggerToken(WsLoggingInterceptor.name), useValue: mockLogger },
+      ],
     })
       .overrideGuard(WsJwtGuard)
       .useValue({ canActivate: jest.fn(() => true) })
@@ -44,23 +62,20 @@ describe('ScannerGateway', () => {
 
   describe('lifecycle', () => {
     it('should log on init', () => {
-      const logSpy = jest.spyOn(gateway['logger'], 'log');
       gateway.afterInit(mockServer as Server);
-      expect(logSpy).toHaveBeenCalledWith('🔌 ScannerGateway initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith('🔌 ScannerGateway initialized');
     });
 
     it('should log on connection', () => {
-      const logSpy = jest.spyOn(gateway['logger'], 'log');
       gateway.handleConnection(mockSocket as Socket);
-      expect(logSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Client connected to scanner namespace')
       );
     });
 
     it('should log on disconnection', () => {
-      const logSpy = jest.spyOn(gateway['logger'], 'log');
       gateway.handleDisconnect(mockSocket as Socket);
-      expect(logSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Client disconnected from scanner namespace')
       );
     });

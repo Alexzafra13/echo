@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq, asc, count } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { settings } from '@infrastructure/database/schema';
@@ -15,9 +16,9 @@ import {
  */
 @Injectable()
 export class SettingsRepository implements ISettingsRepository {
-  private readonly logger = new Logger(SettingsRepository.name);
-
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(@InjectPinoLogger(SettingsRepository.name)
+    private readonly logger: PinoLogger,
+    private readonly drizzle: DrizzleService) {}
 
   /**
    * Find a setting by key

@@ -3,8 +3,8 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Logger,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Socket } from 'socket.io';
@@ -25,7 +25,10 @@ import { Socket } from 'socket.io';
  */
 @Injectable()
 export class WsLoggingInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(WsLoggingInterceptor.name);
+  constructor(
+    @InjectPinoLogger(WsLoggingInterceptor.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const client = context.switchToWs().getClient<Socket>();

@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists, customArtistImages } from '@infrastructure/database/schema';
@@ -27,9 +28,9 @@ import {
  */
 @Injectable()
 export class UploadCustomArtistImageUseCase {
-  private readonly logger = new Logger(UploadCustomArtistImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UploadCustomArtistImageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly storage: StorageService,
@@ -63,7 +64,7 @@ export class UploadCustomArtistImageUseCase {
     // Validate file using shared utility
     validateFileUpload(input.file, FILE_UPLOAD_CONFIGS.image);
 
-    this.logger.log(`Uploading custom ${input.imageType} image for artist: ${artist.name}`);
+    this.logger.info(`Uploading custom ${input.imageType} image for artist: ${artist.name}`);
 
     // Get storage path for artist
     const basePath = await this.storage.getArtistMetadataPath(input.artistId);
@@ -78,7 +79,7 @@ export class UploadCustomArtistImageUseCase {
 
     try {
       await writeFileSafe(filePath, input.file.buffer);
-      this.logger.log(`Custom image saved to: ${filePath}`);
+      this.logger.info(`Custom image saved to: ${filePath}`);
     } catch {
       throw new BadRequestException('Failed to save image file');
     }
@@ -102,7 +103,7 @@ export class UploadCustomArtistImageUseCase {
 
     const customImage = customImageResult[0];
 
-    this.logger.log(
+    this.logger.info(
       `✅ Successfully uploaded custom ${input.imageType} image for ${artist.name} (ID: ${customImage.id})`,
     );
 

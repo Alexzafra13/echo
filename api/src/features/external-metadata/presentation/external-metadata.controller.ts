@@ -5,9 +5,9 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Logger,
   UseGuards,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ExternalMetadataService } from '../application/external-metadata.service';
 import { MetadataEnrichmentGateway } from './metadata-enrichment.gateway';
@@ -28,9 +28,9 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ExternalMetadataController {
-  private readonly logger = new Logger(ExternalMetadataController.name);
-
   constructor(
+    @InjectPinoLogger(ExternalMetadataController.name)
+    private readonly logger: PinoLogger,
     private readonly metadataService: ExternalMetadataService,
     private readonly gateway: MetadataEnrichmentGateway
   ) {}

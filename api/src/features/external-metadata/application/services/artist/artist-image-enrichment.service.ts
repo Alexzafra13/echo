@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import * as path from 'path';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -31,9 +32,9 @@ export interface ImageEnrichmentResult {
  */
 @Injectable()
 export class ArtistImageEnrichmentService {
-  private readonly logger = new Logger(ArtistImageEnrichmentService.name);
-
   constructor(
+    @InjectPinoLogger(ArtistImageEnrichmentService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly cache: MetadataCacheService,
@@ -91,7 +92,7 @@ export class ArtistImageEnrichmentService {
         `/api/images/artists/${artistId}/profile`
       );
 
-      this.logger.log(`Updated images for: ${artist.name} (${localPaths.totalSize} bytes)`);
+      this.logger.info(`Updated images for: ${artist.name} (${localPaths.totalSize} bytes)`);
       return { updated: true, totalSize: localPaths.totalSize, source: images.source };
     }
 

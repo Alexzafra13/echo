@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and } from 'drizzle-orm';
 import { albums, customAlbumCovers } from '@infrastructure/database/schema';
@@ -15,9 +16,9 @@ import {
  */
 @Injectable()
 export class ApplyCustomAlbumCoverUseCase {
-  private readonly logger = new Logger(ApplyCustomAlbumCoverUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ApplyCustomAlbumCoverUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageService: ImageService,
     private readonly metadataGateway: MetadataEnrichmentGateway,
@@ -61,7 +62,7 @@ export class ApplyCustomAlbumCoverUseCase {
       );
     }
 
-    this.logger.log(`Applying custom cover for album: ${album.name}`);
+    this.logger.info(`Applying custom cover for album: ${album.name}`);
 
     // Deactivate all other custom covers for this album
     await this.drizzle.db
@@ -93,7 +94,7 @@ export class ApplyCustomAlbumCoverUseCase {
       });
     }
 
-    this.logger.log(`✅ Successfully applied custom cover for ${album.name}`);
+    this.logger.info(`✅ Successfully applied custom cover for ${album.name}`);
 
     return {
       success: true,

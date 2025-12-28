@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -15,11 +16,12 @@ import { SettingsService } from './settings.service';
  */
 @Injectable()
 export class StorageService {
-  private readonly logger = new Logger(StorageService.name);
   private basePath: string = '';
   private initialized = false;
 
   constructor(
+    @InjectPinoLogger(StorageService.name)
+    private readonly logger: PinoLogger,
     private readonly config: ConfigService,
     private readonly settings: SettingsService
   ) {}
@@ -79,7 +81,7 @@ export class StorageService {
       await this.initializeDefaultImages();
 
       this.initialized = true;
-      this.logger.log(`Storage initialized at: ${this.basePath} (mode: ${storageLocation}${isTestEnv ? ', test' : ''})`);
+      this.logger.info(`Storage initialized at: ${this.basePath} (mode: ${storageLocation}${isTestEnv ? ', test' : ''})`);
     } catch (error) {
       this.logger.error(`Failed to initialize storage: ${(error as Error).message}`, (error as Error).stack);
       throw error;
@@ -474,7 +476,7 @@ export class StorageService {
 
       // Copy default cover
       await fs.copyFile(defaultCoverSrc, defaultCoverDest);
-      this.logger.log('Default album cover initialized');
+      this.logger.info('Default album cover initialized');
     } catch (error) {
       this.logger.warn(
         `Failed to initialize default images: ${(error as Error).message}. Default images may not be available.`

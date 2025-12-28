@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IArtistBioRetriever } from '../../domain/interfaces';
 import { ArtistBio } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
@@ -23,8 +24,6 @@ import { ExternalApiError } from '@shared/errors';
 export class WikipediaAgent implements IArtistBioRetriever {
   readonly name = 'wikipedia';
   readonly priority = 10; // Secondary source (Last.fm is 5 when enabled)
-
-  private readonly logger = new Logger(WikipediaAgent.name);
   private readonly userAgent = 'Echo-Music-Server/1.0.0 (Wikipedia Biography Retrieval)';
 
   // Language priority order
@@ -66,7 +65,9 @@ export class WikipediaAgent implements IArtistBioRetriever {
     'mtv', 'spotify', 'música', 'music', 'musical',
   ];
 
-  constructor(private readonly rateLimiter: RateLimiterService) {}
+  constructor(@InjectPinoLogger(WikipediaAgent.name)
+    private readonly logger: PinoLogger,
+    private readonly rateLimiter: RateLimiterService) {}
 
   isEnabled(): boolean {
     return true; // Always enabled - no API key required

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
 import { ApplyAlbumCoverUseCase } from './apply-album-cover.use-case';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
@@ -17,6 +18,17 @@ jest.mock('@shared/utils', () => ({
   safeDeleteFile: jest.fn().mockResolvedValue(undefined),
   fileExists: jest.fn().mockResolvedValue(false),
 }));
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('ApplyAlbumCoverUseCase', () => {
   let useCase: ApplyAlbumCoverUseCase;
@@ -87,6 +99,7 @@ describe('ApplyAlbumCoverUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplyAlbumCoverUseCase,
+        { provide: getLoggerToken(ApplyAlbumCoverUseCase.name), useValue: mockLogger },
         { provide: DrizzleService, useValue: mockDrizzle },
         { provide: RedisService, useValue: mockRedis },
         { provide: ImageDownloadService, useValue: mockImageDownload },

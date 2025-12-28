@@ -7,7 +7,6 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  Logger,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -18,6 +17,7 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IsString } from 'class-validator';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
@@ -50,9 +50,11 @@ class BrowseDirectoriesDto {
 @Controller('admin/library')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminLibraryController {
-  private readonly logger = new Logger(AdminLibraryController.name);
-
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(
+    @InjectPinoLogger(AdminLibraryController.name)
+    private readonly logger: PinoLogger,
+    private readonly settingsService: SettingsService,
+  ) {}
 
   /**
    * Get current library configuration
@@ -146,7 +148,7 @@ export class AdminLibraryController {
     // Save to settings
     await this.settingsService.set(LIBRARY_PATH_KEY, normalizedPath);
 
-    this.logger.log(`Music library path updated to: ${normalizedPath}`);
+    this.logger.info(`Music library path updated to: ${normalizedPath}`);
 
     // Count music files
     const fileCount = await this.countMusicFiles(normalizedPath);

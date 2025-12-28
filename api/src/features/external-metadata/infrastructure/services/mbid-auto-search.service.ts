@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, count, sql } from 'drizzle-orm';
 import { artists, albums, tracks, metadataConflicts } from '@infrastructure/database/schema';
@@ -25,9 +26,9 @@ export type { MbidSearchResult } from './mbid-search';
  */
 @Injectable()
 export class MbidAutoSearchService {
-  private readonly logger = new Logger(MbidAutoSearchService.name);
-
   constructor(
+    @InjectPinoLogger(MbidAutoSearchService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly searchExecutor: MbidSearchExecutorService,
     private readonly confidenceStrategy: MbidConfidenceStrategyService,
@@ -50,7 +51,7 @@ export class MbidAutoSearchService {
       const result = await this.confidenceStrategy.determineAction(matches, artistName);
 
       if (result.action === 'auto-apply' && result.topMatch) {
-        this.logger.log(
+        this.logger.info(
           `High confidence match (${result.topMatch.score}) for artist "${artistName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`,
         );
 
@@ -97,7 +98,7 @@ export class MbidAutoSearchService {
       const result = await this.confidenceStrategy.determineAction(matches, albumName);
 
       if (result.action === 'auto-apply' && result.topMatch) {
-        this.logger.log(
+        this.logger.info(
           `High confidence match (${result.topMatch.score}) for album "${albumName}" → "${result.topMatch.name}" (${result.topMatch.mbid})`,
         );
 
@@ -156,7 +157,7 @@ export class MbidAutoSearchService {
       const result = await this.confidenceStrategy.determineAction(matches, params.title);
 
       if (result.action === 'auto-apply' && result.topMatch) {
-        this.logger.log(
+        this.logger.info(
           `High confidence match (${result.topMatch.score}) for track "${params.title}" → "${result.topMatch.name}" (${result.topMatch.mbid})`,
         );
 

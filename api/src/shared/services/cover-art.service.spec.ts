@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { getLoggerToken } from 'nestjs-pino';
 import { CoverArtService } from './cover-art.service';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';
@@ -13,6 +14,17 @@ jest.mock('fs', () => ({
   existsSync: jest.fn(),
 }));
 // music-metadata is mocked via moduleNameMapper in jest.config.js
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('CoverArtService', () => {
   let service: CoverArtService;
@@ -42,6 +54,7 @@ describe('CoverArtService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoverArtService,
+        { provide: getLoggerToken(CoverArtService.name), useValue: mockLogger },
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -76,6 +89,7 @@ describe('CoverArtService', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           CoverArtService,
+          { provide: getLoggerToken(CoverArtService.name), useValue: mockLogger },
           {
             provide: ConfigService,
             useValue: mockConfigService,
@@ -95,6 +109,7 @@ describe('CoverArtService', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           CoverArtService,
+          { provide: getLoggerToken(CoverArtService.name), useValue: mockLogger },
           {
             provide: ConfigService,
             useValue: mockConfigService,

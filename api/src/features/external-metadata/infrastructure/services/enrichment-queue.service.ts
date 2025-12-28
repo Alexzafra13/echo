@@ -1,4 +1,5 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { albums, artists } from '@infrastructure/database/schema';
@@ -57,8 +58,6 @@ export interface EnrichmentQueueStats {
  */
 @Injectable()
 export class EnrichmentQueueService implements OnModuleInit {
-  private readonly logger = new Logger(EnrichmentQueueService.name);
-
   // Session stats
   private isRunning = false;
   private processedInSession = 0;
@@ -67,6 +66,8 @@ export class EnrichmentQueueService implements OnModuleInit {
   private averageProcessingTime = 5000; // Initial estimate: 5 seconds
 
   constructor(
+    @InjectPinoLogger(EnrichmentQueueService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly bullmq: BullmqService,
     private readonly externalMetadataService: ExternalMetadataService,
@@ -80,12 +81,12 @@ export class EnrichmentQueueService implements OnModuleInit {
       return this.processEnrichmentJob(job.data as EnrichmentJob);
     });
 
-    this.logger.log('EnrichmentQueueService initialized');
+    this.logger.info('EnrichmentQueueService initialized');
 
     // Check if there are pending items from a previous session
     const stats = await this.getQueueStats();
     if (stats.totalPending > 0) {
-      this.logger.log(
+      this.logger.info(
         `Found ${stats.totalPending} pending enrichment items from previous session`
       );
     }
@@ -121,7 +122,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     this.sessionStartedAt = new Date();
     this.currentItem = null;
 
-    this.logger.log(
+    this.logger.info(
       `🚀 Starting enrichment queue: ${stats.pendingArtists} artists, ${stats.pendingAlbums} albums`
     );
 
@@ -149,7 +150,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     this.isRunning = false;
     this.currentItem = null;
 
-    this.logger.log('⏹️ Enrichment queue stopped');
+    this.logger.info('⏹️ Enrichment queue stopped');
 
     this.gateway.emitQueueStopped({
       processedInSession: this.processedInSession,
@@ -208,7 +209,7 @@ export class EnrichmentQueueService implements OnModuleInit {
     this.currentItem = `${job.type}: ${job.entityName}`;
 
     try {
-      this.logger.log(`📥 Processing ${job.type}: ${job.entityName}`);
+      this.logger.info(`📥 Processing ${job.type}: ${job.entityName}`);
 
       if (job.type === 'artist') {
         await this.externalMetadataService.enrichArtist(job.entityId, false);
@@ -234,7 +235,7 @@ export class EnrichmentQueueService implements OnModuleInit {
         estimatedTimeRemaining: stats.estimatedTimeRemaining,
       });
 
-      this.logger.log(
+      this.logger.info(
         `✅ Completed ${job.type}: ${job.entityName} (${processingTime}ms, ${stats.totalPending} remaining)`
       );
 
@@ -297,7 +298,7 @@ export class EnrichmentQueueService implements OnModuleInit {
       ? Date.now() - this.sessionStartedAt.getTime()
       : 0;
 
-    this.logger.log(
+    this.logger.info(
       `🎉 Enrichment queue completed! Processed ${this.processedInSession} items in ${this.formatDuration(duration)}`
     );
 
@@ -439,7 +440,7 @@ export class EnrichmentQueueService implements OnModuleInit {
         .where(artistConditions);
 
       artistsReset = result.rowCount ?? 0;
-      this.logger.log(`Reset enrichment state for ${artistsReset} artists`);
+      this.logger.info(`Reset enrichment state for ${artistsReset} artists`);
     }
 
     if (resetAlbums) {
@@ -458,7 +459,7 @@ export class EnrichmentQueueService implements OnModuleInit {
         .where(albumConditions);
 
       albumsReset = result.rowCount ?? 0;
-      this.logger.log(`Reset enrichment state for ${albumsReset} albums`);
+      this.logger.info(`Reset enrichment state for ${albumsReset} albums`);
     }
 
     return { artistsReset, albumsReset };

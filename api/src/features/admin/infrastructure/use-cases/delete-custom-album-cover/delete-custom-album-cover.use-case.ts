@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and } from 'drizzle-orm';
 import { albums, customAlbumCovers } from '@infrastructure/database/schema';
@@ -17,9 +18,9 @@ import {
  */
 @Injectable()
 export class DeleteCustomAlbumCoverUseCase {
-  private readonly logger = new Logger(DeleteCustomAlbumCoverUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteCustomAlbumCoverUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly imageService: ImageService,
@@ -62,7 +63,7 @@ export class DeleteCustomAlbumCoverUseCase {
       );
     }
 
-    this.logger.log(`Deleting custom cover for album: ${album.name}`);
+    this.logger.info(`Deleting custom cover for album: ${album.name}`);
 
     // Delete file from disk
     try {
@@ -91,7 +92,7 @@ export class DeleteCustomAlbumCoverUseCase {
     // Invalidate image cache
     this.imageService.invalidateAlbumCache(input.albumId);
 
-    this.logger.log(`✅ Successfully deleted custom cover for ${album.name}`);
+    this.logger.info(`✅ Successfully deleted custom cover for ${album.name}`);
 
     return {
       success: true,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { MusicBrainzAgent } from '../../agents/musicbrainz.agent';
 import { MbidSearchCacheService } from '../mbid-search-cache.service';
 
@@ -18,9 +19,9 @@ export interface MbidMatch {
  */
 @Injectable()
 export class MbidSearchExecutorService {
-  private readonly logger = new Logger(MbidSearchExecutorService.name);
-
   constructor(
+    @InjectPinoLogger(MbidSearchExecutorService.name)
+    private readonly logger: PinoLogger,
     private readonly musicBrainzAgent: MusicBrainzAgent,
     private readonly searchCache: MbidSearchCacheService,
   ) {}

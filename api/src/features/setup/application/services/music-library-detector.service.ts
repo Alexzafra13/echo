@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -27,7 +28,6 @@ export interface LibraryValidationResult {
  */
 @Injectable()
 export class MusicLibraryDetectorService {
-  private readonly logger = new Logger(MusicLibraryDetectorService.name);
   private readonly musicExtensions = [
     '.mp3',
     '.flac',
@@ -39,6 +39,11 @@ export class MusicLibraryDetectorService {
     '.opus',
   ];
   private readonly mountPoints = ['/music', '/mnt', '/media', '/data'];
+
+  constructor(
+    @InjectPinoLogger(MusicLibraryDetectorService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   /**
    * Check available media folders (Jellyfin-style)
@@ -97,7 +102,7 @@ export class MusicLibraryDetectorService {
       this.logger.warn(`Could not count music files: ${(error as Error).message}`);
     }
 
-    this.logger.log(`Library validation: ${libraryPath} (${fileCount} files found)`);
+    this.logger.info(`Library validation: ${libraryPath} (${fileCount} files found)`);
 
     return {
       valid: true,

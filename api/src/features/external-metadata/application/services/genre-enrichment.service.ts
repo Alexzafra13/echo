@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { genres, artistGenres, albumGenres } from '@infrastructure/database/schema';
@@ -12,9 +13,9 @@ import { MbidSearchService } from './mbid-search.service';
  */
 @Injectable()
 export class GenreEnrichmentService {
-  private readonly logger = new Logger(GenreEnrichmentService.name);
-
   constructor(
+    @InjectPinoLogger(GenreEnrichmentService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly mbidSearch: MbidSearchService,

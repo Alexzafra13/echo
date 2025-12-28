@@ -1,8 +1,21 @@
 import { ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
+import { PinoLogger } from 'nestjs-pino';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { Socket } from 'socket.io';
+
+const createMockLogger = (): jest.Mocked<PinoLogger> =>
+  ({
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+    setContext: jest.fn(),
+    assign: jest.fn(),
+  }) as unknown as jest.Mocked<PinoLogger>;
 
 interface MockSocket {
   id: string;
@@ -19,13 +32,15 @@ describe('WsJwtGuard', () => {
   let mockJwtService: { verifyAsync: jest.Mock };
   let mockSocket: MockSocket;
   let mockContext: ExecutionContext;
+  let mockLogger: jest.Mocked<PinoLogger>;
 
   beforeEach(() => {
+    mockLogger = createMockLogger();
     mockJwtService = {
       verifyAsync: jest.fn(),
     };
 
-    guard = new WsJwtGuard(mockJwtService as unknown as JwtService);
+    guard = new WsJwtGuard(mockLogger, mockJwtService as unknown as JwtService);
 
     mockSocket = {
       id: 'test-socket-id',
