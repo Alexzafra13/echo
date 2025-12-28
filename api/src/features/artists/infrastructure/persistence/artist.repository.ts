@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, desc, count, sql, gt, and } from 'drizzle-orm';
+import { eq, desc, count, sql, gt, and, inArray } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
 import { createSearchPattern } from '@shared/utils';
@@ -39,6 +39,38 @@ export class DrizzleArtistRepository
       .limit(1);
 
     return result[0] ? ArtistMapper.toDomain(result[0]) : null;
+  }
+
+  async findByIds(ids: string[]): Promise<Artist[]> {
+    if (ids.length === 0) return [];
+
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(inArray(artists.id, ids));
+
+    return ArtistMapper.toDomainArray(result);
+  }
+
+  async findByNames(names: string[]): Promise<Map<string, Artist>> {
+    if (names.length === 0) return new Map();
+
+    // Normalize names to lowercase for comparison
+    const lowerNames = names.map(n => n.toLowerCase());
+
+    const result = await this.drizzle.db
+      .select()
+      .from(artists)
+      .where(sql`LOWER(${artists.name}) IN ${lowerNames}`);
+
+    // Build map with lowercase name as key for O(1) lookup
+    const artistMap = new Map<string, Artist>();
+    for (const row of result) {
+      const artist = ArtistMapper.toDomain(row);
+      artistMap.set(artist.name.toLowerCase(), artist);
+    }
+
+    return artistMap;
   }
 
   async findAll(skip: number, take: number): Promise<Artist[]> {
