@@ -78,11 +78,11 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
       },
     }),
 
-    // Rate Limiting (protección contra fuerza bruta y DoS)
-    // Sensible defaults for production - can be overridden per-route with @Throttle()
+    // Rate Limiting - 300 req/min per IP (5/sec)
+    // Routes like /auth/login have stricter limits via @Throttle()
     ThrottlerModule.forRoot([{
-      ttl: 60000, // 60 seconds
-      limit: parseInt(process.env.RATE_LIMIT_DEFAULT ?? '300', 10), // 300 req/min per IP (5/sec)
+      ttl: 60000,
+      limit: 300,
     }]),
 
     // Scheduled Tasks (cron jobs)

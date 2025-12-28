@@ -258,18 +258,17 @@ Node.js: ${process.version}
   `);
 
   // Graceful shutdown handlers
-  const SHUTDOWN_TIMEOUT = parseInt(process.env.SHUTDOWN_TIMEOUT ?? '10000', 10);
+  const SHUTDOWN_TIMEOUT = 10000; // 10 seconds
   let isShuttingDown = false;
 
   const gracefulShutdown = async (signal: string) => {
-    // Prevent multiple shutdown attempts
     if (isShuttingDown) {
       logger.warn({ signal }, 'Shutdown already in progress, ignoring signal');
       return;
     }
     isShuttingDown = true;
 
-    logger.log({ signal, timeout: SHUTDOWN_TIMEOUT }, 'Starting graceful shutdown...');
+    logger.log({ signal }, 'Starting graceful shutdown...');
 
     // Force exit after timeout
     const forceExitTimer = setTimeout(() => {
