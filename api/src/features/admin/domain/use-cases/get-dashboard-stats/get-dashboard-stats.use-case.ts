@@ -1,4 +1,5 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   ILibraryStatsProvider,
   IStorageBreakdownProvider,
@@ -25,9 +26,9 @@ import { GetDashboardStatsInput, GetDashboardStatsOutput } from './get-dashboard
  */
 @Injectable()
 export class GetDashboardStatsUseCase {
-  private readonly logger = new Logger(GetDashboardStatsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetDashboardStatsUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(LIBRARY_STATS_PROVIDER)
     private readonly libraryStats: ILibraryStatsProvider,
     @Inject(STORAGE_BREAKDOWN_PROVIDER)
