@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { createHash } from 'crypto';
 
 export interface CachedImageResult {
@@ -16,7 +17,11 @@ export interface CachedImageResult {
  */
 @Injectable()
 export class ImageCacheService {
-  private readonly logger = new Logger(ImageCacheService.name);
+  constructor(
+    @InjectPinoLogger(ImageCacheService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   private readonly cache = new Map<string, CachedImageResult>();
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 

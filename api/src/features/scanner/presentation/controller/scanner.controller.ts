@@ -9,8 +9,8 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  Logger,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -53,9 +53,9 @@ import {
 @Controller('scanner')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class ScannerController {
-  private readonly logger = new Logger(ScannerController.name);
-
   constructor(
+    @InjectPinoLogger(ScannerController.name)
+    private readonly logger: PinoLogger,
     private readonly startScanUseCase: StartScanUseCase,
     private readonly getScanStatusUseCase: GetScanStatusUseCase,
     private readonly getScansHistoryUseCase: GetScansHistoryUseCase,
@@ -221,7 +221,7 @@ export class ScannerController {
   })
   async purgeMissingFiles() {
     try {
-      this.logger.log('Manual purge of missing files requested');
+      this.logger.info('Manual purge of missing files requested');
       const deleted = await this.libraryCleanup.purgeOldMissingTracks();
 
       return {
@@ -259,7 +259,7 @@ export class ScannerController {
   })
   async deleteMissingTrack(@Param('id') id: string) {
     try {
-      this.logger.log(`Deleting missing track: ${id}`);
+      this.logger.info(`Deleting missing track: ${id}`);
 
       const result = await this.libraryCleanup.deleteMissingTrackById(id);
 

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists } from '@infrastructure/database/schema';
@@ -20,9 +21,9 @@ export interface BioEnrichmentResult {
  */
 @Injectable()
 export class ArtistBioEnrichmentService {
-  private readonly logger = new Logger(ArtistBioEnrichmentService.name);
-
   constructor(
+    @InjectPinoLogger(ArtistBioEnrichmentService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly cache: MetadataCacheService,
@@ -65,7 +66,7 @@ export class ArtistBioEnrichmentService {
         Date.now() - startTime
       );
 
-      this.logger.log(`Updated biography for: ${artist.name} (source: ${bio.source})`);
+      this.logger.info(`Updated biography for: ${artist.name} (source: ${bio.source})`);
       return { updated: true, source: bio.source };
     }
 
@@ -145,7 +146,7 @@ export class ArtistBioEnrichmentService {
           fullBioLength: bio.content.length,
         },
       });
-      this.logger.log(
+      this.logger.info(
         `Created conflict for artist "${artist.name}": existing bio vs ${bio.source} suggestion`
       );
     }

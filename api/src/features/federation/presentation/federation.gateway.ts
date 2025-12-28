@@ -9,7 +9,8 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastructure/websocket';
 import { IsString } from 'class-validator';
 import { AlbumImportProgressEvent } from '../infrastructure/services/album-import.service';
@@ -55,11 +56,13 @@ class SubscribeImportDto {
 @UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class FederationGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  constructor(
+    @InjectPinoLogger(FederationGateway.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   @WebSocketServer()
   server!: Server;
-
-  private readonly logger = new Logger(FederationGateway.name);
-
   // Store latest progress for each active import (for late subscribers)
   private importProgress = new Map<string, AlbumImportProgressEvent>();
 
@@ -67,7 +70,7 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
   private userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
 
   afterInit(server: Server) {
-    this.logger.log('FederationGateway initialized');
+    this.logger.info('FederationGateway initialized');
   }
 
   handleConnection(client: Socket) {
@@ -78,7 +81,7 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
       }
       this.userSockets.get(userId)!.add(client.id);
     }
-    this.logger.log(`Client connected to federation namespace: ${client.id} (User: ${userId || 'anonymous'})`);
+    this.logger.info(`Client connected to federation namespace: ${client.id} (User: ${userId || 'anonymous'})`);
   }
 
   handleDisconnect(client: Socket) {
@@ -89,7 +92,7 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
         this.userSockets.delete(userId);
       }
     }
-    this.logger.log(`Client disconnected from federation namespace: ${client.id}`);
+    this.logger.info(`Client disconnected from federation namespace: ${client.id}`);
   }
 
   /**

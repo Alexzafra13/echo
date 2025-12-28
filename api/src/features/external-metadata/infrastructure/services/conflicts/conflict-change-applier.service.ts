@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists, albums, tracks } from '@infrastructure/database/schema';
@@ -22,9 +23,9 @@ export interface ConflictData {
  */
 @Injectable()
 export class ConflictChangeApplierService {
-  private readonly logger = new Logger(ConflictChangeApplierService.name);
-
   constructor(
+    @InjectPinoLogger(ConflictChangeApplierService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
@@ -65,7 +66,7 @@ export class ConflictChangeApplierService {
         if (conflict.metadata?.suggestedMbid) {
           updateData.mbzArtistId = conflict.metadata.suggestedMbid;
           updateData.mbidSearchedAt = new Date();
-          this.logger.log(
+          this.logger.info(
             `Applying MBID ${conflict.metadata.suggestedMbid} for artist ${conflict.entityId}`,
           );
         }
@@ -85,7 +86,7 @@ export class ConflictChangeApplierService {
       .where(eq(artists.id, conflict.entityId))
       .returning();
 
-    this.logger.log(`Applied ${conflict.field} change to artist ${conflict.entityId}`);
+    this.logger.info(`Applied ${conflict.field} change to artist ${conflict.entityId}`);
     return updatedResults[0];
   }
 
@@ -131,7 +132,7 @@ export class ConflictChangeApplierService {
       .where(eq(albums.id, conflict.entityId))
       .returning();
 
-    this.logger.log(`Applied ${conflict.field} change to album ${conflict.entityId}`);
+    this.logger.info(`Applied ${conflict.field} change to album ${conflict.entityId}`);
     return updatedResults[0];
   }
 
@@ -143,7 +144,7 @@ export class ConflictChangeApplierService {
     updateData: Record<string, any>,
   ): Promise<void> {
     const coverUrl = conflict.suggestedValue;
-    this.logger.log(
+    this.logger.info(
       `Downloading cover for album ${conflict.entityId} from ${conflict.source}: ${coverUrl}`,
     );
 
@@ -157,7 +158,7 @@ export class ConflictChangeApplierService {
       updateData.externalCoverSource = conflict.source;
       updateData.externalInfoUpdatedAt = new Date();
 
-      this.logger.log(
+      this.logger.info(
         `Successfully downloaded cover for album ${conflict.entityId}: ${coverPath}`,
       );
     } catch (error) {
@@ -193,7 +194,7 @@ export class ConflictChangeApplierService {
       .where(eq(tracks.id, conflict.entityId))
       .returning();
 
-    this.logger.log(`Applied ${conflict.field} change to track ${conflict.entityId}`);
+    this.logger.info(`Applied ${conflict.field} change to track ${conflict.entityId}`);
     return updatedResults[0];
   }
 }

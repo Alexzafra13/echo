@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { AgentRegistryService } from '../../infrastructure/services/agent-registry.service';
 import { MusicBrainzArtistMatch, MusicBrainzAlbumMatch } from '../../domain/interfaces';
 
@@ -8,9 +9,9 @@ import { MusicBrainzArtistMatch, MusicBrainzAlbumMatch } from '../../domain/inte
  */
 @Injectable()
 export class MbidSearchService {
-  private readonly logger = new Logger(MbidSearchService.name);
-
-  constructor(private readonly agentRegistry: AgentRegistryService) {}
+  constructor(@InjectPinoLogger(MbidSearchService.name)
+    private readonly logger: PinoLogger,
+    private readonly agentRegistry: AgentRegistryService) {}
 
   /**
    * Search for artist MBID in MusicBrainz

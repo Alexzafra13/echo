@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and } from 'drizzle-orm';
 import { artists, customArtistImages } from '@infrastructure/database/schema';
@@ -17,9 +18,9 @@ import {
  */
 @Injectable()
 export class ApplyCustomArtistImageUseCase {
-  private readonly logger = new Logger(ApplyCustomArtistImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ApplyCustomArtistImageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageService: ImageService,
@@ -56,7 +57,7 @@ export class ApplyCustomArtistImageUseCase {
       throw new BadRequestException('Artist ID mismatch');
     }
 
-    this.logger.log(
+    this.logger.info(
       `Applying custom ${customImage.imageType} image for artist: ${customImage.artist.name}`,
     );
 
@@ -110,7 +111,7 @@ export class ApplyCustomArtistImageUseCase {
       updatedAt: new Date(),
     });
 
-    this.logger.log(
+    this.logger.info(
       `✅ Successfully applied custom ${customImage.imageType} image for ${customImage.artist.name}`,
     );
 

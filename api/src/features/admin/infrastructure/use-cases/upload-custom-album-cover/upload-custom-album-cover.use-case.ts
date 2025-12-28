@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { albums, customAlbumCovers } from '@infrastructure/database/schema';
@@ -27,9 +28,9 @@ import {
  */
 @Injectable()
 export class UploadCustomAlbumCoverUseCase {
-  private readonly logger = new Logger(UploadCustomAlbumCoverUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UploadCustomAlbumCoverUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly storage: StorageService,
@@ -57,7 +58,7 @@ export class UploadCustomAlbumCoverUseCase {
     // Validate file using shared utility
     validateFileUpload(input.file, FILE_UPLOAD_CONFIGS.image);
 
-    this.logger.log(`Uploading custom cover for album: ${album.name}`);
+    this.logger.info(`Uploading custom cover for album: ${album.name}`);
 
     // Get storage path for album (using metadata directory)
     const basePath = path.join(
@@ -77,7 +78,7 @@ export class UploadCustomAlbumCoverUseCase {
 
     try {
       await writeFileSafe(filePath, input.file.buffer);
-      this.logger.log(`Custom cover saved to: ${filePath}`);
+      this.logger.info(`Custom cover saved to: ${filePath}`);
     } catch {
       throw new BadRequestException('Failed to save cover file');
     }
@@ -100,7 +101,7 @@ export class UploadCustomAlbumCoverUseCase {
 
     const customCover = customCoverResult[0];
 
-    this.logger.log(
+    this.logger.info(
       `✅ Successfully uploaded custom cover for ${album.name} (ID: ${customCover.id})`,
     );
 

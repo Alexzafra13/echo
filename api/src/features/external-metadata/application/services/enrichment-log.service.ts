@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { enrichmentLogs } from '@infrastructure/database/schema';
 
@@ -21,9 +22,9 @@ export interface EnrichmentLogData {
  */
 @Injectable()
 export class EnrichmentLogService {
-  private readonly logger = new Logger(EnrichmentLogService.name);
-
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(@InjectPinoLogger(EnrichmentLogService.name)
+    private readonly logger: PinoLogger,
+    private readonly drizzle: DrizzleService) {}
 
   /**
    * Create an enrichment log entry

@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { albums } from '@infrastructure/database/schema';
@@ -22,9 +23,9 @@ import {
  */
 @Injectable()
 export class ApplyAlbumCoverUseCase {
-  private readonly logger = new Logger(ApplyAlbumCoverUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ApplyAlbumCoverUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
@@ -47,7 +48,7 @@ export class ApplyAlbumCoverUseCase {
       throw new NotFoundException(`Album not found: ${input.albumId}`);
     }
 
-    this.logger.log(
+    this.logger.info(
       `Applying cover for album: ${album.name} from ${input.provider}`,
     );
 
@@ -76,7 +77,7 @@ export class ApplyAlbumCoverUseCase {
       const width = dimensions.width;
       const height = dimensions.height;
 
-      this.logger.log(
+      this.logger.info(
         `Cover dimensions: ${width}x${height}`,
       );
 
@@ -91,7 +92,7 @@ export class ApplyAlbumCoverUseCase {
 
       // Rename temp file to final name
       await fs.rename(tempPath, coverPath);
-      this.logger.log(`Saved cover to: ${coverPath} (${width}x${height})`);
+      this.logger.info(`Saved cover to: ${coverPath} (${width}x${height})`);
 
       // Store the final path for database update
       finalCoverPath = coverPath;

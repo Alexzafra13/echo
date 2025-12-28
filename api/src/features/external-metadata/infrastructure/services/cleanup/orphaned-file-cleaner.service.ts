@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../storage.service';
 import { eq } from 'drizzle-orm';
@@ -28,9 +29,9 @@ export interface CleanupResult {
  */
 @Injectable()
 export class OrphanedFileCleanerService {
-  private readonly logger = new Logger(OrphanedFileCleanerService.name);
-
   constructor(
+    @InjectPinoLogger(OrphanedFileCleanerService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
   ) {}
@@ -49,7 +50,7 @@ export class OrphanedFileCleanerService {
     };
 
     try {
-      this.logger.log(`Starting orphaned files cleanup (dry run: ${dryRun})`);
+      this.logger.info(`Starting orphaned files cleanup (dry run: ${dryRun})`);
 
       // 1. Clean orphaned artist files
       const artistCleanup = await this.cleanupArtistFiles(dryRun);
@@ -66,7 +67,7 @@ export class OrphanedFileCleanerService {
 
       result.duration = Date.now() - startTime;
 
-      this.logger.log(
+      this.logger.info(
         `Orphaned files cleanup completed: ${result.filesRemoved} files removed, ` +
           `${(result.spaceFree / 1024 / 1024).toFixed(2)} MB freed in ${result.duration}ms`,
       );
@@ -215,7 +216,7 @@ export class OrphanedFileCleanerService {
 
       if (!dryRun) {
         await fs.rm(dirPath, { recursive: true, force: true });
-        this.logger.log(`Removed orphaned ${entityType} directory: ${dirPath}`);
+        this.logger.info(`Removed orphaned ${entityType} directory: ${dirPath}`);
       } else {
         this.logger.debug(`Would remove: ${dirPath} (${files.length} files)`);
       }
@@ -238,7 +239,7 @@ export class OrphanedFileCleanerService {
         .where(eq(customAlbumCovers.isActive, false))
         .returning();
 
-      this.logger.log(
+      this.logger.info(
         `Deleted inactive records: ${deletedArtistImages.length} artist images, ${deletedAlbumCovers.length} album covers`,
       );
     } catch (error) {

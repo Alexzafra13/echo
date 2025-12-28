@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists } from '@infrastructure/database/schema';
@@ -15,9 +16,9 @@ import {
  */
 @Injectable()
 export class UpdateArtistBackgroundPositionUseCase {
-  private readonly logger = new Logger(UpdateArtistBackgroundPositionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateArtistBackgroundPositionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly metadataGateway: MetadataEnrichmentGateway,
@@ -42,7 +43,7 @@ export class UpdateArtistBackgroundPositionUseCase {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
     }
 
-    this.logger.log(
+    this.logger.info(
       `Updating background position for artist: ${artist.name} to "${input.backgroundPosition}"`,
     );
 
@@ -67,7 +68,7 @@ export class UpdateArtistBackgroundPositionUseCase {
       updatedAt: new Date(),
     });
 
-    this.logger.log(
+    this.logger.info(
       `✅ Successfully updated background position for ${artist.name}`,
     );
 

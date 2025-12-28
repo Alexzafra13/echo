@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { MetadataCacheService } from './metadata-cache.service';
 import {
   OrphanedFileCleanerService,
@@ -26,9 +27,9 @@ export type { CleanupResult, StorageStats } from './cleanup';
  */
 @Injectable()
 export class CleanupService {
-  private readonly logger = new Logger(CleanupService.name);
-
   constructor(
+    @InjectPinoLogger(CleanupService.name)
+    private readonly logger: PinoLogger,
     private readonly metadataCache: MetadataCacheService,
     private readonly orphanedFileCleaner: OrphanedFileCleanerService,
     private readonly storageStats: StorageStatsService,
@@ -77,15 +78,15 @@ export class CleanupService {
     };
 
     try {
-      this.logger.log('Starting metadata cache cleanup...');
+      this.logger.info('Starting metadata cache cleanup...');
 
       const removed = await this.metadataCache.clearExpired();
       result.entriesRemoved = removed;
 
       if (removed > 0) {
-        this.logger.log(`Metadata cache cleanup: removed ${removed} expired entries`);
+        this.logger.info(`Metadata cache cleanup: removed ${removed} expired entries`);
       } else {
-        this.logger.log('Metadata cache cleanup: no expired entries found');
+        this.logger.info('Metadata cache cleanup: no expired entries found');
       }
 
       return result;
@@ -104,14 +105,14 @@ export class CleanupService {
     files: CleanupResult;
     cache: { entriesRemoved: number; errors: string[] };
   }> {
-    this.logger.log(`Starting full cleanup (dry run: ${dryRun})`);
+    this.logger.info(`Starting full cleanup (dry run: ${dryRun})`);
 
     const [filesResult, cacheResult] = await Promise.all([
       this.cleanupOrphanedFiles(dryRun),
       this.cleanupExpiredCache(),
     ]);
 
-    this.logger.log(
+    this.logger.info(
       `Full cleanup completed: ${filesResult.filesRemoved} files, ${cacheResult.entriesRemoved} cache entries`,
     );
 

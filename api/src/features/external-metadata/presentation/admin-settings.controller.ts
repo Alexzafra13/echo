@@ -9,10 +9,10 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Logger,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -83,9 +83,9 @@ class ValidateStoragePathDto {
 @UseGuards(JwtAuthGuard, AdminGuard)
 @ApiBearerAuth()
 export class AdminSettingsController {
-  private readonly logger = new Logger(AdminSettingsController.name);
-
   constructor(
+    @InjectPinoLogger(AdminSettingsController.name)
+    private readonly logger: PinoLogger,
     private readonly settingsService: SettingsService,
     private readonly enrichmentQueueService: EnrichmentQueueService,
     private readonly fanartAgent: FanartTvAgent,
@@ -268,9 +268,9 @@ export class AdminSettingsController {
       await this.settingsService.set(key, dto.value);
 
       if (isCreating) {
-        this.logger.log(`Setting ${key} created with value "${dto.value}"`);
+        this.logger.info(`Setting ${key} created with value "${dto.value}"`);
       } else {
-        this.logger.log(`Setting ${key} updated from "${oldValue}" to "${dto.value}"`);
+        this.logger.info(`Setting ${key} updated from "${oldValue}" to "${dto.value}"`);
       }
 
       // Invalidar caché
@@ -304,42 +304,42 @@ export class AdminSettingsController {
     let agentBecameEnabled = false;
 
     if (key.includes('fanart')) {
-      this.logger.log('Reloading Fanart.tv agent settings...');
+      this.logger.info('Reloading Fanart.tv agent settings...');
       await this.fanartAgent.loadSettings();
       const fanartNowEnabled = this.fanartAgent.isEnabled();
-      this.logger.log(`Fanart.tv agent reloaded (enabled: ${fanartNowEnabled})`);
+      this.logger.info(`Fanart.tv agent reloaded (enabled: ${fanartNowEnabled})`);
 
       // Check if agent was just enabled (wasn't enabled before, now is)
       if (!fanartWasEnabled && fanartNowEnabled) {
         agentBecameEnabled = true;
-        this.logger.log('Fanart.tv agent was just enabled!');
+        this.logger.info('Fanart.tv agent was just enabled!');
       }
     }
 
     if (key.includes('lastfm')) {
-      this.logger.log('Reloading Last.fm agent settings...');
+      this.logger.info('Reloading Last.fm agent settings...');
       await this.lastfmAgent.loadSettings();
       const lastfmNowEnabled = this.lastfmAgent.isEnabled();
-      this.logger.log(`Last.fm agent reloaded (enabled: ${lastfmNowEnabled})`);
+      this.logger.info(`Last.fm agent reloaded (enabled: ${lastfmNowEnabled})`);
 
       // Check if agent was just enabled
       if (!lastfmWasEnabled && lastfmNowEnabled) {
         agentBecameEnabled = true;
-        this.logger.log('Last.fm agent was just enabled!');
+        this.logger.info('Last.fm agent was just enabled!');
       }
     }
 
     // If an agent was just enabled, reset enrichment state for items without external data
     // This allows re-processing items that were skipped when no API keys were configured
     if (agentBecameEnabled) {
-      this.logger.log('Agent enabled - resetting enrichment state for items without external data...');
+      this.logger.info('Agent enabled - resetting enrichment state for items without external data...');
       try {
         const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
           resetArtists: true,
           resetAlbums: true,
           onlyWithoutExternalData: true, // Only reset items that have no external data
         });
-        this.logger.log(
+        this.logger.info(
           `Enrichment state reset: ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums ` +
           `are now ready for re-processing`,
         );
@@ -400,7 +400,7 @@ export class AdminSettingsController {
         throw new BadRequestException('Service must be "lastfm" or "fanart"');
       }
 
-      this.logger.log(`Validating API key for ${dto.service}`);
+      this.logger.info(`Validating API key for ${dto.service}`);
 
       const isValid = await this.settingsService.validateApiKey(dto.service, dto.apiKey);
 
@@ -471,7 +471,7 @@ export class AdminSettingsController {
 
       await this.settingsService.delete(key);
 
-      this.logger.log(`Setting ${key} deleted (reset to default)`);
+      this.logger.info(`Setting ${key} deleted (reset to default)`);
 
       // Invalidar caché
       this.settingsService.clearCache();
@@ -614,7 +614,7 @@ export class AdminSettingsController {
     try {
       this.settingsService.clearCache();
 
-      this.logger.log('Settings cache cleared');
+      this.logger.info('Settings cache cleared');
 
       return {
         success: true,
@@ -667,7 +667,7 @@ export class AdminSettingsController {
       const fanartEnabled = this.fanartAgent.isEnabled();
       const lastfmEnabled = this.lastfmAgent.isEnabled();
 
-      this.logger.log(`Agents reloaded - Fanart.tv: ${fanartEnabled}, Last.fm: ${lastfmEnabled}`);
+      this.logger.info(`Agents reloaded - Fanart.tv: ${fanartEnabled}, Last.fm: ${lastfmEnabled}`);
 
       return {
         success: true,
@@ -734,7 +734,7 @@ export class AdminSettingsController {
     } = {},
   ) {
     try {
-      this.logger.log('Resetting enrichment state...');
+      this.logger.info('Resetting enrichment state...');
 
       const result = await this.enrichmentQueueService.resetEnrichmentState({
         resetArtists: options.resetArtists ?? true,
@@ -744,7 +744,7 @@ export class AdminSettingsController {
 
       const totalReset = result.artistsReset + result.albumsReset;
 
-      this.logger.log(
+      this.logger.info(
         `Enrichment state reset: ${result.artistsReset} artists, ${result.albumsReset} albums`,
       );
 
@@ -793,7 +793,7 @@ export class AdminSettingsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async resetAndStartEnrichment() {
     try {
-      this.logger.log('Resetting enrichment state and starting queue...');
+      this.logger.info('Resetting enrichment state and starting queue...');
 
       // First, reset enrichment state
       const resetResult = await this.enrichmentQueueService.resetEnrichmentState({
@@ -805,7 +805,7 @@ export class AdminSettingsController {
       // Then, start the enrichment queue
       const queueResult = await this.enrichmentQueueService.startEnrichmentQueue();
 
-      this.logger.log(
+      this.logger.info(
         `Reset ${resetResult.artistsReset} artists, ${resetResult.albumsReset} albums. ` +
         `Queue started: ${queueResult.started}, pending: ${queueResult.pending}`,
       );
