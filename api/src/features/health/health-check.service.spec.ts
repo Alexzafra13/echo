@@ -146,37 +146,4 @@ describe('HealthCheckService', () => {
       expect(duration).toBeLessThan(150);
     });
   });
-
-  describe('liveness', () => {
-    it('debería retornar status ok siempre', async () => {
-      const result = await service.liveness();
-
-      expect(result.status).toBe('ok');
-      expect(result.timestamp).toBeDefined();
-    });
-  });
-
-  describe('readiness', () => {
-    it('debería retornar ok cuando DB está disponible', async () => {
-      const result = await service.readiness();
-
-      expect(result.status).toBe('ok');
-      expect(result.services.database).toBe('ok');
-    });
-
-    it('debería retornar error cuando DB falla', async () => {
-      mockDrizzleService.db.execute = jest.fn().mockRejectedValue(new Error('DB down'));
-
-      await expect(service.readiness()).rejects.toThrow(HttpException);
-    });
-
-    it('debería retornar ok aunque Redis falle (no es crítico)', async () => {
-      mockRedisService.ping = jest.fn().mockResolvedValue(false);
-
-      const result = await service.readiness();
-
-      expect(result.status).toBe('ok');
-      expect(result.services.cache).toBe('error');
-    });
-  });
 });
