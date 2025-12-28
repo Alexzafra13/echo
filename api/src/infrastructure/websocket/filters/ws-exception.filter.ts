@@ -1,5 +1,6 @@
-import { ArgumentsHost, Catch, Logger } from '@nestjs/common';
+import { ArgumentsHost, Catch, Injectable } from '@nestjs/common';
 import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
 
 /**
@@ -25,8 +26,14 @@ import { Socket } from 'socket.io';
  * app.useGlobalFilters(new WsExceptionFilter());
  */
 @Catch()
+@Injectable()
 export class WsExceptionFilter extends BaseWsExceptionFilter {
-  private readonly logger = new Logger(WsExceptionFilter.name);
+  constructor(
+    @InjectPinoLogger(WsExceptionFilter.name)
+    private readonly logger: PinoLogger,
+  ) {
+    super();
+  }
 
   catch(exception: unknown, host: ArgumentsHost) {
     const client = host.switchToWs().getClient<Socket>();

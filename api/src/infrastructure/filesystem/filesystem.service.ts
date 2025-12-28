@@ -1,17 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class FilesystemService {
-  private readonly logger = new Logger(FilesystemService.name);
-
   // Use DATA_PATH for all persistent storage (Jellyfin-style)
   private readonly dataPath = process.env.DATA_PATH || '/app/data';
   private readonly uploadPath: string;
   private readonly coversPath: string;
 
-  constructor() {
+  constructor(
+    @InjectPinoLogger(FilesystemService.name)
+    private readonly logger: PinoLogger,
+  ) {
     // All paths relative to DATA_PATH
     this.uploadPath = path.join(this.dataPath, 'uploads');
     this.coversPath = path.join(this.dataPath, 'covers');
@@ -24,7 +26,7 @@ export class FilesystemService {
       try {
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
-          this.logger.log(`Created directory: ${dir}`);
+          this.logger.info(`Created directory: ${dir}`);
         }
       } catch (error) {
         // In production, directories are created by entrypoint
