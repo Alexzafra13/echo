@@ -1,4 +1,5 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { CleanupService } from './cleanup.service';
 import { MetadataCacheService } from './metadata-cache.service';
@@ -14,10 +15,11 @@ import { MetadataCacheService } from './metadata-cache.service';
  */
 @Injectable()
 export class MaintenanceSchedulerService implements OnModuleInit {
-  private readonly logger = new Logger(MaintenanceSchedulerService.name);
   private readonly QUEUE_NAME = 'metadata-maintenance';
 
   constructor(
+    @InjectPinoLogger(MaintenanceSchedulerService.name)
+    private readonly logger: PinoLogger,
     private readonly bullmqService: BullmqService,
     private readonly cleanupService: CleanupService,
     private readonly cacheService: MetadataCacheService,
@@ -26,7 +28,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
   async onModuleInit() {
     // Register the processor for maintenance jobs
     this.bullmqService.registerProcessor(this.QUEUE_NAME, async (job) => {
-      this.logger.log(`Processing maintenance job: ${job.name}`);
+      this.logger.info(`Processing maintenance job: ${job.name}`);
 
       try {
         switch (job.name) {
@@ -54,7 +56,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
     // Schedule weekly full cleanup at Sunday 4:00 AM
     await this.scheduleWeeklyFullCleanup();
 
-    this.logger.log('Maintenance Scheduler initialized');
+    this.logger.info('Maintenance Scheduler initialized');
   }
 
   /**
@@ -88,7 +90,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
       }
     );
 
-    this.logger.log('Scheduled daily cache cleanup at 3:00 AM');
+    this.logger.info('Scheduled daily cache cleanup at 3:00 AM');
   }
 
   /**
@@ -122,18 +124,18 @@ export class MaintenanceSchedulerService implements OnModuleInit {
       }
     );
 
-    this.logger.log('Scheduled weekly full cleanup at Sunday 4:00 AM');
+    this.logger.info('Scheduled weekly full cleanup at Sunday 4:00 AM');
   }
 
   /**
    * Run cache cleanup (expired entries only)
    */
   private async runCacheCleanup(): Promise<void> {
-    this.logger.log('Running scheduled cache cleanup...');
+    this.logger.info('Running scheduled cache cleanup...');
 
     const result = await this.cleanupService.cleanupExpiredCache();
 
-    this.logger.log(
+    this.logger.info(
       `Cache cleanup completed: ${result.entriesRemoved} entries removed, ${result.errors.length} errors`
     );
   }
@@ -142,11 +144,11 @@ export class MaintenanceSchedulerService implements OnModuleInit {
    * Run orphaned files cleanup (dry run = false for scheduled jobs)
    */
   private async runOrphanedFilesCleanup(): Promise<void> {
-    this.logger.log('Running scheduled orphaned files cleanup...');
+    this.logger.info('Running scheduled orphaned files cleanup...');
 
     const result = await this.cleanupService.cleanupOrphanedFiles(false);
 
-    this.logger.log(
+    this.logger.info(
       `Orphaned files cleanup completed: ${result.filesRemoved} files removed, ` +
       `${(result.spaceFree / 1024 / 1024).toFixed(2)} MB freed`
     );
@@ -156,11 +158,11 @@ export class MaintenanceSchedulerService implements OnModuleInit {
    * Run full cleanup (cache + orphaned files)
    */
   private async runFullCleanup(): Promise<void> {
-    this.logger.log('Running scheduled full cleanup...');
+    this.logger.info('Running scheduled full cleanup...');
 
     const result = await this.cleanupService.runFullCleanup(false);
 
-    this.logger.log(
+    this.logger.info(
       `Full cleanup completed: ${result.files.filesRemoved} files, ` +
       `${result.cache.entriesRemoved} cache entries, ` +
       `${(result.files.spaceFree / 1024 / 1024).toFixed(2)} MB freed`
@@ -184,7 +186,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
       }
     );
 
-    this.logger.log('Queued immediate cache cleanup');
+    this.logger.info('Queued immediate cache cleanup');
   }
 
   /**
@@ -204,7 +206,7 @@ export class MaintenanceSchedulerService implements OnModuleInit {
       }
     );
 
-    this.logger.log('Queued immediate full cleanup');
+    this.logger.info('Queued immediate full cleanup');
   }
 
   /**

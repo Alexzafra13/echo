@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { metadataConflicts } from '@infrastructure/database/schema';
@@ -52,9 +53,9 @@ export interface CreateConflictDto {
  */
 @Injectable()
 export class MetadataConflictService {
-  private readonly logger = new Logger(MetadataConflictService.name);
-
   constructor(
+    @InjectPinoLogger(MetadataConflictService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly changeApplier: ConflictChangeApplierService,
     private readonly enrichment: ConflictEnrichmentService,
@@ -202,7 +203,7 @@ export class MetadataConflictService {
     // Mark conflict as accepted
     await this.updateConflictStatus(conflictId, 'accepted', userId);
 
-    this.logger.log(
+    this.logger.info(
       `Accepted conflict ${conflictId}: ${conflict.field} for ${conflict.entityType} ${conflict.entityId}`,
     );
 
@@ -214,7 +215,7 @@ export class MetadataConflictService {
    */
   async rejectConflict(conflictId: string, userId?: string): Promise<void> {
     await this.updateConflictStatus(conflictId, 'rejected', userId);
-    this.logger.log(`Rejected conflict ${conflictId}`);
+    this.logger.info(`Rejected conflict ${conflictId}`);
   }
 
   /**
@@ -222,7 +223,7 @@ export class MetadataConflictService {
    */
   async ignoreConflict(conflictId: string, userId?: string): Promise<void> {
     await this.updateConflictStatus(conflictId, 'ignored', userId);
-    this.logger.log(`Ignored conflict ${conflictId}`);
+    this.logger.info(`Ignored conflict ${conflictId}`);
   }
 
   /**
@@ -314,7 +315,7 @@ export class MetadataConflictService {
         .where(eq(metadataConflicts.id, existing.id))
         .returning();
 
-      this.logger.log(
+      this.logger.info(
         `Updated conflict ${existing.id} with better resolution: ${newMeta.suggestedResolution} from ${data.source}`,
       );
 
@@ -369,7 +370,7 @@ export class MetadataConflictService {
       .values(insertData)
       .returning();
 
-    this.logger.log(
+    this.logger.info(
       `Created ${priority === ConflictPriority.HIGH ? 'HIGH' : 'MEDIUM'} priority conflict for ${data.entityType} ${data.entityId}: ${data.field} (source: ${data.source})`,
     );
 

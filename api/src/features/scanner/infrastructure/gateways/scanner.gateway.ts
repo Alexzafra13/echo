@@ -10,7 +10,8 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastructure/websocket';
 import {
   SubscribeScanDto,
@@ -66,11 +67,13 @@ import {
 @UseInterceptors(WsLoggingInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  constructor(
+    @InjectPinoLogger(ScannerGateway.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   @WebSocketServer()
   server!: Server;
-
-  private readonly logger = new Logger(ScannerGateway.name);
-
   // Store latest progress for each active scan (for late subscribers)
   private scanProgress = new Map<string, ScanProgressDto>();
 
@@ -78,7 +81,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    * Inicialización del gateway
    */
   afterInit(server: Server) {
-    this.logger.log('🔌 ScannerGateway initialized');
+    this.logger.info('🔌 ScannerGateway initialized');
   }
 
   /**
@@ -86,7 +89,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    */
   handleConnection(client: Socket) {
     const userId = client.data?.userId || 'anonymous';
-    this.logger.log(`✅ Client connected to scanner namespace: ${client.id} (User: ${userId})`);
+    this.logger.info(`✅ Client connected to scanner namespace: ${client.id} (User: ${userId})`);
 
     // Send current LUFS progress if there's an active analysis
     if (this.lufsProgress) {
@@ -98,7 +101,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
    * Cliente desconectado
    */
   handleDisconnect(client: Socket) {
-    this.logger.log(`❌ Client disconnected from scanner namespace: ${client.id}`);
+    this.logger.info(`❌ Client disconnected from scanner namespace: ${client.id}`);
   }
 
   /**
@@ -171,7 +174,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
     // TODO: Implementar lógica de pausa en ScanProcessorService
 
-    this.logger.log(`Admin ${client.data.userId} requested to pause scan ${dto.scanId}`);
+    this.logger.info(`Admin ${client.data.userId} requested to pause scan ${dto.scanId}`);
 
     client.emit('scanner:paused', {
       scanId: dto.scanId,
@@ -195,7 +198,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
     // TODO: Implementar lógica de cancelación en ScanProcessorService
 
-    this.logger.log(`Admin ${client.data.userId} requested to cancel scan ${dto.scanId}`);
+    this.logger.info(`Admin ${client.data.userId} requested to cancel scan ${dto.scanId}`);
 
     client.emit('scanner:cancelled', {
       scanId: dto.scanId,
@@ -220,7 +223,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
     // TODO: Implementar lógica de resumir en ScanProcessorService
 
-    this.logger.log(`Admin ${client.data.userId} requested to resume scan ${dto.scanId}`);
+    this.logger.info(`Admin ${client.data.userId} requested to resume scan ${dto.scanId}`);
 
     client.emit('scanner:resumed', {
       scanId: dto.scanId,
@@ -281,7 +284,7 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     // TAMBIÉN emitir a todos los clientes del namespace (para auto-refresh global)
     this.server.emit('scan:completed', data);
 
-    this.logger.log(`Emitted completed for scan ${data.scanId} (to room and broadcast)`);
+    this.logger.info(`Emitted completed for scan ${data.scanId} (to room and broadcast)`);
   }
 
   /**
@@ -313,6 +316,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   emitLibraryChange(data: LibraryChangeDto): void {
     // Broadcast to all connected clients
     this.server.emit('library:change', data);
-    this.logger.log(`📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`);
+    this.logger.info(`📢 Library change: ${data.type} - ${data.trackTitle || data.trackId || 'unknown'}`);
   }
 }

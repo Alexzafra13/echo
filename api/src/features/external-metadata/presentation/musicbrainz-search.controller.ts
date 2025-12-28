@@ -5,9 +5,9 @@ import {
   Param,
   Query,
   Body,
-  Logger,
   UseGuards,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { MusicBrainzAgent } from '../infrastructure/agents/musicbrainz.agent';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -30,9 +30,9 @@ interface SelectMbidDto {
 @Controller('metadata/musicbrainz')
 @UseGuards(JwtAuthGuard)
 export class MusicBrainzSearchController {
-  private readonly logger = new Logger(MusicBrainzSearchController.name);
-
   constructor(
+    @InjectPinoLogger(MusicBrainzSearchController.name)
+    private readonly logger: PinoLogger,
     private readonly musicbrainzAgent: MusicBrainzAgent,
     private readonly drizzle: DrizzleService,
     private readonly metadataService: ExternalMetadataService
@@ -122,7 +122,7 @@ export class MusicBrainzSearchController {
         .set({ mbzArtistId: dto.mbid })
         .where(eq(artists.id, artistId));
 
-      this.logger.log(
+      this.logger.info(
         `Updated artist ${artistId} with MBID: ${dto.mbid} (${dto.name})`
       );
 
@@ -168,7 +168,7 @@ export class MusicBrainzSearchController {
         .set({ mbzAlbumId: dto.mbid })
         .where(eq(albums.id, albumId));
 
-      this.logger.log(
+      this.logger.info(
         `Updated album ${albumId} with MBID: ${dto.mbid} (${dto.name})`
       );
 

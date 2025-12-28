@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { StorageService } from './storage.service';
 import probe from 'probe-image-size';
 import * as fs from 'fs/promises';
@@ -16,15 +17,15 @@ export interface ImageDimensions {
  */
 @Injectable()
 export class ImageDownloadService {
-  private readonly logger = new Logger(ImageDownloadService.name);
-
   // HTTP timeout for downloads (30 seconds)
   private readonly DOWNLOAD_TIMEOUT = 30000;
 
   // Max image size (10 MB)
   private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
-  constructor(private readonly storage: StorageService) {}
+  constructor(@InjectPinoLogger(ImageDownloadService.name)
+    private readonly logger: PinoLogger,
+    private readonly storage: StorageService) {}
 
   /**
    * Download an image from a URL
@@ -94,7 +95,7 @@ export class ImageDownloadService {
     try {
       const buffer = await this.downloadImage(url);
       await this.storage.saveImage(destinationPath, buffer);
-      this.logger.log(`Downloaded and saved: ${destinationPath}`);
+      this.logger.info(`Downloaded and saved: ${destinationPath}`);
     } catch (error) {
       this.logger.error(
         `Error downloading and saving image from ${url} to ${destinationPath}: ${(error as Error).message}`,
@@ -216,7 +217,7 @@ export class ImageDownloadService {
       const result = await probe(fileStream);
       await stream.close();
 
-      this.logger.log(`✓ Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`);
+      this.logger.info(`✓ Got dimensions from file: ${result.width}×${result.height} (${result.type}) - ${filePath.substring(filePath.lastIndexOf('/') + 1)}`);
 
       return {
         width: result.width,
@@ -251,7 +252,7 @@ export class ImageDownloadService {
         },
       });
 
-      this.logger.log(`✓ Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
+      this.logger.info(`✓ Got dimensions from URL: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
 
       return {
         width: result.width,
@@ -315,7 +316,7 @@ export class ImageDownloadService {
         // Probe the buffer stream
         const result = await probe(bufferStream);
 
-        this.logger.log(`✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
+        this.logger.info(`✓ Got dimensions from buffer probe: ${result.width}×${result.height} (${result.type}) - ${url.substring(0, 80)}...`);
 
         return {
           width: result.width,

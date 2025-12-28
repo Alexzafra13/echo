@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { IAlbumCoverRetriever } from '../../domain/interfaces';
 import { AlbumCover } from '../../domain/entities';
@@ -18,12 +19,12 @@ import { ExternalApiError } from '@shared/errors';
 export class CoverArtArchiveAgent implements IAlbumCoverRetriever {
   readonly name = 'coverart';
   readonly priority = 10; // Primary source for album covers
-
-  private readonly logger = new Logger(CoverArtArchiveAgent.name);
   private readonly baseUrl = 'https://coverartarchive.org';
   private readonly enabled: boolean;
 
   constructor(
+    @InjectPinoLogger(CoverArtArchiveAgent.name)
+    private readonly logger: PinoLogger,
     private readonly rateLimiter: RateLimiterService,
     private readonly config: ConfigService
   ) {

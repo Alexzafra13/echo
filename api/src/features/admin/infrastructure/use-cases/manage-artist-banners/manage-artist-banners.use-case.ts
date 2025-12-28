@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, artistBanners } from '@infrastructure/database/schema';
 import { eq, asc, desc } from 'drizzle-orm';
@@ -17,9 +18,9 @@ import {
 
 @Injectable()
 export class ManageArtistBannersUseCase {
-  private readonly logger = new Logger(ManageArtistBannersUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ManageArtistBannersUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly imageDownload: ImageDownloadService,
     private readonly storage: StorageService,
@@ -88,7 +89,7 @@ export class ManageArtistBannersUseCase {
 
     const banner = bannerResult[0];
 
-    this.logger.log(`Added banner for artist ${artist.name} from ${input.provider}`);
+    this.logger.info(`Added banner for artist ${artist.name} from ${input.provider}`);
 
     return {
       success: true,
@@ -122,7 +123,7 @@ export class ManageArtistBannersUseCase {
       .delete(artistBanners)
       .where(eq(artistBanners.id, input.bannerId));
 
-    this.logger.log(`Deleted banner ${input.bannerId}`);
+    this.logger.info(`Deleted banner ${input.bannerId}`);
 
     return {
       success: true,

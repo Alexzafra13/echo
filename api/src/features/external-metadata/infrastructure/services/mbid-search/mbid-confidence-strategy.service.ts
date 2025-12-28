@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { SettingsService } from '../settings.service';
 import { MetadataConflictService, ConflictPriority } from '../metadata-conflict.service';
 import type { MbidMatch } from './mbid-search-executor.service';
@@ -30,9 +31,9 @@ export interface ConflictParams {
  */
 @Injectable()
 export class MbidConfidenceStrategyService {
-  private readonly logger = new Logger(MbidConfidenceStrategyService.name);
-
   constructor(
+    @InjectPinoLogger(MbidConfidenceStrategyService.name)
+    private readonly logger: PinoLogger,
     private readonly settingsService: SettingsService,
     private readonly conflictService: MetadataConflictService,
   ) {}
@@ -103,7 +104,7 @@ export class MbidConfidenceStrategyService {
   ): Promise<void> {
     if (!result.topMatch) return;
 
-    this.logger.log(
+    this.logger.info(
       `Creating MBID conflict for ${params.entityType} "${params.currentValue}" with ${result.suggestions.length} suggestions`,
     );
 

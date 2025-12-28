@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { artists } from '@infrastructure/database/schema';
@@ -27,9 +28,9 @@ import {
  */
 @Injectable()
 export class ApplyArtistAvatarUseCase {
-  private readonly logger = new Logger(ApplyArtistAvatarUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ApplyArtistAvatarUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
     private readonly imageDownload: ImageDownloadService,
@@ -60,7 +61,7 @@ export class ApplyArtistAvatarUseCase {
       throw new NotFoundException(`Artist not found: ${input.artistId}`);
     }
 
-    this.logger.log(
+    this.logger.info(
       `Applying ${input.type} image for artist: ${artist.name} from ${input.provider}`,
     );
 
@@ -87,7 +88,7 @@ export class ApplyArtistAvatarUseCase {
     // Download the new image
     try {
       await this.imageDownload.downloadAndSave(input.avatarUrl, imagePath);
-      this.logger.log(`Downloaded image to: ${imagePath}`);
+      this.logger.info(`Downloaded image to: ${imagePath}`);
     } catch (error) {
       this.logger.error(`Failed to download image: ${(error as Error).message}`);
       throw error;
@@ -153,7 +154,7 @@ export class ApplyArtistAvatarUseCase {
       updatedAt,
     });
 
-    this.logger.log(
+    this.logger.info(
       `✅ Successfully applied ${input.type} image for ${artist.name} (tag will change with new timestamp)`
     );
 

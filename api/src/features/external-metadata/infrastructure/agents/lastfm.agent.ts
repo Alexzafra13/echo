@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IArtistBioRetriever, IArtistImageRetriever } from '../../domain/interfaces';
 import { ArtistBio, ArtistImages } from '../../domain/entities';
 import { RateLimiterService } from '../services/rate-limiter.service';
@@ -55,8 +56,6 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
   get priority(): number {
     return this.enabled ? 5 : 100;
   }
-
-  private readonly logger = new Logger(LastfmAgent.name);
   private readonly baseUrl = 'https://ws.audioscrobbler.com/2.0/';
   private apiKey: string = '';
   private enabled: boolean = false;
@@ -65,6 +64,8 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
   private readonly bioLanguages = ['es', 'en'];
 
   constructor(
+    @InjectPinoLogger(LastfmAgent.name)
+    private readonly logger: PinoLogger,
     private readonly rateLimiter: RateLimiterService,
     private readonly settingsService: SettingsService,
   ) {}
@@ -89,7 +90,7 @@ export class LastfmAgent implements IArtistBioRetriever, IArtistImageRetriever, 
     if (!this.apiKey) {
       this.logger.warn('Last.fm API key not configured. Agent will be disabled.');
     } else {
-      this.logger.log(`Last.fm agent initialized (enabled: ${this.enabled}, priority: ${this.priority})`);
+      this.logger.info(`Last.fm agent initialized (enabled: ${this.enabled}, priority: ${this.priority})`);
     }
   }
 

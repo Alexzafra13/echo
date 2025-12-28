@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../../infrastructure/services/storage.service';
 import { getMimeType } from '@shared/utils';
@@ -16,9 +17,9 @@ export type ArtistImageType = 'profile' | 'background' | 'banner' | 'logo';
  */
 @Injectable()
 export class ArtistImageService {
-  private readonly logger = new Logger(ArtistImageService.name);
-
   constructor(
+    @InjectPinoLogger(ArtistImageService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly cache: ImageCacheService,

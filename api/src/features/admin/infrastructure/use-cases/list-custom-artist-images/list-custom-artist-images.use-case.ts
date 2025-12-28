@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { artists, customArtistImages } from '@infrastructure/database/schema';
 import { eq, desc, and } from 'drizzle-orm';
@@ -14,9 +15,9 @@ import {
  */
 @Injectable()
 export class ListCustomArtistImagesUseCase {
-  private readonly logger = new Logger(ListCustomArtistImagesUseCase.name);
-
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(@InjectPinoLogger(ListCustomArtistImagesUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly drizzle: DrizzleService) {}
 
   async execute(input: ListCustomArtistImagesInput): Promise<ListCustomArtistImagesOutput> {
     // Validate artist exists

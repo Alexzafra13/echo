@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IAgent, IAgentRegistry } from '../../domain/interfaces';
 
 /**
@@ -10,7 +11,11 @@ import { IAgent, IAgentRegistry } from '../../domain/interfaces';
  */
 @Injectable()
 export class AgentRegistryService implements IAgentRegistry {
-  private readonly logger = new Logger(AgentRegistryService.name);
+  constructor(
+    @InjectPinoLogger(AgentRegistryService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   private readonly agents = new Map<string, IAgent>();
 
   /**
@@ -24,7 +29,7 @@ export class AgentRegistryService implements IAgentRegistry {
     }
 
     this.agents.set(agent.name, agent);
-    this.logger.log(
+    this.logger.info(
       `Registered agent: ${agent.name} (priority: ${agent.priority}, enabled: ${agent.isEnabled()})`
     );
   }

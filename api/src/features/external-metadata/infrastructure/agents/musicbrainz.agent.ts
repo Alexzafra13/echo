@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   IMusicBrainzSearch,
   MusicBrainzArtistMatch,
@@ -31,12 +32,12 @@ import {
 export class MusicBrainzAgent implements IMusicBrainzSearch {
   readonly name = 'musicbrainz';
   readonly priority = 5; // High priority - authoritative source
-
-  private readonly logger = new Logger(MusicBrainzAgent.name);
   private readonly baseUrl = 'https://musicbrainz.org/ws/2';
   private readonly userAgent = 'Echo-Music-Server/1.0.0 (https://github.com/yourusername/echo)';
 
-  constructor(private readonly rateLimiter: RateLimiterService) {}
+  constructor(@InjectPinoLogger(MusicBrainzAgent.name)
+    private readonly logger: PinoLogger,
+    private readonly rateLimiter: RateLimiterService) {}
 
   isEnabled(): boolean {
     return true; // Always enabled - free and open API

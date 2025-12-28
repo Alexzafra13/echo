@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../../infrastructure/services/storage.service';
@@ -15,10 +16,11 @@ import { ImageCacheService, CachedImageResult } from './image-cache.service';
  */
 @Injectable()
 export class AlbumCoverService {
-  private readonly logger = new Logger(AlbumCoverService.name);
   private readonly coversPath: string;
 
   constructor(
+    @InjectPinoLogger(AlbumCoverService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
     private readonly cache: ImageCacheService,

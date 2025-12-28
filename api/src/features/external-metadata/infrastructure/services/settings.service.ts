@@ -1,4 +1,5 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { SettingsRepository } from '../persistence/settings.repository';
 
 /**
@@ -7,13 +8,13 @@ import { SettingsRepository } from '../persistence/settings.repository';
  */
 @Injectable()
 export class SettingsService {
-  private readonly logger = new Logger(SettingsService.name);
-
   // In-memory cache for settings
   private readonly cache = new Map<string, any>();
   private cacheInitialized = false;
 
-  constructor(private readonly repository: SettingsRepository) {}
+  constructor(@InjectPinoLogger(SettingsService.name)
+    private readonly logger: PinoLogger,
+    private readonly repository: SettingsRepository) {}
 
   /**
    * Get a setting value with type conversion
@@ -102,7 +103,7 @@ export class SettingsService {
     // Update cache
     this.cache.set(key, value);
 
-    this.logger.log(`Updated setting: ${key} = ${stringValue}`);
+    this.logger.info(`Updated setting: ${key} = ${stringValue}`);
   }
 
   /**
@@ -198,7 +199,7 @@ export class SettingsService {
       }
 
       this.cacheInitialized = true;
-      this.logger.log(`Initialized settings cache with ${allSettings.length} settings`);
+      this.logger.info(`Initialized settings cache with ${allSettings.length} settings`);
     } catch (error) {
       this.logger.error(`Error initializing settings cache: ${(error as Error).message}`, (error as Error).stack);
       this.cacheInitialized = false;
@@ -211,7 +212,7 @@ export class SettingsService {
   clearCache(): void {
     this.cache.clear();
     this.cacheInitialized = false;
-    this.logger.log('Settings cache cleared');
+    this.logger.info('Settings cache cleared');
   }
 
   /**

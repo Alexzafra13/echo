@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { AgentRegistryService } from '../../infrastructure/services/agent-registry.service';
 import { IArtistImageRetriever, IAlbumCoverRetriever } from '../../domain/interfaces';
 
@@ -74,9 +75,9 @@ interface ImageInputOption {
  */
 @Injectable()
 export class ImageSearchOrchestratorService {
-  private readonly logger = new Logger(ImageSearchOrchestratorService.name);
-
-  constructor(private readonly agentRegistry: AgentRegistryService) {}
+  constructor(@InjectPinoLogger(ImageSearchOrchestratorService.name)
+    private readonly logger: PinoLogger,
+    private readonly agentRegistry: AgentRegistryService) {}
 
   /**
    * Search for artist images across all providers
@@ -84,7 +85,7 @@ export class ImageSearchOrchestratorService {
   async searchArtistImages(input: ArtistImageSearchInput): Promise<ImageOption[]> {
     const { artistName, mbzArtistId } = input;
 
-    this.logger.log(`Searching images for artist: ${artistName}`);
+    this.logger.info(`Searching images for artist: ${artistName}`);
 
     const agents = this.agentRegistry.getAgentsFor<IArtistImageRetriever>(
       'IArtistImageRetriever',
@@ -105,7 +106,7 @@ export class ImageSearchOrchestratorService {
       }
     }
 
-    this.logger.log(
+    this.logger.info(
       `Found ${allImages.length} image options from ${agents.length} providers`,
     );
 
@@ -118,7 +119,7 @@ export class ImageSearchOrchestratorService {
   async searchAlbumCovers(input: AlbumCoverSearchInput): Promise<ImageOption[]> {
     const { albumName, artistName, mbzAlbumId, mbzArtistId } = input;
 
-    this.logger.log(`Searching covers for album: ${albumName} by ${artistName}`);
+    this.logger.info(`Searching covers for album: ${albumName} by ${artistName}`);
 
     const agents = this.agentRegistry.getAgentsFor<IAlbumCoverRetriever>(
       'IAlbumCoverRetriever',
@@ -146,7 +147,7 @@ export class ImageSearchOrchestratorService {
       }
     }
 
-    this.logger.log(
+    this.logger.info(
       `Found ${allCovers.length} cover options from ${agents.length} providers`,
     );
 
@@ -236,7 +237,7 @@ export class ImageSearchOrchestratorService {
         height: 310,
       });
 
-      this.logger.log(`Agent "${agent.name}" contributed ${images.length} images`);
+      this.logger.info(`Agent "${agent.name}" contributed ${images.length} images`);
       return images;
     } catch (error) {
       this.logger.warn(`Agent "${agent.name}" failed: ${(error as Error).message}`);
@@ -301,7 +302,7 @@ export class ImageSearchOrchestratorService {
       });
     }
 
-    this.logger.log(`Agent "${agent.name}" contributed ${images.length} images from variants`);
+    this.logger.info(`Agent "${agent.name}" contributed ${images.length} images from variants`);
     return images;
   }
 
@@ -385,7 +386,7 @@ export class ImageSearchOrchestratorService {
         });
       }
 
-      this.logger.log(`Agent "${agent.name}" contributed ${covers.length} covers`);
+      this.logger.info(`Agent "${agent.name}" contributed ${covers.length} covers`);
       return covers;
     } catch (error) {
       this.logger.warn(`Agent "${agent.name}" failed: ${(error as Error).message}`);
@@ -427,7 +428,7 @@ export class ImageSearchOrchestratorService {
       });
     }
 
-    this.logger.log(`Agent "${agent.name}" contributed ${covers.length} covers from variants`);
+    this.logger.info(`Agent "${agent.name}" contributed ${covers.length} covers from variants`);
     return covers;
   }
 

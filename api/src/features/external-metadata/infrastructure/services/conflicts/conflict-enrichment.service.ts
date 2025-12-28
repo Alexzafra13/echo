@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq } from 'drizzle-orm';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
@@ -34,9 +35,9 @@ export interface ConflictWithEntity {
  */
 @Injectable()
 export class ConflictEnrichmentService {
-  private readonly logger = new Logger(ConflictEnrichmentService.name);
-
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(@InjectPinoLogger(ConflictEnrichmentService.name)
+    private readonly logger: PinoLogger,
+    private readonly drizzle: DrizzleService) {}
 
   /**
    * Verify if an entity still exists in the database
@@ -194,7 +195,7 @@ export class ConflictEnrichmentService {
     }
 
     if (orphanedCount > 0) {
-      this.logger.log(`Cleaned up ${orphanedCount} orphaned conflicts`);
+      this.logger.info(`Cleaned up ${orphanedCount} orphaned conflicts`);
     }
 
     return orphanedCount;

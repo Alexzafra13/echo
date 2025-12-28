@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { eq, and, lte, sql } from 'drizzle-orm';
 import { metadataCache } from '@infrastructure/database/schema';
@@ -14,12 +15,12 @@ import { metadataCache } from '@infrastructure/database/schema';
  */
 @Injectable()
 export class MetadataCacheService {
-  private readonly logger = new Logger(MetadataCacheService.name);
-
   // Cache TTL in days (configurable via environment)
   private readonly DEFAULT_TTL_DAYS = 30;
 
-  constructor(private readonly drizzle: DrizzleService) {}
+  constructor(@InjectPinoLogger(MetadataCacheService.name)
+    private readonly logger: PinoLogger,
+    private readonly drizzle: DrizzleService) {}
 
   /**
    * Get cached metadata for a specific entity and provider
@@ -186,7 +187,7 @@ export class MetadataCacheService {
         .returning();
 
       const count = deleted.length;
-      this.logger.log(`Cleared ${count} expired cache entries`);
+      this.logger.info(`Cleared ${count} expired cache entries`);
       return count;
     } catch (error) {
       this.logger.error(`Error clearing expired cache: ${(error as Error).message}`, (error as Error).stack);

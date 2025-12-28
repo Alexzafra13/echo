@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq } from 'drizzle-orm';
 import * as path from 'path';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
@@ -26,9 +27,9 @@ export interface AlbumEnrichmentResult {
  */
 @Injectable()
 export class AlbumEnrichmentService {
-  private readonly logger = new Logger(AlbumEnrichmentService.name);
-
   constructor(
+    @InjectPinoLogger(AlbumEnrichmentService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly agentRegistry: AgentRegistryService,
     private readonly cache: MetadataCacheService,
@@ -84,7 +85,7 @@ export class AlbumEnrichmentService {
       }
 
       const artistName = artistData?.name || 'Unknown Artist';
-      this.logger.log(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
+      this.logger.info(`Enriching album: ${album.name} by ${artistName} (ID: ${albumId})`);
 
       // Step 1: Handle MBID search if missing
       if (!album.mbzAlbumId) {
@@ -105,7 +106,7 @@ export class AlbumEnrichmentService {
         try {
           const genresAdded = await this.genreEnrichment.enrichAlbumGenres(albumId, album.mbzAlbumId);
           if (genresAdded > 0) {
-            this.logger.log(`Added ${genresAdded} genres for album: ${album.name}`);
+            this.logger.info(`Added ${genresAdded} genres for album: ${album.name}`);
           }
         } catch (error) {
           this.logger.warn(`Error enriching genres for "${album.name}": ${(error as Error).message}`);
@@ -189,7 +190,7 @@ export class AlbumEnrichmentService {
     artistName: string,
     errors: string[]
   ): Promise<void> {
-    this.logger.log(`Album "${albumName}" missing MBID, searching MusicBrainz...`);
+    this.logger.info(`Album "${albumName}" missing MBID, searching MusicBrainz...`);
     try {
       const mbMatches = await this.mbidSearch.searchAlbum(albumName, artistName);
 
@@ -206,7 +207,7 @@ export class AlbumEnrichmentService {
               updatedAt: new Date(),
             })
             .where(eq(albums.id, albumId));
-          this.logger.log(
+          this.logger.info(
             `Auto-applied MBID for "${albumName}": ${topMatch.mbid} (score: ${topMatch.score})`
           );
         } else if (topMatch.score >= 70) {
@@ -214,13 +215,13 @@ export class AlbumEnrichmentService {
           await this.createMbidConflict(albumId, albumName, artistName, mbMatches);
           await this.markMbidSearched(albumId);
         } else {
-          this.logger.log(
+          this.logger.info(
             `Low confidence matches for "${albumName}" (best: ${topMatch.score}), skipping MBID assignment`
           );
           await this.markMbidSearched(albumId);
         }
       } else {
-        this.logger.log(`No MusicBrainz matches found for "${albumName}"`);
+        this.logger.info(`No MusicBrainz matches found for "${albumName}"`);
         await this.markMbidSearched(albumId);
       }
     } catch (error) {
@@ -260,7 +261,7 @@ export class AlbumEnrichmentService {
         allSuggestions: suggestions,
       },
     });
-    this.logger.log(
+    this.logger.info(
       `Created MBID conflict for "${albumName}": score ${topMatch.score}, needs manual review`
     );
   }
@@ -316,7 +317,7 @@ export class AlbumEnrichmentService {
         `/api/images/albums/${albumId}/cover`
       );
 
-      this.logger.log(`Updated cover for: ${album.name} (source: ${cover.source})`);
+      this.logger.info(`Updated cover for: ${album.name} (source: ${cover.source})`);
       return true;
     } else {
       // Handle conflict for existing cover
@@ -396,7 +397,7 @@ export class AlbumEnrichmentService {
     }
 
     // Create the conflict
-    this.logger.log(
+    this.logger.info(
       `Cover comparison for "${album.name}": ` +
       `Current: ${currentResolution || 'none'} → Suggested: ${suggestedResolution}`
     );
@@ -420,7 +421,7 @@ export class AlbumEnrichmentService {
         isLowQuality,
       },
     });
-    this.logger.log(
+    this.logger.info(
       `Created conflict for album "${album.name}": existing cover vs ${cover.source} suggestion`
     );
   }

@@ -6,11 +6,11 @@ import {
   Res,
   Headers,
   NotFoundException,
-  Logger,
   UseGuards,
   Header,
   StreamableFile,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -45,9 +45,9 @@ import { ArtistImagesDto, ImageMetadataDto } from './dtos/artist-images.dto';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ImagesController {
-  private readonly logger = new Logger(ImagesController.name);
-
-  constructor(private readonly imageService: ImageService) {}
+  constructor(@InjectPinoLogger(ImagesController.name)
+    private readonly logger: PinoLogger,
+    private readonly imageService: ImageService) {}
 
   /**
    * Sirve una imagen de artista con tag-based cache busting

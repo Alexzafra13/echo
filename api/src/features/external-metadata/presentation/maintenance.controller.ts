@@ -5,9 +5,9 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Logger,
   UseGuards,
 } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -45,9 +45,9 @@ import * as path from 'path';
 @UseGuards(JwtAuthGuard, AdminGuard)
 @ApiBearerAuth()
 export class MaintenanceController {
-  private readonly logger = new Logger(MaintenanceController.name);
-
   constructor(
+    @InjectPinoLogger(MaintenanceController.name)
+    private readonly logger: PinoLogger,
     private readonly cleanupService: CleanupService,
     private readonly drizzle: DrizzleService,
     private readonly storage: StorageService,
@@ -85,7 +85,7 @@ export class MaintenanceController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async getStorageStats() {
     try {
-      this.logger.log('Fetching storage statistics');
+      this.logger.info('Fetching storage statistics');
 
       const stats = await this.cleanupService.getStorageStats();
 
@@ -145,7 +145,7 @@ export class MaintenanceController {
     const isDryRun = dryRun === 'true' || dryRun === '1' || dryRun === undefined;
 
     try {
-      this.logger.log(`Starting cleanup (dry run: ${isDryRun})`);
+      this.logger.info(`Starting cleanup (dry run: ${isDryRun})`);
 
       const result = await this.cleanupService.cleanupOrphanedFiles(isDryRun);
 
@@ -219,7 +219,7 @@ export class MaintenanceController {
     const isDryRun = dryRun === 'true' || dryRun === '1' || dryRun === undefined;
 
     try {
-      this.logger.log(`Starting full cleanup (dry run: ${isDryRun})`);
+      this.logger.info(`Starting full cleanup (dry run: ${isDryRun})`);
 
       const result = await this.cleanupService.runFullCleanup(isDryRun);
 
@@ -268,7 +268,7 @@ export class MaintenanceController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async recalculateStorageSizes() {
     try {
-      this.logger.log('Starting storage size recalculation');
+      this.logger.info('Starting storage size recalculation');
 
       const result = await this.cleanupService.recalculateStorageSizes();
 
@@ -314,7 +314,7 @@ export class MaintenanceController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async verifyIntegrity() {
     try {
-      this.logger.log('Starting file integrity check');
+      this.logger.info('Starting file integrity check');
 
       const result = await this.cleanupService.verifyIntegrity();
 
@@ -363,7 +363,7 @@ export class MaintenanceController {
     let cleaned = 0;
 
     try {
-      this.logger.log('Starting artist image URL cleanup');
+      this.logger.info('Starting artist image URL cleanup');
 
       // Get all artists with incorrect image URLs
       const artistsWithPaths = await this.drizzle.db
@@ -385,7 +385,7 @@ export class MaintenanceController {
           ),
         );
 
-      this.logger.log(`Found ${artistsWithPaths.length} artists with image URLs`);
+      this.logger.info(`Found ${artistsWithPaths.length} artists with image URLs`);
 
       // Clean each artist that has incorrect URLs
       for (const artist of artistsWithPaths) {
@@ -431,7 +431,7 @@ export class MaintenanceController {
 
       const duration = Date.now() - startTime;
 
-      this.logger.log(`Cleanup completed: ${cleaned} artists cleaned, ${errors.length} errors in ${duration}ms`);
+      this.logger.info(`Cleanup completed: ${cleaned} artists cleaned, ${errors.length} errors in ${duration}ms`);
 
       return {
         success: errors.length === 0,
@@ -479,7 +479,7 @@ export class MaintenanceController {
     let filesFound = 0;
 
     try {
-      this.logger.log('Starting artist image synchronization');
+      this.logger.info('Starting artist image synchronization');
 
       // Get base storage path
       const basePath = await this.storage.getBasePath();
@@ -579,7 +579,7 @@ export class MaintenanceController {
 
       const duration = Date.now() - startTime;
 
-      this.logger.log(
+      this.logger.info(
         `Synchronization completed: ${synced} artists synced, ${filesFound} files found, ${errors.length} errors in ${duration}ms`
       );
 
@@ -626,7 +626,7 @@ export class MaintenanceController {
     const startTime = Date.now();
 
     try {
-      this.logger.log('Starting population of sort names');
+      this.logger.info('Starting population of sort names');
 
       // Get all albums without orderAlbumName
       const albumsToUpdate = await this.drizzle.db
@@ -650,7 +650,7 @@ export class MaintenanceController {
           ),
         );
 
-      this.logger.log(`Found ${albumsToUpdate.length} albums and ${artistsToUpdate.length} artists to update`);
+      this.logger.info(`Found ${albumsToUpdate.length} albums and ${artistsToUpdate.length} artists to update`);
 
       // Update albums in batches
       let albumsUpdated = 0;
@@ -682,7 +682,7 @@ export class MaintenanceController {
 
       const duration = Date.now() - startTime;
 
-      this.logger.log(
+      this.logger.info(
         `Sort names populated: ${albumsUpdated} albums, ${artistsUpdated} artists in ${duration}ms`
       );
 
@@ -767,7 +767,7 @@ export class MaintenanceController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async startEnrichmentQueue() {
     try {
-      this.logger.log('Manual request to start enrichment queue');
+      this.logger.info('Manual request to start enrichment queue');
       const result = await this.enrichmentQueue.startEnrichmentQueue();
       return result;
     } catch (error) {
@@ -800,7 +800,7 @@ export class MaintenanceController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async stopEnrichmentQueue() {
     try {
-      this.logger.log('Manual request to stop enrichment queue');
+      this.logger.info('Manual request to stop enrichment queue');
       await this.enrichmentQueue.stopEnrichmentQueue();
       return {
         success: true,
