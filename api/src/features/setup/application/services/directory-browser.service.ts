@@ -1,4 +1,5 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -25,8 +26,12 @@ export interface BrowseResult {
  */
 @Injectable()
 export class DirectoryBrowserService {
-  private readonly logger = new Logger(DirectoryBrowserService.name);
   private readonly musicExtensions = ['.mp3', '.flac', '.m4a', '.ogg', '.wav'];
+
+  constructor(
+    @InjectPinoLogger(DirectoryBrowserService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   /**
    * Browse directories for music library selection

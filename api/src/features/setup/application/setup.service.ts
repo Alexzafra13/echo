@@ -1,4 +1,5 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { eq, count as dbCount } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { users, settings } from '@infrastructure/database/schema';
@@ -55,11 +56,12 @@ export interface SetupStatus {
  */
 @Injectable()
 export class SetupService {
-  private readonly logger = new Logger(SetupService.name);
   private readonly dataPath = process.env.DATA_PATH || '/app/data';
   private readonly setupFilePath: string;
 
   constructor(
+    @InjectPinoLogger(SetupService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
     private readonly directoryBrowser: DirectoryBrowserService,
     private readonly libraryDetector: MusicLibraryDetectorService,
@@ -114,7 +116,7 @@ export class SetupService {
 
     // If setup was previously completed but database was reset, reset the setup state
     if (state.completed) {
-      this.logger.log('Database was reset - resetting setup state to allow re-setup');
+      this.logger.info('Database was reset - resetting setup state to allow re-setup');
       state.completed = false;
       state.completedAt = undefined;
       await this.saveSetupState(state);
@@ -140,7 +142,7 @@ export class SetupService {
       mustChangePassword: false,
     });
 
-    this.logger.log(`Admin user "${username}" created during setup wizard`);
+    this.logger.info(`Admin user "${username}" created during setup wizard`);
   }
 
   /**
@@ -172,7 +174,7 @@ export class SetupService {
     state.musicLibraryPath = libraryPath;
     await this.saveSetupState(state);
 
-    this.logger.log(
+    this.logger.info(
       `Music library configured: ${libraryPath} (${validation.fileCount} files found)`,
     );
 
@@ -219,7 +221,7 @@ export class SetupService {
     // Initialize all default settings
     await this.initializeDefaultSettings(state.musicLibraryPath);
 
-    this.logger.log('Setup wizard completed successfully');
+    this.logger.info('Setup wizard completed successfully');
 
     return {
       success: true,
@@ -380,6 +382,6 @@ export class SetupService {
       }
     }
 
-    this.logger.log(`Initialized ${defaultSettings.length} default settings`);
+    this.logger.info(`Initialized ${defaultSettings.length} default settings`);
   }
 }
