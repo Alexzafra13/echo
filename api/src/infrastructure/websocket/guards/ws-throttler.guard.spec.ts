@@ -1,15 +1,30 @@
 import { ExecutionContext } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
+import { PinoLogger } from 'nestjs-pino';
 import { WsThrottlerGuard } from './ws-throttler.guard';
 import { Socket } from 'socket.io';
+
+const createMockLogger = (): jest.Mocked<PinoLogger> =>
+  ({
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+    setContext: jest.fn(),
+    assign: jest.fn(),
+  }) as unknown as jest.Mocked<PinoLogger>;
 
 describe('WsThrottlerGuard', () => {
   let guard: WsThrottlerGuard;
   let mockSocket: Partial<Socket>;
   let mockContext: ExecutionContext;
+  let mockLogger: jest.Mocked<PinoLogger>;
 
   beforeEach(() => {
-    guard = new WsThrottlerGuard();
+    mockLogger = createMockLogger();
+    guard = new WsThrottlerGuard(mockLogger);
 
     mockSocket = {
       id: 'test-socket-id',

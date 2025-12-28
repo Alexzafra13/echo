@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
 import { ApplyArtistAvatarUseCase } from './apply-artist-avatar.use-case';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
@@ -10,6 +11,17 @@ import { MetadataEnrichmentGateway } from '@features/external-metadata/presentat
 import * as fs from 'fs/promises';
 
 jest.mock('fs/promises');
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('ApplyArtistAvatarUseCase', () => {
   let useCase: ApplyArtistAvatarUseCase;
@@ -88,6 +100,7 @@ describe('ApplyArtistAvatarUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplyArtistAvatarUseCase,
+        { provide: getLoggerToken(ApplyArtistAvatarUseCase.name), useValue: mockLogger },
         { provide: DrizzleService, useValue: mockDrizzle },
         { provide: RedisService, useValue: mockRedis },
         { provide: ImageDownloadService, useValue: mockImageDownload },

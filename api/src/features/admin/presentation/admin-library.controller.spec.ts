@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
 import { AdminLibraryController } from './admin-library.controller';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
@@ -10,6 +11,17 @@ import * as path from 'path';
 // Mock fs/promises
 jest.mock('fs/promises');
 const mockedFs = jest.mocked(fs);
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('AdminLibraryController', () => {
   let controller: AdminLibraryController;
@@ -33,6 +45,10 @@ describe('AdminLibraryController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminLibraryController],
       providers: [
+        {
+          provide: getLoggerToken(AdminLibraryController.name),
+          useValue: mockLogger,
+        },
         {
           provide: SettingsService,
           useValue: mockSettingsService,
@@ -228,6 +244,10 @@ describe('AdminLibraryController', () => {
       const module = await Test.createTestingModule({
         controllers: [AdminLibraryController],
         providers: [
+          {
+            provide: getLoggerToken(AdminLibraryController.name),
+            useValue: mockLogger,
+          },
           {
             provide: SettingsService,
             useValue: mockSettingsService,

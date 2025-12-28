@@ -1,10 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
 import { AdminSettingsController } from './admin-settings.controller';
 import { SettingsService } from '../infrastructure/services/settings.service';
 import { EnrichmentQueueService } from '../infrastructure/services/enrichment-queue.service';
 import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
 import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('AdminSettingsController', () => {
   let controller: AdminSettingsController;
@@ -56,6 +68,7 @@ describe('AdminSettingsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminSettingsController],
       providers: [
+        { provide: getLoggerToken(AdminSettingsController.name), useValue: mockLogger },
         {
           provide: SettingsService,
           useValue: mockSettingsService,

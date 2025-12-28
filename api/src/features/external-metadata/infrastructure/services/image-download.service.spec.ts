@@ -1,9 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
 import { ImageDownloadService } from './image-download.service';
 import { StorageService } from './storage.service';
 
 // Mock fetch global
 global.fetch = jest.fn();
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('ImageDownloadService', () => {
   let service: ImageDownloadService;
@@ -44,6 +56,7 @@ describe('ImageDownloadService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ImageDownloadService,
+        { provide: getLoggerToken(ImageDownloadService.name), useValue: mockLogger },
         {
           provide: StorageService,
           useValue: mockStorage,
