@@ -1,7 +1,8 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Logger } from '@nestjs/common';
-import { ServerOptions } from 'socket.io';
+import { ServerOptions, Server } from 'socket.io';
 import { appConfig } from '@config/app.config';
+import * as jwt from 'jsonwebtoken';
 
 /**
  * WebSocketAdapter - Adaptador personalizado para Socket.IO
@@ -10,6 +11,7 @@ import { appConfig } from '@config/app.config';
  * - Configurar Socket.IO con opciones personalizadas
  * - Habilitar CORS para conexiones WebSocket
  * - Configurar transports (websocket, polling)
+ * - Autenticación JWT en el handshake (middleware)
  * - Logging de conexiones
  *
  * Uso:
@@ -22,7 +24,7 @@ export class WebSocketAdapter extends IoAdapter {
   /**
    * Crea servidor de Socket.IO con configuración personalizada
    */
-  createIOServer(port: number, options?: ServerOptions): any {
+  createIOServer(port: number, options?: ServerOptions): Server {
     // Use same CORS config as HTTP (auto-detects IPs in production)
     const corsOrigins = appConfig.cors_origins;
 
@@ -34,8 +36,8 @@ export class WebSocketAdapter extends IoAdapter {
         credentials: true,
         methods: ['GET', 'POST'],
       },
-      // Transports: websocket primero, polling como fallback
-      transports: ['websocket', 'polling'],
+      // Transports: polling primero para mejor compatibilidad, luego websocket
+      transports: ['polling', 'websocket'],
       // Ping interval para mantener conexión viva
       pingInterval: 10000,
       pingTimeout: 5000,
@@ -47,10 +49,43 @@ export class WebSocketAdapter extends IoAdapter {
       },
     };
 
-    const server = super.createIOServer(port, serverOptions);
+    const server: Server = super.createIOServer(port, serverOptions);
+
+    // Middleware de autenticación JWT para el namespace /scanner
+    const scannerNamespace = server.of('/scanner');
+    scannerNamespace.use((socket, next) => {
+      try {
+        const token = this.extractToken(socket);
+
+        if (!token) {
+          this.logger.warn(`❌ WebSocket auth failed: No token provided`);
+          return next(new Error('No token provided'));
+        }
+
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          this.logger.error('❌ JWT_SECRET not configured');
+          return next(new Error('Server configuration error'));
+        }
+
+        // Verificar token
+        const payload = jwt.verify(token, secret) as jwt.JwtPayload;
+
+        // Adjuntar usuario al socket
+        socket.data.user = payload;
+        socket.data.userId = payload.sub;
+
+        this.logger.debug(`✅ WebSocket auth success: User ${payload.sub}`);
+        next();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`❌ WebSocket auth failed: ${message}`);
+        next(new Error('Unauthorized'));
+      }
+    });
 
     // Logging de conexiones
-    server.on('connection', (socket: any) => {
+    server.on('connection', (socket) => {
       this.logger.log(`🔌 WebSocket client connected: ${socket.id}`);
 
       socket.on('disconnect', (reason: string) => {
@@ -62,7 +97,33 @@ export class WebSocketAdapter extends IoAdapter {
       });
     });
 
-    this.logger.log('✅ WebSocket server initialized');
+    this.logger.log('✅ WebSocket server initialized with JWT middleware');
     return server;
+  }
+
+  /**
+   * Extrae token JWT del handshake
+   * Soporta: query param, auth object, Authorization header
+   */
+  private extractToken(socket: { handshake: { query?: { token?: string | string[] }; auth?: { token?: string }; headers?: { authorization?: string } } }): string | undefined {
+    // 1. Desde query params: ?token=xxx
+    if (socket.handshake.query?.token) {
+      return Array.isArray(socket.handshake.query.token)
+        ? socket.handshake.query.token[0]
+        : socket.handshake.query.token;
+    }
+
+    // 2. Desde auth object: socket.connect({ auth: { token: 'xxx' } })
+    if (socket.handshake.auth?.token) {
+      return socket.handshake.auth.token;
+    }
+
+    // 3. Desde Authorization header: Bearer xxx
+    const authHeader = socket.handshake.headers?.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+
+    return undefined;
   }
 }
