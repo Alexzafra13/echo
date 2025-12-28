@@ -1,6 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
 
 /**
@@ -23,9 +24,11 @@ import { Socket } from 'socket.io';
  */
 @Injectable()
 export class WsJwtGuard implements CanActivate {
-  private readonly logger = new Logger(WsJwtGuard.name);
-
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    @InjectPinoLogger(WsJwtGuard.name)
+    private readonly logger: PinoLogger,
+    private jwtService: JwtService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
