@@ -1,10 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
 import { SettingsService } from './settings.service';
 import { SettingsRepository } from '../persistence/settings.repository';
 
 // Mock fetch global
 global.fetch = jest.fn();
+
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
 
 describe('SettingsService', () => {
   let service: SettingsService;
@@ -24,6 +36,7 @@ describe('SettingsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SettingsService,
+        { provide: getLoggerToken(SettingsService.name), useValue: mockLogger },
         {
           provide: SettingsRepository,
           useValue: mockRepository,

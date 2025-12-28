@@ -1,9 +1,22 @@
 import { ArgumentsHost } from '@nestjs/common';
 import { WsException, BaseWsExceptionFilter } from '@nestjs/websockets';
+import { PinoLogger } from 'nestjs-pino';
 import { WsExceptionFilter } from './ws-exception.filter';
 
 // Mock the base class catch method to avoid issues with Socket.io internals
 jest.spyOn(BaseWsExceptionFilter.prototype, 'catch').mockImplementation(() => {});
+
+const createMockLogger = (): jest.Mocked<PinoLogger> =>
+  ({
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+    setContext: jest.fn(),
+    assign: jest.fn(),
+  }) as unknown as jest.Mocked<PinoLogger>;
 
 describe('WsExceptionFilter', () => {
   let filter: WsExceptionFilter;
@@ -12,9 +25,11 @@ describe('WsExceptionFilter', () => {
     emit: jest.Mock;
   };
   let mockHost: ArgumentsHost;
+  let mockLogger: jest.Mocked<PinoLogger>;
 
   beforeEach(() => {
-    filter = new WsExceptionFilter();
+    mockLogger = createMockLogger();
+    filter = new WsExceptionFilter(mockLogger);
 
     mockClient = {
       id: 'client-123',

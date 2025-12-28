@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
 import { IcyMetadataService, RadioMetadata } from './icy-metadata.service';
 import { EventEmitter } from 'events';
 
@@ -12,12 +13,26 @@ jest.mock('icecast-parser', () => ({
   })),
 }));
 
+const mockLogger = {
+  trace: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  fatal: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
+};
+
 describe('IcyMetadataService', () => {
   let service: IcyMetadataService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [IcyMetadataService],
+      providers: [
+        IcyMetadataService,
+        { provide: getLoggerToken(IcyMetadataService.name), useValue: mockLogger },
+      ],
     }).compile();
 
     service = module.get<IcyMetadataService>(IcyMetadataService);

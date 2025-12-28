@@ -1,11 +1,26 @@
+import { PinoLogger } from 'nestjs-pino';
 import { MetadataEnrichmentGateway } from './metadata-enrichment.gateway';
+
+const createMockLogger = (): jest.Mocked<PinoLogger> =>
+  ({
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+    setContext: jest.fn(),
+    assign: jest.fn(),
+  }) as unknown as jest.Mocked<PinoLogger>;
 
 describe('MetadataEnrichmentGateway', () => {
   let gateway: MetadataEnrichmentGateway;
   let mockServer: any;
+  let mockLogger: jest.Mocked<PinoLogger>;
 
   beforeEach(() => {
-    gateway = new MetadataEnrichmentGateway();
+    mockLogger = createMockLogger();
+    gateway = new MetadataEnrichmentGateway(mockLogger);
 
     mockServer = {
       emit: jest.fn(),
@@ -17,31 +32,27 @@ describe('MetadataEnrichmentGateway', () => {
 
   describe('lifecycle hooks', () => {
     it('should log on init', () => {
-      const logSpy = jest.spyOn(gateway['logger'], 'log');
-
       gateway.afterInit(mockServer);
 
-      expect(logSpy).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalled();
     });
 
     it('should log on client connect', () => {
-      const logSpy = jest.spyOn(gateway['logger'], 'log');
       const mockClient = { id: 'client-123' };
 
       gateway.handleConnection(mockClient as any);
 
-      expect(logSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('client-123'),
       );
     });
 
     it('should log on client disconnect', () => {
-      const logSpy = jest.spyOn(gateway['logger'], 'log');
       const mockClient = { id: 'client-456' };
 
       gateway.handleDisconnect(mockClient as any);
 
-      expect(logSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('client-456'),
       );
     });

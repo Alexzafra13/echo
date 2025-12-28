@@ -1,3 +1,4 @@
+import { PinoLogger } from 'nestjs-pino';
 import { GetDashboardStatsUseCase } from './get-dashboard-stats.use-case';
 import {
   ILibraryStatsProvider,
@@ -9,8 +10,21 @@ import {
   IAlertsProvider,
 } from '../../ports';
 
+const createMockLogger = (): jest.Mocked<PinoLogger> =>
+  ({
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+    setContext: jest.fn(),
+    assign: jest.fn(),
+  }) as unknown as jest.Mocked<PinoLogger>;
+
 describe('GetDashboardStatsUseCase', () => {
   let useCase: GetDashboardStatsUseCase;
+  let mockLogger: jest.Mocked<PinoLogger>;
   let mockLibraryStats: jest.Mocked<ILibraryStatsProvider>;
   let mockStorageBreakdown: jest.Mocked<IStorageBreakdownProvider>;
   let mockSystemHealth: jest.Mocked<ISystemHealthChecker>;
@@ -105,6 +119,8 @@ describe('GetDashboardStatsUseCase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    mockLogger = createMockLogger();
+
     mockLibraryStats = {
       get: jest.fn().mockResolvedValue(libraryStatsData),
     } as any;
@@ -136,6 +152,7 @@ describe('GetDashboardStatsUseCase', () => {
     } as any;
 
     useCase = new GetDashboardStatsUseCase(
+      mockLogger,
       mockLibraryStats,
       mockStorageBreakdown,
       mockSystemHealth,

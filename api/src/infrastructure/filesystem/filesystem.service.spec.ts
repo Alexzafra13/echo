@@ -1,4 +1,5 @@
 import { FilesystemService } from './filesystem.service';
+import { PinoLogger } from 'nestjs-pino';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -16,13 +17,28 @@ jest.mock('fs', () => ({
 
 describe('FilesystemService', () => {
   let service: FilesystemService;
+  let mockLogger: jest.Mocked<PinoLogger>;
   const originalEnv = process.env;
 
   // Helper to create cross-platform paths
   const p = (...segments: string[]) => path.join(...segments);
 
+  const createMockLogger = (): jest.Mocked<PinoLogger> => ({
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    fatal: jest.fn(),
+    setContext: jest.fn(),
+    assign: jest.fn(),
+  } as unknown as jest.Mocked<PinoLogger>);
+
+  const createService = () => new FilesystemService(mockLogger);
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLogger = createMockLogger();
     // Reset environment
     process.env = { ...originalEnv };
     process.env.DATA_PATH = p('/test', 'data');
@@ -40,7 +56,7 @@ describe('FilesystemService', () => {
       process.env.DATA_PATH = p('/custom', 'data');
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
-      service = new FilesystemService();
+      service = createService();
 
       expect(service.getUploadPath()).toBe(p('/custom', 'data', 'uploads'));
       expect(service.getCoversPath()).toBe(p('/custom', 'data', 'covers'));
@@ -50,7 +66,7 @@ describe('FilesystemService', () => {
       delete process.env.DATA_PATH;
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
-      service = new FilesystemService();
+      service = createService();
 
       expect(service.getUploadPath()).toBe(p('/app', 'data', 'uploads'));
       expect(service.getCoversPath()).toBe(p('/app', 'data', 'covers'));
@@ -59,7 +75,7 @@ describe('FilesystemService', () => {
     it('should create directories if they do not exist', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
-      service = new FilesystemService();
+      service = createService();
 
       expect(fs.mkdirSync).toHaveBeenCalledWith(p('/test', 'data', 'uploads'), {
         recursive: true,
@@ -72,7 +88,7 @@ describe('FilesystemService', () => {
     it('should not create directories if they already exist', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
 
-      service = new FilesystemService();
+      service = createService();
 
       expect(fs.mkdirSync).not.toHaveBeenCalled();
     });
@@ -84,13 +100,13 @@ describe('FilesystemService', () => {
       });
 
       // Should not throw
-      expect(() => new FilesystemService()).not.toThrow();
+      expect(() => createService()).not.toThrow();
     });
   });
 
   describe('readDirectory', () => {
     beforeEach(() => {
-      service = new FilesystemService();
+      service = createService();
     });
 
     it('should return list of files in directory', async () => {
@@ -116,7 +132,7 @@ describe('FilesystemService', () => {
 
   describe('fileExists', () => {
     beforeEach(() => {
-      service = new FilesystemService();
+      service = createService();
     });
 
     it('should return true if file exists', async () => {
@@ -141,7 +157,7 @@ describe('FilesystemService', () => {
 
   describe('getFileStats', () => {
     beforeEach(() => {
-      service = new FilesystemService();
+      service = createService();
     });
 
     it('should return file stats', async () => {
@@ -172,7 +188,7 @@ describe('FilesystemService', () => {
 
   describe('createReadStream', () => {
     beforeEach(() => {
-      service = new FilesystemService();
+      service = createService();
     });
 
     it('should create read stream without range', () => {
@@ -216,7 +232,7 @@ describe('FilesystemService', () => {
 
   describe('getUploadPath', () => {
     it('should return upload path', () => {
-      service = new FilesystemService();
+      service = createService();
 
       expect(service.getUploadPath()).toBe(p('/test', 'data', 'uploads'));
     });
@@ -224,7 +240,7 @@ describe('FilesystemService', () => {
 
   describe('getCoversPath', () => {
     it('should return covers path', () => {
-      service = new FilesystemService();
+      service = createService();
 
       expect(service.getCoversPath()).toBe(p('/test', 'data', 'covers'));
     });
