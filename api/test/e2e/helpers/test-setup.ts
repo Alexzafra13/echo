@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerStorage, ThrottlerStorageRecord } from '@nestj
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DrizzleService } from '../../../src/infrastructure/database/drizzle.service';
 import { AppModule } from '../../../src/app.module';
+import { WebSocketAdapter } from '../../../src/infrastructure/websocket/websocket.adapter';
 import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import * as schema from '../../../src/infrastructure/database/schema';
@@ -63,6 +64,9 @@ export async function createTestApp(): Promise<{
   );
 
   app.setGlobalPrefix('api');
+
+  // Habilitar WebSocket adapter para tests de WebSocket E2E
+  app.useWebSocketAdapter(new WebSocketAdapter(app));
 
   // NOTE: MustChangePasswordGuard is NOT applied globally because it requires
   // JwtAuthGuard to run first to populate request.user. Since JwtAuthGuard is
