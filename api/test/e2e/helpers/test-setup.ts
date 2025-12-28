@@ -65,6 +65,14 @@ export async function createTestApp(): Promise<{
 
   app.setGlobalPrefix('api');
 
+  // Habilitar CORS para WebSocket tests
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   // Habilitar WebSocket adapter para tests de WebSocket E2E
   app.useWebSocketAdapter(new WebSocketAdapter(app));
 

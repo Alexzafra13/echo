@@ -40,7 +40,7 @@ describe('WebSocket E2E', () => {
     const { method = 'auth', namespace = '/scanner' } = options;
 
     const socketOptions: {
-      transports: string[];
+      transports: ('websocket' | 'polling')[];
       forceNew: boolean;
       timeout: number;
       reconnection: boolean;
@@ -48,7 +48,8 @@ describe('WebSocket E2E', () => {
       extraHeaders?: { Authorization: string };
       auth?: { token: string };
     } = {
-      transports: ['websocket'],
+      // Use polling first, then upgrade to websocket (more reliable in tests)
+      transports: ['polling', 'websocket'],
       forceNew: true,
       timeout: 5000,
       reconnection: false,
@@ -169,7 +170,7 @@ describe('WebSocket E2E', () => {
     it('debería rechazar conexión sin token', async () => {
       const socket = io(`${serverAddress}/scanner`, {
         auth: { token: '' },
-        transports: ['websocket'],
+        transports: ['polling', 'websocket'],
         forceNew: true,
         timeout: 2000,
       });
