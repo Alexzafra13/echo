@@ -2,17 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { HealthCheckService } from './health-check.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
-
-// Mock Redis
-jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
-    status: 'ready',
-    connect: jest.fn().mockResolvedValue(undefined),
-    ping: jest.fn().mockResolvedValue('PONG'),
-    disconnect: jest.fn(),
-    quit: jest.fn().mockResolvedValue(undefined),
-  }));
-});
+import { RedisService } from '@infrastructure/cache/redis.service';
 
 // Mock os module
 jest.mock('os', () => ({
@@ -24,6 +14,7 @@ jest.mock('os', () => ({
 describe('HealthCheckService', () => {
   let service: HealthCheckService;
   let mockDrizzleService: jest.Mocked<DrizzleService>;
+  let mockRedisService: jest.Mocked<RedisService>;
 
   beforeEach(async () => {
     mockDrizzleService = {
@@ -32,6 +23,11 @@ describe('HealthCheckService', () => {
       },
     } as unknown as jest.Mocked<DrizzleService>;
 
+    mockRedisService = {
+      ping: jest.fn().mockResolvedValue(true),
+      connected: true,
+    } as unknown as jest.Mocked<RedisService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HealthCheckService,
@@ -39,22 +35,20 @@ describe('HealthCheckService', () => {
           provide: DrizzleService,
           useValue: mockDrizzleService,
         },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
       ],
     }).compile();
 
     service = module.get<HealthCheckService>(HealthCheckService);
   });
 
-  afterEach(async () => {
-    await service.onModuleDestroy();
-  });
-
   describe('check', () => {
     it('debería retornar status ok cuando DB y Redis están saludables', async () => {
-      // Act
       const result = await service.check();
 
-      // Assert
       expect(result.status).toBe('ok');
       expect(result.services.database).toBe('ok');
       expect(result.services.cache).toBe('ok');
@@ -62,41 +56,31 @@ describe('HealthCheckService', () => {
     });
 
     it('debería incluir timestamp válido', async () => {
-      // Arrange
       const before = Date.now();
-
-      // Act
       const result = await service.check();
-
-      // Assert
       const after = Date.now();
+
       expect(result.timestamp).toBeGreaterThanOrEqual(before);
       expect(result.timestamp).toBeLessThanOrEqual(after);
     });
 
     it('debería incluir uptime en segundos', async () => {
-      // Act
       const result = await service.check();
 
-      // Assert
       expect(result.uptime).toBeGreaterThanOrEqual(0);
       expect(typeof result.uptime).toBe('number');
     });
 
     it('debería incluir versión del sistema', async () => {
-      // Act
       const result = await service.check();
 
-      // Assert
       expect(result.version).toBeDefined();
       expect(typeof result.version).toBe('string');
     });
 
     it('debería incluir métricas del sistema', async () => {
-      // Act
       const result = await service.check();
 
-      // Assert
       expect(result.system).toBeDefined();
       expect(result.system?.memory).toBeDefined();
       expect(result.system?.memory.total).toBeGreaterThan(0);
@@ -108,12 +92,10 @@ describe('HealthCheckService', () => {
     });
 
     it('debería lanzar HttpException 503 cuando la base de datos falla', async () => {
-      // Arrange
       mockDrizzleService.db.execute = jest.fn().mockRejectedValue(
         new Error('Connection refused')
       );
 
-      // Act & Assert
       await expect(service.check()).rejects.toThrow(HttpException);
 
       try {
@@ -127,11 +109,20 @@ describe('HealthCheckService', () => {
       }
     });
 
+    it('debería retornar status degraded cuando solo Redis falla', async () => {
+      mockRedisService.ping = jest.fn().mockResolvedValue(false);
+
+      const result = await service.check();
+
+      expect(result.status).toBe('degraded');
+      expect(result.services.database).toBe('ok');
+      expect(result.services.cache).toBe('error');
+      expect(result.error).toContain('Cache');
+    });
+
     it('debería manejar errores de BD que no son instancias de Error', async () => {
-      // Arrange
       mockDrizzleService.db.execute = jest.fn().mockRejectedValue('String error');
 
-      // Act & Assert
       await expect(service.check()).rejects.toThrow(HttpException);
 
       try {
@@ -143,28 +134,49 @@ describe('HealthCheckService', () => {
     });
 
     it('debería ejecutar chequeos en paralelo', async () => {
-      // Arrange
       const dbExecuteStart = Date.now();
       mockDrizzleService.db.execute = jest.fn().mockImplementation(async () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         return [{ '?column?': 1 }];
       });
 
-      // Act
       await service.check();
       const duration = Date.now() - dbExecuteStart;
 
-      // Assert
-      // Si los checks fueran secuenciales, tomaría al menos 100ms (50ms cada uno)
-      // En paralelo debería tomar ~50ms
-      expect(duration).toBeLessThan(150); // Allow some margin
+      expect(duration).toBeLessThan(150);
     });
   });
 
-  describe('onModuleDestroy', () => {
-    it('debería cerrar la conexión de Redis al destruir el módulo', async () => {
-      // Act & Assert - no debería lanzar error
-      await expect(service.onModuleDestroy()).resolves.not.toThrow();
+  describe('liveness', () => {
+    it('debería retornar status ok siempre', async () => {
+      const result = await service.liveness();
+
+      expect(result.status).toBe('ok');
+      expect(result.timestamp).toBeDefined();
+    });
+  });
+
+  describe('readiness', () => {
+    it('debería retornar ok cuando DB está disponible', async () => {
+      const result = await service.readiness();
+
+      expect(result.status).toBe('ok');
+      expect(result.services.database).toBe('ok');
+    });
+
+    it('debería retornar error cuando DB falla', async () => {
+      mockDrizzleService.db.execute = jest.fn().mockRejectedValue(new Error('DB down'));
+
+      await expect(service.readiness()).rejects.toThrow(HttpException);
+    });
+
+    it('debería retornar ok aunque Redis falle (no es crítico)', async () => {
+      mockRedisService.ping = jest.fn().mockResolvedValue(false);
+
+      const result = await service.readiness();
+
+      expect(result.status).toBe('ok');
+      expect(result.services.cache).toBe('error');
     });
   });
 });
