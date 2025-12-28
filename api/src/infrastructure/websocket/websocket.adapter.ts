@@ -25,8 +25,10 @@ export class WebSocketAdapter extends IoAdapter {
    * Crea servidor de Socket.IO con configuración personalizada
    */
   createIOServer(port: number, options?: ServerOptions): Server {
-    // Use same CORS config as HTTP (auto-detects IPs in production)
-    const corsOrigins = appConfig.cors_origins;
+    // In test/development mode, allow all origins for easier testing
+    // In production, use configured CORS origins
+    const isTestOrDev = process.env.NODE_ENV !== 'production';
+    const corsOrigins = isTestOrDev ? true : appConfig.cors_origins;
 
     // Configuración del servidor Socket.IO
     const serverOptions: Partial<ServerOptions> = {
