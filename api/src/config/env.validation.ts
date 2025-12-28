@@ -98,6 +98,54 @@ export const envValidationSchema = Joi.object({
   VERSION: Joi.string()
     .optional()
     .default('1.0.0'),
+
+  // ============================================
+  // Database Pool Settings (Production Tuning)
+  // ============================================
+  DB_POOL_MAX: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
+    .default(20),
+
+  DB_POOL_MIN: Joi.number()
+    .integer()
+    .min(0)
+    .max(20)
+    .default(2),
+
+  DB_IDLE_TIMEOUT: Joi.number()
+    .integer()
+    .min(1000)
+    .default(30000),
+
+  DB_CONNECTION_TIMEOUT: Joi.number()
+    .integer()
+    .min(1000)
+    .default(5000),
+
+  DB_STATEMENT_TIMEOUT: Joi.number()
+    .integer()
+    .min(0)
+    .default(60000),
+
+  // ============================================
+  // Rate Limiting
+  // ============================================
+  RATE_LIMIT_DEFAULT: Joi.number()
+    .integer()
+    .min(10)
+    .max(10000)
+    .default(300),
+
+  // ============================================
+  // Graceful Shutdown
+  // ============================================
+  SHUTDOWN_TIMEOUT: Joi.number()
+    .integer()
+    .min(1000)
+    .max(60000)
+    .default(10000),
 });
 
 /**
