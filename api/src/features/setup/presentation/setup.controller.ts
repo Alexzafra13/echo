@@ -5,7 +5,6 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  Logger,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -14,6 +13,7 @@ import {
   ApiResponse,
   ApiBody,
 } from '@nestjs/swagger';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { IsString, MinLength } from 'class-validator';
 import { SetupService } from '../application/setup.service';
 import { Public } from '@shared/decorators/public.decorator';
@@ -64,9 +64,11 @@ class BrowseDirectoriesDto {
 @Controller('setup')
 @Public()
 export class SetupController {
-  private readonly logger = new Logger(SetupController.name);
-
-  constructor(private readonly setupService: SetupService) {}
+  constructor(
+    @InjectPinoLogger(SetupController.name)
+    private readonly logger: PinoLogger,
+    private readonly setupService: SetupService,
+  ) {}
 
   /**
    * Get setup status
@@ -120,7 +122,7 @@ export class SetupController {
   async createAdmin(@Body() dto: CreateAdminDto) {
     await this.setupService.createAdmin(dto.username, dto.password);
 
-    this.logger.log(`Admin account created via setup wizard: ${dto.username}`);
+    this.logger.info(`Admin account created via setup wizard: ${dto.username}`);
 
     return {
       success: true,
@@ -164,7 +166,7 @@ export class SetupController {
   async configureLibrary(@Body() dto: ConfigureLibraryDto) {
     const result = await this.setupService.configureMusicLibrary(dto.path);
 
-    this.logger.log(`Music library validation: ${dto.path} - ${result.valid ? 'valid' : 'invalid'}`);
+    this.logger.info(`Music library validation: ${dto.path} - ${result.valid ? 'valid' : 'invalid'}`);
 
     return result;
   }
@@ -240,7 +242,7 @@ export class SetupController {
   async completeSetup() {
     const result = await this.setupService.completeSetup();
 
-    this.logger.log('Setup wizard completed');
+    this.logger.info('Setup wizard completed');
 
     return result;
   }
