@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getLoggerToken } from 'nestjs-pino';
 import { ArtistsController } from './artists.controller';
 import { GetArtistUseCase } from '../../domain/use-cases/get-artist/get-artist.use-case';
 import { GetArtistsUseCase } from '../../domain/use-cases/get-artists/get-artists.use-case';
 import { GetArtistAlbumsUseCase } from '../../domain/use-cases/get-artist-albums/get-artist-albums.use-case';
 import { SearchArtistsUseCase } from '../../domain/use-cases/search-artists/search-artists.use-case';
-import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
-import { ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
-import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
+import { GetRelatedArtistsUseCase } from '../../domain/use-cases/get-related-artists/get-related-artists.use-case';
+import { GetArtistTopTracksUseCase } from '../../domain/use-cases/get-artist-top-tracks/get-artist-top-tracks.use-case';
+import { GetArtistStatsUseCase } from '../../domain/use-cases/get-artist-stats/get-artist-stats.use-case';
 import { Artist } from '../../domain/entities/artist.entity';
 import { Album } from '@features/albums/domain/entities/album.entity';
 
@@ -17,9 +16,9 @@ describe('ArtistsController', () => {
   let getArtistsUseCase: jest.Mocked<GetArtistsUseCase>;
   let getArtistAlbumsUseCase: jest.Mocked<GetArtistAlbumsUseCase>;
   let searchArtistsUseCase: jest.Mocked<SearchArtistsUseCase>;
-  let playTrackingRepository: jest.Mocked<any>;
-  let artistRepository: jest.Mocked<any>;
-  let lastfmAgent: jest.Mocked<any>;
+  let getRelatedArtistsUseCase: jest.Mocked<GetRelatedArtistsUseCase>;
+  let getArtistTopTracksUseCase: jest.Mocked<GetArtistTopTracksUseCase>;
+  let getArtistStatsUseCase: jest.Mocked<GetArtistStatsUseCase>;
 
   const mockArtist = Artist.reconstruct({
     id: 'artist-1',
@@ -57,30 +56,7 @@ describe('ArtistsController', () => {
     updatedAt: new Date('2025-01-01'),
   });
 
-  const mockLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-
   beforeEach(async () => {
-    const mockPlayTrackingRepository = {
-      getArtistTopTracks: jest.fn(),
-      getArtistGlobalStats: jest.fn(),
-      getRelatedArtists: jest.fn(),
-    };
-
-    const mockArtistRepository = {
-      findById: jest.fn(),
-      findByName: jest.fn(),
-    };
-
-    const mockLastfmAgent = {
-      isEnabled: jest.fn(),
-      getSimilarArtists: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ArtistsController],
       providers: [
@@ -88,10 +64,9 @@ describe('ArtistsController', () => {
         { provide: GetArtistsUseCase, useValue: { execute: jest.fn() } },
         { provide: GetArtistAlbumsUseCase, useValue: { execute: jest.fn() } },
         { provide: SearchArtistsUseCase, useValue: { execute: jest.fn() } },
-        { provide: PLAY_TRACKING_REPOSITORY, useValue: mockPlayTrackingRepository },
-        { provide: ARTIST_REPOSITORY, useValue: mockArtistRepository },
-        { provide: LastfmAgent, useValue: mockLastfmAgent },
-        { provide: getLoggerToken(ArtistsController.name), useValue: mockLogger },
+        { provide: GetRelatedArtistsUseCase, useValue: { execute: jest.fn() } },
+        { provide: GetArtistTopTracksUseCase, useValue: { execute: jest.fn() } },
+        { provide: GetArtistStatsUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -100,9 +75,9 @@ describe('ArtistsController', () => {
     getArtistsUseCase = module.get(GetArtistsUseCase);
     getArtistAlbumsUseCase = module.get(GetArtistAlbumsUseCase);
     searchArtistsUseCase = module.get(SearchArtistsUseCase);
-    playTrackingRepository = module.get(PLAY_TRACKING_REPOSITORY);
-    artistRepository = module.get(ARTIST_REPOSITORY);
-    lastfmAgent = module.get(LastfmAgent);
+    getRelatedArtistsUseCase = module.get(GetRelatedArtistsUseCase);
+    getArtistTopTracksUseCase = module.get(GetArtistTopTracksUseCase);
+    getArtistStatsUseCase = module.get(GetArtistStatsUseCase);
   });
 
   it('should be defined', () => {
@@ -187,36 +162,53 @@ describe('ArtistsController', () => {
   describe('getArtistTopTracks', () => {
     it('debería retornar top tracks del artista', async () => {
       // Arrange
-      const mockTopTracks = [
-        { trackId: 'track-1', title: 'Come Together', playCount: 100 },
-        { trackId: 'track-2', title: 'Something', playCount: 80 },
-      ];
-      playTrackingRepository.getArtistTopTracks.mockResolvedValue(mockTopTracks);
+      const mockTopTracksResult = {
+        data: [
+          { trackId: 'track-1', title: 'Come Together', playCount: 100 },
+          { trackId: 'track-2', title: 'Something', playCount: 80 },
+        ],
+        artistId: 'artist-1',
+        limit: 10,
+      };
+      getArtistTopTracksUseCase.execute.mockResolvedValue(mockTopTracksResult);
 
       // Act
       const result = await controller.getArtistTopTracks('artist-1', '10');
 
       // Assert
-      expect(playTrackingRepository.getArtistTopTracks).toHaveBeenCalledWith('artist-1', 10, undefined);
+      expect(getArtistTopTracksUseCase.execute).toHaveBeenCalledWith({
+        artistId: 'artist-1',
+        limit: 10,
+        days: undefined,
+      });
       expect(result.data).toHaveLength(2);
     });
 
     it('debería filtrar por días si se proporciona', async () => {
       // Arrange
-      playTrackingRepository.getArtistTopTracks.mockResolvedValue([]);
+      getArtistTopTracksUseCase.execute.mockResolvedValue({
+        data: [],
+        artistId: 'artist-1',
+        limit: 10,
+      });
 
       // Act
       await controller.getArtistTopTracks('artist-1', '10', '30');
 
       // Assert
-      expect(playTrackingRepository.getArtistTopTracks).toHaveBeenCalledWith('artist-1', 10, 30);
+      expect(getArtistTopTracksUseCase.execute).toHaveBeenCalledWith({
+        artistId: 'artist-1',
+        limit: 10,
+        days: 30,
+      });
     });
   });
 
   describe('getArtistStats', () => {
     it('debería retornar estadísticas del artista', async () => {
       // Arrange
-      playTrackingRepository.getArtistGlobalStats.mockResolvedValue({
+      getArtistStatsUseCase.execute.mockResolvedValue({
+        artistId: 'artist-1',
         totalPlays: 1000,
         uniqueListeners: 150,
         avgCompletionRate: 0.85,
@@ -227,7 +219,7 @@ describe('ArtistsController', () => {
       const result = await controller.getArtistStats('artist-1');
 
       // Assert
-      expect(playTrackingRepository.getArtistGlobalStats).toHaveBeenCalledWith('artist-1');
+      expect(getArtistStatsUseCase.execute).toHaveBeenCalledWith({ artistId: 'artist-1' });
       expect(result.totalPlays).toBe(1000);
       expect(result.uniqueListeners).toBe(150);
       expect(result.avgCompletionRate).toBe(0.85);
@@ -235,52 +227,39 @@ describe('ArtistsController', () => {
   });
 
   describe('getRelatedArtists', () => {
-    it('debería retornar artistas relacionados desde Last.fm', async () => {
+    it('debería retornar artistas relacionados desde proveedor externo', async () => {
       // Arrange
-      artistRepository.findById.mockResolvedValue(mockArtist);
-      lastfmAgent.isEnabled.mockReturnValue(true);
-      lastfmAgent.getSimilarArtists.mockResolvedValue([
-        { name: 'Pink Floyd', match: 0.8 },
-        { name: 'Led Zeppelin', match: 0.7 },
-      ]);
-
-      const pinkFloyd = Artist.reconstruct({
-        ...mockArtist.toPrimitives(),
-        id: 'artist-2',
-        name: 'Pink Floyd',
-      });
-      artistRepository.findByName.mockImplementation((name: string) => {
-        if (name === 'Pink Floyd') return pinkFloyd;
-        return null;
+      getRelatedArtistsUseCase.execute.mockResolvedValue({
+        data: [
+          { id: 'artist-2', name: 'Pink Floyd', albumCount: 10, songCount: 100, matchScore: 80 },
+        ],
+        artistId: 'artist-1',
+        limit: 10,
+        source: 'external',
       });
 
       // Act
       const result = await controller.getRelatedArtists('artist-1', '10');
 
       // Assert
-      expect(lastfmAgent.isEnabled).toHaveBeenCalled();
-      expect(result.source).toBe('lastfm');
+      expect(getRelatedArtistsUseCase.execute).toHaveBeenCalledWith({
+        artistId: 'artist-1',
+        limit: 10,
+      });
+      expect(result.source).toBe('external');
       expect(result.data).toHaveLength(1);
       expect(result.data[0].name).toBe('Pink Floyd');
     });
 
-    it('debería usar datos internos si Last.fm está deshabilitado', async () => {
+    it('debería usar datos internos si proveedor externo está deshabilitado', async () => {
       // Arrange
-      artistRepository.findById.mockResolvedValue(mockArtist);
-      lastfmAgent.isEnabled.mockReturnValue(false);
-      playTrackingRepository.getRelatedArtists.mockResolvedValue([
-        { artistId: 'artist-2', score: 85 },
-      ]);
-
-      const relatedArtist = Artist.reconstruct({
-        ...mockArtist.toPrimitives(),
-        id: 'artist-2',
-        name: 'Pink Floyd',
-      });
-      artistRepository.findById.mockImplementation((id: string) => {
-        if (id === 'artist-1') return mockArtist;
-        if (id === 'artist-2') return relatedArtist;
-        return null;
+      getRelatedArtistsUseCase.execute.mockResolvedValue({
+        data: [
+          { id: 'artist-2', name: 'Pink Floyd', albumCount: 10, songCount: 100, matchScore: 85 },
+        ],
+        artistId: 'artist-1',
+        limit: 10,
+        source: 'internal',
       });
 
       // Act
@@ -293,7 +272,12 @@ describe('ArtistsController', () => {
 
     it('debería retornar vacío si artista no existe', async () => {
       // Arrange
-      artistRepository.findById.mockResolvedValue(null);
+      getRelatedArtistsUseCase.execute.mockResolvedValue({
+        data: [],
+        artistId: 'nonexistent',
+        limit: 10,
+        source: 'none',
+      });
 
       // Act
       const result = await controller.getRelatedArtists('nonexistent', '10');

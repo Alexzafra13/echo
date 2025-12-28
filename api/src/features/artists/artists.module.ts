@@ -4,10 +4,20 @@ import { AlbumsModule } from '@features/albums/albums.module';
 import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { ArtistsController } from './presentation/controller/artists.controller';
-import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from './domain/use-cases';
+import {
+  GetArtistUseCase,
+  GetArtistsUseCase,
+  GetArtistAlbumsUseCase,
+  SearchArtistsUseCase,
+  GetRelatedArtistsUseCase,
+  GetArtistTopTracksUseCase,
+  GetArtistStatsUseCase,
+} from './domain/use-cases';
 import { DrizzleArtistRepository } from './infrastructure/persistence/artist.repository';
 import { CachedArtistRepository } from './infrastructure/persistence/cached-artist.repository';
 import { ARTIST_REPOSITORY } from './domain/ports/artist-repository.port';
+import { SIMILAR_ARTISTS_PROVIDER } from './domain/ports/similar-artists.port';
+import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
 
 /**
  * ArtistsModule - Módulo de gestión de artistas
@@ -44,6 +54,9 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     GetArtistsUseCase,
     GetArtistAlbumsUseCase,
     SearchArtistsUseCase,
+    GetRelatedArtistsUseCase,
+    GetArtistTopTracksUseCase,
+    GetArtistStatsUseCase,
 
     // Repositories
     DrizzleArtistRepository,
@@ -53,6 +66,11 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     {
       provide: ARTIST_REPOSITORY,
       useClass: USE_CACHE ? CachedArtistRepository : DrizzleArtistRepository,
+    },
+    // Similar artists provider (uses LastfmAgent from ExternalMetadataModule)
+    {
+      provide: SIMILAR_ARTISTS_PROVIDER,
+      useExisting: LastfmAgent,
     },
   ],
   exports: [ARTIST_REPOSITORY],

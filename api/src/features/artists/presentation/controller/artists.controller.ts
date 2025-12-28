@@ -1,7 +1,14 @@
-import { Controller, Get, Param, Query, HttpCode, HttpStatus, Inject, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { GetArtistUseCase, GetArtistsUseCase, GetArtistAlbumsUseCase, SearchArtistsUseCase } from '../../domain/use-cases';
+import {
+  GetArtistUseCase,
+  GetArtistsUseCase,
+  GetArtistAlbumsUseCase,
+  SearchArtistsUseCase,
+  GetRelatedArtistsUseCase,
+  GetArtistTopTracksUseCase,
+  GetArtistStatsUseCase,
+} from '../../domain/use-cases';
 import {
   ArtistResponseDto,
   GetArtistsResponseDto,
@@ -10,15 +17,10 @@ import {
   GetArtistTopTracksResponseDto,
   GetArtistStatsResponseDto,
   GetRelatedArtistsResponseDto,
-  RelatedArtistDto,
 } from '../dtos';
 import { AlbumResponseDto } from '@features/albums/presentation/dtos';
 import { parsePaginationParams } from '@shared/utils';
 import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
-import { PLAY_TRACKING_REPOSITORY, IPlayTrackingRepository } from '@features/play-tracking/domain/ports';
-import { ARTIST_REPOSITORY } from '../../domain/ports/artist-repository.port';
-import { IArtistRepository } from '../../domain/ports/artist-repository.port';
-import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/lastfm.agent';
 import { CacheControl } from '@shared/interceptors';
 
 /**
@@ -36,17 +38,13 @@ import { CacheControl } from '@shared/interceptors';
 @Controller('artists')
 export class ArtistsController {
   constructor(
-    @InjectPinoLogger(ArtistsController.name)
-    private readonly logger: PinoLogger,
     private readonly getArtistUseCase: GetArtistUseCase,
     private readonly getArtistsUseCase: GetArtistsUseCase,
     private readonly getArtistAlbumsUseCase: GetArtistAlbumsUseCase,
     private readonly searchArtistsUseCase: SearchArtistsUseCase,
-    @Inject(PLAY_TRACKING_REPOSITORY)
-    private readonly playTrackingRepository: IPlayTrackingRepository,
-    @Inject(ARTIST_REPOSITORY)
-    private readonly artistRepository: IArtistRepository,
-    private readonly lastfmAgent: LastfmAgent,
+    private readonly getRelatedArtistsUseCase: GetRelatedArtistsUseCase,
+    private readonly getArtistTopTracksUseCase: GetArtistTopTracksUseCase,
+    private readonly getArtistStatsUseCase: GetArtistStatsUseCase,
   ) {}
 
   /**
@@ -151,21 +149,13 @@ export class ArtistsController {
     @Query('limit') limit?: string,
     @Query('days') days?: string,
   ): Promise<GetArtistTopTracksResponseDto> {
-    const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 50);
-    const daysNum = days ? parseInt(days, 10) : undefined;
-
-    const topTracks = await this.playTrackingRepository.getArtistTopTracks(
+    const result = await this.getArtistTopTracksUseCase.execute({
       artistId,
-      limitNum,
-      daysNum,
-    );
-
-    return GetArtistTopTracksResponseDto.create({
-      data: topTracks,
-      artistId,
-      limit: limitNum,
-      days: daysNum,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      days: days ? parseInt(days, 10) : undefined,
     });
+
+    return GetArtistTopTracksResponseDto.create(result);
   }
 
   /**
@@ -192,15 +182,8 @@ export class ArtistsController {
     type: GetArtistStatsResponseDto,
   })
   async getArtistStats(@Param('id', ParseUUIDPipe) artistId: string): Promise<GetArtistStatsResponseDto> {
-    const stats = await this.playTrackingRepository.getArtistGlobalStats(artistId);
-
-    return GetArtistStatsResponseDto.create({
-      artistId,
-      totalPlays: stats.totalPlays,
-      uniqueListeners: stats.uniqueListeners,
-      avgCompletionRate: Math.round(stats.avgCompletionRate * 100) / 100,
-      skipRate: Math.round(stats.skipRate * 100) / 100,
-    });
+    const result = await this.getArtistStatsUseCase.execute({ artistId });
+    return GetArtistStatsResponseDto.create(result);
   }
 
   /**
@@ -236,110 +219,12 @@ export class ArtistsController {
     @Param('id', ParseUUIDPipe) artistId: string,
     @Query('limit') limit?: string,
   ): Promise<GetRelatedArtistsResponseDto> {
-    const limitNum = Math.min(Math.max(parseInt(limit || '10', 10), 1), 20);
-
-    // 1. Get the artist from our database
-    const artist = await this.artistRepository.findById(artistId);
-    if (!artist) {
-      return GetRelatedArtistsResponseDto.create({
-        data: [],
-        artistId,
-        limit: limitNum,
-        source: 'none',
-      });
-    }
-
-    // 2. Check if Last.fm is enabled
-    const lastfmEnabled = this.lastfmAgent.isEnabled();
-
-    // 3. If Last.fm is enabled, use it to find similar artists filtered by library
-    if (lastfmEnabled) {
-      const similarFromLastfm = await this.lastfmAgent.getSimilarArtists(
-        artist.mbzArtistId || null,
-        artist.name,
-        50, // Get more from Last.fm so we can filter to local library
-      );
-
-      this.logger.info(
-        `[Autoplay] Last.fm returned ${similarFromLastfm?.length || 0} similar artists for: ${artist.name}`
-      );
-
-      if (similarFromLastfm && similarFromLastfm.length > 0) {
-        const lastfmArtists: RelatedArtistDto[] = [];
-        const notFoundInLibrary: string[] = [];
-
-        for (const similar of similarFromLastfm) {
-          if (lastfmArtists.length >= limitNum) break;
-
-          // Search for this artist in our library by name
-          const localArtist = await this.artistRepository.findByName(similar.name);
-          if (localArtist && localArtist.id !== artistId) {
-            lastfmArtists.push({
-              id: localArtist.id,
-              name: localArtist.name,
-              albumCount: localArtist.albumCount,
-              songCount: localArtist.songCount,
-              matchScore: Math.round(similar.match * 100),
-            });
-          } else if (!localArtist) {
-            notFoundInLibrary.push(similar.name);
-          }
-        }
-
-        if (notFoundInLibrary.length > 0) {
-          this.logger.info(
-            `[Autoplay] Similar artists NOT in library: ${notFoundInLibrary.slice(0, 10).join(', ')}${notFoundInLibrary.length > 10 ? '...' : ''}`
-          );
-        }
-
-        if (lastfmArtists.length > 0) {
-          this.logger.info(
-            `[Autoplay] Found ${lastfmArtists.length} related artists IN library: ${lastfmArtists.map(a => a.name).join(', ')}`
-          );
-          return GetRelatedArtistsResponseDto.create({
-            data: lastfmArtists,
-            artistId,
-            limit: limitNum,
-            source: 'lastfm',
-          });
-        }
-      }
-
-      this.logger.info(`[Autoplay] No Last.fm similar artists found in library for: ${artist.name}, trying internal patterns`);
-    }
-
-    // 4. Fallback: Use internal co-listening patterns
-    // (when Last.fm is disabled OR Last.fm returned no results in our library)
-    const internalRelated = await this.playTrackingRepository.getRelatedArtists(
+    const result = await this.getRelatedArtistsUseCase.execute({
       artistId,
-      limitNum,
-    );
-
-    const internalArtists: RelatedArtistDto[] = [];
-
-    for (const stat of internalRelated) {
-      const relArtist = await this.artistRepository.findById(stat.artistId);
-      if (relArtist) {
-        internalArtists.push({
-          id: relArtist.id,
-          name: relArtist.name,
-          albumCount: relArtist.albumCount,
-          songCount: relArtist.songCount,
-          matchScore: Math.round(stat.score),
-        });
-      }
-    }
-
-    this.logger.debug(
-      `Found ${internalArtists.length} related artists from internal patterns for: ${artist.name}`
-    );
-
-    return GetRelatedArtistsResponseDto.create({
-      data: internalArtists,
-      artistId,
-      limit: limitNum,
-      source: internalArtists.length > 0 ? 'internal' : 'none',
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
+
+    return GetRelatedArtistsResponseDto.create(result);
   }
 
   /**
