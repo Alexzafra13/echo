@@ -3,6 +3,7 @@ import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
+import { databaseConfig } from '@config/database.config';
 
 export type DrizzleDB = NodePgDatabase<typeof schema>;
 
@@ -51,8 +52,19 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
     @InjectPinoLogger(DrizzleService.name)
     private readonly logger: PinoLogger,
   ) {
+    // Production-ready pool configuration
     this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: databaseConfig.database_url,
+      max: databaseConfig.pool.max,
+      min: databaseConfig.pool.min,
+      idleTimeoutMillis: databaseConfig.pool.idleTimeoutMillis,
+      connectionTimeoutMillis: databaseConfig.pool.connectionTimeoutMillis,
+      statement_timeout: databaseConfig.pool.statementTimeout,
+    });
+
+    // Log pool errors (connection issues, etc.)
+    this.pool.on('error', (err) => {
+      this.logger.error({ error: err.message }, 'Unexpected database pool error');
     });
 
     // Use custom compact logger in development, no logging in production

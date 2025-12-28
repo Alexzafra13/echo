@@ -258,16 +258,34 @@ Node.js: ${process.version}
   `);
 
   // Graceful shutdown handlers
+  const SHUTDOWN_TIMEOUT = parseInt(process.env.SHUTDOWN_TIMEOUT ?? '10000', 10);
+  let isShuttingDown = false;
+
   const gracefulShutdown = async (signal: string) => {
-    logger.log(`Received ${signal}. Starting graceful shutdown...`);
+    // Prevent multiple shutdown attempts
+    if (isShuttingDown) {
+      logger.warn({ signal }, 'Shutdown already in progress, ignoring signal');
+      return;
+    }
+    isShuttingDown = true;
+
+    logger.log({ signal, timeout: SHUTDOWN_TIMEOUT }, 'Starting graceful shutdown...');
+
+    // Force exit after timeout
+    const forceExitTimer = setTimeout(() => {
+      logger.error('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT);
 
     try {
       // Close the NestJS application (triggers OnModuleDestroy hooks)
       await app.close();
+      clearTimeout(forceExitTimer);
       logger.log('Application closed successfully');
       process.exit(0);
     } catch (error) {
-      logger.error('Error during graceful shutdown:', error);
+      clearTimeout(forceExitTimer);
+      logger.error({ error: error instanceof Error ? error.message : error }, 'Error during graceful shutdown');
       process.exit(1);
     }
   };
@@ -278,13 +296,15 @@ Node.js: ${process.version}
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
-    logger.error('Uncaught Exception:', error);
+    logger.error({ error: error.message, stack: error.stack }, 'Uncaught Exception');
     gracefulShutdown('uncaughtException');
   });
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    logger.error({ reason: String(reason) }, 'Unhandled Rejection');
+    // Don't shutdown on unhandled rejection - just log it
+    // This is consistent with Node.js default behavior
   });
 }
 
