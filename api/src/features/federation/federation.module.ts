@@ -48,9 +48,10 @@ import { StreamingModule } from '@features/streaming/streaming.module';
 @Module({
   imports: [StreamingModule],
   controllers: [
+    // Order matters: more specific routes first
+    RemoteLibraryController,    // /federation/servers/:id/library, /albums, /tracks
+    ConnectedServerController,  // /federation/servers/:id (less specific)
     InvitationController,
-    ConnectedServerController,
-    RemoteLibraryController,
     AccessTokenController,
     FederationPublicController,
     FederationImportController,
