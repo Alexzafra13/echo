@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
-import { FederationController } from './presentation/federation.controller';
+// New refactored controllers (smaller, focused)
+import { InvitationController } from './presentation/invitation.controller';
+import { ConnectedServerController } from './presentation/connected-server.controller';
+import { RemoteLibraryController } from './presentation/remote-library.controller';
+import { AccessTokenController } from './presentation/access-token.controller';
+// Existing controllers
 import { FederationPublicController } from './presentation/federation-public.controller';
 import { FederationImportController } from './presentation/federation-import.controller';
 import { FederationGateway } from './presentation/federation.gateway';
@@ -27,6 +32,14 @@ import { StreamingModule } from '@features/streaming/streaming.module';
  * - Infrastructure Layer: Repositorio para persistencia de conexiones
  * - Presentation Layer: Controllers para API REST
  *
+ * Controllers:
+ * - InvitationController: Gestión de tokens de invitación
+ * - ConnectedServerController: Gestión de servidores conectados
+ * - RemoteLibraryController: Navegación de bibliotecas remotas
+ * - AccessTokenController: Gestión de acceso y federación mutua
+ * - FederationPublicController: Endpoints públicos para servidores remotos
+ * - FederationImportController: Importación de álbumes
+ *
  * Seguridad:
  * - Tokens de invitación temporales para establecer conexiones
  * - Tokens de acceso de larga duración para servidores conectados
@@ -34,7 +47,14 @@ import { StreamingModule } from '@features/streaming/streaming.module';
  */
 @Module({
   imports: [StreamingModule],
-  controllers: [FederationController, FederationPublicController, FederationImportController],
+  controllers: [
+    InvitationController,
+    ConnectedServerController,
+    RemoteLibraryController,
+    AccessTokenController,
+    FederationPublicController,
+    FederationImportController,
+  ],
   providers: [
     // Services
     FederationTokenService,
