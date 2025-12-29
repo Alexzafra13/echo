@@ -8,7 +8,8 @@ import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPl
 import { usePlayer, Track } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
-import { UpdatePlaylistDto } from '../../types';
+import { UpdatePlaylistDto, PlaylistTrack } from '../../types';
+import type { Track as SharedTrack } from '@shared/types/track.types';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
@@ -44,14 +45,14 @@ export default function PlaylistDetailPage() {
 
     if (firstAlbumId) {
       const coverUrl = `/api/albums/${firstAlbumId}/cover`;
-      extractDominantColor(coverUrl).then((color) => {
-        setDominantColor(color);
-      });
+      extractDominantColor(coverUrl)
+        .then((color) => setDominantColor(color))
+        .catch(() => {/* Color extraction failed, use default */});
     }
   }, [playlistTracks]);
 
   // Convert API tracks to Player tracks
-  const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
+  const convertToPlayerTracks = (apiTracks: PlaylistTrack[]): Track[] => {
     return apiTracks.map(track => ({
       id: track.id,
       title: track.title,
@@ -91,7 +92,7 @@ export default function PlaylistDetailPage() {
     playQueue(shuffledTracks, 0);
   };
 
-  const handleTrackPlay = (track: any) => {
+  const handleTrackPlay = (track: SharedTrack) => {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
     const playerTracks = convertToPlayerTracks(tracks);
@@ -103,7 +104,7 @@ export default function PlaylistDetailPage() {
     await updatePlaylistMutation.mutateAsync({ id, dto: data });
   };
 
-  const handleRemoveTrack = async (track: any) => {
+  const handleRemoveTrack = async (track: SharedTrack) => {
     if (!id) return;
     try {
       await removeTrackMutation.mutateAsync({ playlistId: id, trackId: track.id });
@@ -142,7 +143,7 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const handleMoveTrackUp = async (_track: any, index: number) => {
+  const handleMoveTrackUp = async (_track: SharedTrack, index: number) => {
     if (!id || index === 0) return;
     const currentTracks = playlistTracks?.tracks || [];
     if (currentTracks.length < 2) return;
@@ -161,7 +162,7 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const handleMoveTrackDown = async (_track: any, index: number) => {
+  const handleMoveTrackDown = async (_track: SharedTrack, index: number) => {
     if (!id) return;
     const currentTracks = playlistTracks?.tracks || [];
     if (index >= currentTracks.length - 1) return;
