@@ -130,7 +130,7 @@ describe('Federation E2E', () => {
         await request(app.getHttpServer())
           .delete(`/api/federation/invitations/${token.id}`)
           .set('Authorization', `Bearer ${accessToken}`)
-          .expect(200);
+          .expect(204);
 
         // Verificar que se eliminó
         const remaining = await drizzle.db
@@ -201,7 +201,7 @@ describe('Federation E2E', () => {
         await request(app.getHttpServer())
           .delete(`/api/federation/access-tokens/${fedToken.id}`)
           .set('Authorization', `Bearer ${accessToken}`)
-          .expect(200);
+          .expect(204);
 
         // Verificar que está revocado (isActive = false)
         const [updated] = await drizzle.db
@@ -219,7 +219,7 @@ describe('Federation E2E', () => {
         await request(app.getHttpServer())
           .delete(`/api/federation/access-tokens/${fedToken.id}?permanent=true`)
           .set('Authorization', `Bearer ${accessToken}`)
-          .expect(200);
+          .expect(204);
 
         // Verificar que se eliminó
         const remaining = await drizzle.db
@@ -494,7 +494,7 @@ describe('Federation E2E', () => {
         await request(app.getHttpServer())
           .delete(`/api/federation/servers/${server.id}`)
           .set('Authorization', `Bearer ${accessToken}`)
-          .expect(200);
+          .expect(204);
 
         // Verificar eliminación
         const remaining = await drizzle.db
