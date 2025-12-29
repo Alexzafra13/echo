@@ -43,18 +43,18 @@ export class GetRelatedArtistsResponseDto {
   limit!: number;
 
   @ApiProperty({
-    example: 'lastfm',
-    description: 'Fuente de los datos (lastfm, internal, none)',
-    enum: ['lastfm', 'internal', 'none']
+    example: 'external',
+    description: 'Fuente de los datos (external, internal, none)',
+    enum: ['external', 'internal', 'none']
   })
   @Expose()
-  source!: 'lastfm' | 'internal' | 'none';
+  source!: 'external' | 'internal' | 'none';
 
   static create(params: {
     data: RelatedArtistDto[];
     artistId: string;
     limit: number;
-    source: 'lastfm' | 'internal' | 'none';
+    source: 'external' | 'internal' | 'none';
   }): GetRelatedArtistsResponseDto {
     const dto = new GetRelatedArtistsResponseDto();
     dto.data = params.data;
