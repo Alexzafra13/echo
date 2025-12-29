@@ -35,6 +35,9 @@ export interface ScoredTrack {
     duration?: number;
     albumId?: string;
     artistId?: string;
+    // Audio normalization data (ReplayGain/LUFS)
+    rgTrackGain?: number;
+    rgTrackPeak?: number;
   };
   album?: {
     id: string;

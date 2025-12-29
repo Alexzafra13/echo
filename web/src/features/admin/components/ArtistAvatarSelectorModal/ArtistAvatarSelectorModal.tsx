@@ -3,15 +3,15 @@ import { X, Check, Loader, AlertCircle, Cloud, Upload } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@shared/components/ui';
 import { useSearchArtistAvatars, useApplyArtistAvatar } from '../../hooks/useArtistAvatars';
-import { AvatarOption } from '../../api/artist-avatars.api';
+import { AvatarOption, AvatarImageType } from '../../api/artist-avatars.api';
 import { FileUploadSection } from './FileUploadSection';
 import styles from './ArtistAvatarSelectorModal.module.css';
 
 interface ArtistAvatarSelectorModalProps {
   artistId: string;
   artistName: string;
-  defaultType?: 'profile' | 'background' | 'banner' | 'logo'; // Pre-select image type
-  allowedTypes?: Array<'profile' | 'background' | 'banner' | 'logo'>; // Restrict which types can be selected
+  defaultType?: AvatarImageType; // Pre-select image type
+  allowedTypes?: AvatarImageType[]; // Restrict which types can be selected
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -49,13 +49,13 @@ export function ArtistAvatarSelectorModal({
 
   // Filter types based on allowedTypes prop (if provided)
   const types = allowedTypes
-    ? allTypes.filter(type => allowedTypes.includes(type as any))
+    ? allTypes.filter((type): type is AvatarImageType => type !== undefined && allowedTypes.includes(type))
     : allTypes;
 
   // Filter avatars
   const filteredAvatars = avatars.filter((a) => {
     // Filter by allowed types (if specified)
-    if (allowedTypes && a.type && !allowedTypes.includes(a.type as any)) return false;
+    if (allowedTypes && a.type && !allowedTypes.includes(a.type)) return false;
     if (providerFilter && a.provider !== providerFilter) return false;
     if (typeFilter && a.type !== typeFilter) return false;
     return true;
@@ -70,7 +70,7 @@ export function ArtistAvatarSelectorModal({
         artistId,
         avatarUrl: selectedAvatar.url,
         provider: selectedAvatar.provider,
-        type: selectedAvatar.type as 'profile' | 'background' | 'banner' | 'logo',
+        type: selectedAvatar.type,
       },
       {
         onSuccess: async () => {
@@ -296,7 +296,7 @@ export function ArtistAvatarSelectorModal({
             /* Upload Tab */
             <FileUploadSection
               artistId={artistId}
-              imageType={(defaultType || (allowedTypes && allowedTypes[0]) || 'profile') as 'profile' | 'background' | 'banner' | 'logo'}
+              imageType={defaultType || (allowedTypes && allowedTypes[0]) || 'profile'}
               onSuccess={() => {
                 onSuccess?.();
                 onClose();

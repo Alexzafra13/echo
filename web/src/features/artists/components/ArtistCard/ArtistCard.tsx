@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { ArtistCardProps } from '../../types';
 import { getArtistAvatarUrl, handleArtistImageError, getArtistInitials } from '../../utils/artist-image.utils';
 import styles from './ArtistCard.module.css';
@@ -5,6 +6,7 @@ import styles from './ArtistCard.module.css';
 /**
  * ArtistCard Component
  * Displays a single artist with avatar, name, and album/song counts
+ * Memoized to prevent unnecessary re-renders in lists
  *
  * @example
  * <ArtistCard
@@ -15,7 +17,7 @@ import styles from './ArtistCard.module.css';
  * Note: Avatar URL is generated dynamically from ImageService API.
  * Uses updatedAt timestamp for cache-busting to ensure images sync with detail view.
  */
-export function ArtistCard({ artist, onClick }: ArtistCardProps) {
+export const ArtistCard = memo(function ArtistCard({ artist, onClick }: ArtistCardProps) {
   // Use dynamic URL generation (V2 system) with cache-busting timestamp
   // ImageService will prioritize: custom > local > external
   const avatarUrl = getArtistAvatarUrl(artist.id, artist.updatedAt);
@@ -45,4 +47,4 @@ export function ArtistCard({ artist, onClick }: ArtistCardProps) {
       </div>
     </article>
   );
-}
+});

@@ -229,7 +229,12 @@ export function HistoryTab() {
           <select
             className={styles.filterSelect}
             value={filters.entityType || ''}
-            onChange={(e) => handleFilterChange({ entityType: e.target.value as any || undefined })}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleFilterChange({
+                entityType: value === 'artist' || value === 'album' ? value : undefined
+              });
+            }}
           >
             <option value="">Todos los tipos</option>
             <option value="artist">Artistas</option>
@@ -239,7 +244,12 @@ export function HistoryTab() {
           <select
             className={styles.filterSelect}
             value={filters.status || ''}
-            onChange={(e) => handleFilterChange({ status: e.target.value as any || undefined })}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleFilterChange({
+                status: value === 'success' || value === 'partial' || value === 'error' ? value : undefined
+              });
+            }}
           >
             <option value="">Todos los estados</option>
             <option value="success">Éxito</option>
