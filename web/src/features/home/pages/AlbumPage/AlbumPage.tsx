@@ -79,9 +79,9 @@ export default function AlbumPage() {
   // Extract dominant color from album cover
   useEffect(() => {
     if (coverUrl) {
-      extractDominantColor(coverUrl).then(color => {
-        setDominantColor(color);
-      });
+      extractDominantColor(coverUrl)
+        .then(color => setDominantColor(color))
+        .catch(() => {/* Color extraction failed, use default */});
     }
   }, [coverUrl]);
 

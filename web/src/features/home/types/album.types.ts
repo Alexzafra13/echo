@@ -15,7 +15,10 @@ export interface Album {
   totalTracks: number;
   duration?: number;
   genres?: string[];
+  genre?: string; // Single genre (from API)
   addedAt: Date;
+  createdAt?: string; // ISO date string
+  path?: string; // File system path
 }
 
 /**
