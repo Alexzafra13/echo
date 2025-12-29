@@ -136,8 +136,8 @@ export function PlaylistDetailPage() {
         duration: st.track!.duration || 0,
         coverImage: st.track!.albumId ? `/api/albums/${st.track!.albumId}/cover` : undefined,
         // Audio normalization data (LUFS)
-        rgTrackGain: (st.track as any)?.rgTrackGain,
-        rgTrackPeak: (st.track as any)?.rgTrackPeak,
+        rgTrackGain: st.track!.rgTrackGain,
+        rgTrackPeak: st.track!.rgTrackPeak,
       }));
   };
 

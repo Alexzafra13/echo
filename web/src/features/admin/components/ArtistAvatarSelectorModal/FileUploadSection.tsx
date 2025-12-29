@@ -9,12 +9,12 @@ import {
   useApplyCustomImage,
   useDeleteCustomImage,
 } from '../../hooks/useArtistAvatars';
-import { CustomImage } from '../../api/artist-avatars.api';
+import { CustomImage, AvatarImageType } from '../../api/artist-avatars.api';
 import styles from './FileUploadSection.module.css';
 
 interface FileUploadSectionProps {
   artistId: string;
-  imageType: 'profile' | 'background' | 'banner' | 'logo';
+  imageType: AvatarImageType;
   onSuccess?: () => void;
 }
 
