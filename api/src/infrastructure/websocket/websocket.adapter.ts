@@ -1,7 +1,8 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, INestApplicationContext } from '@nestjs/common';
 import { ServerOptions, Server } from 'socket.io';
 import { appConfig } from '@config/app.config';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 import * as jwt from 'jsonwebtoken';
 
 /**
@@ -20,6 +21,36 @@ import * as jwt from 'jsonwebtoken';
  */
 export class WebSocketAdapter extends IoAdapter {
   private readonly logger = new Logger(WebSocketAdapter.name);
+  private secretsService: SecuritySecretsService | null = null;
+
+  constructor(private readonly appContext: INestApplicationContext) {
+    super(appContext);
+  }
+
+  /**
+   * Gets the JWT secret from SecuritySecretsService or falls back to env var
+   */
+  private getJwtSecret(): string | undefined {
+    // Try to get from SecuritySecretsService (lazy initialization)
+    if (!this.secretsService) {
+      try {
+        this.secretsService = this.appContext.get(SecuritySecretsService);
+      } catch {
+        // SecuritySecretsService not available, fall back to env var
+        this.logger.debug('SecuritySecretsService not available, using env var');
+      }
+    }
+
+    if (this.secretsService) {
+      try {
+        return this.secretsService.jwtSecret;
+      } catch {
+        // Service not initialized, fall back to env var
+      }
+    }
+
+    return process.env.JWT_SECRET;
+  }
 
   /**
    * Crea servidor de Socket.IO con configuración personalizada
@@ -64,7 +95,7 @@ export class WebSocketAdapter extends IoAdapter {
           return next(new Error('No token provided'));
         }
 
-        const secret = process.env.JWT_SECRET;
+        const secret = this.getJwtSecret();
         if (!secret) {
           this.logger.error('❌ JWT_SECRET not configured');
           return next(new Error('Server configuration error'));
