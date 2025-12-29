@@ -53,22 +53,27 @@ describe('usePlaylists hooks', () => {
     id: 'playlist-1',
     name: 'Test Playlist',
     description: 'Test description',
-    isPublic: false,
-    trackCount: 5,
-    totalDuration: 1200,
-    userId: 'user-1',
+    public: false,
+    songCount: 5,
+    duration: 1200,
+    size: 50000000,
+    ownerId: 'user-1',
+    ownerName: 'Test User',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
   };
 
   const mockTrack: PlaylistTrack = {
     id: 'track-1',
-    trackId: 'original-track-1',
     title: 'Test Song',
+    discNumber: 1,
+    duration: 240,
+    size: '5000000',
+    path: '/music/test.mp3',
     artistName: 'Test Artist',
     albumName: 'Test Album',
-    duration: 240,
-    position: 0,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
   };
 
   beforeEach(() => {
@@ -266,29 +271,6 @@ describe('usePlaylists hooks', () => {
         trackId: 'track-123',
       });
     });
-
-    it('should add track at specific position', async () => {
-      vi.mocked(playlistsService.addTrackToPlaylist).mockResolvedValueOnce({
-        ...mockTrack,
-        position: 5,
-      });
-
-      const { result } = renderHook(() => useAddTrackToPlaylist(), {
-        wrapper: createWrapper(),
-      });
-
-      result.current.mutate({
-        playlistId: 'playlist-1',
-        dto: { trackId: 'track-123', position: 5 },
-      });
-
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-      expect(playlistsService.addTrackToPlaylist).toHaveBeenCalledWith('playlist-1', {
-        trackId: 'track-123',
-        position: 5,
-      });
-    });
   });
 
   describe('useRemoveTrackFromPlaylist', () => {
@@ -323,14 +305,13 @@ describe('usePlaylists hooks', () => {
 
       result.current.mutate({
         playlistId: 'playlist-1',
-        dto: { trackId: 'track-1', newPosition: 5 },
+        dto: { trackOrders: [{ trackId: 'track-1', order: 0 }, { trackId: 'track-2', order: 1 }] },
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(playlistsService.reorderTracks).toHaveBeenCalledWith('playlist-1', {
-        trackId: 'track-1',
-        newPosition: 5,
+        trackOrders: [{ trackId: 'track-1', order: 0 }, { trackId: 'track-2', order: 1 }],
       });
     });
   });

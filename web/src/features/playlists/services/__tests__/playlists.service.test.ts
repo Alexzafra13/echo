@@ -18,22 +18,27 @@ describe('playlistsService', () => {
     id: 'playlist-1',
     name: 'My Playlist',
     description: 'Test description',
-    isPublic: false,
-    trackCount: 5,
-    totalDuration: 1200,
-    userId: 'user-1',
+    public: false,
+    songCount: 5,
+    duration: 1200,
+    size: 50000000,
+    ownerId: 'user-1',
+    ownerName: 'Test User',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
   };
 
   const mockTrack: PlaylistTrack = {
     id: 'track-1',
-    trackId: 'original-track-1',
     title: 'Test Song',
+    discNumber: 1,
+    duration: 240,
+    size: '5000000',
+    path: '/music/test.mp3',
     artistName: 'Test Artist',
     albumName: 'Test Album',
-    duration: 240,
-    position: 0,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
   };
 
   beforeEach(() => {
@@ -134,7 +139,7 @@ describe('playlistsService', () => {
       const createDto = {
         name: 'New Playlist',
         description: 'A new playlist',
-        isPublic: true,
+        public: true,
       };
       const createdPlaylist = { ...mockPlaylist, ...createDto };
       vi.mocked(apiClient.post).mockResolvedValueOnce({ data: createdPlaylist });
@@ -143,7 +148,7 @@ describe('playlistsService', () => {
 
       expect(apiClient.post).toHaveBeenCalledWith('/playlists', createDto);
       expect(result.name).toBe('New Playlist');
-      expect(result.isPublic).toBe(true);
+      expect(result.public).toBe(true);
     });
 
     it('should create playlist with minimal data', async () => {
@@ -181,13 +186,13 @@ describe('playlistsService', () => {
     });
 
     it('should update playlist visibility', async () => {
-      const updateDto = { isPublic: true };
-      const updatedPlaylist = { ...mockPlaylist, isPublic: true };
+      const updateDto = { public: true };
+      const updatedPlaylist = { ...mockPlaylist, public: true };
       vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: updatedPlaylist });
 
       const result = await playlistsService.updatePlaylist('playlist-1', updateDto);
 
-      expect(result.isPublic).toBe(true);
+      expect(result.public).toBe(true);
     });
 
     it('should handle update error', async () => {
@@ -268,16 +273,7 @@ describe('playlistsService', () => {
       const result = await playlistsService.addTrackToPlaylist('playlist-1', dto);
 
       expect(apiClient.post).toHaveBeenCalledWith('/playlists/playlist-1/tracks', dto);
-      expect(result.trackId).toBe('original-track-1');
-    });
-
-    it('should add track at specific position', async () => {
-      const dto = { trackId: 'track-123', position: 3 };
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { ...mockTrack, position: 3 } });
-
-      const result = await playlistsService.addTrackToPlaylist('playlist-1', dto);
-
-      expect(result.position).toBe(3);
+      expect(result.title).toBe('Test Song');
     });
 
     it('should handle duplicate track error', async () => {
@@ -322,8 +318,10 @@ describe('playlistsService', () => {
   describe('reorderTracks', () => {
     it('should reorder tracks in playlist', async () => {
       const dto = {
-        trackId: 'track-1',
-        newPosition: 5,
+        trackOrders: [
+          { trackId: 'track-1', order: 0 },
+          { trackId: 'track-2', order: 1 },
+        ],
       };
       vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} });
 
