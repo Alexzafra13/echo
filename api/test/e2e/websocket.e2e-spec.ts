@@ -115,9 +115,13 @@ describe('WebSocket E2E', () => {
     app = testApp.app;
     drizzle = testApp.drizzle;
 
+    // WebSocket tests require the server to actually listen on a port
+    // (unlike HTTP tests with supertest which can work with the raw server)
+    await app.listen(0, '127.0.0.1');
+
     // Obtener la URL del servidor
     const address = app.getHttpServer().address();
-    const port = typeof address === 'object' ? address?.port : 3000;
+    const port = typeof address === 'object' && address ? address.port : 3000;
     serverAddress = `http://127.0.0.1:${port}`;
   });
 
