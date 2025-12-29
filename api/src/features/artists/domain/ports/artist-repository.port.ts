@@ -13,9 +13,20 @@ export interface IArtistRepository {
   findById(id: string): Promise<Artist | null>;
 
   /**
+   * Busca múltiples artistas por sus IDs (bulk operation)
+   */
+  findByIds(ids: string[]): Promise<Artist[]>;
+
+  /**
    * Busca un artista por nombre exacto (case-insensitive)
    */
   findByName(name: string): Promise<Artist | null>;
+
+  /**
+   * Busca múltiples artistas por nombres exactos (case-insensitive, bulk operation)
+   * Returns a Map for O(1) lookup by lowercase name
+   */
+  findByNames(names: string[]): Promise<Map<string, Artist>>;
 
   /**
    * Obtiene todos los artistas con paginación

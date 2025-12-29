@@ -65,4 +65,20 @@ export class CachedArtistRepository
 
     return artist;
   }
+
+  /**
+   * Bulk find by IDs - delegates to base repository
+   * Not cached individually (bulk operations are typically one-off)
+   */
+  async findByIds(ids: string[]): Promise<Artist[]> {
+    return this.baseRepository.findByIds(ids);
+  }
+
+  /**
+   * Bulk find by names - delegates to base repository
+   * Not cached individually (bulk operations are typically one-off)
+   */
+  async findByNames(names: string[]): Promise<Map<string, Artist>> {
+    return this.baseRepository.findByNames(names);
+  }
 }
