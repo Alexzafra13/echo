@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Bell, Music, Disc, Check, X, AlertTriangle, Database, HardDrive, UserPlus, FileX } from 'lucide-react';
 import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
 import { usePendingRequests } from '@features/social/hooks';
+import { apiClient } from '@shared/services/api';
 import type { EnrichmentNotification } from '@shared/hooks';
 import styles from './MetadataNotifications.module.css';
 
@@ -78,13 +79,8 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
     if (!token || !isAdmin) return;
 
     try {
-      const response = await fetch('/api/admin/dashboard/health', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) return;
-
-      const data = await response.json();
+      const response = await apiClient.get('/admin/dashboard/health');
+      const data = response.data;
       const alerts: SystemAlert[] = [];
 
       // Solo storage CRÍTICO (>90%)
