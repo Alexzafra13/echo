@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import axios from 'axios';
 import { useAuthStore } from '@shared/store';
 
 // We need to test the interceptors behavior, so we'll create a test-specific setup
