@@ -1,12 +1,14 @@
 import { apiClient } from '@shared/services/api';
 
+export type AvatarImageType = 'profile' | 'background' | 'banner' | 'logo';
+
 export interface AvatarOption {
   provider: string;
   url: string;
   thumbnailUrl?: string;
   width?: number;
   height?: number;
-  type?: string; // 'profile', 'background', 'banner', 'logo'
+  type?: AvatarImageType;
 }
 
 export interface ArtistInfo {
@@ -24,7 +26,7 @@ export interface ApplyArtistAvatarRequest {
   artistId: string;
   avatarUrl: string;
   provider: string;
-  type: 'profile' | 'background' | 'banner' | 'logo';
+  type: AvatarImageType;
 }
 
 export interface ApplyArtistAvatarResponse {

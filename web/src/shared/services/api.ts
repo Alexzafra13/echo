@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@shared/store';
+import type { ApiErrorData } from '@shared/types/api.types';
 
 // Get API base URL from environment or default to same origin
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -114,7 +115,7 @@ apiClient.interceptors.response.use(
 
     // If error is 403 with mustChangePassword flag, redirect to first-login
     if (error.response?.status === 403) {
-      const errorData = error.response?.data as any;
+      const errorData = error.response?.data as ApiErrorData | undefined;
       if (errorData?.mustChangePassword === true) {
         // Update user in store to ensure mustChangePassword is true
         useAuthStore.getState().updateUser({ mustChangePassword: true });

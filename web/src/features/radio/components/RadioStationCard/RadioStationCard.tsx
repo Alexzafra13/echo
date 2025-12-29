@@ -1,5 +1,5 @@
 import { Heart, Radio, Music } from 'lucide-react';
-import { useRef, useEffect, useState } from 'react';
+import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import type { RadioBrowserStation } from '../../types';
 import type { RadioStation } from '@features/player/types';
 import type { RadioMetadata } from '../../hooks/useRadioMetadata';
@@ -17,6 +17,7 @@ interface RadioStationCardProps {
 /**
  * RadioStationCard Component
  * Displays a single radio station with cover, name, country and play button
+ * Memoized to prevent unnecessary re-renders in lists
  *
  * @example
  * <RadioStationCard
@@ -27,7 +28,7 @@ interface RadioStationCardProps {
  *   onToggleFavorite={() => toggleFavorite(station)}
  * />
  */
-export function RadioStationCard({
+export const RadioStationCard = memo(function RadioStationCard({
   station,
   isFavorite = false,
   isPlaying = false,
@@ -38,14 +39,14 @@ export function RadioStationCard({
   const metadataTextRef = useRef<HTMLSpanElement>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
-  const handleCardClick = () => {
+  const handleCardClick = useCallback(() => {
     onPlay?.();
-  };
+  }, [onPlay]);
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleFavorite?.();
-  };
+  }, [onToggleFavorite]);
 
   // Get station properties (compatible with both RadioBrowserStation and RadioStation)
   const name = station.name;
@@ -133,4 +134,4 @@ export function RadioStationCard({
       </div>
     </article>
   );
-}
+});

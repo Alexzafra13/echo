@@ -72,16 +72,24 @@ export interface ApiSuccessResponse<T> {
 }
 
 /**
+ * API error response data structure
+ * Used to type error responses from the API
+ */
+export interface ApiErrorData {
+  message?: string;
+  statusCode?: number;
+  error?: string;
+  /** Indicates user must change password (403 response) */
+  mustChangePassword?: boolean;
+}
+
+/**
  * Helper type for Axios errors with typed response data
  * Note: ApiError interface for API responses is defined in auth.types.ts
  */
 interface AxiosErrorWithResponse {
   response?: {
-    data?: {
-      message?: string;
-      statusCode?: number;
-      error?: string;
-    };
+    data?: ApiErrorData;
     status?: number;
   };
   message?: string;
