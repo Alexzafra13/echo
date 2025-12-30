@@ -10,6 +10,7 @@ import { getAutoPlaylists, refreshWaveMix, type AutoPlaylist } from '@shared/ser
 import { useAuthStore } from '@shared/store';
 import { useGridDimensions } from '@features/home/hooks';
 import { logger } from '@shared/utils/logger';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './WaveMixPage.module.css';
 
 /**
@@ -54,8 +55,8 @@ export function WaveMixPage() {
   const handlePlaylistClick = (playlist: AutoPlaylist) => {
     // Navigate to individual playlist page with state
     // Note: wouter doesn't support state in navigation, so we'll store in sessionStorage
-    sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
-    sessionStorage.setItem('playlistReturnPath', '/wave-mix');
+    safeSessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    safeSessionStorage.setItem('playlistReturnPath', '/wave-mix');
     setLocation(`/wave-mix/${playlist.id}`);
   };
 
