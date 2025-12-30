@@ -114,7 +114,9 @@ export function StorageTab() {
       setDirectories(response.data.directories);
       setParentPath(response.data.parent);
     } catch (error) {
-      console.error('Error browsing directory:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error browsing directory:', error);
+      }
     } finally {
       setIsBrowsing(false);
     }
@@ -157,7 +159,9 @@ export function StorageTab() {
       setSaveMessage({ type: 'success', text: 'Configuración guardada correctamente' });
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error: any) {
-      console.error('Error saving settings:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving settings:', error);
+      }
       setSaveMessage({
         type: 'error',
         text: error.response?.data?.message || 'Error al guardar la configuración'

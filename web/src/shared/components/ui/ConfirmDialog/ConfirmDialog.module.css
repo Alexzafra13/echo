@@ -49,8 +49,15 @@
 }
 
 .icon {
-  color: var(--color-warning);
   margin-bottom: 20px;
+}
+
+.icon.warning {
+  color: var(--color-warning);
+}
+
+.icon.danger {
+  color: var(--color-error);
 }
 
 .title {

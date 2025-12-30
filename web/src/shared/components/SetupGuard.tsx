@@ -31,7 +31,9 @@ export function SetupGuard({ children }: SetupGuardProps) {
       }
     } catch (error) {
       // If API fails, assume setup is complete and let login handle errors
-      console.warn('Could not check setup status:', error);
+      if (import.meta.env.DEV) {
+        console.warn('Could not check setup status:', error);
+      }
     } finally {
       setIsChecking(false);
     }

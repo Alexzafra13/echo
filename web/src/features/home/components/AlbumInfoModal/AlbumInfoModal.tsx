@@ -24,7 +24,9 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
 
     // Safety check for NaN or Infinity
     if (!isFinite(size)) {
-      console.warn('Invalid track size:', size, 'for track:', track.title);
+      if (import.meta.env.DEV) {
+        console.warn('Invalid track size:', size, 'for track:', track.title);
+      }
       return acc;
     }
 
