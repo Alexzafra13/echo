@@ -70,7 +70,9 @@ export function SharedAlbumGrid({
       });
       setImportedAlbums((prev) => new Set(prev).add(albumKey));
     } catch (error) {
-      console.error('Failed to start import:', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to start import:', error);
+      }
 
       // Parse error to show user-friendly message
       let errorMessage = 'Error al importar el álbum';

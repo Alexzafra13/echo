@@ -5,6 +5,7 @@ import { Button } from '@shared/components/ui';
 import { useSearchArtistAvatars, useApplyArtistAvatar } from '../../hooks/useArtistAvatars';
 import { AvatarOption, AvatarImageType } from '../../api/artist-avatars.api';
 import { FileUploadSection } from './FileUploadSection';
+import { metadataService } from '@features/admin/metadata/services/metadataService';
 import styles from './ArtistAvatarSelectorModal.module.css';
 
 interface ArtistAvatarSelectorModalProps {
@@ -108,16 +109,6 @@ export function ArtistAvatarSelectorModal({
         },
       },
     );
-  };
-
-  const getProviderLabel = (provider: string) => {
-    const labels: Record<string, string> = {
-      fanart: 'Fanart.tv',
-      lastfm: 'Last.fm',
-      spotify: 'Spotify',
-      musicbrainz: 'MusicBrainz',
-    };
-    return labels[provider] || provider;
   };
 
   const getTypeLabel = (type: string) => {
@@ -236,7 +227,7 @@ export function ArtistAvatarSelectorModal({
                       <option value="">Todos</option>
                       {providers.map((provider) => (
                         <option key={provider} value={provider}>
-                          {getProviderLabel(provider)}
+                          {metadataService.getProviderLabel(provider)}
                         </option>
                       ))}
                     </select>
@@ -279,7 +270,7 @@ export function ArtistAvatarSelectorModal({
                         </span>
                       )}
                       <span className={styles.provider}>
-                        {getProviderLabel(avatar.provider)}
+                        {metadataService.getProviderLabel(avatar.provider)}
                       </span>
                       {avatar.width && avatar.height && (
                         <span className={styles.resolution}>
