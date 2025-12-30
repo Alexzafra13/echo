@@ -42,7 +42,7 @@
 .heroSection__navButton {
   position: absolute;
   top: 50%;
-  left: 8px;
+  left: var(--space-2);
   transform: translateY(-50%);
   z-index: 50;
   width: 36px;
@@ -80,7 +80,7 @@
     rgba(237, 104, 66, 0.65) 100%
   );
   border-color: var(--white-40);
-  color: #ffffff;
+  color: var(--text-on-primary);
   transform: translateY(-50%) scale(1.08);
   box-shadow:
     0 12px 40px rgba(237, 104, 66, 0.4),
@@ -95,7 +95,7 @@
 
 /* Chevron icon animation */
 .heroSection__navButton svg {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-slow);
 }
 
 .heroSection__navButton:hover svg {
@@ -104,7 +104,7 @@
 
 .heroSection__navButton--next {
   left: auto;
-  right: 8px;
+  right: var(--space-2);
 }
 
 .heroSection__content {
@@ -134,9 +134,9 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.3s ease, filter 0.3s ease;
+  transition: transform var(--transition-slow), filter var(--transition-slow);
   flex-shrink: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-base);
   overflow: hidden;
   box-shadow: 0 8px 32px var(--black-60);
   animation: fadeInScale 1.2s ease-out;
@@ -154,7 +154,7 @@
 .heroSection__albumCover {
   width: 260px;
   height: 260px;
-  border-radius: 10px;
+  border-radius: var(--radius-base);
   object-fit: cover;
   display: block;
 }
@@ -174,7 +174,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .heroSection__artistButton {
@@ -183,7 +183,7 @@
   padding: 0;
   cursor: pointer;
   text-align: left;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
   width: fit-content;
 }
 
@@ -204,8 +204,8 @@
   object-fit: contain;
   object-position: left center;
   filter: drop-shadow(0 2px 8px var(--black-50));
-  margin-bottom: 4px;
-  transition: filter 0.3s ease;
+  margin-bottom: var(--space-1);
+  transition: filter var(--transition-slow);
 }
 
 .heroSection__artistButton:hover .heroSection__artistLogo {
@@ -213,32 +213,32 @@
 }
 
 .heroSection__artistName {
-  font-size: 48px;
-  font-weight: 900;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-5xl);
+  font-weight: var(--font-extrabold);
+  color: var(--text-primary);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: -1px;
-  line-height: 1.1;
+  line-height: var(--leading-tight);
   text-shadow: 0 2px 8px var(--black-50);
 }
 
 .heroSection__albumTitle {
   font-size: 72px;
-  font-weight: 900;
-  color: var(--color-accent, #ff3333);
+  font-weight: var(--font-extrabold);
+  color: var(--color-primary);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: -2px;
-  line-height: 1;
+  line-height: var(--leading-none);
   text-shadow: 0 2px 8px var(--black-50);
 }
 
 .heroSection__meta {
-  font-size: 14px;
-  color: var(--color-text-secondary, #b8bcc8);
-  margin: 4px 0 0 0;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: var(--space-1) 0 0 0;
+  font-weight: var(--font-medium);
 }
 
 .heroSection__playButton {
@@ -249,25 +249,25 @@
   justify-content: flex-start;
   width: 160px;
   height: 50px;
-  margin-top: 16px;
-  padding: 0 16px;
+  margin-top: var(--space-4);
+  padding: 0 var(--space-4);
   border: none;
-  border-radius: 8px;
-  background: var(--color-primary-500, #ed6842);
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: var(--radius-base);
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   cursor: pointer;
   outline: none;
   user-select: none;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   box-shadow: 0 4px 12px var(--black-20);
 }
 
 .heroSection__playButton:hover {
-  background: var(--color-primary-600, #e04d28);
+  background: var(--color-primary-hover);
   box-shadow: 0 6px 20px rgba(237, 104, 66, 0.4);
   transform: translateY(-2px);
 }
@@ -278,7 +278,7 @@
 }
 
 .heroSection__playIcon {
-  margin-right: 10px;
+  margin-right: var(--space-2);
   width: 24px;
   height: 24px;
   flex-shrink: 0;
@@ -293,7 +293,7 @@
 .heroSection__playText {
   display: flex;
   align-items: center;
-  line-height: 1;
+  line-height: var(--leading-none);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -343,7 +343,7 @@
   }
 
   .heroSection__artistName {
-    font-size: 40px;
+    font-size: var(--text-4xl);
   }
 
   .heroSection__albumTitle {
@@ -358,7 +358,7 @@
   .heroSection__navButton {
     width: 32px;
     height: 48px;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
   }
 }
 
@@ -390,19 +390,19 @@
     justify-content: flex-start;
     align-items: center;
     text-align: left;
-    padding: 60px 20px 16px 20px; /* Ajustado para nuevo tamaño */
-    gap: 16px;
+    padding: 60px var(--space-5) var(--space-4) var(--space-5);
+    gap: var(--space-4);
   }
 
   .heroSection__albumCoverButton {
     box-shadow: 0 8px 24px var(--black-70);
-    border-radius: 8px; /* Menos redondeado */
+    border-radius: var(--radius-base);
   }
 
   .heroSection__albumCover {
-    width: 140px; /* Más grande para que no se vea tan redondeado */
+    width: 140px;
     height: 140px;
-    border-radius: 8px; /* Menos redondeado */
+    border-radius: var(--radius-base);
   }
 
   .heroSection__info {
@@ -415,18 +415,18 @@
   }
 
   .heroSection__artistLogo {
-    max-height: 32px; /* Más pequeño */
+    max-height: 32px;
     max-width: 200px;
     object-position: left center;
   }
 
   .heroSection__artistName {
-    font-size: 18px; /* Más pequeño */
+    font-size: var(--text-lg);
     letter-spacing: -0.5px;
   }
 
   .heroSection__albumTitle {
-    font-size: 24px; /* Más pequeño */
+    font-size: var(--text-2xl);
     letter-spacing: -1px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -434,7 +434,7 @@
   }
 
   .heroSection__meta {
-    font-size: 11px;
+    font-size: var(--text-xs);
     margin-top: 2px;
   }
 
@@ -443,32 +443,32 @@
   }
 
   .heroSection__playButton {
-    width: 105px; /* Ajustado para que quepa "Reproducir" */
+    width: 105px;
     height: 32px;
-    margin: 10px 0 0 0;
-    font-size: 10px; /* Más pequeño para que quepa */
-    padding: 0 10px;
-    border-radius: 8px; /* Más cuadrado */
-    letter-spacing: 0.3px; /* Mejor espaciado */
+    margin: var(--space-2) 0 0 0;
+    font-size: 10px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-base);
+    letter-spacing: 0.3px;
   }
 
   .heroSection__playIcon {
     width: 14px;
     height: 14px;
-    margin-right: 5px;
+    margin-right: var(--space-1);
   }
 
   .heroSection__playText {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-transform: uppercase; /* Mayúsculas para mejor legibilidad */
+    text-transform: uppercase;
   }
 
   /* Simplificar animación en móvil */
   .heroSection__playButton:hover .heroSection__playIcon {
     transform: none;
-    margin-right: 6px;
+    margin-right: var(--space-1);
   }
 
   .heroSection__playButton:hover .heroSection__playText {
@@ -494,19 +494,19 @@
   /* Flechas ya ocultas en breakpoint anterior */
 
   .heroSection__content {
-    padding: 56px 16px 12px 16px;
-    gap: 12px;
+    padding: 56px var(--space-4) var(--space-3) var(--space-4);
+    gap: var(--space-3);
   }
 
   .heroSection__albumCoverButton {
     box-shadow: 0 6px 20px var(--black-70);
-    border-radius: 6px; /* Menos redondeado */
+    border-radius: var(--radius-sm);
   }
 
   .heroSection__albumCover {
-    width: 120px; /* Más grande para mejor proporción */
+    width: 120px;
     height: 120px;
-    border-radius: 6px; /* Menos redondeado */
+    border-radius: var(--radius-sm);
   }
 
   .heroSection__artistLogo {
@@ -515,11 +515,11 @@
   }
 
   .heroSection__artistName {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 
   .heroSection__albumTitle {
-    font-size: 20px;
+    font-size: var(--text-xl);
   }
 
   .heroSection__meta {
@@ -527,19 +527,19 @@
   }
 
   .heroSection__playButton {
-    width: 95px; /* Ajustado */
+    width: 95px;
     height: 28px;
-    margin: 8px 0 0 0;
-    font-size: 9px; /* Más pequeño */
-    padding: 0 8px;
-    border-radius: 6px; /* Más cuadrado */
+    margin: var(--space-2) 0 0 0;
+    font-size: 9px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-sm);
     letter-spacing: 0.3px;
   }
 
   .heroSection__playIcon {
     width: 12px;
     height: 12px;
-    margin-right: 4px;
+    margin-right: var(--space-1);
   }
 
   .heroSection__playText {
@@ -553,11 +553,11 @@
 /* ===== Light Theme Styles ===== */
 /* El hero tiene fondo oscuro, por lo que el texto debe permanecer blanco */
 :root[data-theme="light"] .heroSection__artistName {
-  color: #ffffff;
+  color: var(--text-on-primary);
 }
 
 :root[data-theme="light"] .heroSection__albumTitle {
-  color: var(--color-accent, #ff3333);
+  color: var(--color-primary);
 }
 
 :root[data-theme="light"] .heroSection__meta {
