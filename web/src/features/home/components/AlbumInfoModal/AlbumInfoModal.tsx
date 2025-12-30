@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { getCoverUrl } from '@shared/utils/cover.utils';
 import { formatDuration, formatFileSize, formatDate } from '@shared/utils/format';
+import { logger } from '@shared/utils/logger';
 import type { Album, Track } from '../../types';
 import styles from './AlbumInfoModal.module.css';
 
@@ -25,7 +26,7 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
     // Safety check for NaN or Infinity
     if (!isFinite(size)) {
       if (import.meta.env.DEV) {
-        console.warn('Invalid track size:', size, 'for track:', track.title);
+        logger.warn('Invalid track size:', size, 'for track:', track.title);
       }
       return acc;
     }

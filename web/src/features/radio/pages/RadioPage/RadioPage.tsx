@@ -29,6 +29,7 @@ import type { RadioStation, RadioBrowserStation } from '../../types';
 import type { Country } from '../../components/CountrySelect/CountrySelect';
 import { getCountryFlag, getCountryName } from '../../utils/country.utils';
 import { Radio, Music2 } from 'lucide-react';
+import { logger } from '@shared/utils/logger';
 import styles from './RadioPage.module.css';
 
 export default function RadioPage() {
@@ -310,7 +311,7 @@ export default function RadioPage() {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to toggle favorite:', error);
+        logger.error('Failed to toggle favorite:', error);
       }
     }
   }, [favoriteStations, saveFavoriteMutation, deleteFavoriteMutation]);

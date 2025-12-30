@@ -7,6 +7,7 @@ import { HealthPanel } from './HealthPanel';
 import { ActivityTimelineChart } from './ActivityTimelineChart';
 import { StorageBreakdownChart } from './StorageBreakdownChart';
 import { RecentActivityFeed } from './RecentActivityFeed';
+import { logger } from '@shared/utils/logger';
 import styles from './DashboardPanel.module.css';
 
 interface DashboardStats {
@@ -124,7 +125,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
       setStats(response.data);
     } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error loading dashboard stats:', err);
+        logger.error('Error loading dashboard stats:', err);
       }
       setError(err.response?.data?.message || 'Error al cargar las estadísticas');
     } finally {

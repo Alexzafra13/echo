@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
+import { logger } from '@shared/utils/logger';
 
 /**
  * WebSocketService - Cliente WebSocket para conexión con el servidor
@@ -81,13 +82,13 @@ export class WebSocketService {
 
     socket.on('error', (error: Error) => {
       if (import.meta.env.DEV) {
-        console.error(`[WebSocket] Error on /${namespace}:`, error);
+        logger.error(`[WebSocket] Error on /${namespace}:`, error);
       }
     });
 
     socket.on('connect_error', (error: Error) => {
       if (import.meta.env.DEV) {
-        console.error(`[WebSocket] Connection error on /${namespace}:`, error.message);
+        logger.error(`[WebSocket] Connection error on /${namespace}:`, error.message);
       }
     });
 

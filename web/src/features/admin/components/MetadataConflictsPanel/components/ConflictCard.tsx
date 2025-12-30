@@ -10,6 +10,7 @@ import {
 } from '../../../hooks/useMetadataConflicts';
 import { ImageWithFallback } from './ImageWithFallback';
 import { SourceBadge } from './SourceBadge';
+import { logger } from '@shared/utils/logger';
 import styles from '../MetadataConflictsPanel.module.css';
 
 interface ConflictCardProps {
@@ -220,7 +221,7 @@ export function ConflictCard({ conflict }: ConflictCardProps) {
                   alt="Suggested"
                   onError={(e) => {
                     if (import.meta.env.DEV) {
-                      console.error(
+                      logger.error(
                         'Error loading suggested cover:',
                         suggestedImageUrl,
                         'for conflict:',

@@ -9,6 +9,7 @@ import {
   updatePurgeMode,
   MissingTrack,
 } from '../../api/missing-files.api';
+import { logger } from '@shared/utils/logger';
 import styles from './MissingFilesPanel.module.css';
 
 /**
@@ -47,7 +48,7 @@ export function MissingFilesPanel() {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error loading missing files:', error);
+        logger.error('Error loading missing files:', error);
       }
       setNotification({ type: 'error', message: 'Error al cargar archivos desaparecidos' });
     } finally {
@@ -64,7 +65,7 @@ export function MissingFilesPanel() {
       await loadMissingFiles();
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error purging missing files:', error);
+        logger.error('Error purging missing files:', error);
       }
       setNotification({ type: 'error', message: 'Error al purgar archivos' });
     } finally {
@@ -84,7 +85,7 @@ export function MissingFilesPanel() {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error deleting track:', error);
+        logger.error('Error deleting track:', error);
       }
       setNotification({ type: 'error', message: 'Error al eliminar track' });
     } finally {
@@ -101,7 +102,7 @@ export function MissingFilesPanel() {
       setNotification({ type: 'success', message: 'Configuracion guardada' });
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error saving settings:', error);
+        logger.error('Error saving settings:', error);
       }
       setNotification({ type: 'error', message: 'Error al guardar configuracion' });
     }

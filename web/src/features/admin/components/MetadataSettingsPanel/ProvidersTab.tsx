@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, X, AlertCircle, Key, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { logger } from '@shared/utils/logger';
 import styles from './ProvidersTab.module.css';
 
 interface Settings {
@@ -69,7 +70,7 @@ export function ProvidersTab() {
       setFanarttvKey(parsedSettings.fanarttvApiKey);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error loading settings:', error);
+        logger.error('Error loading settings:', error);
       }
     } finally {
       setIsLoading(false);
@@ -175,7 +176,7 @@ export function ProvidersTab() {
       setTimeout(() => setSaveMessage(null), 5000);
     } catch (error: any) {
       if (import.meta.env.DEV) {
-        console.error('Error saving settings:', error);
+        logger.error('Error saving settings:', error);
       }
       setSaveMessage({
         type: 'error',

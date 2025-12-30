@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { logger } from '@shared/utils/logger';
 
 interface CountryInfo {
   country: string;
@@ -25,7 +26,7 @@ export function useUserCountry() {
         };
       } catch (error) {
         if (import.meta.env.DEV) {
-          console.error('Failed to detect user country:', error);
+          logger.error('Failed to detect user country:', error);
         }
         // Fallback a España
         return {

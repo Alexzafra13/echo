@@ -10,6 +10,7 @@ import {
   useDeleteCustomImage,
 } from '../../hooks/useArtistAvatars';
 import { CustomImage, AvatarImageType } from '../../api/artist-avatars.api';
+import { logger } from '@shared/utils/logger';
 import styles from './FileUploadSection.module.css';
 
 interface FileUploadSectionProps {
@@ -74,7 +75,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
               },
               onError: (error: any) => {
                 if (import.meta.env.DEV) {
-                  console.error('[FileUpload] ❌ Apply error:', error);
+                  logger.error('[FileUpload] ❌ Apply error:', error);
                 }
                 setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
                 resetInput();
@@ -84,7 +85,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[FileUpload] ❌ Upload error:', error);
+            logger.error('[FileUpload] ❌ Upload error:', error);
           }
           setUploadError(error?.response?.data?.message || 'Error al subir la imagen');
         },
@@ -109,7 +110,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[FileUpload] ❌ Apply error:', error);
+            logger.error('[FileUpload] ❌ Apply error:', error);
           }
           setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
         },
@@ -137,7 +138,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[FileUpload] ❌ Delete error:', error);
+            logger.error('[FileUpload] ❌ Delete error:', error);
           }
           setUploadError(error?.response?.data?.message || 'Error al eliminar la imagen');
         },
