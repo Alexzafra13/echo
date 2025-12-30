@@ -24,3 +24,6 @@ export type { ModalProps } from './Modal';
 
 export { Select } from './Select';
 export type { SelectProps, SelectOption } from './Select';
+
+export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogProps } from './ConfirmDialog';

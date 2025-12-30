@@ -42,7 +42,9 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
         const recent = await getRecentlyPlayed(10);
         setRecentTracks(recent);
       } catch (err) {
-        console.error('Failed to load recent tracks:', err);
+        if (import.meta.env.DEV) {
+          console.error('Failed to load recent tracks:', err);
+        }
       } finally {
         setLoadingRecent(false);
       }

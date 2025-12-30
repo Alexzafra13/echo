@@ -26,7 +26,9 @@ export function DailyRedirect() {
           setError('No hay playlist diaria disponible');
         }
       } catch (err) {
-        console.error('Failed to load daily mix:', err);
+        if (import.meta.env.DEV) {
+          console.error('Failed to load daily mix:', err);
+        }
         setError('Error al cargar la playlist diaria');
       }
     };

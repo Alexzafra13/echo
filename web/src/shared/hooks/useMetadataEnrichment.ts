@@ -119,7 +119,9 @@ export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
   }, []);
 
   const handleError = useCallback((data: EnrichmentErrorData) => {
-    console.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
+    if (import.meta.env.DEV) {
+      console.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
+    }
     setProgress(null);
   }, []);
 

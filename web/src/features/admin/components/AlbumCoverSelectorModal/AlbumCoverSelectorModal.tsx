@@ -5,6 +5,7 @@ import { Button } from '@shared/components/ui';
 import { useSearchAlbumCovers, useApplyAlbumCover } from '../../hooks/useAlbumCovers';
 import { CoverOption } from '../../api/album-covers.api';
 import { AlbumCoverUploadTab } from './AlbumCoverUploadTab';
+import { metadataService } from '@features/admin/metadata/services/metadataService';
 import styles from './AlbumCoverSelectorModal.module.css';
 
 interface AlbumCoverSelectorModalProps {
@@ -102,17 +103,6 @@ export function AlbumCoverSelectorModal({
     );
   };
 
-  const getProviderLabel = (provider: string) => {
-    const labels: Record<string, string> = {
-      coverartarchive: 'Cover Art Archive',
-      fanart: 'Fanart.tv',
-      musicbrainz: 'MusicBrainz',
-      lastfm: 'Last.fm',
-      spotify: 'Spotify',
-    };
-    return labels[provider] || provider;
-  };
-
   return (
     <div className={styles.modal} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -186,7 +176,7 @@ export function AlbumCoverSelectorModal({
                       <option value="">Todos ({covers.length})</option>
                       {providers.map((provider) => (
                         <option key={provider} value={provider}>
-                          {getProviderLabel(provider)} (
+                          {metadataService.getProviderLabel(provider)} (
                           {covers.filter((c) => c.provider === provider).length})
                         </option>
                       ))}
@@ -222,7 +212,7 @@ export function AlbumCoverSelectorModal({
                       </div>
                       <div className={styles.coverInfo}>
                         <span className={styles.coverProvider}>
-                          {getProviderLabel(cover.provider)}
+                          {metadataService.getProviderLabel(cover.provider)}
                         </span>
                         {cover.width && cover.height && (
                           <span className={styles.coverResolution}>
