@@ -23,7 +23,7 @@
   padding: var(--space-3) var(--space-4);
   font-family: var(--font-body);
   font-size: var(--text-base);
-  color: var(--text-primary, #ffffff);
+  color: var(--text-primary);
   background: var(--white-05);
   border: 1px solid var(--white-10);
   border-radius: var(--radius-base);
@@ -33,7 +33,7 @@
 }
 
 .input::placeholder {
-  color: var(--text-tertiary, #6b7280);
+  color: var(--text-tertiary);
 }
 
 .input:hover:not(:disabled) {
@@ -43,7 +43,7 @@
 
 .input:focus,
 .input:focus-visible {
-  border-color: var(--color-primary, #ed6842);
+  border-color: var(--color-primary);
   background: var(--white-08);
   outline: none;
   box-shadow: none;

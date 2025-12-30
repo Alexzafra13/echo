@@ -3,28 +3,28 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--space-6);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--space-2);
 }
 
 .label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
 }
 
 .textarea {
   padding: 14px 16px;
   background: var(--white-05);
   border: 1px solid var(--white-10);
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-base);
-  color: var(--text-primary, #ffffff);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  color: var(--text-primary);
   font-family: inherit;
   transition: all var(--transition-fast);
   resize: vertical;
@@ -40,14 +40,14 @@
 
 .textarea:focus,
 .textarea:focus-visible {
-  border-color: var(--color-primary, #ed6842);
+  border-color: var(--color-primary);
   background: var(--white-08);
   outline: none;
   box-shadow: none;
 }
 
 .textarea::placeholder {
-  color: var(--color-text-tertiary);
+  color: var(--text-tertiary);
 }
 
 .textarea:disabled {
@@ -59,17 +59,17 @@
 .checkboxField {
   display: flex;
   align-items: center;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
 }
 
 .checkboxLabel {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
   cursor: pointer;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   user-select: none;
 }
 
@@ -80,9 +80,9 @@
 }
 
 .checkboxHint {
-  font-size: 12px;
-  font-weight: normal;
-  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-normal);
+  color: var(--text-tertiary);
 }
 
 .checkbox {
@@ -100,7 +100,7 @@
 /* Actions */
 .actions {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--space-4);
 }
 
 .actions button {
