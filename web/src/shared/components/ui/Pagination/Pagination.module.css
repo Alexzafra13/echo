@@ -9,7 +9,7 @@
   position: relative;
   display: flex;
   justify-content: center;
-  margin: 32px 0;
+  margin: var(--space-8) 0;
 }
 
 .pagination__list {
@@ -51,7 +51,7 @@
   left: var(--pagination-inset);
   width: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
   height: calc(var(--pagination-size) - (2 * var(--pagination-inset)));
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.25), rgba(255, 107, 107, 0.15));
+  background: linear-gradient(135deg, rgba(237, 104, 66, 0.25), rgba(237, 104, 66, 0.15));
   border: none;
   border-radius: calc(var(--pagination-radius) * 1px);
   backdrop-filter: blur(12px);
@@ -59,7 +59,7 @@
   pointer-events: none;
   z-index: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+  box-shadow: 0 2px 8px rgba(237, 104, 66, 0.2);
 }
 
 /* Position indicator on current page */
@@ -81,43 +81,43 @@
 .pagination__link {
   display: grid;
   place-items: center;
-  color: var(--color-text-primary, #ffffff);
+  color: var(--text-primary);
   text-decoration: none;
   width: 100%;
   height: 100%;
   user-select: none;
   position: relative;
-  outline-color: var(--color-primary, #ff6b6b);
+  outline-color: var(--color-primary);
   outline-offset: 2px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   border-radius: calc(var(--pagination-radius) * 1px);
-  transition: all 0.2s ease-out;
+  transition: all var(--transition-base);
   -webkit-tap-highlight-color: transparent;
 }
 
 .pagination__link:hover:not(.pagination__link__disabled):not(.pagination__link__current) {
   background: var(--white-05);
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
 }
 
 .pagination__link:focus-visible {
-  outline: 2px solid var(--color-primary, #ff6b6b);
+  outline: 2px solid var(--color-primary);
 }
 
 /* Current page */
 .pagination__link__current {
-  color: var(--color-primary, #ff6b6b);
-  font-weight: 600;
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
   cursor: default;
 }
 
 /* Arrow buttons */
 .pagination__link__arrow {
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 /* Disabled state */
@@ -133,8 +133,8 @@
 }
 
 .pagination__link__gap {
-  color: var(--color-text-tertiary, #6b7280);
-  font-weight: 600;
+  color: var(--text-tertiary);
+  font-weight: var(--font-semibold);
   letter-spacing: 2px;
 }
 
@@ -155,7 +155,7 @@
   }
 
   .pagination__link {
-    font-size: 13px;
+    font-size: var(--text-sm);
   }
 }
 
@@ -166,7 +166,7 @@
   }
 
   .pagination__link {
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 }
 
@@ -178,7 +178,7 @@
   }
 
   .pagination__link {
-    transition: all 0.2s ease-out;
+    transition: all var(--transition-base);
   }
 }
 
