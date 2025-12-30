@@ -72,99 +72,12 @@ export function formatBitrate(bitrate?: number): string {
   return `${bitrate} kbps`;
 }
 
-/**
- * Format date to localized Spanish string
- * @param date - Date string, Date object, or undefined
- * @returns Formatted date string
- */
-export function formatDate(date?: Date | string): string {
-  if (!date) return 'Desconocida';
-  return new Date(date).toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-/**
- * Format date to short format (DD/MM/YYYY HH:mm)
- * @param dateString - Date string
- * @returns Formatted date string
- */
-export function formatDateShort(dateString?: string): string {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleString('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-/**
- * Format date with time including seconds (DD/MM/YYYY HH:mm:ss)
- * @param dateString - Date string
- * @returns Formatted date string
- */
-export function formatDateWithTime(dateString?: string): string {
-  if (!dateString) return 'N/A';
-  return new Intl.DateTimeFormat('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(new Date(dateString));
-}
-
-/**
- * Format date with abbreviated month and time (e.g., "15 ene 2024, 14:30")
- * @param dateString - Date string
- * @returns Formatted date string
- */
-export function formatDateCompact(dateString?: string): string {
-  if (!dateString) return 'Nunca';
-  return new Date(dateString).toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-/**
- * Format relative time from now (e.g., "hace 2 días", "hace 5 minutos")
- * @param date - Date object or timestamp
- * @returns Formatted relative time string in Spanish
- */
-export function formatDistanceToNow(date: Date | number): string {
-  const now = new Date();
-  const targetDate = date instanceof Date ? date : new Date(date);
-  const diffMs = now.getTime() - targetDate.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  const diffWeeks = Math.floor(diffDays / 7);
-  const diffMonths = Math.floor(diffDays / 30);
-  const diffYears = Math.floor(diffDays / 365);
-
-  if (diffSeconds < 60) {
-    return 'hace unos segundos';
-  } else if (diffMinutes < 60) {
-    return diffMinutes === 1 ? 'hace 1 minuto' : `hace ${diffMinutes} minutos`;
-  } else if (diffHours < 24) {
-    return diffHours === 1 ? 'hace 1 hora' : `hace ${diffHours} horas`;
-  } else if (diffDays < 7) {
-    return diffDays === 1 ? 'hace 1 día' : `hace ${diffDays} días`;
-  } else if (diffWeeks < 4) {
-    return diffWeeks === 1 ? 'hace 1 semana' : `hace ${diffWeeks} semanas`;
-  } else if (diffMonths < 12) {
-    return diffMonths === 1 ? 'hace 1 mes' : `hace ${diffMonths} meses`;
-  } else {
-    return diffYears === 1 ? 'hace 1 año' : `hace ${diffYears} años`;
-  }
-}
+// Re-export date formatting functions from the canonical source
+// This maintains backward compatibility for existing imports
+export {
+  formatDate,
+  formatDateShort,
+  formatDateWithTime,
+  formatDateCompact,
+  formatDistanceToNow,
+} from './date.utils';

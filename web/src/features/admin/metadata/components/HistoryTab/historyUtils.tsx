@@ -5,21 +5,11 @@
  */
 
 import { CheckCircle, AlertCircle, XCircle, Music, Disc } from 'lucide-react';
+import { formatDateCompact } from '@shared/utils/date.utils';
 import styles from './HistoryTab.module.css';
 
-/**
- * Format date for display
- */
-export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+// Re-export formatDate using the compact format for backward compatibility
+export const formatDate = formatDateCompact;
 
 /**
  * Get status badge with icon
