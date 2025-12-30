@@ -23,3 +23,4 @@ export { useClickOutside } from './useClickOutside';
 export type { UseClickOutsideOptions, UseClickOutsideReturn } from './useClickOutside';
 export { useShufflePlay } from './useShufflePlay';
 export type { UseShufflePlayReturn } from './useShufflePlay';
+export { useDominantColor } from './useDominantColor';

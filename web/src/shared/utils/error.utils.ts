@@ -45,23 +45,3 @@ export function getApiErrorMessage(error: unknown, defaultMessage: string): stri
   return defaultMessage;
 }
 
-/**
- * Checks if an error is a specific HTTP status code
- *
- * @param error - The caught error
- * @param statusCode - The HTTP status code to check for
- * @returns true if the error matches the status code
- *
- * @example
- * ```tsx
- * if (isApiErrorWithStatus(error, 404)) {
- *   // Handle not found
- * }
- * ```
- */
-export function isApiErrorWithStatus(error: unknown, statusCode: number): boolean {
-  if (axios.isAxiosError(error)) {
-    return error.response?.status === statusCode;
-  }
-  return false;
-}
