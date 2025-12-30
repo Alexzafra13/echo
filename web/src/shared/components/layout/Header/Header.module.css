@@ -4,7 +4,7 @@
 .headerWrapper {
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky, 1020);
+  z-index: var(--z-sticky);
   background: transparent;
   /* This wrapper makes header + search panel move together */
 }
@@ -20,7 +20,7 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky, 1020);
+  z-index: var(--z-sticky);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -80,7 +80,7 @@
   -webkit-backdrop-filter: blur(12px);
   border: none;
   border-radius: 10px;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -90,7 +90,7 @@
 
 .header__backButton:hover {
   background: var(--white-06);
-  color: var(--color-text-primary, #ffffff);
+  color: var(--text-primary);
   transform: translateX(-3px);
   box-shadow: 0 4px 12px var(--black-15);
 }
@@ -145,7 +145,7 @@
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-tertiary, #6b7280);
+  color: var(--text-tertiary);
   pointer-events: none;
 }
 
@@ -156,19 +156,19 @@
   border-radius: 24px;
   background: var(--white-05);
   border: 1px solid var(--white-10);
-  color: var(--color-text-primary, #ffffff);
+  color: var(--text-primary);
   font-size: 14px;
   transition: all 0.2s ease;
 }
 
 .header__searchInput::placeholder {
-  color: var(--color-text-tertiary, #6b7280);
+  color: var(--text-tertiary);
 }
 
 .header__searchInput:focus {
   outline: none;
   background: var(--white-08);
-  border-color: var(--color-primary, #ff6b6b);
+  border-color: var(--color-primary);
 }
 
 .header__searchClearButton {
@@ -204,13 +204,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--text-secondary);
   transition: all 0.2s ease;
 }
 
 .header__themeToggle:hover {
   background: var(--white-10);
-  color: var(--color-primary, #ff6b6b);
+  color: var(--color-primary);
   transform: rotate(15deg);
 }
 
@@ -232,7 +232,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--text-secondary);
   transition: all 0.2s ease;
   padding: 0;
   overflow: hidden;
@@ -240,7 +240,7 @@
 
 .header__userButton:hover {
   background: var(--white-10);
-  color: var(--color-text-primary, #ffffff);
+  color: var(--text-primary);
 }
 
 .header__userAvatar {
@@ -347,13 +347,13 @@
 .header__userName {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-text-primary, #ffffff);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .header__userRole {
   font-size: 12px;
-  color: var(--color-text-tertiary, #6b7280);
+  color: var(--text-tertiary);
   margin: 4px 0 0 0;
   text-transform: capitalize;
 }
@@ -371,7 +371,7 @@
   border: none;
   text-align: left;
   font-size: 14px;
-  color: var(--color-text-secondary, #b8bcc8);
+  color: var(--text-secondary);
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -382,7 +382,7 @@
 
 .header__userMenuItem:hover {
   background: var(--white-05);
-  color: var(--color-text-primary, #ffffff);
+  color: var(--text-primary);
   transform: translateX(4px);
 }
 
