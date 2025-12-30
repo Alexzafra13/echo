@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { ArrowRight, User, Lock, AlertCircle } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
-import { getApiErrorMessage } from '@shared/types';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './LoginPage.module.css';
 
 /**
