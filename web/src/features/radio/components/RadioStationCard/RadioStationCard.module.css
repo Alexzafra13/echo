@@ -4,11 +4,11 @@
 .radioCard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   cursor: pointer;
-  transition: transform 0.3s ease;
-  padding: 8px;
-  border-radius: 8px; /* iOS rounded */
+  transition: transform var(--transition-slow);
+  padding: var(--space-2);
+  border-radius: var(--radius-base);
 }
 
 .radioCard:hover {
@@ -24,10 +24,10 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   box-shadow: 0 4px 12px var(--black-30);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow var(--transition-slow);
   background: var(--bg-surface);
 }
 
@@ -42,7 +42,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-base) 100%);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   z-index: 1;
 }
 
@@ -52,7 +52,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-slow);
   z-index: 2;
 }
 
@@ -65,7 +65,7 @@
   inset: 0;
   background: transparent;
   pointer-events: none;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   z-index: 3;
 }
 
@@ -79,19 +79,19 @@
 
 .radioCard__favoriteButton {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: var(--space-2);
+  right: var(--space-2);
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--black-60);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: white;
+  transition: all var(--transition-slow);
+  color: var(--text-on-primary);
   opacity: 0;
   transform: translateY(-8px);
   pointer-events: auto;
@@ -109,7 +109,7 @@
 }
 
 .radioCard__favoriteButton--active {
-  color: var(--color-primary, #ed6842);
+  color: var(--color-primary);
   background: var(--primary-20);
 }
 
@@ -120,13 +120,13 @@
 .radioCard__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .radioCard__title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -134,35 +134,35 @@
 }
 
 .radioCard__meta {
-  font-size: 13px;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .radioCard__quality {
-  font-size: 11px;
-  color: var(--color-text-tertiary, #8b8f9a);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .radioCard__separator {
-  color: var(--color-text-tertiary, #8b8f9a);
+  color: var(--text-tertiary);
 }
 
 .radioCard__nowPlaying {
-  font-size: 12px;
-  color: var(--color-text-tertiary, #8b8f9a);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   margin: 2px 0 0 0;
   overflow: hidden;
   font-style: italic;
@@ -173,7 +173,7 @@
 .radioCard__nowPlayingText {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
   white-space: nowrap;
 }
 
@@ -213,33 +213,33 @@
 /* Mobile - iOS Style */
 @media (max-width: 768px) {
   .radioCard {
-    gap: 10px;
-    padding: 6px;
-    border-radius: 12px; /* iOS rounded */
+    gap: var(--space-2);
+    padding: var(--space-1);
+    border-radius: var(--radius-md);
   }
 
   .radioCard__coverContainer {
-    border-radius: 8px;
+    border-radius: var(--radius-base);
   }
 
   .radioCard__title {
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
 
   .radioCard__meta {
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .radioCard__quality {
-    font-size: 10px;
+    font-size: var(--text-xs);
   }
 
   /* En móvil, siempre mostrar botones (touch-friendly) */
   .radioCard__playButton {
     width: 40px;
     height: 40px;
-    bottom: 8px;
-    right: 8px;
+    bottom: var(--space-2);
+    right: var(--space-2);
     opacity: 1; /* Siempre visible en móvil */
     transform: translateY(0);
   }
@@ -252,8 +252,8 @@
   .radioCard__favoriteButton {
     width: 32px;
     height: 32px;
-    top: 8px;
-    right: 8px;
+    top: var(--space-2);
+    right: var(--space-2);
     opacity: 1; /* Siempre visible en móvil */
     transform: translateY(0);
   }
