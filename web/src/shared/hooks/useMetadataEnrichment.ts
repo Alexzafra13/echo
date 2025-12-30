@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useWebSocketConnection } from './useWebSocketConnection';
+import { logger } from '@shared/utils/logger';
 
 /**
  * Notificación de enriquecimiento de metadatos
@@ -120,7 +121,7 @@ export function useMetadataEnrichment(token: string | null, isAdmin: boolean) {
 
   const handleError = useCallback((data: EnrichmentErrorData) => {
     if (import.meta.env.DEV) {
-      console.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
+      logger.error(`❌ Enrichment error: ${data.entityName} - ${data.error}`);
     }
     setProgress(null);
   }, []);

@@ -110,7 +110,7 @@ export default function PlaylistDetailPage() {
       await removeTrackMutation.mutateAsync({ playlistId: id, trackId: track.id });
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error removing track from playlist:', error);
+        logger.error('Error removing track from playlist:', error);
       }
     }
   };

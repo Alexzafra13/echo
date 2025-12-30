@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import WebSocketService from '@shared/services/websocket.service';
+import { logger } from '@shared/utils/logger';
 import type { Socket } from 'socket.io-client';
 
 /**
@@ -83,7 +84,7 @@ export function useMetadataWebSocket(): Socket | null {
       };
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('[useMetadataWebSocket] Connection error:', error);
+        logger.error('[useMetadataWebSocket] Connection error:', error);
       }
       setSocket(null);
     }

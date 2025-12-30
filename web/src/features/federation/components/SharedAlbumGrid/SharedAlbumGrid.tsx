@@ -4,6 +4,7 @@ import { Download, Check, Loader2, Users, Plus, AlertTriangle, X } from 'lucide-
 import { AxiosError } from 'axios';
 import type { SharedAlbum } from '../../types';
 import { useStartImport, useConnectedServers } from '../../hooks/useSharedLibraries';
+import { logger } from '@shared/utils/logger';
 import styles from './SharedAlbumGrid.module.css';
 
 interface SharedAlbumGridProps {
@@ -71,7 +72,7 @@ export function SharedAlbumGrid({
       setImportedAlbums((prev) => new Set(prev).add(albumKey));
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to start import:', error);
+        logger.error('Failed to start import:', error);
       }
 
       // Parse error to show user-friendly message

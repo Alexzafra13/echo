@@ -5,6 +5,7 @@ import { useMetadataEnrichment, useClickOutside } from '@shared/hooks';
 import { usePendingRequests } from '@features/social/hooks';
 import { apiClient } from '@shared/services/api';
 import type { EnrichmentNotification } from '@shared/hooks';
+import { logger } from '@shared/utils/logger';
 import styles from './MetadataNotifications.module.css';
 
 interface MetadataNotificationsProps {
@@ -141,7 +142,7 @@ export function MetadataNotifications({ token, isAdmin }: MetadataNotificationsP
       setSystemAlerts(alerts);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error fetching system alerts:', error);
+        logger.error('Error fetching system alerts:', error);
       }
     }
   };

@@ -12,6 +12,7 @@ import {
   useSearchUsers,
 } from '../../hooks';
 import { useListeningNowSSE } from '../../hooks/useListeningNowSSE';
+import { logger } from '@shared/utils/logger';
 import {
   SearchUsersPanel,
   ListeningNowSection,
@@ -60,7 +61,7 @@ export default function SocialPage() {
       refetchSearch();
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error sending friend request:', error);
+        logger.error('Error sending friend request:', error);
       }
     }
   };
@@ -70,7 +71,7 @@ export default function SocialPage() {
       await acceptRequestMutation.mutateAsync(friendshipId);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error accepting friend request:', error);
+        logger.error('Error accepting friend request:', error);
       }
     }
   };
@@ -80,7 +81,7 @@ export default function SocialPage() {
       await removeFriendshipMutation.mutateAsync(friendshipId);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error rejecting friend request:', error);
+        logger.error('Error rejecting friend request:', error);
       }
     }
   };

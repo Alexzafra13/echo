@@ -4,6 +4,7 @@ import { Button, Modal } from '@shared/components/ui';
 import { useTrackSearch } from '@features/home/hooks/useTracks';
 import { getRecentlyPlayed, type RecentlyPlayed } from '@shared/services/play-tracking.service';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
+import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types';
 import styles from './CreatePlaylistModal.module.css';
 
@@ -43,7 +44,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
         setRecentTracks(recent);
       } catch (err) {
         if (import.meta.env.DEV) {
-          console.error('Failed to load recent tracks:', err);
+          logger.error('Failed to load recent tracks:', err);
         }
       } finally {
         setLoadingRecent(false);
