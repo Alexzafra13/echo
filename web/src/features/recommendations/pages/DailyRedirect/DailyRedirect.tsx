@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { Waves } from 'lucide-react';
 import { getAutoPlaylists } from '@shared/services/recommendations.service';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './DailyRedirect.module.css';
 
 /**
@@ -19,8 +20,8 @@ export function DailyRedirect() {
         const waveMixPlaylist = playlists.find(p => p.type === 'wave-mix');
 
         if (waveMixPlaylist) {
-          sessionStorage.setItem('currentPlaylist', JSON.stringify(waveMixPlaylist));
-          sessionStorage.setItem('playlistReturnPath', '/');
+          safeSessionStorage.setItem('currentPlaylist', JSON.stringify(waveMixPlaylist));
+          safeSessionStorage.setItem('playlistReturnPath', '/');
           setLocation(`/wave-mix/${waveMixPlaylist.id}`, { replace: true });
         } else {
           setError('No hay playlist diaria disponible');
