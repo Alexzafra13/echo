@@ -310,13 +310,13 @@
 }
 
 :root[data-theme="light"] .playlistDetailPage__hero--artist .playlistType {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--white-85);
 }
 
 :root[data-theme="light"] .playlistDetailPage__hero--artist .playlistDescription {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--white-90);
 }
 
 :root[data-theme="light"] .playlistDetailPage__hero--artist .playlistMeta {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--white-80);
 }

@@ -32,7 +32,7 @@
   background: linear-gradient(135deg, var(--white-06) 0%, var(--white-04) 100%);
   border-color: var(--white-15);
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2),
+  box-shadow: 0 12px 32px var(--black-20),
               0 0 0 1px rgba(237, 104, 66, 0.1);
 }
 
@@ -113,11 +113,11 @@
 
 /* Light Theme */
 :root[data-theme="light"] .card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(135deg, var(--white-70) 0%, var(--white-50) 100%);
 }
 
 :root[data-theme="light"] .card:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1),
+  background: linear-gradient(135deg, var(--white-90) 0%, var(--white-70) 100%);
+  box-shadow: 0 12px 32px var(--black-10),
               0 0 0 1px rgba(237, 104, 66, 0.15);
 }

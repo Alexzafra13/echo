@@ -450,7 +450,7 @@
 .artistDetailPage__imageModal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.92);
+  background: var(--black-92);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -498,7 +498,7 @@
   width: auto;
   height: auto;
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 20px 60px var(--black-90);
   object-fit: contain;
 }
 
@@ -514,7 +514,7 @@
 }
 
 :root[data-theme="light"] .artistDetailPage__stats {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--white-85);
 }
 
 :root[data-theme="light"] .artistDetailPage__biographyText__collapsed::after {

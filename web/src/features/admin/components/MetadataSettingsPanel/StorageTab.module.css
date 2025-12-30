@@ -167,7 +167,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--black-75);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -291,7 +291,7 @@
 
 .browserPath code {
   color: var(--color-secondary-400, #22d3ee);
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--black-25);
   padding: 6px 12px;
   border-radius: 6px;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);

@@ -40,7 +40,7 @@
   border-radius: 8px;
   padding: 6px;
   min-width: 170px;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 -8px 32px var(--black-60);
   backdrop-filter: blur(16px);
   animation: menuFadeIn 0.15s ease;
   z-index: 1000;

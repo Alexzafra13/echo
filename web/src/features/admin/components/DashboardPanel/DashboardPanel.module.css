@@ -97,7 +97,7 @@
   background: linear-gradient(135deg, var(--white-06) 0%, var(--white-04) 100%);
   border-color: var(--white-15);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px var(--black-15);
 }
 
 .cardTitle {
