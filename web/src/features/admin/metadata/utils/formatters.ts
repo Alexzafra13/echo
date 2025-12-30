@@ -4,6 +4,9 @@
  * Shared formatting utilities for metadata system
  */
 
+// Re-export date functions from canonical source
+export { formatDate, formatRelativeTime } from '@shared/utils/date.utils';
+
 /**
  * Format bytes to human-readable string
  *
@@ -21,50 +24,6 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-}
-
-/**
- * Format date to localized string
- *
- * @param date - Date string or Date object
- * @param options - Intl.DateTimeFormat options
- * @returns Formatted date string
- */
-export function formatDate(
-  date: string | Date,
-  options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }
-): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('es-ES', options).format(dateObj);
-}
-
-/**
- * Format date to relative time (e.g., "hace 2 horas")
- *
- * @param date - Date string or Date object
- * @returns Relative time string
- */
-export function formatRelativeTime(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  const diffMs = now.getTime() - dateObj.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffSec < 60) return 'hace unos segundos';
-  if (diffMin < 60) return `hace ${diffMin} minuto${diffMin !== 1 ? 's' : ''}`;
-  if (diffHour < 24) return `hace ${diffHour} hora${diffHour !== 1 ? 's' : ''}`;
-  if (diffDay < 30) return `hace ${diffDay} día${diffDay !== 1 ? 's' : ''}`;
-
-  return formatDate(dateObj, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 /**
