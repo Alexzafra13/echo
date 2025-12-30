@@ -9,7 +9,7 @@
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
   border: 1px solid var(--white-08);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px var(--black-15);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -139,7 +139,7 @@
   height: fit-content;
   max-height: calc(100vh - 300px);
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px var(--black-12), 0 2px 4px var(--black-08);
   position: sticky;
   top: 1.5rem;
 }
@@ -304,7 +304,7 @@
   background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-1) 100%);
   border: 1px solid var(--border-color);
   border-radius: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--black-06);
 }
 
 .detailTitle {
@@ -336,7 +336,7 @@
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeIn 0.4s ease-out;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px var(--black-08), 0 1px 2px var(--black-06);
 }
 
 .conflictCard:hover {
@@ -496,7 +496,7 @@
   padding: 0.375rem 0.75rem;
   border-radius: 0.375rem;
   border: 1px solid var(--primary-30);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px var(--black-08);
 }
 
 .sourceText {
@@ -822,11 +822,11 @@
 
 /* Light Theme */
 :root[data-theme="light"] .panel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+  background: linear-gradient(135deg, var(--white-80) 0%, rgba(248, 250, 252, 0.6) 100%);
 }
 
 :root[data-theme="light"] .header {
-  border-bottom-color: rgba(0, 0, 0, 0.08);
+  border-bottom-color: var(--black-08);
 }
 
 :root[data-theme="light"] .title {
