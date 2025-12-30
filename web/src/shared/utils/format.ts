@@ -20,46 +20,29 @@ export function formatDuration(seconds: number | undefined): string {
 }
 
 /**
- * Format bytes to human readable size (KB, MB, GB, etc.)
- * @param bytes - Size in bytes
- * @returns Formatted size string
- */
-export function formatFileSize(bytes?: number | string): string {
-  if (!bytes) return 'Desconocido';
-
-  // If already formatted as string, return it
-  if (typeof bytes === 'string') return bytes;
-
-  if (!isFinite(bytes)) return 'Desconocido';
-
-  const kb = bytes / 1024;
-  const mb = kb / 1024;
-  const gb = mb / 1024;
-
-  if (gb >= 1) {
-    return `${gb.toFixed(2)} GB`;
-  }
-  if (mb >= 1) {
-    return `${mb.toFixed(2)} MB`;
-  }
-  if (kb >= 1) {
-    return `${kb.toFixed(2)} KB`;
-  }
-  return `${bytes} bytes`;
-}
-
-/**
  * Format bytes using 1024-based units (B, KB, MB, GB, TB)
- * Similar to formatFileSize but with more units and different formatting
  * @param bytes - Size in bytes
  * @returns Formatted size string
  */
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
+  if (!isFinite(bytes)) return 'Desconocido';
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+}
+
+/**
+ * Format bytes to human readable size
+ * Wrapper around formatBytes with additional input handling
+ * @param bytes - Size in bytes (number or string)
+ * @returns Formatted size string
+ */
+export function formatFileSize(bytes?: number | string): string {
+  if (!bytes) return 'Desconocido';
+  if (typeof bytes === 'string') return bytes;
+  return formatBytes(bytes);
 }
 
 /**

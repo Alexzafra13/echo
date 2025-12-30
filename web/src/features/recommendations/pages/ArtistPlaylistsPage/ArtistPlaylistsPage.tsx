@@ -8,6 +8,7 @@ import { PlaylistCover } from '../../components/PlaylistCover';
 import { getArtistPlaylistsPaginated, type AutoPlaylist } from '@shared/services/recommendations.service';
 import { useAuthStore } from '@shared/store';
 import { logger } from '@shared/utils/logger';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './ArtistPlaylistsPage.module.css';
 
 /**
@@ -61,8 +62,8 @@ export function ArtistPlaylistsPage() {
   }, []);
 
   const handlePlaylistClick = (playlist: AutoPlaylist) => {
-    sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
-    sessionStorage.setItem('playlistReturnPath', '/artist-playlists');
+    safeSessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    safeSessionStorage.setItem('playlistReturnPath', '/artist-playlists');
     setLocation(`/wave-mix/${playlist.id}`);
   };
 

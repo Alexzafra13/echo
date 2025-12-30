@@ -15,6 +15,7 @@ import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import type { Track as HomeTrack } from '@features/home/types';
 import type { Track as PlayerTrack } from '@features/player/types';
 import { logger } from '@shared/utils/logger';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './PlaylistDetailPage.module.css';
 
 // Zod schema for validating playlist data from sessionStorage
@@ -71,7 +72,7 @@ export function PlaylistDetailPage() {
 
   useEffect(() => {
     // Get playlist from sessionStorage
-    const storedPlaylist = sessionStorage.getItem('currentPlaylist');
+    const storedPlaylist = safeSessionStorage.getItem('currentPlaylist');
     if (storedPlaylist) {
       try {
         const parsedData = JSON.parse(storedPlaylist);
