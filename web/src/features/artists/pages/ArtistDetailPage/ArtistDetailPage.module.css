@@ -3,7 +3,7 @@
 .artistDetailPage {
   display: flex;
   min-height: 100vh;
-  background: var(--color-bg-primary, #0a0e27);
+  background: var(--bg-base);
   background-image: var(--gradient-textured);
 }
 
@@ -32,14 +32,14 @@
 }
 
 .artistDetailPage__backButton {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 /* Hero Section - Immersive design */
 .artistDetailPage__hero {
   position: relative;
   min-height: 450px;
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
   /* No border-radius for immersive effect */
   /* Extend to edges */
   margin-left: -40px;
@@ -68,7 +68,7 @@
   z-index: 1;
   display: flex;
   align-items: flex-end;
-  gap: 32px;
+  gap: var(--space-8);
   padding: 40px;
   min-height: 400px;
 }
@@ -83,13 +83,13 @@
 .artistDetailPage__avatar {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   object-fit: cover;
   object-position: center top; /* Show face/head instead of cutting at middle */
   box-shadow: 0 8px 32px var(--black-60);
   border: 4px solid var(--white-10);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .artistDetailPage__avatar:hover {
@@ -100,14 +100,14 @@
 .artistDetailPage__avatarFallback {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 80px;
-  font-weight: 900;
-  color: white;
+  font-weight: var(--font-black);
+  color: var(--text-on-primary);
   text-transform: uppercase;
   box-shadow: 0 8px 32px var(--black-60);
   border: 4px solid var(--white-10);
@@ -118,8 +118,8 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 16px;
-  padding-bottom: 8px;
+  gap: var(--space-4);
+  padding-bottom: var(--space-2);
 }
 
 .artistDetailPage__logo {
@@ -134,66 +134,66 @@
 
 .artistDetailPage__name {
   font-size: 64px;
-  font-weight: 900;
-  color: var(--color-text-primary, #ffffff);
+  font-weight: var(--font-black);
+  color: var(--text-primary);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: -2px;
-  line-height: 1;
+  line-height: var(--leading-none);
   text-shadow: 0 4px 12px var(--black-80);
 }
 
 .artistDetailPage__stats {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-text-secondary, #b8bcc8);
+  gap: var(--space-3);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
   text-shadow: 0 2px 4px var(--black-80);
 }
 
 /* Biography Section */
 .artistDetailPage__biography {
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
 }
 
 .artistDetailPage__biographyHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .artistDetailPage__biographyIcon {
-  color: var(--color-accent, #ed6842);
+  color: var(--color-primary);
   opacity: 0.8;
 }
 
 .artistDetailPage__sectionTitle {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .artistDetailPage__biographyContent {
   max-width: 900px;
   background: var(--white-02);
-  padding: 28px 32px;
-  border-radius: 12px;
+  padding: var(--space-7) var(--space-8);
+  border-radius: var(--radius-lg);
   border-left: 3px solid var(--primary-30);
   position: relative;
 }
 
 .artistDetailPage__biographyText {
   font-family: var(--font-biography, 'Lora', Georgia, serif);
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
   margin: 0;
   white-space: pre-wrap;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--transition-slow);
   text-align: justify;
   hyphens: auto;
 }
@@ -206,8 +206,8 @@
   float: left;
   margin-top: -0.1em;
   margin-right: 5px;
-  font-weight: 700;
-  color: var(--color-accent, #ed6842);
+  font-weight: var(--font-bold);
+  color: var(--color-primary);
 }
 
 /* Texto colapsado con fade */
@@ -234,51 +234,51 @@
 
 /* Botón Leer más/menos */
 .artistDetailPage__biographyToggle {
-  margin-top: 16px;
-  padding: 8px 20px;
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-5);
   background: var(--primary-10);
   border: 1px solid var(--primary-30);
-  border-radius: 20px;
-  color: var(--color-accent, #ed6842);
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-xl);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .artistDetailPage__biographyToggle:hover {
   background: var(--primary-20);
-  border-color: rgba(237, 104, 66, 0.5);
+  border-color: var(--primary-50);
   transform: translateY(-1px);
 }
 
 /* Fuente de la biografía */
 .artistDetailPage__biographySource {
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--white-05);
-  font-size: 13px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
 .artistDetailPage__biographyPlaceholder {
-  font-size: 15px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   font-style: italic;
   margin: 0;
 }
 
 /* Albums Section */
 .artistDetailPage__albums {
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
 }
 
 .artistDetailPage__emptyAlbums {
-  font-size: 15px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   font-style: italic;
-  margin: 20px 0 0 0;
+  margin: var(--space-5) 0 0 0;
 }
 
 /* Loading/Error States */
@@ -288,38 +288,38 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: var(--space-5);
   min-height: 400px;
-  color: var(--color-text-secondary, #b8bcc8);
-  font-size: 16px;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
 }
 
 .artistDetailPage__error {
-  color: #ff6b6b;
+  color: var(--color-error);
 }
 
 .artistDetailPage__error button {
-  padding: 10px 24px;
-  background: var(--color-primary, #ed6842);
-  color: white;
+  padding: var(--space-2) var(--space-6);
+  background: var(--color-primary);
+  color: var(--text-on-primary);
   border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .artistDetailPage__error button:hover {
-  background: var(--color-primary-600, #ff6b3d);
+  background: var(--color-primary-hover);
   transform: scale(1.05);
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
   .artistDetailPage__heroContent {
-    gap: 24px;
-    padding: 32px;
+    gap: var(--space-6);
+    padding: var(--space-8);
     min-height: 350px;
   }
 
@@ -372,8 +372,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 20px;
-    padding: 24px;
+    gap: var(--space-5);
+    padding: var(--space-6);
     min-height: 300px;
   }
 
@@ -533,35 +533,35 @@
 .artistDetailPage__sectionHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .artistDetailPage__sectionIcon {
-  color: var(--color-accent, #ed6842);
+  color: var(--color-primary);
   opacity: 0.8;
 }
 
 /* ===== Top Tracks Section ===== */
 .artistDetailPage__topTracks {
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
 }
 
 .artistDetailPage__topTracksList {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px 24px;
+  gap: var(--space-2) var(--space-6);
 }
 
 .artistDetailPage__topTrack {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   background: var(--white-02);
-  border-radius: 8px;
+  border-radius: var(--radius-base);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .artistDetailPage__topTrack:hover {
@@ -574,16 +574,16 @@
 
 .artistDetailPage__topTrackRank {
   width: 24px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
   text-align: center;
 }
 
 .artistDetailPage__topTrackCover {
   width: 48px;
   height: 48px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -591,12 +591,12 @@
 .artistDetailPage__topTrackCoverPlaceholder {
   width: 48px;
   height: 48px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--white-05);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-tertiary);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -605,29 +605,29 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .artistDetailPage__topTrackTitle {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .artistDetailPage__topTrackAlbum {
-  font-size: 13px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .artistDetailPage__topTrackMeta {
-  font-size: 13px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -636,63 +636,63 @@
 .artistDetailPage__topTrackStats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .artistDetailPage__topTrackPlays {
-  font-size: 13px;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .artistDetailPage__topTrackDuration {
   width: 50px;
-  font-size: 13px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   text-align: right;
 }
 
 .artistDetailPage__topTrackPlay {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: var(--color-accent, #ed6842);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
   border: none;
-  color: white;
+  color: var(--text-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 
 .artistDetailPage__topTrackPlay:hover {
   transform: scale(1.1);
-  background: var(--color-primary-600, #ff6b3d);
+  background: var(--color-primary-hover);
 }
 
 /* ===== Related Artists Section ===== */
 .artistDetailPage__relatedArtists {
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
 }
 
 .artistDetailPage__relatedArtistsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .artistDetailPage__relatedArtist {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 16px;
+  padding: var(--space-5) var(--space-4);
   background: var(--white-02);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: center;
 }
 
@@ -704,9 +704,9 @@
 .artistDetailPage__relatedArtistAvatar {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   background: var(--white-05);
   position: relative;
 }
@@ -724,53 +724,52 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
-  color: white;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--text-on-primary);
 }
 
 .artistDetailPage__relatedArtistInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   width: 100%;
 }
 
 .artistDetailPage__relatedArtistName {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .artistDetailPage__relatedArtistMeta {
-  font-size: 12px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
 /* ===== Artist Playlists Section ===== */
 .artistDetailPage__playlists {
-  margin-bottom: 48px;
+  margin-bottom: var(--space-12);
 }
 
 .artistDetailPage__playlistsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .artistDetailPage__playlistCard {
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: var(--space-3);
   background: var(--white-02);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .artistDetailPage__playlistCard:hover {
@@ -781,9 +780,9 @@
 .artistDetailPage__playlistCover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-base);
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .artistDetailPage__playlistCover > * {
@@ -794,21 +793,21 @@
 .artistDetailPage__playlistInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .artistDetailPage__playlistName {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .artistDetailPage__playlistMeta {
-  font-size: 13px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
 }
 
 /* ===== Responsive for new sections ===== */
@@ -818,8 +817,8 @@
   }
 
   .artistDetailPage__topTrack {
-    padding: 10px 12px;
-    gap: 12px;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-3);
   }
 
   .artistDetailPage__topTrackCover,
@@ -846,7 +845,7 @@
   .artistDetailPage__relatedArtistsGrid {
     display: flex;
     overflow-x: auto;
-    gap: 16px;
+    gap: var(--space-4);
     margin: 0 -20px;
     padding-left: 20px;
     padding-right: 20px;
@@ -861,7 +860,7 @@
   .artistDetailPage__relatedArtist {
     flex-shrink: 0;
     width: 140px;
-    padding: 16px 12px;
+    padding: var(--space-4) var(--space-3);
   }
 
   .artistDetailPage__relatedArtistAvatar {
@@ -875,23 +874,23 @@
 
   .artistDetailPage__playlistsGrid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .artistDetailPage__playlistCard {
-    padding: 10px;
+    padding: var(--space-2);
   }
 
   .artistDetailPage__playlistCover {
-    margin-bottom: 10px;
+    margin-bottom: var(--space-2);
   }
 
   .artistDetailPage__playlistName {
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
 
   .artistDetailPage__playlistMeta {
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 }
 
