@@ -1,4 +1,5 @@
 import { useLocation } from 'wouter';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import { PlaylistCover } from '@features/recommendations/components/PlaylistCover';
 import type { AutoPlaylist } from '@shared/services/recommendations.service';
 import styles from './PlaylistGrid.module.css';
@@ -25,7 +26,7 @@ export function PlaylistGrid({
 
   const handlePlaylistClick = (playlist: AutoPlaylist) => {
     // Store playlist in sessionStorage for the detail page
-    sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+    safeSessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
     setLocation(`/wave-mix/${playlist.id}`);
   };
 

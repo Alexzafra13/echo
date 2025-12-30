@@ -8,6 +8,7 @@ import { useArtist } from '@features/artists/hooks';
 import type { HeroSectionProps } from '../../types';
 import { isHeroAlbum, isHeroPlaylist } from '../../types';
 import { logger } from '@shared/utils/logger';
+import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
 import styles from './HeroSection.module.css';
 
 /**
@@ -125,8 +126,8 @@ export function HeroSection({ item, onPlay, onNext, onPrevious }: HeroSectionPro
       setLocation(`/album/${album!.id}`);
     } else if (isPlaylist) {
       // Store playlist in sessionStorage and navigate to detail
-      sessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
-      sessionStorage.setItem('playlistReturnPath', '/');
+      safeSessionStorage.setItem('currentPlaylist', JSON.stringify(playlist));
+      safeSessionStorage.setItem('playlistReturnPath', '/');
       setLocation(`/wave-mix/${playlist!.id}`);
     }
   };
