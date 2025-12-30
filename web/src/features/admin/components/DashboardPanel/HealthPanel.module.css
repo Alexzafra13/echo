@@ -250,13 +250,13 @@
 
 /* Light Theme */
 :root[data-theme="light"] .container {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(135deg, var(--white-70) 0%, var(--white-50) 100%);
 }
 
 :root[data-theme="light"] .healthItem {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(135deg, var(--white-60) 0%, var(--white-40) 100%);
 }
 
 :root[data-theme="light"] .healthItem:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+  background: linear-gradient(135deg, var(--white-80) 0%, var(--white-60) 100%);
 }

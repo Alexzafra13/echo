@@ -609,8 +609,8 @@
   .table tbody tr {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, var(--white-04) 0%, var(--white-02) 100%);
+    border: 1px solid var(--white-08);
     border-radius: 16px;
     padding: 0;
     margin-bottom: 0;
@@ -620,8 +620,8 @@
   }
 
   .table tbody tr:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, var(--white-06) 0%, var(--white-03) 100%);
+    border-color: var(--white-12);
     transform: translateY(-1px);
   }
 
@@ -631,9 +631,9 @@
 
   /* Card Header - User Info */
   .table td:first-child {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--white-02);
     padding: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--white-06);
   }
 
   .table td:first-child::before {
@@ -661,8 +661,8 @@
 
   .table td:last-child {
     padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--white-02);
+    border-top: 1px solid var(--white-06);
   }
 
   .table td:last-child::before {

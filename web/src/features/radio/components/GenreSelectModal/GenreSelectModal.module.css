@@ -6,7 +6,7 @@
   right: 0;
   bottom: 0;
   z-index: var(--z-modal, 1050);
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--black-60);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -38,11 +38,11 @@
   display: flex;
   flex-direction: column;
   box-shadow:
-    0 25px 80px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 25px 80px var(--black-50),
+    inset 0 1px 0 var(--white-08),
+    inset 0 0 0 1px var(--white-05);
   animation: slideDownFromTop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--white-08);
   outline: none;
 }
 
@@ -69,7 +69,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .modal__title {
@@ -87,7 +87,7 @@
 }
 
 .modal__closeButton {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-05);
   border: none;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -100,7 +100,7 @@
 }
 
 .modal__closeButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   color: var(--color-text-primary);
   transform: scale(1.05);
 }
@@ -113,15 +113,15 @@
   padding: 12px 20px;
   margin: 16px 20px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--black-25);
+  border: 1px solid var(--white-08);
   color: var(--color-text-secondary);
   transition: all 0.2s ease;
 }
 
 .modal__search:focus-within {
   border-color: var(--color-primary);
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--black-30);
 }
 
 .modal__searchInput {
@@ -143,7 +143,7 @@
 }
 
 .modal__searchClear {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border: none;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -156,7 +156,7 @@
 }
 
 .modal__searchClear:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
   color: var(--color-text-primary);
 }
 
@@ -187,8 +187,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--white-04);
+  border: 1px solid var(--white-06);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -199,8 +199,8 @@
 }
 
 .genreOption:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--white-08);
+  border-color: var(--white-12);
   transform: translateX(2px);
 }
 
@@ -245,7 +245,7 @@
   .modal__overlay {
     padding: 0;
     align-items: flex-start;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--black-60);
   }
 
   .modal__content {
@@ -306,7 +306,7 @@
     border-left: none;
     border-right: none;
     border-top: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--white-06);
   }
 
   .genreOption:last-child {

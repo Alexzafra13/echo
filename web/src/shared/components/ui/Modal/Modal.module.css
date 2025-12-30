@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--black-80);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -19,16 +19,16 @@
   background: linear-gradient(180deg, #1a1b26 0%, #13141c 100%);
   border-radius: var(--border-radius-xl, 16px);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 24px 48px -12px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(0, 0, 0, 0.3);
+    0 0 0 1px var(--white-08),
+    0 24px 48px -12px var(--black-50),
+    0 0 60px var(--black-30);
   max-width: 90vw;
   max-height: 90vh;
   width: 480px;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.3s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--white-10);
   overflow: hidden;
 }
 
@@ -37,8 +37,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-02);
+  border-bottom: 1px solid var(--white-08);
 }
 
 .modalHeaderContent {
@@ -82,8 +82,8 @@
 }
 
 .closeButton {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white-05);
+  border: 1px solid var(--white-08);
   color: var(--color-text-secondary, #9ca3af);
   cursor: pointer;
   padding: 8px;
@@ -95,8 +95,8 @@
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--white-10);
+  border-color: var(--white-15);
   color: var(--color-text-primary, #ffffff);
 }
 

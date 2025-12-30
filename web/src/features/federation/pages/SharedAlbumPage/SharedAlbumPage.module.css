@@ -204,7 +204,7 @@
   border-radius: 12px;
   padding: 8px;
   z-index: 1000;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px var(--black-50);
   animation: fadeInScale 0.15s ease;
 }
 
@@ -412,7 +412,7 @@
 .sharedAlbumPage__imageModal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.92);
+  background: var(--black-92);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -460,7 +460,7 @@
   width: auto;
   height: auto;
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 20px 60px var(--black-90);
   object-fit: contain;
 }
 
@@ -661,7 +661,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border: none;
   border-radius: 6px;
   color: #fca5a5;
@@ -670,7 +670,7 @@
 }
 
 .sharedAlbumPage__errorClose:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   color: #ffffff;
 }
 
