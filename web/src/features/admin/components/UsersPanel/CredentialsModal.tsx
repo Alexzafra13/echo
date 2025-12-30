@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Key, Copy, Check, AlertCircle } from 'lucide-react';
 import { Button, Modal } from '@shared/components/ui';
+import { logger } from '@shared/utils/logger';
 import styles from './CredentialsModal.module.css';
 
 interface CredentialsModalProps {
@@ -25,7 +26,7 @@ export function CredentialsModal({
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error copying to clipboard:', error);
+        logger.error('Error copying to clipboard:', error);
       }
     }
   };

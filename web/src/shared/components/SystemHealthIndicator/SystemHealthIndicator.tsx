@@ -3,6 +3,7 @@ import { Activity, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiClient } from '@shared/services/api';
 import { useAuth, useClickOutside } from '@shared/hooks';
+import { logger } from '@shared/utils/logger';
 import styles from './SystemHealthIndicator.module.css';
 
 interface SystemHealth {
@@ -57,7 +58,7 @@ export function SystemHealthIndicator() {
       setAlerts(response.data.activeAlerts);
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error loading system health:', err);
+        logger.error('Error loading system health:', err);
       }
       // Si falla, asumir estado degradado
       setHealth(null);

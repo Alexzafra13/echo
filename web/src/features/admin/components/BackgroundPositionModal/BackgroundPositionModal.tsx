@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check, Loader, Move } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { useUpdateBackgroundPosition } from '../../hooks/useArtistAvatars';
+import { logger } from '@shared/utils/logger';
 import styles from './BackgroundPositionModal.module.css';
 
 interface BackgroundPositionModalProps {
@@ -232,7 +233,7 @@ export function BackgroundPositionModal({
         },
         onError: (error) => {
           if (import.meta.env.DEV) {
-            console.error('[BackgroundPositionModal] ❌ Failed to save position:', error);
+            logger.error('[BackgroundPositionModal] ❌ Failed to save position:', error);
           }
         },
       },

@@ -4,6 +4,7 @@ import { AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, Chevr
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatDateWithTime } from '@shared/utils/format';
+import { logger } from '@shared/utils/logger';
 import styles from './LogsPanel.module.css';
 
 interface SystemLog {
@@ -86,7 +87,7 @@ export function LogsPanel() {
       setTotal(response.data.total);
     } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error loading logs:', err);
+        logger.error('Error loading logs:', err);
       }
       setError('Error al cargar logs');
     } finally {

@@ -10,6 +10,7 @@ import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { useDropdownMenu } from '@shared/hooks';
+import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
 import type { RemoteTrack } from '../../types';
 import styles from './SharedAlbumPage.module.css';
@@ -161,7 +162,7 @@ export default function SharedAlbumPage() {
       setIsImported(true);
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Failed to start import:', err);
+        logger.error('Failed to start import:', err);
       }
 
       // Parse error to show user-friendly message

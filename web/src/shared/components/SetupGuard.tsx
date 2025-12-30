@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { getSetupStatus } from '@features/setup';
+import { logger } from '@shared/utils/logger';
 
 interface SetupGuardProps {
   children: React.ReactNode;
@@ -32,7 +33,7 @@ export function SetupGuard({ children }: SetupGuardProps) {
     } catch (error) {
       // If API fails, assume setup is complete and let login handle errors
       if (import.meta.env.DEV) {
-        console.warn('Could not check setup status:', error);
+        logger.warn('Could not check setup status:', error);
       }
     } finally {
       setIsChecking(false);

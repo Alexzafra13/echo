@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LikeDislikeButtons } from './LikeDislikeButtons';
 import * as interactionsService from '@shared/services/interactions.service';
+import type { ToggleLikeResponse } from '@shared/services/interactions.service';
 
 // Mock the interactions service
 vi.mock('@shared/services/interactions.service', () => ({
@@ -269,12 +270,12 @@ describe('LikeDislikeButtons', () => {
 
   describe('loading state', () => {
     it('should show loading class when making API call', async () => {
-      let resolveToggle: (value: any) => void;
-      const togglePromise = new Promise((resolve) => {
+      let resolveToggle: (value: ToggleLikeResponse) => void;
+      const togglePromise = new Promise<ToggleLikeResponse>((resolve) => {
         resolveToggle = resolve;
       });
 
-      vi.mocked(interactionsService.toggleLike).mockReturnValue(togglePromise as any);
+      vi.mocked(interactionsService.toggleLike).mockReturnValue(togglePromise);
 
       const { container } = render(
         <LikeDislikeButtons itemId={mockItemId} itemType={mockItemType} />
@@ -294,12 +295,12 @@ describe('LikeDislikeButtons', () => {
     });
 
     it('should disable buttons while loading', async () => {
-      let resolveToggle: (value: any) => void;
-      const togglePromise = new Promise((resolve) => {
+      let resolveToggle: (value: ToggleLikeResponse) => void;
+      const togglePromise = new Promise<ToggleLikeResponse>((resolve) => {
         resolveToggle = resolve;
       });
 
-      vi.mocked(interactionsService.toggleLike).mockReturnValue(togglePromise as any);
+      vi.mocked(interactionsService.toggleLike).mockReturnValue(togglePromise);
 
       render(<LikeDislikeButtons itemId={mockItemId} itemType={mockItemType} />);
 

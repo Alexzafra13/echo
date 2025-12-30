@@ -6,6 +6,7 @@ import { useSearchAlbumCovers, useApplyAlbumCover } from '../../hooks/useAlbumCo
 import { CoverOption } from '../../api/album-covers.api';
 import { AlbumCoverUploadTab } from './AlbumCoverUploadTab';
 import { metadataService } from '@features/admin/metadata/services/metadataService';
+import { logger } from '@shared/utils/logger';
 import styles from './AlbumCoverSelectorModal.module.css';
 
 interface AlbumCoverSelectorModalProps {
@@ -95,7 +96,7 @@ export function AlbumCoverSelectorModal({
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[AlbumCoverSelector] ❌ Error applying cover:', error);
+            logger.error('[AlbumCoverSelector] ❌ Error applying cover:', error);
           }
           setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la carátula');
         },

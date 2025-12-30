@@ -9,6 +9,7 @@ import {
   useApplyCustomCover,
   useDeleteCustomCover,
 } from '../../hooks/useAlbumCoversCustom';
+import { logger } from '@shared/utils/logger';
 import styles from './AlbumCoverUploadTab.module.css';
 
 interface AlbumCoverUploadTabProps {
@@ -65,7 +66,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
               },
               onError: (error: any) => {
                 if (import.meta.env.DEV) {
-                  console.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+                  logger.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
                 }
                 setUploadError(error?.response?.data?.message || 'Error al aplicar la portada');
               },
@@ -74,7 +75,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[AlbumCoverUpload] ❌ Error uploading cover:', error);
+            logger.error('[AlbumCoverUpload] ❌ Error uploading cover:', error);
           }
           setUploadError(error?.response?.data?.message || 'Error al subir la portada');
         },
@@ -97,7 +98,7 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+            logger.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
           }
           setUploadError(error?.response?.data?.message || 'Error al aplicar la portada');
         },

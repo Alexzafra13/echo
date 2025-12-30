@@ -3,6 +3,7 @@ import { Search, Check, AlertCircle, Info } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
+import { logger } from '@shared/utils/logger';
 import styles from './ProvidersTab.module.css';
 
 interface AutoSearchConfig {
@@ -52,7 +53,7 @@ export function AutoSearchTab() {
       setConfig(response.data);
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error loading auto-search config:', err);
+        logger.error('Error loading auto-search config:', err);
       }
       setNotification({ type: 'error', message: 'Error al cargar configuración de auto-búsqueda' });
     } finally {
@@ -72,7 +73,7 @@ export function AutoSearchTab() {
       });
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error loading auto-search stats:', error);
+        logger.error('Error loading auto-search stats:', error);
       }
     }
   };
@@ -93,7 +94,7 @@ export function AutoSearchTab() {
       await loadConfig();
     } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Error saving auto-search config:', err);
+        logger.error('Error saving auto-search config:', err);
       }
       setNotification({
         type: 'error',
