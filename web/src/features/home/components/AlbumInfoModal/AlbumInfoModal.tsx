@@ -1,11 +1,12 @@
 import { X } from 'lucide-react';
 import { getCoverUrl } from '@shared/utils/cover.utils';
 import { formatDuration, formatFileSize, formatDate } from '@shared/utils/format';
+import type { Album, Track } from '../../types';
 import styles from './AlbumInfoModal.module.css';
 
 interface AlbumInfoModalProps {
-  album: any; // Album type
-  tracks?: any[]; // Tracks for additional info
+  album: Album;
+  tracks?: Track[];
   onClose: () => void;
 }
 
@@ -18,7 +19,8 @@ export function AlbumInfoModal({ album, tracks = [], onClose }: AlbumInfoModalPr
 
   // Calculate total size and duration from tracks
   const totalSize = tracks.reduce((acc, track) => {
-    const size = track.size || 0;
+    const rawSize = track.size;
+    const size = typeof rawSize === 'string' ? parseInt(rawSize, 10) : (rawSize || 0);
 
     // Safety check for NaN or Infinity
     if (!isFinite(size)) {
