@@ -3,22 +3,22 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space-7);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding-bottom: var(--space-5);
   border-bottom: 1px solid var(--white-10);
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 16px;
-  color: var(--color-text-primary, #ffffff);
+  gap: var(--space-4);
+  color: var(--text-primary);
 }
 
 .headerLeft > svg {
@@ -27,27 +27,27 @@
 
 .title {
   font-size: 26px;
-  font-weight: 800;
-  color: var(--color-text-primary, #ffffff);
+  font-weight: var(--font-black);
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 14px;
-  color: var(--color-text-tertiary, #6b7280);
-  margin: 4px 0 0 0;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin: var(--space-1) 0 0 0;
+  font-weight: var(--font-medium);
 }
 
 .refreshButton {
-  padding: 12px 22px;
+  padding: var(--space-3) 22px;
   background: linear-gradient(135deg, rgba(237, 104, 66, 0.12) 0%, rgba(237, 104, 66, 0.06) 100%);
   border: 1px solid rgba(237, 104, 66, 0.25);
   border-radius: 10px;
-  color: var(--color-primary, #ed6842);
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -88,8 +88,8 @@
 .card {
   background: linear-gradient(135deg, var(--white-04) 0%, var(--white-02) 100%);
   border: 1px solid var(--white-08);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -101,9 +101,9 @@
 }
 
 .cardTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   margin: 0 0 18px 0;
   letter-spacing: -0.2px;
 }
@@ -111,80 +111,80 @@
 /* Activity Stats */
 .activityStats {
   display: flex;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .activityStat {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   flex: 1;
 }
 
 .activityLabel {
-  font-size: 12px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.5px;
 }
 
 .activityValue {
   font-size: 28px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
 /* Enrichment Stats */
 .enrichmentStats {
   display: flex;
-  gap: 32px;
+  gap: var(--space-8);
 }
 
 .enrichmentPeriod {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   flex: 1;
 }
 
 .periodLabel {
-  font-size: 12px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.5px;
 }
 
 .periodStats {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .periodValue {
   font-size: 28px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
 .periodDetails {
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
   font-size: 13px;
 }
 
 .successCount {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--color-success);
 }
 
 .failedCount {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--color-error);
 }
 
@@ -192,32 +192,32 @@
 .scanInfo {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .scanStat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .scanLabel {
-  font-size: 12px;
-  color: var(--color-text-tertiary, #6b7280);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.5px;
 }
 
 .scanValue {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--color-text-primary, #ffffff);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
 .noScanInfo {
-  font-size: 14px;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   font-style: italic;
   margin: 0;
 }
@@ -228,8 +228,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
+  padding: 80px var(--space-5);
+  gap: var(--space-4);
 }
 
 .loadingIcon {
@@ -247,8 +247,8 @@
 }
 
 .loading p {
-  font-size: 16px;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -258,26 +258,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
+  padding: 80px var(--space-5);
+  gap: var(--space-4);
 }
 
 .error p {
-  font-size: 16px;
+  font-size: var(--text-base);
   color: var(--color-error);
   margin: 0;
 }
 
 .retryButton {
-  padding: 10px 24px;
+  padding: 10px var(--space-6);
   background: rgba(255, 107, 107, 0.1);
   border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 8px;
-  color: var(--color-primary, #ff6b6b);
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-base);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .retryButton:hover {
@@ -302,7 +302,7 @@
   .activityStats,
   .enrichmentStats {
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
   }
 }
 
@@ -314,7 +314,7 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .scanInfo {
