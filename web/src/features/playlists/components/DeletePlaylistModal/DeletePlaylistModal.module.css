@@ -3,26 +3,26 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--space-6);
 }
 
 .description {
-  font-size: var(--font-size-base);
+  font-size: var(--text-base);
   line-height: 1.6;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .description strong {
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
 }
 
 .actions {
   display: flex;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--color-border);
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-base);
 }
 
 .actions button {
