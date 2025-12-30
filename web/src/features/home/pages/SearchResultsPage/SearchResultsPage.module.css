@@ -8,7 +8,7 @@
 .searchResultsPage {
   display: flex;
   min-height: 100vh;
-  background: var(--color-bg-primary, #0a0e27);
+  background: var(--bg-base);
 }
 
 .searchResultsPage__main {
@@ -37,19 +37,19 @@
 
 /* Header */
 .searchResultsPage__header {
-  margin-bottom: 32px;
+  margin-bottom: var(--space-8);
 }
 
 .searchResultsPage__header h1 {
   font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--color-text-primary);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
 }
 
 .searchResultsPage__query {
-  font-size: 18px;
-  color: var(--color-text-secondary);
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
 }
 
 /* Sections container */
@@ -63,41 +63,41 @@
 .searchResultsPage__section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .searchResultsPage__sectionTitle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  gap: var(--space-3);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
 .searchResultsPage__count {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 /* Grid Layout (for Artists and Albums) */
 .searchResultsPage__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* auto-fit para mejor responsividad */
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .searchResultsPage__card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--space-3);
+  padding: var(--space-4);
   background: var(--color-surface-secondary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-base);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   text-align: left;
 }
 
@@ -110,7 +110,7 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-tertiary);
 }
 
@@ -118,28 +118,28 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--color-surface-tertiary);
 }
 
 .searchResultsPage__cardInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .searchResultsPage__cardTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .searchResultsPage__cardMeta {
-  font-size: 14px;
-  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -149,20 +149,20 @@
 .searchResultsPage__list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .searchResultsPage__listItem {
   display: grid;
   grid-template-columns: 40px 50px 1fr auto;
   align-items: center;
-  gap: 16px;
-  padding: 8px 12px;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-3);
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-base);
   text-align: left;
 }
 
@@ -171,8 +171,8 @@
 }
 
 .searchResultsPage__listNumber {
-  font-size: 16px;
-  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
   text-align: center;
 }
 
@@ -180,38 +180,38 @@
   width: 50px;
   height: 50px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-tertiary);
 }
 
 .searchResultsPage__listInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .searchResultsPage__listTitle {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .searchResultsPage__listMeta {
-  font-size: 14px;
-  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .searchResultsPage__listDuration {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  padding-right: 8px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  padding-right: var(--space-2);
 }
 
 /* Empty State */
@@ -221,10 +221,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: var(--space-4);
   min-height: 400px;
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .searchResultsPage__empty svg,
@@ -233,16 +233,16 @@
 }
 
 .searchResultsPage__empty h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .searchResultsPage__empty p,
 .searchResultsPage__loading p {
-  font-size: 16px;
-  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
   max-width: 400px;
   margin: 0;
 }
@@ -262,21 +262,21 @@
   }
 
   .searchResultsPage__header h1 {
-    font-size: 24px;
+    font-size: var(--text-2xl);
   }
 
   .searchResultsPage__query {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 
   .searchResultsPage__grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* auto-fit consistente */
-    gap: 12px;
+    gap: var(--space-3);
   }
 
   .searchResultsPage__card {
-    padding: 12px; /* Menos padding en mobile */
-    border-radius: 8px; /* Menos redondeado */
+    padding: var(--space-3); /* Menos padding en mobile */
+    border-radius: var(--radius-base); /* Menos redondeado */
   }
 
   .searchResultsPage__cardImage {
@@ -284,19 +284,19 @@
   }
 
   .searchResultsPage__cardImage_round {
-    border-radius: 50%; /* Mantener circular para artistas */
+    border-radius: var(--radius-full); /* Mantener circular para artistas */
   }
 
   .searchResultsPage__listItem {
     grid-template-columns: 30px 40px 1fr auto;
-    gap: 12px;
+    gap: var(--space-3);
     border-radius: 6px; /* Menos redondeado */
   }
 
   .searchResultsPage__listImage {
     width: 40px;
     height: 40px;
-    border-radius: 4px; /* Menos redondeado */
+    border-radius: var(--radius-sm); /* Menos redondeado */
   }
 }
 
@@ -311,7 +311,7 @@
   }
 
   .searchResultsPage__header h1 {
-    font-size: 20px;
+    font-size: var(--text-xl);
   }
 
   .searchResultsPage__grid {
@@ -320,6 +320,6 @@
   }
 
   .searchResultsPage__card {
-    padding: 8px; /* Más compacto */
+    padding: var(--space-2); /* Más compacto */
   }
 }
