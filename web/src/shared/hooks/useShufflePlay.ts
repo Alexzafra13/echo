@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePlayer } from '@features/player';
 import { tracksService } from '@features/home/services/tracks.service';
+import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
 
 const BATCH_SIZE = 50;
@@ -154,7 +155,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('[ShufflePlay] Error loading more:', error);
+        logger.error('[ShufflePlay] Error loading more:', error);
       }
     } finally {
       state.loading = false;
@@ -227,7 +228,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
 
       if (newTracks.length === 0) {
         if (import.meta.env.DEV) {
-          console.warn('[ShufflePlay] No tracks available');
+          logger.warn('[ShufflePlay] No tracks available');
         }
         return;
       }
@@ -253,7 +254,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
       playQueue(tracksToPlay, 0);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('[ShufflePlay] Error:', error);
+        logger.error('[ShufflePlay] Error:', error);
       }
     } finally {
       setIsLoading(false);

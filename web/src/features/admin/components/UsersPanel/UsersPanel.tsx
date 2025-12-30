@@ -8,6 +8,7 @@ import { EditUserModal } from './EditUserModal';
 import { CredentialsModal } from './CredentialsModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { formatDateCompact } from '@shared/utils/format';
+import { logger } from '@shared/utils/logger';
 import styles from './UsersPanel.module.css';
 import type { NotificationType } from '@shared/components/ui';
 
@@ -66,7 +67,7 @@ export function UsersPanel() {
       setNotification({ type: 'success', message: 'Usuario desactivado correctamente' });
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error deleting user:', err);
+        logger.error('Error deleting user:', err);
       }
       setNotification({ type: 'error', message: 'Error al eliminar usuario. Por favor intenta de nuevo.' });
     }
@@ -85,7 +86,7 @@ export function UsersPanel() {
       setNotification({ type: 'success', message: 'Usuario eliminado permanentemente' });
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error permanently deleting user:', err);
+        logger.error('Error permanently deleting user:', err);
       }
       setNotification({ type: 'error', message: 'Error al eliminar usuario permanentemente. Por favor intenta de nuevo.' });
     }
@@ -107,7 +108,7 @@ export function UsersPanel() {
       });
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error resetting password:', err);
+        logger.error('Error resetting password:', err);
       }
       setNotification({ type: 'error', message: 'Error al resetear contraseña. Por favor intenta de nuevo.' });
     }
@@ -129,7 +130,7 @@ export function UsersPanel() {
       setNotification({ type: 'success', message: 'Usuario reactivado correctamente' });
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error reactivating user:', err);
+        logger.error('Error reactivating user:', err);
       }
       setNotification({ type: 'error', message: 'Error al reactivar usuario. Por favor intenta de nuevo.' });
     }

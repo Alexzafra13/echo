@@ -8,6 +8,7 @@
  */
 
 import { apiClient } from './api';
+import { logger } from '@shared/utils/logger';
 
 /**
  * Play context types
@@ -134,7 +135,7 @@ export async function recordPlay(data: RecordPlayData): Promise<void> {
     await apiClient.post('/play-tracking/play', data);
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('[PlayTracking] Failed to record play:', error);
+      logger.error('[PlayTracking] Failed to record play:', error);
     }
   }
 }
@@ -158,7 +159,7 @@ export async function recordSkip(data: RecordSkipData): Promise<void> {
     });
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('[PlayTracking] Failed to record skip:', error);
+      logger.error('[PlayTracking] Failed to record skip:', error);
     }
   }
 }
@@ -215,7 +216,7 @@ export async function updatePlaybackState(data: PlaybackStateData): Promise<void
     await apiClient.put('/play-tracking/playback-state', data);
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('[PlayTracking] Failed to update playback state:', error);
+      logger.error('[PlayTracking] Failed to update playback state:', error);
     }
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Socket } from 'socket.io-client';
 import WebSocketService from '../services/websocket.service';
+import { logger } from '@shared/utils/logger';
 
 export type WebSocketNamespace = 'scanner' | 'metadata' | 'federation';
 
@@ -162,7 +163,7 @@ export function useWebSocketConnection(
       };
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error(`[useWebSocketConnection] Error connecting to ${namespace}:`, error);
+        logger.error(`[useWebSocketConnection] Error connecting to ${namespace}:`, error);
       }
       socketRef.current = null;
       setIsConnected(false);

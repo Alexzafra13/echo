@@ -3,6 +3,8 @@
  * Uses simplified k-means clustering and color vibrancy detection
  */
 
+import { logger } from './logger';
+
 interface RGB {
   r: number;
   g: number;
@@ -215,7 +217,7 @@ function loadImageAndExtractColor(
       onComplete?.();
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error extracting color:', error);
+        logger.error('Error extracting color:', error);
       }
       resolve('64, 71, 114'); // Dark blue fallback
       onComplete?.();

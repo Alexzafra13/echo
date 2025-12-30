@@ -3,6 +3,7 @@ import { AlbumCard } from '../AlbumCard';
 import type { AlbumGridProps } from '../../types';
 import { albumsService } from '../../services';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { logger } from '@shared/utils/logger';
 import styles from './AlbumGrid.module.css';
 
 interface ExtendedAlbumGridProps extends AlbumGridProps {
@@ -65,7 +66,7 @@ export function AlbumGrid({
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to load album tracks:', error);
+        logger.error('Failed to load album tracks:', error);
       }
     }
   };

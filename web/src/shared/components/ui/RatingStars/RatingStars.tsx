@@ -6,6 +6,7 @@ import {
   getItemInteractionSummary,
   type ItemType
 } from '@shared/services/interactions.service';
+import { logger } from '@shared/utils/logger';
 import styles from './RatingStars.module.css';
 
 interface RatingStarsProps {
@@ -47,7 +48,7 @@ export function RatingStars({
       } catch (error) {
         // Silently fail - item might not have interactions yet
         if (import.meta.env.DEV) {
-          console.debug('No interactions found for item:', itemId);
+          logger.debug('No interactions found for item:', itemId);
         }
       }
     };
@@ -77,7 +78,7 @@ export function RatingStars({
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error updating rating:', error);
+        logger.error('Error updating rating:', error);
       }
     } finally {
       setIsLoading(false);

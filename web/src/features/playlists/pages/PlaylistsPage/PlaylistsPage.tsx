@@ -9,6 +9,7 @@ import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
+import { logger } from '@shared/utils/logger';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -89,7 +90,7 @@ export default function PlaylistsPage() {
       await deletePlaylistMutation.mutateAsync(deletePlaylistId);
     } catch (error: any) {
       if (import.meta.env.DEV) {
-        console.error('Error deleting playlist:', error);
+        logger.error('Error deleting playlist:', error);
       }
       alert('Error al eliminar la playlist');
     }

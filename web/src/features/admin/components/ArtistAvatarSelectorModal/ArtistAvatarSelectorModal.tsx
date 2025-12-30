@@ -6,6 +6,7 @@ import { useSearchArtistAvatars, useApplyArtistAvatar } from '../../hooks/useArt
 import { AvatarOption, AvatarImageType } from '../../api/artist-avatars.api';
 import { FileUploadSection } from './FileUploadSection';
 import { metadataService } from '@features/admin/metadata/services/metadataService';
+import { logger } from '@shared/utils/logger';
 import styles from './ArtistAvatarSelectorModal.module.css';
 
 interface ArtistAvatarSelectorModalProps {
@@ -103,7 +104,7 @@ export function ArtistAvatarSelectorModal({
         },
         onError: (error: any) => {
           if (import.meta.env.DEV) {
-            console.error('[ArtistAvatarSelector] ❌ Error applying avatar:', error);
+            logger.error('[ArtistAvatarSelector] ❌ Error applying avatar:', error);
           }
           setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la imagen');
         },

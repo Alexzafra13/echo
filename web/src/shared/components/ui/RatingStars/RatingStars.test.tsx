@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RatingStars } from './RatingStars';
 import * as interactionsService from '@shared/services/interactions.service';
+import type { RatingResponse } from '@shared/services/interactions.service';
 
 // Mock the interactions service
 vi.mock('@shared/services/interactions.service', () => ({
@@ -209,12 +210,12 @@ describe('RatingStars', () => {
 
   describe('loading state', () => {
     it('should show loading class when making API call', async () => {
-      let resolveRating: (value: any) => void;
-      const ratingPromise = new Promise((resolve) => {
+      let resolveRating: (value: RatingResponse) => void;
+      const ratingPromise = new Promise<RatingResponse>((resolve) => {
         resolveRating = resolve;
       });
 
-      vi.mocked(interactionsService.setRating).mockReturnValue(ratingPromise as any);
+      vi.mocked(interactionsService.setRating).mockReturnValue(ratingPromise);
 
       const { container } = render(
         <RatingStars itemId={mockItemId} itemType={mockItemType} />
@@ -241,12 +242,12 @@ describe('RatingStars', () => {
     });
 
     it('should disable buttons while loading', async () => {
-      let resolveRating: (value: any) => void;
-      const ratingPromise = new Promise((resolve) => {
+      let resolveRating: (value: RatingResponse) => void;
+      const ratingPromise = new Promise<RatingResponse>((resolve) => {
         resolveRating = resolve;
       });
 
-      vi.mocked(interactionsService.setRating).mockReturnValue(ratingPromise as any);
+      vi.mocked(interactionsService.setRating).mockReturnValue(ratingPromise);
 
       render(<RatingStars itemId={mockItemId} itemType={mockItemType} />);
 

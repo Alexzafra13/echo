@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { useAuthStore } from '@shared/store';
 import * as authService from '@shared/services/auth.service';
 import { type ReactNode } from 'react';
+import type { LoginResponse } from '@shared/types';
 
 // Mock wouter
 vi.mock('wouter', () => ({
@@ -140,12 +141,12 @@ describe('useAuth', () => {
         mustChangePassword: false,
       };
 
-      let resolveLogin: (value: any) => void;
-      const loginPromise = new Promise((resolve) => {
+      let resolveLogin: (value: LoginResponse) => void;
+      const loginPromise = new Promise<LoginResponse>((resolve) => {
         resolveLogin = resolve;
       });
 
-      vi.mocked(authService.authService.login).mockReturnValue(loginPromise as any);
+      vi.mocked(authService.authService.login).mockReturnValue(loginPromise);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -267,12 +268,12 @@ describe('useAuth', () => {
         'refresh-token'
       );
 
-      let resolveLogout: (value: any) => void;
-      const logoutPromise = new Promise((resolve) => {
+      let resolveLogout: (value: void) => void;
+      const logoutPromise = new Promise<void>((resolve) => {
         resolveLogout = resolve;
       });
 
-      vi.mocked(authService.authService.logout).mockReturnValue(logoutPromise as any);
+      vi.mocked(authService.authService.logout).mockReturnValue(logoutPromise);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),

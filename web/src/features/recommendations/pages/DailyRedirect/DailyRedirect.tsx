@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Waves } from 'lucide-react';
 import { getAutoPlaylists } from '@shared/services/recommendations.service';
 import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
+import { logger } from '@shared/utils/logger';
 import styles from './DailyRedirect.module.css';
 
 /**
@@ -28,7 +29,7 @@ export function DailyRedirect() {
         }
       } catch (err) {
         if (import.meta.env.DEV) {
-          console.error('Failed to load daily mix:', err);
+          logger.error('Failed to load daily mix:', err);
         }
         setError('Error al cargar la playlist diaria');
       }
