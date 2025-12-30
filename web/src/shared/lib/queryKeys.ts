@@ -101,6 +101,3 @@ export const queryKeys = {
     favorites: () => [...queryKeys.radio.all, 'favorites'] as const,
   },
 } as const;
-
-// Type helpers for query key inference
-export type QueryKeys = typeof queryKeys;

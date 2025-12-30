@@ -153,7 +153,9 @@ export function useShufflePlay(): UseShufflePlayReturn {
         }
       }
     } catch (error) {
-      console.error('[ShufflePlay] Error loading more:', error);
+      if (import.meta.env.DEV) {
+        console.error('[ShufflePlay] Error loading more:', error);
+      }
     } finally {
       state.loading = false;
     }
@@ -224,7 +226,9 @@ export function useShufflePlay(): UseShufflePlayReturn {
       }
 
       if (newTracks.length === 0) {
-        console.warn('[ShufflePlay] No tracks available');
+        if (import.meta.env.DEV) {
+          console.warn('[ShufflePlay] No tracks available');
+        }
         return;
       }
 
@@ -248,7 +252,9 @@ export function useShufflePlay(): UseShufflePlayReturn {
       if (!isShuffle) toggleShuffle();
       playQueue(tracksToPlay, 0);
     } catch (error) {
-      console.error('[ShufflePlay] Error:', error);
+      if (import.meta.env.DEV) {
+        console.error('[ShufflePlay] Error:', error);
+      }
     } finally {
       setIsLoading(false);
     }
