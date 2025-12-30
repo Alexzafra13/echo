@@ -83,30 +83,5 @@ export interface ApiErrorData {
   mustChangePassword?: boolean;
 }
 
-/**
- * Helper type for Axios errors with typed response data
- * Note: ApiError interface for API responses is defined in auth.types.ts
- */
-interface AxiosErrorWithResponse {
-  response?: {
-    data?: ApiErrorData;
-    status?: number;
-  };
-  message?: string;
-}
-
-/**
- * Extracts error message from an API error
- * @param error - The error object from a failed API call
- * @param fallback - Fallback message if no message is found
- */
-export function getApiErrorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const axiosError = error as AxiosErrorWithResponse;
-    return axiosError.response?.data?.message || fallback;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
-}
+// Note: getApiErrorMessage is defined in @shared/utils/error.utils.ts
+// Use that version instead of duplicating here
