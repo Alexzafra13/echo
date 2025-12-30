@@ -20,8 +20,8 @@
 
 .textarea {
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: var(--border-radius-md);
   font-size: var(--font-size-base);
   color: var(--text-primary, #ffffff);
@@ -34,14 +34,14 @@
 }
 
 .textarea:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--white-25);
+  background: var(--white-07);
 }
 
 .textarea:focus,
 .textarea:focus-visible {
   border-color: var(--color-primary, #ed6842);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   outline: none;
   box-shadow: none;
 }

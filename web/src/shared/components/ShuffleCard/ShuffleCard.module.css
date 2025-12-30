@@ -17,7 +17,7 @@
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 20px var(--black-25);
   position: relative;
   z-index: 1; /* Above hero background fade */
   overflow: hidden;
@@ -38,7 +38,7 @@
 
 .shuffleCard:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 28px var(--black-35);
 }
 
 .shuffleCard:active:not(:disabled) {
@@ -62,7 +62,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--white-15);
   border-radius: 10px;
   flex-shrink: 0;
 }

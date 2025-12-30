@@ -165,7 +165,7 @@
   background: linear-gradient(135deg, var(--white-05) 0%, var(--white-03) 100%);
   border-color: var(--white-15);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px var(--black-20);
 }
 
 .logCardExpanded {
@@ -457,27 +457,27 @@
 
 /* Light Theme Overrides */
 :root[data-theme="light"] .logCard {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, var(--white-60) 0%, var(--white-40) 100%);
+  border-color: var(--black-08);
 }
 
 :root[data-theme="light"] .logCard:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, var(--white-80) 0%, var(--white-60) 100%);
+  box-shadow: 0 8px 24px var(--black-10);
 }
 
 :root[data-theme="light"] .filters {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(135deg, var(--white-60) 0%, var(--white-40) 100%);
 }
 
 :root[data-theme="light"] .select {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.12);
+  background: var(--white-80);
+  border-color: var(--black-12);
   color: var(--text-primary);
 }
 
 :root[data-theme="light"] .detailsJson,
 :root[data-theme="light"] .stackTrace {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: var(--black-04);
+  border-color: var(--black-08);
 }

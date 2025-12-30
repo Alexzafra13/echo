@@ -49,14 +49,14 @@
 }
 
 .secondary {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   color: var(--color-text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--white-15);
 }
 
 .secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--white-12);
+  border-color: var(--white-25);
   transform: translateY(-2px);
 }
 

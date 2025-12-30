@@ -83,7 +83,7 @@
   aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+  background: var(--surface-secondary, var(--white-05));
   margin-bottom: 12px;
 }
 
@@ -100,14 +100,14 @@
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary, rgba(255, 255, 255, 0.1)) 100%);
+  background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary, var(--white-10)) 100%);
 }
 
 .sharedAlbumGrid__serverBadge {
   position: absolute;
   bottom: 8px;
   left: 8px;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--black-75);
   backdrop-filter: blur(4px);
   color: var(--text-primary, #ffffff);
   font-size: 10px;
@@ -128,7 +128,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--black-75);
   backdrop-filter: blur(4px);
   border: none;
   color: var(--text-primary, #ffffff);
@@ -368,7 +368,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border: none;
   border-radius: 6px;
   color: #fca5a5;
@@ -377,7 +377,7 @@
 }
 
 .sharedAlbumGrid__errorClose:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
   color: #ffffff;
 }
 
@@ -400,7 +400,7 @@
   justify-content: center;
   text-align: center;
   padding: 48px 24px;
-  background: var(--surface-secondary, rgba(255, 255, 255, 0.03));
+  background: var(--surface-secondary, var(--white-03));
   border-radius: 12px;
   margin: 0 20px;
 }

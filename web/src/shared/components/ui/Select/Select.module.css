@@ -92,12 +92,12 @@
   background: rgba(30, 41, 59, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--white-12);
   border-radius: 12px;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.15),
-    0 10px 25px -5px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 4px 6px -1px var(--black-15),
+    0 10px 25px -5px var(--black-30),
+    inset 0 1px 0 var(--white-06);
   z-index: 1000;
   animation: selectDropdownIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -205,22 +205,22 @@
 
 /* ===== Light Theme ===== */
 :root[data-theme="light"] .select__trigger {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: var(--white-80);
+  border-color: var(--black-10);
   color: var(--color-text-primary, #1f2937);
 }
 
 :root[data-theme="light"] .select__trigger:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.15);
+  background: var(--white-95);
+  border-color: var(--black-15);
 }
 
 :root[data-theme="light"] .select__dropdown {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: var(--white-98);
+  border-color: var(--black-10);
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 10px 20px -5px rgba(0, 0, 0, 0.15);
+    0 4px 6px -1px var(--black-10),
+    0 10px 20px -5px var(--black-15);
 }
 
 :root[data-theme="light"] .select__option {
@@ -229,6 +229,6 @@
 
 :root[data-theme="light"] .select__option:hover,
 :root[data-theme="light"] .select__option--highlighted {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--black-05);
   color: var(--color-text-primary, #1f2937);
 }

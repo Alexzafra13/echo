@@ -6,7 +6,7 @@
   right: 0;
   bottom: 0;
   z-index: var(--z-modal, 1050);
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--black-75);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-start;

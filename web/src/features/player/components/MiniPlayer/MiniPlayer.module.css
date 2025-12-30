@@ -155,7 +155,7 @@
   /* Gradient desde transparente arriba hasta semi-transparente abajo */
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0) 0%,
+    transparent 0%,
     var(--black-40) 50%,
     var(--black-60) 100%
   );

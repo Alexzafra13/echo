@@ -22,8 +22,8 @@
 }
 
 .input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 12px;
   color: var(--text-primary, #ffffff);
   font-size: 15px;
@@ -39,14 +39,14 @@
 }
 
 .input:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--white-25);
+  background: var(--white-07);
 }
 
 .input:focus,
 .input:focus-visible {
   border-color: var(--color-primary, #ed6842);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   outline: none;
   box-shadow: none;
 }
@@ -66,8 +66,8 @@
 }
 
 .searchInput {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   border-radius: 12px;
   color: var(--text-primary, #ffffff);
   font-size: 15px;
@@ -83,14 +83,14 @@
 }
 
 .searchInput:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--white-25);
+  background: var(--white-07);
 }
 
 .searchInput:focus,
 .searchInput:focus-visible {
   border-color: var(--color-primary, #ed6842);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   outline: none;
   box-shadow: none;
 }
@@ -112,7 +112,7 @@
 
 .clearSearch:hover {
   color: var(--text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
 }
 
 /* Track sections */
@@ -148,12 +148,12 @@
 }
 
 .trackList::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border-radius: 3px;
 }
 
 .trackList::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-20);
 }
 
 /* Track item */
@@ -162,7 +162,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white-03);
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
@@ -172,8 +172,8 @@
 }
 
 .trackItem:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--white-08);
+  border-color: var(--white-10);
 }
 
 .trackItemSelected {
@@ -197,7 +197,7 @@
   width: 40px;
   height: 40px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,7 +278,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 8px 6px 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-08);
   border-radius: 8px;
   max-width: 220px;
 }
@@ -295,7 +295,7 @@
   width: 32px;
   height: 32px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -327,7 +327,7 @@
 }
 
 .removeButton {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-10);
   border: none;
   border-radius: 50%;
   width: 20px;
@@ -389,7 +389,7 @@
   gap: 12px;
   margin-top: 8px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--white-08);
 }
 
 .actions button {
@@ -403,14 +403,14 @@
 
 /* Cancel button styling */
 .actions button:first-child {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white-05);
+  border: 1px solid var(--white-10);
   color: var(--text-secondary, #9ca3af);
 }
 
 .actions button:first-child:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--white-10);
+  border-color: var(--white-20);
   color: var(--text-primary, #ffffff);
 }
 

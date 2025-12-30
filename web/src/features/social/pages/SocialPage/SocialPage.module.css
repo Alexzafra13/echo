@@ -76,7 +76,7 @@
 .statItem:hover {
   border-color: var(--white-15);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px var(--black-10);
 }
 
 .statItem__icon {
@@ -139,7 +139,7 @@
   border-radius: 16px;
   padding: 20px;
   border: 1px solid var(--white-08);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 24px var(--black-10);
 }
 
 .socialPage__searchWrapper {
@@ -476,7 +476,7 @@
   height: 48px;
   border-radius: 8px;
   object-fit: cover;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--black-30);
 }
 
 .listeningCard__coverPlaceholder {
@@ -594,7 +594,7 @@
 }
 
 .section:hover {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px var(--black-08);
 }
 
 .section__title {
@@ -1155,82 +1155,82 @@
    ============================================ */
 
 :root[data-theme="light"] .socialPage__search {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  background: var(--white-90);
+  border-color: var(--black-08);
+  box-shadow: 0 4px 24px var(--black-05);
 }
 
 :root[data-theme="light"] .socialPage__searchInput {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: var(--black-04);
+  border-color: var(--black-10);
 }
 
 :root[data-theme="light"] .listeningSection {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(var(--color-primary-rgb, 99, 102, 241), 0.06) 100%);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, var(--white-90) 0%, rgba(var(--color-primary-rgb, 99, 102, 241), 0.06) 100%);
+  border-color: var(--black-08);
 }
 
 :root[data-theme="light"] .listeningCard {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: var(--white-90);
+  border-color: var(--black-08);
 }
 
 :root[data-theme="light"] .listeningCard:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 40px var(--black-12);
 }
 
 :root[data-theme="light"] .section {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: var(--white-90);
+  border-color: var(--black-08);
 }
 
 :root[data-theme="light"] .section:hover {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 24px var(--black-05);
 }
 
 :root[data-theme="light"] .requestCard,
 :root[data-theme="light"] .friendCard,
 :root[data-theme="light"] .searchResult {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--black-03);
 }
 
 :root[data-theme="light"] .requestCard:hover,
 :root[data-theme="light"] .friendCard:hover,
 :root[data-theme="light"] .searchResult:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--black-06);
 }
 
 :root[data-theme="light"] .activityItem:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--black-03);
 }
 
 :root[data-theme="light"] .section__empty {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--black-02);
 }
 
 :root[data-theme="light"] .listeningSection__emptyIcon {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--black-05);
 }
 
 :root[data-theme="light"] .statItem {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: var(--white-90);
+  border-color: var(--black-08);
 }
 
 :root[data-theme="light"] .statItem:hover {
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border-color: var(--black-12);
+  box-shadow: 0 4px 16px var(--black-05);
 }
 
 :root[data-theme="light"] .statItem__icon {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--black-05);
 }
 
 :root[data-theme="light"] .activityItem {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--black-02);
 }
 
 :root[data-theme="light"] .activityItem:hover {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.08);
+  background: var(--black-04);
+  border-color: var(--black-08);
 }
