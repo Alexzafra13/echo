@@ -36,7 +36,7 @@ export function useAutoEnrichArtist(
     },
     onError: (error: any) => {
       // Only log unexpected errors (not 404/400 which are expected when enrichment is unavailable)
-      if (error.response?.status !== 404 && error.response?.status !== 400) {
+      if (import.meta.env.DEV && error.response?.status !== 404 && error.response?.status !== 400) {
         console.error('[useAutoEnrichArtist] Unexpected error:', error);
       }
     },

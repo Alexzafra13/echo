@@ -160,7 +160,9 @@ export default function SharedAlbumPage() {
       await startImport.mutateAsync({ serverId, remoteAlbumId: albumId });
       setIsImported(true);
     } catch (err) {
-      console.error('Failed to start import:', err);
+      if (import.meta.env.DEV) {
+        console.error('Failed to start import:', err);
+      }
 
       // Parse error to show user-friendly message
       let errorMessage = 'Error al importar el álbum';

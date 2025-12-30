@@ -122,6 +122,7 @@ export const metadataService = {
       coverartarchive: 'Cover Art Archive',
       lastfm: 'Last.fm',
       fanart: 'Fanart.tv',
+      spotify: 'Spotify',
     };
     return labels[provider] || provider;
   },

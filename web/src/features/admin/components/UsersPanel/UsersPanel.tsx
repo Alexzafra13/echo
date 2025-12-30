@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX, UserCheck } from 'lucide-react';
-import { Button, InlineNotification } from '@shared/components/ui';
+import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
 import { EditUserModal } from './EditUserModal';
 import { CredentialsModal } from './CredentialsModal';
-import { ConfirmDialog } from './ConfirmDialog';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { formatDateCompact } from '@shared/utils/format';
 import styles from './UsersPanel.module.css';

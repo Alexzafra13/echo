@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw, FolderOpen, Lock } from 'lucide-react';
-import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
+import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatBytes } from '@shared/utils/format';
-import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
 import { MissingFilesPanel } from '../MissingFilesPanel';
 import styles from './MaintenanceTab.module.css';
 

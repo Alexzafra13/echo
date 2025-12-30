@@ -23,7 +23,7 @@ import {
   UserPlus,
   RotateCcw,
 } from 'lucide-react';
-import { Button, InlineNotification } from '@shared/components/ui';
+import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import {
   useConnectedServers,
   useInvitationTokens,
@@ -43,7 +43,6 @@ import {
 import { ConnectedServer, InvitationToken, AccessToken } from '../../api/federation.api';
 import { ConnectServerModal } from './ConnectServerModal';
 import { CreateInvitationModal } from './CreateInvitationModal';
-import { ConfirmDialog } from './ConfirmDialog';
 import { formatDistanceToNow } from '@shared/utils/format';
 import styles from './FederationPanel.module.css';
 import type { NotificationType } from '@shared/components/ui';

@@ -46,7 +46,9 @@ export function LikeDislikeButtons({
         }
       } catch (error) {
         // Silently fail - item might not have interactions yet
-        console.debug('No interactions found for item:', itemId);
+        if (import.meta.env.DEV) {
+          console.debug('No interactions found for item:', itemId);
+        }
       }
     };
 

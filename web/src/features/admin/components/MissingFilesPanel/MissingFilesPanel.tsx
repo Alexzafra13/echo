@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileX, Trash2, RefreshCw, CheckCircle, Clock, Settings } from 'lucide-react';
-import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
+import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import type { NotificationType } from '@shared/components/ui';
-import { ConfirmDialog } from '../UsersPanel/ConfirmDialog';
 import {
   getMissingFiles,
   purgeMissingFiles,

@@ -59,7 +59,9 @@ export default function SocialPage() {
       setSuccessMessage(`Solicitud enviada a ${userName}`);
       refetchSearch();
     } catch (error) {
-      console.error('Error sending friend request:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error sending friend request:', error);
+      }
     }
   };
 
@@ -67,7 +69,9 @@ export default function SocialPage() {
     try {
       await acceptRequestMutation.mutateAsync(friendshipId);
     } catch (error) {
-      console.error('Error accepting friend request:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error accepting friend request:', error);
+      }
     }
   };
 
@@ -75,7 +79,9 @@ export default function SocialPage() {
     try {
       await removeFriendshipMutation.mutateAsync(friendshipId);
     } catch (error) {
-      console.error('Error rejecting friend request:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error rejecting friend request:', error);
+      }
     }
   };
 
