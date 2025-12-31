@@ -131,166 +131,121 @@
 }
 
 .serverCard {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 50%, rgba(236, 72, 153, 0.06) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.12) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 16px;
   padding: 24px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.serverCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
 }
 
 .serverCard:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.1) 100%);
-  border-color: rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.14) 50%, rgba(236, 72, 153, 0.18) 100%);
+  border-color: rgba(99, 102, 241, 0.4);
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
 }
 
-.serverCard:hover::before {
-  opacity: 1;
-}
-
-/* Color variants - 10 harmonious colors sequence */
+/* Color variants - 10 harmonious colors sequence (more solid) */
 
 /* 1. Purple/Violet (default - already set above) */
 
 /* 2. Emerald/Teal */
 .serverCard:nth-child(10n+2) {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 184, 166, 0.04) 50%, rgba(6, 182, 212, 0.06) 100%);
-  border-color: rgba(16, 185, 129, 0.2);
-}
-.serverCard:nth-child(10n+2)::before {
-  background: linear-gradient(90deg, #10b981, #14b8a6, #06b6d4);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 184, 166, 0.08) 50%, rgba(6, 182, 212, 0.12) 100%);
+  border-color: rgba(16, 185, 129, 0.25);
 }
 .serverCard:nth-child(10n+2):hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 184, 166, 0.08) 50%, rgba(6, 182, 212, 0.1) 100%);
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(20, 184, 166, 0.14) 50%, rgba(6, 182, 212, 0.18) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2);
 }
 
 /* 3. Orange/Amber */
 .serverCard:nth-child(10n+3) {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(245, 158, 11, 0.04) 50%, rgba(234, 179, 8, 0.06) 100%);
-  border-color: rgba(249, 115, 22, 0.2);
-}
-.serverCard:nth-child(10n+3)::before {
-  background: linear-gradient(90deg, #f97316, #f59e0b, #eab308);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(234, 179, 8, 0.12) 100%);
+  border-color: rgba(249, 115, 22, 0.25);
 }
 .serverCard:nth-child(10n+3):hover {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(234, 179, 8, 0.1) 100%);
-  border-color: rgba(249, 115, 22, 0.35);
-  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.15);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.22) 0%, rgba(245, 158, 11, 0.14) 50%, rgba(234, 179, 8, 0.18) 100%);
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.2);
 }
 
 /* 4. Rose/Pink */
 .serverCard:nth-child(10n+4) {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(236, 72, 153, 0.04) 50%, rgba(217, 70, 239, 0.06) 100%);
-  border-color: rgba(244, 63, 94, 0.2);
-}
-.serverCard:nth-child(10n+4)::before {
-  background: linear-gradient(90deg, #f43f5e, #ec4899, #d946ef);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.15) 0%, rgba(236, 72, 153, 0.08) 50%, rgba(217, 70, 239, 0.12) 100%);
+  border-color: rgba(244, 63, 94, 0.25);
 }
 .serverCard:nth-child(10n+4):hover {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(236, 72, 153, 0.08) 50%, rgba(217, 70, 239, 0.1) 100%);
-  border-color: rgba(244, 63, 94, 0.35);
-  box-shadow: 0 12px 40px rgba(244, 63, 94, 0.15);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.22) 0%, rgba(236, 72, 153, 0.14) 50%, rgba(217, 70, 239, 0.18) 100%);
+  border-color: rgba(244, 63, 94, 0.4);
+  box-shadow: 0 12px 40px rgba(244, 63, 94, 0.2);
 }
 
 /* 5. Cyan/Sky */
 .serverCard:nth-child(10n+5) {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(14, 165, 233, 0.04) 50%, rgba(59, 130, 246, 0.06) 100%);
-  border-color: rgba(6, 182, 212, 0.2);
-}
-.serverCard:nth-child(10n+5)::before {
-  background: linear-gradient(90deg, #06b6d4, #0ea5e9, #3b82f6);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(14, 165, 233, 0.08) 50%, rgba(59, 130, 246, 0.12) 100%);
+  border-color: rgba(6, 182, 212, 0.25);
 }
 .serverCard:nth-child(10n+5):hover {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(14, 165, 233, 0.08) 50%, rgba(59, 130, 246, 0.1) 100%);
-  border-color: rgba(6, 182, 212, 0.35);
-  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.15);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22) 0%, rgba(14, 165, 233, 0.14) 50%, rgba(59, 130, 246, 0.18) 100%);
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
 }
 
 /* 6. Lime/Green */
 .serverCard:nth-child(10n+6) {
-  background: linear-gradient(135deg, rgba(132, 204, 22, 0.08) 0%, rgba(34, 197, 94, 0.04) 50%, rgba(16, 185, 129, 0.06) 100%);
-  border-color: rgba(132, 204, 22, 0.2);
-}
-.serverCard:nth-child(10n+6)::before {
-  background: linear-gradient(90deg, #84cc16, #22c55e, #10b981);
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(34, 197, 94, 0.08) 50%, rgba(16, 185, 129, 0.12) 100%);
+  border-color: rgba(132, 204, 22, 0.25);
 }
 .serverCard:nth-child(10n+6):hover {
-  background: linear-gradient(135deg, rgba(132, 204, 22, 0.12) 0%, rgba(34, 197, 94, 0.08) 50%, rgba(16, 185, 129, 0.1) 100%);
-  border-color: rgba(132, 204, 22, 0.35);
-  box-shadow: 0 12px 40px rgba(132, 204, 22, 0.15);
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.22) 0%, rgba(34, 197, 94, 0.14) 50%, rgba(16, 185, 129, 0.18) 100%);
+  border-color: rgba(132, 204, 22, 0.4);
+  box-shadow: 0 12px 40px rgba(132, 204, 22, 0.2);
 }
 
 /* 7. Fuchsia/Purple */
 .serverCard:nth-child(10n+7) {
-  background: linear-gradient(135deg, rgba(217, 70, 239, 0.08) 0%, rgba(168, 85, 247, 0.04) 50%, rgba(139, 92, 246, 0.06) 100%);
-  border-color: rgba(217, 70, 239, 0.2);
-}
-.serverCard:nth-child(10n+7)::before {
-  background: linear-gradient(90deg, #d946ef, #a855f7, #8b5cf6);
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.15) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(139, 92, 246, 0.12) 100%);
+  border-color: rgba(217, 70, 239, 0.25);
 }
 .serverCard:nth-child(10n+7):hover {
-  background: linear-gradient(135deg, rgba(217, 70, 239, 0.12) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%);
-  border-color: rgba(217, 70, 239, 0.35);
-  box-shadow: 0 12px 40px rgba(217, 70, 239, 0.15);
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.22) 0%, rgba(168, 85, 247, 0.14) 50%, rgba(139, 92, 246, 0.18) 100%);
+  border-color: rgba(217, 70, 239, 0.4);
+  box-shadow: 0 12px 40px rgba(217, 70, 239, 0.2);
 }
 
 /* 8. Red/Orange */
 .serverCard:nth-child(10n+8) {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(245, 158, 11, 0.06) 100%);
-  border-color: rgba(239, 68, 68, 0.2);
-}
-.serverCard:nth-child(10n+8)::before {
-  background: linear-gradient(90deg, #ef4444, #f97316, #f59e0b);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(249, 115, 22, 0.08) 50%, rgba(245, 158, 11, 0.12) 100%);
+  border-color: rgba(239, 68, 68, 0.25);
 }
 .serverCard:nth-child(10n+8):hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(249, 115, 22, 0.08) 50%, rgba(245, 158, 11, 0.1) 100%);
-  border-color: rgba(239, 68, 68, 0.35);
-  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.15);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(249, 115, 22, 0.14) 50%, rgba(245, 158, 11, 0.18) 100%);
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.2);
 }
 
 /* 9. Blue/Indigo */
 .serverCard:nth-child(10n+9) {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 50%, rgba(139, 92, 246, 0.06) 100%);
-  border-color: rgba(59, 130, 246, 0.2);
-}
-.serverCard:nth-child(10n+9)::before {
-  background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(139, 92, 246, 0.12) 100%);
+  border-color: rgba(59, 130, 246, 0.25);
 }
 .serverCard:nth-child(10n+9):hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%);
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.22) 0%, rgba(99, 102, 241, 0.14) 50%, rgba(139, 92, 246, 0.18) 100%);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
 }
 
 /* 10. Yellow/Lime */
 .serverCard:nth-child(10n+10) {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(163, 230, 53, 0.04) 50%, rgba(132, 204, 22, 0.06) 100%);
-  border-color: rgba(234, 179, 8, 0.2);
-}
-.serverCard:nth-child(10n+10)::before {
-  background: linear-gradient(90deg, #eab308, #a3e635, #84cc16);
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(163, 230, 53, 0.08) 50%, rgba(132, 204, 22, 0.12) 100%);
+  border-color: rgba(234, 179, 8, 0.25);
 }
 .serverCard:nth-child(10n+10):hover {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12) 0%, rgba(163, 230, 53, 0.08) 50%, rgba(132, 204, 22, 0.1) 100%);
-  border-color: rgba(234, 179, 8, 0.35);
-  box-shadow: 0 12px 40px rgba(234, 179, 8, 0.15);
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.22) 0%, rgba(163, 230, 53, 0.14) 50%, rgba(132, 204, 22, 0.18) 100%);
+  border-color: rgba(234, 179, 8, 0.4);
+  box-shadow: 0 12px 40px rgba(234, 179, 8, 0.2);
 }
 
 .serverHeader {
