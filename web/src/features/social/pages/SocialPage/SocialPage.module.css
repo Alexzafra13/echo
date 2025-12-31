@@ -2,7 +2,7 @@
 
 .socialPage {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   background-color: var(--color-background);
 }
 
@@ -11,14 +11,15 @@
   margin-left: 200px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
+  /* No overflow here - scroll happens in content for proper player spacing */
 }
 
 .socialPage__content {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   padding: var(--space-6) var(--space-7);
   padding-bottom: calc(120px + var(--player-bottom-spacer, 0px));
+  overflow-y: auto;
 }
 
 /* Header */
