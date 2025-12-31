@@ -163,35 +163,134 @@
   opacity: 1;
 }
 
-/* Color variants for different servers */
-.serverCard:nth-child(2n) {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.04) 50%, rgba(6, 182, 212, 0.06) 100%);
-  border-color: rgba(34, 197, 94, 0.2);
+/* Color variants - 10 harmonious colors sequence */
+
+/* 1. Purple/Violet (default - already set above) */
+
+/* 2. Emerald/Teal */
+.serverCard:nth-child(10n+2) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 184, 166, 0.04) 50%, rgba(6, 182, 212, 0.06) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.serverCard:nth-child(10n+2)::before {
+  background: linear-gradient(90deg, #10b981, #14b8a6, #06b6d4);
+}
+.serverCard:nth-child(10n+2):hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 184, 166, 0.08) 50%, rgba(6, 182, 212, 0.1) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
 }
 
-.serverCard:nth-child(2n)::before {
-  background: linear-gradient(90deg, #22c55e, #10b981, #06b6d4);
-}
-
-.serverCard:nth-child(2n):hover {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 50%, rgba(6, 182, 212, 0.1) 100%);
-  border-color: rgba(34, 197, 94, 0.35);
-  box-shadow: 0 12px 40px rgba(34, 197, 94, 0.15);
-}
-
-.serverCard:nth-child(3n) {
+/* 3. Orange/Amber */
+.serverCard:nth-child(10n+3) {
   background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(245, 158, 11, 0.04) 50%, rgba(234, 179, 8, 0.06) 100%);
   border-color: rgba(249, 115, 22, 0.2);
 }
-
-.serverCard:nth-child(3n)::before {
+.serverCard:nth-child(10n+3)::before {
   background: linear-gradient(90deg, #f97316, #f59e0b, #eab308);
 }
-
-.serverCard:nth-child(3n):hover {
+.serverCard:nth-child(10n+3):hover {
   background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(234, 179, 8, 0.1) 100%);
   border-color: rgba(249, 115, 22, 0.35);
   box-shadow: 0 12px 40px rgba(249, 115, 22, 0.15);
+}
+
+/* 4. Rose/Pink */
+.serverCard:nth-child(10n+4) {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(236, 72, 153, 0.04) 50%, rgba(217, 70, 239, 0.06) 100%);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+.serverCard:nth-child(10n+4)::before {
+  background: linear-gradient(90deg, #f43f5e, #ec4899, #d946ef);
+}
+.serverCard:nth-child(10n+4):hover {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(236, 72, 153, 0.08) 50%, rgba(217, 70, 239, 0.1) 100%);
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 12px 40px rgba(244, 63, 94, 0.15);
+}
+
+/* 5. Cyan/Sky */
+.serverCard:nth-child(10n+5) {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(14, 165, 233, 0.04) 50%, rgba(59, 130, 246, 0.06) 100%);
+  border-color: rgba(6, 182, 212, 0.2);
+}
+.serverCard:nth-child(10n+5)::before {
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9, #3b82f6);
+}
+.serverCard:nth-child(10n+5):hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(14, 165, 233, 0.08) 50%, rgba(59, 130, 246, 0.1) 100%);
+  border-color: rgba(6, 182, 212, 0.35);
+  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.15);
+}
+
+/* 6. Lime/Green */
+.serverCard:nth-child(10n+6) {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.08) 0%, rgba(34, 197, 94, 0.04) 50%, rgba(16, 185, 129, 0.06) 100%);
+  border-color: rgba(132, 204, 22, 0.2);
+}
+.serverCard:nth-child(10n+6)::before {
+  background: linear-gradient(90deg, #84cc16, #22c55e, #10b981);
+}
+.serverCard:nth-child(10n+6):hover {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.12) 0%, rgba(34, 197, 94, 0.08) 50%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: rgba(132, 204, 22, 0.35);
+  box-shadow: 0 12px 40px rgba(132, 204, 22, 0.15);
+}
+
+/* 7. Fuchsia/Purple */
+.serverCard:nth-child(10n+7) {
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.08) 0%, rgba(168, 85, 247, 0.04) 50%, rgba(139, 92, 246, 0.06) 100%);
+  border-color: rgba(217, 70, 239, 0.2);
+}
+.serverCard:nth-child(10n+7)::before {
+  background: linear-gradient(90deg, #d946ef, #a855f7, #8b5cf6);
+}
+.serverCard:nth-child(10n+7):hover {
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.12) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(217, 70, 239, 0.35);
+  box-shadow: 0 12px 40px rgba(217, 70, 239, 0.15);
+}
+
+/* 8. Red/Orange */
+.serverCard:nth-child(10n+8) {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(245, 158, 11, 0.06) 100%);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.serverCard:nth-child(10n+8)::before {
+  background: linear-gradient(90deg, #ef4444, #f97316, #f59e0b);
+}
+.serverCard:nth-child(10n+8):hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(249, 115, 22, 0.08) 50%, rgba(245, 158, 11, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.15);
+}
+
+/* 9. Blue/Indigo */
+.serverCard:nth-child(10n+9) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 50%, rgba(139, 92, 246, 0.06) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.serverCard:nth-child(10n+9)::before {
+  background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
+}
+.serverCard:nth-child(10n+9):hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+}
+
+/* 10. Yellow/Lime */
+.serverCard:nth-child(10n+10) {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(163, 230, 53, 0.04) 50%, rgba(132, 204, 22, 0.06) 100%);
+  border-color: rgba(234, 179, 8, 0.2);
+}
+.serverCard:nth-child(10n+10)::before {
+  background: linear-gradient(90deg, #eab308, #a3e635, #84cc16);
+}
+.serverCard:nth-child(10n+10):hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12) 0%, rgba(163, 230, 53, 0.08) 50%, rgba(132, 204, 22, 0.1) 100%);
+  border-color: rgba(234, 179, 8, 0.35);
+  box-shadow: 0 12px 40px rgba(234, 179, 8, 0.15);
 }
 
 .serverHeader {
@@ -215,16 +314,51 @@
   transition: all 0.3s ease;
 }
 
-.serverCard:nth-child(2n) .serverIcon {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%);
+/* Icon color variants matching card colors */
+.serverCard:nth-child(10n+2) .serverIcon {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(20, 184, 166, 0.15) 100%);
   color: #10b981;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
-
-.serverCard:nth-child(3n) .serverIcon {
+.serverCard:nth-child(10n+3) .serverIcon {
   background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
   color: #f59e0b;
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+.serverCard:nth-child(10n+4) .serverIcon {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(236, 72, 153, 0.15) 100%);
+  color: #ec4899;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
+}
+.serverCard:nth-child(10n+5) .serverIcon {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(14, 165, 233, 0.15) 100%);
+  color: #0ea5e9;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+}
+.serverCard:nth-child(10n+6) .serverIcon {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.2) 0%, rgba(34, 197, 94, 0.15) 100%);
+  color: #22c55e;
+  box-shadow: 0 4px 12px rgba(132, 204, 22, 0.2);
+}
+.serverCard:nth-child(10n+7) .serverIcon {
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%);
+  color: #a855f7;
+  box-shadow: 0 4px 12px rgba(217, 70, 239, 0.2);
+}
+.serverCard:nth-child(10n+8) .serverIcon {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(249, 115, 22, 0.15) 100%);
+  color: #f97316;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+.serverCard:nth-child(10n+9) .serverIcon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
+  color: #6366f1;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+.serverCard:nth-child(10n+10) .serverIcon {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(163, 230, 53, 0.15) 100%);
+  color: #a3e635;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
 }
 
 .serverCard:hover .serverIcon {
