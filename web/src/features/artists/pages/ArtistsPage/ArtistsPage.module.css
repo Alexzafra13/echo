@@ -13,8 +13,7 @@
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
-  height: 100vh;
-  overflow-y: auto;
+  /* No overflow here - scroll happens in content for proper player spacing */
 }
 
 .artistsPage__content {
@@ -22,6 +21,7 @@
   min-height: 0; /* Critical: allows flex child to shrink and enable scroll */
   padding: 24px 30px calc(40px + var(--player-bottom-spacer, 0px)); /* Top for header + base padding + player spacer */
   width: 100%;
+  overflow-y: auto; /* Scroll in content, not main */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   display: flex;
