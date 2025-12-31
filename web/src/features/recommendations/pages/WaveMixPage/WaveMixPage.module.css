@@ -1,6 +1,6 @@
 .waveMixPage {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   background: var(--background-primary);
   color: var(--text-primary);
 }
