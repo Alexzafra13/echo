@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   position: relative; /* Creates stacking context for sticky header */
-  overflow: hidden; /* Contain scroll to content child */
+  /* No overflow to allow sticky header and proper player spacing */
 }
 
 .artistDetailPage__content {
