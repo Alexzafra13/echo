@@ -126,21 +126,171 @@
 /* Server Grid */
 .serverGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
 }
 
 .serverCard {
-  background: var(--white-05);
-  border: 1px solid var(--white-10);
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 50%, rgba(236, 72, 153, 0.06) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.serverCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
 }
 
 .serverCard:hover {
-  background: var(--white-08);
-  border-color: var(--white-15);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.1) 100%);
+  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+}
+
+.serverCard:hover::before {
+  opacity: 1;
+}
+
+/* Color variants - 10 harmonious colors sequence */
+
+/* 1. Purple/Violet (default - already set above) */
+
+/* 2. Emerald/Teal */
+.serverCard:nth-child(10n+2) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 184, 166, 0.04) 50%, rgba(6, 182, 212, 0.06) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.serverCard:nth-child(10n+2)::before {
+  background: linear-gradient(90deg, #10b981, #14b8a6, #06b6d4);
+}
+.serverCard:nth-child(10n+2):hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 184, 166, 0.08) 50%, rgba(6, 182, 212, 0.1) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
+}
+
+/* 3. Orange/Amber */
+.serverCard:nth-child(10n+3) {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(245, 158, 11, 0.04) 50%, rgba(234, 179, 8, 0.06) 100%);
+  border-color: rgba(249, 115, 22, 0.2);
+}
+.serverCard:nth-child(10n+3)::before {
+  background: linear-gradient(90deg, #f97316, #f59e0b, #eab308);
+}
+.serverCard:nth-child(10n+3):hover {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(234, 179, 8, 0.1) 100%);
+  border-color: rgba(249, 115, 22, 0.35);
+  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.15);
+}
+
+/* 4. Rose/Pink */
+.serverCard:nth-child(10n+4) {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(236, 72, 153, 0.04) 50%, rgba(217, 70, 239, 0.06) 100%);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+.serverCard:nth-child(10n+4)::before {
+  background: linear-gradient(90deg, #f43f5e, #ec4899, #d946ef);
+}
+.serverCard:nth-child(10n+4):hover {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(236, 72, 153, 0.08) 50%, rgba(217, 70, 239, 0.1) 100%);
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 12px 40px rgba(244, 63, 94, 0.15);
+}
+
+/* 5. Cyan/Sky */
+.serverCard:nth-child(10n+5) {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(14, 165, 233, 0.04) 50%, rgba(59, 130, 246, 0.06) 100%);
+  border-color: rgba(6, 182, 212, 0.2);
+}
+.serverCard:nth-child(10n+5)::before {
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9, #3b82f6);
+}
+.serverCard:nth-child(10n+5):hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(14, 165, 233, 0.08) 50%, rgba(59, 130, 246, 0.1) 100%);
+  border-color: rgba(6, 182, 212, 0.35);
+  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.15);
+}
+
+/* 6. Lime/Green */
+.serverCard:nth-child(10n+6) {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.08) 0%, rgba(34, 197, 94, 0.04) 50%, rgba(16, 185, 129, 0.06) 100%);
+  border-color: rgba(132, 204, 22, 0.2);
+}
+.serverCard:nth-child(10n+6)::before {
+  background: linear-gradient(90deg, #84cc16, #22c55e, #10b981);
+}
+.serverCard:nth-child(10n+6):hover {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.12) 0%, rgba(34, 197, 94, 0.08) 50%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: rgba(132, 204, 22, 0.35);
+  box-shadow: 0 12px 40px rgba(132, 204, 22, 0.15);
+}
+
+/* 7. Fuchsia/Purple */
+.serverCard:nth-child(10n+7) {
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.08) 0%, rgba(168, 85, 247, 0.04) 50%, rgba(139, 92, 246, 0.06) 100%);
+  border-color: rgba(217, 70, 239, 0.2);
+}
+.serverCard:nth-child(10n+7)::before {
+  background: linear-gradient(90deg, #d946ef, #a855f7, #8b5cf6);
+}
+.serverCard:nth-child(10n+7):hover {
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.12) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(217, 70, 239, 0.35);
+  box-shadow: 0 12px 40px rgba(217, 70, 239, 0.15);
+}
+
+/* 8. Red/Orange */
+.serverCard:nth-child(10n+8) {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(245, 158, 11, 0.06) 100%);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.serverCard:nth-child(10n+8)::before {
+  background: linear-gradient(90deg, #ef4444, #f97316, #f59e0b);
+}
+.serverCard:nth-child(10n+8):hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(249, 115, 22, 0.08) 50%, rgba(245, 158, 11, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.15);
+}
+
+/* 9. Blue/Indigo */
+.serverCard:nth-child(10n+9) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 50%, rgba(139, 92, 246, 0.06) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.serverCard:nth-child(10n+9)::before {
+  background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
+}
+.serverCard:nth-child(10n+9):hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+}
+
+/* 10. Yellow/Lime */
+.serverCard:nth-child(10n+10) {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(163, 230, 53, 0.04) 50%, rgba(132, 204, 22, 0.06) 100%);
+  border-color: rgba(234, 179, 8, 0.2);
+}
+.serverCard:nth-child(10n+10)::before {
+  background: linear-gradient(90deg, #eab308, #a3e635, #84cc16);
+}
+.serverCard:nth-child(10n+10):hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12) 0%, rgba(163, 230, 53, 0.08) 50%, rgba(132, 204, 22, 0.1) 100%);
+  border-color: rgba(234, 179, 8, 0.35);
+  box-shadow: 0 12px 40px rgba(234, 179, 8, 0.15);
 }
 
 .serverHeader {
@@ -151,15 +301,68 @@
 }
 
 .serverIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--primary-15);
-  color: var(--color-primary, #ed6842);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%);
+  color: #8b5cf6;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* Icon color variants matching card colors */
+.serverCard:nth-child(10n+2) .serverIcon {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(20, 184, 166, 0.15) 100%);
+  color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+.serverCard:nth-child(10n+3) .serverIcon {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(245, 158, 11, 0.15) 100%);
+  color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+.serverCard:nth-child(10n+4) .serverIcon {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(236, 72, 153, 0.15) 100%);
+  color: #ec4899;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
+}
+.serverCard:nth-child(10n+5) .serverIcon {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(14, 165, 233, 0.15) 100%);
+  color: #0ea5e9;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+}
+.serverCard:nth-child(10n+6) .serverIcon {
+  background: linear-gradient(135deg, rgba(132, 204, 22, 0.2) 0%, rgba(34, 197, 94, 0.15) 100%);
+  color: #22c55e;
+  box-shadow: 0 4px 12px rgba(132, 204, 22, 0.2);
+}
+.serverCard:nth-child(10n+7) .serverIcon {
+  background: linear-gradient(135deg, rgba(217, 70, 239, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%);
+  color: #a855f7;
+  box-shadow: 0 4px 12px rgba(217, 70, 239, 0.2);
+}
+.serverCard:nth-child(10n+8) .serverIcon {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(249, 115, 22, 0.15) 100%);
+  color: #f97316;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+.serverCard:nth-child(10n+9) .serverIcon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
+  color: #6366f1;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+.serverCard:nth-child(10n+10) .serverIcon {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(163, 230, 53, 0.15) 100%);
+  color: #a3e635;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+}
+
+.serverCard:hover .serverIcon {
+  transform: scale(1.05);
 }
 
 .serverInfo {
@@ -205,34 +408,85 @@
 }
 
 .statusOnline {
-  background: var(--success-15);
-  color: var(--color-success);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.15) 100%);
+  color: #22c55e;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  position: relative;
+}
+
+.statusOnline::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse-online 2s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+@keyframes pulse-online {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
 }
 
 .statusOffline {
-  background: var(--error-10);
-  color: var(--color-error);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+  color: #ef4444;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.statusOffline::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  opacity: 0.6;
 }
 
 .serverStats {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 .stat {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
-  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 500;
+  color: var(--color-text-primary, #ffffff);
+  background: var(--white-08);
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--white-10);
+  transition: all 0.2s ease;
+}
+
+.stat:hover {
+  background: var(--white-12);
+  border-color: var(--white-15);
+}
+
+.stat svg {
+  color: var(--color-text-secondary);
+  opacity: 0.8;
 }
 
 .serverError {
@@ -574,27 +828,35 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64px 32px;
+  padding: 80px 32px;
   text-align: center;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(139, 92, 246, 0.02) 50%, transparent 100%);
+  border-radius: 20px;
+  border: 1px dashed var(--white-15);
 }
 
 .emptyIcon {
-  color: var(--color-text-secondary, #b8bcc8);
-  opacity: 0.5;
-  margin-bottom: 16px;
+  color: #8b5cf6;
+  opacity: 0.6;
+  margin-bottom: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-radius: 20px;
 }
 
 .emptyState h3 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--color-text-primary, #ffffff);
   margin: 0 0 8px 0;
 }
 
 .emptyState p {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text-secondary, #b8bcc8);
-  margin: 0 0 24px 0;
+  margin: 0 0 28px 0;
+  max-width: 300px;
+  line-height: 1.5;
 }
 
 /* Loading State */
