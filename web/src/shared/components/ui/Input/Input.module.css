@@ -18,14 +18,14 @@
 
 .input {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
   font-family: var(--font-body);
   font-size: var(--text-base);
   color: var(--text-primary);
   background: transparent;
   border: 2px solid var(--white-15);
   border-radius: var(--radius-lg);
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease;
   outline: none;
   box-shadow: none;
 }
@@ -57,11 +57,13 @@
   font-weight: var(--font-normal);
   position: absolute;
   pointer-events: none;
-  left: 0;
-  padding: var(--space-3) var(--space-4);
-  margin-left: var(--space-1);
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   transition: all 0.3s ease;
+  background: transparent;
+  padding: 0 var(--space-1);
 }
 
 .labelChar {
@@ -71,25 +73,20 @@
 
 /* Label moves up when input is focused or has value */
 .input:focus ~ .label,
-.input:not(:placeholder-shown) ~ .label,
-.hasValue .label {
+.input:not(:placeholder-shown) ~ .label {
+  top: 0;
   transform: translateY(-50%);
-  margin: 0;
-  margin-left: var(--space-3);
+  left: var(--space-3);
+  font-size: var(--text-sm);
+  background: linear-gradient(to bottom, transparent 45%, rgba(20, 30, 48, 1) 45%);
   padding: 0 var(--space-2);
-  background-color: var(--color-bg-primary, #0f172a);
 }
 
-.input:focus ~ .label .labelChar,
-.input:not(:placeholder-shown) ~ .label .labelChar,
-.hasValue .label .labelChar {
-  font-size: var(--text-sm);
+.input:focus ~ .label .labelChar {
   color: var(--color-primary);
 }
 
-/* Not focused but has value - muted color */
-.input:not(:focus):not(:placeholder-shown) ~ .label .labelChar,
-.hasValue:not(:focus-within) .label .labelChar {
+.input:not(:focus):not(:placeholder-shown) ~ .label .labelChar {
   color: var(--text-secondary);
 }
 
@@ -104,29 +101,26 @@
 }
 
 .error .input:focus ~ .label .labelChar,
-.error .input:not(:placeholder-shown) ~ .label .labelChar,
-.error.hasValue .label .labelChar {
+.error .input:not(:placeholder-shown) ~ .label .labelChar {
   color: var(--color-error);
 }
 
 /* With icon adjustments */
 .withLeftIcon .input {
-  padding-left: var(--space-10);
+  padding-left: var(--space-11);
 }
 
 .withLeftIcon .label {
-  padding-left: var(--space-10);
+  left: var(--space-11);
 }
 
 .withLeftIcon .input:focus ~ .label,
-.withLeftIcon .input:not(:placeholder-shown) ~ .label,
-.withLeftIcon.hasValue .label {
-  margin-left: var(--space-3);
-  padding-left: var(--space-2);
+.withLeftIcon .input:not(:placeholder-shown) ~ .label {
+  left: var(--space-3);
 }
 
 .withRightIcon .input {
-  padding-right: var(--space-10);
+  padding-right: var(--space-11);
 }
 
 .leftIcon,
@@ -138,14 +132,15 @@
   color: var(--text-tertiary);
   pointer-events: none;
   transition: color 0.3s ease;
+  z-index: 1;
 }
 
 .leftIcon {
-  left: var(--space-3);
+  left: var(--space-4);
 }
 
 .rightIcon {
-  right: var(--space-3);
+  right: var(--space-4);
 }
 
 /* Icon color changes on focus */
@@ -195,33 +190,53 @@
 
 /* Sizes */
 .sm .input {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   font-size: var(--text-sm);
 }
 
 .sm .label {
   font-size: var(--text-sm);
-  padding: var(--space-2) var(--space-3);
+  left: var(--space-3);
 }
 
-.sm .input:focus ~ .label .labelChar,
-.sm .input:not(:placeholder-shown) ~ .label .labelChar,
-.sm.hasValue .label .labelChar {
+.sm .input:focus ~ .label,
+.sm .input:not(:placeholder-shown) ~ .label {
   font-size: var(--text-xs);
 }
 
 .lg .input {
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5);
   font-size: var(--text-lg);
 }
 
 .lg .label {
   font-size: var(--text-lg);
-  padding: var(--space-4) var(--space-5);
+  left: var(--space-5);
 }
 
-.lg .input:focus ~ .label .labelChar,
-.lg .input:not(:placeholder-shown) ~ .label .labelChar,
-.lg.hasValue .label .labelChar {
+.lg .input:focus ~ .label,
+.lg .input:not(:placeholder-shown) ~ .label {
   font-size: var(--text-sm);
+}
+
+/* hasValue class - fallback for controlled inputs */
+.hasValue .label {
+  top: 0;
+  transform: translateY(-50%);
+  left: var(--space-3);
+  font-size: var(--text-sm);
+  background: linear-gradient(to bottom, transparent 45%, rgba(20, 30, 48, 1) 45%);
+  padding: 0 var(--space-2);
+}
+
+.hasValue .label .labelChar {
+  color: var(--text-secondary);
+}
+
+.hasValue:focus-within .label .labelChar {
+  color: var(--color-primary);
+}
+
+.withLeftIcon.hasValue .label {
+  left: var(--space-3);
 }
