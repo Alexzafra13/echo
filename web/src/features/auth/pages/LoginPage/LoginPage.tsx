@@ -94,7 +94,6 @@ export default function LoginPage() {
               {...register('username')}
               type="text"
               label="Usuario"
-              placeholder=""
               error={errors.username?.message}
               leftIcon={<User size={20} />}
               autoComplete="username"
@@ -104,7 +103,6 @@ export default function LoginPage() {
               {...register('password')}
               type="password"
               label="Contraseña"
-              placeholder=""
               error={errors.password?.message}
               leftIcon={<Lock size={20} />}
               autoComplete="current-password"
