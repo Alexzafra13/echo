@@ -155,13 +155,10 @@ export default function FirstLoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
             {/* Username (opcional) */}
             <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Nombre de Usuario <span className={styles.optional}>(opcional)</span>
-              </label>
               <Input
                 {...register('username')}
                 type="text"
-                placeholder={user?.username || 'admin'}
+                label="Nombre de Usuario (opcional)"
                 error={errors.username?.message}
                 autoComplete="username"
               />
@@ -172,13 +169,10 @@ export default function FirstLoginPage() {
 
             {/* Nueva contraseña */}
             <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Nueva Contraseña <span className={styles.required}>*</span>
-              </label>
               <Input
                 {...register('newPassword')}
                 type="password"
-                placeholder="Ingrese una contraseña segura"
+                label="Nueva Contraseña"
                 error={errors.newPassword?.message}
                 autoComplete="new-password"
               />
@@ -186,13 +180,10 @@ export default function FirstLoginPage() {
 
             {/* Confirmar contraseña */}
             <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Confirmar Contraseña <span className={styles.required}>*</span>
-              </label>
               <Input
                 {...register('confirmPassword')}
                 type="password"
-                placeholder="Confirme su contraseña"
+                label="Confirmar Contraseña"
                 error={errors.confirmPassword?.message}
                 autoComplete="new-password"
               />
