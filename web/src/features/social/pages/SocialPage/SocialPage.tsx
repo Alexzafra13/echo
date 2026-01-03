@@ -103,20 +103,18 @@ export default function SocialPage() {
           {/* Page Header */}
           <div className={styles.socialPage__header}>
             <div className={styles.socialPage__titleRow}>
-              <div>
-                <h1 className={styles.socialPage__title}>
-                  <Users size={28} />
-                  Social
-                </h1>
-                <p className={styles.socialPage__subtitle}>
-                  Conecta con tus amigos y descubre qué están escuchando
-                </p>
-              </div>
-              <Button variant="primary" onClick={() => setShowSearch(!showSearch)}>
-                <UserPlus size={20} />
-                Añadir amigo
-              </Button>
+              <h1 className={styles.socialPage__title}>
+                <Users size={28} />
+                Social
+              </h1>
             </div>
+            <p className={styles.socialPage__subtitle}>
+              Conecta con tus amigos y descubre qué están escuchando
+            </p>
+            <Button variant="primary" onClick={() => setShowSearch(!showSearch)} className={styles.socialPage__addButton}>
+              <UserPlus size={20} />
+              Añadir amigo
+            </Button>
 
             {/* Search Users */}
             {showSearch && (
