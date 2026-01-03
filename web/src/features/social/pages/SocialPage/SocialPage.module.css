@@ -47,7 +47,11 @@
 
 .socialPage__subtitle {
   color: var(--text-secondary);
-  margin: 0;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.socialPage__addButton {
+  align-self: flex-start;
 }
 
 /* ============================================
