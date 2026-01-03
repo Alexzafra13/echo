@@ -107,15 +107,19 @@
 
 /* With icon adjustments */
 .withLeftIcon .input {
-  padding-left: var(--space-11);
+  padding-left: var(--space-12);
 }
 
 .withLeftIcon .label {
-  left: var(--space-11);
+  left: var(--space-12);
 }
 
 .withLeftIcon .input:focus ~ .label,
 .withLeftIcon .input:not(:placeholder-shown) ~ .label {
+  left: var(--space-3);
+}
+
+.withLeftIcon.hasValue .label {
   left: var(--space-3);
 }
 
