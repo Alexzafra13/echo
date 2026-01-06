@@ -275,20 +275,16 @@ describe('PlaylistsController', () => {
   describe('deletePlaylist', () => {
     it('debería eliminar una playlist', async () => {
       // Arrange
-      deletePlaylistUseCase.execute.mockResolvedValue({
-        success: true,
-        message: 'Playlist deleted successfully',
-      });
+      deletePlaylistUseCase.execute.mockResolvedValue(undefined);
 
       // Act
-      const result = await controller.deletePlaylist('playlist-1', mockRequestWithUser as any);
+      await controller.deletePlaylist('playlist-1', mockRequestWithUser as any);
 
       // Assert
       expect(deletePlaylistUseCase.execute).toHaveBeenCalledWith({
         id: 'playlist-1',
         userId: 'user-1',
       });
-      expect(result.success).toBe(true);
     });
   });
 
