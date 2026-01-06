@@ -13,6 +13,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
   NotFoundException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -342,7 +343,7 @@ export class FederationPublicController {
   })
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async getAlbum(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: FastifyRequest,
   ) {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
@@ -426,7 +427,7 @@ export class FederationPublicController {
   })
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async getAlbumCover(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
     @Req() request: FastifyRequest,
   ) {
@@ -550,7 +551,7 @@ export class FederationPublicController {
   })
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async exportAlbumMetadata(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: FastifyRequest,
   ) {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
@@ -704,7 +705,7 @@ export class FederationPublicController {
   })
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async downloadAlbum(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
     @Req() request: FastifyRequest,
   ) {

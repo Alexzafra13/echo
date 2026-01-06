@@ -11,6 +11,7 @@ import {
   NotFoundException,
   ForbiddenException,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -121,7 +122,7 @@ export class InvitationController {
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async deleteInvitationToken(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
     const token = await this.repository.findFederationTokenById(id);
     if (!token) {

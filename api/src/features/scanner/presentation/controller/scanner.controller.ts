@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
@@ -115,7 +116,7 @@ export class ScannerController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 403, description: 'No autorizado (solo admins)' })
   @ApiResponse({ status: 404, description: 'Escaneo no encontrado' })
-  async getScanStatus(@Param('id') id: string): Promise<ScanStatusResponseDto> {
+  async getScanStatus(@Param('id', ParseUUIDPipe) id: string): Promise<ScanStatusResponseDto> {
     const result = await this.getScanStatusUseCase.execute({ id });
     return result as ScanStatusResponseDto;
   }
@@ -257,7 +258,7 @@ export class ScannerController {
       },
     },
   })
-  async deleteMissingTrack(@Param('id') id: string) {
+  async deleteMissingTrack(@Param('id', ParseUUIDPipe) id: string) {
     try {
       this.logger.info(`Deleting missing track: ${id}`);
 
