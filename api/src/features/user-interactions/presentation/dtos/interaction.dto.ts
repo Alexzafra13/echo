@@ -8,26 +8,6 @@ export enum ItemTypeDto {
   PLAYLIST = 'playlist',
 }
 
-export class ToggleLikeDto {
-  @ApiProperty({ description: 'ID of the item to like' })
-  @IsString()
-  itemId!: string;
-
-  @ApiProperty({ enum: ItemTypeDto, description: 'Type of the item' })
-  @IsEnum(ItemTypeDto)
-  itemType!: ItemTypeDto;
-}
-
-export class ToggleDislikeDto {
-  @ApiProperty({ description: 'ID of the item to dislike' })
-  @IsString()
-  itemId!: string;
-
-  @ApiProperty({ enum: ItemTypeDto, description: 'Type of the item' })
-  @IsEnum(ItemTypeDto)
-  itemType!: ItemTypeDto;
-}
-
 export class SetRatingDto {
   @ApiProperty({ description: 'ID of the item to rate' })
   @IsString()

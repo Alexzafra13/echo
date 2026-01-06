@@ -49,27 +49,15 @@ export class ScoringService {
 
   /**
    * Calculate explicit feedback score (0-100 points)
-   * Based on likes/dislikes and ratings
+   * Based on user ratings (1-5 stars)
    */
-  calculateExplicitFeedback(sentiment?: 'like' | 'dislike', rating?: number): number {
-    let score = 0;
-
-    // Sentiment score
-    if (sentiment === 'like') {
-      score += FEEDBACK_SCORES.like;
-    } else if (sentiment === 'dislike') {
-      score += FEEDBACK_SCORES.dislike;
-    }
-
-    // Rating score (1-5 stars → 12-60 points)
+  calculateExplicitFeedback(rating?: number): number {
+    // Rating score (1-5 stars → 20-100 points)
     if (rating !== undefined && rating > 0) {
-      score += rating * FEEDBACK_SCORES.ratingMultiplier;
+      return rating * FEEDBACK_SCORES.ratingMultiplier;
     }
 
-    // Normalize to 0-100 range
-    // Max possible: 40 (like) + 60 (5 stars) = 100
-    // Min possible: -40 (dislike) + 12 (1 star) = -28
-    return Math.max(-100, Math.min(100, score));
+    return FEEDBACK_SCORES.noFeedback;
   }
 
   /**
@@ -158,7 +146,7 @@ export class ScoringService {
     }
 
     // Calculate each component
-    const explicitFeedback = this.calculateExplicitFeedback(interaction.userSentiment, interaction.userRating);
+    const explicitFeedback = this.calculateExplicitFeedback(interaction.userRating);
 
     const implicitBehavior = trackStats
       ? this.calculateImplicitBehavior(
