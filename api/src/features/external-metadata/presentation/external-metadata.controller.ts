@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -62,7 +63,7 @@ export class ExternalMetadataController {
   })
   @ApiResponse({ status: 404, description: 'Artist not found' })
   async enrichArtist(
-    @Param('id') artistId: string,
+    @Param('id', ParseUUIDPipe) artistId: string,
     @Query('forceRefresh') forceRefresh?: string
   ) {
     const startTime = Date.now();
@@ -147,7 +148,7 @@ export class ExternalMetadataController {
   })
   @ApiResponse({ status: 404, description: 'Album not found' })
   async enrichAlbum(
-    @Param('id') albumId: string,
+    @Param('id', ParseUUIDPipe) albumId: string,
     @Query('forceRefresh') forceRefresh?: string
   ) {
     const startTime = Date.now();

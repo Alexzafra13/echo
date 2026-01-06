@@ -13,6 +13,7 @@ import {
   Res,
   UseGuards,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Observable } from 'rxjs';
@@ -247,7 +248,7 @@ export class RadioController {
   @ApiResponse({ status: 204, description: 'Emisora eliminada' })
   async deleteFavorite(
     @CurrentUser('id') userId: string,
-    @Param('id') stationId: string,
+    @Param('id', ParseUUIDPipe) stationId: string,
   ) {
     await this.deleteFavoriteUseCase.execute({ stationId, userId });
   }

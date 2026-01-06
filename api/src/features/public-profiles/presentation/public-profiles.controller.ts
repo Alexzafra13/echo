@@ -4,6 +4,7 @@ import {
   Param,
   UseGuards,
   HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -51,7 +52,7 @@ export class PublicProfilesController {
     description: 'No autenticado',
   })
   async getPublicProfile(
-    @Param('userId') userId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
     @CurrentUser() currentUser: JwtUser,
   ): Promise<PublicProfileResponseDto> {
     const result = await this.getPublicProfileUseCase.execute({

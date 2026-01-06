@@ -9,6 +9,7 @@ import {
   StreamableFile,
   UseGuards,
   OnModuleDestroy,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -143,7 +144,7 @@ export class StreamingController implements OnModuleDestroy {
     },
   })
   async getStreamMetadata(
-    @Param('id') trackId: string,
+    @Param('id', ParseUUIDPipe) trackId: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
     // 1. Obtener metadata del track
@@ -200,7 +201,7 @@ export class StreamingController implements OnModuleDestroy {
   })
   @ApiResponse({ status: 416, description: 'Range no satisfacible' })
   async streamTrack(
-    @Param('id') trackId: string,
+    @Param('id', ParseUUIDPipe) trackId: string,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
   ): Promise<void> {
@@ -268,7 +269,7 @@ export class StreamingController implements OnModuleDestroy {
     description: 'Descarga iniciada exitosamente',
   })
   async downloadTrack(
-    @Param('id') trackId: string,
+    @Param('id', ParseUUIDPipe) trackId: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
     const metadata = await this.streamTrackUseCase.execute({ trackId });

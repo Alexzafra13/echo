@@ -218,7 +218,7 @@ export class MetadataConflictsController {
   })
   async getEntityConflicts(
     @Param('entityType') entityType: string,
-    @Param('entityId') entityId: string,
+    @Param('entityId', ParseUUIDPipe) entityId: string,
   ): Promise<ConflictResponseDto[]> {
     const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as any);
     return conflicts as any[];
@@ -263,7 +263,7 @@ export class MetadataConflictsController {
     description: 'Invalid suggestion index or conflict not found',
   })
   async applySuggestion(
-    @Param('id') conflictId: string,
+    @Param('id', ParseUUIDPipe) conflictId: string,
     @Body() body: { suggestionIndex: number; userId?: string },
   ): Promise<ConflictResolvedResponseDto> {
     // Get the conflict

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
@@ -25,7 +25,7 @@ export class AlbumCoversController {
       'Queries all available metadata providers for album cover options',
   })
   async searchCovers(
-    @Param('albumId') albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
   ): Promise<SearchAlbumCoversResponseDto> {
     const result = await this.searchAlbumCovers.execute({ albumId });
     return SearchAlbumCoversResponseDto.fromDomain(result);

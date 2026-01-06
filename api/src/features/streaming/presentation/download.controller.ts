@@ -4,6 +4,7 @@ import {
   Param,
   Res,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -71,7 +72,7 @@ export class DownloadController {
   })
   @ApiResponse({ status: 404, description: 'Álbum no encontrado' })
   async downloadAlbum(
-    @Param('id') albumId: string,
+    @Param('id', ParseUUIDPipe) albumId: string,
     @Res() res: FastifyReply,
   ): Promise<void> {
     this.logger.info({ albumId }, 'Starting album download');
