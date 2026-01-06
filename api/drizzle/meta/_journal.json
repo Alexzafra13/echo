@@ -71,6 +71,13 @@
       "when": 1766106891150,
       "tag": "0009_aromatic_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1766193291150,
+      "tag": "0010_drop_user_starred",
+      "breakpoints": true
     }
   ]
 }
