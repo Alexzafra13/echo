@@ -10,6 +10,7 @@ import {
   NotFoundException,
   ForbiddenException,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
 import {
@@ -175,7 +176,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async getRemoteLibrary(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query() query: PaginationQueryDto,
   ): Promise<RemoteLibraryResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
@@ -199,7 +200,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async getRemoteAlbums(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query() query: PaginationQueryDto,
   ): Promise<{ albums: RemoteAlbumDto[]; total: number }> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
@@ -225,7 +226,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async getRemoteAlbum(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Param('albumId') albumId: string,
   ) {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
@@ -245,7 +246,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 200, description: 'Carátula del álbum' })
   @ApiResponse({ status: 404, description: 'Servidor o carátula no encontrada' })
   async getRemoteAlbumCover(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Param('albumId') albumId: string,
     @Res() res: FastifyReply,
   ) {
@@ -284,7 +285,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 404, description: 'Servidor o track no encontrado' })
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async streamRemoteTrack(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Param('trackId') trackId: string,
     @Query('token') token: string | undefined,
     @Headers('range') range: string | undefined,

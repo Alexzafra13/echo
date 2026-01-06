@@ -11,6 +11,7 @@ import {
   NotFoundException,
   ForbiddenException,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -131,7 +132,7 @@ export class ConnectedServerController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async getConnectedServer(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ConnectedServerResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     return this.mapServerToResponse(server);
@@ -152,7 +153,7 @@ export class ConnectedServerController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async syncServer(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ConnectedServerResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     const updated = await this.remoteServerService.syncServerStats(server);
@@ -170,7 +171,7 @@ export class ConnectedServerController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async disconnectFromServer(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
     await this.getServerWithOwnershipCheck(id, user.id);
     await this.remoteServerService.disconnectFromServer(id);
@@ -210,7 +211,7 @@ export class ConnectedServerController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async checkServerHealth(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ConnectedServerResponseDto> {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     await this.remoteServerService.pingServer(server);
