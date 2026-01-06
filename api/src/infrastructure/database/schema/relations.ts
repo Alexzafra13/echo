@@ -7,7 +7,7 @@ import { albums, customAlbumCovers } from './albums';
 import { tracks, trackArtists } from './tracks';
 import { genres, artistGenres, albumGenres, trackGenres } from './genres';
 import { playlists, playlistTracks } from './playlists';
-import { userStarred, userRatings, playHistory, userPlayStats } from './play-stats';
+import { userRatings, playHistory, userPlayStats } from './play-stats';
 import { playQueues, playQueueTracks } from './play-queue';
 import { players, transcodings } from './player';
 import { radioStations } from './radio';
@@ -28,7 +28,6 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   shares: many(shares),
   playStats: many(userPlayStats),
   ratings: many(userRatings),
-  starred: many(userStarred),
   // Social: friendships where user is the requester
   sentFriendRequests: many(friendships, { relationName: 'requester' }),
   // Social: friendships where user is the addressee
@@ -200,13 +199,6 @@ export const playlistTracksRelations = relations(playlistTracks, ({ one }) => ({
 // ============================================
 // Play Stats Relations
 // ============================================
-export const userStarredRelations = relations(userStarred, ({ one }) => ({
-  user: one(users, {
-    fields: [userStarred.userId],
-    references: [users.id],
-  }),
-}));
-
 export const userRatingsRelations = relations(userRatings, ({ one }) => ({
   user: one(users, {
     fields: [userRatings.userId],

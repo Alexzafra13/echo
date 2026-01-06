@@ -72,44 +72,40 @@ describe('ScoringService', () => {
   });
 
   describe('calculateExplicitFeedback', () => {
-    it('should return like score for liked track', () => {
-      const result = service.calculateExplicitFeedback('like');
-      expect(result).toBe(FEEDBACK_SCORES.like);
-    });
-
-    it('should return dislike score for disliked track', () => {
-      const result = service.calculateExplicitFeedback('dislike');
-      expect(result).toBe(FEEDBACK_SCORES.dislike);
-    });
-
-    it('should return 0 for no sentiment', () => {
+    it('should return 0 for no rating', () => {
       const result = service.calculateExplicitFeedback();
       expect(result).toBe(0);
     });
 
-    it('should add rating score to sentiment', () => {
-      const rating = 5;
-      const expectedRatingScore = rating * FEEDBACK_SCORES.ratingMultiplier;
-      const result = service.calculateExplicitFeedback('like', rating);
-      expect(result).toBe(FEEDBACK_SCORES.like + expectedRatingScore);
+    it('should return 0 for undefined rating', () => {
+      const result = service.calculateExplicitFeedback(undefined);
+      expect(result).toBe(0);
     });
 
-    it('should calculate rating without sentiment', () => {
-      const rating = 3;
+    it('should calculate score for 1-star rating', () => {
+      const rating = 1;
       const expected = rating * FEEDBACK_SCORES.ratingMultiplier;
-      const result = service.calculateExplicitFeedback(undefined, rating);
+      const result = service.calculateExplicitFeedback(rating);
       expect(result).toBe(expected);
     });
 
-    it('should clamp to 100 for max positive feedback', () => {
-      const result = service.calculateExplicitFeedback('like', 5);
-      expect(result).toBe(100); // 40 + 60 = 100
+    it('should calculate score for 3-star rating', () => {
+      const rating = 3;
+      const expected = rating * FEEDBACK_SCORES.ratingMultiplier;
+      const result = service.calculateExplicitFeedback(rating);
+      expect(result).toBe(expected);
     });
 
-    it('should clamp negative scores to -100', () => {
-      // dislike alone is -40, shouldn't go below -100
-      const result = service.calculateExplicitFeedback('dislike', 0);
-      expect(result).toBe(FEEDBACK_SCORES.dislike);
+    it('should calculate max score for 5-star rating', () => {
+      const rating = 5;
+      const expected = rating * FEEDBACK_SCORES.ratingMultiplier;
+      const result = service.calculateExplicitFeedback(rating);
+      expect(result).toBe(expected); // 5 * 20 = 100
+    });
+
+    it('should return 0 for zero rating', () => {
+      const result = service.calculateExplicitFeedback(0);
+      expect(result).toBe(0);
     });
   });
 
@@ -219,11 +215,8 @@ describe('ScoringService', () => {
       mockInteractionsRepo.getItemInteractionSummary.mockResolvedValue({
         itemId: trackId,
         itemType: 'track',
-        totalLikes: 1,
-        totalDislikes: 0,
         averageRating: 4.5,
-        ratingCount: 1,
-        userSentiment: 'like' as const,
+        totalRatings: 1,
         userRating: 5,
       });
 
@@ -303,11 +296,8 @@ describe('ScoringService', () => {
       mockInteractionsRepo.getItemInteractionSummary.mockResolvedValue({
         itemId: trackId,
         itemType: 'track',
-        totalLikes: 0,
-        totalDislikes: 0,
         averageRating: 0,
-        ratingCount: 0,
-        userSentiment: undefined,
+        totalRatings: 0,
         userRating: undefined,
       });
 
@@ -340,11 +330,8 @@ describe('ScoringService', () => {
       mockInteractionsRepo.getItemInteractionSummary.mockResolvedValue({
         itemId: 'any',
         itemType: 'track',
-        totalLikes: 0,
-        totalDislikes: 0,
         averageRating: 0,
-        ratingCount: 0,
-        userSentiment: undefined,
+        totalRatings: 0,
         userRating: undefined,
       });
 
