@@ -5,9 +5,6 @@
 
 export type SocialActionType =
   | 'created_playlist'
-  | 'liked_track'
-  | 'liked_album'
-  | 'liked_artist'
   | 'played_track'
   | 'became_friends';
 
@@ -21,14 +18,11 @@ export type TargetType = 'playlist' | 'album' | 'track' | 'artist';
  *
  * @example
  * getActionText('created_playlist') // "creó la playlist"
- * getActionText('liked_track') // "le gustó"
+ * getActionText('played_track') // "escuchó"
  */
 export function getActionText(actionType: string): string {
   const actionTexts: Record<string, string> = {
     created_playlist: 'creó la playlist',
-    liked_track: 'le gustó',
-    liked_album: 'le gustó el álbum',
-    liked_artist: 'le gustó el artista',
     played_track: 'escuchó',
     became_friends: 'ahora es amigo de',
   };
@@ -43,15 +37,12 @@ export function getActionText(actionType: string): string {
  * @returns Emoji representing the action
  *
  * @example
- * getActionIcon('liked_track') // "❤️"
+ * getActionIcon('created_playlist') // "📋"
  * getActionIcon('played_track') // "🎵"
  */
 export function getActionIcon(actionType: string): string {
   const actionIcons: Record<string, string> = {
     created_playlist: '📋',
-    liked_track: '❤️',
-    liked_album: '❤️',
-    liked_artist: '❤️',
     played_track: '🎵',
     became_friends: '🤝',
   };

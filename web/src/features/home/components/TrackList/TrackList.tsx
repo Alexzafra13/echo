@@ -8,7 +8,6 @@ import type { Track } from '../../types';
 import { formatDuration } from '../../types';
 import { TrackOptionsMenu } from '../TrackOptionsMenu/TrackOptionsMenu';
 import { RatingStars } from '@shared/components/ui/RatingStars';
-import { LikeDislikeButtons } from '@shared/components/ui/LikeDislikeButtons';
 import { downloadService } from '@shared/services/download.service';
 import { logger } from '@shared/utils/logger';
 import styles from './TrackList.module.css';
@@ -267,10 +266,9 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
           {formatDuration(track.duration)}
         </span>
 
-        {/* Rating (Like/Dislike + Stars) - Only render on desktop to avoid API rate limits */}
+        {/* Rating Stars - Only render on desktop to avoid API rate limits */}
         {!isMobile && !isMissingTrack && (
           <div className={styles.trackList__trackRating}>
-            <LikeDislikeButtons itemId={track.id} itemType="track" size={16} />
             <RatingStars itemId={track.id} itemType="track" size={14} />
           </div>
         )}
