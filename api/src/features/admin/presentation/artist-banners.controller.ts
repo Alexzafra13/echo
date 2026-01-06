@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
@@ -19,7 +19,7 @@ export class ArtistBannersManagementController {
 
   @Get(':artistId/banners')
   @ApiOperation({ summary: 'List all banners for an artist' })
-  async listBanners(@Param('artistId') artistId: string) {
+  async listBanners(@Param('artistId', ParseUUIDPipe) artistId: string) {
     return this.manageBanners.list({ artistId });
   }
 
@@ -31,7 +31,7 @@ export class ArtistBannersManagementController {
 
   @Delete('banners/:bannerId')
   @ApiOperation({ summary: 'Delete a banner' })
-  async deleteBanner(@Param('bannerId') bannerId: string) {
+  async deleteBanner(@Param('bannerId', ParseUUIDPipe) bannerId: string) {
     return this.manageBanners.delete({ bannerId });
   }
 }
