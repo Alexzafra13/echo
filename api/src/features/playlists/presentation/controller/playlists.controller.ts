@@ -38,6 +38,7 @@ import {
   CreatePlaylistDto,
   UpdatePlaylistDto,
   AddTrackToPlaylistDto,
+  AddTrackToPlaylistResponseDto,
   ReorderTracksDto,
   PlaylistResponseDto,
   PlaylistsListResponseDto,
@@ -253,25 +254,19 @@ export class PlaylistsController {
    * Eliminar una playlist
    */
   @Delete(':id')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Eliminar una playlist' })
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.NO_CONTENT,
     description: 'Playlist eliminada exitosamente',
-    schema: {
-      properties: {
-        success: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Playlist deleted successfully' },
-      },
-    },
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist no encontrada' })
   async deletePlaylist(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: RequestWithUser,
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<void> {
     const userId = req.user.id;
-    return this.deletePlaylistUseCase.execute({ id, userId });
+    await this.deletePlaylistUseCase.execute({ id, userId });
   }
 
   /**
@@ -301,15 +296,7 @@ export class PlaylistsController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Track agregado exitosamente',
-    schema: {
-      properties: {
-        playlistId: { type: 'string' },
-        trackId: { type: 'string' },
-        trackOrder: { type: 'number' },
-        createdAt: { type: 'string', format: 'date-time' },
-        message: { type: 'string' },
-      },
-    },
+    type: AddTrackToPlaylistResponseDto,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist o Track no encontrado' })
   @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Track ya existe en la playlist' })
@@ -317,13 +304,14 @@ export class PlaylistsController {
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Body() dto: AddTrackToPlaylistDto,
     @Req() req: RequestWithUser,
-  ): Promise<any> {
+  ): Promise<AddTrackToPlaylistResponseDto> {
     const userId = req.user.id;
-    return this.addTrackToPlaylistUseCase.execute({
+    const result = await this.addTrackToPlaylistUseCase.execute({
       playlistId,
       trackId: dto.trackId,
       userId,
     });
+    return AddTrackToPlaylistResponseDto.fromDomain(result);
   }
 
   /**
