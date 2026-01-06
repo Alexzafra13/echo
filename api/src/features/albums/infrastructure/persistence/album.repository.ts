@@ -3,7 +3,7 @@ import { eq, desc, or, inArray, count, sql, and } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { DrizzleBaseRepository } from '@shared/base';
 import { createSearchPattern } from '@shared/utils';
-import { albums, artists, userStarred } from '@infrastructure/database/schema';
+import { albums, artists } from '@infrastructure/database/schema';
 import { Album } from '../../domain/entities/album.entity';
 import { IAlbumRepository } from '../../domain/ports/album-repository.port';
 import { AlbumMapper } from './album.mapper';
@@ -256,48 +256,12 @@ export class DrizzleAlbumRepository
     );
   }
 
-  async findFavorites(userId: string, skip: number, take: number): Promise<Album[]> {
-    const favoriteIds = await this.drizzle.db
-      .select({ starredId: userStarred.starredId })
-      .from(userStarred)
-      .where(
-        and(
-          eq(userStarred.userId, userId),
-          eq(userStarred.starredType, 'album'),
-          eq(userStarred.sentiment, 'like'),
-        ),
-      )
-      .orderBy(desc(userStarred.starredAt))
-      .offset(skip)
-      .limit(take);
-
-    if (favoriteIds.length === 0) {
-      return [];
-    }
-
-    const ids = favoriteIds.map((f) => f.starredId);
-
-    const result = await this.drizzle.db
-      .select({
-        album: albums,
-        artistName: artists.name,
-      })
-      .from(albums)
-      .leftJoin(artists, eq(albums.artistId, artists.id))
-      .where(inArray(albums.id, ids));
-
-    // Maintain starred order
-    const albumMap = new Map(result.map((r) => [r.album.id, r]));
-    const orderedAlbums = ids
-      .map((id) => albumMap.get(id))
-      .filter((r): r is typeof result[0] => r !== undefined);
-
-    return orderedAlbums.map((r) =>
-      AlbumMapper.toDomain({
-        ...r.album,
-        artist: r.artistName ? { name: r.artistName } : undefined,
-      }),
-    );
+  /**
+   * @deprecated Favorites functionality has been removed (likes/dislikes system deprecated)
+   * Returns empty array for backwards compatibility
+   */
+  async findFavorites(_userId: string, _skip: number, _take: number): Promise<Album[]> {
+    return [];
   }
 
   async count(): Promise<number> {

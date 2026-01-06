@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { USER_INTERACTIONS_REPOSITORY } from './domain/ports';
 import { DrizzleUserInteractionsRepository } from './infrastructure/persistence/user-interactions.repository';
 import {
-  ToggleLikeUseCase,
-  ToggleDislikeUseCase,
   SetRatingUseCase,
   RemoveRatingUseCase,
   GetUserInteractionsUseCase,
@@ -13,6 +11,7 @@ import { UserInteractionsController } from './presentation/controller/user-inter
 
 /**
  * UserInteractionsModule
+ * Handles user ratings for tracks, albums, artists, and playlists.
  * DrizzleService is provided globally via DrizzleModule
  */
 @Module({
@@ -20,10 +19,8 @@ import { UserInteractionsController } from './presentation/controller/user-inter
   providers: [
     {
       provide: USER_INTERACTIONS_REPOSITORY,
-      useClass: DrizzleUserInteractionsRepository, // Uses Drizzle
+      useClass: DrizzleUserInteractionsRepository,
     },
-    ToggleLikeUseCase,
-    ToggleDislikeUseCase,
     SetRatingUseCase,
     RemoveRatingUseCase,
     GetUserInteractionsUseCase,

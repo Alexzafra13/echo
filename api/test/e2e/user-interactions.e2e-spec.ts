@@ -16,9 +16,7 @@ import * as schema from '../../src/infrastructure/database/schema';
 /**
  * User Interactions E2E Tests
  *
- * Prueba los endpoints de interacciones de usuario:
- * - POST /api/interactions/like - Toggle like
- * - POST /api/interactions/dislike - Toggle dislike
+ * Prueba los endpoints de interacciones de usuario (ratings):
  * - POST /api/interactions/rating - Establecer rating
  * - DELETE /api/interactions/rating/:itemType/:itemId - Eliminar rating
  * - GET /api/interactions/me - Obtener interacciones del usuario
@@ -47,8 +45,7 @@ describe('User Interactions E2E', () => {
   });
 
   beforeEach(async () => {
-    // Limpiar tablas de interacciones primero
-    await drizzle.db.delete(schema.userStarred);
+    // Limpiar tablas de interacciones
     await drizzle.db.delete(schema.userRatings);
 
     // Limpiar BD
@@ -71,169 +68,28 @@ describe('User Interactions E2E', () => {
     user2Id = user2Result.user.id;
 
     // Crear contenido de prueba
-    const artist = await createTestArtist(drizzle, { name: 'Liked Artist' });
+    const artist = await createTestArtist(drizzle, { name: 'Rated Artist' });
     artistId = artist.id;
 
     const album = await createTestAlbum(drizzle, {
-      name: 'Liked Album',
+      name: 'Rated Album',
       artistId: artist.id,
     });
     albumId = album.id;
 
     const track = await createTestTrack(drizzle, {
-      title: 'Liked Track',
-      path: '/music/liked.mp3',
+      title: 'Rated Track',
+      path: '/music/rated.mp3',
       albumId: album.id,
       artistId: artist.id,
     });
     trackId = track.id;
 
     const playlist = await createTestPlaylist(drizzle, {
-      name: 'Liked Playlist',
+      name: 'Rated Playlist',
       ownerId: userId,
     });
     playlistId = playlist.id;
-  });
-
-  describe('POST /api/interactions/like', () => {
-    it('debería dar like a un track', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          itemId: trackId,
-          itemType: 'track',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.liked).toBe(true);
-          expect(res.body.likedAt).toBeDefined();
-        });
-    });
-
-    it('debería quitar like (toggle off)', async () => {
-      // Dar like primero
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
-      // Toggle off
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.liked).toBe(false);
-        });
-    });
-
-    it('debería dar like a un álbum', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          itemId: albumId,
-          itemType: 'album',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.liked).toBe(true);
-        });
-    });
-
-    it('debería dar like a un artista', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          itemId: artistId,
-          itemType: 'artist',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.liked).toBe(true);
-        });
-    });
-
-    it('debería dar like a una playlist', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          itemId: playlistId,
-          itemType: 'playlist',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.liked).toBe(true);
-        });
-    });
-
-    it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(401);
-    });
-
-    it('debería validar itemType', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'invalid' })
-        .expect(400);
-    });
-
-    it('debería validar campos requeridos', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemType: 'track' })
-        .expect(400);
-    });
-  });
-
-  describe('POST /api/interactions/dislike', () => {
-    it('debería dar dislike a un track', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          itemId: trackId,
-          itemType: 'track',
-        })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.disliked).toBe(true);
-        });
-    });
-
-    it('debería quitar dislike (toggle off)', async () => {
-      // Dar dislike primero
-      await request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
-      // Toggle off
-      return request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.disliked).toBe(false);
-        });
-    });
-
-    it('debería rechazar sin autenticación', () => {
-      return request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(401);
-    });
   });
 
   describe('POST /api/interactions/rating', () => {
@@ -273,6 +129,54 @@ describe('User Interactions E2E', () => {
         });
     });
 
+    it('debería dar rating a un álbum', () => {
+      return request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          itemId: albumId,
+          itemType: 'album',
+          rating: 4,
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.rating).toBe(4);
+          expect(res.body.itemType).toBe('album');
+        });
+    });
+
+    it('debería dar rating a un artista', () => {
+      return request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          itemId: artistId,
+          itemType: 'artist',
+          rating: 5,
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.rating).toBe(5);
+          expect(res.body.itemType).toBe('artist');
+        });
+    });
+
+    it('debería dar rating a una playlist', () => {
+      return request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          itemId: playlistId,
+          itemType: 'playlist',
+          rating: 3,
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.rating).toBe(3);
+          expect(res.body.itemType).toBe('playlist');
+        });
+    });
+
     it('debería validar rating mínimo (1)', () => {
       return request(app.getHttpServer())
         .post('/api/interactions/rating')
@@ -294,6 +198,22 @@ describe('User Interactions E2E', () => {
         .post('/api/interactions/rating')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ itemId: trackId, itemType: 'track', rating: 3.5 })
+        .expect(400);
+    });
+
+    it('debería validar itemType', () => {
+      return request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ itemId: trackId, itemType: 'invalid', rating: 5 })
+        .expect(400);
+    });
+
+    it('debería validar campos requeridos', () => {
+      return request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ itemType: 'track', rating: 5 })
         .expect(400);
     });
 
@@ -320,6 +240,13 @@ describe('User Interactions E2E', () => {
         .expect(204);
     });
 
+    it('no debería fallar al eliminar rating inexistente', () => {
+      return request(app.getHttpServer())
+        .delete(`/api/interactions/rating/track/${trackId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(204);
+    });
+
     it('debería rechazar sin autenticación', () => {
       return request(app.getHttpServer())
         .delete(`/api/interactions/rating/track/${trackId}`)
@@ -329,26 +256,21 @@ describe('User Interactions E2E', () => {
 
   describe('GET /api/interactions/me', () => {
     beforeEach(async () => {
-      // Crear varias interacciones
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: albumId, itemType: 'album' });
-
-      await request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: artistId, itemType: 'artist' });
-
+      // Crear varios ratings
       await request(app.getHttpServer())
         .post('/api/interactions/rating')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ itemId: trackId, itemType: 'track', rating: 5 });
+
+      await request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ itemId: albumId, itemType: 'album', rating: 4 });
+
+      await request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ itemId: artistId, itemType: 'artist', rating: 3 });
     });
 
     it('debería obtener todas las interacciones del usuario', () => {
@@ -358,7 +280,7 @@ describe('User Interactions E2E', () => {
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true);
-          expect(res.body.length).toBeGreaterThan(0);
+          expect(res.body.length).toBe(3);
         });
     });
 
@@ -369,6 +291,7 @@ describe('User Interactions E2E', () => {
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true);
+          expect(res.body.length).toBe(1);
           res.body.forEach((interaction: any) => {
             expect(interaction.itemType).toBe('track');
           });
@@ -385,7 +308,7 @@ describe('User Interactions E2E', () => {
           expect(interaction).toHaveProperty('userId');
           expect(interaction).toHaveProperty('itemId');
           expect(interaction).toHaveProperty('itemType');
-          expect(interaction).toHaveProperty('sentiment');
+          expect(interaction).toHaveProperty('rating');
         });
     });
 
@@ -398,23 +321,13 @@ describe('User Interactions E2E', () => {
 
   describe('GET /api/interactions/item/:itemType/:itemId', () => {
     beforeEach(async () => {
-      // Usuario 1 da like y rating 5
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
+      // Usuario 1 da rating 5
       await request(app.getHttpServer())
         .post('/api/interactions/rating')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ itemId: trackId, itemType: 'track', rating: 5 });
 
-      // Usuario 2 da like y rating 4
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${user2Token}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
+      // Usuario 2 da rating 4
       await request(app.getHttpServer())
         .post('/api/interactions/rating')
         .set('Authorization', `Bearer ${user2Token}`)
@@ -429,12 +342,9 @@ describe('User Interactions E2E', () => {
         .expect((res) => {
           expect(res.body.itemId).toBe(trackId);
           expect(res.body.itemType).toBe('track');
-          expect(res.body.totalLikes).toBe(2);
-          expect(res.body.totalDislikes).toBe(0);
           expect(res.body.totalRatings).toBe(2);
           expect(res.body.averageRating).toBe(4.5);
-          // Incluir estado del usuario actual
-          expect(res.body.userSentiment).toBe('like');
+          // Incluir rating del usuario actual
           expect(res.body.userRating).toBe(5);
         });
     });
@@ -446,6 +356,25 @@ describe('User Interactions E2E', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.userRating).toBe(4);
+          expect(res.body.averageRating).toBe(4.5);
+        });
+    });
+
+    it('debería mostrar item sin rating de usuario', async () => {
+      // Crear tercer usuario sin rating
+      const user3Result = await createUserAndLogin(drizzle, app, {
+        username: 'interactions_user3',
+        password: 'Test123!',
+      });
+
+      return request(app.getHttpServer())
+        .get(`/api/interactions/item/track/${trackId}`)
+        .set('Authorization', `Bearer ${user3Result.accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.totalRatings).toBe(2);
+          expect(res.body.averageRating).toBe(4.5);
+          expect(res.body.userRating).toBeUndefined();
         });
     });
 
@@ -456,72 +385,9 @@ describe('User Interactions E2E', () => {
     });
   });
 
-  describe('Interacción like/dislike mutuamente exclusiva', () => {
-    it('dar like debería quitar dislike previo', async () => {
-      // Dar dislike primero
-      await request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
-      // Dar like debería quitar el dislike
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(200);
-
-      // Verificar estado
-      return request(app.getHttpServer())
-        .get(`/api/interactions/item/track/${trackId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.userSentiment).toBe('like');
-          expect(res.body.totalLikes).toBe(1);
-          expect(res.body.totalDislikes).toBe(0);
-        });
-    });
-
-    it('dar dislike debería quitar like previo', async () => {
-      // Dar like primero
-      await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' });
-
-      // Dar dislike debería quitar el like
-      await request(app.getHttpServer())
-        .post('/api/interactions/dislike')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(200);
-
-      // Verificar estado
-      return request(app.getHttpServer())
-        .get(`/api/interactions/item/track/${trackId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.userSentiment).toBe('dislike');
-          expect(res.body.totalLikes).toBe(0);
-          expect(res.body.totalDislikes).toBe(1);
-        });
-    });
-  });
-
-  describe('Flujo completo de interacciones', () => {
-    it('debería completar flujo de like, rating y consulta', async () => {
-      // 1. Dar like
-      const likeRes = await request(app.getHttpServer())
-        .post('/api/interactions/like')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' })
-        .expect(200);
-
-      expect(likeRes.body.liked).toBe(true);
-
-      // 2. Dar rating
+  describe('Flujo completo de ratings', () => {
+    it('debería completar flujo de rating y consulta', async () => {
+      // 1. Dar rating
       const ratingRes = await request(app.getHttpServer())
         .post('/api/interactions/rating')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -530,31 +396,42 @@ describe('User Interactions E2E', () => {
 
       expect(ratingRes.body.rating).toBe(5);
 
-      // 3. Obtener mis interacciones
+      // 2. Obtener mis interacciones
       const meRes = await request(app.getHttpServer())
         .get('/api/interactions/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
-      expect(meRes.body.length).toBeGreaterThan(0);
+      expect(meRes.body.length).toBe(1);
+      expect(meRes.body[0].rating).toBe(5);
 
-      // 4. Obtener resumen del item
+      // 3. Obtener resumen del item
       const summaryRes = await request(app.getHttpServer())
         .get(`/api/interactions/item/track/${trackId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
-      expect(summaryRes.body.totalLikes).toBe(1);
+      expect(summaryRes.body.totalRatings).toBe(1);
       expect(summaryRes.body.averageRating).toBe(5);
+      expect(summaryRes.body.userRating).toBe(5);
 
-      // 5. Quitar like
-      const unlikeRes = await request(app.getHttpServer())
-        .post('/api/interactions/like')
+      // 4. Actualizar rating
+      const updateRes = await request(app.getHttpServer())
+        .post('/api/interactions/rating')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ itemId: trackId, itemType: 'track' })
+        .send({ itemId: trackId, itemType: 'track', rating: 3 })
         .expect(200);
 
-      expect(unlikeRes.body.liked).toBe(false);
+      expect(updateRes.body.rating).toBe(3);
+
+      // 5. Verificar actualización
+      const verifyRes = await request(app.getHttpServer())
+        .get(`/api/interactions/item/track/${trackId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(verifyRes.body.averageRating).toBe(3);
+      expect(verifyRes.body.userRating).toBe(3);
 
       // 6. Eliminar rating
       await request(app.getHttpServer())
@@ -568,9 +445,53 @@ describe('User Interactions E2E', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
-      expect(finalRes.body.totalLikes).toBe(0);
-      // userRating puede ser null o undefined cuando no hay rating
-      expect(finalRes.body.userRating ?? null).toBeNull();
+      expect(finalRes.body.totalRatings).toBe(0);
+      expect(finalRes.body.averageRating).toBe(0);
+      // userRating puede ser undefined cuando no hay rating
+      expect(finalRes.body.userRating).toBeUndefined();
+    });
+  });
+
+  describe('Aislamiento entre usuarios', () => {
+    it('cada usuario debería tener su propio rating independiente', async () => {
+      // Usuario 1 da rating 5
+      await request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ itemId: trackId, itemType: 'track', rating: 5 });
+
+      // Usuario 2 da rating 2
+      await request(app.getHttpServer())
+        .post('/api/interactions/rating')
+        .set('Authorization', `Bearer ${user2Token}`)
+        .send({ itemId: trackId, itemType: 'track', rating: 2 });
+
+      // Verificar ratings de usuario 1
+      const user1Res = await request(app.getHttpServer())
+        .get('/api/interactions/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(user1Res.body.length).toBe(1);
+      expect(user1Res.body[0].rating).toBe(5);
+
+      // Verificar ratings de usuario 2
+      const user2Res = await request(app.getHttpServer())
+        .get('/api/interactions/me')
+        .set('Authorization', `Bearer ${user2Token}`)
+        .expect(200);
+
+      expect(user2Res.body.length).toBe(1);
+      expect(user2Res.body[0].rating).toBe(2);
+
+      // Verificar promedio
+      const summaryRes = await request(app.getHttpServer())
+        .get(`/api/interactions/item/track/${trackId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(summaryRes.body.averageRating).toBe(3.5);
+      expect(summaryRes.body.totalRatings).toBe(2);
     });
   });
 });

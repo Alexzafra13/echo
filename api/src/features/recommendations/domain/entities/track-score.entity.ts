@@ -85,12 +85,10 @@ export const SCORING_WEIGHTS = {
   diversity: 0.02,         // 2% weight (reduced - don't force diversity too much)
 };
 
-// Explicit feedback scoring
+// Explicit feedback scoring (ratings only)
 export const FEEDBACK_SCORES = {
-  like: 40,
-  dislike: -40,
   noFeedback: 0,
-  ratingMultiplier: 12, // 1-5 stars → 12-60 points
+  ratingMultiplier: 20, // 1-5 stars → 20-100 points (scaled up since no more likes/dislikes)
 };
 
 // Recency decay factor (lambda for exponential decay)
