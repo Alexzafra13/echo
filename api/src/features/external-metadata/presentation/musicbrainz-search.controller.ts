@@ -6,6 +6,7 @@ import {
   Query,
   Body,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
@@ -112,7 +113,7 @@ export class MusicBrainzSearchController {
    */
   @Post('artists/:artistId/select')
   async selectArtistMbid(
-    @Param('artistId') artistId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
     @Body() dto: SelectMbidDto
   ) {
     try {
@@ -158,7 +159,7 @@ export class MusicBrainzSearchController {
    */
   @Post('albums/:albumId/select')
   async selectAlbumMbid(
-    @Param('albumId') albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
     @Body() dto: SelectMbidDto
   ) {
     try {

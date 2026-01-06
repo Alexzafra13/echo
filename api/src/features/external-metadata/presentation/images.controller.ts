@@ -9,6 +9,7 @@ import {
   UseGuards,
   Header,
   StreamableFile,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import {
@@ -96,7 +97,7 @@ export class ImagesController {
   @ApiResponse({ status: 404, description: 'Artist or image not found' })
   @ApiResponse({ status: 304, description: 'Not Modified (ETag matches)' })
   async getArtistImage(
-    @Param('artistId') artistId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
     @Param('imageType') imageType: string,
     @Query('tag') tag: string | undefined,
     @Headers('if-none-match') ifNoneMatch: string | undefined,
@@ -194,7 +195,7 @@ export class ImagesController {
   @ApiResponse({ status: 404, description: 'Album or cover not found' })
   @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
   async getAlbumCover(
-    @Param('albumId') albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
     @Query('tag') tag: string | undefined,
     @Headers('if-none-match') ifNoneMatch: string | undefined,
     @Res({ passthrough: true }) res: FastifyReply,
@@ -268,8 +269,8 @@ export class ImagesController {
   })
   @ApiResponse({ status: 404, description: 'Custom cover not found' })
   async getCustomAlbumCover(
-    @Param('albumId') albumId: string,
-    @Param('customCoverId') customCoverId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
+    @Param('customCoverId', ParseUUIDPipe) customCoverId: string,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     try {
@@ -336,8 +337,8 @@ export class ImagesController {
   })
   @ApiResponse({ status: 404, description: 'Custom image not found' })
   async getCustomArtistImage(
-    @Param('artistId') artistId: string,
-    @Param('customImageId') customImageId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
+    @Param('customImageId', ParseUUIDPipe) customImageId: string,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     try {
@@ -395,7 +396,7 @@ export class ImagesController {
     },
   })
   async checkArtistImage(
-    @Param('artistId') artistId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
     @Param('imageType') imageType: string,
   ) {
     // Validar tipo de imagen
@@ -544,7 +545,7 @@ export class ImagesController {
   @ApiResponse({ status: 404, description: 'User or avatar not found' })
   @ApiResponse({ status: 304, description: 'Not Modified (cached)' })
   async getUserAvatar(
-    @Param('userId') userId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
     @Res({ passthrough: true }) res: FastifyReply,
   ): Promise<StreamableFile> {
     try {

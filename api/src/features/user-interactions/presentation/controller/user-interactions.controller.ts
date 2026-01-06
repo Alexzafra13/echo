@@ -10,6 +10,7 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -142,7 +143,7 @@ export class UserInteractionsController {
     description: 'Rating removed successfully',
   })
   async removeRating(
-    @Param('itemId') itemId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
     @Param('itemType') itemType: ItemTypeDto,
     @Req() req: RequestWithUser,
   ): Promise<void> {
@@ -194,7 +195,7 @@ export class UserInteractionsController {
     type: ItemInteractionSummaryDto,
   })
   async getItemSummary(
-    @Param('itemId') itemId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
     @Param('itemType') itemType: ItemTypeDto,
     @Req() req: RequestWithUser,
   ): Promise<ItemInteractionSummaryDto> {

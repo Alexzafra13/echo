@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Req,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
@@ -80,7 +81,7 @@ export class CustomAlbumCoversController {
     description: 'Invalid file (size, type, or missing)',
   })
   async uploadCover(
-    @Param('albumId') albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
     @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: any },
   ) {
     // Fastify multipart - get uploaded file
@@ -126,8 +127,8 @@ export class CustomAlbumCoversController {
     description: 'Set a custom cover as the active cover for the album',
   })
   async applyCover(
-    @Param('albumId') albumId: string,
-    @Param('customCoverId') customCoverId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
+    @Param('customCoverId', ParseUUIDPipe) customCoverId: string,
   ) {
     return await this.applyCustomCover.execute({
       albumId,
@@ -141,8 +142,8 @@ export class CustomAlbumCoversController {
     description: 'Delete a custom uploaded cover',
   })
   async deleteCover(
-    @Param('albumId') albumId: string,
-    @Param('customCoverId') customCoverId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
+    @Param('customCoverId', ParseUUIDPipe) customCoverId: string,
   ) {
     return await this.deleteCustomCover.execute({
       albumId,
