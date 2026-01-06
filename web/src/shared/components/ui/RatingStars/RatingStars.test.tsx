@@ -280,8 +280,6 @@ describe('RatingStars', () => {
         itemId: mockItemId,
         itemType: mockItemType,
         userRating: 4,
-        totalLikes: 10,
-        totalDislikes: 2,
         averageRating: 4.2,
         totalRatings: 15,
       });
