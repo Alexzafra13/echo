@@ -334,7 +334,7 @@ export class PlaylistsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Playlist o Track no encontrado' })
   async removeTrackFromPlaylist(
     @Param('id', ParseUUIDPipe) playlistId: string,
-    @Param('trackId') trackId: string,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
     @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; message: string }> {
     const userId = req.user.id;

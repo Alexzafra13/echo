@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
@@ -29,7 +29,7 @@ export class ArtistAvatarsController {
       'Queries all available metadata providers for artist image options (profile, background, banner, logo)',
   })
   async searchAvatars(
-    @Param('artistId') artistId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
   ): Promise<SearchArtistAvatarsResponseDto> {
     const result = await this.searchArtistAvatars.execute({ artistId });
     return SearchArtistAvatarsResponseDto.fromDomain(result);

@@ -227,7 +227,7 @@ export class RemoteLibraryController {
   async getRemoteAlbum(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('albumId') albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
   ) {
     const server = await this.getServerWithOwnershipCheck(id, user.id);
     const album = await this.remoteServerService.getRemoteAlbum(server, albumId);
@@ -247,7 +247,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 404, description: 'Servidor o carátula no encontrada' })
   async getRemoteAlbumCover(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('albumId') albumId: string,
+    @Param('albumId', ParseUUIDPipe) albumId: string,
     @Res() res: FastifyReply,
   ) {
     // Get server directly (endpoint is public, covers are not sensitive data)
@@ -286,7 +286,7 @@ export class RemoteLibraryController {
   @ApiResponse({ status: 403, description: 'Sin acceso al servidor' })
   async streamRemoteTrack(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('trackId') trackId: string,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
     @Query('token') token: string | undefined,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,

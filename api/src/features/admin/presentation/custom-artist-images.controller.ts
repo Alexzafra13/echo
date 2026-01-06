@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Req,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
@@ -86,7 +87,7 @@ export class CustomArtistImagesController {
     description: 'Invalid file (size, type, or missing)',
   })
   async uploadImage(
-    @Param('artistId') artistId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
     @Req() request: FastifyRequest & { file: () => Promise<MultipartFile> } & { user: any },
   ) {
     // Fastify multipart - get uploaded file
@@ -148,8 +149,8 @@ export class CustomArtistImagesController {
     description: 'Set a custom image as the active image for the artist',
   })
   async applyImage(
-    @Param('artistId') artistId: string,
-    @Param('customImageId') customImageId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
+    @Param('customImageId', ParseUUIDPipe) customImageId: string,
   ) {
     return await this.applyCustomImage.execute({
       artistId,
@@ -163,8 +164,8 @@ export class CustomArtistImagesController {
     description: 'Delete a custom uploaded image',
   })
   async deleteImage(
-    @Param('artistId') artistId: string,
-    @Param('customImageId') customImageId: string,
+    @Param('artistId', ParseUUIDPipe) artistId: string,
+    @Param('customImageId', ParseUUIDPipe) customImageId: string,
   ) {
     return await this.deleteCustomImage.execute({
       artistId,

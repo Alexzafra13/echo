@@ -475,7 +475,7 @@ export class FederationPublicController {
   })
   @ApiParam({ name: 'trackId', description: 'ID del track' })
   async streamTrack(
-    @Param('trackId') trackId: string,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
     @Req() request: FastifyRequest,
