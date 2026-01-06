@@ -10,6 +10,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadGatewayException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -163,7 +164,7 @@ export class FederationImportController {
   @ApiResponse({ status: 404, description: 'Importación no encontrada' })
   async getImportStatus(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<AlbumImportQueue> {
     const importEntry = await this.importService.getImportStatus(id);
 
@@ -193,7 +194,7 @@ export class FederationImportController {
   @ApiResponse({ status: 404, description: 'Importación no encontrada' })
   async cancelImport(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ success: boolean }> {
     const importEntry = await this.importService.getImportStatus(id);
 

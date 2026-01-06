@@ -13,6 +13,7 @@ import {
   NotFoundException,
   ForbiddenException,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -93,7 +94,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async revokeOrDeleteAccessToken(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query('permanent') permanent?: string,
   ): Promise<void> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
@@ -128,7 +129,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async reactivateAccessToken(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<AccessTokenResponseDto> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
@@ -171,7 +172,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al token' })
   async updateAccessTokenPermissions(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePermissionsDto,
   ): Promise<AccessTokenResponseDto> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
@@ -255,7 +256,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
   async approveMutualRequest(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ConnectedServerResponseDto> {
     const accessToken = await this.tokenService.getAccessTokenById(id);
     if (!accessToken) {
@@ -317,7 +318,7 @@ export class AccessTokenController {
   @ApiResponse({ status: 403, description: 'Sin acceso al access token' })
   async rejectMutualRequest(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
     const accessToken = await this.tokenService.getAccessTokenById(id);
     if (!accessToken) {

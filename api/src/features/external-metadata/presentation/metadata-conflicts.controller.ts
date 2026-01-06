@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, HttpCode, HttpStatus, UseGuards, BadRequestException, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
@@ -92,7 +92,7 @@ export class MetadataConflictsController {
     status: 404,
     description: 'Conflict not found',
   })
-  async getConflict(@Param('id') id: string): Promise<ConflictResponseDto> {
+  async getConflict(@Param('id', ParseUUIDPipe) id: string): Promise<ConflictResponseDto> {
     // Get conflicts for the entity (this will return array, we filter by ID)
     const conflicts = await this.conflictService.getPendingConflicts(0, 100);
     const conflict = conflicts.conflicts.find((c) => c.id === id);
@@ -124,7 +124,7 @@ export class MetadataConflictsController {
     description: 'Conflict not found',
   })
   async acceptConflict(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ResolveConflictDto,
   ): Promise<ConflictResolvedResponseDto> {
     const updatedEntity = await this.conflictService.acceptConflict(id, dto.userId);
@@ -157,7 +157,7 @@ export class MetadataConflictsController {
     description: 'Conflict not found',
   })
   async rejectConflict(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ResolveConflictDto,
   ): Promise<ConflictResolvedResponseDto> {
     await this.conflictService.rejectConflict(id, dto.userId);
@@ -189,7 +189,7 @@ export class MetadataConflictsController {
     description: 'Conflict not found',
   })
   async ignoreConflict(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ResolveConflictDto,
   ): Promise<ConflictResolvedResponseDto> {
     await this.conflictService.ignoreConflict(id, dto.userId);
