@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
@@ -164,7 +165,7 @@ export class AdminController {
     description: 'Usuario no encontrado'
   })
   async updateUser(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserRequestDto,
   ): Promise<UpdateUserResponseDto> {
     const result = await this.updateUserUseCase.execute({
@@ -209,7 +210,7 @@ export class AdminController {
     description: 'Usuario no encontrado'
   })
   async deleteUser(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: JwtUser,
   ): Promise<void> {
     await this.deleteUserUseCase.execute({
@@ -249,7 +250,7 @@ export class AdminController {
     status: 404,
     description: 'Usuario no encontrado'
   })
-  async permanentlyDeleteUser(@Param('id') id: string): Promise<void> {
+  async permanentlyDeleteUser(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.permanentlyDeleteUserUseCase.execute({ userId: id });
   }
 
@@ -282,7 +283,7 @@ export class AdminController {
     description: 'Usuario no encontrado'
   })
   async resetUserPassword(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: JwtUser,
   ): Promise<ResetPasswordResponseDto> {
     const result = await this.resetUserPasswordUseCase.execute({
