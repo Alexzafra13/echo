@@ -1,17 +1,6 @@
 import { apiClient } from './api';
 
 export type ItemType = 'track' | 'album' | 'artist' | 'playlist';
-export type Sentiment = 'like' | 'dislike';
-
-export interface ToggleLikeResponse {
-  liked: boolean;
-  likedAt?: Date;
-}
-
-export interface ToggleDislikeResponse {
-  disliked: boolean;
-  dislikedAt?: Date;
-}
 
 export interface RatingResponse {
   userId: string;
@@ -25,34 +14,9 @@ export interface RatingResponse {
 export interface ItemInteractionSummary {
   itemId: string;
   itemType: ItemType;
-  userSentiment?: Sentiment;
   userRating?: number;
-  totalLikes: number;
-  totalDislikes: number;
   averageRating: number;
   totalRatings: number;
-}
-
-/**
- * Toggle like on an item
- */
-export async function toggleLike(itemId: string, itemType: ItemType): Promise<ToggleLikeResponse> {
-  const response = await apiClient.post<ToggleLikeResponse>(
-    '/interactions/like',
-    { itemId, itemType },
-  );
-  return response.data;
-}
-
-/**
- * Toggle dislike on an item
- */
-export async function toggleDislike(itemId: string, itemType: ItemType): Promise<ToggleDislikeResponse> {
-  const response = await apiClient.post<ToggleDislikeResponse>(
-    '/interactions/dislike',
-    { itemId, itemType },
-  );
-  return response.data;
 }
 
 /**

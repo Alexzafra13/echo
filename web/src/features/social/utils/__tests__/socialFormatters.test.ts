@@ -11,9 +11,6 @@ describe('socialFormatters', () => {
   describe('getActionText', () => {
     it.each([
       ['created_playlist', 'creó la playlist'],
-      ['liked_track', 'le gustó'],
-      ['liked_album', 'le gustó el álbum'],
-      ['liked_artist', 'le gustó el artista'],
       ['played_track', 'escuchó'],
       ['became_friends', 'ahora es amigo de'],
     ])('should return correct text for %s', (actionType, expected) => {
@@ -28,9 +25,6 @@ describe('socialFormatters', () => {
   describe('getActionIcon', () => {
     it.each([
       ['created_playlist', '📋'],
-      ['liked_track', '❤️'],
-      ['liked_album', '❤️'],
-      ['liked_artist', '❤️'],
       ['played_track', '🎵'],
       ['became_friends', '🤝'],
     ])('should return correct icon for %s', (actionType, expected) => {
@@ -75,9 +69,6 @@ describe('socialFormatters', () => {
 
     it.each([
       'created_playlist',
-      'liked_track',
-      'liked_album',
-      'liked_artist',
       'played_track',
     ])('should return true for %s', (actionType) => {
       expect(shouldShowCover(actionType)).toBe(true);
