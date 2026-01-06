@@ -222,7 +222,6 @@ export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
         radio_stations,
         play_history,
         user_play_stats,
-        user_starred,
         user_ratings,
         stream_tokens,
         users
@@ -233,7 +232,6 @@ export async function cleanUserTables(drizzle: DrizzleService): Promise<void> {
     await drizzle.db.delete(schema.radioStations);
     await drizzle.db.delete(schema.playHistory);
     await drizzle.db.delete(schema.userPlayStats);
-    await drizzle.db.delete(schema.userStarred);
     await drizzle.db.delete(schema.userRatings);
     await drizzle.db.delete(schema.streamTokens);
     await drizzle.db.delete(schema.users);

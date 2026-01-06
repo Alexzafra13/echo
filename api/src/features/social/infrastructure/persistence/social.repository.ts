@@ -10,7 +10,6 @@ import {
   artists,
   playlists,
   playlistTracks,
-  userStarred,
 } from '@infrastructure/database/schema';
 import { ISocialRepository } from '../../domain/ports';
 import {
@@ -452,28 +451,9 @@ export class DrizzleSocialRepository implements ISocialRepository {
       .orderBy(desc(friendships.updatedAt))
       .limit(limit);
 
-    // Get recent likes from friends
-    const likesResults = await this.drizzle.db
-      .select({
-        starredAt: userStarred.starredAt,
-        starredId: userStarred.starredId,
-        starredType: userStarred.starredType,
-        likedByUserId: userStarred.userId,
-      })
-      .from(userStarred)
-      .where(
-        and(
-          inArray(userStarred.userId, friendIds),
-          eq(userStarred.sentiment, 'like'),
-        ),
-      )
-      .orderBy(desc(userStarred.starredAt))
-      .limit(limit);
-
     // Get user info for all activities (including both users in friendships)
     const allUserIds = [
       ...new Set([
-        ...likesResults.map(l => l.likedByUserId),
         ...playlistResults.map(p => p.userId),
         ...friendshipResults.map(f => f.requesterId),
         ...friendshipResults.map(f => f.addresseeId),
@@ -493,57 +473,6 @@ export class DrizzleSocialRepository implements ISocialRepository {
       .where(inArray(users.id, allUserIds));
 
     const userMap = new Map(userInfos.map(u => [u.id, u]));
-
-    // Get target names for likes (tracks, albums, artists)
-    const trackIds = likesResults.filter(l => l.starredType === 'track').map(l => l.starredId);
-    const albumIds = likesResults.filter(l => l.starredType === 'album').map(l => l.starredId);
-    const artistIds = likesResults.filter(l => l.starredType === 'artist').map(l => l.starredId);
-
-    const targetNames = new Map<string, string>();
-    const targetCovers = new Map<string, { albumId: string; coverPath: string | null }>();
-
-    // Fetch track names with album covers
-    if (trackIds.length > 0) {
-      const trackResults = await this.drizzle.db
-        .select({
-          id: tracks.id,
-          title: tracks.title,
-          albumId: tracks.albumId,
-          albumCoverPath: albums.coverArtPath,
-        })
-        .from(tracks)
-        .leftJoin(albums, eq(albums.id, tracks.albumId))
-        .where(inArray(tracks.id, trackIds));
-      trackResults.forEach(t => {
-        targetNames.set(`track-${t.id}`, t.title || 'Canción');
-        if (t.albumId && t.albumCoverPath) {
-          targetCovers.set(`track-${t.id}`, { albumId: t.albumId, coverPath: t.albumCoverPath });
-        }
-      });
-    }
-
-    // Fetch album names with covers
-    if (albumIds.length > 0) {
-      const albumResults = await this.drizzle.db
-        .select({ id: albums.id, name: albums.name, coverPath: albums.coverArtPath })
-        .from(albums)
-        .where(inArray(albums.id, albumIds));
-      albumResults.forEach(a => {
-        targetNames.set(`album-${a.id}`, a.name || 'Álbum');
-        if (a.coverPath) {
-          targetCovers.set(`album-${a.id}`, { albumId: a.id, coverPath: a.coverPath });
-        }
-      });
-    }
-
-    // Fetch artist names
-    if (artistIds.length > 0) {
-      const artistResults = await this.drizzle.db
-        .select({ id: artists.id, name: artists.name })
-        .from(artists)
-        .where(inArray(artists.id, artistIds));
-      artistResults.forEach(a => targetNames.set(`artist-${a.id}`, a.name || 'Artista'));
-    }
 
     // Fetch up to 4 unique album IDs for each playlist (for mosaic cover)
     const playlistAlbumIds = new Map<string, string[]>();
@@ -600,29 +529,6 @@ export class DrizzleSocialRepository implements ISocialRepository {
           targetCoverPath: p.coverImageUrl || null, // Custom cover if set
           targetAlbumIds: albumIds, // For mosaic cover
           createdAt: p.createdAt,
-        });
-      }
-    }
-
-    // Add like activities
-    for (const l of likesResults) {
-      const user = userMap.get(l.likedByUserId);
-      if (user) {
-        const targetKey = `${l.starredType}-${l.starredId}`;
-        const coverInfo = targetCovers.get(targetKey);
-        activities.push({
-          id: `like-${l.starredId}-${l.starredType}`,
-          userId: l.likedByUserId,
-          username: user.username,
-          userName: user.name,
-          userAvatarPath: user.avatarPath,
-          actionType: `liked_${l.starredType}` as ActivityItem['actionType'],
-          targetType: l.starredType,
-          targetId: l.starredId,
-          targetName: targetNames.get(targetKey) || '',
-          targetCoverPath: coverInfo?.coverPath || null,
-          targetAlbumId: coverInfo?.albumId,
-          createdAt: l.starredAt,
         });
       }
     }

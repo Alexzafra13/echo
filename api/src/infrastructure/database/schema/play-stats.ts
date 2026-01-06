@@ -14,28 +14,6 @@ import { users } from './users';
 import { tracks } from './tracks';
 
 // ============================================
-// UserStarred
-// ============================================
-export const userStarred = pgTable(
-  'user_starred',
-  {
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    starredId: uuid('starred_id').notNull(), // Polymorphic: can reference tracks, albums, artists, playlists
-    starredType: varchar('starred_type', { length: 50 }).notNull(),
-    sentiment: varchar('sentiment', { length: 20 }).notNull(),
-    starredAt: timestamp('starred_at').defaultNow().notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.starredId, table.starredType] }),
-    index('idx_user_starred_user').on(table.userId, table.starredAt),
-    index('idx_user_starred_item').on(table.starredId, table.starredType),
-    index('idx_user_starred_sentiment').on(table.userId, table.sentiment),
-  ],
-);
-
-// ============================================
 // UserRating
 // ============================================
 export const userRatings = pgTable(
@@ -106,8 +84,6 @@ export const userPlayStats = pgTable(
 );
 
 // Type exports
-export type UserStarred = typeof userStarred.$inferSelect;
-export type NewUserStarred = typeof userStarred.$inferInsert;
 export type UserRating = typeof userRatings.$inferSelect;
 export type NewUserRating = typeof userRatings.$inferInsert;
 export type PlayHistory = typeof playHistory.$inferSelect;
