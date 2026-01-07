@@ -36,11 +36,7 @@ import {
   ConnectedServerResponseDto,
 } from './dto';
 
-/**
- * AccessTokenController - Gestión de tokens de acceso y federación mutua
- *
- * Permite gestionar qué servidores tienen acceso a tu biblioteca.
- */
+// Gestión de tokens de acceso y federación mutua entre servidores
 @ApiTags('federation')
 @Controller('federation/access-tokens')
 @UseGuards(JwtAuthGuard)
@@ -210,10 +206,6 @@ export class AccessTokenController {
       createdAt: updated.createdAt,
     };
   }
-
-  // ============================================
-  // Mutual Federation (Solicitudes de federación mutua)
-  // ============================================
 
   @Get('pending-mutual')
   @ApiOperation({

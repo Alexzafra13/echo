@@ -32,11 +32,7 @@ import {
   ConnectedServerResponseDto,
 } from './dto';
 
-/**
- * ConnectedServerController - Gestión de servidores conectados
- *
- * Permite a los usuarios conectarse a servidores de amigos y gestionar conexiones.
- */
+// Conexión y gestión de servidores federados de otros usuarios
 @ApiTags('federation')
 @Controller('federation/servers')
 @UseGuards(JwtAuthGuard)
@@ -50,9 +46,6 @@ export class ConnectedServerController {
     private readonly repository: IFederationRepository,
   ) {}
 
-  /**
-   * Helper to get a connected server and verify ownership
-   */
   private async getServerWithOwnershipCheck(
     serverId: string,
     userId: string,

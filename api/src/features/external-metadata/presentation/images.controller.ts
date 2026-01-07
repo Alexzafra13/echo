@@ -27,20 +27,7 @@ import { Public } from '@shared/decorators/public.decorator';
 import { ImageService, ArtistImageType } from '../application/services/image.service';
 import { ArtistImagesDto, ImageMetadataDto } from './dtos/artist-images.dto';
 
-/**
- * Images Controller
- * HTTP endpoints for serving locally stored images from external metadata
- *
- * Endpoints:
- * - GET /api/images/artists/:artistId/:imageType - Serve artist image
- * - GET /api/images/albums/:albumId/cover - Serve album cover
- *
- * Features:
- * - Streaming de archivos para eficiencia
- * - Cache headers (ETag, Last-Modified, Cache-Control)
- * - Soporte para HTTP 304 Not Modified
- * - Validación de tipos de imagen
- */
+// Servir imágenes con cache HTTP (ETag, 304 Not Modified)
 @ApiTags('images')
 @Controller('images')
 @UseGuards(JwtAuthGuard)
@@ -50,23 +37,7 @@ export class ImagesController {
     private readonly logger: PinoLogger,
     private readonly imageService: ImageService) {}
 
-  /**
-   * Sirve una imagen de artista con tag-based cache busting
-   * GET /api/images/artists/:artistId/:imageType?tag={cacheTag}
-   *
-   * imageType puede ser:
-   * - profile: Imagen de perfil del artista
-   * - background: Imagen de fondo HD (1920x1080+)
-   * - banner: Banner del artista (1000x185+)
-   * - logo: Logo del artista con transparencia
-   *
-   * Query params:
-   * - tag: Cache tag (MD5 hash) for cache-busting (changes URL when image changes)
-   *
-   * HTTP Cache validation:
-   * - Uses ETag header for proper HTTP caching
-   * - Returns 304 Not Modified if client's If-None-Match matches current ETag
-   */
+  // Endpoints públicos para servir imágenes (necesario para <img src>)
   @Public()
   @Get('artists/:artistId/:imageType')
   @ApiOperation({
@@ -161,10 +132,6 @@ export class ImagesController {
     }
   }
 
-  /**
-   * Sirve la portada de un álbum
-   * GET /api/images/albums/:albumId/cover
-   */
   @Public()
   @Get('albums/:albumId/cover')
   @ApiOperation({
@@ -238,10 +205,6 @@ export class ImagesController {
     }
   }
 
-  /**
-   * Sirve una portada personalizada de álbum por su ID
-   * GET /api/images/albums/:albumId/custom/:customCoverId
-   */
   @Public()
   @Get('albums/:albumId/custom/:customCoverId')
   @ApiOperation({
@@ -306,10 +269,6 @@ export class ImagesController {
     }
   }
 
-  /**
-   * Sirve una imagen personalizada por su ID
-   * GET /api/images/artists/:artistId/custom/:customImageId
-   */
   @Public()
   @Get('artists/:artistId/custom/:customImageId')
   @ApiOperation({
@@ -374,10 +333,6 @@ export class ImagesController {
     }
   }
 
-  /**
-   * Verifica si un artista tiene una imagen específica
-   * GET /api/images/artists/:artistId/:imageType/exists
-   */
   @Get('artists/:artistId/:imageType/exists')
   @ApiOperation({
     summary: 'Check if artist image exists',
@@ -428,10 +383,6 @@ export class ImagesController {
     };
   }
 
-  /**
-   * Verifica si un álbum tiene portada
-   * GET /api/images/albums/:albumId/cover/exists
-   */
   @Get('albums/:albumId/cover/exists')
   @ApiOperation({
     summary: 'Check if album cover exists',
@@ -457,10 +408,6 @@ export class ImagesController {
     };
   }
 
-  /**
-   * Get album cover metadata (including tag for cache busting)
-   * GET /api/images/albums/:albumId/cover/metadata
-   */
   @Get('albums/:albumId/cover/metadata')
   @ApiOperation({
     summary: 'Get album cover metadata',
@@ -517,10 +464,6 @@ export class ImagesController {
     }
   }
 
-  /**
-   * Sirve el avatar de un usuario
-   * GET /api/images/users/:userId/avatar
-   */
   @Public()
   @Get('users/:userId/avatar')
   @ApiOperation({
@@ -576,10 +519,6 @@ export class ImagesController {
     }
   }
 
-  /**
-   * Obtiene todas las imágenes disponibles de un artista
-   * GET /api/images/artists/:artistId/all
-   */
   @Get('artists/:artistId/all')
   @ApiOperation({
     summary: 'Get all available artist images',
@@ -672,13 +611,6 @@ export class ImagesController {
     };
   }
 
-  // ============================================
-  // MÉTODOS PRIVADOS
-  // ============================================
-
-  /**
-   * Configura headers de caché para la respuesta (V2 con tag)
-   */
   private setCacheHeaders(
     res: FastifyReply,
     imageResult: { mimeType: string; lastModified: Date; tag: string },

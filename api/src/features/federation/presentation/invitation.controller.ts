@@ -31,11 +31,7 @@ import {
   InvitationTokenResponseDto,
 } from './dto';
 
-/**
- * InvitationController - Gestión de tokens de invitación
- *
- * Permite a los usuarios crear tokens para que otros se conecten a su servidor.
- */
+// Creación de tokens de invitación para que otros conecten a tu servidor
 @ApiTags('federation')
 @Controller('federation/invitations')
 @UseGuards(JwtAuthGuard)
