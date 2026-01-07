@@ -103,7 +103,7 @@ export class FederationPublicController {
           { serverName: dto.serverName, token: dto.invitationToken?.substring(0, 4) + '...' },
           'Invalid or expired invitation token',
         );
-        throw new UnauthorizedException('Invalid or expired invitation token');
+        throw new UnauthorizedException('Token de invitación inválido o expirado');
       }
 
       if (mutualToken) {
@@ -205,7 +205,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canBrowse) {
-      throw new ForbiddenException('Browse permission not granted');
+      throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
     const page = query.page || 1;
@@ -273,7 +273,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canBrowse) {
-      throw new ForbiddenException('Browse permission not granted');
+      throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
     const page = query.page || 1;
@@ -332,7 +332,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canBrowse) {
-      throw new ForbiddenException('Browse permission not granted');
+      throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
     // Get album
@@ -354,7 +354,7 @@ export class FederationPublicController {
       .limit(1);
 
     if (!album) {
-      throw new NotFoundException('Album not found');
+      throw new NotFoundException('Álbum no encontrado');
     }
 
     // Get tracks
@@ -532,7 +532,7 @@ export class FederationPublicController {
     const accessToken = (request as any).federationAccessToken as FederationAccessToken;
 
     if (!accessToken.permissions.canDownload) {
-      throw new ForbiddenException('Download permission not granted');
+      throw new ForbiddenException('Permiso de descarga no otorgado');
     }
 
     // Get album with all metadata
@@ -563,7 +563,7 @@ export class FederationPublicController {
       .limit(1);
 
     if (!album) {
-      throw new NotFoundException('Album not found');
+      throw new NotFoundException('Álbum no encontrado');
     }
 
     // Get tracks with ALL metadata including LUFS/ReplayGain

@@ -31,13 +31,13 @@ export class FederationAccessGuard implements CanActivate {
     }
 
     if (!token) {
-      throw new UnauthorizedError('Federation access token required');
+      throw new UnauthorizedError('Token de acceso de federación requerido');
     }
 
     const accessToken = await this.tokenService.validateAccessToken(token);
 
     if (!accessToken) {
-      throw new UnauthorizedError('Invalid or expired federation access token');
+      throw new UnauthorizedError('Token de acceso de federación inválido o expirado');
     }
 
     // Attach token info to request for use in controllers

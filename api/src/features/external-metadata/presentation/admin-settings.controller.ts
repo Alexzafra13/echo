@@ -345,11 +345,11 @@ export class AdminSettingsController {
   async validateApiKey(@Body() dto: ValidateApiKeyDto) {
     try {
       if (!dto.service || !dto.apiKey) {
-        throw new BadRequestException('Service and apiKey are required');
+        throw new BadRequestException('Service y apiKey son requeridos');
       }
 
       if (!['lastfm', 'fanart'].includes(dto.service)) {
-        throw new BadRequestException('Service must be "lastfm" or "fanart"');
+        throw new BadRequestException('Service debe ser "lastfm" o "fanart"');
       }
 
       this.logger.info(`Validating API key for ${dto.service}`);

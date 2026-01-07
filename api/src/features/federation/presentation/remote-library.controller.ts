@@ -59,10 +59,10 @@ export class RemoteLibraryController {
   ): Promise<ConnectedServer> {
     const server = await this.repository.findConnectedServerById(serverId);
     if (!server) {
-      throw new NotFoundException('Server not found');
+      throw new NotFoundException('Servidor no encontrado');
     }
     if (server.userId !== userId) {
-      throw new ForbiddenException('You do not have access to this server');
+      throw new ForbiddenException('No tienes acceso a este servidor');
     }
     return server;
   }
@@ -238,14 +238,14 @@ export class RemoteLibraryController {
     // Get server directly (endpoint is public, covers are not sensitive data)
     const server = await this.repository.findConnectedServerById(id);
     if (!server) {
-      res.status(HttpStatus.NOT_FOUND).send({ error: 'Server not found' });
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Servidor no encontrado' });
       return;
     }
 
     const cover = await this.remoteServerService.getRemoteAlbumCover(server, albumId);
 
     if (!cover) {
-      res.status(HttpStatus.NOT_FOUND).send({ error: 'Cover not found' });
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Carátula no encontrada' });
       return;
     }
 
@@ -278,24 +278,24 @@ export class RemoteLibraryController {
   ) {
     // Validate stream token
     if (!token) {
-      res.status(HttpStatus.UNAUTHORIZED).send({ error: 'Stream token is required' });
+      res.status(HttpStatus.UNAUTHORIZED).send({ error: 'Token de streaming requerido' });
       return;
     }
 
     const userId = await this.streamTokenService.validateToken(token);
     if (!userId) {
-      res.status(HttpStatus.UNAUTHORIZED).send({ error: 'Invalid or expired stream token' });
+      res.status(HttpStatus.UNAUTHORIZED).send({ error: 'Token de streaming inválido o expirado' });
       return;
     }
 
     // Get server and verify ownership
     const server = await this.repository.findConnectedServerById(id);
     if (!server) {
-      res.status(HttpStatus.NOT_FOUND).send({ error: 'Server not found' });
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'Servidor no encontrado' });
       return;
     }
     if (server.userId !== userId) {
-      res.status(HttpStatus.FORBIDDEN).send({ error: 'You do not have access to this server' });
+      res.status(HttpStatus.FORBIDDEN).send({ error: 'No tienes acceso a este servidor' });
       return;
     }
 
@@ -307,7 +307,7 @@ export class RemoteLibraryController {
       );
 
       if (!streamResult) {
-        res.status(HttpStatus.NOT_FOUND).send({ error: 'Track not found' });
+        res.status(HttpStatus.NOT_FOUND).send({ error: 'Track no encontrado' });
         return;
       }
 
@@ -333,7 +333,7 @@ export class RemoteLibraryController {
         { serverId: id, trackId, error: error instanceof Error ? error.message : error },
         'Failed to stream remote track',
       );
-      res.status(HttpStatus.BAD_GATEWAY).send({ error: 'Failed to stream from remote server' });
+      res.status(HttpStatus.BAD_GATEWAY).send({ error: 'Error al hacer streaming desde servidor remoto' });
     }
   }
 
