@@ -270,7 +270,7 @@ export default function HomePage() {
   // Display albums based on calculated grid size (2 rows that fill the screen width)
   const displayedRecentAlbums = recentAlbums?.slice(0, neededAlbums) || [];
   const displayedTopPlayedAlbums = topPlayedAlbums?.slice(0, neededAlbums) || [];
-  const displayedRecentlyPlayedAlbums = recentlyPlayedAlbums?.albums?.slice(0, neededAlbums) || [];
+  const displayedRecentlyPlayedAlbums = recentlyPlayedAlbums?.data?.slice(0, neededAlbums) || [];
 
   // Render a section by ID
   const renderSection = (sectionId: HomeSectionId): ReactNode => {

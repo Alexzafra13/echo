@@ -69,17 +69,17 @@ export default function AlbumsPage() {
   switch (sortBy) {
     case 'alphabetical':
       activeQuery = alphabeticalQuery;
-      allAlbums = alphabeticalQuery.data?.albums || [];
+      allAlbums = alphabeticalQuery.data?.data || [];
       totalPages = alphabeticalQuery.data?.totalPages || 1;
       break;
     case 'artist':
       activeQuery = byArtistQuery;
-      allAlbums = byArtistQuery.data?.albums || [];
+      allAlbums = byArtistQuery.data?.data || [];
       totalPages = byArtistQuery.data?.totalPages || 1;
       break;
     case 'recently-played':
       activeQuery = recentlyPlayedQuery;
-      allAlbums = recentlyPlayedQuery.data?.albums || [];
+      allAlbums = recentlyPlayedQuery.data?.data || [];
       totalPages = 1; // No pagination for recently played
       break;
     case 'top-played':
@@ -89,7 +89,7 @@ export default function AlbumsPage() {
       break;
     case 'favorites':
       activeQuery = favoritesQuery;
-      allAlbums = favoritesQuery.data?.albums || [];
+      allAlbums = favoritesQuery.data?.data || [];
       totalPages = favoritesQuery.data?.hasMore ? page + 1 : page; // Estimate based on hasMore
       break;
     case 'recent':

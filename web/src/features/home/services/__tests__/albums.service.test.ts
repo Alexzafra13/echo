@@ -234,11 +234,12 @@ describe('albumsService', () => {
   describe('getAlphabetically', () => {
     it('should fetch albums sorted alphabetically', async () => {
       const mockResponse = {
-        albums: [mockAlbum2, mockAlbum], // Another Album comes before Test Album
+        data: [mockAlbum2, mockAlbum], // Another Album comes before Test Album
         total: 2,
         page: 1,
         limit: 20,
         totalPages: 1,
+        hasMore: false,
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -247,17 +248,18 @@ describe('albumsService', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/albums/alphabetical', {
         params: undefined,
       });
-      expect(result.albums).toHaveLength(2);
-      expect(result.albums[0].title).toBe('Another Album');
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].title).toBe('Another Album');
     });
 
     it('should fetch with pagination', async () => {
       const mockResponse = {
-        albums: [mockAlbum],
+        data: [mockAlbum],
         total: 100,
         page: 2,
         limit: 10,
         totalPages: 10,
+        hasMore: true,
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -274,11 +276,12 @@ describe('albumsService', () => {
   describe('getByArtist', () => {
     it('should fetch albums sorted by artist', async () => {
       const mockResponse = {
-        albums: [mockAlbum2, mockAlbum],
+        data: [mockAlbum2, mockAlbum],
         total: 2,
         page: 1,
         limit: 20,
         totalPages: 1,
+        hasMore: false,
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -287,16 +290,17 @@ describe('albumsService', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/albums/by-artist', {
         params: undefined,
       });
-      expect(result.albums).toHaveLength(2);
+      expect(result.data).toHaveLength(2);
     });
 
     it('should fetch with pagination', async () => {
       const mockResponse = {
-        albums: [],
+        data: [],
         total: 50,
         page: 3,
         limit: 15,
         totalPages: 4,
+        hasMore: true,
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -311,7 +315,7 @@ describe('albumsService', () => {
   describe('getRecentlyPlayed', () => {
     it('should fetch recently played albums', async () => {
       const mockResponse = {
-        albums: [mockAlbum, mockAlbum2],
+        data: [mockAlbum, mockAlbum2],
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -320,12 +324,12 @@ describe('albumsService', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/albums/recently-played', {
         params: undefined,
       });
-      expect(result.albums).toHaveLength(2);
+      expect(result.data).toHaveLength(2);
     });
 
     it('should fetch with limit', async () => {
       const mockResponse = {
-        albums: [mockAlbum],
+        data: [mockAlbum],
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
 
@@ -337,18 +341,20 @@ describe('albumsService', () => {
     });
 
     it('should handle user with no play history', async () => {
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { albums: [] } });
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } });
 
       const result = await albumsService.getRecentlyPlayed();
 
-      expect(result.albums).toHaveLength(0);
+      expect(result.data).toHaveLength(0);
     });
   });
 
   describe('getFavorites', () => {
     it('should fetch favorite albums', async () => {
       const mockResponse = {
-        albums: [mockAlbum],
+        data: [mockAlbum],
+        page: 1,
+        limit: 20,
         hasMore: false,
       };
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: mockResponse });
@@ -358,13 +364,13 @@ describe('albumsService', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/albums/favorites', {
         params: undefined,
       });
-      expect(result.albums).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
       expect(result.hasMore).toBe(false);
     });
 
     it('should fetch with pagination', async () => {
       const mockResponse = {
-        albums: [mockAlbum, mockAlbum2],
+        data: [mockAlbum, mockAlbum2],
         page: 1,
         limit: 20,
         hasMore: true,
@@ -380,11 +386,11 @@ describe('albumsService', () => {
     });
 
     it('should handle user with no favorites', async () => {
-      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { albums: [] } });
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [], page: 1, limit: 20, hasMore: false } });
 
       const result = await albumsService.getFavorites();
 
-      expect(result.albums).toHaveLength(0);
+      expect(result.data).toHaveLength(0);
     });
   });
 });
