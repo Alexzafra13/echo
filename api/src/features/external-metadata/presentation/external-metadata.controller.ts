@@ -14,16 +14,7 @@ import { ExternalMetadataService } from '../application/external-metadata.servic
 import { MetadataEnrichmentGateway } from './metadata-enrichment.gateway';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 
-/**
- * External Metadata Controller
- * HTTP endpoints for manual metadata enrichment
- *
- * Endpoints:
- * - POST /api/metadata/artists/:id/enrich - Enrich single artist
- * - POST /api/metadata/albums/:id/enrich - Enrich single album
- * - POST /api/metadata/artists/enrich-all - Enrich all artists (admin only)
- * - POST /api/metadata/albums/enrich-all - Enrich all albums (admin only)
- */
+// Enriquecimiento de metadata desde APIs externas (Last.fm, Fanart.tv, MusicBrainz)
 @ApiTags('external-metadata')
 @Controller('metadata')
 @UseGuards(JwtAuthGuard)
@@ -36,10 +27,6 @@ export class ExternalMetadataController {
     private readonly gateway: MetadataEnrichmentGateway
   ) {}
 
-  /**
-   * Enrich a single artist with external metadata
-   * GET /api/metadata/artists/:id/enrich?forceRefresh=false
-   */
   @Post('artists/:id/enrich')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -122,10 +109,6 @@ export class ExternalMetadataController {
     }
   }
 
-  /**
-   * Enrich a single album with external metadata
-   * POST /api/metadata/albums/:id/enrich?forceRefresh=false
-   */
   @Post('albums/:id/enrich')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
