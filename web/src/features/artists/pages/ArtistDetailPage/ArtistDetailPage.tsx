@@ -303,9 +303,9 @@ export default function ArtistDetailPage() {
             )}
 
             <div className={styles.artistDetailPage__heroContent}>
-              {/* Admin Options Menu - Positioned absolutely */}
+              {/* Mobile-only: Admin Options Menu at top-right */}
               {user?.isAdmin && (
-                <div className={styles.artistDetailPage__optionsMenu}>
+                <div className={styles.artistDetailPage__optionsMenuMobile}>
                   <ArtistOptionsMenu
                     onChangeProfile={handleChangeProfile}
                     onChangeBackground={handleChangeBackgroundOrBanner}
@@ -330,6 +330,16 @@ export default function ArtistDetailPage() {
                   <div className={styles.artistDetailPage__avatarFallback}>
                     {initials}
                   </div>
+                )}
+                {/* Desktop: Admin Options Menu near avatar */}
+                {user?.isAdmin && (
+                  <ArtistOptionsMenu
+                    onChangeProfile={handleChangeProfile}
+                    onChangeBackground={handleChangeBackgroundOrBanner}
+                    onAdjustPosition={handleAdjustPosition}
+                    onChangeLogo={handleChangeLogo}
+                    hasBackground={backgroundUrl !== undefined && hasBackground}
+                  />
                 )}
               </div>
 
