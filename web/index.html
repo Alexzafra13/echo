@@ -5,12 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Echo - Tu servidor personal de streaming de música. Escucha tu colección de música desde cualquier lugar." />
     <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="author" content="Echo Music Server" />
+    <meta name="keywords" content="música, streaming, servidor personal, audio, reproductor, playlists" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Echo - Music Streaming" />
+    <meta property="og:description" content="Tu servidor personal de streaming de música. Escucha tu colección de música desde cualquier lugar." />
+    <meta property="og:image" content="/images/logos/echo-icon.png" />
+    <meta property="og:site_name" content="Echo Music Server" />
+    <meta property="og:locale" content="es_ES" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Echo - Music Streaming" />
+    <meta name="twitter:description" content="Tu servidor personal de streaming de música. Escucha tu colección de música desde cualquier lugar." />
+    <meta name="twitter:image" content="/images/logos/echo-icon.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Echo" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/images/logos/echo-icon.png" />
     <link rel="apple-touch-icon" href="/images/logos/echo-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/logos/echo-icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/logos/echo-icon.png" />
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts with preload for critical fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,10 +47,25 @@
       rel="stylesheet"
     />
 
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/images/logos/echo-icon.png" as="image" />
+
     <title>Echo - Music Streaming</title>
   </head>
   <body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
     <div id="root"></div>
+
+    <!-- Fallback for users without JavaScript -->
+    <noscript>
+      <div style="padding: 2rem; text-align: center; background: #0f172a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Echo Music Streaming</h1>
+        <p style="color: #94a3b8;">Para usar Echo, necesitas habilitar JavaScript en tu navegador.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
