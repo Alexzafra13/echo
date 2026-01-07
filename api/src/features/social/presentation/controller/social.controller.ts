@@ -191,15 +191,7 @@ export class SocialController {
   // SSE: Real-time Listening Now Updates
   // ============================================
 
-  /**
-   * GET /social/listening/stream
-   * Server-Sent Events endpoint for real-time "listening now" updates
-   * Streams updates when friends start/stop playing music
-   *
-   * Note: EventSource cannot send Authorization headers, so this endpoint
-   * is public but requires userId as query parameter. The userId is used
-   * to filter updates to only show the user's friends.
-   */
+  // SSE: EventSource no soporta headers, por eso es @Public() con userId en query
   @Sse('listening/stream')
   @Public()
   streamListeningNow(
