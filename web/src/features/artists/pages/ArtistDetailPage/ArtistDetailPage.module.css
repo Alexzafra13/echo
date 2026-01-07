@@ -422,9 +422,9 @@
   .artistDetailPage__optionsMenuMobile {
     display: block;
     position: absolute;
-    top: 70px; /* Below the header (56px + margin) */
+    top: 90px; /* Below the header with more margin */
     right: 16px;
-    z-index: 10;
+    z-index: 100; /* Above header */
   }
 
   /* Hide circular avatar on mobile - image is now the background */
