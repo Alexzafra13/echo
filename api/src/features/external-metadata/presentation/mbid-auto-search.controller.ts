@@ -5,17 +5,7 @@ import { AdminGuard } from '@shared/guards/admin.guard';
 import { MbidAutoSearchService } from '../infrastructure/services/mbid-auto-search.service';
 import { SettingsService } from '../infrastructure/services/settings.service';
 
-/**
- * MbidAutoSearchController
- * Admin endpoints for configuring MusicBrainz ID auto-search functionality
- *
- * Features:
- * - Enable/disable auto-search during library scan
- * - Configure confidence threshold for auto-apply
- * - View auto-search statistics
- *
- * All endpoints require admin authentication
- */
+// Configuración de búsqueda automática de MBIDs durante escaneo
 @ApiTags('Admin - MBID Auto-Search')
 @Controller('admin/mbid-auto-search')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -26,10 +16,6 @@ export class MbidAutoSearchController {
     private readonly settingsService: SettingsService,
   ) {}
 
-  /**
-   * GET /admin/mbid-auto-search/config
-   * Get current auto-search configuration
-   */
   @Get('config')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -81,10 +67,6 @@ export class MbidAutoSearchController {
     };
   }
 
-  /**
-   * PUT /admin/mbid-auto-search/config
-   * Update auto-search configuration
-   */
   @Put('config')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -178,10 +160,6 @@ export class MbidAutoSearchController {
     };
   }
 
-  /**
-   * GET /admin/mbid-auto-search/stats
-   * Get auto-search statistics
-   */
   @Get('stats')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
