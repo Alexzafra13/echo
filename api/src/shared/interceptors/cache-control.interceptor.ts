@@ -11,17 +11,11 @@ import { tap } from 'rxjs/operators';
 
 export const CACHE_TTL_KEY = 'cache_ttl';
 
-/**
- * Decorator to set Cache-Control headers on responses
- * @param ttlSeconds - Time to live in seconds (default: 60)
- */
+// Decorador para añadir Cache-Control a las respuestas. Ej: @CacheControl(300)
 export const CacheControl = (ttlSeconds: number = 60) =>
   SetMetadata(CACHE_TTL_KEY, ttlSeconds);
 
-/**
- * Interceptor that adds Cache-Control headers to responses
- * Use with @CacheControl(seconds) decorator
- */
+// Interceptor que aplica el header Cache-Control si el endpoint usa @CacheControl()
 @Injectable()
 export class CacheControlInterceptor implements NestInterceptor {
   constructor(private reflector: Reflector) {}
@@ -37,7 +31,6 @@ export class CacheControlInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(() => {
-        // Only set cache headers for successful responses
         response.header('Cache-Control', `public, max-age=${ttl}`);
       }),
     );

@@ -6,14 +6,7 @@ import { DrizzleUserRepository } from '../persistence/user.repository';
 import { UserProps } from '../../domain/entities/user.entity';
 import { SecuritySecretsService } from '@config/security-secrets.service';
 
-/**
- * JwtStrategy - Estrategia de Passport para validar JWT
- *
- * Se usa en Guards para validar que el token sea válido
- * y extraer el usuario del token
- *
- * Uses SecuritySecretsService for auto-generated secrets (like Navidrome/Jellyfin)
- */
+// Passport strategy: valida JWT y extrae usuario
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(

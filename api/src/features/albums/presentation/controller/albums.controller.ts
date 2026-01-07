@@ -24,16 +24,6 @@ import { CurrentUser, ApiCommonErrors, ApiNotFoundError } from '@shared/decorato
 import { JwtUser } from '@shared/types/request.types';
 import { CacheControl } from '@shared/interceptors';
 
-/**
- * AlbumsController - Controlador de álbumes
- *
- * Responsabilidades:
- * - Recibir peticiones HTTP
- * - Validar parámetros
- * - Llamar a los use cases
- * - Mapear respuestas a DTOs
- * - Retornar JSON
- */
 @ApiTags('albums')
 @Controller('albums')
 export class AlbumsController {
@@ -54,13 +44,6 @@ export class AlbumsController {
     private readonly getFavoriteAlbumsUseCase: GetFavoriteAlbumsUseCase,
   ) {}
 
-  /**
-   * GET /albums/recent
-   * Obtener álbumes agregados recientemente
-   *
-   * Query params:
-   * - take: número de álbumes a traer (default: 12, máximo: 50)
-   */
   @Get('recent')
   @HttpCode(HttpStatus.OK)
   @CacheControl(60) // 1 minute cache
@@ -95,13 +78,6 @@ export class AlbumsController {
     return result.map((album) => AlbumResponseDto.fromDomain(album));
   }
 
-  /**
-   * GET /albums/top-played
-   * Obtener álbumes más reproducidos basado en estadísticas de reproducción
-   *
-   * Query params:
-   * - take: número de álbumes a traer (default: 10, máximo: 50)
-   */
   @Get('top-played')
   @HttpCode(HttpStatus.OK)
   @CacheControl(300) // 5 minute cache (stats based)
@@ -136,15 +112,6 @@ export class AlbumsController {
     return result.map((album) => AlbumResponseDto.fromDomain(album));
   }
 
-  /**
-   * GET /albums/alphabetical
-   * Obtener álbumes ordenados alfabéticamente
-   * Requiere autenticación
-   *
-   * Query params:
-   * - page: número de página (default: 1)
-   * - limit: álbumes por página (default: 20, máximo: 100)
-   */
   @Get('alphabetical')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -192,15 +159,6 @@ export class AlbumsController {
     });
   }
 
-  /**
-   * GET /albums/by-artist
-   * Obtener álbumes ordenados por nombre de artista
-   * Requiere autenticación
-   *
-   * Query params:
-   * - page: número de página (default: 1)
-   * - limit: álbumes por página (default: 20, máximo: 100)
-   */
   @Get('by-artist')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -248,14 +206,6 @@ export class AlbumsController {
     });
   }
 
-  /**
-   * GET /albums/recently-played
-   * Obtener álbumes reproducidos recientemente por el usuario autenticado
-   * Requiere autenticación
-   *
-   * Query params:
-   * - limit: número de álbumes (default: 20, máximo: 100)
-   */
   @Get('recently-played')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -294,15 +244,6 @@ export class AlbumsController {
     });
   }
 
-  /**
-   * GET /albums/favorites
-   * Obtener álbumes favoritos del usuario autenticado
-   * Requiere autenticación
-   *
-   * Query params:
-   * - page: número de página (default: 1)
-   * - limit: álbumes por página (default: 20, máximo: 100)
-   */
   @Get('favorites')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -352,10 +293,6 @@ export class AlbumsController {
     });
   }
 
-  /**
-   * GET /albums/featured
-   * Obtener álbum destacado para la sección hero
-   */
   @Get('featured')
   @HttpCode(HttpStatus.OK)
   @CacheControl(300) // 5 minute cache
@@ -378,11 +315,7 @@ export class AlbumsController {
     return AlbumResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /albums/:id/tracks
-   * Obtener todas las canciones de un álbum
-   * IMPORTANTE: Debe ir ANTES de @Get(':id') para que el router lo capture correctamente
-   */
+  // Debe ir antes de @Get(':id') por orden de rutas
   @Get(':id/tracks')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -407,11 +340,6 @@ export class AlbumsController {
     return result.tracks.map((track: Track) => TrackResponseDto.fromDomain(track));
   }
 
-  /**
-   * GET /albums/:id/cover
-   * Obtener cover art del álbum
-   * IMPORTANTE: Debe ir ANTES de @Get(':id') para que el router lo capture correctamente
-   */
   @Get(':id/cover')
   @ApiCommonErrors()
   @ApiNotFoundError('Álbum')
@@ -440,7 +368,6 @@ export class AlbumsController {
   ): Promise<void> {
     const result = await this.getAlbumCoverUseCase.execute({ albumId: id });
 
-    // Servir la imagen con headers apropiados
     res.headers({
       'Content-Type': result.mimeType,
       'Content-Length': result.fileSize.toString(),
@@ -450,11 +377,6 @@ export class AlbumsController {
     res.send(result.buffer);
   }
 
-  /**
-   * GET /albums/:id
-   * Obtener UN álbum por su ID
-   * IMPORTANTE: Debe ir DESPUÉS de rutas más específicas como /:id/tracks y /:id/cover
-   */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -479,14 +401,6 @@ export class AlbumsController {
     return AlbumResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /albums
-   * Obtener lista paginada de álbumes
-   *
-   * Query params:
-   * - skip: número de álbumes a saltar (default: 0)
-   * - take: número de álbumes a traer (default: 10, máximo: 100)
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @CacheControl(60) // 1 minute cache
@@ -527,14 +441,6 @@ export class AlbumsController {
     return GetAlbumsResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /albums/search/:query
-   * Buscar álbumes por nombre
-   *
-   * Query params:
-   * - skip: número de resultados a saltar (default: 0)
-   * - take: número de resultados a traer (default: 10, máximo: 100)
-   */
   @Get('search/:query')
   @HttpCode(HttpStatus.OK)
   @CacheControl(30) // 30 second cache for search

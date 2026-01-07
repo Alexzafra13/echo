@@ -64,10 +64,6 @@ export class PlaylistsController {
     private readonly reorderPlaylistTracksUseCase: ReorderPlaylistTracksUseCase,
   ) {}
 
-  /**
-   * POST /playlists
-   * Crear una nueva playlist
-   */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear una nueva playlist' })
@@ -94,10 +90,6 @@ export class PlaylistsController {
     return PlaylistResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /playlists/:id
-   * Obtener una playlist por ID
-   */
   @Get(':id')
   @ApiOperation({ summary: 'Obtener una playlist por ID' })
   @ApiResponse({
@@ -118,10 +110,6 @@ export class PlaylistsController {
     return PlaylistResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /playlists
-   * Listar playlists del usuario o públicas
-   */
   @Get()
   @ApiOperation({ summary: 'Listar playlists del usuario o públicas' })
   @ApiQuery({
@@ -173,10 +161,6 @@ export class PlaylistsController {
     return PlaylistsListResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /playlists/by-artist/:artistId
-   * Obtener playlists públicas que contienen canciones de un artista
-   */
   @Get('by-artist/:artistId')
   @ApiOperation({ summary: 'Obtener playlists públicas que contienen canciones de un artista' })
   @ApiQuery({
@@ -217,10 +201,6 @@ export class PlaylistsController {
     return PlaylistsListResponseDto.fromDomain(result);
   }
 
-  /**
-   * PATCH /playlists/:id
-   * Actualizar una playlist
-   */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar una playlist' })
   @ApiResponse({
@@ -249,10 +229,6 @@ export class PlaylistsController {
     return PlaylistResponseDto.fromDomain(result);
   }
 
-  /**
-   * DELETE /playlists/:id
-   * Eliminar una playlist
-   */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Eliminar una playlist' })
@@ -269,10 +245,6 @@ export class PlaylistsController {
     await this.deletePlaylistUseCase.execute({ id, userId });
   }
 
-  /**
-   * GET /playlists/:id/tracks
-   * Obtener los tracks de una playlist
-   */
   @Get(':id/tracks')
   @ApiOperation({ summary: 'Obtener los tracks de una playlist' })
   @ApiResponse({
@@ -286,10 +258,6 @@ export class PlaylistsController {
     return PlaylistTracksResponseDto.fromDomain(result);
   }
 
-  /**
-   * POST /playlists/:id/tracks
-   * Agregar un track a la playlist
-   */
   @Post(':id/tracks')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Agregar un track a la playlist' })
@@ -314,10 +282,6 @@ export class PlaylistsController {
     return AddTrackToPlaylistResponseDto.fromDomain(result);
   }
 
-  /**
-   * DELETE /playlists/:id/tracks/:trackId
-   * Remover un track de la playlist
-   */
   @Delete(':id/tracks/:trackId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Remover un track de la playlist' })
@@ -345,10 +309,6 @@ export class PlaylistsController {
     });
   }
 
-  /**
-   * PUT /playlists/:id/tracks/reorder
-   * Reordenar los tracks de la playlist
-   */
   @Post(':id/tracks/reorder')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reordenar los tracks de la playlist' })

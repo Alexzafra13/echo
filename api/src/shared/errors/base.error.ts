@@ -1,8 +1,4 @@
-/**
- * Base error class for domain errors.
- * Domain errors should NOT contain HTTP-specific information.
- * HTTP status codes are mapped in the HttpExceptionFilter.
- */
+// Clase base para errores de dominio. El mapeo a HTTP se hace en HttpExceptionFilter.
 export class BaseError extends Error {
   constructor(
     public readonly code: string,
@@ -13,12 +9,9 @@ export class BaseError extends Error {
   }
 }
 
-/**
- * Error code to HTTP status mapping.
- * Used by HttpExceptionFilter to convert domain errors to HTTP responses.
- */
+// Mapeo de códigos de error a status HTTP
 export const ERROR_HTTP_STATUS_MAP: Record<string, number> = {
-  // Client errors (4xx)
+  // Errores de cliente (4xx)
   NOT_FOUND: 404,
   VALIDATION_ERROR: 400,
   UNAUTHORIZED: 401,
@@ -27,7 +20,7 @@ export const ERROR_HTTP_STATUS_MAP: Record<string, number> = {
   IMAGE_PROCESSING_ERROR: 422,
   SCANNER_ERROR: 409,
 
-  // Server errors (5xx)
+  // Errores de servidor (5xx)
   EXTERNAL_API_ERROR: 502,
   TIMEOUT_ERROR: 504,
   INFRASTRUCTURE_ERROR: 503,
@@ -37,10 +30,6 @@ export const ERROR_HTTP_STATUS_MAP: Record<string, number> = {
   INTERNAL_ERROR: 500,
 };
 
-/**
- * Get HTTP status code for an error code.
- * Returns 500 for unknown error codes.
- */
 export function getHttpStatusForError(code: string): number {
   return ERROR_HTTP_STATUS_MAP[code] ?? 500;
 }
