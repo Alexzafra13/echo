@@ -27,6 +27,7 @@ import {
   GenerateSmartPlaylistUseCase,
   GetAutoPlaylistsUseCase,
 } from '../../domain/use-cases';
+import { SmartPlaylistConfig } from '../../domain/entities/track-score.entity';
 import {
   CalculateScoreDto,
   DailyMixConfigDto,
@@ -161,7 +162,7 @@ export class RecommendationsController {
     // Log for autoplay debugging
     this.logger.info(`[SmartPlaylist] Generating playlist: artistId=${config.artistId}, name=${config.name}`);
 
-    const result = await this.generateSmartPlaylistUseCase.execute(userId, config as any);
+    const result = await this.generateSmartPlaylistUseCase.execute(userId, config as SmartPlaylistConfig);
 
     this.logger.info(`[SmartPlaylist] Generated ${result.tracks.length} tracks for artistId=${config.artistId}`);
 
