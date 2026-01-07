@@ -43,16 +43,7 @@ import { Public } from '@shared/decorators/public.decorator';
 import * as fs from 'fs';
 import * as path from 'path';
 
-/**
- * FederationPublicController - Endpoints públicos para servidores conectados
- *
- * Estos endpoints son accedidos por otros servidores Echo que tienen
- * un token de acceso válido. Permiten:
- * - Conectarse usando un token de invitación
- * - Navegar la biblioteca
- * - Hacer streaming de tracks
- * - Descargar álbumes completos
- */
+// Endpoints públicos para servidores federados (accedidos con token de acceso)
 @ApiTags('federation-public')
 @Controller('federation')
 export class FederationPublicController {
@@ -63,10 +54,6 @@ export class FederationPublicController {
     private readonly drizzle: DrizzleService,
     private readonly coverArtService: CoverArtService,
   ) {}
-
-  // ============================================
-  // Connection endpoints (Sin autenticación, usan token de invitación)
-  // ============================================
 
   @Post('connect')
   @Public()
@@ -202,10 +189,6 @@ export class FederationPublicController {
 
     return { ok: true };
   }
-
-  // ============================================
-  // Library endpoints (Requieren token de acceso)
-  // ============================================
 
   @Get('library')
   @UseGuards(FederationAccessGuard)
@@ -463,10 +446,6 @@ export class FederationPublicController {
     res.send(stream);
   }
 
-  // ============================================
-  // Streaming endpoints
-  // ============================================
-
   @Get('stream/:trackId')
   @UseGuards(FederationAccessGuard)
   @ApiOperation({
@@ -538,10 +517,6 @@ export class FederationPublicController {
       stream.pipe(res.raw);
     }
   }
-
-  // ============================================
-  // Download endpoints
-  // ============================================
 
   @Get('albums/:id/export')
   @UseGuards(FederationAccessGuard)
@@ -778,10 +753,6 @@ export class FederationPublicController {
       },
     });
   }
-
-  // ============================================
-  // Private helpers
-  // ============================================
 
   private async getServerInfo(): Promise<ServerInfoResponseDto> {
     const [albumCount] = await this.drizzle.db
