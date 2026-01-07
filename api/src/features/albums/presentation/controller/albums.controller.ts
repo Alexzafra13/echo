@@ -185,11 +185,10 @@ export class AlbumsController {
     });
 
     return GetAlbumsPaginatedResponseDto.create({
-      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      data: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
       total: result.total,
       page: result.page,
       limit: result.limit,
-      totalPages: result.totalPages,
     });
   }
 
@@ -242,11 +241,10 @@ export class AlbumsController {
     });
 
     return GetAlbumsPaginatedResponseDto.create({
-      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      data: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
       total: result.total,
       page: result.page,
       limit: result.limit,
-      totalPages: result.totalPages,
     });
   }
 
@@ -292,7 +290,7 @@ export class AlbumsController {
     });
 
     return GetRecentlyPlayedAlbumsResponseDto.create({
-      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      data: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
     });
   }
 
@@ -347,7 +345,7 @@ export class AlbumsController {
     });
 
     return GetFavoriteAlbumsResponseDto.create({
-      albums: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
+      data: result.albums.map(album => AlbumResponseDto.fromDomain(album)),
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,

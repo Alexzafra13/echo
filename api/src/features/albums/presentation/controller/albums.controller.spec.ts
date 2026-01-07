@@ -338,7 +338,7 @@ describe('AlbumsController', () => {
         userId: 'user-1',
         limit: 20,
       });
-      expect(result.albums).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
     });
   });
 
@@ -363,7 +363,7 @@ describe('AlbumsController', () => {
         page: 1,
         limit: 20,
       });
-      expect(result.albums).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
       expect(result.hasMore).toBe(false);
     });
   });
