@@ -303,6 +303,19 @@ export default function ArtistDetailPage() {
             )}
 
             <div className={styles.artistDetailPage__heroContent}>
+              {/* Admin Options Menu - Positioned absolutely */}
+              {user?.isAdmin && (
+                <div className={styles.artistDetailPage__optionsMenu}>
+                  <ArtistOptionsMenu
+                    onChangeProfile={handleChangeProfile}
+                    onChangeBackground={handleChangeBackgroundOrBanner}
+                    onAdjustPosition={handleAdjustPosition}
+                    onChangeLogo={handleChangeLogo}
+                    hasBackground={backgroundUrl !== undefined && hasBackground}
+                  />
+                </div>
+              )}
+
               {/* Artist Avatar/Profile */}
               <div className={styles.artistDetailPage__avatarContainer}>
                 {profileUrl ? (
@@ -317,15 +330,6 @@ export default function ArtistDetailPage() {
                   <div className={styles.artistDetailPage__avatarFallback}>
                     {initials}
                   </div>
-                )}
-                {user?.isAdmin && (
-                  <ArtistOptionsMenu
-                    onChangeProfile={handleChangeProfile}
-                    onChangeBackground={handleChangeBackgroundOrBanner}
-                    onAdjustPosition={handleAdjustPosition}
-                    onChangeLogo={handleChangeLogo}
-                    hasBackground={backgroundUrl !== undefined && hasBackground}
-                  />
                 )}
               </div>
 
