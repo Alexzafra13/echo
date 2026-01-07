@@ -79,7 +79,7 @@ export function ConflictCard({ conflict }: ConflictCardProps) {
     conflict.metadata?.suggestions &&
     Array.isArray(conflict.metadata.suggestions) &&
     conflict.metadata.suggestions.length > 1;
-  const suggestions = hasMultipleSuggestions ? conflict.metadata.suggestions : [];
+  const suggestions = hasMultipleSuggestions ? conflict.metadata?.suggestions : [];
 
   const handleAccept = () => {
     setError(null);
@@ -305,7 +305,8 @@ export function ConflictCard({ conflict }: ConflictCardProps) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {(showAllSuggestions ? suggestions : suggestions.slice(0, 3)).map(
+            {(showAllSuggestions ? suggestions : suggestions?.slice(0, 3))?.map(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (suggestion: any, index: number) => (
                 <label
                   key={index}

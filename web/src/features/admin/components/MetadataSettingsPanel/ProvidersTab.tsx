@@ -3,7 +3,14 @@ import { Check, X, AlertCircle, Key, Shield, CheckCircle2, XCircle } from 'lucid
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ProvidersTab.module.css';
+
+/** API Setting response from backend */
+interface ApiSetting {
+  key: string;
+  value: string;
+}
 
 interface Settings {
   autoEnrichEnabled: boolean;
@@ -51,8 +58,8 @@ export function ProvidersTab() {
       const data = response.data;
 
       // Convert array of settings to object
-      const settingsMap: any = {};
-      data.forEach((setting: any) => {
+      const settingsMap: Record<string, string> = {};
+      (data as ApiSetting[]).forEach((setting) => {
         settingsMap[setting.key] = setting.value;
       });
 
@@ -100,10 +107,10 @@ export function ProvidersTab() {
         ...prev,
         lastfm: { valid: response.data.valid, message: response.data.message },
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setValidationStatus((prev) => ({
         ...prev,
-        lastfm: { valid: false, message: error.response?.data?.message || 'Error al validar' },
+        lastfm: { valid: false, message: getApiErrorMessage(error, 'Error al validar') },
       }));
     } finally {
       setValidating(null);
@@ -133,10 +140,10 @@ export function ProvidersTab() {
         ...prev,
         fanarttv: { valid: response.data.valid, message: response.data.message },
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setValidationStatus((prev) => ({
         ...prev,
-        fanarttv: { valid: false, message: error.response?.data?.message || 'Error al validar' },
+        fanarttv: { valid: false, message: getApiErrorMessage(error, 'Error al validar') },
       }));
     } finally {
       setValidating(null);
@@ -174,13 +181,13 @@ export function ProvidersTab() {
       setSaveMessage({ type: 'success', text: 'Configuración guardada correctamente' });
       // Clear message after 5 seconds
       setTimeout(() => setSaveMessage(null), 5000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (import.meta.env.DEV) {
         logger.error('Error saving settings:', error);
       }
       setSaveMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Error al guardar configuración'
+        text: getApiErrorMessage(error, 'Error al guardar configuración')
       });
       // Clear message after 5 seconds
       setTimeout(() => setSaveMessage(null), 5000);

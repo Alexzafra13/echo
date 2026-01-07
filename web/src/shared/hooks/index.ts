@@ -24,3 +24,4 @@ export type { UseClickOutsideOptions, UseClickOutsideReturn } from './useClickOu
 export { useShufflePlay } from './useShufflePlay';
 export type { UseShufflePlayReturn } from './useShufflePlay';
 export { useDominantColor } from './useDominantColor';
+export { useFocusTrap } from './useFocusTrap';

@@ -31,4 +31,30 @@ export default defineConfig({
       // via websocket.service.ts to avoid Vite proxy issues with Socket.IO
     },
   },
+  build: {
+    // Enable source maps for production debugging (optional)
+    sourcemap: false,
+    // Minify with esbuild (faster) or terser (smaller)
+    minify: 'esbuild',
+    // Target modern browsers for smaller bundles
+    target: 'es2020',
+    // Chunk splitting for better caching
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks for better caching
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-utils': ['axios', 'zustand', 'zod', 'clsx'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+    // Report chunk sizes
+    chunkSizeWarningLimit: 500,
+  },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@tanstack/react-query', 'axios', 'zustand'],
+  },
 });

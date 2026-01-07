@@ -17,6 +17,31 @@ export type ConflictSource = 'musicbrainz' | 'lastfm' | 'fanart' | 'coverartarch
 export type ConflictStatus = 'pending' | 'accepted' | 'rejected' | 'ignored';
 
 /**
+ * Suggestion option for a conflict (Picard-style)
+ * Using Record for flexibility as API returns various fields
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ConflictSuggestion = Record<string, any>;
+
+/**
+ * Additional metadata attached to a conflict
+ * Flexible type as API can return various fields
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ConflictMetadata = Record<string, any>;
+
+/**
+ * Entity info attached to a conflict
+ */
+export interface ConflictEntity {
+  name: string;
+  albumCount?: number;
+  songCount?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+/**
  * Metadata conflict interface
  */
 export interface MetadataConflict {
@@ -29,14 +54,11 @@ export interface MetadataConflict {
   source: ConflictSource;
   status: ConflictStatus;
   priority: number;
-  metadata?: any;
+  metadata?: ConflictMetadata;
   createdAt: string;
   resolvedAt?: string;
   resolvedBy?: string;
-  entity?: {
-    name: string;
-    [key: string]: any;
-  };
+  entity?: ConflictEntity;
 }
 
 /**
