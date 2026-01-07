@@ -5,16 +5,6 @@ import { TrackResponseDto, GetTracksResponseDto, SearchTracksResponseDto, Shuffl
 import { parsePaginationParams } from '@shared/utils';
 import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 
-/**
- * TracksController - Controlador de tracks
- *
- * Responsabilidades:
- * - Recibir peticiones HTTP
- * - Validar parámetros
- * - Llamar a los use cases
- * - Mapear respuestas a DTOs
- * - Retornar JSON
- */
 @ApiTags('tracks')
 @ApiBearerAuth('JWT-auth')
 @Controller('tracks')
@@ -26,15 +16,6 @@ export class TracksController {
     private readonly getShuffledTracksUseCase: GetShuffledTracksUseCase,
   ) {}
 
-  /**
-   * GET /tracks/shuffle
-   * Obtener tracks en orden aleatorio con paginación
-   *
-   * Query params:
-   * - seed: valor para orden determinístico (opcional, se genera si no se provee)
-   * - skip: número de tracks a saltar (default: 0)
-   * - take: número de tracks a traer (default: 50, máximo: 100)
-   */
   @Get('shuffle')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -84,10 +65,6 @@ export class TracksController {
     return ShuffledTracksResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /tracks/:id
-   * Obtener UN track por su ID
-   */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -112,14 +89,6 @@ export class TracksController {
     return TrackResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /tracks
-   * Obtener lista paginada de tracks
-   *
-   * Query params:
-   * - skip: número de tracks a saltar (default: 0)
-   * - take: número de tracks a traer (default: 10, máximo: 100)
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -159,14 +128,6 @@ export class TracksController {
     return GetTracksResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /tracks/search/:query
-   * Buscar tracks por título
-   *
-   * Query params:
-   * - skip: número de resultados a saltar (default: 0)
-   * - take: número de resultados a traer (default: 10, máximo: 100)
-   */
   @Get('search/:query')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

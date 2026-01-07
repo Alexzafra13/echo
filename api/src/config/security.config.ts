@@ -1,3 +1,4 @@
+// JWT y bcrypt. Los secretos se auto-generan en Docker si no existen.
 export const securityConfig = {
   jwt_secret: process.env.JWT_SECRET,
   jwt_expiration: process.env.JWT_EXPIRATION || '24h',

@@ -5,10 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 
-/**
- * AdminGuard - Verifica que el usuario sea admin
- * Debe usarse DESPUÉS de JwtAuthGuard
- */
+// Verifica que el usuario sea admin. Usar después de JwtAuthGuard.
 @Injectable()
 export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {

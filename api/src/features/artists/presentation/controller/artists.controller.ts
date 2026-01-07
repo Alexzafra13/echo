@@ -23,16 +23,6 @@ import { parsePaginationParams } from '@shared/utils';
 import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import { CacheControl } from '@shared/interceptors';
 
-/**
- * ArtistsController - Controlador de artistas
- *
- * Responsabilidades:
- * - Recibir peticiones HTTP
- * - Validar parámetros
- * - Llamar a los use cases
- * - Mapear respuestas a DTOs
- * - Retornar JSON
- */
 @ApiTags('artists')
 @ApiBearerAuth('JWT-auth')
 @Controller('artists')
@@ -47,11 +37,7 @@ export class ArtistsController {
     private readonly getArtistStatsUseCase: GetArtistStatsUseCase,
   ) {}
 
-  /**
-   * GET /artists/:id/albums
-   * Obtener álbumes de un artista
-   * IMPORTANTE: Debe ir ANTES de @Get(':id') para que el router lo capture correctamente
-   */
+  // Debe ir antes de @Get(':id') por orden de rutas
   @Get(':id/albums')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -107,10 +93,6 @@ export class ArtistsController {
     });
   }
 
-  /**
-   * GET /artists/:id/top-tracks
-   * Obtener las canciones más escuchadas de un artista (globalmente entre todos los usuarios)
-   */
   @Get(':id/top-tracks')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -158,10 +140,6 @@ export class ArtistsController {
     return GetArtistTopTracksResponseDto.create(result);
   }
 
-  /**
-   * GET /artists/:id/stats
-   * Obtener estadísticas globales del artista
-   */
   @Get(':id/stats')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -186,10 +164,6 @@ export class ArtistsController {
     return GetArtistStatsResponseDto.create(result);
   }
 
-  /**
-   * GET /artists/:id/related
-   * Obtener artistas relacionados - primero con datos internos, fallback a Last.fm
-   */
   @Get(':id/related')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -227,10 +201,6 @@ export class ArtistsController {
     return GetRelatedArtistsResponseDto.create(result);
   }
 
-  /**
-   * GET /artists/:id
-   * Obtener UN artista por su ID
-   */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiCommonErrors()
@@ -255,10 +225,6 @@ export class ArtistsController {
     return ArtistResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /artists
-   * Obtener lista paginada de artistas
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @CacheControl(60) // 1 minute cache
@@ -299,10 +265,6 @@ export class ArtistsController {
     return GetArtistsResponseDto.fromDomain(result);
   }
 
-  /**
-   * GET /artists/search/:query
-   * Buscar artistas por nombre
-   */
   @Get('search/:query')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

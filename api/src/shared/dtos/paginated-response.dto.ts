@@ -1,8 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-/**
- * Meta información para respuestas paginadas
- */
 export class PaginationMeta {
   @ApiProperty({ description: 'Total de elementos', example: 100 })
   total!: number;
@@ -38,22 +35,7 @@ export class PaginationMeta {
   }
 }
 
-/**
- * Respuesta paginada genérica
- * Usar para estandarizar todas las respuestas con paginación
- *
- * @example
- * ```typescript
- * // En un controlador
- * async getAlbums(): Promise<PaginatedResponse<AlbumResponseDto>> {
- *   const result = await this.getAlbumsUseCase.execute({ page: 1, limit: 20 });
- *   return PaginatedResponse.create(
- *     result.albums.map(a => AlbumResponseDto.fromDomain(a)),
- *     { total: result.total, page: 1, limit: 20 }
- *   );
- * }
- * ```
- */
+// Respuesta paginada con page/limit
 export class PaginatedResponse<T> {
   @ApiProperty({ description: 'Lista de elementos', isArray: true })
   data!: T[];
@@ -72,10 +54,7 @@ export class PaginatedResponse<T> {
   }
 }
 
-/**
- * Respuesta paginada simple (para APIs con skip/take)
- * Compatible con el formato existente de la API
- */
+// Respuesta paginada con skip/take
 export class SimplePaginatedResponse<T> {
   @ApiProperty({ description: 'Lista de elementos', isArray: true })
   data!: T[];
