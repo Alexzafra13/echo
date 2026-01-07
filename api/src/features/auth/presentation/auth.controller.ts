@@ -25,17 +25,10 @@ import {
 } from './dtos';
 import { USER_REPOSITORY, IUserRepository } from '../domain/ports';
 
-/**
- * AuthController - Gestiona autenticación y autorización
- *
- * Rutas:
- * - POST /auth/login → @Public() (única ruta sin JWT en toda la app)
- * - POST /auth/refresh → Requiere JWT válido
- * - GET /auth/me → Requiere JWT + permite si mustChangePassword=true
- */
+// Autenticación: login, refresh token, perfil
 @ApiTags('auth')
 @Controller('auth')
-@UseGuards(JwtAuthGuard) // Aplicar guard a todo el controlador
+@UseGuards(JwtAuthGuard)
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
@@ -44,14 +37,9 @@ export class AuthController {
     private readonly userRepository: IUserRepository,
   ) {}
 
-  /**
-   * Login - ÚNICA ruta pública de toda la aplicación
-   * No requiere JWT porque el usuario aún no está autenticado
-   * Rate limit: 50 intentos por minuto para prevenir fuerza bruta
-   */
   @Post('login')
-  @Public() // ← IMPORTANTE: Única ruta con @Public()
-  @Throttle({ default: { limit: 50, ttl: 60000 } }) // 50 intentos/min - protege brute force, permite E2E
+  @Public()
+  @Throttle({ default: { limit: 50, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Iniciar sesión',
@@ -80,10 +68,6 @@ export class AuthController {
     return AuthResponseDto.fromDomain(result);
   }
 
-  /**
-   * Refresh Token - Requiere JWT válido (refresh token)
-   * NO es público porque el refresh token ya es un JWT
-   */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
@@ -111,13 +95,9 @@ export class AuthController {
     return RefreshTokenResponseDto.fromDomain(result);
   }
 
-  /**
-   * Get Me - Ver perfil del usuario autenticado
-   * Permite acceso incluso si mustChangePassword=true
-   * Fetches fresh data from database to include latest avatar status
-   */
+  // Consulta BD para datos actualizados (avatar, etc.)
   @Get('me')
-  @AllowChangePassword() // ← Usuario puede ver su perfil aunque deba cambiar password
+  @AllowChangePassword()
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
@@ -133,11 +113,9 @@ export class AuthController {
     description: 'No autenticado o token inválido'
   })
   async me(@CurrentUser() jwtUser: JwtUser) {
-    // Fetch fresh user data from database to get updated avatar status
     const freshUser = await this.userRepository.findById(jwtUser.id);
 
     if (!freshUser) {
-      // Fallback to JWT data if user not found (shouldn't happen)
       return {
         user: {
           id: jwtUser.id,
@@ -152,7 +130,6 @@ export class AuthController {
       };
     }
 
-    // Return user with updated data including hasAvatar
     return {
       user: {
         id: freshUser.id,
