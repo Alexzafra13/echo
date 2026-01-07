@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { CreateUserOutput } from '../../domain/use-cases/create-user/create-user.dto';
 
 class CreatedUserDto {
   @ApiProperty({
@@ -39,7 +40,7 @@ export class CreateUserResponseDto {
   })
   temporaryPassword!: string;
 
-  static fromDomain(data: any): CreateUserResponseDto {
+  static fromDomain(data: CreateUserOutput): CreateUserResponseDto {
     const dto = new CreateUserResponseDto();
     dto.user = data.user;
     dto.temporaryPassword = data.temporaryPassword;

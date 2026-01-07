@@ -8,62 +8,40 @@ This report identifies areas for improvement in the Echo Music Server API follow
 
 ## 1. Type Safety Issues
 
-### 1.1 Use of `any` in DTOs (HIGH PRIORITY)
+### 1.1 Use of `any` in DTOs ~~(HIGH PRIORITY)~~ ✅ RESOLVED
 
-**Problem:** Multiple DTOs use `any` type in `fromDomain` methods and response properties, reducing type safety and IDE support.
+**Status:** ✅ Fixed on 2026-01-07
 
-**Files Affected:**
-- `api/src/features/albums/presentation/dtos/album.response.dto.ts:64`
-- `api/src/features/artists/presentation/dtos/artist.response.dto.ts:72`
-- `api/src/features/tracks/presentation/dtos/track.response.dto.ts:112`
-- `api/src/features/albums/presentation/dtos/albums-sort.query.dto.ts:57,77`
-- And 10+ more files
+**Original Problem:** Multiple DTOs used `any` type in `fromDomain` methods and response properties.
 
-**Recommended Fix:**
+**Resolution:**
+- `album.response.dto.ts` - Now uses `AlbumData` type
+- `artist.response.dto.ts` - Now uses `ArtistData` type
+- `track.response.dto.ts` - Now uses `TrackData` type
+- `albums-sort.query.dto.ts` - Now uses `AlbumResponseDto[]`
+- `shuffled-tracks.response.dto.ts` - Now uses `GetShuffledTracksOutput`
+- `create-user.response.dto.ts` - Now uses `CreateUserOutput`
+
+### 1.2 Missing Return Type on canActivate ~~(MEDIUM)~~ ✅ RESOLVED
+
+**Status:** ✅ Already fixed
+
+**File:** `api/src/shared/guards/jwt-auth.guard.ts` now has proper return type:
 ```typescript
-// Before
-static fromDomain(data: any): AlbumResponseDto { ... }
-
-// After - Use domain entity type
-import { Album } from '../../domain/entities/album.entity';
-static fromDomain(data: Album): AlbumResponseDto { ... }
-```
-
-### 1.2 Missing Return Type on canActivate (MEDIUM)
-
-**File:** `api/src/features/shared/guards/jwt-auth.guard.ts:16`
-
-```typescript
-// Before - implicit any return
-canActivate(context: ExecutionContext): boolean | Promise<boolean> | any {
-
-// After - explicit Observable type
-canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean>
 ```
 
 ---
 
 ## 2. Validation Improvements
 
-### 2.1 Missing @IsNotEmpty() on Required Fields (MEDIUM)
+### 2.1 Missing @IsNotEmpty() on Required Fields ~~(MEDIUM)~~ ✅ RESOLVED
 
-**Problem:** Some DTOs use @MinLength but miss @IsNotEmpty(), allowing whitespace-only strings.
+**Status:** ✅ Already fixed
 
-**Files Affected:**
-- `api/src/features/auth/presentation/dtos/login.request.dto.ts`
-- `api/src/features/admin/presentation/dtos/create-user.request.dto.ts`
-
-**Recommended Fix:**
-```typescript
-import { IsString, MinLength, IsNotEmpty } from 'class-validator';
-
-export class LoginRequestDto {
-  @IsString()
-  @IsNotEmpty({ message: 'Username cannot be empty' })
-  @MinLength(3)
-  username!: string;
-}
-```
+Both DTOs now have proper validation:
+- `login.request.dto.ts` - Has `@IsNotEmpty()` decorators
+- `create-user.request.dto.ts` - Has `@IsNotEmpty()` decorators
 
 ### 2.2 Missing Email Validation (LOW)
 
@@ -165,23 +143,27 @@ return {
 
 ## 5. Code Quality
 
-### 5.1 Logger Injection Inconsistency (LOW)
+### 5.1 Logger Injection Inconsistency (LOW) - Acceptable
 
-**Problem:** Mixed usage of NestJS Logger and PinoLogger.
+**Status:** ℹ️ Reviewed - acceptable patterns
 
-**Files:**
-- `artists.controller.ts` uses `new Logger(ArtistsController.name)`
-- `albums.controller.ts` uses `@InjectPinoLogger()`
+**Observation:** Mixed usage of NestJS Logger and PinoLogger exists, but is justified:
+- **Static utilities** (`file-system.util.ts`): Use `new Logger()` - cannot use DI
+- **Adapters** (`websocket.adapter.ts`): Use `new Logger()` - extends IoAdapter, no DI
+- **Controllers/Services**: Use `@InjectPinoLogger()` via DI - correct pattern
 
-**Recommended:** Use PinoLogger consistently via dependency injection.
+**Conclusion:** The mixed usage is acceptable given the technical constraints of static utilities and adapters that cannot use dependency injection.
 
-### 5.2 Duplicate Code in Streaming Controller (MEDIUM)
+### 5.2 Duplicate Code in Streaming Controller ~~(MEDIUM)~~ ✅ RESOLVED
+
+**Status:** ✅ Already refactored
 
 **File:** `api/src/features/streaming/presentation/streaming.controller.ts`
 
-**Problem:** Similar stream handling code repeated for range and full requests.
-
-**Recommended:** Extract common streaming logic to a private method.
+The controller now has a `createManagedStream()` private method that handles:
+- Active stream tracking
+- Automatic cleanup on close/end/error
+- Error logging with context
 
 ### 5.3 Missing Response DTOs for Complex Returns (MEDIUM)
 
@@ -238,24 +220,25 @@ return {
 
 ## 8. Implementation Priority Matrix
 
-| Issue | Priority | Effort | Impact |
-|-------|----------|--------|--------|
-| Replace `any` with proper types | HIGH | Medium | High |
-| Standardize pagination response | HIGH | Medium | High |
-| Add @IsNotEmpty() validation | MEDIUM | Low | Medium |
-| Create missing response DTOs | MEDIUM | Medium | Medium |
-| Consistent logger injection | LOW | Low | Low |
-| API versioning | LOW | High | Low |
-| Fix N+1 in getRelatedArtists | MEDIUM | Medium | Medium |
-| Enhance rate limiting | LOW | Medium | Medium |
+| Issue | Priority | Effort | Impact | Status |
+|-------|----------|--------|--------|--------|
+| Replace `any` with proper types | HIGH | Medium | High | ✅ Done |
+| Standardize pagination response | HIGH | Medium | High | 🔄 Pending |
+| Add @IsNotEmpty() validation | MEDIUM | Low | Medium | ✅ Done |
+| Create missing response DTOs | MEDIUM | Medium | Medium | 🔄 Pending |
+| Consistent logger injection | LOW | Low | Low | ✅ Reviewed |
+| API versioning | LOW | High | Low | 🔄 Backlog |
+| Fix N+1 in getRelatedArtists | MEDIUM | Medium | Medium | 🔄 Pending |
+| Enhance rate limiting | LOW | Medium | Medium | 🔄 Backlog |
+| Refactor streaming controller | MEDIUM | Medium | Medium | ✅ Done |
 
 ---
 
 ## 9. Quick Wins (Can implement now)
 
-1. Add proper types to `fromDomain` methods
-2. Add `@IsNotEmpty()` to required string fields
-3. Unify logger injection pattern
+1. ~~Add proper types to `fromDomain` methods~~ ✅ Done
+2. ~~Add `@IsNotEmpty()` to required string fields~~ ✅ Done
+3. ~~Unify logger injection pattern~~ ✅ Reviewed (acceptable)
 4. Create standard pagination response DTO
 5. Add common error responses to Swagger docs
 
@@ -263,22 +246,23 @@ return {
 
 ## 10. Recommended Action Items
 
-### Immediate (This Sprint)
-1. Create typed `fromDomain` methods for all DTOs
-2. Add validation decorators to request DTOs
-3. Standardize pagination response format
+### Completed ✅
+1. ~~Create typed `fromDomain` methods for all DTOs~~ ✅
+2. ~~Add validation decorators to request DTOs~~ ✅
+3. ~~Refactor streaming controller for less duplication~~ ✅
 
-### Short-term (Next Sprint)
-1. Create response DTOs for all inline returns
-2. Implement consistent error documentation
-3. Refactor streaming controller for less duplication
+### Remaining Tasks
+1. Standardize pagination response format
+2. Create response DTOs for all inline returns
+3. Implement consistent error documentation
+4. Optimize N+1 queries in getRelatedArtists
 
-### Long-term (Backlog)
+### Backlog
 1. Implement API versioning
 2. Add tiered rate limiting
-3. Optimize N+1 queries
 
 ---
 
 *Report generated: 2025-12-25*
+*Last updated: 2026-01-07*
 *Reviewer: Claude Code API Review*
