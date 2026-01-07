@@ -3,8 +3,10 @@ import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
- * Base DTO for page-based pagination queries.
- * Use this for endpoints that use page/limit style pagination.
+ * PaginationQueryDto - DTO base para paginación por página
+ *
+ * Usar para endpoints que usan paginación estilo page/limit.
+ * Los parámetros son opcionales con valores por defecto.
  *
  * @example
  * ```typescript
@@ -43,8 +45,10 @@ export class PaginationQueryDto {
 }
 
 /**
- * DTO for skip/take (offset) style pagination.
- * Use this for endpoints that use offset-based pagination.
+ * OffsetPaginationQueryDto - DTO para paginación por offset
+ *
+ * Usar para endpoints que usan paginación estilo skip/take (offset).
+ * Útil para scroll infinito o paginación basada en cursor.
  *
  * @example
  * ```typescript
@@ -83,8 +87,10 @@ export class OffsetPaginationQueryDto {
 }
 
 /**
- * Simple limit query DTO for endpoints that only need a limit.
- * Use for lists without full pagination (e.g., "top 10", "recent 5").
+ * LimitQueryDto - DTO simple para límite sin paginación completa
+ *
+ * Usar para listas que solo necesitan un límite (ej: "top 10", "últimos 5").
+ * No incluye offset ni información de página.
  *
  * @example
  * ```typescript
