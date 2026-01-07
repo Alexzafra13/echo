@@ -5,14 +5,15 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { TrackList } from '@features/home/components';
 import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist, useReorderPlaylistTracks } from '../../hooks/usePlaylists';
-import { usePlayer, Track } from '@features/player';
+import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
 import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
-import { UpdatePlaylistDto, PlaylistTrack } from '../../types';
+import { UpdatePlaylistDto } from '../../types';
 import type { Track as SharedTrack } from '@shared/types/track.types';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { formatDuration } from '@shared/utils/format';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
+import { toPlayerTracks } from '@shared/utils/track.utils';
 import { useAuthStore } from '@shared/store';
 import { logger } from '@shared/utils/logger';
 import styles from './PlaylistDetailPage.module.css';
@@ -51,36 +52,19 @@ export default function PlaylistDetailPage() {
     }
   }, [playlistTracks]);
 
-  // Convert API tracks to Player tracks
-  const convertToPlayerTracks = (apiTracks: PlaylistTrack[]): Track[] => {
-    return apiTracks.map(track => ({
-      id: track.id,
-      title: track.title,
-      artist: track.artistName || 'Unknown Artist',
-      albumId: track.albumId,
-      albumName: track.albumName,
-      duration: track.duration || 0,
-      coverImage: track.albumId ? `/api/albums/${track.albumId}/cover` : undefined,
-      trackNumber: track.trackNumber,
-      // Audio normalization data (LUFS)
-      rgTrackGain: track.rgTrackGain,
-      rgTrackPeak: track.rgTrackPeak,
-    }));
-  };
-
   const handlePlayAll = () => {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
     // Disable shuffle mode for ordered playback
     setShuffle(false);
-    const playerTracks = convertToPlayerTracks(tracks);
+    const playerTracks = toPlayerTracks(tracks);
     playQueue(playerTracks, 0);
   };
 
   const handleShufflePlay = () => {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
-    const playerTracks = convertToPlayerTracks(tracks);
+    const playerTracks = toPlayerTracks(tracks);
     // Enable shuffle mode
     setShuffle(true);
     // Shuffle the tracks array using Fisher-Yates algorithm
@@ -95,7 +79,7 @@ export default function PlaylistDetailPage() {
   const handleTrackPlay = (track: SharedTrack) => {
     const tracks = playlistTracks?.tracks || [];
     if (tracks.length === 0) return;
-    const playerTracks = convertToPlayerTracks(tracks);
+    const playerTracks = toPlayerTracks(tracks);
     const trackIndex = tracks.findIndex(t => t.id === track.id);
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };

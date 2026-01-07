@@ -6,6 +6,7 @@ import { Sidebar } from '../../components';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { handleAvatarError } from '@shared/utils/avatar.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
 import type { Artist } from '@features/artists/types/artist.types';
 import type { Album } from '@features/home/types/album.types';
@@ -36,15 +37,6 @@ export function SearchResultsPage() {
 
   const isLoading = loadingArtists || loadingAlbums || loadingTracks;
   const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0;
-
-  // Handle avatar image error - fallback to default avatar
-  const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const defaultAvatar = '/images/empy_cover/empy_cover_default.png';
-    if (img.src !== defaultAvatar) {
-      img.src = defaultAvatar;
-    }
-  };
 
   // Render content based on state
   const renderContent = () => {

@@ -7,6 +7,8 @@ import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
 import { usePlayer } from '@features/player';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { handleAvatarError } from '@shared/utils/avatar.utils';
+import { toPlayerTracks } from '@shared/utils/track.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
 import type { Artist } from '@features/artists/types';
 import type { Album } from '@features/home/types';
@@ -90,33 +92,9 @@ export function SearchPanel({ isOpen, query, onClose }: SearchPanelProps) {
   // Handle track click - play the track and queue remaining search results
   const handlePlayTrack = (_track: Track, index: number) => {
     // Convert search results to player Track format and play
-    const playerTracks = tracks.map((t: Track) => ({
-      id: t.id,
-      title: t.title,
-      artist: t.artistName || t.artist,
-      artistId: t.artistId,
-      albumName: t.albumTitle || t.albumName,
-      albumId: t.albumId,
-      duration: t.duration,
-      trackNumber: t.trackNumber,
-      path: t.path,
-      // Audio normalization data (LUFS)
-      rgTrackGain: t.rgTrackGain,
-      rgTrackPeak: t.rgTrackPeak,
-    }));
-
-    // Play all tracks starting from the clicked one
+    const playerTracks = toPlayerTracks(tracks);
     playQueue(playerTracks, index);
     onClose();
-  };
-
-  // Handle avatar image error - fallback to default avatar
-  const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const defaultAvatar = '/images/empy_cover/empy_cover_default.png';
-    if (img.src !== defaultAvatar) {
-      img.src = defaultAvatar;
-    }
   };
 
   if (!isVisible) return null;
