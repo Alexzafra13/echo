@@ -87,6 +87,14 @@
   min-height: 400px;
 }
 
+/* Options menu for admin - positioned in hero */
+.artistDetailPage__optionsMenu {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  z-index: 10;
+}
+
 .artistDetailPage__avatarContainer {
   position: relative;
   flex-shrink: 0;
@@ -411,6 +419,13 @@
     min-height: 360px;
     width: 100%;
     justify-content: flex-end; /* Push content to bottom */
+  }
+
+  /* Options menu - top right on mobile */
+  .artistDetailPage__optionsMenu {
+    top: 70px; /* Below header */
+    right: 16px;
+    bottom: auto;
   }
 
   /* Hide circular avatar on mobile - image is now the background */
