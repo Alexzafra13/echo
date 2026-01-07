@@ -31,11 +31,7 @@ import {
   InvitationTokenResponseDto,
 } from './dto';
 
-/**
- * InvitationController - Gestión de tokens de invitación
- *
- * Permite a los usuarios crear tokens para que otros se conecten a su servidor.
- */
+// Creación de tokens de invitación para que otros conecten a tu servidor
 @ApiTags('federation')
 @Controller('federation/invitations')
 @UseGuards(JwtAuthGuard)
@@ -126,10 +122,10 @@ export class InvitationController {
   ): Promise<void> {
     const token = await this.repository.findFederationTokenById(id);
     if (!token) {
-      throw new NotFoundException('Invitation token not found');
+      throw new NotFoundException('Token de invitación no encontrado');
     }
     if (token.createdByUserId !== user.id) {
-      throw new ForbiddenException('You do not have access to this token');
+      throw new ForbiddenException('No tienes acceso a este token');
     }
     await this.tokenService.deleteInvitationToken(id);
     this.logger.info({ userId: user.id, tokenId: id }, 'Invitation token deleted');

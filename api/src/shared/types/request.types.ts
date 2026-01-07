@@ -1,4 +1,5 @@
 import { FastifyRequest } from 'fastify';
+import { FederationAccessToken } from '@features/federation/domain/types/federation.types';
 
 // Usuario autenticado (lo que retorna JwtStrategy.validate)
 export interface JwtUser {
@@ -43,4 +44,9 @@ export interface JwtTokenPayload {
 export interface JwtSignOptions {
   expiresIn?: string;
   secret?: string;
+}
+
+// Request con token de federación (usado por FederationAccessGuard)
+export interface RequestWithFederationToken extends FastifyRequest {
+  federationAccessToken: FederationAccessToken;
 }

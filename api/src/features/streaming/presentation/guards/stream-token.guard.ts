@@ -17,14 +17,14 @@ export class StreamTokenGuard implements CanActivate {
     const token = request.query?.token;
 
     if (!token || typeof token !== 'string') {
-      throw new UnauthorizedError('Stream token is required');
+      throw new UnauthorizedError('Token de streaming requerido');
     }
 
     // Validate token
     const userId = await this.streamTokenService.validateToken(token);
 
     if (!userId) {
-      throw new UnauthorizedError('Invalid or expired stream token');
+      throw new UnauthorizedError('Token de streaming inválido o expirado');
     }
 
     // Attach user info to request for use in controller

@@ -30,9 +30,9 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util';
 import { CoverArtService } from '@shared/services';
 import { albums, tracks, artists } from '@infrastructure/database/schema';
-import { FederationAccessToken } from '../domain/types';
 import { FederationTokenService } from '../domain/services';
 import { FederationAccessGuard } from './guards';
+import { RequestWithFederationToken } from '@shared/types/request.types';
 import {
   AcceptConnectionDto,
   ConnectionResponseDto,
@@ -43,16 +43,7 @@ import { Public } from '@shared/decorators/public.decorator';
 import * as fs from 'fs';
 import * as path from 'path';
 
-/**
- * FederationPublicController - Endpoints públicos para servidores conectados
- *
- * Estos endpoints son accedidos por otros servidores Echo que tienen
- * un token de acceso válido. Permiten:
- * - Conectarse usando un token de invitación
- * - Navegar la biblioteca
- * - Hacer streaming de tracks
- * - Descargar álbumes completos
- */
+// Endpoints públicos para servidores federados (accedidos con token de acceso)
 @ApiTags('federation-public')
 @Controller('federation')
 export class FederationPublicController {
@@ -63,10 +54,6 @@ export class FederationPublicController {
     private readonly drizzle: DrizzleService,
     private readonly coverArtService: CoverArtService,
   ) {}
-
-  // ============================================
-  // Connection endpoints (Sin autenticación, usan token de invitación)
-  // ============================================
 
   @Post('connect')
   @Public()
@@ -116,7 +103,7 @@ export class FederationPublicController {
           { serverName: dto.serverName, token: dto.invitationToken?.substring(0, 4) + '...' },
           'Invalid or expired invitation token',
         );
-        throw new UnauthorizedException('Invalid or expired invitation token');
+        throw new UnauthorizedException('Token de invitación inválido o expirado');
       }
 
       if (mutualToken) {
@@ -189,23 +176,19 @@ export class FederationPublicController {
     summary: 'Notificar desconexión',
     description: 'Notifica que el servidor remoto se está desconectando',
   })
-  async disconnect(@Req() request: FastifyRequest): Promise<{ ok: boolean }> {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+  async disconnect(@Req() request: RequestWithFederationToken): Promise<{ ok: boolean }> {
+    const { federationAccessToken } = request;
 
     // Revoke the access token
-    await this.tokenService.revokeAccessToken(accessToken.id);
+    await this.tokenService.revokeAccessToken(federationAccessToken.id);
 
     this.logger.info(
-      { serverName: accessToken.serverName },
+      { serverName: federationAccessToken.serverName },
       'Server disconnected',
     );
 
     return { ok: true };
   }
-
-  // ============================================
-  // Library endpoints (Requieren token de acceso)
-  // ============================================
 
   @Get('library')
   @UseGuards(FederationAccessGuard)
@@ -217,12 +200,12 @@ export class FederationPublicController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getLibrary(
     @Query() query: PaginationQueryDto,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canBrowse) {
-      throw new ForbiddenException('Browse permission not granted');
+    if (!federationAccessToken.permissions.canBrowse) {
+      throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
     const page = query.page || 1;
@@ -285,12 +268,12 @@ export class FederationPublicController {
   })
   async getAlbums(
     @Query() query: PaginationQueryDto,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canBrowse) {
-      throw new ForbiddenException('Browse permission not granted');
+    if (!federationAccessToken.permissions.canBrowse) {
+      throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
     const page = query.page || 1;
@@ -344,12 +327,12 @@ export class FederationPublicController {
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async getAlbum(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canBrowse) {
-      throw new ForbiddenException('Browse permission not granted');
+    if (!federationAccessToken.permissions.canBrowse) {
+      throw new ForbiddenException('Permiso de navegación no otorgado');
     }
 
     // Get album
@@ -371,7 +354,7 @@ export class FederationPublicController {
       .limit(1);
 
     if (!album) {
-      throw new NotFoundException('Album not found');
+      throw new NotFoundException('Álbum no encontrado');
     }
 
     // Get tracks
@@ -429,11 +412,11 @@ export class FederationPublicController {
   async getAlbumCover(
     @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canBrowse) {
+    if (!federationAccessToken.permissions.canBrowse) {
       res.status(HttpStatus.FORBIDDEN).send({ error: 'Browse permission not granted' });
       return;
     }
@@ -463,10 +446,6 @@ export class FederationPublicController {
     res.send(stream);
   }
 
-  // ============================================
-  // Streaming endpoints
-  // ============================================
-
   @Get('stream/:trackId')
   @UseGuards(FederationAccessGuard)
   @ApiOperation({
@@ -478,11 +457,11 @@ export class FederationPublicController {
     @Param('trackId', ParseUUIDPipe) trackId: string,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canStream) {
+    if (!federationAccessToken.permissions.canStream) {
       res.status(HttpStatus.FORBIDDEN).send({ error: 'Stream permission not granted' });
       return;
     }
@@ -539,10 +518,6 @@ export class FederationPublicController {
     }
   }
 
-  // ============================================
-  // Download endpoints
-  // ============================================
-
   @Get('albums/:id/export')
   @UseGuards(FederationAccessGuard)
   @ApiOperation({
@@ -552,12 +527,12 @@ export class FederationPublicController {
   @ApiParam({ name: 'id', description: 'ID del álbum' })
   async exportAlbumMetadata(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canDownload) {
-      throw new ForbiddenException('Download permission not granted');
+    if (!federationAccessToken.permissions.canDownload) {
+      throw new ForbiddenException('Permiso de descarga no otorgado');
     }
 
     // Get album with all metadata
@@ -588,7 +563,7 @@ export class FederationPublicController {
       .limit(1);
 
     if (!album) {
-      throw new NotFoundException('Album not found');
+      throw new NotFoundException('Álbum no encontrado');
     }
 
     // Get tracks with ALL metadata including LUFS/ReplayGain
@@ -707,11 +682,11 @@ export class FederationPublicController {
   async downloadAlbum(
     @Param('id', ParseUUIDPipe) id: string,
     @Res() res: FastifyReply,
-    @Req() request: FastifyRequest,
+    @Req() request: RequestWithFederationToken,
   ) {
-    const accessToken = (request as any).federationAccessToken as FederationAccessToken;
+    const { federationAccessToken } = request;
 
-    if (!accessToken.permissions.canDownload) {
+    if (!federationAccessToken.permissions.canDownload) {
       res.status(HttpStatus.FORBIDDEN).send({ error: 'Download permission not granted' });
       return;
     }
@@ -778,10 +753,6 @@ export class FederationPublicController {
       },
     });
   }
-
-  // ============================================
-  // Private helpers
-  // ============================================
 
   private async getServerInfo(): Promise<ServerInfoResponseDto> {
     const [albumCount] = await this.drizzle.db

@@ -30,9 +30,6 @@ import { AlbumImportQueue } from '../domain/types';
 import { AlbumImportService } from '../infrastructure/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 
-/**
- * DTO for starting an album import
- */
 class StartImportDto {
   @ApiProperty({ description: 'ID of the connected server' })
   @IsString()
@@ -45,18 +42,7 @@ class StartImportDto {
   remoteAlbumId!: string;
 }
 
-/**
- * FederationImportController - Endpoints for album import management
- *
- * Responsibilities:
- * - Start album imports from federated servers
- * - List user's imports
- * - Cancel pending imports
- * - Get import status
- *
- * Real-time progress is delivered via WebSocket (FederationGateway)
- * Connect to /federation namespace and listen for 'import:progress' events
- */
+// Importación de álbumes desde servidores federados (progreso via WebSocket /federation)
 @ApiTags('federation-import')
 @Controller('federation/import')
 @UseGuards(JwtAuthGuard)
@@ -70,10 +56,6 @@ export class FederationImportController {
     private readonly repository: IFederationRepository,
   ) {}
 
-  /**
-   * POST /federation/import
-   * Start importing an album from a connected server
-   */
   @Post()
   @ApiOperation({
     summary: 'Iniciar importación de álbum',
@@ -133,10 +115,6 @@ export class FederationImportController {
     }
   }
 
-  /**
-   * GET /federation/import
-   * List all imports for the current user
-   */
   @Get()
   @ApiOperation({
     summary: 'Listar importaciones',
@@ -150,10 +128,6 @@ export class FederationImportController {
     return this.importService.getUserImports(user.id);
   }
 
-  /**
-   * GET /federation/import/:id
-   * Get import status
-   */
   @Get(':id')
   @ApiOperation({
     summary: 'Estado de importación',
@@ -180,10 +154,6 @@ export class FederationImportController {
     return importEntry;
   }
 
-  /**
-   * DELETE /federation/import/:id
-   * Cancel a pending import
-   */
   @Delete(':id')
   @ApiOperation({
     summary: 'Cancelar importación',

@@ -29,24 +29,11 @@ import * as fs from 'fs';
 import { ReadStream } from 'fs';
 import { ServerResponse } from 'http';
 
-/**
- * StreamingController - Controlador de streaming de audio
- *
- * Responsabilidades:
- * - Streamear archivos de audio con soporte para HTTP Range requests
- * - Proporcionar metadata de archivos (HEAD)
- * - Manejar descarga completa de archivos
- *
- * Autenticación: Usa StreamTokenGuard que valida tokens de streaming
- * en query parameters (requerido para HTML5 audio element)
- *
- * MustChangePasswordGuard: Excluido vía @AllowChangePassword para permitir streaming
- * incluso cuando el usuario debe cambiar su contraseña
- */
+// Streaming de audio con soporte para Range requests (seek/skip)
 @ApiTags('streaming')
 @Controller('tracks')
 @UseGuards(StreamTokenGuard)
-@AllowChangePassword() // Permitir streaming aunque usuario deba cambiar contraseña
+@AllowChangePassword()
 export class StreamingController implements OnModuleDestroy {
   private readonly activeStreams = new Set<ReadStream>();
 
@@ -56,9 +43,6 @@ export class StreamingController implements OnModuleDestroy {
     private readonly streamTrackUseCase: StreamTrackUseCase,
   ) {}
 
-  /**
-   * Cleanup: Destruir todos los streams activos al cerrar el módulo
-   */
   onModuleDestroy(): void {
     this.logger.info({ activeStreams: this.activeStreams.size }, 'Cleaning up active streams');
 
@@ -71,9 +55,6 @@ export class StreamingController implements OnModuleDestroy {
     this.activeStreams.clear();
   }
 
-  /**
-   * Crea un stream con manejo automático de cleanup y errores
-   */
   private createManagedStream(
     filePath: string,
     trackId: string,
@@ -109,10 +90,6 @@ export class StreamingController implements OnModuleDestroy {
     return stream;
   }
 
-  /**
-   * HEAD /tracks/:id/stream
-   * Obtener metadata del archivo sin descargar contenido
-   */
   @Head(':id/stream')
   @ApiCommonErrors()
   @ApiNotFoundError('Track')
@@ -160,10 +137,6 @@ export class StreamingController implements OnModuleDestroy {
     res.status(HttpStatus.OK).send();
   }
 
-  /**
-   * GET /tracks/:id/stream
-   * Streamear audio con soporte para HTTP Range requests
-   */
   @Get(':id/stream')
   @ApiCommonErrors()
   @ApiNotFoundError('Track')
@@ -247,10 +220,6 @@ export class StreamingController implements OnModuleDestroy {
     }
   }
 
-  /**
-   * GET /tracks/:id/download
-   * Descargar track completo
-   */
   @Get(':id/download')
   @ApiCommonErrors()
   @ApiNotFoundError('Track')

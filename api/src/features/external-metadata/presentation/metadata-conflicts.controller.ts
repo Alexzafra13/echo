@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nes
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MetadataConflictService } from '../infrastructure/services/metadata-conflict.service';
+import { EntityType, ConflictSource, ConflictWithEntity } from '../infrastructure/services/conflicts/conflict-enrichment.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
@@ -15,19 +16,7 @@ import {
   ConflictResolvedResponseDto,
 } from './dtos/metadata-conflicts.dto';
 
-/**
- * MetadataConflictsController
- * Handles metadata conflict management endpoints
- *
- * Responsibilities:
- * - List pending conflicts with filters and pagination
- * - Get conflict details
- * - Accept suggested metadata changes
- * - Reject suggested changes
- * - Ignore conflicts permanently
- *
- * All endpoints require admin authentication
- */
+// Gestión de conflictos de metadata: aceptar/rechazar/ignorar sugerencias
 @ApiTags('Admin - Metadata Conflicts')
 @Controller('admin/metadata-conflicts')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -38,10 +27,6 @@ export class MetadataConflictsController {
     private readonly drizzle: DrizzleService,
   ) {}
 
-  /**
-   * GET /admin/metadata-conflicts
-   * List all pending conflicts with pagination and filters
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -60,23 +45,19 @@ export class MetadataConflictsController {
     await this.conflictService.cleanupOrphanedConflicts();
 
     const result = await this.conflictService.getPendingConflicts(skip, take, {
-      entityType: entityType as any,
-      source: source as any,
+      entityType: entityType as EntityType | undefined,
+      source: source as ConflictSource | undefined,
       priority,
     });
 
     return {
-      conflicts: result.conflicts as any[],
+      conflicts: result.conflicts as ConflictResponseDto[],
       total: result.total,
       skip,
       take,
     };
   }
 
-  /**
-   * GET /admin/metadata-conflicts/:id
-   * Get details of a specific conflict
-   */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -101,13 +82,9 @@ export class MetadataConflictsController {
       throw new NotFoundError('MetadataConflict', id);
     }
 
-    return conflict as any;
+    return conflict as ConflictResponseDto;
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/accept
-   * Accept a conflict and apply the suggested value
-   */
   @Post(':id/accept')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -137,10 +114,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/reject
-   * Reject a conflict (keep current value)
-   */
   @Post(':id/reject')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -169,10 +142,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/ignore
-   * Ignore a conflict permanently (don't show again)
-   */
   @Post(':id/ignore')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -201,10 +170,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * GET /admin/metadata-conflicts/entity/:entityType/:entityId
-   * Get all conflicts for a specific entity
-   */
   @Get('entity/:entityType/:entityId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -220,14 +185,11 @@ export class MetadataConflictsController {
     @Param('entityType') entityType: string,
     @Param('entityId', ParseUUIDPipe) entityId: string,
   ): Promise<ConflictResponseDto[]> {
-    const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as any);
-    return conflicts as any[];
+    const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as EntityType);
+    return conflicts as ConflictResponseDto[];
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/apply-suggestion
-   * Apply a specific suggestion from multiple options (for MBID auto-search conflicts)
-   */
+  // Aplica una sugerencia específica (para conflictos con múltiples opciones de MBID)
   @Post(':id/apply-suggestion')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

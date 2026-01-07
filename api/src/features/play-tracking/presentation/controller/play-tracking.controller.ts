@@ -29,6 +29,7 @@ import {
   GetUserPlaySummaryUseCase,
   UpdatePlaybackStateUseCase,
 } from '../../domain/use-cases';
+import { PlayContext, SourceType } from '../../domain/entities/play-event.entity';
 import { RecordPlayDto, RecordSkipDto, UpdatePlaybackStateDto } from '../dtos/play-tracking.dto';
 import {
   PlayEventResponseDto,
@@ -51,10 +52,6 @@ export class PlayTrackingController {
     private readonly updatePlaybackStateUseCase: UpdatePlaybackStateUseCase,
   ) {}
 
-  /**
-   * POST /play-tracking/play
-   * Record a play event with context
-   */
   @Post('play')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Record a play event with smart context tracking' })
@@ -69,10 +66,10 @@ export class PlayTrackingController {
     const playEvent = await this.recordPlayUseCase.execute({
       userId,
       trackId: dto.trackId,
-      playContext: dto.playContext as any,
+      playContext: dto.playContext as PlayContext,
       completionRate: dto.completionRate,
       sourceId: dto.sourceId,
-      sourceType: dto.sourceType as any,
+      sourceType: dto.sourceType as SourceType | undefined,
       client: req.headers['user-agent'],
     });
 
@@ -91,10 +88,6 @@ export class PlayTrackingController {
     };
   }
 
-  /**
-   * POST /play-tracking/skip
-   * Record a skip event
-   */
   @Post('skip')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Record a skip event (track skipped before completion)' })
@@ -110,7 +103,7 @@ export class PlayTrackingController {
       userId,
       dto.trackId,
       dto.completionRate,
-      dto.playContext as any,
+      dto.playContext as PlayContext,
     );
 
     return {
@@ -128,10 +121,6 @@ export class PlayTrackingController {
     };
   }
 
-  /**
-   * GET /play-tracking/history
-   * Get user's play history
-   */
   @Get('history')
   @ApiOperation({ summary: 'Get user play history' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -164,10 +153,6 @@ export class PlayTrackingController {
     }));
   }
 
-  /**
-   * GET /play-tracking/top-tracks
-   * Get user's top tracks
-   */
   @Get('top-tracks')
   @ApiOperation({ summary: 'Get user top tracks based on weighted play count' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -186,10 +171,6 @@ export class PlayTrackingController {
     return await this.getUserTopTracksUseCase.execute(userId, limit, days);
   }
 
-  /**
-   * GET /play-tracking/recently-played
-   * Get recently played tracks
-   */
   @Get('recently-played')
   @ApiOperation({ summary: 'Get recently played tracks (unique tracks)' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -206,10 +187,6 @@ export class PlayTrackingController {
     return await this.getRecentlyPlayedUseCase.execute(userId, limit);
   }
 
-  /**
-   * GET /play-tracking/summary
-   * Get user play summary with statistics
-   */
   @Get('summary')
   @ApiOperation({ summary: 'Get user play summary with statistics' })
   @ApiQuery({ name: 'days', required: false, type: Number })
@@ -247,10 +224,6 @@ export class PlayTrackingController {
     };
   }
 
-  /**
-   * PUT /play-tracking/playback-state
-   * Update current playback state (for social "listening now" feature)
-   */
   @Put('playback-state')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
