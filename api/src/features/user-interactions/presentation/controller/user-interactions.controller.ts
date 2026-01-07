@@ -50,10 +50,6 @@ export class UserInteractionsController {
     private readonly getItemSummaryUseCase: GetItemSummaryUseCase,
   ) {}
 
-  /**
-   * POST /interactions/rating
-   * Set rating for an item (1-5 stars)
-   */
   @Post('rating')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Set rating for an item (1-5 stars)' })
@@ -77,10 +73,6 @@ export class UserInteractionsController {
     };
   }
 
-  /**
-   * DELETE /interactions/rating/:itemId/:itemType
-   * Remove rating from an item
-   */
   @Delete('rating/:itemType/:itemId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove rating from an item' })
@@ -97,10 +89,6 @@ export class UserInteractionsController {
     await this.removeRatingUseCase.execute(userId, itemId, itemType as any);
   }
 
-  /**
-   * GET /interactions/me
-   * Get all ratings for the current user
-   */
   @SkipThrottle()
   @Get('me')
   @ApiOperation({ summary: 'Get all ratings for the current user' })
@@ -125,10 +113,6 @@ export class UserInteractionsController {
     }));
   }
 
-  /**
-   * GET /interactions/item/:itemType/:itemId
-   * Get rating summary for an item
-   */
   @SkipThrottle()
   @Get('item/:itemType/:itemId')
   @ApiOperation({ summary: 'Get rating summary for an item' })
