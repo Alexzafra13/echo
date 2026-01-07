@@ -260,3 +260,30 @@
 :root[data-theme="light"] .healthItem:hover {
   background: linear-gradient(135deg, var(--white-80) 0%, var(--white-60) 100%);
 }
+
+/* Scan Progress */
+.scanProgress {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary, #ed6842);
+  background: var(--white-05);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary, #ed6842) 0%, var(--color-primary-light, #f5a388) 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
