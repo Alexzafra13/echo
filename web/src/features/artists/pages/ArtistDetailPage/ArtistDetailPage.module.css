@@ -421,10 +421,10 @@
     justify-content: flex-end; /* Push content to bottom */
   }
 
-  /* Options menu - top right on mobile */
+  /* Options menu - top right inside hero on mobile */
   .artistDetailPage__optionsMenu {
-    top: 70px; /* Below header */
-    right: 16px;
+    top: 16px; /* Near top of hero content */
+    right: 0;
     bottom: auto;
   }
 
