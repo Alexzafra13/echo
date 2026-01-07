@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { UnauthorizedError } from '@shared/errors';
+import { RequestWithFederationToken } from '@shared/types/request.types';
 import { FederationTokenService } from '../../domain/services/federation-token.service';
 
 /**
@@ -41,7 +42,7 @@ export class FederationAccessGuard implements CanActivate {
     }
 
     // Attach token info to request for use in controllers
-    (request as any).federationAccessToken = accessToken;
+    (request as RequestWithFederationToken).federationAccessToken = accessToken;
 
     return true;
   }

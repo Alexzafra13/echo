@@ -29,6 +29,7 @@ import {
   GetUserPlaySummaryUseCase,
   UpdatePlaybackStateUseCase,
 } from '../../domain/use-cases';
+import { PlayContext, SourceType } from '../../domain/entities/play-event.entity';
 import { RecordPlayDto, RecordSkipDto, UpdatePlaybackStateDto } from '../dtos/play-tracking.dto';
 import {
   PlayEventResponseDto,
@@ -65,10 +66,10 @@ export class PlayTrackingController {
     const playEvent = await this.recordPlayUseCase.execute({
       userId,
       trackId: dto.trackId,
-      playContext: dto.playContext as any,
+      playContext: dto.playContext as PlayContext,
       completionRate: dto.completionRate,
       sourceId: dto.sourceId,
-      sourceType: dto.sourceType as any,
+      sourceType: dto.sourceType as SourceType | undefined,
       client: req.headers['user-agent'],
     });
 
@@ -102,7 +103,7 @@ export class PlayTrackingController {
       userId,
       dto.trackId,
       dto.completionRate,
-      dto.playContext as any,
+      dto.playContext as PlayContext,
     );
 
     return {
