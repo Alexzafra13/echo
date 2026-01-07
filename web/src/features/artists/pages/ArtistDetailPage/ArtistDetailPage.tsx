@@ -302,20 +302,20 @@ export default function ArtistDetailPage() {
               />
             )}
 
-            <div className={styles.artistDetailPage__heroContent}>
-              {/* Mobile-only: Admin Options Menu at top-right */}
-              {user?.isAdmin && (
-                <div className={styles.artistDetailPage__optionsMenuMobile}>
-                  <ArtistOptionsMenu
-                    onChangeProfile={handleChangeProfile}
-                    onChangeBackground={handleChangeBackgroundOrBanner}
-                    onAdjustPosition={handleAdjustPosition}
-                    onChangeLogo={handleChangeLogo}
-                    hasBackground={backgroundUrl !== undefined && hasBackground}
-                  />
-                </div>
-              )}
+            {/* Mobile-only: Admin Options Menu at top-right (outside heroContent for z-index) */}
+            {user?.isAdmin && (
+              <div className={styles.artistDetailPage__optionsMenuMobile}>
+                <ArtistOptionsMenu
+                  onChangeProfile={handleChangeProfile}
+                  onChangeBackground={handleChangeBackgroundOrBanner}
+                  onAdjustPosition={handleAdjustPosition}
+                  onChangeLogo={handleChangeLogo}
+                  hasBackground={backgroundUrl !== undefined && hasBackground}
+                />
+              </div>
+            )}
 
+            <div className={styles.artistDetailPage__heroContent}>
               {/* Artist Avatar/Profile */}
               <div className={styles.artistDetailPage__avatarContainer}>
                 {profileUrl ? (
