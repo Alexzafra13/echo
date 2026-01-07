@@ -1,6 +1,7 @@
-import { IsOptional, IsInt, Min, Max, IsIn } from 'class-validator';
+import { IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { AlbumResponseDto } from './album.response.dto';
 
 /**
  * DTO para query params de paginación de álbumes
@@ -53,8 +54,8 @@ export class AlbumsLimitQueryDto {
  * DTO para respuesta de álbumes con paginación completa
  */
 export class AlbumsPaginatedResponseDto {
-  @ApiPropertyOptional({ description: 'Lista de álbumes' })
-  albums!: any[];
+  @ApiPropertyOptional({ description: 'Lista de álbumes', type: [AlbumResponseDto] })
+  albums!: AlbumResponseDto[];
 
   @ApiPropertyOptional({ description: 'Total de álbumes' })
   total!: number;
@@ -73,8 +74,8 @@ export class AlbumsPaginatedResponseDto {
  * DTO para respuesta simple de lista de álbumes
  */
 export class AlbumsListResponseDto {
-  @ApiPropertyOptional({ description: 'Lista de álbumes' })
-  albums!: any[];
+  @ApiPropertyOptional({ description: 'Lista de álbumes', type: [AlbumResponseDto] })
+  albums!: AlbumResponseDto[];
 
   @ApiPropertyOptional({ description: 'Página actual (si aplica)' })
   page?: number;

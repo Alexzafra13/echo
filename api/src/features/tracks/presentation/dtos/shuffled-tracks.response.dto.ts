@@ -1,6 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TrackResponseDto } from './track.response.dto';
+import type { GetShuffledTracksOutput } from '../../domain/use-cases/get-shuffled-tracks/get-shuffled-tracks.dto';
 
 /**
  * ShuffledTracksResponseDto - DTO de respuesta para tracks en orden aleatorio paginado
@@ -35,9 +36,9 @@ export class ShuffledTracksResponseDto {
   @Expose()
   hasMore!: boolean;
 
-  static fromDomain(data: any): ShuffledTracksResponseDto {
+  static fromDomain(data: GetShuffledTracksOutput): ShuffledTracksResponseDto {
     const dto = new ShuffledTracksResponseDto();
-    dto.data = data.data.map((track: any) => TrackResponseDto.fromDomain(track));
+    dto.data = data.data.map((track) => TrackResponseDto.fromDomain(track));
     dto.total = data.total;
     dto.seed = data.seed;
     dto.skip = data.skip;
