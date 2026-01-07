@@ -378,7 +378,7 @@
     padding-left: 20px;
     padding-right: 20px;
     padding-top: 0; /* No padding - image extends to very top */
-    overflow: hidden;
+    overflow: visible; /* Allow menu to be visible */
     margin-bottom: var(--space-6);
   }
 
@@ -422,9 +422,9 @@
   .artistDetailPage__optionsMenuMobile {
     display: block;
     position: absolute;
-    top: 65px; /* Just below the header */
-    right: 5px;
-    z-index: 100;
+    top: 75px; /* Below header - accounting for negative margin */
+    right: 10px;
+    z-index: 200; /* High z-index to be above everything */
   }
 
   /* Hide circular avatar on mobile - image is now the background */
