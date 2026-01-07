@@ -572,7 +572,7 @@
   }
 
   .profilePage__content {
-    padding: 16px 20px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header en mobile + bottom nav + player dinámico */
   }
 
   .profilePage__header {
