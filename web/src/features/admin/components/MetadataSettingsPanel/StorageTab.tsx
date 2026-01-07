@@ -3,7 +3,14 @@ import { Folder, HardDrive, CheckCircle2, XCircle, AlertCircle, ChevronRight, Ch
 import { Button, Input } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './StorageTab.module.css';
+
+/** API Setting response from backend */
+interface ApiSetting {
+  key: string;
+  value: string;
+}
 
 interface DirectoryEntry {
   name: string;
@@ -52,12 +59,13 @@ export function StorageTab() {
       const data = response.data;
 
       // Convert array of settings to object
-      const settingsMap: any = {};
-      data.forEach((setting: any) => {
+      const settingsMap: Record<string, string> = {};
+      (data as ApiSetting[]).forEach((setting) => {
         settingsMap[setting.key] = setting.value;
       });
 
-      const mode = settingsMap['metadata.storage.location'] || 'centralized';
+      const modeValue = settingsMap['metadata.storage.location'] || 'centralized';
+      const mode: 'centralized' | 'portable' = modeValue === 'portable' ? 'portable' : 'centralized';
       const path = settingsMap['metadata.storage.path'] || '/app/uploads/metadata';
 
       setStorageMode(mode);
@@ -159,13 +167,13 @@ export function StorageTab() {
 
       setSaveMessage({ type: 'success', text: 'Configuración guardada correctamente' });
       setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (import.meta.env.DEV) {
         logger.error('Error saving settings:', error);
       }
       setSaveMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Error al guardar la configuración'
+        text: getApiErrorMessage(error, 'Error al guardar la configuración')
       });
       setTimeout(() => setSaveMessage(null), 5000);
     } finally {

@@ -7,6 +7,9 @@ import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
+import type { Artist } from '@features/artists/types/artist.types';
+import type { Album } from '@features/home/types/album.types';
+import type { Track } from '@shared/types/track.types';
 import styles from './SearchResultsPage.module.css';
 
 /**
@@ -90,7 +93,7 @@ export function SearchResultsPage() {
               <span className={styles.searchResultsPage__count}>({artists.length})</span>
             </h2>
             <div className={styles.searchResultsPage__grid}>
-              {artists.map((artist: any) => (
+              {artists.map((artist: Artist) => (
                 <button
                   key={artist.id}
                   className={styles.searchResultsPage__card}
@@ -121,7 +124,7 @@ export function SearchResultsPage() {
               <span className={styles.searchResultsPage__count}>({albums.length})</span>
             </h2>
             <div className={styles.searchResultsPage__grid}>
-              {albums.map((album: any) => (
+              {albums.map((album: Album) => (
                 <button
                   key={album.id}
                   className={styles.searchResultsPage__card}
@@ -152,7 +155,7 @@ export function SearchResultsPage() {
               <span className={styles.searchResultsPage__count}>({tracks.length})</span>
             </h2>
             <div className={styles.searchResultsPage__list}>
-              {tracks.map((track: any, index: number) => (
+              {tracks.map((track: Track, index: number) => (
                 <button
                   key={track.id}
                   className={styles.searchResultsPage__listItem}

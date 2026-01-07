@@ -5,10 +5,11 @@ import { logger } from '@shared/utils/logger';
 
 export type WebSocketNamespace = 'scanner' | 'metadata' | 'federation';
 
-export interface WebSocketEventHandler {
+// WebSocket events can receive various data types, so we use `any` intentionally
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface WebSocketEventHandler<T = any> {
   event: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handler: (data: any) => void;
+  handler: (data: T) => void;
 }
 
 export interface UseWebSocketConnectionOptions {

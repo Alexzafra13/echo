@@ -25,6 +25,7 @@ import {
   HardDrive,
 } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import {
   getSetupStatus,
   createAdmin,
@@ -121,8 +122,8 @@ export default function SetupWizard() {
       const result = await browseDirectories(path);
       setBrowseData(result);
       setSelectedPath(result.currentPath);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al explorar directorios');
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error, 'Error al explorar directorios'));
     } finally {
       setIsBrowsing(false);
     }
@@ -138,8 +139,8 @@ export default function SetupWizard() {
       });
       setStep('library');
       loadDirectory('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear la cuenta de administrador');
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error, 'Error al crear la cuenta de administrador'));
     } finally {
       setIsSubmitting(false);
     }
@@ -154,8 +155,8 @@ export default function SetupWizard() {
       if (result.valid) {
         setSelectedPath(path);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al validar la biblioteca');
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error, 'Error al validar la biblioteca'));
     } finally {
       setIsSubmitting(false);
     }
@@ -167,8 +168,8 @@ export default function SetupWizard() {
     try {
       await completeSetup();
       setStep('done');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al completar la configuración');
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error, 'Error al completar la configuración'));
     } finally {
       setIsSubmitting(false);
     }
