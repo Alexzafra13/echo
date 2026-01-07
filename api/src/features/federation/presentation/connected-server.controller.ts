@@ -52,10 +52,10 @@ export class ConnectedServerController {
   ): Promise<ConnectedServer> {
     const server = await this.repository.findConnectedServerById(serverId);
     if (!server) {
-      throw new NotFoundException('Server not found');
+      throw new NotFoundException('Servidor no encontrado');
     }
     if (server.userId !== userId) {
-      throw new ForbiddenException('You do not have access to this server');
+      throw new ForbiddenException('No tienes acceso a este servidor');
     }
     return server;
   }

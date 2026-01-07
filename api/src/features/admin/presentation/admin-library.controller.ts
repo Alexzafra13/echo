@@ -127,13 +127,13 @@ export class AdminLibraryController {
       const stats = await fs.stat(normalizedPath);
 
       if (!stats.isDirectory()) {
-        throw new BadRequestException('Path is not a directory');
+        throw new BadRequestException('La ruta no es un directorio');
       }
     } catch (error) {
       if (error instanceof BadRequestException || error instanceof ForbiddenException) {
         throw error;
       }
-      throw new BadRequestException('Path does not exist or is not accessible');
+      throw new BadRequestException('La ruta no existe o no es accesible');
     }
 
     // Save to settings
@@ -225,7 +225,7 @@ export class AdminLibraryController {
       const stats = await fs.stat(normalizedPath);
 
       if (!stats.isDirectory()) {
-        throw new BadRequestException('Not a directory');
+        throw new BadRequestException('No es un directorio');
       }
 
       const entries = await fs.readdir(normalizedPath, { withFileTypes: true });
@@ -305,7 +305,7 @@ export class AdminLibraryController {
         throw error;
       }
       this.logger.error(`Error browsing ${normalizedPath}: ${(error as Error).message}`);
-      throw new BadRequestException('Cannot access directory');
+      throw new BadRequestException('No se puede acceder al directorio');
     }
   }
 

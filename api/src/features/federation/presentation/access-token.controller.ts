@@ -95,10 +95,10 @@ export class AccessTokenController {
   ): Promise<void> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
     if (accessToken.ownerId !== user.id) {
-      throw new ForbiddenException('You do not have access to this token');
+      throw new ForbiddenException('No tienes acceso a este token');
     }
 
     if (permanent === 'true') {
@@ -129,15 +129,15 @@ export class AccessTokenController {
   ): Promise<AccessTokenResponseDto> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
     if (accessToken.ownerId !== user.id) {
-      throw new ForbiddenException('You do not have access to this token');
+      throw new ForbiddenException('No tienes acceso a este token');
     }
 
     const updated = await this.tokenService.reactivateAccessToken(id);
     if (!updated) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
 
     this.logger.info({ userId: user.id, tokenId: id }, 'Access token reactivated');
@@ -173,10 +173,10 @@ export class AccessTokenController {
   ): Promise<AccessTokenResponseDto> {
     const accessToken = await this.repository.findFederationAccessTokenById(id);
     if (!accessToken) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
     if (accessToken.ownerId !== user.id) {
-      throw new ForbiddenException('You do not have access to this token');
+      throw new ForbiddenException('No tienes acceso a este token');
     }
 
     // Only include defined values to allow partial updates
@@ -188,7 +188,7 @@ export class AccessTokenController {
     const updated = await this.tokenService.updateAccessTokenPermissions(id, permissionsToUpdate);
 
     if (!updated) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
 
     this.logger.info(
@@ -252,19 +252,19 @@ export class AccessTokenController {
   ): Promise<ConnectedServerResponseDto> {
     const accessToken = await this.tokenService.getAccessTokenById(id);
     if (!accessToken) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
     if (accessToken.ownerId !== user.id) {
-      throw new ForbiddenException('You do not have access to this access token');
+      throw new ForbiddenException('No tienes acceso a este token de acceso');
     }
     if (accessToken.mutualStatus !== 'pending' || !accessToken.mutualInvitationToken || !accessToken.serverUrl) {
-      throw new NotFoundException('No pending mutual request found');
+      throw new NotFoundException('No hay solicitud mutua pendiente');
     }
 
     // Approve the request
     const approved = await this.tokenService.approveMutualRequest(id);
     if (!approved) {
-      throw new NotFoundException('Failed to approve mutual request');
+      throw new NotFoundException('Error al aprobar solicitud mutua');
     }
 
     // Connect to the remote server using the invitation token they provided
@@ -314,10 +314,10 @@ export class AccessTokenController {
   ): Promise<void> {
     const accessToken = await this.tokenService.getAccessTokenById(id);
     if (!accessToken) {
-      throw new NotFoundException('Access token not found');
+      throw new NotFoundException('Token de acceso no encontrado');
     }
     if (accessToken.ownerId !== user.id) {
-      throw new ForbiddenException('You do not have access to this access token');
+      throw new ForbiddenException('No tienes acceso a este token de acceso');
     }
 
     await this.tokenService.rejectMutualRequest(id);

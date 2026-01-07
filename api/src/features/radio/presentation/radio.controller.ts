@@ -281,7 +281,7 @@ export class RadioController {
     @Res() reply: FastifyReply,
   ) {
     if (!streamUrl) {
-      throw new BadRequestException('URL parameter is required');
+      throw new BadRequestException('Parámetro URL requerido');
     }
 
     // Validate URL format
@@ -289,12 +289,12 @@ export class RadioController {
     try {
       parsedUrl = new URL(streamUrl);
     } catch {
-      throw new BadRequestException('Invalid URL format');
+      throw new BadRequestException('Formato de URL inválido');
     }
 
     // Only allow http and https protocols
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      throw new BadRequestException('Only HTTP and HTTPS URLs are allowed');
+      throw new BadRequestException('Solo se permiten URLs HTTP y HTTPS');
     }
 
     // Block private/internal networks (SSRF protection)
@@ -314,7 +314,7 @@ export class RadioController {
     ];
 
     if (blockedPatterns.some(pattern => pattern.test(hostname))) {
-      throw new BadRequestException('Access to internal networks is not allowed');
+      throw new BadRequestException('Acceso a redes internas no permitido');
     }
 
     // Proxy the stream

@@ -94,7 +94,7 @@ export class CustomArtistImagesController {
     const data = await request.file();
 
     if (!data) {
-      throw new BadRequestException('No file uploaded');
+      throw new BadRequestException('No se subió ningún archivo');
     }
 
     // Validate file size (10MB max for custom images)
@@ -104,7 +104,7 @@ export class CustomArtistImagesController {
     const buffer = await data.toBuffer();
 
     if (buffer.length > MAX_SIZE) {
-      throw new BadRequestException('File size exceeds maximum allowed size of 10MB');
+      throw new BadRequestException('El archivo excede el tamaño máximo de 10MB');
     }
 
     // Validate MIME type
@@ -120,7 +120,7 @@ export class CustomArtistImagesController {
     const imageType = fields.imageType?.value;
 
     if (!imageType) {
-      throw new BadRequestException('imageType field is required');
+      throw new BadRequestException('El campo imageType es requerido');
     }
 
     const validImageTypes = ['profile', 'background', 'banner', 'logo'];

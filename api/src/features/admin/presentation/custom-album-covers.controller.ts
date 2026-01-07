@@ -88,7 +88,7 @@ export class CustomAlbumCoversController {
     const data = await request.file();
 
     if (!data) {
-      throw new BadRequestException('No file uploaded');
+      throw new BadRequestException('No se subió ningún archivo');
     }
 
     // Validate file size (10MB max)
@@ -98,7 +98,7 @@ export class CustomAlbumCoversController {
     const buffer = await data.toBuffer();
 
     if (buffer.length > MAX_SIZE) {
-      throw new BadRequestException('File size exceeds maximum allowed size of 10MB');
+      throw new BadRequestException('El archivo excede el tamaño máximo de 10MB');
     }
 
     // Validate MIME type
