@@ -506,7 +506,7 @@
   }
 
   .settingsPage__content {
-    padding: var(--space-4) var(--space-5) calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 100px var(--space-5) calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header en mobile + bottom nav + player dinámico */
   }
 
   .settingsPage__header {
