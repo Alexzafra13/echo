@@ -9,16 +9,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BaseError, getHttpStatusForError } from '@shared/errors/base.error';
 
-/**
- * HttpExceptionFilter - Maneja todas las excepciones HTTP de forma global
- *
- * Funcionalidad:
- * - Captura todas las excepciones (HTTP y no HTTP)
- * - Log estructurado con Pino
- * - Oculta stack traces en producción
- * - Formato de respuesta consistente
- * - Previene exposición de información sensible
- */
+// Captura todas las excepciones y las convierte a respuestas HTTP consistentes
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   constructor(
@@ -31,27 +22,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
 
-    // Determinar status code
     let status: number;
 
     if (exception instanceof BaseError) {
-      // Custom domain errors (UnauthorizedError, ValidationError, etc.)
-      // Map error code to HTTP status using the centralized mapping
       status = getHttpStatusForError(exception.code);
     } else if (exception instanceof HttpException) {
-      // NestJS HTTP exceptions
       status = exception.getStatus();
     } else {
-      // Unknown errors
       status = HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
-    // Determinar mensaje
     let message: string;
     let error: string;
 
     if (exception instanceof BaseError) {
-      // Custom domain errors
       message = exception.message;
       error = exception.code;
     } else if (exception instanceof HttpException) {
@@ -75,23 +59,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error = 'UnknownError';
     }
 
-    // Construir respuesta
     const errorResponse = {
       statusCode: status,
       message,
       error,
       timestamp: new Date().toISOString(),
       path: request.url,
-      // Solo incluir stack trace en desarrollo
       ...(process.env.NODE_ENV !== 'production' &&
         exception instanceof Error && {
           stack: exception.stack,
         }),
     };
 
-    // Log del error
     if (status >= 500) {
-      // Server errors (500+): log como error
       this.logger.error(
         {
           err: exception instanceof Error ? exception : new Error(String(exception)),
@@ -106,7 +86,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `HTTP ${status}: ${message}`,
       );
     } else {
-      // Client errors (400-499): log como warn
       this.logger.warn(
         {
           statusCode: status,
@@ -118,7 +97,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
-    // Enviar respuesta
     response.status(status).send(errorResponse);
   }
 }
