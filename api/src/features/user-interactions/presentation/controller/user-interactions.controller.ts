@@ -27,6 +27,7 @@ import {
   GetUserInteractionsUseCase,
   GetItemSummaryUseCase,
 } from '../../domain/use-cases';
+import { ItemType } from '../../domain/entities/user-interaction.entity';
 import {
   SetRatingDto,
   GetUserInteractionsDto,
@@ -61,7 +62,7 @@ export class UserInteractionsController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid rating value' })
   async setRating(@Body() dto: SetRatingDto, @Req() req: RequestWithUser): Promise<RatingResponseDto> {
     const userId = req.user.id;
-    const result = await this.setRatingUseCase.execute(userId, dto.itemId, dto.itemType as any, dto.rating);
+    const result = await this.setRatingUseCase.execute(userId, dto.itemId, dto.itemType as ItemType, dto.rating);
 
     return {
       userId: result.userId,
@@ -86,7 +87,7 @@ export class UserInteractionsController {
     @Req() req: RequestWithUser,
   ): Promise<void> {
     const userId = req.user.id;
-    await this.removeRatingUseCase.execute(userId, itemId, itemType as any);
+    await this.removeRatingUseCase.execute(userId, itemId, itemType as ItemType);
   }
 
   @SkipThrottle()
@@ -102,7 +103,7 @@ export class UserInteractionsController {
     @Req() req: RequestWithUser,
   ): Promise<UserInteractionDto[]> {
     const userId = req.user.id;
-    const interactions = await this.getUserInteractionsUseCase.execute(userId, query.itemType as any);
+    const interactions = await this.getUserInteractionsUseCase.execute(userId, query.itemType as ItemType | undefined);
 
     return interactions.map((interaction) => ({
       userId: interaction.userId,
@@ -127,7 +128,7 @@ export class UserInteractionsController {
     @Req() req: RequestWithUser,
   ): Promise<ItemInteractionSummaryDto> {
     const userId = req.user.id;
-    const summary = await this.getItemSummaryUseCase.execute(itemId, itemType as any, userId);
+    const summary = await this.getItemSummaryUseCase.execute(itemId, itemType as ItemType, userId);
 
     return {
       itemId: summary.itemId,
