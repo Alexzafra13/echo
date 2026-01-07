@@ -52,10 +52,11 @@ export class AlbumsLimitQueryDto {
 
 /**
  * DTO para respuesta de álbumes con paginación completa
+ * Formato estandarizado: data + page/limit/total/totalPages
  */
 export class AlbumsPaginatedResponseDto {
   @ApiPropertyOptional({ description: 'Lista de álbumes', type: [AlbumResponseDto] })
-  albums!: AlbumResponseDto[];
+  data!: AlbumResponseDto[];
 
   @ApiPropertyOptional({ description: 'Total de álbumes' })
   total!: number;
@@ -72,10 +73,11 @@ export class AlbumsPaginatedResponseDto {
 
 /**
  * DTO para respuesta simple de lista de álbumes
+ * Formato estandarizado: data + paginación opcional
  */
 export class AlbumsListResponseDto {
   @ApiPropertyOptional({ description: 'Lista de álbumes', type: [AlbumResponseDto] })
-  albums!: AlbumResponseDto[];
+  data!: AlbumResponseDto[];
 
   @ApiPropertyOptional({ description: 'Página actual (si aplica)' })
   page?: number;
