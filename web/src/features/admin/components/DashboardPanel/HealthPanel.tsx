@@ -25,17 +25,26 @@ interface ActiveAlerts {
   scanErrors: number;
 }
 
+interface ScanStats {
+  currentScan: {
+    isRunning: boolean;
+    startedAt: string | null;
+    progress: number;
+  };
+}
+
 interface HealthPanelProps {
   health: SystemHealth;
   alerts: ActiveAlerts;
-  onNavigateToTab?: (tab: string) => void; // ← Nueva prop para navegación
+  scanStats?: ScanStats;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 /**
  * HealthPanel Component
  * Panel que muestra el estado de salud del sistema y alertas activas
  */
-export function HealthPanel({ health, alerts, onNavigateToTab }: HealthPanelProps) {
+export function HealthPanel({ health, alerts, scanStats, onNavigateToTab }: HealthPanelProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
@@ -115,7 +124,20 @@ export function HealthPanel({ health, alerts, onNavigateToTab }: HealthPanelProp
           <div className={styles.healthStatus}>
             {getStatusIcon(health.scanner)}
             <span>{getStatusLabel(health.scanner)}</span>
+            {scanStats?.currentScan.isRunning && (
+              <span className={styles.scanProgress}>
+                {scanStats.currentScan.progress}%
+              </span>
+            )}
           </div>
+          {scanStats?.currentScan.isRunning && (
+            <div className={styles.progressBar}>
+              <div
+                className={styles.progressFill}
+                style={{ width: `${scanStats.currentScan.progress}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Storage */}
