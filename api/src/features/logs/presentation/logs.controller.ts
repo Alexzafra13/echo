@@ -17,11 +17,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { LogService, LogLevel, LogCategory } from '../application/log.service';
 
-/**
- * LogsController
- *
- * Endpoints para administradores para consultar logs del sistema
- */
+// Solo admins pueden ver logs del sistema
 @ApiTags('logs')
 @Controller('logs')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -29,10 +25,6 @@ import { LogService, LogLevel, LogCategory } from '../application/log.service';
 export class LogsController {
   constructor(private readonly logService: LogService) {}
 
-  /**
-   * GET /api/logs
-   * Obtener logs con filtros
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -148,10 +140,6 @@ export class LogsController {
     });
   }
 
-  /**
-   * GET /api/logs/stats
-   * Obtener estadísticas de logs
-   */
   @Get('stats')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -199,10 +187,6 @@ export class LogsController {
     });
   }
 
-  /**
-   * GET /api/logs/categories
-   * Obtener lista de categorías disponibles
-   */
   @Get('categories')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -228,10 +212,6 @@ export class LogsController {
     };
   }
 
-  /**
-   * GET /api/logs/levels
-   * Obtener lista de niveles disponibles
-   */
   @Get('levels')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
