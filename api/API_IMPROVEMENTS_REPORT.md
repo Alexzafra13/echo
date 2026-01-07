@@ -161,29 +161,38 @@ The controller now has a `createManagedStream()` private method that handles:
 - Automatic cleanup on close/end/error
 - Error logging with context
 
-### 5.3 Missing Response DTOs for Complex Returns (MEDIUM)
+### 5.3 Missing Response DTOs for Complex Returns ~~(MEDIUM)~~ ✅ RESOLVED
 
-**Problem:** Controllers returning inline objects without DTOs:
-- `getArtistTopTracks` returns `{ data, artistId, limit, days }`
-- `getArtistStats` returns `{ artistId, totalPlays, ... }`
-- `getRelatedArtists` returns `{ data, artistId, limit, source }`
+**Status:** ✅ Already implemented
+
+**Original concern:** Controllers returning inline objects without DTOs.
+
+**Resolution:** All endpoints now use proper typed DTOs:
+- `getArtistTopTracks` → `GetArtistTopTracksResponseDto`
+- `getArtistStats` → `GetArtistStatsResponseDto`
+- `getRelatedArtists` → `GetRelatedArtistsResponseDto`
+
+All DTOs include `@ApiProperty` decorators for Swagger and `static create()` factory methods.
 
 ---
 
 ## 6. Documentation
 
-### 6.1 Missing Error Response Documentation (MEDIUM)
+### 6.1 Missing Error Response Documentation ~~(MEDIUM)~~ ✅ RESOLVED
 
-**Problem:** Many endpoints only document success responses, not error cases.
+**Status:** ✅ Already implemented
 
-**Recommended:** Add @ApiResponse for common errors:
-```typescript
-@ApiResponse({ status: 400, description: 'Validation error' })
-@ApiResponse({ status: 401, description: 'Unauthorized' })
-@ApiResponse({ status: 403, description: 'Forbidden' })
-@ApiResponse({ status: 404, description: 'Resource not found' })
-@ApiResponse({ status: 500, description: 'Internal server error' })
-```
+**Original concern:** Many endpoints only documented success responses.
+
+**Resolution:** Comprehensive error documentation infrastructure exists:
+- Shared decorators in `@shared/decorators/api-errors.decorator.ts`:
+  - `@ApiCommonErrors()` - documents 400, 401, 500
+  - `@ApiNotFoundError(resource)` - documents 404
+  - `@ApiForbiddenError()` - documents 403
+  - `@ApiProtectedEndpoint(resource)` - combines common + 404
+  - `@ApiAdminEndpoint()` - combines common + 403
+- 385 `@ApiResponse` usages across 36 controllers
+- Major controllers (albums, artists, tracks, playlists, users, admin) all have error documentation
 
 ### 6.2 API Versioning Not Implemented (LOW)
 
@@ -204,13 +213,16 @@ The controller now has a `createManagedStream()` private method that handles:
 **Current:** Compression disabled in production (handled by nginx)
 **Status:** This is actually correct - documented in main.ts
 
-### 7.2 Potential N+1 Query in getRelatedArtists (MEDIUM)
+### 7.2 Potential N+1 Query in getRelatedArtists ~~(MEDIUM)~~ ✅ RESOLVED
 
-**File:** `api/src/features/artists/presentation/controller/artists.controller.ts:270-336`
+**Status:** ✅ Already optimized
 
-**Problem:** Multiple sequential database queries in a loop.
+**File:** `api/src/features/artists/domain/use-cases/get-related-artists/get-related-artists.use-case.ts`
 
-**Recommended:** Use batch queries or eager loading.
+**Resolution:** The use case uses bulk queries to avoid N+1 problems:
+- `findByNames()` for bulk artist lookup from Last.fm results
+- `findByIds()` for bulk lookup from internal co-listening patterns
+- Maps created for O(1) lookup instead of individual queries
 
 ---
 
@@ -221,10 +233,10 @@ The controller now has a `createManagedStream()` private method that handles:
 | Replace `any` with proper types | HIGH | Medium | High | ✅ Done |
 | Standardize pagination response | HIGH | Medium | High | ✅ Done |
 | Add @IsNotEmpty() validation | MEDIUM | Low | Medium | ✅ Done |
-| Create missing response DTOs | MEDIUM | Medium | Medium | 🔄 Pending |
+| Create missing response DTOs | MEDIUM | Medium | Medium | ✅ Done |
 | Consistent logger injection | LOW | Low | Low | ✅ Reviewed |
 | API versioning | LOW | High | Low | 🔄 Backlog |
-| Fix N+1 in getRelatedArtists | MEDIUM | Medium | Medium | 🔄 Pending |
+| Fix N+1 in getRelatedArtists | MEDIUM | Medium | Medium | ✅ Done |
 | Enhance rate limiting | LOW | Medium | Medium | 🔄 Backlog |
 | Refactor streaming controller | MEDIUM | Medium | Medium | ✅ Done |
 
@@ -236,7 +248,7 @@ The controller now has a `createManagedStream()` private method that handles:
 2. ~~Add `@IsNotEmpty()` to required string fields~~ ✅ Done
 3. ~~Unify logger injection pattern~~ ✅ Reviewed (acceptable)
 4. ~~Create standard pagination response DTO~~ ✅ Done
-5. Add common error responses to Swagger docs
+5. ~~Add common error responses to Swagger docs~~ ✅ Done (already implemented)
 
 ---
 
@@ -249,9 +261,9 @@ The controller now has a `createManagedStream()` private method that handles:
 
 ### Remaining Tasks
 1. ~~Standardize pagination response format~~ ✅ Done
-2. Create response DTOs for all inline returns
-3. Implement consistent error documentation
-4. Optimize N+1 queries in getRelatedArtists
+2. ~~Create response DTOs for all inline returns~~ ✅ Done (already implemented)
+3. ~~Implement consistent error documentation~~ ✅ Done (already implemented)
+4. ~~Optimize N+1 queries in getRelatedArtists~~ ✅ Done (already optimized)
 
 ### Backlog
 1. Implement API versioning
