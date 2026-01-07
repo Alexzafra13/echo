@@ -16,13 +16,7 @@ export interface AutoSearchStatsDisplayProps {
  * Display auto-search statistics with colored cards
  */
 export function AutoSearchStatsDisplay({ stats }: AutoSearchStatsDisplayProps) {
-  // Calculate stats from the API response structure
-  const totalProcessed = stats.totalProcessed || 0;
-  const autoApplied = totalProcessed
-    ? Math.round((stats.successRate / 100) * totalProcessed)
-    : 0;
-  const conflictsCreated = totalProcessed - autoApplied;
-  const ignored = 0; // This would come from backend if available
+  const { autoApplied, conflictsCreated, ignored } = stats;
 
   return (
     <div className={styles.section}>
