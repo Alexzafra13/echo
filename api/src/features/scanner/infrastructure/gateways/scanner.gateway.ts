@@ -239,6 +239,10 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     return this.lufsProgress;
   }
 
+  getCurrentProgress(scanId: string): ScanProgressDto | null {
+    return this.scanProgress.get(scanId) ?? null;
+  }
+
   emitLibraryChange(data: LibraryChangeDto): void {
     // Broadcast to all connected clients
     this.server.emit('library:change', data);

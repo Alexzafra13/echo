@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from '@features/auth/auth.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { HealthModule } from '@features/health/health.module';
 import { SocialModule } from '@features/social/social.module';
+import { ScannerModule } from '@features/scanner/scanner.module';
 import { AdminController } from './presentation/admin.controller';
 import { AdminDashboardController } from './presentation/admin-dashboard.controller';
 import { AdminLibraryController } from './presentation/admin-library.controller';
@@ -57,7 +58,7 @@ import {
 } from './domain/ports';
 
 @Module({
-  imports: [AuthModule, ExternalMetadataModule, HealthModule, SocialModule],
+  imports: [AuthModule, ExternalMetadataModule, HealthModule, SocialModule, forwardRef(() => ScannerModule)],
   controllers: [
     AdminController,
     AdminDashboardController,

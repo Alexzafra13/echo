@@ -196,6 +196,7 @@ export class MbidAutoSearchService {
 
   /**
    * Get auto-search statistics for admin panel
+   * Calcula estadísticas basadas en datos reales de la base de datos
    */
   async getAutoSearchStats(): Promise<{
     totalAutoSearched: number;
@@ -203,7 +204,8 @@ export class MbidAutoSearchService {
     conflictsCreated: number;
     ignored: number;
   }> {
-    const result = await this.drizzle.db
+    // Conflictos pendientes de auto-search
+    const [pendingConflicts] = await this.drizzle.db
       .select({ count: count() })
       .from(metadataConflicts)
       .where(
@@ -213,13 +215,50 @@ export class MbidAutoSearchService {
         ),
       );
 
-    const conflictsCreated = result[0]?.count ?? 0;
+    // Conflictos aceptados (auto-applied por usuario o auto)
+    const [acceptedConflicts] = await this.drizzle.db
+      .select({ count: count() })
+      .from(metadataConflicts)
+      .where(
+        and(
+          sql`${metadataConflicts.metadata}->>'autoSearched' = 'true'`,
+          eq(metadataConflicts.status, 'accepted'),
+        ),
+      );
+
+    // Conflictos ignorados/rechazados
+    const [ignoredConflicts] = await this.drizzle.db
+      .select({ count: count() })
+      .from(metadataConflicts)
+      .where(
+        and(
+          sql`${metadataConflicts.metadata}->>'autoSearched' = 'true'`,
+          sql`${metadataConflicts.status} IN ('rejected', 'ignored')`,
+        ),
+      );
+
+    // Artistas con MBID asignado (auto-applied silenciosamente)
+    const [artistsWithMbid] = await this.drizzle.db
+      .select({ count: count() })
+      .from(artists)
+      .where(sql`${artists.mbzArtistId} IS NOT NULL`);
+
+    // Albums con MBID asignado
+    const [albumsWithMbid] = await this.drizzle.db
+      .select({ count: count() })
+      .from(albums)
+      .where(sql`${albums.mbzAlbumId} IS NOT NULL`);
+
+    const conflictsCreated = pendingConflicts?.count ?? 0;
+    const autoApplied = (artistsWithMbid?.count ?? 0) + (albumsWithMbid?.count ?? 0) + (acceptedConflicts?.count ?? 0);
+    const ignored = ignoredConflicts?.count ?? 0;
+    const totalAutoSearched = autoApplied + conflictsCreated + ignored;
 
     return {
-      totalAutoSearched: 0, // TODO: Implement tracking
-      autoApplied: 0, // TODO: Implement tracking
+      totalAutoSearched,
+      autoApplied,
       conflictsCreated,
-      ignored: 0, // TODO: Implement tracking
+      ignored,
     };
   }
 }

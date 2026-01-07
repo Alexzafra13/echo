@@ -98,10 +98,10 @@ export interface CleanupResult {
 // ============================================================================
 
 export interface AutoSearchStats {
-  totalProcessed: number;
-  successRate: number;
-  averageConfidence: number;
-  lastRun: string | null;
+  totalAutoSearched: number;
+  autoApplied: number;
+  conflictsCreated: number;
+  ignored: number;
 }
 
 // ============================================================================
