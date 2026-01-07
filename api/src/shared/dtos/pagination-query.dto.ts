@@ -2,20 +2,7 @@ import { IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-/**
- * PaginationQueryDto - DTO base para paginación por página
- *
- * Usar para endpoints que usan paginación estilo page/limit.
- * Los parámetros son opcionales con valores por defecto.
- *
- * @example
- * ```typescript
- * @Get()
- * async getItems(@Query() query: PaginationQueryDto) {
- *   return this.service.findAll(query.page, query.limit);
- * }
- * ```
- */
+// Paginación estilo page/limit
 export class PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Page number (starts at 1)',
@@ -44,20 +31,7 @@ export class PaginationQueryDto {
   limit?: number = 20;
 }
 
-/**
- * OffsetPaginationQueryDto - DTO para paginación por offset
- *
- * Usar para endpoints que usan paginación estilo skip/take (offset).
- * Útil para scroll infinito o paginación basada en cursor.
- *
- * @example
- * ```typescript
- * @Get()
- * async getItems(@Query() query: OffsetPaginationQueryDto) {
- *   return this.service.findAll(query.skip, query.take);
- * }
- * ```
- */
+// Paginación estilo skip/take (para scroll infinito)
 export class OffsetPaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Number of items to skip',
@@ -86,20 +60,7 @@ export class OffsetPaginationQueryDto {
   take?: number = 20;
 }
 
-/**
- * LimitQueryDto - DTO simple para límite sin paginación completa
- *
- * Usar para listas que solo necesitan un límite (ej: "top 10", "últimos 5").
- * No incluye offset ni información de página.
- *
- * @example
- * ```typescript
- * @Get('recent')
- * async getRecent(@Query() query: LimitQueryDto) {
- *   return this.service.findRecent(query.limit);
- * }
- * ```
- */
+// Solo límite, sin paginación (para "top 10", "últimos 5", etc)
 export class LimitQueryDto {
   @ApiPropertyOptional({
     description: 'Maximum number of items to return',

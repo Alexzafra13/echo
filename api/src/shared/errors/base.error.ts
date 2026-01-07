@@ -1,11 +1,4 @@
-/**
- * BaseError - Clase base para errores de dominio
- *
- * Los errores de dominio NO deben contener información HTTP.
- * El mapeo a códigos HTTP se hace en HttpExceptionFilter.
- *
- * Esto permite que la capa de dominio sea independiente del protocolo HTTP.
- */
+// Clase base para errores de dominio. El mapeo a HTTP se hace en HttpExceptionFilter.
 export class BaseError extends Error {
   constructor(
     public readonly code: string,
@@ -16,12 +9,7 @@ export class BaseError extends Error {
   }
 }
 
-/**
- * Mapeo de códigos de error a status HTTP
- *
- * Centraliza la conversión de errores de dominio a respuestas HTTP.
- * Usado por HttpExceptionFilter para generar respuestas consistentes.
- */
+// Mapeo de códigos de error a status HTTP
 export const ERROR_HTTP_STATUS_MAP: Record<string, number> = {
   // Errores de cliente (4xx)
   NOT_FOUND: 404,
@@ -42,11 +30,6 @@ export const ERROR_HTTP_STATUS_MAP: Record<string, number> = {
   INTERNAL_ERROR: 500,
 };
 
-/**
- * Obtiene el código HTTP para un código de error de dominio
- * @param code - Código de error (ej: 'NOT_FOUND', 'UNAUTHORIZED')
- * @returns Código HTTP correspondiente (default: 500)
- */
 export function getHttpStatusForError(code: string): number {
   return ERROR_HTTP_STATUS_MAP[code] ?? 500;
 }
