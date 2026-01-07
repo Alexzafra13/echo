@@ -1,9 +1,10 @@
 import { FastifyRequest } from 'fastify';
 
 /**
- * JWT User - The user object attached to requests after JWT validation
- * This is what JwtStrategy.validate() returns (user.toPrimitives())
- * Use this type instead of `any` for @CurrentUser() decorator
+ * JwtUser - Usuario autenticado extraído del token JWT
+ *
+ * Este es el objeto que JwtStrategy.validate() retorna (user.toPrimitives()).
+ * Usar este tipo en lugar de `any` con el decorador @CurrentUser().
  */
 export interface JwtUser {
   id: string;
@@ -32,16 +33,19 @@ export interface JwtUser {
 }
 
 /**
- * Authenticated request with user information
- * Use this instead of `any` in controllers
+ * RequestWithUser - Request autenticado con información del usuario
+ *
+ * Usar este tipo en lugar de `any` en controllers que requieren autenticación.
  */
 export interface RequestWithUser extends FastifyRequest {
   user: JwtUser;
 }
 
 /**
- * JWT Token Payload - What's encoded in the JWT token
- * This is minimal info stored in the token itself
+ * JwtTokenPayload - Payload codificado en el token JWT
+ *
+ * Contiene solo la información mínima necesaria en el token.
+ * Los datos completos del usuario se obtienen desde la BD.
  */
 export interface JwtTokenPayload {
   userId: string;
@@ -51,7 +55,7 @@ export interface JwtTokenPayload {
 }
 
 /**
- * JWT Sign Options - Options for signing JWT tokens
+ * JwtSignOptions - Opciones para firmar tokens JWT
  */
 export interface JwtSignOptions {
   expiresIn?: string;

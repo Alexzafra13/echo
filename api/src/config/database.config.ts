@@ -1,15 +1,18 @@
 /**
- * Database configuration with sensible defaults for self-hosted use.
+ * Configuración de base de datos PostgreSQL
+ *
+ * Valores por defecto optimizados para uso self-hosted.
+ * El pool de conexiones previene el agotamiento de conexiones en la BD.
  */
 export const databaseConfig = {
   database_url: process.env.DATABASE_URL,
 
-  // Connection pool - prevents exhausting DB connections
+  // Pool de conexiones - previene agotamiento de conexiones en BD
   pool: {
-    max: 20,                      // Max connections (enough for most use cases)
-    min: 2,                       // Keep 2 warm connections
-    idleTimeoutMillis: 30000,     // Close idle connections after 30s
-    connectionTimeoutMillis: 5000, // Fail fast if DB is unreachable
-    statementTimeout: 60000,      // Kill queries running > 60s
+    max: 20,                      // Máximo de conexiones (suficiente para la mayoría de casos)
+    min: 2,                       // Mantener 2 conexiones activas
+    idleTimeoutMillis: 30000,     // Cerrar conexiones inactivas después de 30s
+    connectionTimeoutMillis: 5000, // Fallar rápido si la BD no responde
+    statementTimeout: 60000,      // Matar queries que tarden > 60s
   },
 };
