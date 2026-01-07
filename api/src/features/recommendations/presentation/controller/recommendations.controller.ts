@@ -57,10 +57,6 @@ export class RecommendationsController {
     private readonly trackRepository: ITrackRepository,
   ) {}
 
-  /**
-   * POST /recommendations/calculate-score
-   * Calculate intelligent score for a track
-   */
   @Post('calculate-score')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Calculate intelligent score for a track based on user behavior' })
@@ -86,10 +82,6 @@ export class RecommendationsController {
     };
   }
 
-  /**
-   * GET /recommendations/daily-mix
-   * Generate personalized Daily Mix playlist
-   */
   @Get('daily-mix')
   @ApiOperation({ summary: 'Generate personalized Daily Mix playlist (max 50 tracks)' })
   @ApiResponse({
@@ -155,10 +147,6 @@ export class RecommendationsController {
     };
   }
 
-  /**
-   * POST /recommendations/smart-playlist
-   * Generate smart playlist based on configuration
-   */
   @Post('smart-playlist')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Generate smart playlist (by artist, genre, or personalized)' })
@@ -216,10 +204,6 @@ export class RecommendationsController {
     };
   }
 
-  /**
-   * GET /recommendations/wave-mix
-   * Get all Wave Mix playlists (daily mix + artist playlists + genre playlists)
-   */
   @Get('wave-mix')
   @ApiOperation({ summary: 'Get all Wave Mix playlists (daily mix + artist + genre)' })
   @ApiResponse({
@@ -235,10 +219,6 @@ export class RecommendationsController {
     return this.enrichPlaylistsWithTracks(playlists);
   }
 
-  /**
-   * POST /recommendations/wave-mix/refresh
-   * Force refresh Wave Mix playlists (ignores Redis cache)
-   */
   @Post('wave-mix/refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Force refresh Wave Mix playlists (ignores 24h cache)' })
@@ -255,10 +235,6 @@ export class RecommendationsController {
     return this.enrichPlaylistsWithTracks(playlists);
   }
 
-  /**
-   * GET /recommendations/wave-mix/artists
-   * Get paginated Wave Mix artist playlists
-   */
   @Get('wave-mix/artists')
   @ApiOperation({ summary: 'Get paginated Wave Mix artist playlists' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix artist playlists retrieved successfully' })
@@ -276,10 +252,6 @@ export class RecommendationsController {
     return { playlists: playlistsWithTracks, total: result.total, skip: skipNum, take: takeNum, hasMore: result.hasMore };
   }
 
-  /**
-   * GET /recommendations/wave-mix/genres
-   * Get paginated Wave Mix genre playlists
-   */
   @Get('wave-mix/genres')
   @ApiOperation({ summary: 'Get paginated Wave Mix genre playlists' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Wave Mix genre playlists retrieved successfully' })
@@ -297,14 +269,6 @@ export class RecommendationsController {
     return { playlists: playlistsWithTracks, total: result.total, skip: skipNum, take: takeNum, hasMore: result.hasMore };
   }
 
-  /**
-   * OPTIMIZATION: Private helper methods to avoid code duplication
-   */
-
-  /**
-   * Batch fetch track details by IDs
-   * Usa el repository para respetar la arquitectura hexagonal
-   */
   private async fetchTracksById(trackIds: string[]) {
     if (trackIds.length === 0) {
       return new Map();
@@ -334,9 +298,6 @@ export class RecommendationsController {
     return new Map(tracksData.map((t) => [t.id, t]));
   }
 
-  /**
-   * Map a single playlist with track details
-   */
   private mapPlaylistWithTracks(playlist: any, trackMap: Map<string, any>): AutoPlaylistDto {
     return {
       id: playlist.id,
@@ -382,10 +343,7 @@ export class RecommendationsController {
     };
   }
 
-  /**
-   * OPTIMIZATION: Batch enrich multiple playlists with track details
-   * Avoids N+1 query pattern by fetching all tracks at once
-   */
+  // Batch enrich para evitar N+1 queries
   private async enrichPlaylistsWithTracks(playlists: any[]): Promise<AutoPlaylistDto[]> {
     if (playlists.length === 0) {
       return [];
