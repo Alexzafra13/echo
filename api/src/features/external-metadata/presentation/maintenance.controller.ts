@@ -28,18 +28,7 @@ import { normalizeForSorting } from '@shared/utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-/**
- * Maintenance Controller
- * HTTP endpoints for metadata storage maintenance and cleanup (admin only)
- *
- * Endpoints:
- * - GET /api/maintenance/storage/stats - Get storage statistics
- * - POST /api/maintenance/cleanup/orphaned - Clean orphaned files
- * - POST /api/maintenance/storage/recalculate - Recalculate storage sizes
- * - GET /api/maintenance/verify/integrity - Verify file integrity
- *
- * All endpoints require admin privileges
- */
+// Mantenimiento de almacenamiento: limpieza, estadísticas, integridad (solo admin)
 @ApiTags('maintenance')
 @Controller('maintenance')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -55,10 +44,6 @@ export class MaintenanceController {
     private readonly config: ConfigService,
   ) {}
 
-  /**
-   * Obtiene estadísticas de uso de almacenamiento
-   * GET /api/maintenance/storage/stats
-   */
   @Get('storage/stats')
   @ApiOperation({
     summary: 'Get storage statistics',
@@ -100,10 +85,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Limpia archivos huérfanos
-   * POST /api/maintenance/cleanup/orphaned?dryRun=true
-   */
   @Post('cleanup/orphaned')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -165,10 +146,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Ejecuta limpieza completa: archivos huérfanos + caché expirado
-   * POST /api/maintenance/cleanup/full?dryRun=true
-   */
   @Post('cleanup/full')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -242,10 +219,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Recalcula los tamaños de almacenamiento
-   * POST /api/maintenance/storage/recalculate
-   */
   @Post('storage/recalculate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -283,10 +256,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Verifica la integridad de archivos
-   * GET /api/maintenance/verify/integrity
-   */
   @Get('verify/integrity')
   @ApiOperation({
     summary: 'Verify file integrity',
@@ -331,10 +300,7 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Limpia las URLs de imágenes incorrectas (file:// o /api/...) y permite re-enriquecimiento
-   * POST /api/maintenance/clean/artist-image-urls
-   */
+  // Limpia URLs incorrectas (file://, /api/) para permitir re-enriquecimiento
   @Post('clean/artist-image-urls')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -445,10 +411,7 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Sincroniza la base de datos con los archivos físicos existentes en storage
-   * POST /api/maintenance/sync/artist-images
-   */
+  // Sincroniza DB con archivos físicos existentes en storage
   @Post('sync/artist-images')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -596,10 +559,7 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Popula orderAlbumName y orderArtistName para álbumes y artistas existentes
-   * POST /api/maintenance/populate-sort-names
-   */
+  // Genera campos de ordenación para registros existentes (migración)
   @Post('populate-sort-names')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -698,14 +658,6 @@ export class MaintenanceController {
     }
   }
 
-  // ========================
-  // ENRICHMENT QUEUE ENDPOINTS
-  // ========================
-
-  /**
-   * Obtiene estadísticas de la cola de enriquecimiento
-   * GET /api/maintenance/enrichment-queue/stats
-   */
   @Get('enrichment-queue/stats')
   @ApiOperation({
     summary: 'Get enrichment queue statistics',
@@ -740,10 +692,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Inicia la cola de enriquecimiento
-   * POST /api/maintenance/enrichment-queue/start
-   */
   @Post('enrichment-queue/start')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -776,10 +724,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Detiene la cola de enriquecimiento
-   * POST /api/maintenance/enrichment-queue/stop
-   */
   @Post('enrichment-queue/stop')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -812,10 +756,6 @@ export class MaintenanceController {
     }
   }
 
-  /**
-   * Obtiene las rutas de almacenamiento configuradas
-   * GET /api/maintenance/storage/paths
-   */
   @Get('storage/paths')
   @ApiOperation({
     summary: 'Get storage paths',

@@ -20,15 +20,7 @@ import { DownloadService } from '../infrastructure/services/download.service';
 import { StreamTokenGuard } from './guards';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 
-/**
- * DownloadController - Controlador de descarga de archivos
- *
- * Responsabilidades:
- * - Descargar álbumes completos como ZIP
- *
- * Autenticación: Usa StreamTokenGuard que valida tokens de streaming
- * en query parameters (permite descarga desde browser)
- */
+// Descarga de álbumes como ZIP (usa StreamToken en query params para navegador)
 @ApiTags('downloads')
 @Controller('albums')
 @UseGuards(StreamTokenGuard)
@@ -40,10 +32,6 @@ export class DownloadController {
     private readonly downloadService: DownloadService,
   ) {}
 
-  /**
-   * GET /albums/:id/download
-   * Descargar álbum completo como ZIP
-   */
   @Get(':id/download')
   @ApiOperation({
     summary: 'Descargar álbum como ZIP',

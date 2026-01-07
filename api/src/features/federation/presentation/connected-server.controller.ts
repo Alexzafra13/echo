@@ -32,11 +32,7 @@ import {
   ConnectedServerResponseDto,
 } from './dto';
 
-/**
- * ConnectedServerController - Gestión de servidores conectados
- *
- * Permite a los usuarios conectarse a servidores de amigos y gestionar conexiones.
- */
+// Conexión y gestión de servidores federados de otros usuarios
 @ApiTags('federation')
 @Controller('federation/servers')
 @UseGuards(JwtAuthGuard)
@@ -50,19 +46,16 @@ export class ConnectedServerController {
     private readonly repository: IFederationRepository,
   ) {}
 
-  /**
-   * Helper to get a connected server and verify ownership
-   */
   private async getServerWithOwnershipCheck(
     serverId: string,
     userId: string,
   ): Promise<ConnectedServer> {
     const server = await this.repository.findConnectedServerById(serverId);
     if (!server) {
-      throw new NotFoundException('Server not found');
+      throw new NotFoundException('Servidor no encontrado');
     }
     if (server.userId !== userId) {
-      throw new ForbiddenException('You do not have access to this server');
+      throw new ForbiddenException('No tienes acceso a este servidor');
     }
     return server;
   }

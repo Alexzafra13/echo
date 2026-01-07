@@ -18,9 +18,6 @@ import { IsString, MinLength } from 'class-validator';
 import { SetupService } from '../application/setup.service';
 import { Public } from '@shared/decorators/public.decorator';
 
-/**
- * DTO for creating admin account
- */
 class CreateAdminDto {
   @IsString()
   @MinLength(3)
@@ -31,35 +28,17 @@ class CreateAdminDto {
   password!: string;
 }
 
-/**
- * DTO for configuring music library
- */
 class ConfigureLibraryDto {
   @IsString()
   path!: string;
 }
 
-/**
- * DTO for browsing directories
- */
 class BrowseDirectoriesDto {
   @IsString()
   path!: string;
 }
 
-/**
- * Setup Controller
- *
- * Handles first-run setup wizard (Jellyfin-style).
- * All endpoints are PUBLIC (no auth required) but only work
- * when setup is not completed.
- *
- * Flow:
- * 1. GET /setup/status - Check if setup needed
- * 2. POST /setup/admin - Create admin account
- * 3. POST /setup/library - Configure music library
- * 4. POST /setup/complete - Finish setup
- */
+// Setup wizard (estilo Jellyfin). Todos los endpoints son @Public() pero solo funcionan si setup no está completado.
 @ApiTags('setup')
 @Controller('setup')
 @Public()
@@ -70,10 +49,6 @@ export class SetupController {
     private readonly setupService: SetupService,
   ) {}
 
-  /**
-   * Get setup status
-   * Returns whether setup is needed and current progress
-   */
   @Get('status')
   @ApiOperation({
     summary: 'Get setup status',
@@ -97,9 +72,6 @@ export class SetupController {
     return this.setupService.getStatus();
   }
 
-  /**
-   * Create admin account (Step 1)
-   */
   @Post('admin')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -131,9 +103,6 @@ export class SetupController {
     };
   }
 
-  /**
-   * Configure music library (Step 2)
-   */
   @Post('library')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -171,9 +140,6 @@ export class SetupController {
     return result;
   }
 
-  /**
-   * Browse directories for library selection
-   */
   @Post('browse')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -218,9 +184,6 @@ export class SetupController {
     return this.setupService.browseDirectories(dto.path);
   }
 
-  /**
-   * Complete setup (Step 3)
-   */
   @Post('complete')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

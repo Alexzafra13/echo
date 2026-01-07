@@ -25,36 +25,7 @@ import {
   LibraryChangeDto,
 } from '../../presentation/dtos/scanner-events.dto';
 
-/**
- * ScannerGateway - Gateway WebSocket para eventos del scanner
- *
- * Responsabilidades:
- * - Emitir progreso de escaneos en tiempo real
- * - Permitir suscripción a scans específicos
- * - Permitir control del scanner (pausar/cancelar/resumir)
- * - Notificar errores durante el escaneo
- *
- * Eventos emitidos (servidor → cliente):
- * - scan:progress    - Progreso del escaneo
- * - scan:error       - Error durante escaneo
- * - scan:completed   - Escaneo completado
- *
- * Eventos recibidos (cliente → servidor):
- * - scanner:subscribe - Suscribirse a un scan
- * - scanner:pause     - Pausar scan
- * - scanner:cancel    - Cancelar scan
- * - scanner:resume    - Resumir scan pausado
- *
- * Seguridad:
- * - Requiere autenticación JWT
- * - Rate limiting aplicado
- * - Solo usuarios admin pueden controlar scans
- *
- * Uso:
- * const socket = io('http://localhost:3000/scanner');
- * socket.emit('scanner:subscribe', { scanId: '123' });
- * socket.on('scan:progress', (data) => console.log(data));
- */
+// Eventos de escaneo en tiempo real (requiere JWT, control solo admin)
 @WebSocketGateway({
   namespace: 'scanner',
   cors: {
@@ -77,16 +48,10 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   // Store latest progress for each active scan (for late subscribers)
   private scanProgress = new Map<string, ScanProgressDto>();
 
-  /**
-   * Inicialización del gateway
-   */
   afterInit(server: Server) {
     this.logger.info('🔌 ScannerGateway initialized');
   }
 
-  /**
-   * Cliente conectado
-   */
   handleConnection(client: Socket) {
     const userId = client.data?.userId || 'anonymous';
     this.logger.info(`✅ Client connected to scanner namespace: ${client.id} (User: ${userId})`);
@@ -97,16 +62,10 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     }
   }
 
-  /**
-   * Cliente desconectado
-   */
   handleDisconnect(client: Socket) {
     this.logger.info(`❌ Client disconnected from scanner namespace: ${client.id}`);
   }
 
-  /**
-   * Suscribirse a eventos de un scan específico
-   */
   @SubscribeMessage('scanner:subscribe')
   @UseGuards(WsThrottlerGuard)
   async handleSubscribe(
@@ -135,9 +94,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     }
   }
 
-  /**
-   * Desuscribirse de eventos de un scan
-   */
   @SubscribeMessage('scanner:unsubscribe')
   @UseGuards(WsThrottlerGuard)
   async handleUnsubscribe(
@@ -158,9 +114,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     });
   }
 
-  /**
-   * Pausar un scan (solo admin)
-   */
   @SubscribeMessage('scanner:pause')
   @UseGuards(WsThrottlerGuard)
   async handlePause(
@@ -182,9 +135,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     });
   }
 
-  /**
-   * Cancelar un scan (solo admin)
-   */
   @SubscribeMessage('scanner:cancel')
   @UseGuards(WsThrottlerGuard)
   async handleCancel(
@@ -207,9 +157,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     });
   }
 
-  /**
-   * Resumir un scan pausado (solo admin)
-   */
   @SubscribeMessage('scanner:resume')
   @UseGuards(WsThrottlerGuard)
   async handleResume(
@@ -234,11 +181,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
   // Store latest LUFS progress for late subscribers
   private lufsProgress: LufsProgressDto | null = null;
 
-  // ========== Métodos públicos para emitir eventos ==========
-
-  /**
-   * Emitir progreso del scan a todos los clientes suscritos
-   */
   emitProgress(data: ScanProgressDto): void {
     const room = `scan:${data.scanId}`;
 
@@ -254,9 +196,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     this.logger.debug(`Emitted progress for scan ${data.scanId}: ${data.progress}%`);
   }
 
-  /**
-   * Emitir error del scan
-   */
   emitError(data: ScanErrorDto): void {
     const room = `scan:${data.scanId}`;
 
@@ -269,9 +208,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     this.logger.warn(`Emitted error for scan ${data.scanId}: ${data.error}`);
   }
 
-  /**
-   * Emitir completado del scan
-   */
   emitCompleted(data: ScanCompletedDto): void {
     const room = `scan:${data.scanId}`;
 
@@ -287,9 +223,6 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     this.logger.info(`Emitted completed for scan ${data.scanId} (to room and broadcast)`);
   }
 
-  /**
-   * Emitir progreso del análisis LUFS a todos los clientes
-   */
   emitLufsProgress(data: LufsProgressDto): void {
     // Store latest progress for late subscribers
     this.lufsProgress = data.isRunning ? data : null;
@@ -302,17 +235,10 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     );
   }
 
-  /**
-   * Obtener el estado actual de LUFS para nuevos suscriptores
-   */
   getCurrentLufsProgress(): LufsProgressDto | null {
     return this.lufsProgress;
   }
 
-  /**
-   * Emitir cambio en la biblioteca (track/album/artist añadido o eliminado)
-   * Usado por el file watcher para notificar cambios en tiempo real
-   */
   emitLibraryChange(data: LibraryChangeDto): void {
     // Broadcast to all connected clients
     this.server.emit('library:change', data);

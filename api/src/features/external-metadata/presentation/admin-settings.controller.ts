@@ -29,17 +29,11 @@ import { EnrichmentQueueService } from '../infrastructure/services/enrichment-qu
 import { FanartTvAgent } from '../infrastructure/agents/fanart-tv.agent';
 import { LastfmAgent } from '../infrastructure/agents/lastfm.agent';
 
-/**
- * DTO para actualizar una configuración
- */
 class UpdateSettingDto {
   @IsString()
   value!: string;
 }
 
-/**
- * DTO para validar API key
- */
 class ValidateApiKeyDto {
   @IsIn(['lastfm', 'fanart'])
   service!: 'lastfm' | 'fanart';
@@ -48,36 +42,17 @@ class ValidateApiKeyDto {
   apiKey!: string;
 }
 
-/**
- * DTO para navegar directorios
- */
 class BrowseDirectoriesDto {
   @IsString()
   path!: string;
 }
 
-/**
- * DTO para validar ruta de almacenamiento
- */
 class ValidateStoragePathDto {
   @IsString()
   path!: string;
 }
 
-/**
- * Admin Settings Controller
- * HTTP endpoints for managing external metadata settings (admin only)
- *
- * Endpoints:
- * - GET /api/admin/settings - Get all settings
- * - GET /api/admin/settings/category/:category - Get settings by category
- * - GET /api/admin/settings/:key - Get specific setting
- * - PUT /api/admin/settings/:key - Update setting
- * - POST /api/admin/settings/validate-api-key - Validate external API key
- * - DELETE /api/admin/settings/:key - Delete setting (reset to default)
- *
- * All endpoints require admin privileges
- */
+// Configuración de metadata externa: API keys, rutas, agentes (solo admin)
 @ApiTags('admin-settings')
 @Controller('admin/settings')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -92,10 +67,6 @@ export class AdminSettingsController {
     private readonly lastfmAgent: LastfmAgent,
   ) {}
 
-  /**
-   * Obtiene todas las configuraciones
-   * GET /api/admin/settings
-   */
   @Get()
   @ApiOperation({
     summary: 'Get all settings',
@@ -133,10 +104,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Obtiene configuraciones por categoría
-   * GET /api/admin/settings/category/:category
-   */
   @Get('category/:category')
   @ApiOperation({
     summary: 'Get settings by category',
@@ -168,10 +135,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Obtiene una configuración específica
-   * GET /api/admin/settings/:key
-   */
   @Get(':key')
   @ApiOperation({
     summary: 'Get specific setting',
@@ -217,10 +180,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Actualiza una configuración
-   * PUT /api/admin/settings/:key
-   */
   @Put(':key')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -292,10 +251,7 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Reload external metadata agents when their API keys are updated
-   * Also resets enrichment state for items that weren't enriched due to missing API keys
-   */
+  // Recarga agentes si se actualiza su API key y resetea items sin datos
   private async reloadAgentsIfNeeded(key: string): Promise<void> {
     // Track which agents were enabled before reload
     const fanartWasEnabled = this.fanartAgent.isEnabled();
@@ -350,10 +306,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Valida una API key de un servicio externo
-   * POST /api/admin/settings/validate-api-key
-   */
   @Post('validate-api-key')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -393,11 +345,11 @@ export class AdminSettingsController {
   async validateApiKey(@Body() dto: ValidateApiKeyDto) {
     try {
       if (!dto.service || !dto.apiKey) {
-        throw new BadRequestException('Service and apiKey are required');
+        throw new BadRequestException('Service y apiKey son requeridos');
       }
 
       if (!['lastfm', 'fanart'].includes(dto.service)) {
-        throw new BadRequestException('Service must be "lastfm" or "fanart"');
+        throw new BadRequestException('Service debe ser "lastfm" o "fanart"');
       }
 
       this.logger.info(`Validating API key for ${dto.service}`);
@@ -431,10 +383,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Elimina una configuración (reset a default)
-   * DELETE /api/admin/settings/:key
-   */
   @Delete(':key')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -487,10 +435,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Navega directorios del servidor
-   * POST /api/admin/settings/browse-directories
-   */
   @Post('browse-directories')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -541,10 +485,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Valida una ruta de almacenamiento
-   * POST /api/admin/settings/validate-storage-path
-   */
   @Post('validate-storage-path')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -588,10 +528,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Limpia el caché de configuraciones
-   * POST /api/admin/settings/cache/clear
-   */
   @Post('cache/clear')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -626,10 +562,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Recarga todos los agentes de metadata externos
-   * POST /api/admin/settings/agents/reload
-   */
   @Post('agents/reload')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -683,13 +615,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Reset enrichment state for items without external data
-   * POST /api/admin/settings/enrichment/reset
-   *
-   * Use this endpoint after configuring API keys to allow re-processing
-   * of items that were previously skipped due to missing API keys.
-   */
   @Post('enrichment/reset')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -762,12 +687,6 @@ export class AdminSettingsController {
     }
   }
 
-  /**
-   * Reset enrichment state and start enrichment queue
-   * POST /api/admin/settings/enrichment/reset-and-start
-   *
-   * Convenience endpoint that resets state and immediately starts the enrichment queue.
-   */
   @Post('enrichment/reset-and-start')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

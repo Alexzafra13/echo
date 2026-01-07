@@ -36,19 +36,7 @@ import {
   ScansHistoryResponseDto,
 } from '../dtos';
 
-/**
- * ScannerController - Endpoints para escaneo de librería
- *
- * Responsabilidades:
- * - Proveer endpoints REST para escaneo
- * - Validar entrada con DTOs
- * - Delegar lógica a use cases
- * - Retornar respuestas HTTP apropiadas
- *
- * Seguridad:
- * - Requiere autenticación JWT
- * - Requiere permisos de administrador
- */
+// Solo admins pueden escanear la librería
 @ApiTags('Scanner')
 @ApiBearerAuth()
 @Controller('scanner')
@@ -64,9 +52,6 @@ export class ScannerController {
     private readonly libraryCleanup: LibraryCleanupService,
   ) {}
 
-  /**
-   * POST /scanner/start - Inicia un nuevo escaneo de la librería
-   */
   @Post('start')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Inicia un nuevo escaneo de la librería musical' })
@@ -90,9 +75,6 @@ export class ScannerController {
     return result as StartScanResponseDto;
   }
 
-  /**
-   * GET /scanner/lufs-status - Obtiene el estado del análisis LUFS
-   */
   @Get('lufs-status')
   @ApiOperation({ summary: 'Obtiene el estado del análisis LUFS en segundo plano' })
   @ApiResponse({
@@ -103,9 +85,6 @@ export class ScannerController {
     return this.lufsQueueService.getQueueStats();
   }
 
-  /**
-   * GET /scanner/:id - Obtiene el estado de un escaneo
-   */
   @Get(':id')
   @ApiOperation({ summary: 'Obtiene el estado de un escaneo específico' })
   @ApiResponse({
@@ -121,9 +100,6 @@ export class ScannerController {
     return result as ScanStatusResponseDto;
   }
 
-  /**
-   * GET /scanner - Obtiene el historial de escaneos
-   */
   @Get()
   @ApiOperation({ summary: 'Obtiene el historial de escaneos' })
   @ApiResponse({
@@ -144,13 +120,6 @@ export class ScannerController {
     return result as ScansHistoryResponseDto;
   }
 
-  // ========================
-  // MISSING FILES ENDPOINTS
-  // ========================
-
-  /**
-   * GET /scanner/missing-files - Lista archivos marcados como desaparecidos
-   */
   @Get('missing-files')
   @ApiOperation({
     summary: 'Get missing files',
@@ -199,9 +168,6 @@ export class ScannerController {
     }
   }
 
-  /**
-   * POST /scanner/missing-files/purge - Purga archivos desaparecidos
-   */
   @Post('missing-files/purge')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -238,9 +204,6 @@ export class ScannerController {
     }
   }
 
-  /**
-   * DELETE /scanner/missing-files/:id - Elimina un track específico marcado como desaparecido
-   */
   @Delete('missing-files/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -283,9 +246,6 @@ export class ScannerController {
     }
   }
 
-  /**
-   * GET /scanner/missing-files/purge-mode - Obtiene el modo de purga actual
-   */
   @Get('missing-files/purge-mode')
   @ApiOperation({
     summary: 'Get purge mode',

@@ -224,7 +224,7 @@ export class UsersController {
     const data = await request.file();
 
     if (!data) {
-      throw new BadRequestException('No file uploaded');
+      throw new BadRequestException('No se subió ningún archivo');
     }
 
     // Validate file size (5MB max for avatars)
@@ -234,7 +234,7 @@ export class UsersController {
     const buffer = await data.toBuffer();
 
     if (buffer.length > MAX_SIZE) {
-      throw new BadRequestException(`File size exceeds maximum allowed size of 5MB`);
+      throw new BadRequestException('El archivo excede el tamaño máximo de 5MB');
     }
 
     // Validate MIME type

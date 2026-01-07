@@ -33,9 +33,6 @@ import { SaveApiStationDto } from './dto/save-api-station.dto';
 import * as http from 'http';
 import * as https from 'https';
 
-/**
- * RadioController - Controlador de estaciones de radio
- */
 @ApiTags('radio')
 @Controller('radio')
 @UseGuards(JwtAuthGuard)
@@ -48,10 +45,6 @@ export class RadioController {
     private readonly icyMetadataService: IcyMetadataService,
   ) {}
 
-  /**
-   * GET /radio/search
-   * Buscar emisoras en Radio Browser API
-   */
   @Get('search')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -64,10 +57,6 @@ export class RadioController {
     return stations;
   }
 
-  /**
-   * GET /radio/top-voted
-   * Obtener emisoras más votadas
-   */
   @Get('top-voted')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -79,10 +68,6 @@ export class RadioController {
     return stations;
   }
 
-  /**
-   * GET /radio/popular
-   * Obtener emisoras más populares por clicks
-   */
   @Get('popular')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -94,10 +79,6 @@ export class RadioController {
     return stations;
   }
 
-  /**
-   * GET /radio/by-country/:code
-   * Obtener emisoras por código de país
-   */
   @Get('by-country/:code')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -115,10 +96,6 @@ export class RadioController {
     return stations;
   }
 
-  /**
-   * GET /radio/by-tag/:tag
-   * Obtener emisoras por género/tag
-   */
   @Get('by-tag/:tag')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -133,10 +110,6 @@ export class RadioController {
     return stations;
   }
 
-  /**
-   * GET /radio/tags
-   * Obtener todos los géneros/tags disponibles
-   */
   @Get('tags')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -147,10 +120,6 @@ export class RadioController {
     return this.searchStationsUseCase.getTags(limit || 100);
   }
 
-  /**
-   * GET /radio/countries
-   * Obtener todos los países disponibles
-   */
   @Get('countries')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -161,10 +130,6 @@ export class RadioController {
     return this.searchStationsUseCase.getCountries();
   }
 
-  /**
-   * GET /radio/favorites
-   * Obtener emisoras favoritas del usuario
-   */
   @Get('favorites')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -177,10 +142,6 @@ export class RadioController {
     return RadioStationResponseDto.fromDomainArray(stations);
   }
 
-  /**
-   * POST /radio/favorites/from-api
-   * Guardar emisora desde Radio Browser como favorita
-   */
   @Post('favorites/from-api')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -201,10 +162,6 @@ export class RadioController {
     return RadioStationResponseDto.fromDomain(station);
   }
 
-  /**
-   * POST /radio/favorites/custom
-   * Crear y guardar emisora personalizada
-   */
   @Post('favorites/custom')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -235,10 +192,6 @@ export class RadioController {
     return RadioStationResponseDto.fromDomain(station);
   }
 
-  /**
-   * DELETE /radio/favorites/:id
-   * Eliminar una emisora favorita
-   */
   @Delete('favorites/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
@@ -253,12 +206,7 @@ export class RadioController {
     await this.deleteFavoriteUseCase.execute({ stationId, userId });
   }
 
-  /**
-   * GET /radio/metadata/stream
-   * Server-Sent Events endpoint for real-time ICY metadata
-   * Streams "now playing" information from radio stations
-   * PUBLIC: EventSource cannot send JWT headers, metadata is non-sensitive public data
-   */
+  // SSE: EventSource no puede enviar JWT, metadata es pública
   @Sse('metadata/stream')
   @Public()
   @ApiOperation({
@@ -320,11 +268,7 @@ export class RadioController {
     });
   }
 
-  /**
-   * GET /radio/stream/proxy
-   * Proxy for HTTP radio streams to avoid Mixed Content blocking on HTTPS pages
-   * PUBLIC: Radio streams are public data, no auth needed
-   */
+  // Proxy HTTP→HTTPS para evitar Mixed Content en el navegador
   @Get('stream/proxy')
   @Public()
   @ApiOperation({
@@ -337,7 +281,7 @@ export class RadioController {
     @Res() reply: FastifyReply,
   ) {
     if (!streamUrl) {
-      throw new BadRequestException('URL parameter is required');
+      throw new BadRequestException('Parámetro URL requerido');
     }
 
     // Validate URL format
@@ -345,12 +289,12 @@ export class RadioController {
     try {
       parsedUrl = new URL(streamUrl);
     } catch {
-      throw new BadRequestException('Invalid URL format');
+      throw new BadRequestException('Formato de URL inválido');
     }
 
     // Only allow http and https protocols
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      throw new BadRequestException('Only HTTP and HTTPS URLs are allowed');
+      throw new BadRequestException('Solo se permiten URLs HTTP y HTTPS');
     }
 
     // Block private/internal networks (SSRF protection)
@@ -370,7 +314,7 @@ export class RadioController {
     ];
 
     if (blockedPatterns.some(pattern => pattern.test(hostname))) {
-      throw new BadRequestException('Access to internal networks is not allowed');
+      throw new BadRequestException('Acceso a redes internas no permitido');
     }
 
     // Proxy the stream

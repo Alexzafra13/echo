@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { UnauthorizedError } from '@shared/errors';
+import { RequestWithFederationToken } from '@shared/types/request.types';
 import { FederationTokenService } from '../../domain/services/federation-token.service';
 
 /**
@@ -31,17 +32,17 @@ export class FederationAccessGuard implements CanActivate {
     }
 
     if (!token) {
-      throw new UnauthorizedError('Federation access token required');
+      throw new UnauthorizedError('Token de acceso de federación requerido');
     }
 
     const accessToken = await this.tokenService.validateAccessToken(token);
 
     if (!accessToken) {
-      throw new UnauthorizedError('Invalid or expired federation access token');
+      throw new UnauthorizedError('Token de acceso de federación inválido o expirado');
     }
 
     // Attach token info to request for use in controllers
-    (request as any).federationAccessToken = accessToken;
+    (request as RequestWithFederationToken).federationAccessToken = accessToken;
 
     return true;
   }
