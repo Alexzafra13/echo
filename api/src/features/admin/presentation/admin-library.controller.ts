@@ -41,10 +41,7 @@ class BrowseDirectoriesDto {
   path!: string;
 }
 
-/**
- * Admin Library Controller
- * Manages music library path configuration
- */
+// Configuración del path de la librería de música
 @ApiTags('admin/library')
 @ApiBearerAuth('JWT-auth')
 @Controller('admin/library')
@@ -56,9 +53,6 @@ export class AdminLibraryController {
     private readonly settingsService: SettingsService,
   ) {}
 
-  /**
-   * Get current library configuration
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -103,9 +97,6 @@ export class AdminLibraryController {
     };
   }
 
-  /**
-   * Update library path
-   */
   @Put()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -161,9 +152,6 @@ export class AdminLibraryController {
     };
   }
 
-  /**
-   * Browse directories
-   */
   @Post('browse')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -321,9 +309,6 @@ export class AdminLibraryController {
     }
   }
 
-  /**
-   * Count music files in a directory (recursive, limited depth)
-   */
   private async countMusicFiles(dirPath: string, depth = 0): Promise<number> {
     if (depth > 5) return 0; // Limit recursion depth
 
@@ -352,9 +337,6 @@ export class AdminLibraryController {
     return count;
   }
 
-  /**
-   * Get available mount points for browsing
-   */
   private async getAvailableMountPoints(): Promise<string[]> {
     const available: string[] = [];
 
@@ -373,9 +355,6 @@ export class AdminLibraryController {
     return available;
   }
 
-  /**
-   * Check if a path is within allowed roots
-   */
   private isPathAllowed(targetPath: string): boolean {
     const normalized = path.normalize(targetPath).replace(/\\/g, '/');
     return ALLOWED_ROOTS.some(
@@ -383,9 +362,6 @@ export class AdminLibraryController {
     );
   }
 
-  /**
-   * Validate path access - throws if not allowed
-   */
   private validatePathAccess(targetPath: string): void {
     if (!this.isPathAllowed(targetPath)) {
       throw new ForbiddenException(
