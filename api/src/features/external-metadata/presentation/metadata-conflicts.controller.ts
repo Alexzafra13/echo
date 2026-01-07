@@ -15,19 +15,7 @@ import {
   ConflictResolvedResponseDto,
 } from './dtos/metadata-conflicts.dto';
 
-/**
- * MetadataConflictsController
- * Handles metadata conflict management endpoints
- *
- * Responsibilities:
- * - List pending conflicts with filters and pagination
- * - Get conflict details
- * - Accept suggested metadata changes
- * - Reject suggested changes
- * - Ignore conflicts permanently
- *
- * All endpoints require admin authentication
- */
+// Gestión de conflictos de metadata: aceptar/rechazar/ignorar sugerencias
 @ApiTags('Admin - Metadata Conflicts')
 @Controller('admin/metadata-conflicts')
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -38,10 +26,6 @@ export class MetadataConflictsController {
     private readonly drizzle: DrizzleService,
   ) {}
 
-  /**
-   * GET /admin/metadata-conflicts
-   * List all pending conflicts with pagination and filters
-   */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -73,10 +57,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * GET /admin/metadata-conflicts/:id
-   * Get details of a specific conflict
-   */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -104,10 +84,6 @@ export class MetadataConflictsController {
     return conflict as any;
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/accept
-   * Accept a conflict and apply the suggested value
-   */
   @Post(':id/accept')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -137,10 +113,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/reject
-   * Reject a conflict (keep current value)
-   */
   @Post(':id/reject')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -169,10 +141,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/ignore
-   * Ignore a conflict permanently (don't show again)
-   */
   @Post(':id/ignore')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -201,10 +169,6 @@ export class MetadataConflictsController {
     };
   }
 
-  /**
-   * GET /admin/metadata-conflicts/entity/:entityType/:entityId
-   * Get all conflicts for a specific entity
-   */
   @Get('entity/:entityType/:entityId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -224,10 +188,7 @@ export class MetadataConflictsController {
     return conflicts as any[];
   }
 
-  /**
-   * POST /admin/metadata-conflicts/:id/apply-suggestion
-   * Apply a specific suggestion from multiple options (for MBID auto-search conflicts)
-   */
+  // Aplica una sugerencia específica (para conflictos con múltiples opciones de MBID)
   @Post(':id/apply-suggestion')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

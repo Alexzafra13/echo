@@ -16,18 +16,12 @@ import { artists, albums } from '@infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
 import { ExternalMetadataService } from '../application/external-metadata.service';
 
-/**
- * DTO for selecting a MusicBrainz match
- */
 interface SelectMbidDto {
   mbid: string;
   name: string;
 }
 
-/**
- * MusicBrainz Search Controller
- * Provides endpoints for searching MusicBrainz and updating entity MBIDs
- */
+// Búsqueda y asignación manual de MBIDs de MusicBrainz
 @Controller('metadata/musicbrainz')
 @UseGuards(JwtAuthGuard)
 export class MusicBrainzSearchController {
@@ -39,10 +33,6 @@ export class MusicBrainzSearchController {
     private readonly metadataService: ExternalMetadataService
   ) {}
 
-  /**
-   * Search for artists by name
-   * GET /api/metadata/musicbrainz/search/artists?q=artistName&limit=5
-   */
   @Get('search/artists')
   async searchArtists(
     @Query('q') query: string,
@@ -58,10 +48,6 @@ export class MusicBrainzSearchController {
     return { matches };
   }
 
-  /**
-   * Search for albums by title and artist
-   * GET /api/metadata/musicbrainz/search/albums?q=albumTitle&artist=artistName&limit=5
-   */
   @Get('search/albums')
   async searchAlbums(
     @Query('q') query: string,
@@ -82,35 +68,19 @@ export class MusicBrainzSearchController {
     return { matches };
   }
 
-  /**
-   * Get artist details by MBID
-   * GET /api/metadata/musicbrainz/artists/:mbid
-   */
   @Get('artists/:mbid')
   async getArtistByMbid(@Param('mbid') mbid: string) {
     const artist = await this.musicbrainzAgent.getArtistByMbid(mbid);
     return { artist };
   }
 
-  /**
-   * Get album details by MBID
-   * GET /api/metadata/musicbrainz/albums/:mbid
-   */
   @Get('albums/:mbid')
   async getAlbumByMbid(@Param('mbid') mbid: string) {
     const album = await this.musicbrainzAgent.getAlbumByMbid(mbid);
     return { album };
   }
 
-  /**
-   * Select and apply MusicBrainz MBID for an artist
-   * POST /api/metadata/musicbrainz/artists/:artistId/select
-   * Body: { mbid: string, name: string }
-   *
-   * This will:
-   * 1. Update the artist's mbzArtistId in the database
-   * 2. Automatically trigger enrichment (biography, images from Fanart.tv)
-   */
+  // Asigna MBID y dispara enriquecimiento automático
   @Post('artists/:artistId/select')
   async selectArtistMbid(
     @Param('artistId', ParseUUIDPipe) artistId: string,
@@ -148,15 +118,6 @@ export class MusicBrainzSearchController {
     }
   }
 
-  /**
-   * Select and apply MusicBrainz MBID for an album
-   * POST /api/metadata/musicbrainz/albums/:albumId/select
-   * Body: { mbid: string, name: string }
-   *
-   * This will:
-   * 1. Update the album's mbzAlbumId in the database
-   * 2. Automatically trigger enrichment (cover art from Cover Art Archive)
-   */
   @Post('albums/:albumId/select')
   async selectAlbumMbid(
     @Param('albumId', ParseUUIDPipe) albumId: string,
@@ -194,12 +155,6 @@ export class MusicBrainzSearchController {
     }
   }
 
-  /**
-   * Suggest MusicBrainz matches for an artist that doesn't have an MBID
-   * GET /api/metadata/musicbrainz/artists/:artistId/suggest
-   *
-   * Searches MusicBrainz using the artist's name and returns potential matches
-   */
   @Get('artists/:artistId/suggest')
   async suggestArtistMatches(@Param('artistId') artistId: string) {
     try {
@@ -238,12 +193,6 @@ export class MusicBrainzSearchController {
     }
   }
 
-  /**
-   * Suggest MusicBrainz matches for an album that doesn't have an MBID
-   * GET /api/metadata/musicbrainz/albums/:albumId/suggest
-   *
-   * Searches MusicBrainz using the album's title and artist, returns potential matches
-   */
   @Get('albums/:albumId/suggest')
   async suggestAlbumMatches(@Param('albumId') albumId: string) {
     try {
