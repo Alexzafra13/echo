@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { JwtUser } from '@shared/types/request.types';
 
+// Tokens para streaming de audio (30 días de duración)
 @ApiTags('streaming')
 @ApiBearerAuth('JWT-auth')
 @Controller('stream-token')
@@ -12,10 +13,6 @@ import { JwtUser } from '@shared/types/request.types';
 export class StreamTokenController {
   constructor(private readonly streamTokenService: StreamTokenService) {}
 
-  /**
-   * Generate or get existing stream token
-   * POST /api/stream-token/generate
-   */
   @Post('generate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -38,10 +35,6 @@ export class StreamTokenController {
     return { token, expiresAt };
   }
 
-  /**
-   * Get current stream token
-   * GET /api/stream-token
-   */
   @Get()
   @ApiOperation({
     summary: 'Get current stream token',
@@ -71,10 +64,6 @@ export class StreamTokenController {
     return tokenData;
   }
 
-  /**
-   * Revoke stream token
-   * DELETE /api/stream-token
-   */
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({

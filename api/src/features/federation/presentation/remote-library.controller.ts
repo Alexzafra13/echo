@@ -38,11 +38,7 @@ import {
   SharedLibrariesQueryDto,
 } from './dto';
 
-/**
- * RemoteLibraryController - Navegación de bibliotecas remotas
- *
- * Permite ver álbumes y tracks de servidores conectados.
- */
+// Navegación y streaming de bibliotecas remotas de servidores federados
 @ApiTags('federation')
 @Controller('federation')
 @UseGuards(JwtAuthGuard)
@@ -57,9 +53,6 @@ export class RemoteLibraryController {
     private readonly streamTokenService: StreamTokenService,
   ) {}
 
-  /**
-   * Helper to get a connected server and verify ownership
-   */
   private async getServerWithOwnershipCheck(
     serverId: string,
     userId: string,
@@ -73,10 +66,6 @@ export class RemoteLibraryController {
     }
     return server;
   }
-
-  // ============================================
-  // Shared Libraries (Álbums de todos los servidores)
-  // ============================================
 
   @Get('shared-albums')
   @ApiOperation({
@@ -156,10 +145,6 @@ export class RemoteLibraryController {
       serverCount: successfulServers,
     };
   }
-
-  // ============================================
-  // Remote Library (Navegar biblioteca de servidor remoto)
-  // ============================================
 
   @Get('servers/:id/library')
   @ApiOperation({
@@ -352,13 +337,7 @@ export class RemoteLibraryController {
     }
   }
 
-  // ============================================
-  // Private helpers
-  // ============================================
-
-  /**
-   * Transforms a remote album's coverUrl to use the local proxy endpoint
-   */
+  // Transforma coverUrl remota a proxy local
   private transformAlbumCoverUrl<T extends { id: string; coverUrl?: string }>(
     album: T,
     serverId: string,
@@ -371,9 +350,6 @@ export class RemoteLibraryController {
     };
   }
 
-  /**
-   * Transforms an array of remote albums' coverUrls to use the local proxy endpoint
-   */
   private transformAlbumsCoverUrls<T extends { id: string; coverUrl?: string }>(
     albums: T[],
     serverId: string,
