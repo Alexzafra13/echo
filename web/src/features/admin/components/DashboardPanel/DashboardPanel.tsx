@@ -221,6 +221,7 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
       <HealthPanel
         health={stats.systemHealth}
         alerts={stats.activeAlerts}
+        scanStats={stats.scanStats}
         onNavigateToTab={onNavigateToTab}
       />
 
