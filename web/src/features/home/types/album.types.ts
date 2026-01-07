@@ -86,39 +86,45 @@ export type AlbumSortOption = 'recent' | 'alphabetical' | 'artist' | 'recently-p
 
 /**
  * Response type for alphabetically sorted albums
+ * Standardized format: data + page/limit/total/totalPages/hasMore
  */
 export interface AlbumsAlphabeticalResponse {
-  albums: Album[];
+  data: Album[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
+  hasMore: boolean;
 }
 
 /**
  * Response type for albums sorted by artist
+ * Standardized format: data + page/limit/total/totalPages/hasMore
  */
 export interface AlbumsByArtistResponse {
-  albums: Album[];
+  data: Album[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
+  hasMore: boolean;
 }
 
 /**
  * Response type for recently played albums
+ * Standardized format: data (no pagination)
  */
 export interface AlbumsRecentlyPlayedResponse {
-  albums: Album[];
+  data: Album[];
 }
 
 /**
  * Response type for favorite albums
+ * Standardized format: data + page/limit/hasMore
  */
 export interface AlbumsFavoritesResponse {
-  albums: Album[];
-  page?: number;
-  limit?: number;
-  hasMore?: boolean;
+  data: Album[];
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }

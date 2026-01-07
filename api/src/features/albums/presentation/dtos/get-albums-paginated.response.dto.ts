@@ -5,12 +5,14 @@ import { AlbumResponseDto } from './album.response.dto';
 /**
  * GetAlbumsPaginatedResponseDto - DTO de respuesta para listas paginadas de álbumes
  * Usado por endpoints como: alphabetical, by-artist
+ *
+ * Formato estandarizado: data + page/limit/total/totalPages/hasMore
  */
 export class GetAlbumsPaginatedResponseDto {
   @ApiProperty({ type: [AlbumResponseDto], description: 'Lista de álbumes' })
   @Expose()
   @Type(() => AlbumResponseDto)
-  albums!: AlbumResponseDto[];
+  data!: AlbumResponseDto[];
 
   @ApiProperty({ example: 100, description: 'Total de álbumes' })
   @Expose()
@@ -28,47 +30,55 @@ export class GetAlbumsPaginatedResponseDto {
   @Expose()
   totalPages!: number;
 
+  @ApiProperty({ example: true, description: 'Hay más álbumes disponibles' })
+  @Expose()
+  hasMore!: boolean;
+
   static create(params: {
-    albums: AlbumResponseDto[];
+    data: AlbumResponseDto[];
     total: number;
     page: number;
     limit: number;
-    totalPages: number;
   }): GetAlbumsPaginatedResponseDto {
     const dto = new GetAlbumsPaginatedResponseDto();
-    dto.albums = params.albums;
+    dto.data = params.data;
     dto.total = params.total;
     dto.page = params.page;
     dto.limit = params.limit;
-    dto.totalPages = params.totalPages;
+    dto.totalPages = Math.ceil(params.total / params.limit);
+    dto.hasMore = params.page < dto.totalPages;
     return dto;
   }
 }
 
 /**
  * GetRecentlyPlayedAlbumsResponseDto - DTO de respuesta para álbumes reproducidos recientemente
+ *
+ * Formato estandarizado: data (sin paginación para este endpoint)
  */
 export class GetRecentlyPlayedAlbumsResponseDto {
   @ApiProperty({ type: [AlbumResponseDto], description: 'Álbumes reproducidos recientemente' })
   @Expose()
   @Type(() => AlbumResponseDto)
-  albums!: AlbumResponseDto[];
+  data!: AlbumResponseDto[];
 
-  static create(params: { albums: AlbumResponseDto[] }): GetRecentlyPlayedAlbumsResponseDto {
+  static create(params: { data: AlbumResponseDto[] }): GetRecentlyPlayedAlbumsResponseDto {
     const dto = new GetRecentlyPlayedAlbumsResponseDto();
-    dto.albums = params.albums;
+    dto.data = params.data;
     return dto;
   }
 }
 
 /**
  * GetFavoriteAlbumsResponseDto - DTO de respuesta para álbumes favoritos
+ *
+ * Formato estandarizado: data + page/limit/hasMore
  */
 export class GetFavoriteAlbumsResponseDto {
   @ApiProperty({ type: [AlbumResponseDto], description: 'Álbumes favoritos' })
   @Expose()
   @Type(() => AlbumResponseDto)
-  albums!: AlbumResponseDto[];
+  data!: AlbumResponseDto[];
 
   @ApiProperty({ example: 1, description: 'Página actual' })
   @Expose()
@@ -83,13 +93,13 @@ export class GetFavoriteAlbumsResponseDto {
   hasMore!: boolean;
 
   static create(params: {
-    albums: AlbumResponseDto[];
+    data: AlbumResponseDto[];
     page: number;
     limit: number;
     hasMore: boolean;
   }): GetFavoriteAlbumsResponseDto {
     const dto = new GetFavoriteAlbumsResponseDto();
-    dto.albums = params.albums;
+    dto.data = params.data;
     dto.page = params.page;
     dto.limit = params.limit;
     dto.hasMore = params.hasMore;
