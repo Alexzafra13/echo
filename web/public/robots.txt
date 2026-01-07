@@ -1,15 +1,5 @@
 # Echo Music Server - Robots.txt
-# https://www.robotstxt.org/
+# App self-hosted - No indexar
 
-# Allow all crawlers
 User-agent: *
-Allow: /
-
-# Disallow sensitive paths
-Disallow: /api/
-Disallow: /admin/
-Disallow: /first-login
-Disallow: /setup
-
-# Sitemap (uncomment when available)
-# Sitemap: https://your-domain.com/sitemap.xml
+Disallow: /
