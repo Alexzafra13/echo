@@ -422,8 +422,8 @@
   .artistDetailPage__optionsMenuMobile {
     display: block;
     position: absolute;
-    top: 16px;
-    right: 0;
+    top: 70px; /* Below the header (56px + margin) */
+    right: 16px;
     z-index: 10;
   }
 
