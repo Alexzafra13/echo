@@ -68,7 +68,7 @@ describe('StreamTokenGuard', () => {
 
       // Act & Assert
       await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedError);
-      await expect(guard.canActivate(context)).rejects.toThrow('Stream token is required');
+      await expect(guard.canActivate(context)).rejects.toThrow('Token de streaming requerido');
       expect(streamTokenService.validateToken).not.toHaveBeenCalled();
     });
 
@@ -78,7 +78,7 @@ describe('StreamTokenGuard', () => {
 
       // Act & Assert
       await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedError);
-      await expect(guard.canActivate(context)).rejects.toThrow('Stream token is required');
+      await expect(guard.canActivate(context)).rejects.toThrow('Token de streaming requerido');
     });
 
     it('debería lanzar UnauthorizedError si token no es string', async () => {
@@ -87,7 +87,7 @@ describe('StreamTokenGuard', () => {
 
       // Act & Assert
       await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedError);
-      await expect(guard.canActivate(context)).rejects.toThrow('Stream token is required');
+      await expect(guard.canActivate(context)).rejects.toThrow('Token de streaming requerido');
     });
 
     it('debería lanzar UnauthorizedError si token es inválido', async () => {
@@ -97,7 +97,7 @@ describe('StreamTokenGuard', () => {
 
       // Act & Assert
       await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedError);
-      await expect(guard.canActivate(context)).rejects.toThrow('Invalid or expired stream token');
+      await expect(guard.canActivate(context)).rejects.toThrow('Token de streaming inválido o expirado');
       expect(streamTokenService.validateToken).toHaveBeenCalledWith('invalid-token');
     });
 
@@ -107,7 +107,7 @@ describe('StreamTokenGuard', () => {
       streamTokenService.validateToken.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(guard.canActivate(context)).rejects.toThrow('Invalid or expired stream token');
+      await expect(guard.canActivate(context)).rejects.toThrow('Token de streaming inválido o expirado');
     });
 
     it('debería manejar tokens con caracteres especiales', async () => {
