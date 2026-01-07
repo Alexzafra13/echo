@@ -87,12 +87,9 @@
   min-height: 400px;
 }
 
-/* Options menu for admin - positioned in hero */
-.artistDetailPage__optionsMenu {
-  position: absolute;
-  bottom: 40px;
-  right: 40px;
-  z-index: 10;
+/* Mobile-only options menu - hidden on desktop */
+.artistDetailPage__optionsMenuMobile {
+  display: none;
 }
 
 .artistDetailPage__avatarContainer {
@@ -421,14 +418,17 @@
     justify-content: flex-end; /* Push content to bottom */
   }
 
-  /* Options menu - top right inside hero on mobile */
-  .artistDetailPage__optionsMenu {
-    top: 16px; /* Near top of hero content */
+  /* Show mobile options menu */
+  .artistDetailPage__optionsMenuMobile {
+    display: block;
+    position: absolute;
+    top: 16px;
     right: 0;
-    bottom: auto;
+    z-index: 10;
   }
 
   /* Hide circular avatar on mobile - image is now the background */
+  /* The desktop menu inside avatarContainer is also hidden */
   .artistDetailPage__avatarContainer {
     display: none;
   }
