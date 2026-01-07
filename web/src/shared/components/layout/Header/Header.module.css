@@ -453,8 +453,10 @@
 @media (max-width: 768px) {
   .header {
     padding: var(--space-2) var(--space-4);
+    /* iOS PWA safe area - avoid status bar overlap */
+    padding-top: calc(var(--space-2) + env(safe-area-inset-top, 0px));
     gap: var(--space-2);
-    height: 52px; /* iOS standard header height */
+    height: calc(52px + env(safe-area-inset-top, 0px)); /* iOS standard header height + safe area */
     border-bottom: 1px solid var(--white-10);
   }
 
@@ -521,11 +523,11 @@
   /* Dropdown como modal full-width en móvil */
   .header__userDropdown {
     position: fixed;
-    top: 48px; /* Pegado al bottom del header */
+    top: calc(52px + env(safe-area-inset-top, 0px)); /* Pegado al bottom del header + safe area */
     left: 0;
     right: 0;
     width: 100%;
-    max-height: calc(100vh - 48px);
+    max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px));
     margin-top: 0; /* Sin margen en móvil */
     background: rgba(15, 18, 28, 0.95); /* Mismo color que desktop */
     backdrop-filter: blur(20px);
