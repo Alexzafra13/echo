@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nes
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { AdminGuard } from '@shared/guards/admin.guard';
 import { MetadataConflictService } from '../infrastructure/services/metadata-conflict.service';
+import { EntityType, ConflictSource, ConflictWithEntity } from '../infrastructure/services/conflicts/conflict-enrichment.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { metadataConflicts, artists, albums, tracks } from '@infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
@@ -44,13 +45,13 @@ export class MetadataConflictsController {
     await this.conflictService.cleanupOrphanedConflicts();
 
     const result = await this.conflictService.getPendingConflicts(skip, take, {
-      entityType: entityType as any,
-      source: source as any,
+      entityType: entityType as EntityType | undefined,
+      source: source as ConflictSource | undefined,
       priority,
     });
 
     return {
-      conflicts: result.conflicts as any[],
+      conflicts: result.conflicts as ConflictResponseDto[],
       total: result.total,
       skip,
       take,
@@ -81,7 +82,7 @@ export class MetadataConflictsController {
       throw new NotFoundError('MetadataConflict', id);
     }
 
-    return conflict as any;
+    return conflict as ConflictResponseDto;
   }
 
   @Post(':id/accept')
@@ -184,8 +185,8 @@ export class MetadataConflictsController {
     @Param('entityType') entityType: string,
     @Param('entityId', ParseUUIDPipe) entityId: string,
   ): Promise<ConflictResponseDto[]> {
-    const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as any);
-    return conflicts as any[];
+    const conflicts = await this.conflictService.getConflictsForEntity(entityId, entityType as EntityType);
+    return conflicts as ConflictResponseDto[];
   }
 
   // Aplica una sugerencia específica (para conflictos con múltiples opciones de MBID)
