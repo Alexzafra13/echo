@@ -1,0 +1,5 @@
+# Echo Music Server - Robots.txt
+# App self-hosted - No indexar
+
+User-agent: *
+Disallow: /

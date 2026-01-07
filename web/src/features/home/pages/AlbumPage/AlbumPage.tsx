@@ -12,6 +12,7 @@ import { useAlbumMetadataSync } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { toPlayerTracks } from '@shared/utils/track.utils';
 import { getArtistImageUrl, useAlbumCoverMetadata, getAlbumCoverUrl, useArtistImages } from '../../hooks';
 import { logger } from '@shared/utils/logger';
 import { downloadService } from '@shared/services/download.service';
@@ -125,34 +126,26 @@ export default function AlbumPage() {
     }
   };
 
-  // Convert API tracks to Player tracks
-  const convertToPlayerTracks = (apiTracks: any[]): Track[] => {
-    return apiTracks.map(track => ({
-      id: track.id,
-      title: track.title,
-      artist: track.artistName || album?.artist || 'Unknown Artist',
-      artistId: track.artistId || album?.artistId,
-      albumId: id,
-      albumName: album?.title,
-      duration: track.duration || 0,
-      coverImage: album?.coverImage,
-      // Audio normalization data (LUFS)
-      rgTrackGain: track.rgTrackGain,
-      rgTrackPeak: track.rgTrackPeak,
-    }));
+  // Album context for track conversion
+  const albumContext = {
+    albumId: id,
+    albumName: album?.title,
+    artist: album?.artist,
+    artistId: album?.artistId,
+    coverImage: album?.coverImage,
   };
 
   const handlePlayAll = () => {
     if (!tracks || tracks.length === 0) return;
     // Disable shuffle mode for ordered playback
     setShuffle(false);
-    const playerTracks = convertToPlayerTracks(tracks);
+    const playerTracks = toPlayerTracks(tracks, albumContext);
     playQueue(playerTracks, 0);
   };
 
   const handleShufflePlay = () => {
     if (!tracks || tracks.length === 0) return;
-    const playerTracks = convertToPlayerTracks(tracks);
+    const playerTracks = toPlayerTracks(tracks, albumContext);
     // Enable shuffle mode
     setShuffle(true);
     // Shuffle the tracks array using Fisher-Yates algorithm
@@ -165,9 +158,9 @@ export default function AlbumPage() {
     playQueue(shuffledTracks, 0);
   };
 
-  const handleTrackPlay = (track: any) => {
+  const handleTrackPlay = (track: Track) => {
     if (!tracks) return;
-    const playerTracks = convertToPlayerTracks(tracks);
+    const playerTracks = toPlayerTracks(tracks, albumContext);
     const trackIndex = tracks.findIndex(t => t.id === track.id);
     playQueue(playerTracks, trackIndex >= 0 ? trackIndex : 0);
   };

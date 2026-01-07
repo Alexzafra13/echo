@@ -6,6 +6,7 @@
  * - Click outside to close
  * - Accessible close button
  * - Portal rendering
+ * - Focus trap for accessibility
  * - Support for custom headers with icons and subtitles
  */
 
@@ -13,6 +14,7 @@ import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useFocusTrap } from '@shared/hooks';
 import styles from './Modal.module.css';
 
 export interface ModalProps {
@@ -44,6 +46,9 @@ export function Modal({
   width,
   className,
 }: ModalProps) {
+  // Focus trap for accessibility
+  const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen);
+
   // ESC key handler
   useEffect(() => {
     if (!isOpen) return;
@@ -89,6 +94,7 @@ export function Modal({
       aria-labelledby="modal-title"
     >
       <div
+        ref={focusTrapRef}
         className={`${styles.modalContent} ${className || ''}`}
         style={width ? { width } : undefined}
         onClick={(e) => e.stopPropagation()}

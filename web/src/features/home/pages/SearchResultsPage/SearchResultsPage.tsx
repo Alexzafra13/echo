@@ -6,7 +6,11 @@ import { Sidebar } from '../../components';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
 import { useArtistSearch } from '@features/artists/hooks';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
+import { handleAvatarError } from '@shared/utils/avatar.utils';
 import { getArtistImageUrl } from '@features/home/hooks';
+import type { Artist } from '@features/artists/types/artist.types';
+import type { Album } from '@features/home/types/album.types';
+import type { Track } from '@shared/types/track.types';
 import styles from './SearchResultsPage.module.css';
 
 /**
@@ -33,15 +37,6 @@ export function SearchResultsPage() {
 
   const isLoading = loadingArtists || loadingAlbums || loadingTracks;
   const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0;
-
-  // Handle avatar image error - fallback to default avatar
-  const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const defaultAvatar = '/images/empy_cover/empy_cover_default.png';
-    if (img.src !== defaultAvatar) {
-      img.src = defaultAvatar;
-    }
-  };
 
   // Render content based on state
   const renderContent = () => {
@@ -90,7 +85,7 @@ export function SearchResultsPage() {
               <span className={styles.searchResultsPage__count}>({artists.length})</span>
             </h2>
             <div className={styles.searchResultsPage__grid}>
-              {artists.map((artist: any) => (
+              {artists.map((artist: Artist) => (
                 <button
                   key={artist.id}
                   className={styles.searchResultsPage__card}
@@ -121,7 +116,7 @@ export function SearchResultsPage() {
               <span className={styles.searchResultsPage__count}>({albums.length})</span>
             </h2>
             <div className={styles.searchResultsPage__grid}>
-              {albums.map((album: any) => (
+              {albums.map((album: Album) => (
                 <button
                   key={album.id}
                   className={styles.searchResultsPage__card}
@@ -152,7 +147,7 @@ export function SearchResultsPage() {
               <span className={styles.searchResultsPage__count}>({tracks.length})</span>
             </h2>
             <div className={styles.searchResultsPage__list}>
-              {tracks.map((track: any, index: number) => (
+              {tracks.map((track: Track, index: number) => (
                 <button
                   key={track.id}
                   className={styles.searchResultsPage__listItem}

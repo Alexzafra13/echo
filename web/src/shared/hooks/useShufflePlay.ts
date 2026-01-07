@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePlayer } from '@features/player';
 import { tracksService } from '@features/home/services/tracks.service';
 import { logger } from '@shared/utils/logger';
+import { toPlayerTracks } from '@shared/utils/track.utils';
 import type { Track } from '@shared/types/track.types';
 
 const BATCH_SIZE = 50;
@@ -12,24 +13,6 @@ export interface UseShufflePlayReturn {
   isLoading: boolean;
   loadMoreTracks: () => Promise<void>;
   hasMore: boolean;
-}
-
-function convertToPlayerTrack(track: import('@features/home/types').Track): Track {
-  return {
-    id: track.id,
-    title: track.title,
-    artist: track.artistName || 'Artista desconocido',
-    artistId: track.artistId,
-    albumId: track.albumId,
-    albumName: track.albumName,
-    duration: track.duration,
-    coverImage: track.albumId ? `/api/images/albums/${track.albumId}/cover` : undefined,
-    trackNumber: track.trackNumber,
-    discNumber: track.discNumber,
-    // Audio normalization data (LUFS)
-    rgTrackGain: track.rgTrackGain,
-    rgTrackPeak: track.rgTrackPeak,
-  };
 }
 
 interface ShuffleState {
@@ -104,7 +87,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
           break;
         }
 
-        const allTracks = response.data.map(convertToPlayerTrack);
+        const allTracks = toPlayerTracks(response.data);
         state.skip += response.data.length;
 
         // Filter out tracks we've already seen in this shuffle session
@@ -203,7 +186,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
           break;
         }
 
-        const allTracks = response.data.map(convertToPlayerTrack);
+        const allTracks = toPlayerTracks(response.data);
         currentSkip += response.data.length;
 
         // Filter out tracks we've already seen
