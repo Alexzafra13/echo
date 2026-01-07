@@ -314,6 +314,28 @@ textarea:focus-visible {
   border-width: 0;
 }
 
+/* ===== Skip Link for Accessibility ===== */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary-500);
+  color: var(--text-on-primary);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-base);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  z-index: 9999;
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+  outline: 2px solid var(--color-primary-300);
+  outline-offset: 2px;
+}
+
 .container {
   width: 100%;
   max-width: 1280px;
