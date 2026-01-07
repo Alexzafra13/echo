@@ -277,16 +277,27 @@ export default function ArtistDetailPage() {
         <div className={styles.artistDetailPage__content}>
           {/* Hero Section */}
           <section className={styles.artistDetailPage__hero}>
-            {/* Background */}
+            {/* Background - Desktop uses background/banner, Mobile uses profile for Spotify-style look */}
             {backgroundUrl && (
               <div
                 key={`${backgroundUrl}-${imageRenderKey}`} // Force complete re-render when image changes
-                className={styles.artistDetailPage__background}
+                className={`${styles.artistDetailPage__background} ${styles.artistDetailPage__backgroundDesktop}`}
                 style={{
                   backgroundImage: `url(${backgroundUrl})`,
                   // Use saved position, or default based on image type
                   backgroundPosition: artist?.backgroundPosition ||
                     (hasBackground ? 'center top' : 'center center'),
+                }}
+              />
+            )}
+            {/* Mobile-only: Profile image as hero background (Spotify app style) */}
+            {(profileUrl || backgroundUrl) && (
+              <div
+                key={`mobile-${profileUrl || backgroundUrl}-${profileRenderKey}`}
+                className={`${styles.artistDetailPage__background} ${styles.artistDetailPage__backgroundMobile}`}
+                style={{
+                  backgroundImage: `url(${profileUrl || backgroundUrl})`,
+                  backgroundPosition: 'center top',
                 }}
               />
             )}
