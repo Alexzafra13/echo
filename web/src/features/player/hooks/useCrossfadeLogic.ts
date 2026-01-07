@@ -23,7 +23,20 @@ interface UseCrossfadeLogicParams {
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
 }
 
-const FADE_STEPS = 50; // Number of volume steps for smooth transition
+/**
+ * Apply equal-power crossfade curve for smoother audio transitions.
+ * Uses cosine/sine curves to maintain constant perceived loudness.
+ * This prevents the "dip" in volume that occurs with linear crossfades.
+ */
+function equalPowerFade(progress: number): { fadeOut: number; fadeIn: number } {
+  // Clamp progress between 0 and 1
+  const p = Math.max(0, Math.min(1, progress));
+  // Equal power crossfade: use cos/sin for smooth transition
+  // This maintains constant power (loudness) throughout the fade
+  const fadeOut = Math.cos(p * Math.PI * 0.5);
+  const fadeIn = Math.sin(p * Math.PI * 0.5);
+  return { fadeOut, fadeIn };
+}
 
 export function useCrossfadeLogic({
   audioElements,
@@ -36,26 +49,28 @@ export function useCrossfadeLogic({
   onCrossfadeTrigger,
 }: UseCrossfadeLogicParams) {
   const [isCrossfading, setIsCrossfading] = useState(false);
-  const crossfadeIntervalRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const crossfadeTimeoutRef = useRef<number | null>(null);
   const crossfadeStartedRef = useRef(false);
+  const crossfadeStartTimeRef = useRef<number | null>(null);
 
   // Store callbacks in ref to avoid stale closures
   const callbacksRef = useRef({ onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger });
   callbacksRef.current = { onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger };
 
   /**
-   * Clear any ongoing crossfade timers
+   * Clear any ongoing crossfade animation
    */
   const clearCrossfade = useCallback(() => {
-    if (crossfadeIntervalRef.current) {
-      clearInterval(crossfadeIntervalRef.current);
-      crossfadeIntervalRef.current = null;
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
     if (crossfadeTimeoutRef.current) {
       clearTimeout(crossfadeTimeoutRef.current);
       crossfadeTimeoutRef.current = null;
     }
+    crossfadeStartTimeRef.current = null;
     setIsCrossfading(false);
   }, []);
 
@@ -67,8 +82,8 @@ export function useCrossfadeLogic({
   }, []);
 
   /**
-   * Perform crossfade transition
-   * Fades out active audio while fading in inactive audio
+   * Perform crossfade transition using requestAnimationFrame
+   * Uses equal-power curve for smooth audio transitions without crackling
    */
   const performCrossfade = useCallback(async () => {
     const activeAudio = audioElements.getActiveAudio();
@@ -89,37 +104,51 @@ export function useCrossfadeLogic({
       await audioElements.playInactive();
 
       const fadeDuration = settings.duration * 1000; // Convert to ms
-      const fadeInterval = fadeDuration / FADE_STEPS;
-      const volumeStep = targetVolume / FADE_STEPS;
-
-      let currentStep = 0;
       const activeId = audioElements.getActiveAudioId();
       const inactiveId = activeId === 'A' ? 'B' : 'A';
 
-      crossfadeIntervalRef.current = window.setInterval(() => {
-        currentStep++;
+      // Use requestAnimationFrame for smoother volume transitions
+      // This avoids the timing issues of setInterval that cause crackling
+      crossfadeStartTimeRef.current = performance.now();
 
-        // Fade out active, fade in inactive
-        const fadeOutVolume = Math.max(0, targetVolume - (volumeStep * currentStep));
-        const fadeInVolume = Math.min(targetVolume, volumeStep * currentStep);
+      const animateFade = (currentTime: number) => {
+        const startTime = crossfadeStartTimeRef.current;
+        if (startTime === null) return;
 
-        audioElements.setAudioVolume(activeId, fadeOutVolume);
-        audioElements.setAudioVolume(inactiveId, fadeInVolume);
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(1, elapsed / fadeDuration);
 
-        if (currentStep >= FADE_STEPS) {
+        // Use equal-power curve for perceptually smooth fade
+        const { fadeOut, fadeIn } = equalPowerFade(progress);
+
+        // Apply volumes with target volume scaling
+        audioElements.setAudioVolume(activeId, fadeOut * targetVolume);
+        audioElements.setAudioVolume(inactiveId, fadeIn * targetVolume);
+
+        if (progress < 1) {
+          // Continue animation
+          animationFrameRef.current = requestAnimationFrame(animateFade);
+        } else {
           // Crossfade complete
           clearCrossfade();
 
-          // Stop the old audio
-          audioElements.stopActive();
+          // Ensure final volumes are set correctly
+          audioElements.setAudioVolume(activeId, 0);
+          audioElements.setAudioVolume(inactiveId, targetVolume);
 
-          // Switch active audio
-          audioElements.switchActiveAudio();
-
-          logger.debug('[Crossfade] Crossfade complete, switched to:', audioElements.getActiveAudioId());
-          callbacksRef.current.onCrossfadeComplete?.();
+          // Stop the old audio (with a micro-delay to avoid audio glitch)
+          setTimeout(() => {
+            audioElements.stopActive();
+            // Switch active audio
+            audioElements.switchActiveAudio();
+            logger.debug('[Crossfade] Crossfade complete, switched to:', audioElements.getActiveAudioId());
+            callbacksRef.current.onCrossfadeComplete?.();
+          }, 10);
         }
-      }, fadeInterval);
+      };
+
+      // Start the animation loop
+      animationFrameRef.current = requestAnimationFrame(animateFade);
 
       return true;
     } catch (error) {
