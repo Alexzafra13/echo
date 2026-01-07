@@ -9,19 +9,7 @@ import { Logger } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Server, Socket } from 'socket.io';
 
-/**
- * Metadata Enrichment WebSocket Gateway
- * Provides real-time updates during metadata enrichment process
- *
- * Events emitted to clients:
- * - enrichment:started - Enrichment process started
- * - enrichment:progress - Progress update during enrichment
- * - enrichment:completed - Enrichment completed successfully
- * - enrichment:error - Error occurred during enrichment
- *
- * Note: This gateway does NOT require authentication to allow
- * receiving metadata updates without JWT token overhead.
- */
+// Eventos de enriquecimiento de metadata en tiempo real (sin auth para evitar overhead)
 @WebSocketGateway({
   namespace: 'metadata',
   cors: {
@@ -50,9 +38,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.info(`Client disconnected from metadata namespace: ${client.id}`);
   }
 
-  /**
-   * Emit enrichment started event
-   */
   emitEnrichmentStarted(data: {
     entityType: 'artist' | 'album';
     entityId: string;
@@ -66,9 +51,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.debug(`Enrichment started: ${data.entityType} ${data.entityName}`);
   }
 
-  /**
-   * Emit enrichment progress event
-   */
   emitEnrichmentProgress(data: {
     entityType: 'artist' | 'album';
     entityId: string;
@@ -88,9 +70,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  /**
-   * Emit enrichment completed event
-   */
   emitEnrichmentCompleted(data: {
     entityType: 'artist' | 'album';
     entityId: string;
@@ -110,9 +89,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  /**
-   * Emit enrichment error event
-   */
   emitEnrichmentError(data: {
     entityType: 'artist' | 'album';
     entityId: string;
@@ -126,9 +102,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.error(`Enrichment error: ${data.entityName} - ${data.error}`);
   }
 
-  /**
-   * Emit batch enrichment started event
-   */
   emitBatchEnrichmentStarted(data: {
     entityType: 'artist' | 'album';
     total: number;
@@ -140,9 +113,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.info(`Batch enrichment started: ${data.total} ${data.entityType}s`);
   }
 
-  /**
-   * Emit batch enrichment progress event
-   */
   emitBatchEnrichmentProgress(data: {
     entityType: 'artist' | 'album';
     current: number;
@@ -159,9 +129,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  /**
-   * Emit batch enrichment completed event
-   */
   emitBatchEnrichmentCompleted(data: {
     entityType: 'artist' | 'album';
     total: number;
@@ -179,10 +146,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  /**
-   * Emit artist images updated event
-   * Used when artist avatar, background, banner, or logo is manually updated
-   */
   emitArtistImagesUpdated(data: {
     artistId: string;
     artistName: string;
@@ -205,10 +168,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  /**
-   * Emit album cover updated event
-   * Used when album cover is manually updated
-   */
   emitAlbumCoverUpdated(data: {
     albumId: string;
     albumName: string;
@@ -234,10 +193,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  /**
-   * Emit metadata cache invalidation event
-   * Generic event for any metadata changes that require cache refresh
-   */
   emitCacheInvalidation(data: {
     entityType: 'artist' | 'album';
     entityId: string;
@@ -255,13 +210,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     );
   }
 
-  // ========================
-  // ENRICHMENT QUEUE EVENTS
-  // ========================
-
-  /**
-   * Emit enrichment queue started event
-   */
   emitQueueStarted(data: {
     totalPending: number;
     pendingArtists: number;
@@ -274,9 +222,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.info(`Queue started: ${data.totalPending} items pending`);
   }
 
-  /**
-   * Emit enrichment queue stopped event
-   */
   emitQueueStopped(data: { processedInSession: number }) {
     this.server.emit('queue:stopped', {
       ...data,
@@ -285,9 +230,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.info(`Queue stopped: ${data.processedInSession} items processed`);
   }
 
-  /**
-   * Emit enrichment queue item completed event
-   */
   emitQueueItemCompleted(data: {
     itemType: 'artist' | 'album';
     entityName: string;
@@ -302,9 +244,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.debug(`Queue item completed: ${data.entityName}`);
   }
 
-  /**
-   * Emit enrichment queue item error event
-   */
   emitQueueItemError(data: {
     itemType: 'artist' | 'album';
     entityName: string;
@@ -317,9 +256,6 @@ export class MetadataEnrichmentGateway implements OnGatewayInit, OnGatewayConnec
     this.logger.error(`Queue item error: ${data.entityName} - ${data.error}`);
   }
 
-  /**
-   * Emit enrichment queue completed event
-   */
   emitQueueCompleted(data: {
     processedInSession: number;
     duration: string;

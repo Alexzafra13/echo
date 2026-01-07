@@ -15,35 +15,12 @@ import { WsJwtGuard, WsThrottlerGuard, WsLoggingInterceptor } from '@infrastruct
 import { IsString } from 'class-validator';
 import { AlbumImportProgressEvent } from '../infrastructure/services/album-import.service';
 
-/**
- * DTO for subscribing to import progress
- */
 class SubscribeImportDto {
   @IsString()
   importId!: string;
 }
 
-/**
- * FederationGateway - Gateway WebSocket para eventos de federación
- *
- * Responsabilidades:
- * - Emitir progreso de importaciones de álbumes en tiempo real
- * - Permitir suscripción a importaciones específicas
- *
- * Eventos emitidos (servidor → cliente):
- * - import:progress  - Progreso de importación
- * - import:completed - Importación completada
- * - import:failed    - Importación fallida
- *
- * Eventos recibidos (cliente → servidor):
- * - federation:subscribe   - Suscribirse a una importación
- * - federation:unsubscribe - Desuscribirse de una importación
- *
- * Uso:
- * const socket = io('http://localhost:3000/federation');
- * socket.emit('federation:subscribe', { importId: '123' });
- * socket.on('import:progress', (data) => console.log(data));
- */
+// Eventos de importación de álbumes federados en tiempo real
 @WebSocketGateway({
   namespace: 'federation',
   cors: {
@@ -95,9 +72,6 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
     this.logger.info(`Client disconnected from federation namespace: ${client.id}`);
   }
 
-  /**
-   * Subscribe to events for a specific import
-   */
   @SubscribeMessage('federation:subscribe')
   @UseGuards(WsThrottlerGuard)
   async handleSubscribe(
@@ -121,9 +95,6 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
     }
   }
 
-  /**
-   * Unsubscribe from events for a specific import
-   */
   @SubscribeMessage('federation:unsubscribe')
   @UseGuards(WsThrottlerGuard)
   async handleUnsubscribe(
@@ -141,9 +112,6 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
     });
   }
 
-  /**
-   * Handle import progress events (called from AlbumImportService)
-   */
   private handleImportProgress(event: AlbumImportProgressEvent): void {
     const room = `import:${event.importId}`;
 
@@ -171,11 +139,6 @@ export class FederationGateway implements OnGatewayInit, OnGatewayConnection, On
     );
   }
 
-  // ========== Public methods for emitting events ==========
-
-  /**
-   * Emit import progress to subscribed clients
-   */
   emitProgress(data: AlbumImportProgressEvent): void {
     this.handleImportProgress(data);
   }
