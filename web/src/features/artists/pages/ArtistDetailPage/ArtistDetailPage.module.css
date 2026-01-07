@@ -167,175 +167,95 @@
   text-shadow: 0 2px 4px var(--black-80);
 }
 
-/* Biography Section - Editorial/Magazine Style */
+/* Biography Section - Spotify Minimal Style */
 .artistDetailPage__biography {
   margin-bottom: var(--space-12);
-  position: relative;
 }
 
 .artistDetailPage__biographyHeader {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .artistDetailPage__biographyIcon {
-  color: var(--color-primary);
-  opacity: 0.8;
+  color: var(--text-primary);
+  opacity: 0.7;
 }
 
 .artistDetailPage__sectionTitle {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   color: var(--text-primary);
   margin: 0;
 }
 
 .artistDetailPage__biographyContent {
-  max-width: 900px;
-  position: relative;
-  /* Glassmorphism card */
-  background: linear-gradient(
-    135deg,
-    var(--white-05) 0%,
-    var(--white-02) 100%
-  );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: var(--space-8) var(--space-10);
-  border-radius: var(--radius-2xl);
-  border: 1px solid var(--white-08);
-  box-shadow:
-    0 4px 24px -4px var(--black-30),
-    0 0 0 1px var(--white-02) inset;
-  overflow: hidden;
-}
-
-/* Decorative quote mark */
-.artistDetailPage__biographyContent::before {
-  content: '"';
-  position: absolute;
-  top: -20px;
-  left: 20px;
-  font-family: Georgia, serif;
-  font-size: 180px;
-  line-height: 1;
-  color: var(--color-primary);
-  opacity: 0.08;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Accent line */
-.artistDetailPage__biographyContent::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    var(--color-primary) 0%,
-    var(--primary-30) 100%
-  );
-  border-radius: 4px 0 0 4px;
+  max-width: 800px;
 }
 
 .artistDetailPage__biographyText {
-  position: relative;
-  z-index: 1;
-  font-family: var(--font-biography, 'Lora', Georgia, serif);
-  font-size: var(--text-lg);
-  line-height: 1.9;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.7;
   color: var(--text-secondary);
   margin: 0;
   white-space: pre-wrap;
-  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: justify;
-  hyphens: auto;
-  letter-spacing: 0.01em;
 }
 
-/* Drop cap - Primera letra destacada */
+/* Drop cap - Estilo Spotify (sin drop cap, pero mantenemos por si acaso) */
 .artistDetailPage__dropCap {
-  font-family: var(--font-display, 'Outfit', sans-serif);
-  font-size: 3.5em;
-  line-height: 0.8;
-  float: left;
-  margin-top: 0.05em;
-  margin-right: 12px;
-  margin-bottom: 4px;
-  font-weight: var(--font-black);
-  color: var(--color-primary);
-  text-shadow: 0 2px 8px var(--primary-30);
+  /* No destacamos la primera letra en estilo Spotify */
+  font-size: inherit;
+  line-height: inherit;
+  float: none;
+  margin: 0;
+  font-weight: inherit;
+  color: inherit;
+  text-shadow: none;
 }
 
-/* Texto colapsado con fade elegante */
+/* Texto colapsado con fade suave */
 .artistDetailPage__biographyText__collapsed {
-  max-height: 200px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  position: relative;
+  max-height: none; /* Let line-clamp handle it */
 }
 
-.artistDetailPage__biographyText__collapsed::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(10, 14, 39, 0.7) 40%,
-    rgba(10, 14, 39, 0.95) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* Botón Leer más/menos - Pill style */
+/* Botón Leer más/menos - Spotify text link style */
 .artistDetailPage__biographyToggle {
-  position: relative;
-  z-index: 3;
-  margin-top: var(--space-5);
-  padding: var(--space-3) var(--space-6);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: 0;
+  background: none;
   border: none;
-  border-radius: var(--radius-full);
-  color: var(--text-on-primary);
+  color: var(--text-primary);
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-bold);
   cursor: pointer;
-  transition: all var(--transition-base);
-  box-shadow: 0 4px 12px -2px var(--primary-30);
+  transition: all var(--transition-fast);
 }
 
 .artistDetailPage__biographyToggle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px -2px var(--primary-50);
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .artistDetailPage__biographyToggle:active {
-  transform: translateY(0);
+  opacity: 0.7;
 }
 
-/* Fuente de la biografía - Badge style */
+/* Fuente de la biografía - Minimal */
 .artistDetailPage__biographySource {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-6);
-  padding: var(--space-2) var(--space-4);
-  background: var(--white-05);
-  border-radius: var(--radius-full);
+  display: block;
+  margin-top: var(--space-4);
   font-size: var(--text-xs);
   color: var(--text-tertiary);
-  font-style: normal;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .artistDetailPage__biographyPlaceholder {
@@ -516,34 +436,17 @@
   }
 
   .artistDetailPage__sectionTitle {
-    font-size: 24px;
+    font-size: 22px;
   }
 
-  /* Biography responsive */
-  .artistDetailPage__biographyContent {
-    padding: var(--space-6) var(--space-5);
-    border-radius: var(--radius-xl);
-  }
-
-  .artistDetailPage__biographyContent::before {
-    font-size: 120px;
-    top: -15px;
-    left: 10px;
-  }
-
+  /* Biography responsive - Spotify style stays minimal */
   .artistDetailPage__biographyText {
-    font-size: 15px;
-    line-height: 1.8;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
-  .artistDetailPage__dropCap {
-    font-size: 2.8em;
-    margin-right: 8px;
-  }
-
-  .artistDetailPage__biographyToggle {
-    padding: var(--space-2) var(--space-5);
-    font-size: var(--text-xs);
+  .artistDetailPage__biographyText__collapsed {
+    -webkit-line-clamp: 3;
   }
 }
 
@@ -589,24 +492,9 @@
     font-size: 10px;
   }
 
-  /* Biography 480px */
-  .artistDetailPage__biographyContent {
-    padding: var(--space-5) var(--space-4);
-  }
-
-  .artistDetailPage__biographyContent::before {
-    font-size: 100px;
-    top: -10px;
-    left: 8px;
-  }
-
+  /* Biography 480px - stays minimal */
   .artistDetailPage__biographyText {
-    font-size: 14px;
-    line-height: 1.75;
-  }
-
-  .artistDetailPage__dropCap {
-    font-size: 2.5em;
+    font-size: 13px;
   }
 }
 
@@ -681,30 +569,7 @@
   color: var(--white-85);
 }
 
-:root[data-theme="light"] .artistDetailPage__biographyContent {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0.4) 100%
-  );
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow:
-    0 4px 24px -4px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-}
-
-:root[data-theme="light"] .artistDetailPage__biographyText__collapsed::after {
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(229, 231, 235, 0.7) 40%,
-    rgba(229, 231, 235, 0.98) 100%
-  );
-}
-
-:root[data-theme="light"] .artistDetailPage__biographySource {
-  background: rgba(0, 0, 0, 0.05);
-}
+/* Light theme - biography doesn't need special styles in Spotify minimal */
 
 :root[data-theme="light"] .artistDetailPage__imageModal {
   background: rgba(229, 231, 235, 0.95);
