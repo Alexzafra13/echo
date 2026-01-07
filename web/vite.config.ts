@@ -47,25 +47,32 @@ export default defineConfig({
             },
           },
           {
-            // Cache Google Fonts
+            // Cache Google Fonts stylesheets - use StaleWhileRevalidate for resilience
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'google-fonts-cache',
+              cacheName: 'google-fonts-stylesheets',
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
           {
+            // Cache Google Fonts files (woff2) - use CacheFirst since fonts rarely change
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'gstatic-fonts-cache',
+              cacheName: 'google-fonts-webfonts',
               expiration: {
-                maxEntries: 10,
+                maxEntries: 30,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
               },
             },
           },

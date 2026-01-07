@@ -246,7 +246,7 @@ export default function ArtistDetailPage() {
       <div className={styles.artistDetailPage}>
         <Sidebar />
         <main className={styles.artistDetailPage__main}>
-          <Header showBackButton disableSearch />
+          <Header showBackButton disableSearch alwaysGlass />
           <div className={styles.artistDetailPage__loading}>Cargando artista...</div>
         </main>
       </div>
@@ -258,7 +258,7 @@ export default function ArtistDetailPage() {
       <div className={styles.artistDetailPage}>
         <Sidebar />
         <main className={styles.artistDetailPage__main}>
-          <Header showBackButton disableSearch />
+          <Header showBackButton disableSearch alwaysGlass />
           <div className={styles.artistDetailPage__error}>
             Error al cargar artista
           </div>
@@ -272,7 +272,7 @@ export default function ArtistDetailPage() {
       <Sidebar />
 
       <main className={styles.artistDetailPage__main}>
-        <Header showBackButton disableSearch />
+        <Header showBackButton disableSearch alwaysGlass />
 
         <div className={styles.artistDetailPage__content}>
           {/* Hero Section */}
