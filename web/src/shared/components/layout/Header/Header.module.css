@@ -460,6 +460,15 @@
     border-bottom: 1px solid var(--white-10);
   }
 
+  /* PWA Standalone mode - extra padding for iOS status bar */
+  @media (display-mode: standalone) {
+    .header {
+      /* In PWA mode, add extra padding since safe-area might not be enough */
+      padding-top: calc(var(--space-4) + env(safe-area-inset-top, 44px));
+      height: calc(60px + env(safe-area-inset-top, 44px));
+    }
+  }
+
   /* Glass effect siempre activo en móvil - override pseudo-element */
   .header::before {
     background: linear-gradient(
@@ -537,6 +546,14 @@
     padding: var(--space-5) var(--space-4);
     animation: slideDown 0.3s ease;
     z-index: 1001; /* Mayor que hero buttons */
+  }
+
+  /* PWA Standalone mode - adjust dropdown position */
+  @media (display-mode: standalone) {
+    .header__userDropdown {
+      top: calc(60px + env(safe-area-inset-top, 44px));
+      max-height: calc(100vh - 60px - env(safe-area-inset-top, 44px));
+    }
   }
 
   /* Light theme para dropdown móvil */
