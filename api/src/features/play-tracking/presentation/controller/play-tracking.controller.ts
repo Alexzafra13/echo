@@ -51,10 +51,6 @@ export class PlayTrackingController {
     private readonly updatePlaybackStateUseCase: UpdatePlaybackStateUseCase,
   ) {}
 
-  /**
-   * POST /play-tracking/play
-   * Record a play event with context
-   */
   @Post('play')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Record a play event with smart context tracking' })
@@ -91,10 +87,6 @@ export class PlayTrackingController {
     };
   }
 
-  /**
-   * POST /play-tracking/skip
-   * Record a skip event
-   */
   @Post('skip')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Record a skip event (track skipped before completion)' })
@@ -128,10 +120,6 @@ export class PlayTrackingController {
     };
   }
 
-  /**
-   * GET /play-tracking/history
-   * Get user's play history
-   */
   @Get('history')
   @ApiOperation({ summary: 'Get user play history' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -164,10 +152,6 @@ export class PlayTrackingController {
     }));
   }
 
-  /**
-   * GET /play-tracking/top-tracks
-   * Get user's top tracks
-   */
   @Get('top-tracks')
   @ApiOperation({ summary: 'Get user top tracks based on weighted play count' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -186,10 +170,6 @@ export class PlayTrackingController {
     return await this.getUserTopTracksUseCase.execute(userId, limit, days);
   }
 
-  /**
-   * GET /play-tracking/recently-played
-   * Get recently played tracks
-   */
   @Get('recently-played')
   @ApiOperation({ summary: 'Get recently played tracks (unique tracks)' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -206,10 +186,6 @@ export class PlayTrackingController {
     return await this.getRecentlyPlayedUseCase.execute(userId, limit);
   }
 
-  /**
-   * GET /play-tracking/summary
-   * Get user play summary with statistics
-   */
   @Get('summary')
   @ApiOperation({ summary: 'Get user play summary with statistics' })
   @ApiQuery({ name: 'days', required: false, type: Number })
@@ -247,10 +223,6 @@ export class PlayTrackingController {
     };
   }
 
-  /**
-   * PUT /play-tracking/playback-state
-   * Update current playback state (for social "listening now" feature)
-   */
   @Put('playback-state')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
