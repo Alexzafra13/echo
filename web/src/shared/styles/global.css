@@ -64,10 +64,10 @@ body.has-footer-player {
   --player-bottom-spacer: 120px; /* Altura del reproductor en footer (desktop) */
 }
 
-/* Mobile: Reproductor más compacto requiere menos espacio */
+/* Mobile: Reproductor flotante requiere espacio adicional */
 @media (max-width: 768px) {
   body.has-footer-player {
-    --player-bottom-spacer: 60px; /* Mobile: 60px base + 60px spacer = 120px total (50px nav + 70px player) */
+    --player-bottom-spacer: 90px; /* Mobile: 60px base + 90px spacer = 150px total (50px nav + 12px margin + ~70px player) */
   }
 }
 
