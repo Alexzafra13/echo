@@ -124,34 +124,83 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   }, [getInactiveAudio]);
 
   /**
-   * Play the active audio element
+   * Wait for audio to be ready to play without interruption
+   * This prevents crackling when starting playback before buffer is ready
    */
-  const playActive = useCallback(async () => {
+  const waitForAudioReady = useCallback((audio: HTMLAudioElement, timeout: number = 3000): Promise<boolean> => {
+    return new Promise((resolve) => {
+      // If already ready to play through, resolve immediately
+      if (audio.readyState >= 4) { // HAVE_ENOUGH_DATA
+        resolve(true);
+        return;
+      }
+
+      let timeoutId: number;
+
+      const handleCanPlayThrough = () => {
+        clearTimeout(timeoutId);
+        audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+        audio.removeEventListener('error', handleError);
+        resolve(true);
+      };
+
+      const handleError = () => {
+        clearTimeout(timeoutId);
+        audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+        audio.removeEventListener('error', handleError);
+        resolve(false);
+      };
+
+      // Timeout fallback - don't block forever
+      timeoutId = window.setTimeout(() => {
+        audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+        audio.removeEventListener('error', handleError);
+        // Resolve true anyway - let the browser handle buffering
+        resolve(true);
+      }, timeout);
+
+      audio.addEventListener('canplaythrough', handleCanPlayThrough, { once: true });
+      audio.addEventListener('error', handleError, { once: true });
+    });
+  }, []);
+
+  /**
+   * Play the active audio element, waiting for buffer if needed
+   */
+  const playActive = useCallback(async (waitForBuffer: boolean = true) => {
     const audio = getActiveAudio();
     if (audio) {
       try {
+        // Wait for enough buffer to prevent crackling on mobile/PWA
+        if (waitForBuffer) {
+          await waitForAudioReady(audio);
+        }
         await audio.play();
       } catch (error) {
         logger.error('[AudioElements] Failed to play:', (error as Error).message);
         throw error;
       }
     }
-  }, [getActiveAudio]);
+  }, [getActiveAudio, waitForAudioReady]);
 
   /**
-   * Play the inactive audio element (for crossfade)
+   * Play the inactive audio element (for crossfade), waiting for buffer if needed
    */
-  const playInactive = useCallback(async () => {
+  const playInactive = useCallback(async (waitForBuffer: boolean = true) => {
     const audio = getInactiveAudio();
     if (audio) {
       try {
+        // Wait for enough buffer to prevent crackling during crossfade
+        if (waitForBuffer) {
+          await waitForAudioReady(audio);
+        }
         await audio.play();
       } catch (error) {
         logger.error('[AudioElements] Failed to play inactive:', (error as Error).message);
         throw error;
       }
     }
-  }, [getInactiveAudio]);
+  }, [getInactiveAudio, waitForAudioReady]);
 
   /**
    * Pause the active audio element
@@ -170,11 +219,50 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
   }, []);
 
   /**
-   * Stop and clear both audio elements
+   * Fade out an audio element to prevent clicks/pops
+   * Returns a promise that resolves when fade is complete
    */
-  const stopBoth = useCallback(() => {
+  const fadeOutAudio = useCallback((audio: HTMLAudioElement, duration: number = 50): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!audio || audio.paused || audio.volume === 0) {
+        resolve();
+        return;
+      }
+
+      const startVolume = audio.volume;
+      const startTime = performance.now();
+
+      const animateFadeOut = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(1, elapsed / duration);
+
+        // Use exponential curve for quick but smooth fade
+        audio.volume = startVolume * (1 - progress);
+
+        if (progress < 1) {
+          requestAnimationFrame(animateFadeOut);
+        } else {
+          audio.volume = 0;
+          resolve();
+        }
+      };
+
+      requestAnimationFrame(animateFadeOut);
+    });
+  }, []);
+
+  /**
+   * Stop and clear both audio elements with fade-out to prevent pops
+   */
+  const stopBoth = useCallback(async () => {
     const audioA = audioRefA.current;
     const audioB = audioRefB.current;
+
+    // Fade out both in parallel to prevent clicks
+    await Promise.all([
+      audioA ? fadeOutAudio(audioA) : Promise.resolve(),
+      audioB ? fadeOutAudio(audioB) : Promise.resolve(),
+    ]);
 
     if (audioA) {
       audioA.pause();
@@ -188,31 +276,37 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     }
 
     activeAudioRef.current = 'A';
-  }, []);
+  }, [fadeOutAudio]);
 
   /**
-   * Stop and clear the active audio element
+   * Stop and clear the active audio element with optional fade-out
    */
-  const stopActive = useCallback(() => {
+  const stopActive = useCallback(async (withFade: boolean = false) => {
     const audio = getActiveAudio();
     if (audio) {
+      if (withFade && !audio.paused) {
+        await fadeOutAudio(audio);
+      }
       audio.pause();
       audio.currentTime = 0;
       audio.src = '';
     }
-  }, [getActiveAudio]);
+  }, [getActiveAudio, fadeOutAudio]);
 
   /**
-   * Stop and clear the inactive audio element
+   * Stop and clear the inactive audio element with optional fade-out
    */
-  const stopInactive = useCallback(() => {
+  const stopInactive = useCallback(async (withFade: boolean = false) => {
     const audio = getInactiveAudio();
     if (audio) {
+      if (withFade && !audio.paused) {
+        await fadeOutAudio(audio);
+      }
       audio.pause();
       audio.currentTime = 0;
       audio.src = '';
     }
-  }, [getInactiveAudio]);
+  }, [getInactiveAudio, fadeOutAudio]);
 
   /**
    * Seek to a specific time on the active audio
@@ -387,6 +481,10 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
     stopActive,
     stopInactive,
     seek,
+
+    // Audio utilities for smooth transitions
+    waitForAudioReady,
+    fadeOutAudio,
   };
 }
 
