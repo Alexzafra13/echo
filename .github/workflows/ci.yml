@@ -135,8 +135,17 @@ jobs:
           REDIS_PORT: 6379
         run: pnpm test:e2e
 
-      - name: Build project
+      # Web tests: React components and hooks
+      - name: Run web tests
+        working-directory: web
+        run: pnpm test --run
+
+      - name: Build API
         working-directory: api
+        run: pnpm build
+
+      - name: Build Web
+        working-directory: web
         run: pnpm build
 
       # Upload coverage report as artifact
