@@ -615,7 +615,7 @@
     grid-template-rows: auto auto;
     align-items: center;
     height: auto;
-    padding: 10px 14px 4px;
+    padding: 10px 14px 0;
     /* Position above bottom tab bar (50px) + safe area + margin */
     bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
     left: 12px;
@@ -636,15 +636,15 @@
     overflow: hidden; /* Clip swipe animation */
   }
 
-  /* Progress bar super fina abajo - segunda fila del grid */
+  /* Progress bar super fina abajo - pegada al borde inferior del player */
   .progressContainer {
     grid-column: 1 / -1;
     grid-row: 2;
     padding: 0;
-    margin: 10px 0 0 0;
+    margin: 8px -14px 0 -14px; /* Expandir a los bordes laterales */
     gap: 0;
     height: 3px;
-    width: 100%;
+    width: calc(100% + 28px); /* Compensar márgenes negativos */
     position: relative;
   }
 
@@ -826,7 +826,7 @@
     left: 10px;
     right: 10px;
     border-radius: 14px;
-    padding: 8px 12px 4px;
+    padding: 8px 12px 0;
   }
 
   .trackInfo {
@@ -834,7 +834,8 @@
   }
 
   .progressContainer {
-    margin-top: 8px;
+    margin: 8px -12px 0 -12px; /* Ajustar para padding menor */
+    width: calc(100% + 24px);
   }
 
   .trackCoverContainer {
