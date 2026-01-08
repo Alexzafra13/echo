@@ -1,7 +1,6 @@
 import { MoreVertical } from 'lucide-react';
-import { usePlayerPreference } from '../../hooks/usePlayerPreference';
+import { usePlayerSettingsStore, type PlayerPreference } from '../../store';
 import { usePlayer } from '../../context/PlayerContext';
-import type { PlayerPreference } from '../../hooks/usePlayerPreference';
 import styles from './PlayerMenu.module.css';
 
 interface PlayerMenuProps {
@@ -14,7 +13,8 @@ interface PlayerMenuProps {
 }
 
 export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, strokeWidth = 2 }: PlayerMenuProps) {
-  const { preference, setPreference } = usePlayerPreference();
+  const preference = usePlayerSettingsStore((s) => s.playerPreference);
+  const setPreference = usePlayerSettingsStore((s) => s.setPlayerPreference);
   const { crossfade, setCrossfadeEnabled } = usePlayer();
 
   const handleOptionClick = (value: PlayerPreference) => {

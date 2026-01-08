@@ -6,7 +6,7 @@ import { QueueList } from '../QueueList/QueueList';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
 import { NowPlayingView } from '../NowPlayingView';
 import { usePageEndDetection } from '../../hooks/usePageEndDetection';
-import { usePlayerPreference } from '../../hooks/usePlayerPreference';
+import { usePlayerSettingsStore } from '../../store';
 import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -56,7 +56,7 @@ export function AudioPlayer() {
   const isMiniMode = usePageEndDetection(120);
 
   // Sistema de preferencias
-  const { preference } = usePlayerPreference();
+  const preference = usePlayerSettingsStore((s) => s.playerPreference);
 
   // Detectar si estamos en mobile (viewport <= 768px)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);

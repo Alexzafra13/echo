@@ -13,15 +13,13 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef, ReactNode } from 'react';
 import { Track, PlayerContextValue, RadioStation } from '../types';
 import { useStreamToken } from '../hooks/useStreamToken';
-import { useCrossfadeSettings } from '../hooks/useCrossfadeSettings';
-import { useNormalizationSettings } from '../hooks/useNormalizationSettings';
+import { usePlayerSettingsStore } from '../store';
 import { useAudioElements } from '../hooks/useAudioElements';
 import { useAudioNormalization } from '../hooks/useAudioNormalization';
 import { usePlayTracking } from '../hooks/usePlayTracking';
 import { useQueueManagement } from '../hooks/useQueueManagement';
 import { useCrossfadeLogic } from '../hooks/useCrossfadeLogic';
 import { useRadioPlayback } from '../hooks/useRadioPlayback';
-import { useAutoplaySettings } from '../hooks/useAutoplaySettings';
 import { useAutoplay } from '../hooks/useAutoplay';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
@@ -38,21 +36,18 @@ interface PlayerProviderProps {
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== EXTERNAL HOOKS ==========
   const { data: streamTokenData, ensureToken } = useStreamToken();
-  const {
-    settings: crossfadeSettings,
-    setEnabled: setCrossfadeEnabledStorage,
-    setDuration: setCrossfadeDurationStorage,
-  } = useCrossfadeSettings();
-  const {
-    settings: normalizationSettings,
-    setEnabled: setNormalizationEnabledStorage,
-    setTargetLufs: setNormalizationTargetLufsStorage,
-    setPreventClipping: setNormalizationPreventClippingStorage,
-  } = useNormalizationSettings();
-  const {
-    settings: autoplaySettings,
-    setEnabled: setAutoplayEnabledStorage,
-  } = useAutoplaySettings();
+
+  // Player settings from Zustand store
+  const crossfadeSettings = usePlayerSettingsStore((s) => s.crossfade);
+  const normalizationSettings = usePlayerSettingsStore((s) => s.normalization);
+  const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
+  const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
+  const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
+  const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
+  const setNormalizationTargetLufsStore = usePlayerSettingsStore((s) => s.setNormalizationTargetLufs);
+  const setNormalizationPreventClippingStore = usePlayerSettingsStore((s) => s.setNormalizationPreventClipping);
+  const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
+
   const autoplay = useAutoplay();
 
   // ========== STATE ==========
@@ -579,38 +574,38 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // ========== CROSSFADE SETTINGS ==========
 
   const setCrossfadeEnabled = useCallback((enabled: boolean) => {
-    setCrossfadeEnabledStorage(enabled);
-  }, [setCrossfadeEnabledStorage]);
+    setCrossfadeEnabledStore(enabled);
+  }, [setCrossfadeEnabledStore]);
 
   const setCrossfadeDuration = useCallback((dur: number) => {
-    setCrossfadeDurationStorage(dur);
-  }, [setCrossfadeDurationStorage]);
+    setCrossfadeDurationStore(dur);
+  }, [setCrossfadeDurationStore]);
 
   // ========== NORMALIZATION SETTINGS ==========
 
   const setNormalizationEnabled = useCallback((enabled: boolean) => {
-    setNormalizationEnabledStorage(enabled);
+    setNormalizationEnabledStore(enabled);
     // Re-apply gain with new settings
     normalization.applyGain(currentTrack);
-  }, [setNormalizationEnabledStorage, normalization, currentTrack]);
+  }, [setNormalizationEnabledStore, normalization, currentTrack]);
 
   const setNormalizationTargetLufs = useCallback((target: -14 | -16) => {
-    setNormalizationTargetLufsStorage(target);
+    setNormalizationTargetLufsStore(target);
     // Re-apply gain with new settings
     normalization.applyGain(currentTrack);
-  }, [setNormalizationTargetLufsStorage, normalization, currentTrack]);
+  }, [setNormalizationTargetLufsStore, normalization, currentTrack]);
 
   const setNormalizationPreventClipping = useCallback((prevent: boolean) => {
-    setNormalizationPreventClippingStorage(prevent);
+    setNormalizationPreventClippingStore(prevent);
     // Re-apply gain with new settings
     normalization.applyGain(currentTrack);
-  }, [setNormalizationPreventClippingStorage, normalization, currentTrack]);
+  }, [setNormalizationPreventClippingStore, normalization, currentTrack]);
 
   // ========== AUTOPLAY SETTINGS ==========
 
   const setAutoplayEnabled = useCallback((enabled: boolean) => {
-    setAutoplayEnabledStorage(enabled);
-  }, [setAutoplayEnabledStorage]);
+    setAutoplayEnabledStore(enabled);
+  }, [setAutoplayEnabledStore]);
 
   // ========== CONTEXT VALUE ==========
 
