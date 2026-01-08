@@ -615,7 +615,7 @@
     grid-template-rows: auto auto;
     align-items: center;
     height: auto;
-    padding: 10px 14px 6px; /* 6px bottom para espacio del progress bar */
+    padding: 10px 14px 0; /* Sin padding inferior - progress bar va pegado */
     /* Position above bottom tab bar (50px) + safe area + margin */
     bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
     left: 12px;
@@ -636,13 +636,13 @@
     overflow: hidden; /* Clip swipe animation */
   }
 
-  /* Progress bar super fina abajo - parte del grid */
+  /* Progress bar super fina abajo - pegada al borde inferior */
   .progressContainer {
     grid-column: 1 / -1;
     grid-row: 2;
     display: block;
     padding: 0;
-    margin: 8px 0 0 0;
+    margin: 8px 0 0 0; /* Solo margen superior para separar del contenido */
     height: 3px;
     width: 100%;
   }
@@ -829,7 +829,7 @@
     left: 10px;
     right: 10px;
     border-radius: 14px;
-    padding: 8px 12px 6px;
+    padding: 8px 12px 0;
   }
 
   .trackInfo {
