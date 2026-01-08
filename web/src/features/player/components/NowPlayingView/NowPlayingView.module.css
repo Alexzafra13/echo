@@ -87,7 +87,7 @@
 .nowPlaying__headerTitle {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary); /* Blanco para mejor visibilidad sobre fondos de colores */
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
