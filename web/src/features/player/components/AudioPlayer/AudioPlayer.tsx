@@ -317,9 +317,10 @@ export function AudioPlayer() {
             <button
               className={`${styles.controlButton} ${styles.playButton}`}
               onClick={togglePlayPause}
-              title={isPlaying ? 'Pausar' : 'Reproducir'}
+              title={isPlaying ? 'Pausar radio' : 'Reproducir radio'}
+              aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}
             >
-              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+              {isPlaying ? <Pause size={24} aria-hidden="true" /> : <Play size={24} aria-hidden="true" />}
             </button>
           ) : (
             /* Track mode: controles completos */
@@ -327,41 +328,48 @@ export function AudioPlayer() {
               <button
                 className={`${styles.controlButton} ${styles.controlButtonSmall} ${isShuffle ? styles.active : ''}`}
                 onClick={toggleShuffle}
-                title="Shuffle"
+                title="Reproducción aleatoria"
+                aria-label={isShuffle ? 'Desactivar reproducción aleatoria' : 'Activar reproducción aleatoria'}
+                aria-pressed={isShuffle}
               >
-                <Shuffle size={16} />
+                <Shuffle size={16} aria-hidden="true" />
               </button>
 
               <button
                 className={styles.controlButton}
                 onClick={playPrevious}
-                title="Anterior"
+                title="Canción anterior"
+                aria-label="Canción anterior"
               >
-                <SkipBack size={20} />
+                <SkipBack size={20} aria-hidden="true" />
               </button>
 
               <button
                 className={`${styles.controlButton} ${styles.playButton}`}
                 onClick={togglePlayPause}
                 title={isPlaying ? 'Pausar' : 'Reproducir'}
+                aria-label={isPlaying ? 'Pausar reproducción' : 'Reproducir'}
               >
-                {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                {isPlaying ? <Pause size={24} aria-hidden="true" /> : <Play size={24} aria-hidden="true" />}
               </button>
 
               <button
                 className={styles.controlButton}
                 onClick={playNext}
-                title="Siguiente"
+                title="Siguiente canción"
+                aria-label="Siguiente canción"
               >
-                <SkipForward size={20} />
+                <SkipForward size={20} aria-hidden="true" />
               </button>
 
               <button
                 className={`${styles.controlButton} ${styles.controlButtonSmall} ${repeatMode !== 'off' ? styles.active : ''}`}
                 onClick={toggleRepeat}
-                title={`Repetir: ${repeatMode}`}
+                title={repeatMode === 'off' ? 'Activar repetición' : repeatMode === 'all' ? 'Repetir canción actual' : 'Desactivar repetición'}
+                aria-label={repeatMode === 'off' ? 'Activar repetición' : repeatMode === 'all' ? 'Repetir canción actual' : 'Desactivar repetición'}
+                aria-pressed={repeatMode !== 'off'}
               >
-                {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
+                {repeatMode === 'one' ? <Repeat1 size={16} aria-hidden="true" /> : <Repeat size={16} aria-hidden="true" />}
               </button>
             </>
           )}
@@ -394,11 +402,14 @@ export function AudioPlayer() {
             <button
               className={`${styles.queueButton} ${isQueueOpen ? styles['queueButton--active'] : ''}`}
               onClick={toggleQueue}
-              title="Lista de reproducción"
+              title="Cola de reproducción"
+              aria-label={`Cola de reproducción${queue.length > 0 ? `, ${queue.length} canciones en cola` : ''}`}
+              aria-expanded={isQueueOpen}
+              aria-haspopup="true"
             >
-              <ListMusic size={22} strokeWidth={1.5} />
+              <ListMusic size={22} strokeWidth={1.5} aria-hidden="true" />
               {queue.length > 0 && (
-                <span className={styles.queueButton__count}>{queue.length}</span>
+                <span className={styles.queueButton__count} aria-hidden="true">{queue.length}</span>
               )}
             </button>
 
@@ -412,8 +423,9 @@ export function AudioPlayer() {
             className={styles.volumeButton}
             onClick={toggleMute}
             title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
+            aria-label={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
-            {volume === 0 ? <VolumeX size={22} strokeWidth={1.5} /> : <Volume2 size={22} strokeWidth={1.5} />}
+            {volume === 0 ? <VolumeX size={22} strokeWidth={1.5} aria-hidden="true" /> : <Volume2 size={22} strokeWidth={1.5} aria-hidden="true" />}
           </button>
           <input
             type="range"
@@ -424,6 +436,7 @@ export function AudioPlayer() {
             onChange={handleVolumeChange}
             className={styles.volumeSlider}
             style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
+            aria-label={`Volumen: ${Math.round(volume * 100)}%`}
           />
         </div>
 
@@ -433,8 +446,9 @@ export function AudioPlayer() {
             className={styles.expandButton}
             onClick={() => setIsNowPlayingOpen(true)}
             title="Expandir reproductor"
+            aria-label="Expandir reproductor a pantalla completa"
           >
-            <Maximize2 size={22} strokeWidth={1.5} />
+            <Maximize2 size={22} strokeWidth={1.5} aria-hidden="true" />
           </button>
         )}
 
@@ -452,10 +466,17 @@ export function AudioPlayer() {
       {/* Progress bar - Solo para tracks, no para radio - Ahora en la parte inferior del player */}
       {!isRadioMode && (
         <div className={styles.progressContainer}>
-          <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
+          <span className={styles.timeLabel} aria-hidden="true">{formatDuration(currentTime)}</span>
           <div
             className={styles.progressBar}
             onClick={handleProgressClick}
+            role="slider"
+            aria-label="Progreso de reproducción"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            aria-valuenow={Math.round(currentTime)}
+            aria-valuetext={`${formatDuration(currentTime)} de ${formatDuration(duration)}`}
+            tabIndex={0}
           >
             <div
               className={styles.progressFill}
@@ -466,7 +487,7 @@ export function AudioPlayer() {
               style={{ left: `${progressPercent}%` }}
             />
           </div>
-          <span className={styles.timeLabel}>{formatDuration(duration)}</span>
+          <span className={styles.timeLabel} aria-hidden="true">{formatDuration(duration)}</span>
         </div>
       )}
 
