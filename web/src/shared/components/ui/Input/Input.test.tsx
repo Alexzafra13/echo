@@ -7,9 +7,9 @@ import { Search } from 'lucide-react';
 describe('Input', () => {
   describe('rendering', () => {
     it('should render input element', () => {
-      render(<Input placeholder="Enter text" />);
+      render(<Input />);
 
-      expect(screen.getByPlaceholderText('Enter text')).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
 
     it('should apply default size', () => {
@@ -29,15 +29,17 @@ describe('Input', () => {
 
   describe('label', () => {
     it('should render label when provided', () => {
-      render(<Input label="Username" />);
+      const { container } = render(<Input label="Username" />);
 
-      expect(screen.getByText('Username')).toBeInTheDocument();
+      const label = container.querySelector('label');
+      expect(label).toBeInTheDocument();
+      expect(label?.textContent).toBe('Username');
     });
 
     it('should associate label with input using htmlFor', () => {
-      render(<Input id="username" label="Username" />);
+      const { container } = render(<Input id="username" label="Username" />);
 
-      const label = screen.getByText('Username');
+      const label = container.querySelector('label');
       expect(label).toHaveAttribute('for', 'username');
     });
   });
@@ -76,9 +78,9 @@ describe('Input', () => {
     });
 
     it('should set aria-invalid when error exists', () => {
-      render(<Input error="Error" placeholder="input" />);
+      render(<Input error="Error" />);
 
-      const input = screen.getByPlaceholderText('input');
+      const input = screen.getByRole('textbox');
       expect(input).toHaveAttribute('aria-invalid', 'true');
     });
 
@@ -149,9 +151,9 @@ describe('Input', () => {
 
   describe('password type', () => {
     it('should render password input', () => {
-      render(<Input type="password" placeholder="password" />);
+      const { container } = render(<Input type="password" />);
 
-      const input = screen.getByPlaceholderText('password');
+      const input = container.querySelector('input');
       expect(input).toHaveAttribute('type', 'password');
     });
 
@@ -163,9 +165,9 @@ describe('Input', () => {
     });
 
     it('should toggle password visibility when clicked', () => {
-      render(<Input type="password" placeholder="password" />);
+      const { container } = render(<Input type="password" />);
 
-      const input = screen.getByPlaceholderText('password');
+      const input = container.querySelector('input');
       const toggleButton = screen.getByLabelText(/mostrar contraseña/i);
 
       // Initially password type
@@ -232,14 +234,13 @@ describe('Input', () => {
     it('should pass through standard input attributes', () => {
       render(
         <Input
-          placeholder="Test"
           disabled
           required
           maxLength={10}
         />
       );
 
-      const input = screen.getByPlaceholderText('Test');
+      const input = screen.getByRole('textbox');
 
       expect(input).toBeDisabled();
       expect(input).toBeRequired();
@@ -249,9 +250,9 @@ describe('Input', () => {
     it('should handle onChange event', () => {
       const handleChange = vi.fn();
 
-      render(<Input onChange={handleChange} placeholder="test" />);
+      render(<Input onChange={handleChange} />);
 
-      const input = screen.getByPlaceholderText('test');
+      const input = screen.getByRole('textbox');
       fireEvent.change(input, { target: { value: 'Hello' } });
 
       expect(handleChange).toHaveBeenCalled();
