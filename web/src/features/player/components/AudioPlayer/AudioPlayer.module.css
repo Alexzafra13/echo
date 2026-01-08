@@ -730,7 +730,7 @@
     display: block !important; /* Always show album on mobile */
     font-size: 12px;
     margin-top: 0;
-    color: var(--text-tertiary);
+    color: var(--text-secondary); /* Más visible sobre fondos de colores */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -739,7 +739,7 @@
   }
 
   .trackAlbum:hover {
-    color: var(--text-tertiary); /* No highlight on mobile */
+    color: var(--text-secondary); /* No highlight on mobile */
     text-decoration: none; /* No underline on mobile */
   }
 
