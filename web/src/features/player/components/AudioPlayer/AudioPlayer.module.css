@@ -640,11 +640,9 @@
   .progressContainer {
     grid-column: 1 / -1;
     grid-row: 2;
-    display: flex;
-    align-items: flex-end;
+    display: block;
     padding: 0;
-    margin: 6px 0 0 0;
-    gap: 0;
+    margin: 8px 0 0 0;
     height: 3px;
     width: 100%;
   }
@@ -657,8 +655,9 @@
     height: 3px;
     border-radius: 0;
     background: var(--white-15);
-    cursor: default; /* Dificultar interacción */
+    cursor: default;
     width: 100%;
+    position: relative;
   }
 
   .progressBar:hover {
@@ -666,13 +665,16 @@
   }
 
   .progressBar:active {
-    height: 4px; /* Mínima expansión al tocar */
+    height: 3px;
   }
 
   .progressFill {
-    height: 100%;
+    height: 3px;
     background: var(--color-primary-500);
-    transition: none; /* Sin transición en móvil para evitar artefactos */
+    transition: none;
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 
   .progressHandle {
