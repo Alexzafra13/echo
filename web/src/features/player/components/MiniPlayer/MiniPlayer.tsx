@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Radio } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
-import { usePlayerPreference } from '../../hooks/usePlayerPreference';
+import { usePlayerSettingsStore } from '../../store';
 import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { PlayerMenu } from '../PlayerMenu/PlayerMenu';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
@@ -18,7 +18,7 @@ export function MiniPlayer({ isVisible }: MiniPlayerProps) {
   const [, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { preference } = usePlayerPreference();
+  const preference = usePlayerSettingsStore((s) => s.playerPreference);
   const {
     currentTrack,
     currentRadioStation,
