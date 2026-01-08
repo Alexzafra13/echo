@@ -657,11 +657,11 @@
     background: var(--white-15);
     cursor: default;
     width: 100%;
-    position: relative;
+    /* No usar position relative/absolute - causa bugs con backdrop-filter */
   }
 
   .progressBar:hover {
-    height: 3px; /* No expandir */
+    height: 3px;
   }
 
   .progressBar:active {
@@ -669,12 +669,11 @@
   }
 
   .progressFill {
-    height: 3px;
+    height: 100%;
     background: var(--color-primary-500);
     transition: none;
-    position: absolute;
-    top: 0;
-    left: 0;
+    border-radius: 0;
+    /* Flujo normal, sin position absolute - evita bugs de renderizado */
   }
 
   .progressHandle {
