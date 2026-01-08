@@ -615,7 +615,7 @@
     grid-template-rows: auto auto;
     align-items: center;
     height: auto;
-    padding: 10px 14px 0;
+    padding: 10px 14px 6px; /* 6px bottom para espacio del progress bar */
     /* Position above bottom tab bar (50px) + safe area + margin */
     bottom: calc(50px + env(safe-area-inset-bottom, 0) + 12px);
     left: 12px;
@@ -638,14 +638,15 @@
 
   /* Progress bar super fina abajo - pegada al borde inferior del player */
   .progressContainer {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     padding: 0;
-    margin: 8px -14px 0 -14px; /* Expandir a los bordes laterales */
+    margin: 0;
     gap: 0;
     height: 3px;
-    width: calc(100% + 28px); /* Compensar márgenes negativos */
-    position: relative;
+    width: 100%;
   }
 
   .timeLabel {
@@ -826,16 +827,11 @@
     left: 10px;
     right: 10px;
     border-radius: 14px;
-    padding: 8px 12px 0;
+    padding: 8px 12px 6px;
   }
 
   .trackInfo {
     gap: 10px;
-  }
-
-  .progressContainer {
-    margin: 8px -12px 0 -12px; /* Ajustar para padding menor */
-    width: calc(100% + 24px);
   }
 
   .trackCoverContainer {
