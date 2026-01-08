@@ -22,6 +22,7 @@ import {
   useRemoveFriendship,
 } from '@features/social/hooks';
 import { formatDuration } from '@shared/utils/format';
+import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { useQueryClient } from '@tanstack/react-query';
 import type {
   FriendshipStatus,
@@ -83,62 +84,8 @@ const getColorFromString = (str: string): string => {
 };
 
 /**
- * Extract dominant color from an image using canvas
- * Samples the image and finds the most common color
- */
-const extractColorFromImage = (img: HTMLImageElement): string => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return DEFAULT_COLORS[0];
-
-  // Use small size for performance
-  const size = 50;
-  canvas.width = size;
-  canvas.height = size;
-
-  try {
-    ctx.drawImage(img, 0, 0, size, size);
-    const imageData = ctx.getImageData(0, 0, size, size);
-    const data = imageData.data;
-
-    let r = 0, g = 0, b = 0, count = 0;
-
-    // Sample pixels and calculate average color
-    for (let i = 0; i < data.length; i += 16) { // Skip pixels for performance
-      const red = data[i];
-      const green = data[i + 1];
-      const blue = data[i + 2];
-      const alpha = data[i + 3];
-
-      // Skip transparent pixels
-      if (alpha < 128) continue;
-
-      // Skip very light or very dark pixels
-      const brightness = (red + green + blue) / 3;
-      if (brightness < 30 || brightness > 220) continue;
-
-      r += red;
-      g += green;
-      b += blue;
-      count++;
-    }
-
-    if (count === 0) return DEFAULT_COLORS[0];
-
-    // Calculate average and darken slightly for better hero background
-    r = Math.floor((r / count) * 0.6);
-    g = Math.floor((g / count) * 0.6);
-    b = Math.floor((b / count) * 0.6);
-
-    return `rgb(${r}, ${g}, ${b})`;
-  } catch {
-    // Canvas tainted by CORS or other error
-    return DEFAULT_COLORS[0];
-  }
-};
-
-/**
  * Hook to extract dominant color from an image URL
+ * Uses shared colorExtractor utility
  */
 const useImageColor = (imageUrl?: string, fallbackId?: string): string => {
   const fallbackColor = useMemo(
@@ -153,24 +100,9 @@ const useImageColor = (imageUrl?: string, fallbackId?: string): string => {
       return;
     }
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-
-    img.onload = () => {
-      const extractedColor = extractColorFromImage(img);
-      setColor(extractedColor);
-    };
-
-    img.onerror = () => {
-      setColor(fallbackColor);
-    };
-
-    img.src = imageUrl;
-
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
+    extractDominantColor(imageUrl)
+      .then(extractedColor => setColor(extractedColor))
+      .catch(() => setColor(fallbackColor));
   }, [imageUrl, fallbackColor]);
 
   return color;
