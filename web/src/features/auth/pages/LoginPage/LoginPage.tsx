@@ -72,7 +72,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className={styles.logoContainer}>
           <img
-            src="/images/logos/echo-icon.png"
+            src="/images/logos/echo_dark.svg"
             alt="Echo"
             className={styles.logo}
           />
