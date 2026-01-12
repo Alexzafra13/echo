@@ -31,7 +31,7 @@ export function AdminSidebar({ activeTab, onTabChange, tabs }: AdminSidebarProps
       {/* Logo - Same as main sidebar */}
       <div className={styles.sidebar__logoContainer}>
         <img
-          src="/images/logos/echo-icon-sidebar-white.png"
+          src="/images/logos/echo_dark.svg"
           alt="Echo"
           className={styles.sidebar__logo}
         />
