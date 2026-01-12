@@ -54,7 +54,7 @@ export function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.sidebar__logoContainer}>
         <img
-          src="/images/logos/echo-icon-sidebar-white.png"
+          src="/images/logos/echo_dark.svg"
           alt="Echo"
           className={styles.sidebar__logo}
         />
