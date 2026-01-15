@@ -2,7 +2,27 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import * as os from 'os';
+import * as fs from 'fs/promises';
+
+// Storage thresholds (configurable via env)
+const STORAGE_WARNING_PERCENT = parseInt(process.env.STORAGE_WARNING_THRESHOLD || '85', 10);
+const STORAGE_CRITICAL_PERCENT = parseInt(process.env.STORAGE_CRITICAL_THRESHOLD || '95', 10);
+
+// Setting key for music library path
+const LIBRARY_PATH_KEY = 'library.music.path';
+
+export type ServiceStatus = 'ok' | 'warning' | 'critical' | 'error';
+
+export interface StorageInfo {
+  path: string;
+  totalMB: number;
+  freeMB: number;
+  usedMB: number;
+  usagePercent: number;
+  status: ServiceStatus;
+}
 
 export interface HealthCheckResult {
   status: 'ok' | 'error' | 'degraded';
@@ -10,8 +30,9 @@ export interface HealthCheckResult {
   uptime: number;
   version: string;
   services: {
-    database: 'ok' | 'error';
-    cache: 'ok' | 'error';
+    database: ServiceStatus;
+    cache: ServiceStatus;
+    storage: ServiceStatus;
   };
   system?: {
     memory: {
@@ -23,6 +44,7 @@ export interface HealthCheckResult {
     cpu: {
       loadAverage: number[];
     };
+    storage?: StorageInfo;
   };
   error?: string;
 }
@@ -34,6 +56,7 @@ export class HealthCheckService {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly redis: RedisService,
+    private readonly settings: SettingsService,
   ) {}
 
   async check(): Promise<HealthCheckResult> {
@@ -48,16 +71,18 @@ export class HealthCheckService {
       services: {
         database: 'ok',
         cache: 'ok',
+        storage: 'ok',
       },
     };
 
     // Run checks in parallel
-    const [dbResult, cacheResult] = await Promise.allSettled([
+    const [dbResult, cacheResult, storageResult] = await Promise.allSettled([
       this.checkDatabase(),
       this.checkRedis(),
+      this.checkStorage(),
     ]);
 
-    // Database is critical
+    // Database is critical - app cannot function without it
     if (dbResult.status === 'rejected') {
       result.services.database = 'error';
       result.status = 'error';
@@ -81,8 +106,31 @@ export class HealthCheckService {
         : `Cache: ${errorMessage}`;
     }
 
-    result.system = this.getSystemMetrics();
+    // Get system metrics (sync)
+    const systemMetrics = this.getSystemMetrics();
 
+    // Storage check - non-critical but important for monitoring
+    if (storageResult.status === 'fulfilled' && storageResult.value) {
+      const storageInfo = storageResult.value;
+      result.services.storage = storageInfo.status;
+      systemMetrics.storage = storageInfo;
+
+      // Degrade status if storage is warning/critical
+      if (storageInfo.status === 'critical' || storageInfo.status === 'warning') {
+        if (result.status === 'ok') {
+          result.status = 'degraded';
+        }
+        const storageMsg = `Storage: ${storageInfo.usagePercent}% used (${storageInfo.status})`;
+        result.error = result.error ? `${result.error}; ${storageMsg}` : storageMsg;
+      }
+    } else if (storageResult.status === 'rejected') {
+      // Storage check failed - not critical, just mark as error
+      result.services.storage = 'error';
+    }
+
+    result.system = systemMetrics;
+
+    // Only throw 503 if database is down (critical)
     if (result.services.database === 'error') {
       throw new HttpException(result, HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -90,7 +138,11 @@ export class HealthCheckService {
     return result;
   }
 
-  private getSystemMetrics() {
+  private getSystemMetrics(): {
+    memory: { total: number; free: number; used: number; usagePercent: number };
+    cpu: { loadAverage: number[] };
+    storage?: StorageInfo;
+  } {
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
@@ -116,6 +168,51 @@ export class HealthCheckService {
     const isAlive = await this.redis.ping();
     if (!isAlive) {
       throw new Error('Redis ping failed');
+    }
+  }
+
+  private async checkStorage(): Promise<StorageInfo | null> {
+    // Get music library path from settings
+    const libraryPath = await this.settings.get<string>(LIBRARY_PATH_KEY);
+
+    if (!libraryPath) {
+      // Library not configured yet (first run)
+      return null;
+    }
+
+    try {
+      // Use statfs to get disk space info (Node.js 18.15+)
+      const stats = await fs.statfs(libraryPath);
+
+      const blockSize = stats.bsize;
+      const totalBytes = stats.blocks * blockSize;
+      const freeBytes = stats.bfree * blockSize;
+      const usedBytes = totalBytes - freeBytes;
+
+      const totalMB = Math.round(totalBytes / 1024 / 1024);
+      const freeMB = Math.round(freeBytes / 1024 / 1024);
+      const usedMB = Math.round(usedBytes / 1024 / 1024);
+      const usagePercent = Math.round((usedBytes / totalBytes) * 100);
+
+      // Determine status based on thresholds
+      let status: ServiceStatus = 'ok';
+      if (usagePercent >= STORAGE_CRITICAL_PERCENT) {
+        status = 'critical';
+      } else if (usagePercent >= STORAGE_WARNING_PERCENT) {
+        status = 'warning';
+      }
+
+      return {
+        path: libraryPath,
+        totalMB,
+        freeMB,
+        usedMB,
+        usagePercent,
+        status,
+      };
+    } catch {
+      // Path doesn't exist or can't be accessed
+      return null;
     }
   }
 }

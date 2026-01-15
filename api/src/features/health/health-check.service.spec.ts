@@ -3,6 +3,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { HealthCheckService } from './health-check.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 
 // Mock os module
 jest.mock('os', () => ({
@@ -11,10 +12,20 @@ jest.mock('os', () => ({
   loadavg: jest.fn(() => [1.5, 1.2, 1.0]),
 }));
 
+// Mock fs/promises for storage check
+jest.mock('fs/promises', () => ({
+  statfs: jest.fn().mockResolvedValue({
+    bsize: 4096,
+    blocks: 125000000, // ~500GB
+    bfree: 25000000,   // ~100GB free (80% used)
+  }),
+}));
+
 describe('HealthCheckService', () => {
   let service: HealthCheckService;
   let mockDrizzleService: jest.Mocked<DrizzleService>;
   let mockRedisService: jest.Mocked<RedisService>;
+  let mockSettingsService: jest.Mocked<SettingsService>;
 
   beforeEach(async () => {
     mockDrizzleService = {
@@ -28,6 +39,10 @@ describe('HealthCheckService', () => {
       connected: true,
     } as unknown as jest.Mocked<RedisService>;
 
+    mockSettingsService = {
+      get: jest.fn().mockResolvedValue('/music'),
+    } as unknown as jest.Mocked<SettingsService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HealthCheckService,
@@ -39,6 +54,10 @@ describe('HealthCheckService', () => {
           provide: RedisService,
           useValue: mockRedisService,
         },
+        {
+          provide: SettingsService,
+          useValue: mockSettingsService,
+        },
       ],
     }).compile();
 
@@ -46,12 +65,13 @@ describe('HealthCheckService', () => {
   });
 
   describe('check', () => {
-    it('debería retornar status ok cuando DB y Redis están saludables', async () => {
+    it('debería retornar status ok cuando DB, Redis y Storage están saludables', async () => {
       const result = await service.check();
 
       expect(result.status).toBe('ok');
       expect(result.services.database).toBe('ok');
       expect(result.services.cache).toBe('ok');
+      expect(result.services.storage).toBe('ok');
       expect(result.error).toBeUndefined();
     });
 
@@ -144,6 +164,27 @@ describe('HealthCheckService', () => {
       const duration = Date.now() - dbExecuteStart;
 
       expect(duration).toBeLessThan(150);
+    });
+
+    it('debería incluir información de storage cuando library está configurada', async () => {
+      const result = await service.check();
+
+      expect(result.system?.storage).toBeDefined();
+      expect(result.system?.storage?.path).toBe('/music');
+      expect(result.system?.storage?.totalMB).toBeGreaterThan(0);
+      expect(result.system?.storage?.freeMB).toBeGreaterThan(0);
+      expect(result.system?.storage?.usagePercent).toBeGreaterThanOrEqual(0);
+      expect(result.system?.storage?.usagePercent).toBeLessThanOrEqual(100);
+    });
+
+    it('debería manejar library path no configurado', async () => {
+      mockSettingsService.get = jest.fn().mockResolvedValue(null);
+
+      const result = await service.check();
+
+      // Storage service should still be ok if path not configured (first run)
+      expect(result.services.storage).toBe('ok');
+      expect(result.system?.storage).toBeUndefined();
     });
   });
 });
