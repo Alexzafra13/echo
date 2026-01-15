@@ -42,19 +42,13 @@
   justify-content: center;
   align-items: center;
   z-index: 1;
-  width: 180px;
-  height: 180px;
-  overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .logo {
-  width: 240px;
-  height: 240px;
-  object-fit: cover;
-  object-position: 58% 45%; /* Center on the logo, crop edges */
-  transform: scale(1.3); /* Zoom in more to hide CD case frame */
+  width: 200px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* Login form card */
@@ -117,13 +111,7 @@
     padding: 40px 30px;
   }
 
-  .logoContainer {
-    width: 150px;
-    height: 150px;
-  }
-
   .logo {
-    width: 200px;
-    height: 200px;
+    width: 160px;
   }
 }
