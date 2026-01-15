@@ -3,17 +3,14 @@ import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogService, LogCategory } from './log.service';
 
-// Default retention period in days (configurable via env)
-const LOG_RETENTION_DAYS = parseInt(process.env.LOG_RETENTION_DAYS || '30', 10);
+// Retention period: 30 days
+const LOG_RETENTION_DAYS = 30;
 
 /**
  * Log Cleanup Service
  *
  * Automatically cleans up old system logs to prevent database growth.
- * Runs daily at 3:00 AM.
- *
- * Configuration:
- * - LOG_RETENTION_DAYS: Number of days to keep logs (default: 30)
+ * Runs daily at 3:00 AM. Keeps logs from the last 30 days.
  */
 @Injectable()
 export class LogCleanupService {

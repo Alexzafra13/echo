@@ -92,7 +92,7 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
 
     // Global Infrastructure
     DrizzleModule,
-    SecuritySecretsModule, // Auto-generates JWT secrets on first run (like Navidrome)
+    SecuritySecretsModule, // Auto-generates JWT secrets on first run
     CacheModule,
     QueueModule,
     FilesystemModule,

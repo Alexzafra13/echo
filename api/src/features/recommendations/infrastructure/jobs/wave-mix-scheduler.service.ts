@@ -6,8 +6,8 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { users } from '@infrastructure/database/schema';
 import { gt, gte, and } from 'drizzle-orm';
 
-// Only process users active in the last N days
-const ACTIVE_USER_DAYS = parseInt(process.env.WAVE_MIX_ACTIVE_DAYS || '30', 10);
+// Only process users active in the last 30 days
+const ACTIVE_USER_DAYS = 30;
 // Batch size for pagination
 const USER_BATCH_SIZE = 100;
 
