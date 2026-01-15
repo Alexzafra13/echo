@@ -41,6 +41,24 @@
   display: none; /* Contenido movido al header como customSearch y customContent */
 }
 
+/* Page Header */
+.radioPage__pageHeader {
+  margin-bottom: 32px;
+}
+
+.radioPage__pageTitle {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0 0 8px 0;
+}
+
+.radioPage__pageSubtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+}
+
 /* Filters */
 .radioPage__filters {
   margin-bottom: var(--space-6);
@@ -194,6 +212,18 @@
     max-width: 100%;
   }
 
+  .radioPage__pageHeader {
+    margin-bottom: 16px;
+  }
+
+  .radioPage__pageTitle {
+    font-size: 32px;
+  }
+
+  .radioPage__pageSubtitle {
+    font-size: 14px;
+  }
+
   /* Remove grid layout on mobile for natural content flow */
   .radioPage__gridWrapper {
     display: block; /* Override grid layout */
@@ -262,14 +292,18 @@
   }
 
   .radioPage__content {
-    padding: 68px var(--space-3) calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 16px var(--space-3) calc(60px + var(--player-bottom-spacer, 0px));
     width: 100%;
     max-width: 100%;
   }
 
+  .radioPage__pageTitle {
+    font-size: 28px;
+  }
+
   .radioPage__topBar {
     padding: 10px var(--space-3);
-    margin: -68px calc(-1 * var(--space-3)) 16px;
+    margin: -16px calc(-1 * var(--space-3)) 16px;
     gap: 10px;
     width: 100%;
     max-width: 100%;
