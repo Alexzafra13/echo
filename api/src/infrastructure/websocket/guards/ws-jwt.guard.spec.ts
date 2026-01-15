@@ -4,6 +4,7 @@ import { WsException } from '@nestjs/websockets';
 import { PinoLogger } from 'nestjs-pino';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { Socket } from 'socket.io';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 
 const createMockLogger = (): jest.Mocked<PinoLogger> =>
   ({
@@ -16,6 +17,13 @@ const createMockLogger = (): jest.Mocked<PinoLogger> =>
     setContext: jest.fn(),
     assign: jest.fn(),
   }) as unknown as jest.Mocked<PinoLogger>;
+
+const createMockSecretsService = (): jest.Mocked<SecuritySecretsService> =>
+  ({
+    jwtSecret: 'test-jwt-secret',
+    jwtRefreshSecret: 'test-jwt-refresh-secret',
+    initializeSecrets: jest.fn(),
+  }) as unknown as jest.Mocked<SecuritySecretsService>;
 
 interface MockSocket {
   id: string;
@@ -33,14 +41,20 @@ describe('WsJwtGuard', () => {
   let mockSocket: MockSocket;
   let mockContext: ExecutionContext;
   let mockLogger: jest.Mocked<PinoLogger>;
+  let mockSecretsService: jest.Mocked<SecuritySecretsService>;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
+    mockSecretsService = createMockSecretsService();
     mockJwtService = {
       verifyAsync: jest.fn(),
     };
 
-    guard = new WsJwtGuard(mockLogger, mockJwtService as unknown as JwtService);
+    guard = new WsJwtGuard(
+      mockLogger,
+      mockJwtService as unknown as JwtService,
+      mockSecretsService,
+    );
 
     mockSocket = {
       id: 'test-socket-id',
@@ -73,7 +87,7 @@ describe('WsJwtGuard', () => {
       expect(mockSocket.data.user).toEqual(payload);
       expect(mockSocket.data.userId).toBe('user-123');
       expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(token, {
-        secret: process.env.JWT_SECRET,
+        secret: mockSecretsService.jwtSecret,
       });
     });
 

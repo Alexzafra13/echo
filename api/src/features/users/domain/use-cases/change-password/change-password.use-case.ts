@@ -7,9 +7,10 @@ import {
 } from '@features/auth/domain/ports';
 import {
   NotFoundError,
-  ValidationError,
   UnauthorizedError,
+  ValidationError,
 } from '@shared/errors';
+import { Password } from '@features/auth/domain/value-objects/password.vo';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { ChangePasswordInput } from './change-password.dto';
 
@@ -24,10 +25,11 @@ export class ChangePasswordUseCase {
   ) {}
 
   async execute(input: ChangePasswordInput): Promise<void> {
-    // 1. Validar nueva contraseña
-    if (!input.newPassword || input.newPassword.length < 8) {
-      throw new ValidationError('Password must be at least 8 characters');
-    }
+    // 1. Validar nueva contraseña usando Password Value Object
+    // Esto asegura que cumpla con todos los requisitos de seguridad:
+    // - Mínimo 8 caracteres
+    // - Al menos 1 mayúscula, 1 minúscula, 1 número, 1 carácter especial
+    const validatedPassword = new Password(input.newPassword);
 
     // 2. Buscar usuario
     const user = await this.userRepository.findById(input.userId);
@@ -51,7 +53,7 @@ export class ChangePasswordUseCase {
 
       // Verificar que nueva contraseña sea diferente
       const isSamePassword = await this.passwordService.compare(
-        input.newPassword,
+        validatedPassword.getValue(),
         user.passwordHash,
       );
       if (isSamePassword) {
@@ -60,7 +62,7 @@ export class ChangePasswordUseCase {
     }
 
     // 4. Hash de nueva contraseña
-    const newPasswordHash = await this.passwordService.hash(input.newPassword);
+    const newPasswordHash = await this.passwordService.hash(validatedPassword.getValue());
 
     // 6. Actualizar contraseña
     await this.userRepository.updatePassword(user.id, newPasswordHash);

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
+import { SecuritySecretsService } from '@config/security-secrets.service';
 
 /**
  * WsJwtGuard - Guard de autenticación JWT para WebSocket
@@ -28,6 +29,7 @@ export class WsJwtGuard implements CanActivate {
     @InjectPinoLogger(WsJwtGuard.name)
     private readonly logger: PinoLogger,
     private jwtService: JwtService,
+    private secretsService: SecuritySecretsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,9 +41,9 @@ export class WsJwtGuard implements CanActivate {
         throw new WsException('No token provided');
       }
 
-      // Verificar token
+      // Verificar token usando el servicio de secretos centralizado
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
+        secret: this.secretsService.jwtSecret,
       });
 
       // Adjuntar usuario al socket para acceso posterior
