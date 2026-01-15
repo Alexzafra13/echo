@@ -106,6 +106,32 @@ export class StreamingController implements OnModuleDestroy {
       }
     });
 
+    // Handle destination (response) errors - e.g., client disconnects abruptly
+    res.on('error', (error) => {
+      cleanup();
+      // Only log if it's not a normal client disconnect
+      if ((error as NodeJS.ErrnoException).code !== 'ECONNRESET') {
+        this.logger.warn(
+          {
+            error: error instanceof Error ? error.message : error,
+            trackId,
+          },
+          'Response stream error',
+        );
+      }
+      if (!stream.destroyed) {
+        stream.destroy();
+      }
+    });
+
+    // Handle client disconnect (close without error)
+    res.on('close', () => {
+      cleanup();
+      if (!stream.destroyed) {
+        stream.destroy();
+      }
+    });
+
     stream.on('close', cleanup);
     stream.on('end', cleanup);
 
