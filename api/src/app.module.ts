@@ -38,6 +38,7 @@ import { SocialModule } from './features/social/social.module';
 import { FederationModule } from './features/federation/federation.module';
 import { validateEnvironment } from './config/env.validation';
 import { SecuritySecretsModule } from './config/security-secrets.module';
+import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer.util';
 
 @Module({
   imports: [
@@ -68,8 +69,9 @@ import { SecuritySecretsModule } from './config/security-secrets.module';
           req: (req: any) => ({
             method: req.method,
             url: req.url,
-            params: req.params,
-            query: req.query,
+            // Sanitize params and query to prevent logging sensitive data
+            params: sanitizeParams(req.params),
+            query: sanitizeQueryParams(req.query),
           }),
           res: (res: any) => ({
             statusCode: res.statusCode,

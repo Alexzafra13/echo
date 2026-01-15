@@ -8,6 +8,10 @@ import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Socket } from 'socket.io';
+import { sanitizeForLog } from '@shared/utils/log-sanitizer.util';
+
+// Only log payloads in non-production environments
+const LOG_PAYLOADS = process.env.NODE_ENV !== 'production';
 
 /**
  * WsLoggingInterceptor - Interceptor para logging de eventos WebSocket
@@ -17,6 +21,10 @@ import { Socket } from 'socket.io';
  * - Log de eventos salientes (servidor → cliente)
  * - Métricas de tiempo de procesamiento
  * - Información de contexto (userId, socketId)
+ *
+ * Security:
+ * - In production, only logs metadata (event name, user, duration)
+ * - In development, logs sanitized payloads for debugging
  *
  * Uso:
  * @UseInterceptors(WsLoggingInterceptor)
@@ -38,11 +46,17 @@ export class WsLoggingInterceptor implements NestInterceptor {
     const userId = client.data?.userId || 'anonymous';
     const socketId = client.id;
 
-    // Log del evento entrante
-    this.logger.debug(
-      `📨 Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`,
-      { data }
-    );
+    // Log incoming event - only include sanitized payload in non-production
+    if (LOG_PAYLOADS && data && typeof data === 'object') {
+      this.logger.debug(
+        `Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`,
+        { data: sanitizeForLog(data) }
+      );
+    } else {
+      this.logger.debug(
+        `Incoming event: ${pattern} | User: ${userId} | Socket: ${socketId}`
+      );
+    }
 
     const now = Date.now();
 
@@ -50,16 +64,23 @@ export class WsLoggingInterceptor implements NestInterceptor {
       tap({
         next: (response: any) => {
           const duration = Date.now() - now;
-          this.logger.debug(
-            `📤 Outgoing response: ${pattern} | Duration: ${duration}ms | User: ${userId}`,
-            { response }
-          );
+          // Only include sanitized response in non-production
+          if (LOG_PAYLOADS && response && typeof response === 'object') {
+            this.logger.debug(
+              `Outgoing response: ${pattern} | Duration: ${duration}ms | User: ${userId}`,
+              { response: sanitizeForLog(response) }
+            );
+          } else {
+            this.logger.debug(
+              `Outgoing response: ${pattern} | Duration: ${duration}ms | User: ${userId}`
+            );
+          }
         },
         error: (error: any) => {
           const duration = Date.now() - now;
+          // Log error message but not full error object which might contain sensitive data
           this.logger.error(
-            `❌ Event error: ${pattern} | Duration: ${duration}ms | User: ${userId}`,
-            error
+            `Event error: ${pattern} | Duration: ${duration}ms | User: ${userId} | Error: ${error?.message || 'Unknown error'}`
           );
         },
       })
