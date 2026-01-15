@@ -4,6 +4,12 @@ import { BullmqService } from '@infrastructure/queue/bullmq.service';
 import { WaveMixService } from '../services/wave-mix.service';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { users } from '@infrastructure/database/schema';
+import { gt, gte, and } from 'drizzle-orm';
+
+// Only process users active in the last N days
+const ACTIVE_USER_DAYS = parseInt(process.env.WAVE_MIX_ACTIVE_DAYS || '30', 10);
+// Batch size for pagination
+const USER_BATCH_SIZE = 100;
 
 /**
  * Wave Mix Scheduler Service
@@ -91,41 +97,78 @@ export class WaveMixSchedulerService implements OnModuleInit {
   /**
    * Regenerate Wave Mix for all active users
    * Called by the daily scheduled job
+   *
+   * Uses cursor-based pagination to avoid loading all users into memory.
+   * Only processes users who have logged in within ACTIVE_USER_DAYS.
    */
   async regenerateAllWaveMixes(): Promise<void> {
-    this.logger.info('Starting daily Wave Mix regeneration for all users');
+    this.logger.info({ activeDays: ACTIVE_USER_DAYS }, 'Starting daily Wave Mix regeneration for active users');
 
-    // Get all users (you may want to filter by activity, e.g., users who logged in last 30 days)
-    const allUsers = await this.drizzle.db
-      .select({ id: users.id, username: users.username })
-      .from(users);
-
-    this.logger.info({ userCount: allUsers.length }, 'Found users for Wave Mix regeneration');
+    // Calculate cutoff date for active users
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - ACTIVE_USER_DAYS);
 
     let successCount = 0;
     let errorCount = 0;
+    let totalProcessed = 0;
+    let lastId: string | null = null;
 
-    // Process users in batches to avoid overwhelming the system
-    const batchSize = 10;
-    for (let i = 0; i < allUsers.length; i += batchSize) {
-      const batch = allUsers.slice(i, i + batchSize);
+    // Process users in batches using cursor-based pagination
+    while (true) {
+      // Build query: active users (logged in within cutoff) with cursor pagination
+      const conditions = [gte(users.lastLoginAt, cutoffDate)];
+      if (lastId) {
+        conditions.push(gt(users.id, lastId));
+      }
 
-      await Promise.allSettled(
-        batch.map(async (user) => {
-          try {
+      const batch = await this.drizzle.db
+        .select({ id: users.id, username: users.username })
+        .from(users)
+        .where(and(...conditions))
+        .orderBy(users.id)
+        .limit(USER_BATCH_SIZE);
+
+      if (batch.length === 0) {
+        break; // No more users
+      }
+
+      // Process users in sub-batches of 10 for controlled concurrency
+      const concurrencyLimit = 10;
+      for (let i = 0; i < batch.length; i += concurrencyLimit) {
+        const subBatch = batch.slice(i, i + concurrencyLimit);
+        const results = await Promise.allSettled(
+          subBatch.map(async (user) => {
             await this.waveMixService.refreshAutoPlaylists(user.id);
+            return user;
+          })
+        );
+
+        // Count results
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
             successCount++;
-            this.logger.debug({ userId: user.id, username: user.username }, 'Wave Mix regenerated');
-          } catch (error) {
+            this.logger.debug({ userId: result.value.id }, 'Wave Mix regenerated');
+          } else {
             errorCount++;
-            this.logger.error({ userId: user.id, username: user.username, error }, 'Failed to regenerate Wave Mix');
+            this.logger.error({ error: result.reason }, 'Failed to regenerate Wave Mix');
           }
-        })
-      );
+        }
+      }
+
+      totalProcessed += batch.length;
+      lastId = batch[batch.length - 1].id;
+
+      // Log progress every 100 users
+      if (totalProcessed % 100 === 0) {
+        this.logger.info({ processed: totalProcessed, success: successCount, errors: errorCount }, 'Wave Mix regeneration progress');
+      }
+
+      // Small delay between batches to reduce system load
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     this.logger.info(
-      { successCount, errorCount, totalUsers: allUsers.length },
+      { successCount, errorCount, totalProcessed },
       'Daily Wave Mix regeneration completed'
     );
   }

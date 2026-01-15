@@ -79,29 +79,47 @@ export class BullmqService implements OnModuleInit, OnModuleDestroy {
     queueName: string,
     processor: (job: any) => Promise<any>,
     options?: { concurrency?: number },
-  ) {
-    const worker = new Worker(queueName, processor, {
-      connection: this.redisConnection,
-      concurrency: options?.concurrency ?? 1, // Default 1, can be increased for parallel processing
-    });
+  ): Worker | null {
+    try {
+      const worker = new Worker(queueName, processor, {
+        connection: this.redisConnection,
+        concurrency: options?.concurrency ?? 1,
+      });
 
-    worker.on('completed', (job) => {
-      this.logger.info({
-        jobId: job.id,
-        jobName: job.name,
-        queueName,
-      }, 'Job completed successfully');
-    });
+      worker.on('completed', (job) => {
+        this.logger.debug({
+          jobId: job.id,
+          jobName: job.name,
+          queueName,
+        }, 'Job completed successfully');
+      });
 
-    worker.on('failed', (job, err) => {
+      worker.on('failed', (job, err) => {
+        this.logger.error({
+          jobId: job?.id,
+          jobName: job?.name,
+          queueName,
+          error: err.message,
+        }, 'Job failed');
+      });
+
+      worker.on('error', (err) => {
+        this.logger.error({
+          queueName,
+          error: err.message,
+        }, 'Worker error');
+      });
+
+      this.workers.push(worker);
+      this.logger.info({ queueName, concurrency: options?.concurrency ?? 1 }, 'Worker registered');
+
+      return worker;
+    } catch (error) {
       this.logger.error({
-        jobId: job?.id,
-        jobName: job?.name,
         queueName,
-        error: err,
-      }, 'Job failed');
-    });
-
-    this.workers.push(worker);
+        error: error instanceof Error ? error.message : String(error),
+      }, 'Failed to register processor');
+      return null;
+    }
   }
 }
