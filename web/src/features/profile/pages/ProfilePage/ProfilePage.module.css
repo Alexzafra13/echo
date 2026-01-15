@@ -572,7 +572,7 @@
   }
 
   .profilePage__content {
-    padding: 100px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header en mobile + bottom nav + player dinámico */
+    padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header en mobile + bottom nav + player dinámico */
   }
 
   .profilePage__header {
@@ -644,7 +644,7 @@
   }
 
   .profilePage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
   .profilePage__header h1 {
