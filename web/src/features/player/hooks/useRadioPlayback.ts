@@ -120,9 +120,22 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
     const finalStreamUrl = getProxiedStreamUrl(streamUrl);
 
     // Check if this is an HLS stream and browser needs HLS.js
-    const needsHls = isHlsStream(finalStreamUrl) && !supportsNativeHls();
+    const isHls = isHlsStream(finalStreamUrl);
+    const hasNativeHls = supportsNativeHls();
+    const hlsSupported = Hls.isSupported();
+    const needsHls = isHls && !hasNativeHls;
 
-    if (needsHls && Hls.isSupported()) {
+    // Debug logging to understand HLS detection
+    logger.info('[Radio] HLS detection:', {
+      url: finalStreamUrl,
+      isHls,
+      hasNativeHls,
+      hlsSupported,
+      needsHls,
+      willUseHlsJs: needsHls && hlsSupported
+    });
+
+    if (needsHls && hlsSupported) {
       // Use HLS.js for .m3u8 streams in Chrome/Firefox
       logger.debug('[Radio] Using HLS.js for stream:', finalStreamUrl);
 
