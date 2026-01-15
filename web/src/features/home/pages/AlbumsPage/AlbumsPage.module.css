@@ -36,11 +36,10 @@
 }
 
 .albumsPage__title {
-  font-size: 48px;
-  font-weight: 900;
+  font-size: 36px;
+  font-weight: 800;
   color: var(--color-text-primary, #ffffff);
   margin: 0 0 8px 0;
-  letter-spacing: -1px;
 }
 
 .albumsPage__subtitle {
@@ -132,7 +131,7 @@
   }
 
   .albumsPage__title {
-    font-size: 40px;
+    font-size: 32px;
   }
 }
 
@@ -169,7 +168,7 @@
   }
 
   .albumsPage__title {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .albumsPage__subtitle {
@@ -193,7 +192,7 @@
   }
 
   .albumsPage__title {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .albumsPage__subtitle {

@@ -47,8 +47,8 @@
 }
 
 .radioPage__pageTitle {
-  font-size: 48px;
-  font-weight: 900;
+  font-size: 36px;
+  font-weight: 800;
   color: var(--color-text-primary, #ffffff);
   margin: 0 0 8px 0;
 }
@@ -217,7 +217,7 @@
   }
 
   .radioPage__pageTitle {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .radioPage__pageSubtitle {
@@ -298,7 +298,7 @@
   }
 
   .radioPage__pageTitle {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .radioPage__topBar {
