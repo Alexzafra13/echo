@@ -12,6 +12,7 @@ describe('ScoringService', () => {
   beforeEach(() => {
     mockInteractionsRepo = {
       getItemInteractionSummary: jest.fn(),
+      getUserInteractions: jest.fn(),
     } as any;
 
     mockPlayTrackingRepo = {
@@ -341,17 +342,15 @@ describe('ScoringService', () => {
     it('should rank tracks by score descending', async () => {
       const trackIds = ['track-1', 'track-2', 'track-3'];
 
-      // Mock different play stats to get different scores
-      mockPlayTrackingRepo.getUserPlayStats
-        .mockResolvedValueOnce([
-          { itemId: 'track-1', itemType: 'track', playCount: 5, weightedPlayCount: 3, avgCompletionRate: 0.5, lastPlayedAt: new Date() },
-        ])
-        .mockResolvedValueOnce([
-          { itemId: 'track-2', itemType: 'track', playCount: 20, weightedPlayCount: 15, avgCompletionRate: 0.9, lastPlayedAt: new Date() },
-        ])
-        .mockResolvedValueOnce([
-          { itemId: 'track-3', itemType: 'track', playCount: 10, weightedPlayCount: 8, avgCompletionRate: 0.7, lastPlayedAt: new Date() },
-        ]);
+      // Mock getUserInteractions to return empty array (no ratings)
+      mockInteractionsRepo.getUserInteractions.mockResolvedValue([]);
+
+      // Mock getUserPlayStats to return all track stats at once (optimized query)
+      mockPlayTrackingRepo.getUserPlayStats.mockResolvedValue([
+        { itemId: 'track-1', itemType: 'track', playCount: 5, weightedPlayCount: 3, avgCompletionRate: 0.5, lastPlayedAt: new Date() },
+        { itemId: 'track-2', itemType: 'track', playCount: 20, weightedPlayCount: 15, avgCompletionRate: 0.9, lastPlayedAt: new Date() },
+        { itemId: 'track-3', itemType: 'track', playCount: 10, weightedPlayCount: 8, avgCompletionRate: 0.7, lastPlayedAt: new Date() },
+      ]);
 
       const result = await service.calculateAndRankTracks(userId, trackIds);
 
@@ -369,8 +368,17 @@ describe('ScoringService', () => {
       const trackIds = ['track-1'];
       const trackArtistMap = new Map([['track-1', 'artist-1']]);
 
+      // Mock getUserInteractions
+      mockInteractionsRepo.getUserInteractions.mockResolvedValue([]);
+
+      // Mock getUserPlayStats - first call for tracks, second for artists
+      mockPlayTrackingRepo.getUserPlayStats
+        .mockResolvedValueOnce([{ itemId: 'track-1', itemType: 'track', playCount: 5, weightedPlayCount: 3, avgCompletionRate: 0.5, lastPlayedAt: new Date() }])
+        .mockResolvedValueOnce([{ itemId: 'artist-1', itemType: 'artist', playCount: 10, weightedPlayCount: 10, avgCompletionRate: 1, lastPlayedAt: new Date() }]);
+
       await service.calculateAndRankTracks(userId, trackIds, trackArtistMap);
 
+      expect(mockPlayTrackingRepo.getUserPlayStats).toHaveBeenCalledWith(userId, 'track');
       expect(mockPlayTrackingRepo.getUserPlayStats).toHaveBeenCalledWith(userId, 'artist');
     });
   });
