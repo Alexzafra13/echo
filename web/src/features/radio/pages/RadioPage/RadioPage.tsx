@@ -378,6 +378,13 @@ export default function RadioPage() {
         />
 
         <div ref={contentRef} className={styles.radioPage__content}>
+          {/* Page Header */}
+          <div className={styles.radioPage__pageHeader}>
+            <h1 className={styles.radioPage__pageTitle}>Radio</h1>
+            <p className={styles.radioPage__pageSubtitle}>
+              Descubre emisoras de radio de todo el mundo
+            </p>
+          </div>
 
           {/* Genre selector button */}
           <div className={styles.radioPage__filters}>
