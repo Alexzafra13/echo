@@ -5,12 +5,17 @@ import { JwtUser } from '@shared/types/request.types';
 import { IUserRepository } from '../../domain/ports';
 import { LoginUseCase } from '../../domain/use-cases/login';
 import { RefreshTokenUseCase } from '../../domain/use-cases/refresh-token';
+import { LogoutUseCase } from '../../domain/use-cases/logout';
 
 interface MockLoginUseCase {
   execute: jest.Mock;
 }
 
 interface MockRefreshTokenUseCase {
+  execute: jest.Mock;
+}
+
+interface MockLogoutUseCase {
   execute: jest.Mock;
 }
 
@@ -23,6 +28,7 @@ describe('AuthController', () => {
   let controller: AuthController;
   let mockLoginUseCase: MockLoginUseCase;
   let mockRefreshTokenUseCase: MockRefreshTokenUseCase;
+  let mockLogoutUseCase: MockLogoutUseCase;
   let mockUserRepository: MockUserRepository;
 
   beforeEach(() => {
@@ -34,6 +40,10 @@ describe('AuthController', () => {
       execute: jest.fn(),
     };
 
+    mockLogoutUseCase = {
+      execute: jest.fn(),
+    };
+
     mockUserRepository = {
       findById: jest.fn(),
       findByUsername: jest.fn(),
@@ -42,6 +52,7 @@ describe('AuthController', () => {
     controller = new AuthController(
       mockLoginUseCase as unknown as LoginUseCase,
       mockRefreshTokenUseCase as unknown as RefreshTokenUseCase,
+      mockLogoutUseCase as unknown as LogoutUseCase,
       mockUserRepository as unknown as IUserRepository,
     );
   });
