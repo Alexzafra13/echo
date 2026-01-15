@@ -29,6 +29,9 @@ import * as fs from 'fs';
 import { ReadStream } from 'fs';
 import { ServerResponse } from 'http';
 
+// Timeout para streams en milisegundos (30 minutos para tracks completos)
+const STREAM_TIMEOUT_MS = 30 * 60 * 1000;
+
 // Streaming de audio con soporte para Range requests (seek/skip)
 @ApiTags('streaming')
 @Controller('tracks')
@@ -68,6 +71,22 @@ export class StreamingController implements OnModuleDestroy {
     const cleanup = (): void => {
       this.activeStreams.delete(stream);
     };
+
+    // Configurar timeout para prevenir conexiones zombie
+    // Si el cliente no lee datos en 30 minutos, cerrar la conexión
+    res.setTimeout(STREAM_TIMEOUT_MS, () => {
+      this.logger.warn(
+        { trackId, ...(options && { start: options.start, end: options.end }) },
+        'Stream timeout - client not reading data, closing connection',
+      );
+      cleanup();
+      if (!stream.destroyed) {
+        stream.destroy();
+      }
+      if (!res.destroyed) {
+        res.destroy();
+      }
+    });
 
     stream.on('error', (error) => {
       cleanup();
