@@ -44,8 +44,8 @@
 }
 
 .artistsPage__title {
-  font-size: 48px;
-  font-weight: 900;
+  font-size: 36px;
+  font-weight: 800;
   color: var(--color-text-primary, #ffffff);
   margin: 0 0 8px 0;
 }
@@ -189,7 +189,7 @@
   }
 
   .artistsPage__title {
-    font-size: 40px;
+    font-size: 32px;
   }
 }
 
@@ -203,7 +203,7 @@
   }
 
   .artistsPage__title {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .artistsPage__subtitle {
@@ -230,6 +230,6 @@
   }
 
   .artistsPage__title {
-    font-size: 28px;
+    font-size: 24px;
   }
 }

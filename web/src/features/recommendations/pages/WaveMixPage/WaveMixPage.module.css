@@ -122,11 +122,10 @@
 }
 
 .waveMixPage__heroTitle {
-  font-size: 4rem;
-  font-weight: 900;
+  font-size: 36px;
+  font-weight: 800;
   margin: 0;
   color: var(--color-text-primary, #ffffff);
-  line-height: 1.1;
 }
 
 .waveMixPage__heroDescription {
@@ -377,7 +376,7 @@
   }
 
   .waveMixPage__heroTitle {
-    font-size: 2rem;
+    font-size: 28px;
   }
 
   .waveMixPage__heroDescription {
@@ -492,7 +491,7 @@
   }
 
   .waveMixPage__heroTitle {
-    font-size: 1.75rem;
+    font-size: 24px;
   }
 
   .waveMixPage__section {
