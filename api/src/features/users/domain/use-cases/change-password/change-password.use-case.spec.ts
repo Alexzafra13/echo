@@ -200,12 +200,13 @@ describe('ChangePasswordUseCase', () => {
       mockPasswordService.hash.mockResolvedValue('$2b$12$new_password_hash');
       mockUserRepository.updatePassword.mockResolvedValue(undefined);
 
-      // Act & Assert
+      // Act & Assert - La contraseña debe cumplir todos los requisitos:
+      // mínimo 8 caracteres, mayúscula, minúscula, número y carácter especial
       await expect(
         useCase.execute({
           userId: mockUser.id,
           currentPassword: 'OldPass123!',
-          newPassword: '12345678',
+          newPassword: 'NewPass8!',
         })
       ).resolves.not.toThrow();
     });
