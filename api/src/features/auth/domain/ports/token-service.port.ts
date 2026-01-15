@@ -7,6 +7,9 @@ import { User } from '../entities/user.entity';
 export interface TokenPayload {
   userId: string;
   username: string;
+  // Campos estándar de JWT agregados automáticamente
+  iat?: number; // Issued At (timestamp)
+  exp?: number; // Expiration (timestamp)
 }
 
 /**
