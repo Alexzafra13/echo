@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Play, Disc, Ghost, ChevronUp, ChevronDown } from 'lucide-react';
+import { Play, Pause, Disc, Ghost, ChevronUp, ChevronDown } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { AddToPlaylistModal } from '@features/playlists/components/AddToPlaylistModal';
@@ -57,7 +57,7 @@ interface TrackListProps {
 export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum = false, hideAlbumCover = false, onRemoveFromPlaylist, onMoveUp, onMoveDown }: TrackListProps) {
   const canReorder = !!(onMoveUp && onMoveDown);
   const [, setLocation] = useLocation();
-  const { addToQueue } = usePlayer();
+  const { addToQueue, isPlaying: playerIsPlaying, togglePlayPause } = usePlayer();
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
   const [selectedTrackForInfo, setSelectedTrackForInfo] = useState<Track | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -150,7 +150,8 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
 
   // Helper function to render a single track row
   const renderTrackRow = (track: Track, index: number) => {
-    const isPlaying = currentTrackId === track.id;
+    const isCurrentTrack = currentTrackId === track.id;
+    const isPlayingThisTrack = isCurrentTrack && playerIsPlaying;
     const isMissingTrack = track.isMissing === true;
     const coverUrl = track.albumId ? `/api/albums/${track.albumId}/cover` : '/placeholder-album.png';
     // Use playlistOrder if available (for playlists), otherwise use trackNumber
@@ -159,14 +160,18 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
     // Build class names
     const trackClasses = [
       styles.trackList__track,
-      isPlaying ? styles['trackList__track--active'] : '',
+      isCurrentTrack ? styles['trackList__track--active'] : '',
       isMissingTrack ? styles['trackList__track--missing'] : '',
       canReorder ? styles['trackList__track--reorderable'] : '',
     ].filter(Boolean).join(' ');
 
-    // Handle click - don't play if track is missing
+    // Handle click - toggle play/pause if current track, otherwise play
     const handleTrackClick = () => {
-      if (!isMissingTrack) {
+      if (isMissingTrack) return;
+
+      if (isCurrentTrack) {
+        togglePlayPause();
+      } else {
         handlePlay(track);
       }
     };
@@ -191,11 +196,19 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
                 className={styles.trackList__playButton}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handlePlay(track);
+                  if (isCurrentTrack) {
+                    togglePlayPause();
+                  } else {
+                    handlePlay(track);
+                  }
                 }}
-                aria-label={`Play ${track.title}`}
+                aria-label={isPlayingThisTrack ? `Pause ${track.title}` : `Play ${track.title}`}
               >
-                <Play size={16} fill="currentColor" />
+                {isPlayingThisTrack ? (
+                  <Pause size={16} fill="currentColor" />
+                ) : (
+                  <Play size={16} fill="currentColor" />
+                )}
               </button>
             </>
           )}
