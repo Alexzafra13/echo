@@ -3,7 +3,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv/config');
 }
 
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -11,6 +11,7 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { WebSocketAdapter } from '@infrastructure/websocket';
+import { MustChangePasswordInterceptor } from '@shared/interceptors/must-change-password.interceptor';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -105,13 +106,11 @@ async function bootstrap() {
     return this.toString();
   };
 
-  // NOTE: MustChangePasswordGuard requires architectural changes to work properly.
-  // Currently it runs before JwtAuthGuard (which is per-controller), so request.user
-  // is not populated when it checks. This needs to be converted to an interceptor
-  // or JwtAuthGuard needs to be made global with @Public() on all public endpoints.
-  // For now, the guard is disabled until the architecture is updated.
-  // const reflector = app.get(Reflector);
-  // app.useGlobalGuards(new MustChangePasswordGuard(reflector));
+  // MustChangePassword: Bloquea acceso si usuario debe cambiar contraseña
+  // Usa interceptor en lugar de guard porque los interceptores se ejecutan
+  // DESPUÉS de los guards, garantizando que request.user ya esté poblado.
+  const reflector = app.get(Reflector);
+  app.useGlobalInterceptors(new MustChangePasswordInterceptor(reflector));
 
   // Swagger Configuration (Development only)
   // In production, API docs are not needed and we save memory

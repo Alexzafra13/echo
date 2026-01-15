@@ -26,6 +26,9 @@ export interface JwtUser {
   bio?: string;
   createdAt: Date;
   updatedAt: Date;
+  // Campos adicionales para logout (agregados por JwtStrategy)
+  rawToken?: string;
+  tokenExp?: number;
 }
 
 // Request con usuario autenticado
