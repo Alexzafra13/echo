@@ -14,19 +14,12 @@ import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
  * - Infrastructure Layer: Repository (con cache), mapper
  * - Presentation Layer: Controller, DTOs
  *
- * Responsabilidades:
- * - Registrar providers (use cases, repositorio)
- * - Exportar controllers
- *
  * Cache:
  * - Usa CachedTrackRepository (Decorator Pattern)
  * - Transparente para el dominio
- * - Configurable con ENABLE_CACHE
  *
  * DrizzleService is provided globally via DrizzleModule
  */
-
-const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
 
 @Module({
   imports: [
@@ -44,10 +37,10 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     DrizzleTrackRepository,
     CachedTrackRepository,
 
-    // Implementación del port - CONFIGURABLE
+    // Repository with cache (Decorator Pattern)
     {
       provide: TRACK_REPOSITORY,
-      useClass: USE_CACHE ? CachedTrackRepository : DrizzleTrackRepository,
+      useClass: CachedTrackRepository,
     },
   ],
   exports: [TRACK_REPOSITORY],

@@ -10,7 +10,7 @@ type ExpiresIn = JwtSignOptions['expiresIn'];
 /**
  * JwtAdapter - Implementa ITokenService con NestJS JWT
  *
- * Uses SecuritySecretsService for auto-generated secrets (like Navidrome/Jellyfin)
+ * Uses SecuritySecretsService for auto-generated secrets
  */
 @Injectable()
 export class JwtAdapter implements ITokenService {
@@ -26,7 +26,7 @@ export class JwtAdapter implements ITokenService {
     };
 
     const options: JwtSignOptions = {
-      expiresIn: (process.env.JWT_EXPIRATION || '24h') as ExpiresIn,
+      expiresIn: '24h' as ExpiresIn,
     };
 
     return this.jwtService.sign(payload, options);
@@ -39,7 +39,7 @@ export class JwtAdapter implements ITokenService {
     };
 
     const options: JwtSignOptions = {
-      expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as ExpiresIn,
+      expiresIn: '7d' as ExpiresIn,
       secret: this.secretsService.jwtRefreshSecret,
     };
 

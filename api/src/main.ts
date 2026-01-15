@@ -12,6 +12,7 @@ import { AppModule } from './app.module';
 import { appConfig } from './config/app.config';
 import { WebSocketAdapter } from '@infrastructure/websocket';
 import { MustChangePasswordInterceptor } from '@shared/interceptors/must-change-password.interceptor';
+import { getVersion } from '@shared/utils/version.util';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -37,13 +38,9 @@ async function bootstrap() {
   });
 
   // Compression for JSON responses
-  // In production, compression should be handled by the reverse proxy (nginx)
-  // to avoid double-compression which causes ERR_CONTENT_DECODING_FAILED errors
-  // Like Navidrome/Jellyfin: backend doesn't compress, proxy does
-  const enableCompression = process.env.NODE_ENV !== 'production' &&
-    process.env.DISABLE_COMPRESSION !== 'true';
-
-  if (enableCompression) {
+  // In production, compression is handled by the reverse proxy (nginx)
+  // to avoid double-compression.
+  if (process.env.NODE_ENV !== 'production') {
     await app.register(require('@fastify/compress'), {
       encodings: ['gzip', 'deflate'],
       threshold: 1024, // Only compress responses > 1KB
@@ -155,7 +152,7 @@ async function bootstrap() {
   }
 
   // Serve Frontend Static Files (Production)
-  // Similar to Jellyfin/Navidrome: single container serves both API and frontend
+  // Single container serves both API and frontend
   const frontendPath = join(__dirname, '..', '..', 'web', 'dist');
   const indexHtmlPath = join(frontendPath, 'index.html');
 
@@ -225,7 +222,7 @@ async function bootstrap() {
   }
 
   const isProd = process.env.NODE_ENV === 'production';
-  const version = process.env.VERSION || '1.0.0';
+  const version = getVersion();
 
   logger.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -246,12 +243,12 @@ Node.js: ${process.version}
    CORS:     ${appConfig.cors_origins.join(', ')}
    Helmet:   ✅ Enabled (XSS, Clickjacking, etc.)
    Rate Limit: 100 req/min (global)
-   Auth:     JWT with ${process.env.BCRYPT_ROUNDS || 12} bcrypt rounds
+   Auth:     JWT + bcrypt (12 rounds)
 
 🎯 Features:
-   Frontend: ${existsSync(frontendPath) ? '✅ Served (Jellyfin-style single container)' : '❌ Not found (API-only mode)'}
+   Frontend: ${existsSync(frontendPath) ? '✅ Served (single container)' : '❌ Not found (API-only mode)'}
    WebSocket: ✅ Enabled
-   Cache:    ${process.env.ENABLE_CACHE !== 'false' ? '✅ Redis' : '❌ Disabled'}
+   Cache:    ✅ Redis
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `);

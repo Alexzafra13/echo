@@ -3,12 +3,13 @@ import { sql } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { RedisService } from '@infrastructure/cache/redis.service';
 import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
+import { getVersion } from '@shared/utils/version.util';
 import * as os from 'os';
 import * as fs from 'fs/promises';
 
-// Storage thresholds (configurable via env)
-const STORAGE_WARNING_PERCENT = parseInt(process.env.STORAGE_WARNING_THRESHOLD || '85', 10);
-const STORAGE_CRITICAL_PERCENT = parseInt(process.env.STORAGE_CRITICAL_THRESHOLD || '95', 10);
+// Storage thresholds (percentage)
+const STORAGE_WARNING_PERCENT = 85;
+const STORAGE_CRITICAL_PERCENT = 95;
 
 // Setting key for music library path
 const LIBRARY_PATH_KEY = 'library.music.path';
@@ -67,7 +68,7 @@ export class HealthCheckService {
       status: 'ok',
       timestamp,
       uptime,
-      version: process.env.VERSION || '1.0.0',
+      version: getVersion(),
       services: {
         database: 'ok',
         cache: 'ok',
