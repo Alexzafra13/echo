@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt';
-import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 import { TokenPayload } from '../../domain/ports/token-service.port';
 import { DrizzleUserRepository } from '../persistence/user.repository';
 import { UserProps } from '../../domain/entities/user.entity';
@@ -31,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super(options);
   }
 
-  async validate(req: Request, payload: TokenPayload): Promise<UserPropsWithToken | null> {
+  async validate(req: FastifyRequest, payload: TokenPayload): Promise<UserPropsWithToken | null> {
     // Extraer el token raw del header para poder invalidarlo en logout
     const authHeader = req.headers.authorization;
     const rawToken = authHeader?.replace('Bearer ', '');
