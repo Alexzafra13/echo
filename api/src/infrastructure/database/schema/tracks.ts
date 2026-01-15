@@ -82,6 +82,7 @@ export const tracks = pgTable(
     index('idx_tracks_artist_mbid').on(table.mbzArtistId),
     index('idx_tracks_album_mbid').on(table.mbzAlbumId),
     index('idx_tracks_missing').on(table.missingAt), // Para filtrar tracks desaparecidos
+    index('idx_tracks_lufs').on(table.lufsAnalyzedAt), // For finding tracks pending LUFS analysis
   ],
 );
 
@@ -97,6 +98,7 @@ export const trackArtists = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.trackId, table.artistId] }),
+    index('idx_track_artists_artist').on(table.artistId), // For reverse lookups: find all tracks by artist
   ],
 );
 

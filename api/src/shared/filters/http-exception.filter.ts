@@ -8,6 +8,7 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { BaseError, getHttpStatusForError } from '@shared/errors/base.error';
+import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer.util';
 
 // Captura todas las excepciones y las convierte a respuestas HTTP consistentes
 @Catch()
@@ -78,8 +79,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
           req: {
             method: request.method,
             url: request.url,
-            params: request.params,
-            query: request.query,
+            params: sanitizeParams(request.params as Record<string, unknown>),
+            query: sanitizeQueryParams(request.query as Record<string, unknown>),
           },
           statusCode: status,
         },

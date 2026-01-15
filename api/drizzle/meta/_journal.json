@@ -78,6 +78,13 @@
       "when": 1766193291150,
       "tag": "0010_drop_user_starred",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1768470466361,
+      "tag": "0011_add_missing_indexes",
+      "breakpoints": true
     }
   ]
 }
