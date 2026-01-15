@@ -4,21 +4,26 @@ import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { streamTokens, users } from '@infrastructure/database/schema';
 import { randomBytes } from 'crypto';
 
+// Stream token expiration in hours (default: 24 hours)
+// Shorter than JWT for security since tokens are passed in query params (visible in logs)
+const STREAM_TOKEN_EXPIRY_HOURS = parseInt(process.env.STREAM_TOKEN_EXPIRY_HOURS || '24', 10);
+
 @Injectable()
 export class StreamTokenService {
   constructor(private readonly drizzle: DrizzleService) {}
 
   /**
    * Generate a new stream token for a user
-   * Token expires after 30 days
+   * Token expires after STREAM_TOKEN_EXPIRY_HOURS (default: 24 hours)
+   * Shorter than JWT because stream tokens are passed in URL query params
    */
   async generateToken(userId: string): Promise<{ token: string; expiresAt: Date }> {
     // Generate random token (64 characters)
     const token = randomBytes(32).toString('hex');
 
-    // Token expires in 30 days
+    // Token expires based on config (default 24 hours)
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setTime(expiresAt.getTime() + STREAM_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
 
     // Delete any existing tokens for this user (only one token per user)
     await this.drizzle.db
