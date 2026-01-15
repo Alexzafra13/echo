@@ -33,15 +33,21 @@
 .logoContainer {
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-bottom: 8px;
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 .logo {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  object-position: 55% center;
+  transform: scale(1.15);
 }
 
 .card {
