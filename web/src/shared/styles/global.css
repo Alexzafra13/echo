@@ -317,21 +317,36 @@ textarea:focus-visible {
 /* ===== Skip Link for Accessibility ===== */
 .skip-link {
   position: absolute;
-  top: -100%;
-  left: 50%;
-  transform: translateX(-50%);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
   background: var(--color-primary-500);
   color: var(--text-on-primary);
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-base);
   font-weight: var(--font-semibold);
   text-decoration: none;
   z-index: 9999;
-  transition: top var(--transition-fast);
 }
 
 .skip-link:focus {
+  position: fixed;
   top: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  padding: var(--space-3) var(--space-6);
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+  border-radius: var(--radius-base);
   outline: 2px solid var(--color-primary-300);
   outline-offset: 2px;
 }
