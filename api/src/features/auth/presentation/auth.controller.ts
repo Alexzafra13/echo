@@ -16,6 +16,7 @@ import { JwtUser } from '@shared/types/request.types';
 import {
   LoginUseCase,
   RefreshTokenUseCase,
+  LogoutUseCase,
 } from '../domain/use-cases';
 import {
   LoginRequestDto,
@@ -33,6 +34,7 @@ export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    private readonly logoutUseCase: LogoutUseCase,
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
   ) {}
@@ -93,6 +95,40 @@ export class AuthController {
     });
 
     return RefreshTokenResponseDto.fromDomain(result);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @AllowChangePassword()
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Cerrar sesión',
+    description: 'Invalida el token JWT actual. El token no podrá ser usado nuevamente incluso si no ha expirado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sesión cerrada exitosamente',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado o token inválido',
+  })
+  async logout(@CurrentUser() user: JwtUser): Promise<{ message: string }> {
+    // Verificar que tenemos el token raw y exp para invalidar
+    if (!user.rawToken || !user.tokenExp) {
+      // Si no tenemos el token (edge case), igual retornamos success
+      // El cliente debería eliminar el token de su lado
+      return { message: 'Logged out successfully' };
+    }
+
+    await this.logoutUseCase.execute({
+      token: user.rawToken,
+      userId: user.id,
+      username: user.username,
+      tokenExp: user.tokenExp,
+    });
+
+    return { message: 'Logged out successfully' };
   }
 
   // Consulta BD para datos actualizados (avatar, etc.)
