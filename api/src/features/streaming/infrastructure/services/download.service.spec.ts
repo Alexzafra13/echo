@@ -4,6 +4,11 @@ import { DownloadService, AlbumDownloadInfo } from './download.service';
 // Mock fs module
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
+  createReadStream: jest.fn(() => ({
+    on: jest.fn(),
+    pipe: jest.fn(),
+    destroy: jest.fn(),
+  })),
   promises: {
     stat: jest.fn(),
   },
@@ -453,8 +458,8 @@ describe('DownloadService', () => {
       // Act
       await service.streamAlbumAsZip(albumInfo, mockOutputStream as any);
 
-      // Assert
-      expect(mockArchive.file).toHaveBeenCalledTimes(1);
+      // Assert - append is used for tracks (with streams), file is only for cover
+      expect(mockArchive.append).toHaveBeenCalledTimes(1); // Only track1, track2 was skipped
       expect(mockLogger.warn).toHaveBeenCalled();
     });
 
