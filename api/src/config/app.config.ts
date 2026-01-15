@@ -1,6 +1,10 @@
 import { networkInterfaces } from 'os';
 
-// Auto-detecta CORS: en dev usa Vite, en prod detecta las IPs de red
+/**
+ * Auto-detect CORS origins based on environment
+ * Development: Vite dev server
+ * Production: Auto-detect network IPs
+ */
 function getDefaultCorsOrigins(): string {
   const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -28,6 +32,6 @@ function getDefaultCorsOrigins(): string {
 export const appConfig = {
   node_env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT ?? '3000', 10),
-  api_prefix: process.env.API_PREFIX || 'api',
+  api_prefix: 'api',
   cors_origins: (process.env.CORS_ORIGINS || getDefaultCorsOrigins()).split(','),
 };

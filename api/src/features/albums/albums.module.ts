@@ -20,18 +20,10 @@ import { CoverArtService } from '@shared/services';
  * - Infrastructure Layer: Repository (con cache), mapper
  * - Presentation Layer: Controller, DTOs
  *
- * Responsabilidades:
- * - Importar dependencias globales (Drizzle, Cache)
- * - Registrar providers (use cases, repositorio)
- * - Exportar controllers
- *
  * Cache:
  * - Usa CachedAlbumRepository (Decorator Pattern)
  * - Transparente para el dominio (usa misma interfaz IAlbumRepository)
- * - Configurable con variable ENABLE_CACHE (default: true)
  */
-
-const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
 
 @Module({
   imports: [
@@ -61,10 +53,10 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false'; // Default: true
     // Services
     CoverArtService,
 
-    // Implementación del port - CONFIGURABLE
+    // Repository with cache (Decorator Pattern)
     {
       provide: ALBUM_REPOSITORY,
-      useClass: USE_CACHE ? CachedAlbumRepository : DrizzleAlbumRepository,
+      useClass: CachedAlbumRepository,
     },
   ],
   exports: [ALBUM_REPOSITORY, CachedAlbumRepository],

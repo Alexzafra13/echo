@@ -7,7 +7,7 @@ import { IPasswordService } from '../../domain/ports/password-service.port';
  */
 @Injectable()
 export class BcryptAdapter implements IPasswordService {
-  private readonly rounds = parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
+  private readonly rounds = 12;
 
   async hash(password: string): Promise<string> {
     return bcrypt.hash(password, this.rounds);
