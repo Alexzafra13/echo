@@ -226,7 +226,7 @@
 
 @media (max-width: 480px) {
   .artistsPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño */
+    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .artistsPage__title {

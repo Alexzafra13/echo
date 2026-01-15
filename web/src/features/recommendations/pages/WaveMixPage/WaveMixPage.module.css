@@ -368,7 +368,7 @@
 
   .waveMixPage__content {
     margin-top: 0; /* Eliminar margin negativo */
-    padding: 100px 16px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
     overflow-x: hidden; /* Solo content tiene overflow-x hidden */
   }
 
@@ -487,7 +487,7 @@
 
 @media (max-width: 480px) {
   .waveMixPage__content {
-    padding: 90px 12px calc(60px + var(--player-bottom-spacer, 0px));
+    padding: 16px 12px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .waveMixPage__hero {
