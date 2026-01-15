@@ -23,6 +23,10 @@ export const libraryScans = pgTable(
     tracksDeleted: integer('tracks_deleted').default(0).notNull(),
     errorMessage: text('error_message'),
   },
+  (table) => [
+    index('idx_library_scans_status').on(table.status), // For finding active/pending scans
+    index('idx_library_scans_started').on(table.startedAt), // For sorting by date
+  ],
 );
 
 // ============================================
