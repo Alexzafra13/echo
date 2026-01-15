@@ -72,7 +72,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className={styles.logoContainer}>
           <img
-            src="/images/logos/echo_dark.svg"
+            src="/images/empy_cover/empy_cover_default.png"
             alt="Echo"
             className={styles.logo}
           />
