@@ -35,19 +35,13 @@
   justify-content: center;
   align-items: center;
   margin-bottom: 8px;
-  width: 120px;
-  height: 120px;
-  overflow: hidden;
-  border-radius: 10px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 .logo {
-  width: 160px;
-  height: 160px;
-  object-fit: cover;
-  object-position: 58% 45%;
-  transform: scale(1.3);
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 .card {
