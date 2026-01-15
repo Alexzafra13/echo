@@ -146,7 +146,6 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
           logger.error('[Radio] HLS fatal error:', data.type, data.details);
-          setState(prev => ({ ...prev, signalStatus: 'error' }));
 
           // Try to recover from fatal errors
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
@@ -154,7 +153,14 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
           } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             hls.recoverMediaError();
           } else {
+            // Unrecoverable error - exit radio mode completely
             cleanupHls();
+            setState({
+              currentStation: null,
+              isRadioMode: false,
+              signalStatus: 'error',
+              metadata: null,
+            });
           }
         }
       });
@@ -180,7 +186,15 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
           'name' in station ? station.name : 'Unknown',
           'URL:', finalStreamUrl
         );
-        setState(prev => ({ ...prev, signalStatus: 'error' }));
+        // Clear the broken source to prevent blocking future playback
+        audio.src = '';
+        // Exit radio mode completely on load failure
+        setState({
+          currentStation: null,
+          isRadioMode: false,
+          signalStatus: 'error',
+          metadata: null,
+        });
         audio.onerror = null;
       };
     }
@@ -220,12 +234,15 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
 
   /**
    * Stop radio playback
+   * Note: This is async because stopBoth() needs to fade out audio first
    */
-  const stopRadio = useCallback(() => {
+  const stopRadio = useCallback(async () => {
     // Cleanup HLS instance if active
     cleanupHls();
 
-    audioElements.stopBoth();
+    // Wait for stopBoth to complete (includes fade-out) before returning
+    // This prevents race conditions where new audio is loaded before old is cleared
+    await audioElements.stopBoth();
     audioElements.resetToAudioA();
 
     setState({
