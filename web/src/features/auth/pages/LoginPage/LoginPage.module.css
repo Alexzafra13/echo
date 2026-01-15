@@ -50,11 +50,11 @@
 }
 
 .logo {
-  width: 200px;
-  height: 200px;
+  width: 240px;
+  height: 240px;
   object-fit: cover;
-  object-position: 55% center; /* Crop out the CD case spine on the left */
-  transform: scale(1.15); /* Zoom in slightly to hide edges */
+  object-position: 58% 45%; /* Center on the logo, crop edges */
+  transform: scale(1.3); /* Zoom in more to hide CD case frame */
 }
 
 /* Login form card */
@@ -123,7 +123,7 @@
   }
 
   .logo {
-    width: 170px;
-    height: 170px;
+    width: 200px;
+    height: 200px;
   }
 }
