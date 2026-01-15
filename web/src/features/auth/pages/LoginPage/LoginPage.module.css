@@ -40,14 +40,14 @@
   margin-bottom: -30px;
   display: flex;
   justify-content: center;
-  align-items: center;
   z-index: 1;
 }
 
 .logo {
-  width: 200px;
-  height: auto;
-  border-radius: 8px;
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
@@ -112,6 +112,7 @@
   }
 
   .logo {
-    width: 160px;
+    width: 150px;
+    height: 150px;
   }
 }
