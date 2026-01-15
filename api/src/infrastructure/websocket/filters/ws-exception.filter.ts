@@ -2,6 +2,10 @@ import { ArgumentsHost, Catch, Injectable } from '@nestjs/common';
 import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Socket } from 'socket.io';
+import { sanitizeForLog } from '@shared/utils/log-sanitizer.util';
+
+// Only log payloads in non-production environments
+const LOG_PAYLOADS = process.env.NODE_ENV !== 'production';
 
 /**
  * WsExceptionFilter - Filtro global para excepciones de WebSocket
@@ -52,16 +56,23 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
       code = 'ERROR';
     }
 
-    // Log del error
-    this.logger.error(
-      `❌ WebSocket error on client ${client.id}:`,
-      {
-        message,
-        code,
-        data,
-        stack: exception instanceof Error ? exception.stack : undefined,
-      }
-    );
+    // Log error - only include sanitized data in non-production
+    const logContext: Record<string, unknown> = {
+      message,
+      code,
+    };
+
+    // Only include data payload in non-production, and sanitize it
+    if (LOG_PAYLOADS && data && typeof data === 'object') {
+      logContext.data = sanitizeForLog(data);
+    }
+
+    // Only include stack trace in non-production
+    if (LOG_PAYLOADS && exception instanceof Error) {
+      logContext.stack = exception.stack;
+    }
+
+    this.logger.error(`WebSocket error on client ${client.id}:`, logContext);
 
     // Enviar error al cliente
     const errorResponse = {
