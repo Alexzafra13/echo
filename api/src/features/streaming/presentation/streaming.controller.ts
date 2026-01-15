@@ -74,19 +74,22 @@ export class StreamingController implements OnModuleDestroy {
 
     // Configurar timeout para prevenir conexiones zombie
     // Si el cliente no lee datos en 30 minutos, cerrar la conexión
-    res.setTimeout(STREAM_TIMEOUT_MS, () => {
-      this.logger.warn(
-        { trackId, ...(options && { start: options.start, end: options.end }) },
-        'Stream timeout - client not reading data, closing connection',
-      );
-      cleanup();
-      if (!stream.destroyed) {
-        stream.destroy();
-      }
-      if (!res.destroyed) {
-        res.destroy();
-      }
-    });
+    // Nota: setTimeout puede no existir en mocks de tests
+    if (typeof res.setTimeout === 'function') {
+      res.setTimeout(STREAM_TIMEOUT_MS, () => {
+        this.logger.warn(
+          { trackId, ...(options && { start: options.start, end: options.end }) },
+          'Stream timeout - client not reading data, closing connection',
+        );
+        cleanup();
+        if (!stream.destroyed) {
+          stream.destroy();
+        }
+        if (!res.destroyed) {
+          res.destroy();
+        }
+      });
+    }
 
     stream.on('error', (error) => {
       cleanup();
