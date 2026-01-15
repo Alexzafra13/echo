@@ -634,6 +634,16 @@
                 inset 0 1px 1px var(--white-05);
     z-index: 9998; /* Justo debajo de la bottom nav (9999) */
     overflow: hidden; /* Clip swipe animation */
+    /* Disable transitions on mobile to prevent trembling from safe-area changes */
+    transition: none;
+    transform: none;
+  }
+
+  /* Ensure player never hides on mobile - no sidebar mode */
+  .player--hidden {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   /* Progress bar super fina abajo - pegada al borde inferior */
@@ -830,6 +840,15 @@
     right: 10px;
     border-radius: 14px;
     padding: 8px 12px 0;
+    transition: none;
+    transform: none;
+  }
+
+  /* Ensure player never hides on small mobile */
+  .player--hidden {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .trackInfo {
