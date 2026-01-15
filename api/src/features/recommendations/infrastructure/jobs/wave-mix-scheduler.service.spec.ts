@@ -39,11 +39,22 @@ describe('WaveMixSchedulerService', () => {
       refreshAutoPlaylists: jest.fn(),
     };
 
-    // Create chainable mock for Drizzle query builder
+    // Create chainable mock for Drizzle query builder with pagination support
+    let queryCallCount = 0;
     mockDrizzle = {
       db: {
         select: jest.fn().mockImplementation(() => ({
-          from: jest.fn().mockImplementation(() => Promise.resolve(mockUsersData)),
+          from: jest.fn().mockImplementation(() => ({
+            where: jest.fn().mockImplementation(() => ({
+              orderBy: jest.fn().mockImplementation(() => ({
+                limit: jest.fn().mockImplementation(() => {
+                  // Return data on first call, empty array on subsequent calls (pagination end)
+                  queryCallCount++;
+                  return queryCallCount === 1 ? Promise.resolve(mockUsersData) : Promise.resolve([]);
+                }),
+              })),
+            })),
+          })),
         })),
       },
     };
@@ -104,7 +115,7 @@ describe('WaveMixSchedulerService', () => {
   });
 
   describe('regenerateAllWaveMixes', () => {
-    it('debería regenerar Wave Mix para todos los usuarios', async () => {
+    it('debería regenerar Wave Mix para todos los usuarios activos', async () => {
       // Arrange
       mockUsersData = [
         { id: 'user-1', username: 'user1' },
@@ -123,7 +134,7 @@ describe('WaveMixSchedulerService', () => {
       expect(mockWaveMixService.refreshAutoPlaylists).toHaveBeenCalledWith('user-2');
       expect(mockWaveMixService.refreshAutoPlaylists).toHaveBeenCalledWith('user-3');
       expect(mockLogger.info).toHaveBeenCalledWith(
-        { successCount: 3, errorCount: 0, totalUsers: 3 },
+        { successCount: 3, errorCount: 0, totalProcessed: 3 },
         'Daily Wave Mix regeneration completed'
       );
     });
@@ -143,7 +154,7 @@ describe('WaveMixSchedulerService', () => {
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith(
-        { successCount: 1, errorCount: 1, totalUsers: 2 },
+        { successCount: 1, errorCount: 1, totalProcessed: 2 },
         'Daily Wave Mix regeneration completed'
       );
       expect(mockLogger.error).toHaveBeenCalled();
