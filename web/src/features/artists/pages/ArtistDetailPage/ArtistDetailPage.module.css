@@ -412,8 +412,8 @@
     text-align: center;
     gap: var(--space-4);
     padding: var(--space-6);
-    padding-top: 140px; /* More space for header + breathing room */
-    min-height: 360px;
+    padding-top: 180px; /* More space for header + breathing room */
+    min-height: 400px;
     width: 100%;
     justify-content: flex-end; /* Push content to bottom */
   }
@@ -422,8 +422,8 @@
   .artistDetailPage__optionsMenuMobile {
     display: block;
     position: absolute;
-    top: 100px; /* Below header with more spacing */
-    right: 10px;
+    top: 120px; /* Below header */
+    right: 15px;
     z-index: 200; /* High z-index to be above everything */
   }
 
@@ -504,11 +504,11 @@
   }
 
   .artistDetailPage__heroContent {
-    padding-top: 130px;
+    padding-top: 160px;
   }
 
   .artistDetailPage__optionsMenuMobile {
-    top: 90px;
+    top: 110px;
   }
 
   .artistDetailPage__name {
