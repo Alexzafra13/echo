@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { TokenBlacklistService } from '../../infrastructure/services/token-blacklist.service';
+import { Injectable, Inject } from '@nestjs/common';
+import {
+  ITokenBlacklistService,
+  TOKEN_BLACKLIST_SERVICE,
+} from '../../ports';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { LogoutInput } from './logout.dto';
 
@@ -12,7 +15,8 @@ import { LogoutInput } from './logout.dto';
 @Injectable()
 export class LogoutUseCase {
   constructor(
-    private readonly tokenBlacklist: TokenBlacklistService,
+    @Inject(TOKEN_BLACKLIST_SERVICE)
+    private readonly tokenBlacklist: ITokenBlacklistService,
     private readonly logService: LogService,
   ) {}
 
