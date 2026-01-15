@@ -185,7 +185,7 @@
   }
 
   .albumsPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .albumsPage__pageHeader {
