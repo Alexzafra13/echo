@@ -61,7 +61,7 @@ describe('StreamTokenService', () => {
       expect(mockWhere).toHaveBeenCalled();
     });
 
-    it('debería crear token con expiración de 30 días', async () => {
+    it('debería crear token con expiración de 24 horas (default)', async () => {
       // Arrange
       const userId = 'user-123';
       mockDrizzle.db.delete.mockReturnValue({
@@ -76,9 +76,9 @@ describe('StreamTokenService', () => {
       // Act
       const result = await service.generateToken(userId);
 
-      // Assert
-      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
-      const expectedExpiry = now + thirtyDaysInMs;
+      // Assert - default is 24 hours (STREAM_TOKEN_EXPIRY_HOURS)
+      const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+      const expectedExpiry = now + twentyFourHoursInMs;
       // Allow 1 second tolerance
       expect(result.expiresAt.getTime()).toBeGreaterThanOrEqual(expectedExpiry - 1000);
       expect(result.expiresAt.getTime()).toBeLessThanOrEqual(expectedExpiry + 1000);
