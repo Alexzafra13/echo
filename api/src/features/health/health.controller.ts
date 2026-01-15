@@ -25,7 +25,20 @@ export class HealthController {
         version: '1.0.0',
         services: {
           database: 'ok',
-          cache: 'ok'
+          cache: 'ok',
+          storage: 'ok'
+        },
+        system: {
+          memory: { total: 16384, free: 8192, used: 8192, usagePercent: 50 },
+          cpu: { loadAverage: [0.5, 0.6, 0.7] },
+          storage: {
+            path: '/music',
+            totalMB: 500000,
+            freeMB: 100000,
+            usedMB: 400000,
+            usagePercent: 80,
+            status: 'ok'
+          }
         }
       }
     }
