@@ -506,7 +506,7 @@
   }
 
   .settingsPage__content {
-    padding: 100px var(--space-5) calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header en mobile + bottom nav + player dinámico */
+    padding: var(--space-5) var(--space-5) calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header {
@@ -540,7 +540,7 @@
   }
 
   .settingsPage__content {
-    padding: 90px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header + bottom nav + player dinámico */
+    padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px));
   }
 
   .settingsPage__header h1 {
