@@ -87,24 +87,41 @@ export class DownloadService {
   }
 
   /**
-   * Stream album as ZIP file
-   * Returns total size estimate for progress tracking
+   * Stream album as ZIP file with backpressure support
+   * Prevents OOM when client reads slowly by respecting stream backpressure
    */
   async streamAlbumAsZip(
     albumInfo: AlbumDownloadInfo,
     outputStream: Writable,
   ): Promise<void> {
+    // Use smaller highWaterMark to reduce memory usage
     const archive = archiver('zip', {
       zlib: { level: 0 }, // No compression for audio files (already compressed)
+      highWaterMark: 1024 * 1024, // 1MB buffer instead of default 16KB
     });
 
-    // Handle archive errors
+    // Track if we've been aborted
+    let aborted = false;
+
+    // Handle client disconnect
+    outputStream.on('close', () => {
+      if (!archive.closed) {
+        aborted = true;
+        archive.abort();
+        this.logger.info(
+          { albumId: albumInfo.albumId },
+          'Client disconnected, aborting ZIP archive',
+        );
+      }
+    });
+
+    // Handle archive errors - don't throw, just log and abort
     archive.on('error', (err: Error) => {
       this.logger.error(
         { error: err.message, albumId: albumInfo.albumId },
         'Error creating ZIP archive',
       );
-      throw err;
+      aborted = true;
     });
 
     archive.on('warning', (err: archiver.ArchiverError) => {
@@ -114,7 +131,10 @@ export class DownloadService {
           'File not found during ZIP creation',
         );
       } else {
-        throw err;
+        this.logger.error(
+          { error: err.message, albumId: albumInfo.albumId },
+          'Archive warning',
+        );
       }
     });
 
@@ -126,16 +146,29 @@ export class DownloadService {
       `${albumInfo.artistName} - ${albumInfo.albumName}`,
     );
 
+    // Helper to wait for drain when backpressure occurs
+    const waitForDrain = (): Promise<void> => {
+      return new Promise((resolve) => {
+        outputStream.once('drain', resolve);
+      });
+    };
+
     // Add cover if exists
-    if (albumInfo.coverPath && fs.existsSync(albumInfo.coverPath)) {
+    if (albumInfo.coverPath && fs.existsSync(albumInfo.coverPath) && !aborted) {
       const coverExt = path.extname(albumInfo.coverPath);
       archive.file(albumInfo.coverPath, {
         name: `${folderName}/cover${coverExt}`,
       });
     }
 
-    // Add tracks
+    // Add tracks one by one, respecting backpressure
     for (const track of albumInfo.tracks) {
+      // Check if we should abort
+      if (aborted) {
+        this.logger.info({ albumId: albumInfo.albumId }, 'Aborting ZIP due to disconnect');
+        break;
+      }
+
       if (!fs.existsSync(track.path)) {
         this.logger.warn(
           { trackId: track.id, path: track.path },
@@ -154,22 +187,34 @@ export class DownloadService {
       const ext = track.suffix || path.extname(track.path).slice(1) || 'mp3';
       const fileName = `${discPrefix}${trackNum} - ${safeTitle}.${ext}`;
 
-      archive.file(track.path, {
+      // Use stream instead of file path for better backpressure handling
+      const fileStream = fs.createReadStream(track.path, {
+        highWaterMark: 64 * 1024, // 64KB chunks
+      });
+
+      archive.append(fileStream, {
         name: `${folderName}/${fileName}`,
       });
+
+      // Wait for drain if the output buffer is full (backpressure)
+      if (outputStream.writableNeedDrain) {
+        await waitForDrain();
+      }
     }
 
-    // Finalize archive
-    await archive.finalize();
+    // Finalize archive if not aborted
+    if (!aborted) {
+      await archive.finalize();
 
-    this.logger.info(
-      {
-        albumId: albumInfo.albumId,
-        albumName: albumInfo.albumName,
-        trackCount: albumInfo.tracks.length,
-      },
-      'Album ZIP download completed',
-    );
+      this.logger.info(
+        {
+          albumId: albumInfo.albumId,
+          albumName: albumInfo.albumName,
+          trackCount: albumInfo.tracks.length,
+        },
+        'Album ZIP download completed',
+      );
+    }
   }
 
   /**

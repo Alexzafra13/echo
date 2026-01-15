@@ -195,18 +195,86 @@ export class ScoringService {
 
   /**
    * Calculate scores for multiple tracks and rank them
+   * OPTIMIZED: Pre-loads all data in 3 queries instead of 3*N queries
    */
   async calculateAndRankTracks(
     userId: string,
     trackIds: string[],
     trackArtistMap?: Map<string, string>,
   ): Promise<TrackScore[]> {
-    // Calculate scores for all tracks
-    const scorePromises = trackIds.map((trackId) =>
-      this.calculateFullTrackScore(userId, trackId, trackArtistMap?.get(trackId)),
+    if (trackIds.length === 0) {
+      return [];
+    }
+
+    // PRE-LOAD ALL DATA ONCE (3 queries total instead of 3*N)
+    // 1. Get all user interactions for tracks at once
+    const allInteractions = await this.interactionsRepo.getUserInteractions(userId, 'track');
+    const interactionMap = new Map(
+      allInteractions.map((i) => [i.itemId, i]),
     );
 
-    const scores = await Promise.all(scorePromises);
+    // 2. Get all track play stats once
+    const trackPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'track');
+    const trackStatsMap = new Map(
+      trackPlayStats.map((s) => [s.itemId, s]),
+    );
+
+    // 3. Get all artist play stats once (if we have artist info)
+    let artistStatsMap = new Map<string, { playCount: number }>();
+    if (trackArtistMap && trackArtistMap.size > 0) {
+      const artistPlayStats = await this.playTrackingRepo.getUserPlayStats(userId, 'artist');
+      artistStatsMap = new Map(
+        artistPlayStats.map((s) => [s.itemId, { playCount: s.playCount }]),
+      );
+    }
+
+    // Calculate total play count for diversity
+    const totalPlayCount = trackPlayStats.reduce((sum, s) => sum + s.playCount, 0);
+
+    // Calculate scores using pre-loaded data (no more queries in loop!)
+    const scores: TrackScore[] = trackIds.map((trackId) => {
+      const interaction = interactionMap.get(trackId);
+      const trackStats = trackStatsMap.get(trackId);
+      const artistId = trackArtistMap?.get(trackId);
+      const artistStats = artistId ? artistStatsMap.get(artistId) : undefined;
+
+      // Calculate each component
+      const explicitFeedback = this.calculateExplicitFeedback(interaction?.rating ?? undefined);
+
+      const implicitBehavior = trackStats
+        ? this.calculateImplicitBehavior(
+            trackStats.weightedPlayCount,
+            trackStats.avgCompletionRate || 0,
+            trackStats.playCount,
+          )
+        : 0;
+
+      const recency = this.calculateRecency(trackStats?.lastPlayedAt);
+
+      const diversity = this.calculateDiversity(
+        artistStats?.playCount || 0,
+        totalPlayCount,
+      );
+
+      const totalScore = this.calculateTrackScore(
+        explicitFeedback,
+        implicitBehavior,
+        recency,
+        diversity,
+      );
+
+      return {
+        trackId,
+        totalScore,
+        breakdown: {
+          explicitFeedback,
+          implicitBehavior,
+          recency,
+          diversity,
+        },
+        rank: 0,
+      };
+    });
 
     // Sort by total score descending
     scores.sort((a, b) => b.totalScore - a.totalScore);
