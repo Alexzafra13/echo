@@ -128,8 +128,7 @@ export class SetupService {
     }
 
     // Hash password and create admin
-    const rounds = parseInt(process.env.BCRYPT_ROUNDS || '12', 10);
-    const passwordHash = await bcrypt.hash(password, rounds);
+    const passwordHash = await bcrypt.hash(password, 12);
 
     await this.drizzle.db.insert(users).values({
       username,

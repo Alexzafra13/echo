@@ -23,7 +23,7 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
     LogsModule,
     CacheModule,
     // Use registerAsync to get secret from SecuritySecretsService
-    // Secrets are auto-generated on first run (like Navidrome/Jellyfin)
+    // Secrets are auto-generated on first run
     JwtModule.registerAsync({
       useFactory: async (secretsService: SecuritySecretsService): Promise<JwtModuleOptions> => {
         // Ensure secrets are initialized before using them
@@ -31,7 +31,7 @@ import { CacheModule } from '@infrastructure/cache/cache.module';
         return {
           secret: secretsService.jwtSecret,
           signOptions: {
-            expiresIn: (process.env.JWT_EXPIRATION || '24h') as '24h',
+            expiresIn: '24h',
           },
         };
       },

@@ -8,8 +8,8 @@ import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 /**
  * SecuritySecretsService - Auto-generates and persists JWT secrets
  *
- * Similar to Navidrome/Jellyfin: secrets are auto-generated on first run
- * and stored in the database. Users don't need to configure them manually.
+ * Secrets are auto-generated on first run and stored in the database.
+ * Users don't need to configure them manually.
  *
  * Priority:
  * 1. Environment variable (if set by user)

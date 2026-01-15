@@ -27,18 +27,10 @@ import { LastfmAgent } from '@features/external-metadata/infrastructure/agents/l
  * - Infrastructure Layer: Repository (con cache), mapper
  * - Presentation Layer: Controller, DTOs
  *
- * Responsabilidades:
- * - Importar dependencias globales (Drizzle, Cache)
- * - Registrar providers (use cases, repositorio)
- * - Exportar controllers
- *
  * Cache:
  * - Usa CachedArtistRepository (Decorator Pattern)
  * - Transparente para el dominio
- * - Configurable con ENABLE_CACHE
  */
-
-const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
 
 @Module({
   imports: [
@@ -62,10 +54,10 @@ const USE_CACHE = process.env.ENABLE_CACHE !== 'false';
     DrizzleArtistRepository,
     CachedArtistRepository,
 
-    // Implementación del port - CONFIGURABLE
+    // Repository with cache (Decorator Pattern)
     {
       provide: ARTIST_REPOSITORY,
-      useClass: USE_CACHE ? CachedArtistRepository : DrizzleArtistRepository,
+      useClass: CachedArtistRepository,
     },
     // Similar artists provider (uses LastfmAgent from ExternalMetadataModule)
     {
