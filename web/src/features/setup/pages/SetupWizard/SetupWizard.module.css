@@ -31,13 +31,21 @@
   margin-bottom: -30px;
   display: flex;
   justify-content: center;
+  align-items: center;
   z-index: 1;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .logo {
-  width: 200px;
-  height: auto;
-  object-fit: contain;
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  object-position: 55% center;
+  transform: scale(1.15);
 }
 
 /* Wizard Card */
