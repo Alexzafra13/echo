@@ -118,6 +118,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Trigger next track with crossfade
       playNextRef.current(true);
     },
+    // LUFS normalization support - use separate effective volumes for each audio
+    getEffectiveVolume: normalization.getEffectiveVolume,
+    onCrossfadeSwapGains: normalization.swapGains,
   });
 
   // ========== RADIO METADATA ==========
@@ -224,24 +227,28 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       await radio.stopRadio();
     }
 
-    // Apply audio normalization for the new track (adjusts volume directly)
-    normalization.applyGain(track);
-
     if (withCrossfade && crossfadeSettings.enabled && isPlaying) {
-      // Crossfade: prepare next track on inactive audio
+      // Crossfade: apply gain ONLY to the inactive audio element
+      // This prevents the current track from jumping in volume
+      const inactiveId = audioElements.getActiveAudioId() === 'A' ? 'B' : 'A';
+      normalization.applyGainToAudio(track, inactiveId);
+
+      // Prepare next track on inactive audio
       logger.debug('[Player] Starting crossfade to:', track.title);
       crossfade.prepareCrossfade(streamUrl);
 
       // Update track state
       setCurrentTrack(track);
 
-      // Start crossfade transition
+      // Start crossfade transition (uses separate effective volumes for each audio)
       crossfade.performCrossfade();
 
       // Start new play session
       playTracking.startPlaySession(track);
     } else {
-      // Normal play (no crossfade)
+      // Normal play (no crossfade) - apply gain to both elements
+      normalization.applyGain(track);
+
       crossfade.clearCrossfade();
       audioElements.stopInactive();
       audioElements.loadOnActive(streamUrl);
