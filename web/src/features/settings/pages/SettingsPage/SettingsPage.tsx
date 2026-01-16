@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Settings, Palette, Globe, Check, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical, Sun, Moon, Monitor } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
@@ -43,6 +43,30 @@ export function SettingsPage() {
 
   // Local state for home sections
   const [homeSections, setHomeSections] = useState<HomeSectionConfig[]>([]);
+
+  // State for showing success message temporarily
+  const [showSuccess, setShowSuccess] = useState(false);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Show success message temporarily when save succeeds
+  useEffect(() => {
+    if (isSuccessHome) {
+      setShowSuccess(true);
+      // Clear any existing timeout
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      // Hide after 3 seconds
+      successTimeoutRef.current = setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    }
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, [isSuccessHome]);
 
   // Sync home sections with server data
   useEffect(() => {
@@ -185,7 +209,7 @@ export function SettingsPage() {
                     </button>
                   )}
 
-                  {isSuccessHome && !hasHomeChanges && (
+                  {showSuccess && !hasHomeChanges && (
                     <div className={styles.settingsPage__success}>
                       <Check size={18} />
                       Configuración guardada
