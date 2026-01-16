@@ -43,6 +43,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
   const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
+  const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
   const setNormalizationEnabledStore = usePlayerSettingsStore((s) => s.setNormalizationEnabled);
   const setNormalizationTargetLufsStore = usePlayerSettingsStore((s) => s.setNormalizationTargetLufs);
   const setNormalizationPreventClippingStore = usePlayerSettingsStore((s) => s.setNormalizationPreventClipping);
@@ -112,6 +113,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     isRadioMode: radio.isRadioMode,
     repeatMode: queue.repeatMode,
     hasNextTrack: queue.repeatMode === 'all' || queue.currentIndex < queue.queue.length - 1,
+    currentTrackOutroStart: currentTrack?.outroStart, // Smart crossfade: use detected outro start
     onCrossfadeTrigger: () => {
       // End current play session before crossfade
       playTracking.endPlaySession(false);
@@ -599,6 +601,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setCrossfadeDurationStore(dur);
   }, [setCrossfadeDurationStore]);
 
+  const setCrossfadeSmartMode = useCallback((enabled: boolean) => {
+    setCrossfadeSmartModeStore(enabled);
+  }, [setCrossfadeSmartModeStore]);
+
   // ========== NORMALIZATION SETTINGS ==========
 
   const setNormalizationEnabled = useCallback((enabled: boolean) => {
@@ -686,6 +692,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       // Crossfade controls
       setCrossfadeEnabled,
       setCrossfadeDuration,
+      setCrossfadeSmartMode,
 
       // Normalization controls
       setNormalizationEnabled,
@@ -730,6 +737,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       setVolume,
       setCrossfadeEnabled,
       setCrossfadeDuration,
+      setCrossfadeSmartMode,
       setNormalizationEnabled,
       setNormalizationTargetLufs,
       setNormalizationPreventClipping,

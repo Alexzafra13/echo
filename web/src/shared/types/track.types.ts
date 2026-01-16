@@ -57,6 +57,9 @@ export interface Track {
   rgAlbumGain?: number; // Gain to normalize album (in dB)
   rgAlbumPeak?: number; // Album peak (0-1)
 
+  // Smart crossfade
+  outroStart?: number; // Seconds where outro/silence begins (for smart crossfade)
+
   // Missing file status (ghost track)
   isMissing?: boolean; // True if the file is missing from disk
 
