@@ -55,7 +55,7 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
   /**
    * Play a radio station
    */
-  const playRadio = useCallback((station: RadioStation | RadioBrowserStation) => {
+  const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
     // Use url_resolved if available (better quality), fallback to url
     const streamUrl = 'urlResolved' in station
       ? station.urlResolved
@@ -69,7 +69,9 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
     }
 
     // Stop any playing audio and reset to audio A for radio
-    audioElements.stopBoth();
+    // IMPORTANT: Must await stopBoth() as it's async with fade-out
+    // Not awaiting causes race condition where src is cleared after new stream loads
+    await audioElements.stopBoth();
     audioElements.resetToAudioA();
 
     const audio = audioElements.getActiveAudio();
@@ -102,7 +104,15 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
         'name' in station ? station.name : 'Unknown',
         'URL:', finalStreamUrl
       );
-      setState(prev => ({ ...prev, signalStatus: 'error' }));
+      // Clear the broken source to prevent blocking future playback
+      audio.src = '';
+      // Exit radio mode completely on load failure
+      setState({
+        currentStation: null,
+        isRadioMode: false,
+        signalStatus: 'error',
+        metadata: null,
+      });
       audio.onerror = null;
     };
 
@@ -141,9 +151,12 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
 
   /**
    * Stop radio playback
+   * Note: This is async because stopBoth() needs to fade out audio first
    */
-  const stopRadio = useCallback(() => {
-    audioElements.stopBoth();
+  const stopRadio = useCallback(async () => {
+    // Wait for stopBoth to complete (includes fade-out) before returning
+    // This prevents race conditions where new audio is loaded before old is cleared
+    await audioElements.stopBoth();
     audioElements.resetToAudioA();
 
     setState({

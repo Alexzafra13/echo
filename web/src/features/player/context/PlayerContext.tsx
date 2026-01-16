@@ -219,9 +219,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return;
     }
 
-    // Exit radio mode if active
+    // Exit radio mode if active (must await to prevent race condition)
     if (radio.isRadioMode) {
-      radio.stopRadio();
+      await radio.stopRadio();
     }
 
     // Apply audio normalization for the new track (adjusts volume directly)
@@ -552,20 +552,20 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Play a radio station
    */
-  const playRadio = useCallback((station: RadioStation | RadioBrowserStation) => {
+  const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
     // Clear track state
     setCurrentTrack(null);
     queue.clearQueue();
     crossfade.clearCrossfade();
 
-    radio.playRadio(station);
+    await radio.playRadio(station);
   }, [radio, queue, crossfade]);
 
   /**
    * Stop radio
    */
-  const stopRadio = useCallback(() => {
-    radio.stopRadio();
+  const stopRadio = useCallback(async () => {
+    await radio.stopRadio();
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
