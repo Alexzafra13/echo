@@ -56,97 +56,118 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
    * Play a radio station
    */
   const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
-    // Use url_resolved if available (better quality), fallback to url
-    const streamUrl = 'urlResolved' in station
-      ? station.urlResolved
-      : 'url_resolved' in station
-        ? station.url_resolved
-        : station.url;
+    try {
+      // Use url_resolved if available (better quality), fallback to url
+      const streamUrl = 'urlResolved' in station
+        ? station.urlResolved
+        : 'url_resolved' in station
+          ? station.url_resolved
+          : station.url;
 
-    if (!streamUrl) {
-      logger.error('[Radio] Station has no valid stream URL');
-      return false;
-    }
+      if (!streamUrl) {
+        logger.error('[Radio] Station has no valid stream URL');
+        return false;
+      }
 
-    // Stop any playing audio and reset to audio A for radio
-    // IMPORTANT: Must await stopBoth() as it's async with fade-out
-    // Not awaiting causes race condition where src is cleared after new stream loads
-    await audioElements.stopBoth();
-    audioElements.resetToAudioA();
+      // Stop any playing audio and reset to audio A for radio
+      // IMPORTANT: Must await stopBoth() as it's async with fade-out
+      // Not awaiting causes race condition where src is cleared after new stream loads
+      await audioElements.stopBoth();
+      audioElements.resetToAudioA();
 
-    const audio = audioElements.getActiveAudio();
-    if (!audio) {
-      logger.error('[Radio] No active audio element');
-      return false;
-    }
+      const audio = audioElements.getActiveAudio();
+      if (!audio) {
+        logger.error('[Radio] No active audio element');
+        return false;
+      }
 
-    // Clear previous event listeners to avoid duplicates
-    audio.oncanplay = null;
-    audio.onerror = null;
-
-    // Use proxy for HTTP streams when on HTTPS (Mixed Content fix)
-    const finalStreamUrl = getProxiedStreamUrl(streamUrl);
-    audio.src = finalStreamUrl;
-    audio.load();
-
-    // Wait for audio to be ready before playing
-    audio.oncanplay = () => {
-      audio.play().catch((error) => {
-        logger.error('[Radio] Failed to play:', error.message);
-        setState(prev => ({ ...prev, signalStatus: 'error' }));
-      });
+      // Clear previous event listeners to avoid duplicates
       audio.oncanplay = null;
-    };
+      audio.onerror = null;
 
-    // Error handler for radio loading issues
-    audio.onerror = () => {
-      logger.error('[Radio] Failed to load station:',
-        'name' in station ? station.name : 'Unknown',
-        'URL:', finalStreamUrl
-      );
-      // Clear the broken source to prevent blocking future playback
-      audio.src = '';
-      // Exit radio mode completely on load failure
+      // Use proxy for HTTP streams when on HTTPS (Mixed Content fix)
+      const finalStreamUrl = getProxiedStreamUrl(streamUrl);
+
+      logger.debug('[Radio] Loading stream:', finalStreamUrl);
+      audio.src = finalStreamUrl;
+      audio.load();
+
+      // Wait for audio to be ready before playing
+      audio.oncanplay = () => {
+        audio.play().catch((error) => {
+          logger.error('[Radio] Failed to play:', error.message);
+          // Clear state on play failure
+          audio.src = '';
+          setState({
+            currentStation: null,
+            isRadioMode: false,
+            signalStatus: 'error',
+            metadata: null,
+          });
+        });
+        audio.oncanplay = null;
+      };
+
+      // Error handler for radio loading issues
+      audio.onerror = () => {
+        logger.error('[Radio] Failed to load station:',
+          'name' in station ? station.name : 'Unknown',
+          'URL:', finalStreamUrl
+        );
+        // Clear the broken source to prevent blocking future playback
+        audio.src = '';
+        // Exit radio mode completely on load failure
+        setState({
+          currentStation: null,
+          isRadioMode: false,
+          signalStatus: 'error',
+          metadata: null,
+        });
+        audio.onerror = null;
+      };
+
+      // Normalize station to RadioStation type
+      const normalizedStation: RadioStation = 'stationuuid' in station
+        ? {
+            stationUuid: station.stationuuid,
+            name: station.name,
+            url: station.url,
+            urlResolved: station.url_resolved,
+            homepage: station.homepage,
+            favicon: station.favicon,
+            country: station.country,
+            countryCode: station.countrycode,
+            state: station.state,
+            language: station.language,
+            tags: station.tags,
+            codec: station.codec,
+            bitrate: station.bitrate,
+            votes: station.votes,
+            clickCount: station.clickcount,
+            lastCheckOk: station.lastcheckok === 1,
+          }
+        : station;
+
+      setState({
+        currentStation: normalizedStation,
+        isRadioMode: true,
+        signalStatus: 'good',
+        metadata: null,
+      });
+
+      logger.debug('[Radio] Playing station:', normalizedStation.name);
+      return true;
+    } catch (error) {
+      logger.error('[Radio] Unexpected error playing station:', (error as Error).message);
+      // Reset state on any unexpected error
       setState({
         currentStation: null,
         isRadioMode: false,
         signalStatus: 'error',
         metadata: null,
       });
-      audio.onerror = null;
-    };
-
-    // Normalize station to RadioStation type
-    const normalizedStation: RadioStation = 'stationuuid' in station
-      ? {
-          stationUuid: station.stationuuid,
-          name: station.name,
-          url: station.url,
-          urlResolved: station.url_resolved,
-          homepage: station.homepage,
-          favicon: station.favicon,
-          country: station.country,
-          countryCode: station.countrycode,
-          state: station.state,
-          language: station.language,
-          tags: station.tags,
-          codec: station.codec,
-          bitrate: station.bitrate,
-          votes: station.votes,
-          clickCount: station.clickcount,
-          lastCheckOk: station.lastcheckok === 1,
-        }
-      : station;
-
-    setState({
-      currentStation: normalizedStation,
-      isRadioMode: true,
-      signalStatus: 'good',
-      metadata: null,
-    });
-
-    logger.debug('[Radio] Playing station:', normalizedStation.name);
-    return true;
+      return false;
+    }
   }, [audioElements]);
 
   /**
@@ -154,11 +175,16 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
    * Note: This is async because stopBoth() needs to fade out audio first
    */
   const stopRadio = useCallback(async () => {
-    // Wait for stopBoth to complete (includes fade-out) before returning
-    // This prevents race conditions where new audio is loaded before old is cleared
-    await audioElements.stopBoth();
-    audioElements.resetToAudioA();
+    try {
+      // Wait for stopBoth to complete (includes fade-out) before returning
+      // This prevents race conditions where new audio is loaded before old is cleared
+      await audioElements.stopBoth();
+      audioElements.resetToAudioA();
+    } catch (error) {
+      logger.error('[Radio] Error during stop:', (error as Error).message);
+    }
 
+    // Always clear state even if stopBoth fails
     setState({
       currentStation: null,
       isRadioMode: false,
