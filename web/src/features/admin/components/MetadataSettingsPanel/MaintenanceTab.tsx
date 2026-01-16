@@ -453,6 +453,7 @@ export function MaintenanceTab() {
             type={notification.type}
             message={notification.message}
             onDismiss={() => setNotification(null)}
+            autoHideMs={3000}
           />
         )}
       </div>
