@@ -274,20 +274,22 @@ export class LufsAnalysisQueueService implements OnModuleInit {
       const result = await this.lufsAnalyzer.analyzeFile(job.filePath);
 
       if (result) {
-        // Success: save track LUFS data + mark as analyzed
+        // Success: save track LUFS data + outroStart for smart crossfade + mark as analyzed
         // Note: Album gain/peak will be calculated later in calculateAlbumGains()
         await this.drizzle.db
           .update(tracks)
           .set({
             rgTrackGain: result.trackGain,
             rgTrackPeak: result.trackPeak,
+            outroStart: result.outroStart ?? null,
             lufsAnalyzedAt: now,
             updatedAt: now,
           })
           .where(eq(tracks.id, job.trackId));
 
+        const outroInfo = result.outroStart ? `, outro=${result.outroStart.toFixed(1)}s` : '';
         this.logger.debug(
-          `✅ ${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}`
+          `✅ ${job.trackTitle}: gain=${result.trackGain.toFixed(2)}dB, peak=${result.trackPeak.toFixed(3)}${outroInfo}`
         );
       } else {
         // Analysis returned no data: mark as analyzed but leave values null

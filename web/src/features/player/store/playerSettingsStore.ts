@@ -40,6 +40,7 @@ interface PlayerSettingsState {
   // Crossfade actions
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
+  setCrossfadeSmartMode: (enabled: boolean) => void;
 
   // Normalization actions
   setNormalizationEnabled: (enabled: boolean) => void;
@@ -54,6 +55,7 @@ interface PlayerSettingsState {
 const DEFAULT_CROSSFADE: CrossfadeSettings = {
   enabled: false,
   duration: 5,
+  smartMode: true, // Use track's outroStart when available for intelligent timing
 };
 
 const DEFAULT_NORMALIZATION: NormalizationSettings = {
@@ -92,6 +94,11 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             // Clamp duration between 1 and 12 seconds
             duration: Math.max(1, Math.min(12, duration)),
           },
+        })),
+
+      setCrossfadeSmartMode: (smartMode) =>
+        set((state) => ({
+          crossfade: { ...state.crossfade, smartMode },
         })),
 
       // Normalization actions

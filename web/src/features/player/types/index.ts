@@ -9,6 +9,7 @@ export type { RadioStation, RadioMetadata };
 export interface CrossfadeSettings {
   enabled: boolean;
   duration: number; // Duration in seconds (1-12)
+  smartMode: boolean; // Use track's outroStart for intelligent crossfade timing
 }
 
 export interface NormalizationSettings {
@@ -81,6 +82,7 @@ export interface PlayerContextValue extends PlayerState {
   // Crossfade controls
   setCrossfadeEnabled: (enabled: boolean) => void;
   setCrossfadeDuration: (duration: number) => void;
+  setCrossfadeSmartMode: (enabled: boolean) => void;
 
   // Normalization controls
   setNormalizationEnabled: (enabled: boolean) => void;
