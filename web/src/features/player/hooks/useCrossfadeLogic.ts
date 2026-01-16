@@ -21,6 +21,9 @@ interface UseCrossfadeLogicParams {
   onCrossfadeStart?: () => void;
   onCrossfadeComplete?: () => void;
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
+  // LUFS normalization support
+  getEffectiveVolume?: (audioId: 'A' | 'B') => number;
+  onCrossfadeSwapGains?: () => void; // Called after audio switch to swap gains
 }
 
 /**
@@ -47,6 +50,8 @@ export function useCrossfadeLogic({
   onCrossfadeStart,
   onCrossfadeComplete,
   onCrossfadeTrigger,
+  getEffectiveVolume,
+  onCrossfadeSwapGains,
 }: UseCrossfadeLogicParams) {
   const [isCrossfading, setIsCrossfading] = useState(false);
   const animationFrameRef = useRef<number | null>(null);
@@ -55,8 +60,12 @@ export function useCrossfadeLogic({
   const crossfadeStartTimeRef = useRef<number | null>(null);
 
   // Store callbacks in ref to avoid stale closures
-  const callbacksRef = useRef({ onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger });
-  callbacksRef.current = { onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger };
+  const callbacksRef = useRef({ onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger, onCrossfadeSwapGains });
+  callbacksRef.current = { onCrossfadeStart, onCrossfadeComplete, onCrossfadeTrigger, onCrossfadeSwapGains };
+
+  // Store getEffectiveVolume in ref to avoid stale closures
+  const getEffectiveVolumeRef = useRef(getEffectiveVolume);
+  getEffectiveVolumeRef.current = getEffectiveVolume;
 
   /**
    * Clear any ongoing crossfade animation
@@ -84,18 +93,31 @@ export function useCrossfadeLogic({
   /**
    * Perform crossfade transition using requestAnimationFrame
    * Uses equal-power curve for smooth audio transitions without crackling
+   * Now supports LUFS normalization by using separate effective volumes for each track
    */
   const performCrossfade = useCallback(async () => {
     const activeAudio = audioElements.getActiveAudio();
     const inactiveAudio = audioElements.getInactiveAudio();
-    const targetVolume = audioElements.volume;
+    const activeId = audioElements.getActiveAudioId();
+    const inactiveId = activeId === 'A' ? 'B' : 'A';
 
     if (!activeAudio || !inactiveAudio) {
       logger.error('[Crossfade] Audio elements not available');
       return false;
     }
 
-    logger.debug('[Crossfade] Starting crossfade transition');
+    // Get effective volumes for each audio (includes their respective LUFS gains)
+    // If getEffectiveVolume is provided, use separate volumes; otherwise fallback to single volume
+    const getVolumeForAudio = getEffectiveVolumeRef.current;
+    const activeTargetVolume = getVolumeForAudio ? getVolumeForAudio(activeId) : audioElements.volume;
+    const inactiveTargetVolume = getVolumeForAudio ? getVolumeForAudio(inactiveId) : audioElements.volume;
+
+    logger.debug('[Crossfade] Starting crossfade transition', {
+      activeId,
+      inactiveId,
+      activeVolume: activeTargetVolume,
+      inactiveVolume: inactiveTargetVolume,
+    });
     setIsCrossfading(true);
     callbacksRef.current.onCrossfadeStart?.();
 
@@ -104,8 +126,6 @@ export function useCrossfadeLogic({
       await audioElements.playInactive();
 
       const fadeDuration = settings.duration * 1000; // Convert to ms
-      const activeId = audioElements.getActiveAudioId();
-      const inactiveId = activeId === 'A' ? 'B' : 'A';
 
       // Use requestAnimationFrame for smoother volume transitions
       // This avoids the timing issues of setInterval that cause crackling
@@ -121,9 +141,10 @@ export function useCrossfadeLogic({
         // Use equal-power curve for perceptually smooth fade
         const { fadeOut, fadeIn } = equalPowerFade(progress);
 
-        // Apply volumes with target volume scaling
-        audioElements.setAudioVolume(activeId, fadeOut * targetVolume);
-        audioElements.setAudioVolume(inactiveId, fadeIn * targetVolume);
+        // Apply volumes with each track's own effective volume (includes LUFS gain)
+        // Active track fades out from its volume, inactive fades in to its volume
+        audioElements.setAudioVolume(activeId, fadeOut * activeTargetVolume);
+        audioElements.setAudioVolume(inactiveId, fadeIn * inactiveTargetVolume);
 
         if (progress < 1) {
           // Continue animation
@@ -134,13 +155,15 @@ export function useCrossfadeLogic({
 
           // Ensure final volumes are set correctly
           audioElements.setAudioVolume(activeId, 0);
-          audioElements.setAudioVolume(inactiveId, targetVolume);
+          audioElements.setAudioVolume(inactiveId, inactiveTargetVolume);
 
           // Stop the old audio (with a micro-delay to avoid audio glitch)
           setTimeout(() => {
             audioElements.stopActive();
             // Switch active audio
             audioElements.switchActiveAudio();
+            // Swap the normalization gains to match the new active audio
+            callbacksRef.current.onCrossfadeSwapGains?.();
             logger.debug('[Crossfade] Crossfade complete, switched to:', audioElements.getActiveAudioId());
             callbacksRef.current.onCrossfadeComplete?.();
           }, 10);

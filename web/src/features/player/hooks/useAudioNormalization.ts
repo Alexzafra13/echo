@@ -21,9 +21,16 @@ interface GainCalculation {
  *
  * Arquitectura:
  * HTMLAudioElement.volume = userVolume * normalizationGain
+ *
+ * Crossfade support:
+ * - Separate gains for audioA and audioB to handle crossfade transitions
+ * - During crossfade, each audio maintains its own track's gain
  */
 export function useAudioNormalization(settings: NormalizationSettings) {
-  // Store current normalization gain (linear scale)
+  // Store separate gains for each audio element (for crossfade support)
+  const gainARef = useRef<number>(1);
+  const gainBRef = useRef<number>(1);
+  // Legacy: keep currentGainRef for backwards compatibility
   const currentGainRef = useRef<number>(1);
 
   // Store reference to audio elements for volume adjustment
@@ -53,19 +60,41 @@ export function useAudioNormalization(settings: NormalizationSettings) {
    */
   const setUserVolume = useCallback((volume: number) => {
     audioElementsRef.current.userVolume = volume;
-    // Re-apply the effective volume
+    // Re-apply the effective volume to both elements with their respective gains
     applyEffectiveVolume();
   }, []);
 
   /**
    * Apply effective volume (userVolume * normalizationGain) to audio elements
+   * Each audio element uses its own gain to support crossfade between tracks with different loudness
    */
   const applyEffectiveVolume = useCallback(() => {
     const { audioA, audioB, userVolume } = audioElementsRef.current;
-    const effectiveVolume = Math.min(1, userVolume * currentGainRef.current);
 
-    if (audioA) audioA.volume = effectiveVolume;
-    if (audioB) audioB.volume = effectiveVolume;
+    if (audioA) {
+      const effectiveVolumeA = Math.min(1, userVolume * gainARef.current);
+      audioA.volume = effectiveVolumeA;
+    }
+    if (audioB) {
+      const effectiveVolumeB = Math.min(1, userVolume * gainBRef.current);
+      audioB.volume = effectiveVolumeB;
+    }
+  }, []);
+
+  /**
+   * Get effective volume for a specific audio element (for crossfade calculations)
+   */
+  const getEffectiveVolume = useCallback((audioId: 'A' | 'B'): number => {
+    const { userVolume } = audioElementsRef.current;
+    const gain = audioId === 'A' ? gainARef.current : gainBRef.current;
+    return Math.min(1, userVolume * gain);
+  }, []);
+
+  /**
+   * Get gain for a specific audio element
+   */
+  const getGainForAudio = useCallback((audioId: 'A' | 'B'): number => {
+    return audioId === 'A' ? gainARef.current : gainBRef.current;
   }, []);
 
   /**
@@ -135,16 +164,56 @@ export function useAudioNormalization(settings: NormalizationSettings) {
 
   /**
    * Aplica la ganancia calculada ajustando el volumen del elemento de audio
+   * When called without audioId, applies to both elements (for non-crossfade scenarios)
    */
-  const applyGain = useCallback((track: Track | null) => {
+  const applyGain = useCallback((track: Track | null, audioId?: 'A' | 'B') => {
     const { gainLinear } = calculateGain(track);
 
-    // Store the current gain
-    currentGainRef.current = gainLinear;
+    if (audioId === 'A') {
+      gainARef.current = gainLinear;
+    } else if (audioId === 'B') {
+      gainBRef.current = gainLinear;
+    } else {
+      // Apply to both (legacy behavior for non-crossfade playback)
+      gainARef.current = gainLinear;
+      gainBRef.current = gainLinear;
+      currentGainRef.current = gainLinear;
+    }
 
     // Apply effective volume to audio elements
     applyEffectiveVolume();
   }, [calculateGain, applyEffectiveVolume]);
+
+  /**
+   * Apply gain only to a specific audio element (for crossfade)
+   * Does not affect the other audio element's gain
+   */
+  const applyGainToAudio = useCallback((track: Track | null, audioId: 'A' | 'B') => {
+    const { gainLinear } = calculateGain(track);
+    const { audioA, audioB, userVolume } = audioElementsRef.current;
+
+    if (audioId === 'A') {
+      gainARef.current = gainLinear;
+      if (audioA) {
+        audioA.volume = Math.min(1, userVolume * gainLinear);
+      }
+    } else {
+      gainBRef.current = gainLinear;
+      if (audioB) {
+        audioB.volume = Math.min(1, userVolume * gainLinear);
+      }
+    }
+  }, [calculateGain]);
+
+  /**
+   * Swap gains between audio elements (call after crossfade completes and audio is switched)
+   */
+  const swapGains = useCallback(() => {
+    const tempGain = gainARef.current;
+    gainARef.current = gainBRef.current;
+    gainBRef.current = tempGain;
+    currentGainRef.current = gainARef.current;
+  }, []);
 
   /**
    * Get current normalization gain (for external use if needed)
@@ -174,6 +243,12 @@ export function useAudioNormalization(settings: NormalizationSettings) {
     applyGain,
     calculateGain,
     getCurrentGain,
+
+    // Crossfade-aware API
+    applyGainToAudio,
+    getEffectiveVolume,
+    getGainForAudio,
+    swapGains,
 
     // Legacy API (for compatibility, now no-ops)
     connectAudioElement,
