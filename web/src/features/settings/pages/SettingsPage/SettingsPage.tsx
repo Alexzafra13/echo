@@ -33,6 +33,7 @@ export function SettingsPage() {
     crossfade,
     setCrossfadeEnabled,
     setCrossfadeDuration,
+    setCrossfadeSmartMode,
     normalization,
     setNormalizationEnabled,
     setNormalizationTargetLufs,
@@ -415,26 +416,47 @@ export function SettingsPage() {
 
                   {/* Crossfade Duration */}
                   {crossfade.enabled && (
-                    <div className={styles.settingsPage__toggleItem}>
-                      <div className={styles.settingsPage__toggleInfo}>
-                        <span className={styles.settingsPage__toggleLabel}>Duración del fundido</span>
-                        <p className={styles.settingsPage__toggleDescription}>
-                          Tiempo en segundos para la transición entre canciones
-                        </p>
+                    <>
+                      <div className={styles.settingsPage__toggleItem}>
+                        <div className={styles.settingsPage__toggleInfo}>
+                          <span className={styles.settingsPage__toggleLabel}>Duración del fundido</span>
+                          <p className={styles.settingsPage__toggleDescription}>
+                            Tiempo en segundos para la transición entre canciones
+                          </p>
+                        </div>
+                        <div className={styles.settingsPage__sliderContainer}>
+                          <input
+                            type="range"
+                            className={styles.settingsPage__slider}
+                            min="1"
+                            max="12"
+                            step="1"
+                            value={crossfade.duration}
+                            onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
+                          />
+                          <span className={styles.settingsPage__sliderValue}>{crossfade.duration}s</span>
+                        </div>
                       </div>
-                      <div className={styles.settingsPage__sliderContainer}>
-                        <input
-                          type="range"
-                          className={styles.settingsPage__slider}
-                          min="1"
-                          max="12"
-                          step="1"
-                          value={crossfade.duration}
-                          onChange={(e) => setCrossfadeDuration(Number(e.target.value))}
-                        />
-                        <span className={styles.settingsPage__sliderValue}>{crossfade.duration}s</span>
+
+                      {/* Smart Crossfade Toggle */}
+                      <div className={styles.settingsPage__toggleItem}>
+                        <div className={styles.settingsPage__toggleInfo}>
+                          <span className={styles.settingsPage__toggleLabel}>Fundido inteligente</span>
+                          <p className={styles.settingsPage__toggleDescription}>
+                            Detecta automáticamente el final natural de las canciones para iniciar la transición
+                          </p>
+                        </div>
+                        <label className={styles.settingsPage__toggle}>
+                          <input
+                            type="checkbox"
+                            className={styles.settingsPage__toggleInput}
+                            checked={crossfade.smartMode}
+                            onChange={(e) => setCrossfadeSmartMode(e.target.checked)}
+                          />
+                          <span className={styles.settingsPage__toggleSlider}></span>
+                        </label>
                       </div>
-                    </div>
+                    </>
                   )}
 
                   {/* Autoplay Toggle */}
