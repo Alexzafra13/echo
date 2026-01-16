@@ -163,33 +163,26 @@ export function PlaylistDetailPage() {
   };
 
   // Get background image for artist playlists
+  // Priority: background > banner > avatar (coverImageUrl)
   const getBackgroundUrl = (): string | null => {
     if (playlist?.type !== 'artist' || !artistId) return null;
 
     const hasBackground = artistImages?.images.background?.exists;
     const hasBanner = artistImages?.images.banner?.exists;
 
-    if (!hasBackground && !hasBanner) {
-      // Fallback to coverImageUrl if no artist background
-      return playlist.coverImageUrl || null;
+    // Priority: always prefer background over banner
+    if (hasBackground) {
+      const tag = artistImages?.images.background?.tag;
+      return getArtistImageUrl(artistId, 'background', tag);
     }
 
-    // Use the most recently updated image
-    const bgModified = artistImages?.images.background?.lastModified;
-    const bannerModified = artistImages?.images.banner?.lastModified;
-
-    let imageType: 'background' | 'banner' = 'background';
-    if (!hasBackground) {
-      imageType = 'banner';
-    } else if (hasBanner && bannerModified && bgModified) {
-      imageType = new Date(bgModified) >= new Date(bannerModified) ? 'background' : 'banner';
+    if (hasBanner) {
+      const tag = artistImages?.images.banner?.tag;
+      return getArtistImageUrl(artistId, 'banner', tag);
     }
 
-    const tag = imageType === 'background'
-      ? artistImages?.images.background?.tag
-      : artistImages?.images.banner?.tag;
-
-    return getArtistImageUrl(artistId, imageType, tag);
+    // Fallback to avatar/coverImageUrl
+    return playlist.coverImageUrl || null;
   };
 
   if (!playlist) {
@@ -226,6 +219,7 @@ export function PlaylistDetailPage() {
             )}
 
             <div className={styles.playlistDetailPage__heroContent}>
+              {/* Hide PlaylistCover on mobile for artist playlists - show only background */}
               <PlaylistCover
                 type={playlist.type}
                 name={playlist.name}
@@ -233,7 +227,7 @@ export function PlaylistDetailPage() {
                 coverImageUrl={playlist.coverImageUrl}
                 artistName={playlist.metadata.artistName}
                 size="large"
-                className={styles.playlistCover}
+                className={`${styles.playlistCover} ${isArtistPlaylist ? styles['playlistCover--artist'] : ''}`}
               />
               <div className={styles.playlistDetailPage__info}>
                 <p className={styles.playlistType}>
