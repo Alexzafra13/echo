@@ -288,7 +288,7 @@ describe('Playlists E2E', () => {
       await request(app.getHttpServer())
         .delete(`/api/playlists/${playlistId}`)
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(200);
+        .expect(204);
 
       // Verificar que ya no existe
       return request(app.getHttpServer())
@@ -418,7 +418,7 @@ describe('Playlists E2E', () => {
       await request(app.getHttpServer())
         .delete(`/api/playlists/${playlistId}`)
         .set('Authorization', `Bearer ${userToken}`)
-        .expect(200);
+        .expect(204);
     });
   });
 });
