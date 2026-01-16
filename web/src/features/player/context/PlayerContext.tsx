@@ -219,7 +219,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return;
     }
 
-    // Exit radio mode if active (await to prevent race condition)
+    // Exit radio mode if active (must await to prevent race condition)
     if (radio.isRadioMode) {
       await radio.stopRadio();
     }
@@ -552,13 +552,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Play a radio station
    */
-  const playRadio = useCallback((station: RadioStation | RadioBrowserStation) => {
+  const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
     // Clear track state
     setCurrentTrack(null);
     queue.clearQueue();
     crossfade.clearCrossfade();
 
-    radio.playRadio(station);
+    await radio.playRadio(station);
   }, [radio, queue, crossfade]);
 
   /**
