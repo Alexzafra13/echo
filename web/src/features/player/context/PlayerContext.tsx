@@ -219,9 +219,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return;
     }
 
-    // Exit radio mode if active (await to prevent race condition)
+    // Exit radio mode if active
     if (radio.isRadioMode) {
-      await radio.stopRadio();
+      radio.stopRadio();
     }
 
     // Apply audio normalization for the new track (adjusts volume directly)
@@ -564,8 +564,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   /**
    * Stop radio
    */
-  const stopRadio = useCallback(async () => {
-    await radio.stopRadio();
+  const stopRadio = useCallback(() => {
+    radio.stopRadio();
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
