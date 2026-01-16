@@ -9,63 +9,6 @@ import {
   RadioCountry,
 } from '../../domain/ports';
 
-// Keywords that indicate a TV station (not audio radio)
-const TV_NAME_KEYWORDS = [
-  'tv', 'television', 'televisión', 'televisio', 'télévision',
-  'fernsehen', 'televisione', 'telewizja', 'televize',
-];
-
-const TV_TAG_KEYWORDS = [
-  'tv', 'television', 'video', 'iptv', 'webtv',
-];
-
-const VIDEO_CODECS = [
-  'h264', 'h.264', 'h265', 'h.265', 'hevc', 'vp8', 'vp9', 'av1',
-  'mpeg4', 'mpeg-4', 'xvid', 'divx',
-];
-
-/**
- * Check if a station is likely a TV channel (video) rather than audio radio
- */
-function isTvStation(station: RadioBrowserStation): boolean {
-  const nameLower = station.name.toLowerCase();
-  const tagsLower = station.tags?.toLowerCase() || '';
-  const codecLower = station.codec?.toLowerCase() || '';
-
-  // Check if name contains TV keywords as whole words
-  for (const keyword of TV_NAME_KEYWORDS) {
-    // Match as whole word (e.g., "TV" but not "native")
-    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-    if (regex.test(nameLower)) {
-      return true;
-    }
-  }
-
-  // Check if tags contain TV keywords
-  for (const keyword of TV_TAG_KEYWORDS) {
-    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-    if (regex.test(tagsLower)) {
-      return true;
-    }
-  }
-
-  // Check if codec is a video codec
-  for (const codec of VIDEO_CODECS) {
-    if (codecLower.includes(codec)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Filter out TV stations from results, keeping only audio radio stations
- */
-function filterTvStations(stations: RadioBrowserStation[]): RadioBrowserStation[] {
-  return stations.filter(station => !isTvStation(station));
-}
-
 /**
  * Implementación del cliente de Radio Browser API
  * Usa fetch nativo de Node.js para las llamadas HTTP
@@ -120,12 +63,9 @@ export class RadioBrowserApiService implements IRadioBrowserApiClient {
       }
 
       const stations: RadioBrowserStation[] = await response.json();
+      this.logger.debug(`Found ${stations.length} stations`);
 
-      // Filter out TV stations (video streams) to keep only audio radio
-      const audioStations = filterTvStations(stations);
-      this.logger.debug(`Found ${stations.length} stations, ${audioStations.length} after filtering TV`);
-
-      return audioStations;
+      return stations;
     } catch (error) {
       this.logger.error('Error searching stations:', error);
       throw error;
