@@ -156,6 +156,7 @@ export function LogsPanel() {
           type="error"
           message={error}
           onDismiss={() => setError(null)}
+          autoHideMs={5000}
         />
       )}
 

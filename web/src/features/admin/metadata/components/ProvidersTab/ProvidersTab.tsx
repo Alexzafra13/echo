@@ -227,6 +227,7 @@ export function ProvidersTab() {
           type={notification.type}
           message={notification.message}
           onDismiss={() => setNotification(null)}
+          autoHideMs={3000}
         />
       )}
 

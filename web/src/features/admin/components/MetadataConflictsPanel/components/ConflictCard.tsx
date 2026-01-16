@@ -411,6 +411,7 @@ export function ConflictCard({ conflict }: ConflictCardProps) {
           type="error"
           message={error}
           onDismiss={() => setError(null)}
+          autoHideMs={5000}
         />
       )}
 

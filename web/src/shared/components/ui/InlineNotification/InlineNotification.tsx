@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 import styles from './InlineNotification.module.css';
 
@@ -8,6 +9,8 @@ interface InlineNotificationProps {
   message: string;
   onDismiss?: () => void;
   className?: string;
+  /** Auto-hide after this many milliseconds (e.g., 3000 for 3 seconds) */
+  autoHideMs?: number;
 }
 
 const iconMap = {
@@ -27,8 +30,19 @@ export function InlineNotification({
   message,
   onDismiss,
   className = '',
+  autoHideMs,
 }: InlineNotificationProps) {
   const Icon = iconMap[type];
+
+  // Auto-hide after specified time
+  useEffect(() => {
+    if (autoHideMs && onDismiss) {
+      const timer = setTimeout(() => {
+        onDismiss();
+      }, autoHideMs);
+      return () => clearTimeout(timer);
+    }
+  }, [autoHideMs, onDismiss]);
 
   return (
     <div className={`${styles.notification} ${styles[type]} ${className}`}>
