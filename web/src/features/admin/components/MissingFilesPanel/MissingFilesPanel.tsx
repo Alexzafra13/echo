@@ -191,6 +191,7 @@ export function MissingFilesPanel() {
           type={notification.type}
           message={notification.message}
           onDismiss={() => setNotification(null)}
+          autoHideMs={3000}
         />
       )}
 
