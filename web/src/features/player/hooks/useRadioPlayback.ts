@@ -3,13 +3,11 @@
  *
  * Handles radio station playback including:
  * - Stream URL handling (with HTTPS proxy for mixed content)
- * - HLS stream support via HLS.js (for .m3u8 streams in Chrome/Firefox)
  * - Signal status monitoring
  * - Metadata integration
  */
 
-import { useState, useCallback, useRef } from 'react';
-import Hls from 'hls.js';
+import { useState, useCallback } from 'react';
 import { logger } from '@shared/utils/logger';
 import { getProxiedStreamUrl } from '../utils/streamProxy';
 import type { AudioElements } from './useAudioElements';
@@ -28,21 +26,6 @@ interface UseRadioPlaybackParams {
   audioElements: AudioElements;
 }
 
-/**
- * Helper to detect if a URL is an HLS stream
- */
-function isHlsStream(url: string): boolean {
-  return url.includes('.m3u8') || url.includes('m3u8');
-}
-
-/**
- * Helper to check if browser supports native HLS playback (Safari/iOS)
- */
-function supportsNativeHls(): boolean {
-  const audio = document.createElement('audio');
-  return audio.canPlayType('application/vnd.apple.mpegurl') !== '';
-}
-
 export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
   const [state, setState] = useState<RadioState>({
     currentStation: null,
@@ -50,20 +33,6 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
     signalStatus: null,
     metadata: null,
   });
-
-  // HLS.js instance for handling .m3u8 streams
-  const hlsRef = useRef<Hls | null>(null);
-
-  /**
-   * Cleanup HLS instance
-   */
-  const cleanupHls = useCallback(() => {
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-      logger.debug('[Radio] HLS instance destroyed');
-    }
-  }, []);
 
   /**
    * Update radio metadata
@@ -86,7 +55,7 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
   /**
    * Play a radio station
    */
-  const playRadio = useCallback((station: RadioStation | RadioBrowserStation) => {
+  const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
     // Use url_resolved if available (better quality), fallback to url
     const streamUrl = 'urlResolved' in station
       ? station.urlResolved
@@ -99,11 +68,10 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
       return false;
     }
 
-    // Cleanup any existing HLS instance
-    cleanupHls();
-
     // Stop any playing audio and reset to audio A for radio
-    audioElements.stopBoth();
+    // IMPORTANT: Must await stopBoth() as it's async with fade-out
+    // Not awaiting causes race condition where src is cleared after new stream loads
+    await audioElements.stopBoth();
     audioElements.resetToAudioA();
 
     const audio = audioElements.getActiveAudio();
@@ -118,99 +86,35 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
 
     // Use proxy for HTTP streams when on HTTPS (Mixed Content fix)
     const finalStreamUrl = getProxiedStreamUrl(streamUrl);
+    audio.src = finalStreamUrl;
+    audio.load();
 
-    // Check if this is an HLS stream and browser needs HLS.js
-    const isHls = isHlsStream(finalStreamUrl);
-    const hasNativeHls = supportsNativeHls();
-    const hlsSupported = Hls.isSupported();
-    const needsHls = isHls && !hasNativeHls;
-
-    // Debug logging to understand HLS detection
-    logger.info('[Radio] HLS detection:', {
-      url: finalStreamUrl,
-      isHls,
-      hasNativeHls,
-      hlsSupported,
-      needsHls,
-      willUseHlsJs: needsHls && hlsSupported
-    });
-
-    if (needsHls && hlsSupported) {
-      // Use HLS.js for .m3u8 streams in Chrome/Firefox
-      logger.debug('[Radio] Using HLS.js for stream:', finalStreamUrl);
-
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        debug: false,
+    // Wait for audio to be ready before playing
+    audio.oncanplay = () => {
+      audio.play().catch((error) => {
+        logger.error('[Radio] Failed to play:', error.message);
+        setState(prev => ({ ...prev, signalStatus: 'error' }));
       });
-      hlsRef.current = hls;
+      audio.oncanplay = null;
+    };
 
-      hls.loadSource(finalStreamUrl);
-      hls.attachMedia(audio);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        audio.play().catch((error) => {
-          logger.error('[Radio] Failed to play HLS:', error.message);
-          setState(prev => ({ ...prev, signalStatus: 'error' }));
-        });
+    // Error handler for radio loading issues
+    audio.onerror = () => {
+      logger.error('[Radio] Failed to load station:',
+        'name' in station ? station.name : 'Unknown',
+        'URL:', finalStreamUrl
+      );
+      // Clear the broken source to prevent blocking future playback
+      audio.src = '';
+      // Exit radio mode completely on load failure
+      setState({
+        currentStation: null,
+        isRadioMode: false,
+        signalStatus: 'error',
+        metadata: null,
       });
-
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) {
-          logger.error('[Radio] HLS fatal error:', data.type, data.details);
-
-          // Try to recover from fatal errors
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            hls.recoverMediaError();
-          } else {
-            // Unrecoverable error - exit radio mode completely
-            cleanupHls();
-            setState({
-              currentStation: null,
-              isRadioMode: false,
-              signalStatus: 'error',
-              metadata: null,
-            });
-          }
-        }
-      });
-    } else {
-      // Use native audio for non-HLS streams or Safari (which supports HLS natively)
-      logger.debug('[Radio] Using native audio for stream:', finalStreamUrl);
-
-      audio.src = finalStreamUrl;
-      audio.load();
-
-      // Wait for audio to be ready before playing
-      audio.oncanplay = () => {
-        audio.play().catch((error) => {
-          logger.error('[Radio] Failed to play:', error.message);
-          setState(prev => ({ ...prev, signalStatus: 'error' }));
-        });
-        audio.oncanplay = null;
-      };
-
-      // Error handler for radio loading issues
-      audio.onerror = () => {
-        logger.error('[Radio] Failed to load station:',
-          'name' in station ? station.name : 'Unknown',
-          'URL:', finalStreamUrl
-        );
-        // Clear the broken source to prevent blocking future playback
-        audio.src = '';
-        // Exit radio mode completely on load failure
-        setState({
-          currentStation: null,
-          isRadioMode: false,
-          signalStatus: 'error',
-          metadata: null,
-        });
-        audio.onerror = null;
-      };
-    }
+      audio.onerror = null;
+    };
 
     // Normalize station to RadioStation type
     const normalizedStation: RadioStation = 'stationuuid' in station
@@ -243,16 +147,13 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
 
     logger.debug('[Radio] Playing station:', normalizedStation.name);
     return true;
-  }, [audioElements, cleanupHls]);
+  }, [audioElements]);
 
   /**
    * Stop radio playback
    * Note: This is async because stopBoth() needs to fade out audio first
    */
   const stopRadio = useCallback(async () => {
-    // Cleanup HLS instance if active
-    cleanupHls();
-
     // Wait for stopBoth to complete (includes fade-out) before returning
     // This prevents race conditions where new audio is loaded before old is cleared
     await audioElements.stopBoth();
@@ -266,7 +167,7 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
     });
 
     logger.debug('[Radio] Stopped playback');
-  }, [audioElements, cleanupHls]);
+  }, [audioElements]);
 
   /**
    * Resume radio playback (if paused)
