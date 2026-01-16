@@ -13,6 +13,7 @@ export interface LufsAnalysisResult {
   inputPeak: number; // True peak del archivo (dBTP)
   trackGain: number; // Ganancia necesaria para llegar al target (dB)
   trackPeak: number; // Peak normalizado (0-1)
+  outroStart?: number; // Seconds where outro/silence begins (for smart crossfade)
 }
 
 /**
@@ -39,15 +40,63 @@ export class LufsAnalyzerService {
 
   /**
    * Analiza un archivo de audio y devuelve los valores de loudness
+   * También detecta el inicio del outro/silencio para crossfade inteligente
    * @param filePath Ruta al archivo de audio
    * @returns Resultado del análisis o null si falla
    */
   async analyzeFile(filePath: string): Promise<LufsAnalysisResult | null> {
     try {
-      // Usar loudnorm en modo de análisis (print_format=json)
-      // -nostdin: evita bloqueo esperando entrada
-      // -hide_banner: menos output
-      // Usamos execFile con array de argumentos para evitar command injection
+      // Run loudness analysis and silence detection in parallel
+      const [lufsResult, outroStart] = await Promise.all([
+        this.analyzeLoudness(filePath),
+        this.detectOutroStart(filePath),
+      ]);
+
+      if (!lufsResult) {
+        this.logger.warn({ filePath }, 'No se pudo parsear el output de FFmpeg');
+        return null;
+      }
+
+      // Calcular ganancia necesaria para llegar al target
+      const trackGain = this.TARGET_LUFS - lufsResult.inputLufs;
+
+      // Convertir true peak de dBTP a ratio (0-1)
+      // dBTP a linear: 10^(dBTP/20)
+      const trackPeak = Math.pow(10, lufsResult.inputPeak / 20);
+
+      this.logger.debug(
+        {
+          filePath,
+          inputLufs: lufsResult.inputLufs,
+          inputPeak: lufsResult.inputPeak,
+          trackGain,
+          trackPeak,
+          outroStart,
+        },
+        'Análisis LUFS completado',
+      );
+
+      return {
+        inputLufs: lufsResult.inputLufs,
+        inputPeak: lufsResult.inputPeak,
+        trackGain,
+        trackPeak, // No clamp: True Peak puede ser > 1.0 (> 0 dBTP) en audio con clipping
+        outroStart,
+      };
+    } catch (error) {
+      this.logger.error(
+        { err: error, filePath },
+        'Error analizando archivo con FFmpeg',
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Analyze loudness using FFmpeg loudnorm filter
+   */
+  private async analyzeLoudness(filePath: string): Promise<{ inputLufs: number; inputPeak: number } | null> {
+    try {
       const { stderr } = await execFileAsync(
         'ffmpeg',
         [
@@ -59,49 +108,88 @@ export class LufsAnalyzerService {
           '-',
         ],
         {
-          timeout: 60000, // 60 segundos máximo
-          maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+          timeout: 60000,
+          maxBuffer: 10 * 1024 * 1024,
+        },
+      );
+      return this.parseFFmpegOutput(stderr);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Detect where the outro/silence starts at the end of the track
+   * Uses FFmpeg silencedetect filter to find the last silence in the track
+   * Returns the timestamp in seconds where meaningful audio ends
+   */
+  private async detectOutroStart(filePath: string): Promise<number | undefined> {
+    try {
+      // Use silencedetect to find silence periods
+      // -50dB threshold: audio below this is considered silence
+      // d=0.5: minimum silence duration of 0.5 seconds
+      const { stderr } = await execFileAsync(
+        'ffmpeg',
+        [
+          '-nostdin',
+          '-hide_banner',
+          '-i', filePath,
+          '-af', 'silencedetect=noise=-50dB:d=0.5',
+          '-f', 'null',
+          '-',
+        ],
+        {
+          timeout: 60000,
+          maxBuffer: 10 * 1024 * 1024,
         },
       );
 
-      // FFmpeg escribe el resultado en stderr
-      const result = this.parseFFmpegOutput(stderr);
+      // Parse silence detection output
+      // Format: [silencedetect @ xxx] silence_start: 234.567
+      const silenceMatches = stderr.matchAll(/silence_start:\s*([\d.]+)/g);
+      const silenceStarts: number[] = [];
 
-      if (!result) {
-        this.logger.warn({ filePath }, 'No se pudo parsear el output de FFmpeg');
-        return null;
+      for (const match of silenceMatches) {
+        silenceStarts.push(parseFloat(match[1]));
       }
 
-      // Calcular ganancia necesaria para llegar al target
-      const trackGain = this.TARGET_LUFS - result.inputLufs;
+      if (silenceStarts.length === 0) {
+        // No silence detected - track plays to the very end
+        return undefined;
+      }
 
-      // Convertir true peak de dBTP a ratio (0-1)
-      // dBTP a linear: 10^(dBTP/20)
-      const trackPeak = Math.pow(10, result.inputPeak / 20);
+      // Get track duration from FFmpeg output
+      const durationMatch = stderr.match(/Duration:\s*(\d+):(\d+):(\d+)\.(\d+)/);
+      if (!durationMatch) {
+        return undefined;
+      }
 
-      this.logger.debug(
-        {
-          filePath,
-          inputLufs: result.inputLufs,
-          inputPeak: result.inputPeak,
-          trackGain,
-          trackPeak,
-        },
-        'Análisis LUFS completado',
-      );
+      const hours = parseInt(durationMatch[1], 10);
+      const minutes = parseInt(durationMatch[2], 10);
+      const seconds = parseInt(durationMatch[3], 10);
+      const centiseconds = parseInt(durationMatch[4], 10);
+      const duration = hours * 3600 + minutes * 60 + seconds + centiseconds / 100;
 
-      return {
-        inputLufs: result.inputLufs,
-        inputPeak: result.inputPeak,
-        trackGain,
-        trackPeak, // No clamp: True Peak puede ser > 1.0 (> 0 dBTP) en audio con clipping
-      };
+      // Find the last silence that's near the end of the track (within last 30 seconds)
+      // This is where we want to start the crossfade
+      const lastSilence = silenceStarts
+        .filter(s => s > duration - 30) // Only consider silence in last 30 seconds
+        .sort((a, b) => a - b)[0]; // Get the first (earliest) one near the end
+
+      if (lastSilence === undefined) {
+        return undefined;
+      }
+
+      // Sanity check: outroStart should be at least 5 seconds before end
+      // and at least 30 seconds into the track
+      if (lastSilence < 30 || lastSilence > duration - 5) {
+        return undefined;
+      }
+
+      return lastSilence;
     } catch (error) {
-      this.logger.error(
-        { err: error, filePath },
-        'Error analizando archivo con FFmpeg',
-      );
-      return null;
+      this.logger.debug({ err: error, filePath }, 'Error detecting outro start');
+      return undefined;
     }
   }
 

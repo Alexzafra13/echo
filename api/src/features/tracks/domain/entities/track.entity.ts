@@ -28,6 +28,8 @@ export interface TrackProps {
   rgTrackPeak?: number; // Pico máximo del track (0-1)
   rgAlbumGain?: number; // Ganancia para normalizar el álbum (en dB)
   rgAlbumPeak?: number; // Pico máximo del álbum (0-1)
+  // Smart crossfade
+  outroStart?: number; // Seconds where outro/silence begins (for smart crossfade)
   // Missing file tracking
   missingAt?: Date; // null = present, date = marked as missing
   createdAt: Date;
@@ -168,6 +170,10 @@ export class Track {
 
   get rgAlbumPeak(): number | undefined {
     return this.props.rgAlbumPeak;
+  }
+
+  get outroStart(): number | undefined {
+    return this.props.outroStart;
   }
 
   get missingAt(): Date | undefined {

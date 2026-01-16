@@ -1,0 +1,1 @@
+ALTER TABLE "tracks" ADD COLUMN "outro_start" real;

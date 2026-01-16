@@ -18,6 +18,7 @@ interface UseCrossfadeLogicParams {
   isRadioMode: boolean;
   repeatMode: 'off' | 'all' | 'one';
   hasNextTrack: boolean;
+  currentTrackOutroStart?: number; // Smart crossfade: track's detected outro start time
   onCrossfadeStart?: () => void;
   onCrossfadeComplete?: () => void;
   onCrossfadeTrigger?: () => void; // Called when it's time to start crossfade to next track
@@ -47,6 +48,7 @@ export function useCrossfadeLogic({
   isRadioMode,
   repeatMode,
   hasNextTrack,
+  currentTrackOutroStart,
   onCrossfadeStart,
   onCrossfadeComplete,
   onCrossfadeTrigger,
@@ -192,6 +194,9 @@ export function useCrossfadeLogic({
   /**
    * Check if crossfade should be triggered based on timing
    * Returns true if crossfade should start
+   *
+   * Smart mode: Uses track's detected outroStart (silence/fade point) if available
+   * Normal mode: Uses fixed duration before track end
    */
   const checkCrossfadeTiming = useCallback((): boolean => {
     // Skip if crossfade is disabled, already crossfading, in radio mode, or repeat one
@@ -206,8 +211,31 @@ export function useCrossfadeLogic({
 
     const duration = audioElements.getDuration();
     const currentTime = audioElements.getCurrentTime();
-    const timeRemaining = duration - currentTime;
     const crossfadeDuration = settings.duration;
+
+    // Smart mode: use track's detected outro start time if available
+    // This triggers crossfade when the song naturally ends (silence/fade detected)
+    if (settings.smartMode && currentTrackOutroStart !== undefined && currentTrackOutroStart > 0) {
+      // Trigger at outroStart (where silence/fade begins)
+      // Only if we haven't already started and track is valid
+      if (
+        currentTime >= currentTrackOutroStart &&
+        !crossfadeStartedRef.current &&
+        duration > crossfadeDuration
+      ) {
+        logger.debug('[Crossfade] Smart mode: triggering at outroStart', {
+          currentTime,
+          outroStart: currentTrackOutroStart,
+          duration,
+        });
+        crossfadeStartedRef.current = true;
+        return true;
+      }
+      return false;
+    }
+
+    // Normal mode: use fixed duration before track end
+    const timeRemaining = duration - currentTime;
 
     // Start crossfade when time remaining equals crossfade duration
     // Only if we haven't already started it for this track
@@ -223,7 +251,7 @@ export function useCrossfadeLogic({
     }
 
     return false;
-  }, [settings, isCrossfading, isRadioMode, repeatMode, hasNextTrack, audioElements]);
+  }, [settings, isCrossfading, isRadioMode, repeatMode, hasNextTrack, audioElements, currentTrackOutroStart]);
 
   /**
    * Effect to listen for timeupdate and trigger crossfade
