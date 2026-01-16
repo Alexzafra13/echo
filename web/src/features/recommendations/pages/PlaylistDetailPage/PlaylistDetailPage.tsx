@@ -198,7 +198,7 @@ export function PlaylistDetailPage() {
   const backgroundPosition = artist?.backgroundPosition || 'center top';
 
   return (
-    <div className={styles.playlistDetailPage}>
+    <div className={`${styles.playlistDetailPage} ${isArtistPlaylist ? styles['playlistDetailPage--artistMobile'] : ''}`}>
       <Sidebar />
 
       <main className={styles.playlistDetailPage__main}>
