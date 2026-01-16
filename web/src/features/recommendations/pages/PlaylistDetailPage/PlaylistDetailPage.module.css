@@ -85,6 +85,11 @@
   flex-shrink: 0;
 }
 
+/* Artist playlist cover - hidden on mobile since background shows the image */
+.playlistCover--artist {
+  /* Visible on desktop */
+}
+
 .playlistDetailPage__info {
   flex: 1;
   display: flex;
@@ -220,6 +225,9 @@
   .playlistDetailPage__background {
     top: -100px;
     height: calc(100% + 100px + 80px);
+    /* Less blur/darkening on mobile since background IS the main visual */
+    filter: blur(0) brightness(0.6);
+    transform: scale(1);
   }
 
   .playlistDetailPage__hero--artist .playlistDetailPage__heroContent {
@@ -238,6 +246,11 @@
 
   .playlistCover {
     border-radius: 12px; /* iOS rounded */
+  }
+
+  /* Hide artist cover on mobile - the background image is the main visual */
+  .playlistCover--artist {
+    display: none;
   }
 
   .playlistName {
