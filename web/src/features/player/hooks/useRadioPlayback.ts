@@ -98,12 +98,20 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
           logger.error('[Radio] Failed to play:', error.message);
           // Clear state on play failure
           audio.src = '';
-          setState({
-            currentStation: null,
-            isRadioMode: false,
+          // Show error state briefly before closing
+          setState(prev => ({
+            ...prev,
             signalStatus: 'error',
-            metadata: null,
-          });
+          }));
+          // Close radio mode after showing error
+          setTimeout(() => {
+            setState({
+              currentStation: null,
+              isRadioMode: false,
+              signalStatus: null,
+              metadata: null,
+            });
+          }, 2000);
         });
         audio.oncanplay = null;
       };
@@ -116,13 +124,20 @@ export function useRadioPlayback({ audioElements }: UseRadioPlaybackParams) {
         );
         // Clear the broken source to prevent blocking future playback
         audio.src = '';
-        // Exit radio mode completely on load failure
-        setState({
-          currentStation: null,
-          isRadioMode: false,
+        // Show error state briefly before closing
+        setState(prev => ({
+          ...prev,
           signalStatus: 'error',
-          metadata: null,
-        });
+        }));
+        // Close radio mode after showing error
+        setTimeout(() => {
+          setState({
+            currentStation: null,
+            isRadioMode: false,
+            signalStatus: null,
+            metadata: null,
+          });
+        }, 2000);
         audio.onerror = null;
       };
 
