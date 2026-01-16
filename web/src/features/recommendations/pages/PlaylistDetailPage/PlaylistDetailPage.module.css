@@ -200,6 +200,12 @@
     padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
 
+  /* Artist playlist: full-bleed hero like artist detail page */
+  .playlistDetailPage--artistMobile .playlistDetailPage__content {
+    margin-top: -56px; /* Negative margin so hero extends behind header */
+    padding: 0 20px calc(60px + var(--player-bottom-spacer, 0px)); /* No top padding - hero extends to top */
+  }
+
   .playlistDetailPage__actions {
     justify-content: center;
     gap: 12px;
@@ -215,11 +221,12 @@
   }
 
   .playlistDetailPage__hero--artist {
-    min-height: 300px;
+    min-height: 380px; /* Increased height for app-style hero */
     margin-left: -20px;
     margin-right: -20px;
     padding-left: 20px;
     padding-right: 20px;
+    padding-top: 0; /* No padding - image extends to very top */
   }
 
   .playlistDetailPage__background {
@@ -230,12 +237,29 @@
     transform: scale(1);
   }
 
+  /* Artist playlist background: full-bleed like artist detail page */
+  .playlistDetailPage__hero--artist .playlistDetailPage__background {
+    top: 0; /* Start from very top of hero (which is behind header due to negative margin) */
+    height: calc(100% + 56px); /* Extra height to ensure coverage */
+    left: -20px;
+    right: -20px;
+    width: calc(100% + 40px);
+    filter: blur(0) brightness(0.5); /* No blur, slightly darker */
+    transform: scale(1.02); /* Less scale to show more detail */
+    background-position: center top !important; /* Force face/head visible */
+    /* Stronger gradient fade at bottom for text readability */
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 95%);
+    mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 95%);
+  }
+
   .playlistDetailPage__hero--artist .playlistDetailPage__heroContent {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    min-height: 280px;
+    min-height: 400px;
     padding: 24px;
+    padding-top: 180px; /* More space for header + breathing room */
+    justify-content: flex-end; /* Push content to bottom */
   }
 
   .playlistDetailPage__heroContent {
@@ -284,6 +308,12 @@
     padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
+  /* Artist playlist: full-bleed hero like artist detail page */
+  .playlistDetailPage--artistMobile .playlistDetailPage__content {
+    margin-top: -56px; /* Same negative margin as 768px */
+    padding: 0 16px calc(60px + var(--player-bottom-spacer, 0px));
+  }
+
   .playlistDetailPage__actions {
     gap: 10px;
   }
@@ -304,6 +334,19 @@
   .playlistDetailPage__background {
     top: -90px;
     height: calc(100% + 90px + 60px);
+  }
+
+  /* Artist playlist background: full-bleed at 480px */
+  .playlistDetailPage__hero--artist .playlistDetailPage__background {
+    top: 0;
+    height: calc(100% + 56px);
+    left: -16px;
+    right: -16px;
+    width: calc(100% + 32px);
+  }
+
+  .playlistDetailPage__hero--artist .playlistDetailPage__heroContent {
+    padding-top: 160px;
   }
 
   .playlistName {
