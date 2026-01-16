@@ -553,19 +553,30 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Play a radio station
    */
   const playRadio = useCallback(async (station: RadioStation | RadioBrowserStation) => {
-    // Clear track state
-    setCurrentTrack(null);
-    queue.clearQueue();
-    crossfade.clearCrossfade();
+    try {
+      // Clear track state
+      setCurrentTrack(null);
+      queue.clearQueue();
+      crossfade.clearCrossfade();
 
-    await radio.playRadio(station);
+      await radio.playRadio(station);
+    } catch (error) {
+      logger.error('[Player] Failed to play radio station:', (error as Error).message);
+      // Ensure we're not stuck in a bad state
+      setIsPlaying(false);
+    }
   }, [radio, queue, crossfade]);
 
   /**
    * Stop radio
    */
   const stopRadio = useCallback(async () => {
-    await radio.stopRadio();
+    try {
+      await radio.stopRadio();
+    } catch (error) {
+      logger.error('[Player] Failed to stop radio:', (error as Error).message);
+    }
+    // Always reset state even if stopRadio fails
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
