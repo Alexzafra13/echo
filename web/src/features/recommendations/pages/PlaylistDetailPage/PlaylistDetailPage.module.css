@@ -4,6 +4,7 @@
   background: var(--bg-base, #0f1218);
   background-image: var(--gradient-textured);
   color: var(--text-primary);
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .playlistDetailPage__main {
@@ -192,10 +193,12 @@
   .playlistDetailPage__main {
     margin-left: 0; /* No sidebar en mobile */
     padding-top: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
   }
 
   .playlistDetailPage__content {
     overflow-y: auto; /* Permitir scroll vertical */
+    overflow-x: hidden; /* Prevent horizontal scroll */
     margin-top: 0; /* Eliminar margin negativo */
     padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
@@ -221,7 +224,7 @@
   }
 
   .playlistDetailPage__hero--artist {
-    min-height: 380px; /* Increased height for app-style hero */
+    min-height: 300px; /* Reduced height - cleaner look */
     margin-left: -20px;
     margin-right: -20px;
     padding-left: 20px;
@@ -256,9 +259,9 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    min-height: 400px;
+    min-height: 320px;
     padding: 24px;
-    padding-top: 180px; /* More space for header + breathing room */
+    padding-top: 120px; /* Space for header */
     justify-content: flex-end; /* Push content to bottom */
   }
 
@@ -285,6 +288,15 @@
     max-width: 100%;
   }
 
+  /* Hide description and type label for artist playlists on mobile - cleaner look */
+  .playlistDetailPage__hero--artist .playlistDescription {
+    display: none;
+  }
+
+  .playlistDetailPage__hero--artist .playlistType {
+    display: none;
+  }
+
   .playlistDetailPage__info {
     align-items: center;
   }
@@ -302,10 +314,12 @@
   .playlistDetailPage__main {
     margin-left: 0;
     padding-top: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
   }
 
   .playlistDetailPage__content {
     padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
+    overflow-x: hidden; /* Prevent horizontal scroll */
   }
 
   /* Artist playlist: full-bleed hero like artist detail page */
@@ -346,7 +360,8 @@
   }
 
   .playlistDetailPage__hero--artist .playlistDetailPage__heroContent {
-    padding-top: 160px;
+    padding-top: 100px;
+    min-height: 280px;
   }
 
   .playlistName {
