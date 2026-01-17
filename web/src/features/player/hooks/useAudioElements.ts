@@ -67,11 +67,24 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
 
   /**
    * Switch which audio element is active
+   * Also updates duration/time callbacks to reflect the new active audio
    */
   const switchActiveAudio = useCallback(() => {
     activeAudioRef.current = activeAudioRef.current === 'A' ? 'B' : 'A';
-    logger.debug('[AudioElements] Switched to audio:', activeAudioRef.current);
-    return activeAudioRef.current;
+    const newId = activeAudioRef.current;
+    logger.debug('[AudioElements] Switched to audio:', newId);
+
+    // Immediately update duration and time for the newly active audio
+    // This fixes the issue where duration shows stale value after crossfade
+    const newActiveAudio = newId === 'A' ? audioRefA.current : audioRefB.current;
+    if (newActiveAudio) {
+      if (!isNaN(newActiveAudio.duration) && newActiveAudio.duration > 0) {
+        callbacksRef.current?.onDurationChange?.(newActiveAudio.duration);
+      }
+      callbacksRef.current?.onTimeUpdate?.(newActiveAudio.currentTime);
+    }
+
+    return newId;
   }, []);
 
   /**
