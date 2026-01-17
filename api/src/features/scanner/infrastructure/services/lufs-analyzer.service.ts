@@ -126,15 +126,15 @@ export class LufsAnalyzerService {
   private async detectOutroStart(filePath: string): Promise<number | undefined> {
     try {
       // Use silencedetect to find silence periods
-      // -50dB threshold: audio below this is considered silence
-      // d=0.5: minimum silence duration of 0.5 seconds
+      // -60dB threshold: only actual silence/near-silence (not just quiet parts)
+      // d=1.0: minimum silence duration of 1 second (avoid brief pauses)
       const { stderr } = await execFileAsync(
         'ffmpeg',
         [
           '-nostdin',
           '-hide_banner',
           '-i', filePath,
-          '-af', 'silencedetect=noise=-50dB:d=0.5',
+          '-af', 'silencedetect=noise=-60dB:d=1.0',
           '-f', 'null',
           '-',
         ],
@@ -170,19 +170,21 @@ export class LufsAnalyzerService {
       const centiseconds = parseInt(durationMatch[4], 10);
       const duration = hours * 3600 + minutes * 60 + seconds + centiseconds / 100;
 
-      // Find the last silence that's near the end of the track (within last 30 seconds)
-      // This is where we want to start the crossfade
-      const lastSilence = silenceStarts
-        .filter(s => s > duration - 30) // Only consider silence in last 30 seconds
-        .sort((a, b) => a - b)[0]; // Get the first (earliest) one near the end
+      // Find silence that's near the end of the track (within last 15 seconds)
+      // Only use silences that are very close to the end - this is the actual outro
+      const outroSilences = silenceStarts
+        .filter(s => s > duration - 15 && s > duration * 0.85) // Last 15s AND after 85% of track
+        .sort((a, b) => a - b);
+
+      const lastSilence = outroSilences[0]; // Get the first (earliest) one near the end
 
       if (lastSilence === undefined) {
         return undefined;
       }
 
-      // Sanity check: outroStart should be at least 5 seconds before end
-      // and at least 30 seconds into the track
-      if (lastSilence < 30 || lastSilence > duration - 5) {
+      // Sanity check: outroStart should be at least 3 seconds before end
+      // and at least 60 seconds into the track (skip intros that might have silence)
+      if (lastSilence < 60 || lastSilence > duration - 3) {
         return undefined;
       }
 
