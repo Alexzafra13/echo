@@ -259,10 +259,11 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    min-height: 320px;
-    padding: 24px;
-    padding-top: 120px; /* Space for header */
+    min-height: 280px;
+    padding: 16px 24px;
+    padding-top: 200px; /* More space at top - pushes content down near buttons */
     justify-content: flex-end; /* Push content to bottom */
+    gap: 0.5rem;
   }
 
   .playlistDetailPage__heroContent {
@@ -299,6 +300,12 @@
 
   .playlistDetailPage__info {
     align-items: center;
+  }
+
+  /* Tighter spacing for artist playlists - content closer to buttons */
+  .playlistDetailPage__hero--artist .playlistDetailPage__info {
+    gap: 0.25rem;
+    padding-bottom: 0;
   }
 
   .playButton {
@@ -360,8 +367,8 @@
   }
 
   .playlistDetailPage__hero--artist .playlistDetailPage__heroContent {
-    padding-top: 100px;
-    min-height: 280px;
+    padding-top: 180px; /* Push content down near buttons */
+    min-height: 260px;
   }
 
   .playlistName {
