@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   enrichmentApi,
   ListEnrichmentLogsFilters,
@@ -17,5 +17,7 @@ export function useEnrichmentStats(
   return useQuery({
     queryKey: ['enrichmentStats', period],
     queryFn: () => enrichmentApi.getEnrichmentStats(period),
+    // Keep previous data while fetching new data for smooth transitions
+    placeholderData: keepPreviousData,
   });
 }

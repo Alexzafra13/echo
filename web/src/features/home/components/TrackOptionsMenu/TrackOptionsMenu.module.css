@@ -178,3 +178,36 @@
     opacity: 1; /* Siempre visible en móvil - no hay hover en táctil */
   }
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .trackOptionsMenu__dropdown {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  box-shadow: 0 8px 32px rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme="light"] .trackOptionsMenu__option {
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .trackOptionsMenu__option:hover {
+  background: var(--color-hover);
+}
+
+:root[data-theme="light"] .trackOptionsMenu__option:active {
+  background: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .trackOptionsMenu__option svg {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .trackOptionsMenu__separator {
+  background: var(--border-base);
+}
+
+:root[data-theme="light"] .trackOptionsMenu__trigger:hover,
+:root[data-theme="light"] :global(.trackOptionsMenu__trigger):hover {
+  background: var(--color-hover);
+  color: var(--text-primary);
+}

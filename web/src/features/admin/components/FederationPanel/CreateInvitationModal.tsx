@@ -169,7 +169,7 @@ export function CreateInvitationModal({ onClose, onSuccess }: CreateInvitationMo
             </div>
 
             <div className={styles.modalActions}>
-              <Button variant="secondary" onClick={onClose} type="button">
+              <Button variant="danger" onClick={onClose} type="button">
                 Cancelar
               </Button>
               <Button
