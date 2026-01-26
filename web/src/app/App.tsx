@@ -67,6 +67,9 @@ const GenrePlaylistsPage = lazy(() =>
 const SocialPage = lazy(() =>
   import('@features/social').then((m) => ({ default: m.SocialPage }))
 );
+const TrendingPage = lazy(() =>
+  import('@features/social').then((m) => ({ default: m.TrendingPage }))
+);
 const SharedAlbumPage = lazy(() =>
   import('@features/federation').then((m) => ({ default: m.SharedAlbumPage }))
 );
@@ -218,6 +221,13 @@ function App() {
           <Route path="/social">
             <ProtectedRoute>
               <SocialPage />
+            </ProtectedRoute>
+          </Route>
+
+          {/* Trending Route (Protected) - Top 50 most played tracks */}
+          <Route path="/trending">
+            <ProtectedRoute>
+              <TrendingPage />
             </ProtectedRoute>
           </Route>
 

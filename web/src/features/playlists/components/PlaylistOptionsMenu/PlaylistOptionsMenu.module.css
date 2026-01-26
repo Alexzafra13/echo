@@ -159,3 +159,35 @@
   background: var(--white-10);
   margin: 8px 0;
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .playlistOptionsMenu__dropdown {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  box-shadow: 0 8px 32px rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme="light"] .playlistOptionsMenu__option {
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .playlistOptionsMenu__option:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+:root[data-theme="light"] .playlistOptionsMenu__option:active:not(:disabled) {
+  background: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .playlistOptionsMenu__option svg {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .playlistOptionsMenu__separator {
+  background: var(--border-base);
+}
+
+:root[data-theme="light"] .playlistOptionsMenu__trigger:hover {
+  background: var(--color-hover);
+  color: var(--text-primary);
+}
