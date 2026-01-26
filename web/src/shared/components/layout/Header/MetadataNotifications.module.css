@@ -77,7 +77,7 @@
     0 10px 25px -3px var(--black-30),
     0 0 0 1px var(--white-15);
   overflow: hidden;
-  z-index: 1001; /* Mayor que hero buttons */
+  z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
 
@@ -360,7 +360,7 @@
     border-radius: 0; /* Sin bordes redondeados */
     box-shadow: 0 4px 20px var(--black-30);
     animation: slideDown 0.3s ease;
-    z-index: 1001; /* Mayor que hero buttons */
+    z-index: var(--z-popover);
   }
 
   /* Light theme para dropdown móvil */

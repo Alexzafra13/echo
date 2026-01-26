@@ -4,7 +4,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  z-index: 100;
+  z-index: var(--z-sticky);
 }
 
 .menuButton {
@@ -43,7 +43,7 @@
   box-shadow: 0 -8px 32px var(--black-60);
   backdrop-filter: blur(16px);
   animation: menuFadeIn 0.15s ease;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
 }
 
 @keyframes menuFadeIn {

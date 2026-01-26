@@ -15,7 +15,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
+  z-index: var(--z-sticky);
   /* Permitir que los menús del MiniPlayer se muestren fuera */
   overflow: visible;
 }
@@ -159,7 +159,7 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-right: none;
     border-top: 1px solid var(--white-08);
-    z-index: 9999; /* Z-index muy alto para estar siempre visible */
+    z-index: var(--z-nav-mobile);
     /* iOS safe area */
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
