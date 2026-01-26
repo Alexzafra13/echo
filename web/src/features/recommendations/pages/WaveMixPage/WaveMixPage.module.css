@@ -263,6 +263,12 @@
   margin: 0;
 }
 
+/* Placeholder for incomplete grid rows */
+.playlistCard__placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .separator {
   opacity: 0.5;
 }

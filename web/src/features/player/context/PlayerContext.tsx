@@ -474,7 +474,18 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     const audioB = audioElements.audioRefB.current;
     if (!audioA || !audioB) return;
 
-    const handleEnded = async () => {
+    const handleEnded = async (event: Event) => {
+      // Get which audio element triggered the ended event
+      const endedAudio = event.target as HTMLAudioElement;
+      const activeAudio = audioElements.getActiveAudio();
+
+      // CRITICAL: Ignore ended events from the inactive audio element
+      // This prevents the old track from triggering playNext after a crossfade
+      if (endedAudio !== activeAudio) {
+        logger.debug('[Player] Ignoring ended event from inactive audio element');
+        return;
+      }
+
       // Only handle ended if not in crossfade mode
       if (crossfade.isCrossfading) return;
 

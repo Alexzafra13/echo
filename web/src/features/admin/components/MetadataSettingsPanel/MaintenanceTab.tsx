@@ -110,6 +110,9 @@ export function MaintenanceTab() {
       const response = await apiClient.post('/maintenance/cleanup/orphaned?dryRun=false');
       setCleanupResult(response.data);
 
+      // Auto-hide cleanup result after 5 seconds
+      setTimeout(() => setCleanupResult(null), 5000);
+
       // Refrescar estadísticas
       await loadStats();
     } catch (err: any) {
@@ -146,6 +149,10 @@ export function MaintenanceTab() {
       setPopulateError(null);
       const response = await apiClient.post('/maintenance/populate-sort-names');
       setPopulateResult(response.data);
+
+      // Auto-hide populate result after 5 seconds
+      setTimeout(() => setPopulateResult(null), 5000);
+
       // Refrescar estadísticas
       await loadStats();
     } catch (error: any) {

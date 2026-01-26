@@ -349,7 +349,7 @@ export function SettingsPage() {
                         <div className={styles.settingsPage__toggleInfo}>
                           <span className={styles.settingsPage__toggleLabel}>Nivel de referencia</span>
                           <p className={styles.settingsPage__toggleDescription}>
-                            -16 LUFS (Apple Music) es más conservador, -14 LUFS (Spotify) es más fuerte
+                            -16 LUFS es más conservador (mejor para auriculares), -14 LUFS es más fuerte
                           </p>
                         </div>
                         <select
@@ -357,8 +357,8 @@ export function SettingsPage() {
                           value={normalization.targetLufs}
                           onChange={(e) => setNormalizationTargetLufs(Number(e.target.value) as -14 | -16)}
                         >
-                          <option value={-16}>-16 LUFS (Apple)</option>
-                          <option value={-14}>-14 LUFS (Spotify)</option>
+                          <option value={-16}>-16 LUFS (Conservador)</option>
+                          <option value={-14}>-14 LUFS (Estándar)</option>
                         </select>
                       </div>
 

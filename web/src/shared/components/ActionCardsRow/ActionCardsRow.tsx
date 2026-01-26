@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Shuffle, Calendar, Users, RefreshCw } from 'lucide-react';
+import { Shuffle, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { ActionCard } from '../ActionCard';
 import { useShufflePlay } from '@shared/hooks';
 import { useRandomAlbums } from '@features/explore/hooks';
@@ -57,8 +57,8 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
     setLocation('/daily');
   };
 
-  const handleSocial = () => {
-    setLocation('/social');
+  const handleTrending = () => {
+    setLocation('/trending');
   };
 
   return (
@@ -84,12 +84,12 @@ export function ActionCardsRow({ className }: ActionCardsRowProps) {
         backgroundCoverUrl={waveMixCoverUrl}
       />
 
-      {/* Social Features */}
+      {/* Trending - Top 50 most played tracks */}
       <ActionCard
-        icon={<Users size={22} />}
-        title="Social"
+        icon={<TrendingUp size={22} />}
+        title="Tendencias"
         loadingTitle="Cargando..."
-        onClick={handleSocial}
+        onClick={handleTrending}
         customGradient={['#1f2d3d', '#1a2a1a']}
       />
     </div>
