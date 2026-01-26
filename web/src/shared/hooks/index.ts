@@ -25,3 +25,5 @@ export { useShufflePlay } from './useShufflePlay';
 export type { UseShufflePlayReturn } from './useShufflePlay';
 export { useDominantColor } from './useDominantColor';
 export { useFocusTrap } from './useFocusTrap';
+export { useModal } from './useModal';
+export type { UseModalReturn } from './useModal';
