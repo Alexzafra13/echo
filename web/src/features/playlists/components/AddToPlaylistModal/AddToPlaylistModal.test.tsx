@@ -72,7 +72,7 @@ describe('AddToPlaylistModal', () => {
       isSuccess: true,
       isError: false,
       error: null,
-    } as ReturnType<typeof usePlaylists>);
+    } as unknown as ReturnType<typeof usePlaylists>);
 
     vi.mocked(useAddTrackToPlaylist).mockReturnValue({
       mutateAsync: mockAddTrackMutateAsync,
@@ -121,7 +121,7 @@ describe('AddToPlaylistModal', () => {
         isSuccess: false,
         isError: false,
         error: null,
-      } as ReturnType<typeof usePlaylists>);
+      } as unknown as ReturnType<typeof usePlaylists>);
 
       render(<AddToPlaylistModal track={mockTrack} onClose={vi.fn()} />, {
         wrapper: createWrapper(),
@@ -137,7 +137,7 @@ describe('AddToPlaylistModal', () => {
         isSuccess: true,
         isError: false,
         error: null,
-      } as ReturnType<typeof usePlaylists>);
+      } as unknown as ReturnType<typeof usePlaylists>);
 
       render(<AddToPlaylistModal track={mockTrack} onClose={vi.fn()} />, {
         wrapper: createWrapper(),
@@ -327,7 +327,7 @@ describe('AddToPlaylistModal', () => {
         isSuccess: true,
         isError: false,
         error: null,
-      } as ReturnType<typeof usePlaylists>);
+      } as unknown as ReturnType<typeof usePlaylists>);
 
       render(<AddToPlaylistModal track={mockTrack} onClose={vi.fn()} />, {
         wrapper: createWrapper(),

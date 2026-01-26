@@ -59,6 +59,7 @@ describe('CreatePlaylistModal', () => {
         albumId: 'album-r1',
       },
       playedAt: '2024-01-01T00:00:00.000Z',
+      playContext: 'album' as const,
     },
     {
       trackId: 'recent-2',
@@ -69,6 +70,7 @@ describe('CreatePlaylistModal', () => {
         albumId: 'album-r2',
       },
       playedAt: '2024-01-01T00:00:00.000Z',
+      playContext: 'album' as const,
     },
   ];
 
@@ -78,7 +80,7 @@ describe('CreatePlaylistModal', () => {
     vi.mocked(useTrackSearch).mockReturnValue({
       data: undefined,
       isLoading: false,
-    } as ReturnType<typeof useTrackSearch>);
+    } as unknown as ReturnType<typeof useTrackSearch>);
 
     vi.mocked(getRecentlyPlayed).mockResolvedValue(mockRecentlyPlayed);
   });
@@ -153,7 +155,7 @@ describe('CreatePlaylistModal', () => {
       vi.mocked(useTrackSearch).mockReturnValue({
         data: mockSearchResults,
         isLoading: false,
-      } as ReturnType<typeof useTrackSearch>);
+      } as unknown as ReturnType<typeof useTrackSearch>);
 
       render(
         <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
@@ -174,7 +176,7 @@ describe('CreatePlaylistModal', () => {
       vi.mocked(useTrackSearch).mockReturnValue({
         data: undefined,
         isLoading: true,
-      } as ReturnType<typeof useTrackSearch>);
+      } as unknown as ReturnType<typeof useTrackSearch>);
 
       render(
         <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
@@ -193,7 +195,7 @@ describe('CreatePlaylistModal', () => {
       vi.mocked(useTrackSearch).mockReturnValue({
         data: [],
         isLoading: false,
-      } as ReturnType<typeof useTrackSearch>);
+      } as unknown as ReturnType<typeof useTrackSearch>);
 
       render(
         <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
@@ -212,7 +214,7 @@ describe('CreatePlaylistModal', () => {
       vi.mocked(useTrackSearch).mockReturnValue({
         data: mockSearchResults,
         isLoading: false,
-      } as ReturnType<typeof useTrackSearch>);
+      } as unknown as ReturnType<typeof useTrackSearch>);
 
       render(
         <CreatePlaylistModal onClose={mockOnClose} onSubmit={mockOnSubmit} />,
