@@ -1,43 +1,15 @@
 /**
- * Artist entity (list view)
+ * Artist Types - Feature-specific types and re-exports
  *
- * Note: Images are fetched dynamically via ImageService API endpoints
- * using getArtistImageUrl(artistId, imageType, tag). URLs are not stored in database.
+ * Core Artist types are defined in @shared/types/artist.types
+ * This file re-exports them and adds feature-specific types
  */
-export interface Artist {
-  id: string;
-  name: string;
-  albumCount: number;
-  songCount: number;
-  orderArtistName?: string;
-  updatedAt?: string; // Used for cache-busting image URLs
-}
 
-/**
- * Artist detail (detail view with full info)
- */
-export interface ArtistDetail extends Artist {
-  biography?: string;
-  biographySource?: string;
-  mbzArtistId?: string;
-  externalUrl?: string;
-  externalInfoUpdatedAt?: string;
-  backgroundPosition?: string; // CSS background-position for background image
-  size: number;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export core types from shared
+export type { Artist, ArtistDetail, PaginatedArtists } from '@shared/types/artist.types';
 
-/**
- * Paginated artists response
- */
-export interface PaginatedArtists {
-  data: Artist[];
-  total: number;
-  skip: number;
-  take: number;
-  hasMore: boolean;
-}
+// Import for local use
+import type { Artist } from '@shared/types/artist.types';
 
 /**
  * Props for ArtistCard component
