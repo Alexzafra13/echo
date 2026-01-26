@@ -244,6 +244,9 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+  --z-fullscreen: 9000;      /* Full-screen views (NowPlayingView, etc.) */
+  --z-fullscreen-overlay: 9010; /* Overlays on top of fullscreen views */
+  --z-nav-mobile: 9500;      /* Mobile navigation (sidebar, bottom nav) */
 
   /* ===== Transitions ===== */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);

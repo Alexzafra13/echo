@@ -53,7 +53,7 @@
     0 4px 6px -1px var(--black-10),
     0 10px 25px -3px var(--black-30),
     0 0 0 1px var(--white-15);
-  z-index: 1001; /* Mayor que hero buttons */
+  z-index: var(--z-popover);
 
   /* Animación de entrada - Spring effect */
   transform-origin: top right;
@@ -217,7 +217,7 @@
     border-radius: 0; /* Sin bordes redondeados */
     box-shadow: 0 4px 20px var(--black-30);
     animation: slideDown 0.3s ease;
-    z-index: 1001; /* Mayor que hero buttons */
+    z-index: var(--z-popover);
     min-width: auto; /* Ancho completo */
   }
 
