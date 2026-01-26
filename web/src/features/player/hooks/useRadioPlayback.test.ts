@@ -51,7 +51,7 @@ const createMockAudioElements = (): AudioElements => {
     loadOnActive: vi.fn(),
     loadOnInactive: vi.fn(),
     switchAudio: vi.fn(),
-    stopBoth: vi.fn(),
+    stopBoth: vi.fn().mockResolvedValue(undefined), // Must be async - playRadio awaits this
     resetToAudioA: vi.fn(),
     fadeOutAudio: vi.fn(),
     setOnEnded: vi.fn(),
@@ -106,15 +106,15 @@ describe('useRadioPlayback', () => {
   });
 
   describe('playRadio', () => {
-    it('should play a radio station', () => {
+    it('should play a radio station', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
       const station = createRadioStation();
 
-      act(() => {
-        result.current.playRadio(station);
+      await act(async () => {
+        await result.current.playRadio(station);
       });
 
       expect(result.current.isRadioMode).toBe(true);
@@ -122,20 +122,20 @@ describe('useRadioPlayback', () => {
       expect(result.current.signalStatus).toBe('good');
     });
 
-    it('should stop existing audio before playing', () => {
+    it('should stop existing audio before playing', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       expect(audioElements.stopBoth).toHaveBeenCalled();
       expect(audioElements.resetToAudioA).toHaveBeenCalled();
     });
 
-    it('should use urlResolved when available', () => {
+    it('should use urlResolved when available', async () => {
       const mockAudio = createMockAudioElement();
       audioElements.getActiveAudio = vi.fn().mockReturnValue(mockAudio);
 
@@ -148,14 +148,14 @@ describe('useRadioPlayback', () => {
         urlResolved: 'http://resolved.url',
       });
 
-      act(() => {
-        result.current.playRadio(station);
+      await act(async () => {
+        await result.current.playRadio(station);
       });
 
       expect(mockAudio.src).toBe('http://resolved.url');
     });
 
-    it('should fall back to url when urlResolved is empty', () => {
+    it('should fall back to url when urlResolved is empty', async () => {
       const mockAudio = createMockAudioElement();
       audioElements.getActiveAudio = vi.fn().mockReturnValue(mockAudio);
 
@@ -169,8 +169,8 @@ describe('useRadioPlayback', () => {
         urlResolved: '',
       });
 
-      act(() => {
-        result.current.playRadio(station);
+      await act(async () => {
+        await result.current.playRadio(station);
       });
 
       // When urlResolved is falsy, should return false (no valid URL)
@@ -178,7 +178,7 @@ describe('useRadioPlayback', () => {
       expect(result.current.isRadioMode).toBe(false);
     });
 
-    it('should return false when station has no valid URL', () => {
+    it('should return false when station has no valid URL', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
@@ -188,31 +188,31 @@ describe('useRadioPlayback', () => {
         urlResolved: undefined,
       });
 
-      let returnValue: boolean;
-      act(() => {
-        returnValue = result.current.playRadio(station);
+      let returnValue: boolean | undefined;
+      await act(async () => {
+        returnValue = await result.current.playRadio(station);
       });
 
-      expect(returnValue!).toBe(false);
+      expect(returnValue).toBe(false);
       expect(result.current.isRadioMode).toBe(false);
     });
 
-    it('should return false when no active audio element', () => {
+    it('should return false when no active audio element', async () => {
       audioElements.getActiveAudio = vi.fn().mockReturnValue(null);
 
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      let returnValue: boolean;
-      act(() => {
-        returnValue = result.current.playRadio(createRadioStation());
+      let returnValue: boolean | undefined;
+      await act(async () => {
+        returnValue = await result.current.playRadio(createRadioStation());
       });
 
-      expect(returnValue!).toBe(false);
+      expect(returnValue).toBe(false);
     });
 
-    it('should load and call audio.load()', () => {
+    it('should load and call audio.load()', async () => {
       const mockAudio = createMockAudioElement();
       audioElements.getActiveAudio = vi.fn().mockReturnValue(mockAudio);
 
@@ -220,14 +220,14 @@ describe('useRadioPlayback', () => {
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       expect(mockAudio.load).toHaveBeenCalled();
     });
 
-    it('should clear metadata when playing new station', () => {
+    it('should clear metadata when playing new station', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
@@ -237,14 +237,14 @@ describe('useRadioPlayback', () => {
         result.current.setMetadata({ title: 'Old Song', artist: 'Old Artist' });
       });
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       expect(result.current.metadata).toBe(null);
     });
 
-    it('should handle RadioBrowserStation format with url_resolved', () => {
+    it('should handle RadioBrowserStation format with url_resolved', async () => {
       const mockAudio = createMockAudioElement();
       audioElements.getActiveAudio = vi.fn().mockReturnValue(mockAudio);
 
@@ -272,8 +272,8 @@ describe('useRadioPlayback', () => {
         lastcheckok: 1,
       };
 
-      act(() => {
-        result.current.playRadio(browserStation as never);
+      await act(async () => {
+        await result.current.playRadio(browserStation as never);
       });
 
       expect(mockAudio.src).toBe('http://resolved.url');
@@ -282,19 +282,19 @@ describe('useRadioPlayback', () => {
   });
 
   describe('stopRadio', () => {
-    it('should stop radio playback and reset state', () => {
+    it('should stop radio playback and reset state', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       expect(result.current.isRadioMode).toBe(true);
 
-      act(() => {
-        result.current.stopRadio();
+      await act(async () => {
+        await result.current.stopRadio();
       });
 
       expect(result.current.isRadioMode).toBe(false);
@@ -303,13 +303,13 @@ describe('useRadioPlayback', () => {
       expect(result.current.metadata).toBe(null);
     });
 
-    it('should call stopBoth and resetToAudioA', () => {
+    it('should call stopBoth and resetToAudioA', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.stopRadio();
+      await act(async () => {
+        await result.current.stopRadio();
       });
 
       expect(audioElements.stopBoth).toHaveBeenCalled();
@@ -323,16 +323,16 @@ describe('useRadioPlayback', () => {
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
-      let resumed: boolean;
+      let resumed: boolean | undefined;
       await act(async () => {
         resumed = await result.current.resumeRadio();
       });
 
-      expect(resumed!).toBe(true);
+      expect(resumed).toBe(true);
       expect(audioElements.playActive).toHaveBeenCalled();
     });
 
@@ -341,12 +341,12 @@ describe('useRadioPlayback', () => {
         useRadioPlayback({ audioElements })
       );
 
-      let resumed: boolean;
+      let resumed: boolean | undefined;
       await act(async () => {
         resumed = await result.current.resumeRadio();
       });
 
-      expect(resumed!).toBe(false);
+      expect(resumed).toBe(false);
       expect(audioElements.playActive).not.toHaveBeenCalled();
     });
 
@@ -357,27 +357,27 @@ describe('useRadioPlayback', () => {
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
-      let resumed: boolean;
+      let resumed: boolean | undefined;
       await act(async () => {
         resumed = await result.current.resumeRadio();
       });
 
-      expect(resumed!).toBe(false);
+      expect(resumed).toBe(false);
     });
   });
 
   describe('pauseRadio', () => {
-    it('should pause when in radio mode', () => {
+    it('should pause when in radio mode', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       act(() => {
@@ -434,13 +434,13 @@ describe('useRadioPlayback', () => {
   });
 
   describe('setSignalStatus', () => {
-    it('should update signal status when in radio mode', () => {
+    it('should update signal status when in radio mode', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       act(() => {
@@ -462,13 +462,13 @@ describe('useRadioPlayback', () => {
       expect(result.current.signalStatus).toBe(null);
     });
 
-    it('should handle error status', () => {
+    it('should handle error status', async () => {
       const { result } = renderHook(() =>
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       act(() => {
@@ -480,7 +480,7 @@ describe('useRadioPlayback', () => {
   });
 
   describe('audio event handlers', () => {
-    it('should set oncanplay handler that plays audio', () => {
+    it('should set oncanplay handler that plays audio', async () => {
       const mockAudio = createMockAudioElement();
       audioElements.getActiveAudio = vi.fn().mockReturnValue(mockAudio);
 
@@ -488,8 +488,8 @@ describe('useRadioPlayback', () => {
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       // Verify oncanplay was set
@@ -503,7 +503,7 @@ describe('useRadioPlayback', () => {
       expect(mockAudio.play).toHaveBeenCalled();
     });
 
-    it('should set signal status to error on audio error', () => {
+    it('should set signal status to error on audio error', async () => {
       const mockAudio = createMockAudioElement();
       audioElements.getActiveAudio = vi.fn().mockReturnValue(mockAudio);
 
@@ -511,8 +511,8 @@ describe('useRadioPlayback', () => {
         useRadioPlayback({ audioElements })
       );
 
-      act(() => {
-        result.current.playRadio(createRadioStation());
+      await act(async () => {
+        await result.current.playRadio(createRadioStation());
       });
 
       // Simulate error event
