@@ -632,7 +632,7 @@
     border: 1px solid var(--white-08);
     box-shadow: 0 8px 32px var(--black-40),
                 inset 0 1px 1px var(--white-05);
-    z-index: 9998; /* Justo debajo de la bottom nav (9999) */
+    z-index: calc(var(--z-nav-mobile) - 10); /* Justo debajo de la bottom nav */
     overflow: hidden; /* Clip swipe animation */
     /* Disable transitions on mobile to prevent trembling from safe-area changes */
     transition: none;

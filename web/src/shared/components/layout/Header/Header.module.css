@@ -275,7 +275,7 @@
     0 10px 25px -3px var(--black-30),
     0 0 0 1px var(--white-15);
   padding: var(--space-2);
-  z-index: 1001; /* Mayor que hero buttons */
+  z-index: var(--z-popover);
 
   /* Animación de entrada */
   transform-origin: top right;
@@ -536,7 +536,7 @@
     box-shadow: 0 4px 20px var(--black-30);
     padding: var(--space-5) var(--space-4);
     animation: slideDown 0.3s ease;
-    z-index: 1001; /* Mayor que hero buttons */
+    z-index: var(--z-popover);
   }
 
   /* Light theme para dropdown móvil */

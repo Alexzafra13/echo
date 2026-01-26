@@ -330,7 +330,7 @@ textarea:focus-visible {
   color: var(--text-on-primary);
   font-weight: var(--font-semibold);
   text-decoration: none;
-  z-index: 9999;
+  z-index: var(--z-nav-mobile);
 }
 
 .skip-link:focus {
