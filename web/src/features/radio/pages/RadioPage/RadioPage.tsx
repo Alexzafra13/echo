@@ -4,6 +4,7 @@ import { Sidebar } from '@features/home/components';
 import { Pagination } from '@shared/components/ui';
 import { useGridDimensions } from '@features/home/hooks';
 import { usePlayer } from '@features/player/context/PlayerContext';
+import { useModal } from '@shared/hooks';
 import {
   RadioStationCard,
   RadioSearchBar,
@@ -52,9 +53,11 @@ export default function RadioPage() {
   const [activeFilter, setActiveFilter] = useState<string>('top');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
-  const [isGenreModalOpen, setIsGenreModalOpen] = useState(false);
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+
+  // Modal state management
+  const countryModal = useModal();
+  const genreModal = useModal();
 
   // Transform API countries to Country format
   const allCountries: Country[] = useMemo(() => {
@@ -362,7 +365,7 @@ export default function RadioPage() {
             <CountrySelectButton
               countries={allCountries}
               selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
-              onClick={() => setIsCountryModalOpen(true)}
+              onClick={countryModal.open}
             />
           }
         />
@@ -390,7 +393,7 @@ export default function RadioPage() {
           <div className={styles.radioPage__filters}>
             <button
               className={styles.radioPage__genreButton}
-              onClick={() => setIsGenreModalOpen(true)}
+              onClick={genreModal.open}
             >
               <Music2 size={20} />
               <span>Género: {activeFilterLabel}</span>
@@ -477,8 +480,8 @@ export default function RadioPage() {
 
       {/* Country Selection Modal */}
       <CountrySelectModal
-        isOpen={isCountryModalOpen}
-        onClose={() => setIsCountryModalOpen(false)}
+        isOpen={countryModal.isOpen}
+        onClose={countryModal.close}
         countries={allCountries}
         selectedCountry={selectedCountry || userCountry?.countryCode || 'ES'}
         onChange={handleCountryChange}
@@ -487,8 +490,8 @@ export default function RadioPage() {
 
       {/* Genre Selection Modal */}
       <GenreSelectModal
-        isOpen={isGenreModalOpen}
-        onClose={() => setIsGenreModalOpen(false)}
+        isOpen={genreModal.isOpen}
+        onClose={genreModal.close}
         genres={availableGenres}
         selectedGenre={activeFilter}
         onChange={handleFilterChange}
