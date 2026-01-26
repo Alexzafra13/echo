@@ -3,7 +3,7 @@ import { User, Lock, Calendar, Check, X, Eye, ExternalLink } from 'lucide-react'
 import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
-import { useAuth } from '@shared/hooks';
+import { useAuth, useModal } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
 import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings/hooks';
@@ -27,7 +27,7 @@ export function ProfilePage() {
   const [dominantColor, setDominantColor] = useState<string>('107, 114, 128'); // Default gray
 
   // Avatar modal
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const avatarModal = useModal();
 
   // Name editing
   const [isEditingName, setIsEditingName] = useState(false);
@@ -182,7 +182,7 @@ export function ProfilePage() {
           <div className={styles.profilePage__header}>
             <div
               className={styles.profilePage__avatarContainer}
-              onClick={() => setShowAvatarModal(true)}
+              onClick={avatarModal.open}
             >
               {user?.hasAvatar ? (
                 <img
@@ -554,8 +554,8 @@ export function ProfilePage() {
       </main>
 
       {/* Avatar Edit Modal */}
-      {showAvatarModal && (
-        <AvatarEditModal onClose={() => setShowAvatarModal(false)} />
+      {avatarModal.isOpen && (
+        <AvatarEditModal onClose={avatarModal.close} />
       )}
     </div>
   );

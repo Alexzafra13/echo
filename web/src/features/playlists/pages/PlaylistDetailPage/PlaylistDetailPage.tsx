@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'wouter';
 import { Play, Shuffle, Music, Globe, Lock } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
@@ -7,6 +7,7 @@ import { TrackList } from '@features/home/components';
 import { usePlaylist, usePlaylistTracks, useUpdatePlaylist, useRemoveTrackFromPlaylist, useDeletePlaylist, useReorderPlaylistTracks } from '../../hooks/usePlaylists';
 import { usePlayer } from '@features/player';
 import { Button } from '@shared/components/ui';
+import { useModal } from '@shared/hooks';
 import { PlaylistCoverMosaic, PlaylistOptionsMenu, EditPlaylistModal, DeletePlaylistModal } from '../../components';
 import { UpdatePlaylistDto } from '../../types';
 import type { Track as SharedTrack } from '@shared/types/track.types';
@@ -27,10 +28,12 @@ export default function PlaylistDetailPage() {
   const [, setLocation] = useLocation();
   const { playQueue, currentTrack, setShuffle } = usePlayer();
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Modal state management
+  const imageModal = useModal();
+  const editModal = useModal();
+  const deleteModal = useModal();
 
   const { data: playlist, isLoading: loadingPlaylist, error: playlistError } = usePlaylist(id!);
   const { data: playlistTracks, isLoading: loadingTracks } = usePlaylistTracks(id!);
@@ -103,7 +106,7 @@ export default function PlaylistDetailPage() {
     if (!id) return;
     try {
       await deletePlaylistMutation.mutateAsync(id);
-      setShowDeleteModal(false);
+      deleteModal.close();
       setLocation('/playlists');
     } catch (error) {
       logger.error('Error deleting playlist:', error);
@@ -291,10 +294,10 @@ export default function PlaylistDetailPage() {
                   Aleatorio
                 </Button>
                 <PlaylistOptionsMenu
-                  onEdit={() => setShowEditModal(true)}
+                  onEdit={editModal.open}
                   onToggleVisibility={handleToggleVisibility}
                   onDownload={handleDownloadPlaylist}
-                  onDelete={() => setShowDeleteModal(true)}
+                  onDelete={deleteModal.open}
                   isPublic={playlist.public}
                 />
               </div>
@@ -330,10 +333,10 @@ export default function PlaylistDetailPage() {
       </main>
 
       {/* Image Modal/Lightbox */}
-      {isImageModalOpen && playlist.coverImageUrl && (
+      {imageModal.isOpen && playlist.coverImageUrl && (
         <div
           className={styles.playlistDetailPage__imageModal}
-          onClick={() => setIsImageModalOpen(false)}
+          onClick={imageModal.close}
         >
           <div
             className={styles.playlistDetailPage__imageModalContent}
@@ -349,20 +352,20 @@ export default function PlaylistDetailPage() {
       )}
 
       {/* Edit Playlist Modal */}
-      {showEditModal && playlist && (
+      {editModal.isOpen && playlist && (
         <EditPlaylistModal
           playlist={playlist}
-          onClose={() => setShowEditModal(false)}
+          onClose={editModal.close}
           onSubmit={handleUpdatePlaylist}
           isLoading={updatePlaylistMutation.isPending}
         />
       )}
 
       {/* Delete Playlist Modal */}
-      {showDeleteModal && playlist && (
+      {deleteModal.isOpen && playlist && (
         <DeletePlaylistModal
           playlistName={playlist.name}
-          onClose={() => setShowDeleteModal(false)}
+          onClose={deleteModal.close}
           onConfirm={handleDeletePlaylist}
           isLoading={deletePlaylistMutation.isPending}
         />
