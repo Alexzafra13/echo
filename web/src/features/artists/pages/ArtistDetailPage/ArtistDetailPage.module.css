@@ -750,6 +750,22 @@
   background: var(--color-primary-hover);
 }
 
+/* Track currently playing state */
+.artistDetailPage__topTrackPlaying {
+  background: rgba(var(--color-primary-rgb, 237, 104, 66), 0.08);
+  border-radius: var(--radius-base);
+}
+
+.artistDetailPage__topTrackPlaying .artistDetailPage__topTrackTitle {
+  color: var(--color-primary);
+}
+
+/* Button visible and active when playing */
+.artistDetailPage__topTrackPlayActive {
+  opacity: 1;
+  background: var(--color-primary);
+}
+
 /* ===== Related Artists Section ===== */
 .artistDetailPage__relatedArtists {
   margin-bottom: var(--space-12);

@@ -1,0 +1,342 @@
+/* TrendingPage Styles */
+
+.trendingPage {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-base);
+  background-image: var(--gradient-textured);
+}
+
+.trendingPage__main {
+  flex: 1;
+  margin-left: 200px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.trendingPage__content {
+  flex: 1;
+  padding: 30px 40px calc(40px + var(--player-bottom-spacer, 0px));
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.trendingPage__content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header */
+.trendingPage__header {
+  margin-bottom: var(--space-8);
+}
+
+.trendingPage__titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.trendingPage__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 32px;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.trendingPage__title svg {
+  color: var(--color-primary);
+}
+
+.trendingPage__subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-4) 0;
+}
+
+/* Period Selector */
+.trendingPage__periodSelector {
+  display: flex;
+  gap: 4px;
+  background: var(--white-03);
+  padding: 5px;
+  border-radius: 10px;
+  border: 1px solid var(--white-08);
+  width: fit-content;
+}
+
+.trendingPage__periodButton {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trendingPage__periodButton:hover {
+  background: var(--white-05);
+  color: var(--text-primary);
+}
+
+.trendingPage__periodButtonActive {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(237, 104, 66, 0.3);
+}
+
+/* Loading State */
+.trendingPage__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.trendingPage__loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--white-10);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.trendingPage__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  background: var(--white-03);
+  border-radius: 16px;
+  border: 1px dashed var(--white-10);
+}
+
+.trendingPage__empty svg {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.trendingPage__empty p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.trendingPage__empty span {
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+
+/* Track List */
+.trendingPage__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--white-02);
+  border-radius: 16px;
+  border: 1px solid var(--white-08);
+  overflow: hidden;
+}
+
+.trendingPage__track {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 12px 20px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trendingPage__track:hover {
+  background: var(--white-05);
+}
+
+.trendingPage__trackPlaying {
+  background: rgba(237, 104, 66, 0.08);
+}
+
+.trendingPage__trackPlaying .trendingPage__trackTitle {
+  color: var(--color-primary);
+}
+
+/* Rank */
+.trendingPage__rank {
+  width: 32px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Cover */
+.trendingPage__coverWrapper {
+  flex-shrink: 0;
+}
+
+.trendingPage__cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--white-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+}
+
+/* Track Info */
+.trendingPage__trackInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trendingPage__trackTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trendingPage__trackMeta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stats */
+.trendingPage__stats {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.trendingPage__playCount {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* Duration */
+.trendingPage__duration {
+  width: 48px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Play Button */
+.trendingPage__playButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.trendingPage__track:hover .trendingPage__playButton {
+  opacity: 1;
+}
+
+.trendingPage__playButtonActive {
+  opacity: 1;
+}
+
+.trendingPage__playButton:hover {
+  transform: scale(1.1);
+  background: var(--color-primary-hover);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trendingPage__main {
+    margin-left: 0;
+  }
+
+  .trendingPage__content {
+    padding: 20px 16px calc(40px + var(--player-bottom-spacer, 0px));
+  }
+
+  .trendingPage__title {
+    font-size: 24px;
+  }
+
+  .trendingPage__periodSelector {
+    width: 100%;
+  }
+
+  .trendingPage__periodButton {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+  }
+
+  .trendingPage__track {
+    padding: 10px 12px;
+    gap: var(--space-3);
+  }
+
+  .trendingPage__rank {
+    width: 24px;
+    font-size: 12px;
+  }
+
+  .trendingPage__cover {
+    width: 40px;
+    height: 40px;
+  }
+
+  .trendingPage__stats {
+    display: none;
+  }
+
+  .trendingPage__duration {
+    display: none;
+  }
+
+  .trendingPage__playButton {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
+  }
+}

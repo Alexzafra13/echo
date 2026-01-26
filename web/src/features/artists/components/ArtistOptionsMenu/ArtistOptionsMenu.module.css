@@ -140,3 +140,26 @@
   background: var(--color-border, #2a3150);
   margin: 4px 0;
 }
+
+/* ===== Light Theme Styles ===== */
+:root[data-theme="light"] .artistOptionsMenu__dropdown {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  box-shadow: 0 8px 32px rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme="light"] .artistOptionsMenu__option {
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .artistOptionsMenu__option:hover {
+  background: var(--color-hover);
+}
+
+:root[data-theme="light"] .artistOptionsMenu__option svg {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .artistOptionsMenu__separator {
+  background: var(--border-base);
+}

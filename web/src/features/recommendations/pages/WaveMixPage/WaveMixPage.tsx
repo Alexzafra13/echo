@@ -27,11 +27,19 @@ export function WaveMixPage() {
 
   // Calculate items for 2 rows based on screen size (same as HomePage)
   // Use at least 10 items for mobile carousel scroll
-  const { itemsPerPage: gridItems } = useGridDimensions({
+  const { itemsPerPage: gridItems, columns } = useGridDimensions({
     maxRows: 2,
     headerHeight: 450,
   });
   const neededItems = Math.max(gridItems, 10);
+
+  // Calculate placeholders needed to fill incomplete rows
+  const getPlaceholdersCount = (itemsCount: number): number => {
+    if (columns <= 0) return 0;
+    const itemsInLastRow = itemsCount % columns;
+    if (itemsInLastRow === 0) return 0;
+    return columns - itemsInLastRow;
+  };
 
   const loadPlaylists = async () => {
     setIsLoading(true);
@@ -254,6 +262,10 @@ export function WaveMixPage() {
                         </div>
                       </div>
                     ))}
+                    {/* Placeholders to fill incomplete rows */}
+                    {Array.from({ length: getPlaceholdersCount(Math.min(artistPlaylists.length, neededItems)) }).map((_, idx) => (
+                      <div key={`placeholder-artist-${idx}`} className={styles.playlistCard__placeholder} aria-hidden="true" />
+                    ))}
                   </div>
                 </div>
               )}
@@ -294,6 +306,10 @@ export function WaveMixPage() {
                           </div>
                         </div>
                       </div>
+                    ))}
+                    {/* Placeholders to fill incomplete rows */}
+                    {Array.from({ length: getPlaceholdersCount(Math.min(genrePlaylists.length, neededItems)) }).map((_, idx) => (
+                      <div key={`placeholder-genre-${idx}`} className={styles.playlistCard__placeholder} aria-hidden="true" />
                     ))}
                   </div>
                 </div>

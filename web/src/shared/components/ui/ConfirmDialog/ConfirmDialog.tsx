@@ -104,11 +104,11 @@ export function ConfirmDialog({
         </p>
 
         <div className={styles.actions}>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+          <Button variant="danger" onClick={onCancel} disabled={isLoading}>
             Cancelar
           </Button>
           <Button
-            variant={variant === 'danger' ? 'danger' : 'secondary'}
+            variant="primary"
             onClick={onConfirm}
             disabled={isLoading}
           >

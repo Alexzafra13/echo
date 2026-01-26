@@ -57,16 +57,16 @@ export function HistoryTab() {
 
   return (
     <div className={styles.container}>
-      {/* Statistics Section */}
-      {!statsLoading && statsData && (
-        <>
+      {/* Statistics Section - Always show when data available (keeps previous data during refetch) */}
+      {statsData && (
+        <div style={{ opacity: statsLoading ? 0.7 : 1, transition: 'opacity 0.2s ease' }}>
           <StatsSection
             stats={statsData}
             period={statsPeriod}
             onPeriodChange={setStatsPeriod}
           />
           <ProviderStatsGrid providers={statsData.byProvider} />
-        </>
+        </div>
       )}
 
       {/* History Section */}

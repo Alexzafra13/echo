@@ -31,12 +31,39 @@
 .albumOptionsMenu__dropdown {
   min-width: 220px;
   overflow-y: auto;
-  background: var(--color-bg-elevated, #1e293b);
+  background: var(--bg-elevated, #1e293b);
   border: 1px solid var(--white-10);
   border-radius: 8px;
   box-shadow: 0 8px 32px var(--black-60);
   padding: 8px;
   /* Position, top/bottom, left/right, max-height set via inline styles */
+}
+
+/* Light theme styles */
+:root[data-theme="light"] .albumOptionsMenu__dropdown {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  box-shadow: 0 8px 32px rgba(31, 41, 55, 0.2);
+}
+
+:root[data-theme="light"] .albumOptionsMenu__option {
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .albumOptionsMenu__option:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+:root[data-theme="light"] .albumOptionsMenu__option:active:not(:disabled) {
+  background: rgba(31, 41, 55, 0.1);
+}
+
+:root[data-theme="light"] .albumOptionsMenu__option svg {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="light"] .albumOptionsMenu__separator {
+  background: var(--border-base);
 }
 
 /* Animation when dropdown opens below */

@@ -11,6 +11,7 @@ import { usePrivacySettings, useUpdatePrivacySettings } from '@features/settings
 import { AvatarEditModal } from '../../components/AvatarEditModal';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { formatDate } from '@shared/utils/format';
+import { extractDominantColor } from '@shared/utils/colorExtractor';
 import styles from './ProfilePage.module.css';
 
 /**
@@ -21,6 +22,9 @@ export function ProfilePage() {
   const { user } = useAuth();
   const updateUser = useAuthStore((state) => state.updateUser);
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
+
+  // Dominant color from avatar for dynamic background
+  const [dominantColor, setDominantColor] = useState<string>('107, 114, 128'); // Default gray
 
   // Avatar modal
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -51,6 +55,16 @@ export function ProfilePage() {
   useEffect(() => {
     setName(user?.name || '');
   }, [user?.name]);
+
+  // Extract dominant color from avatar
+  useEffect(() => {
+    if (user?.hasAvatar && user?.id) {
+      const avatarUrl = getUserAvatarUrl(user.id, user.hasAvatar, avatarTimestamp);
+      extractDominantColor(avatarUrl)
+        .then(color => setDominantColor(color))
+        .catch(() => {/* Color extraction failed, use default */});
+    }
+  }, [user?.hasAvatar, user?.id, avatarTimestamp]);
 
   // Sync privacy settings with server data
   useEffect(() => {
@@ -154,7 +168,15 @@ export function ProfilePage() {
       <main className={styles.profilePage__main}>
         <Header showBackButton disableSearch />
 
-        <div className={styles.profilePage__content}>
+        <div
+          className={styles.profilePage__content}
+          style={{
+            background: `linear-gradient(180deg,
+              rgba(${dominantColor}, 0.35) 0%,
+              rgba(${dominantColor}, 0.15) 20%,
+              transparent 50%)`
+          }}
+        >
           <div className={styles.profilePage__contentInner}>
           {/* Header with Avatar */}
           <div className={styles.profilePage__header}>
@@ -164,6 +186,7 @@ export function ProfilePage() {
             >
               {user?.hasAvatar ? (
                 <img
+                  key={`avatar-${avatarTimestamp}`}
                   src={getUserAvatarUrl(user?.id, user?.hasAvatar, avatarTimestamp)}
                   alt={user?.name || user?.username}
                   className={styles.profilePage__avatar}

@@ -1,5 +1,5 @@
 import { useParams, useLocation } from 'wouter';
-import { BookOpen, Music, Users, Play, TrendingUp, ListMusic } from 'lucide-react';
+import { BookOpen, Music, Users, Play, Pause, TrendingUp, ListMusic } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
@@ -26,7 +26,7 @@ export default function ArtistDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
-  const { play } = usePlayer();
+  const { play, pause, currentTrack, isPlaying } = usePlayer();
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
   const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
@@ -105,8 +105,20 @@ export default function ArtistDetailPage() {
     return count.toString();
   };
 
-  // Handle playing a top track
+  // Check if a track is currently playing
+  const isTrackPlaying = (trackId: string) => {
+    return currentTrack?.id === trackId && isPlaying;
+  };
+
+  // Handle playing/pausing a top track
   const handlePlayTopTrack = (track: typeof topTracks[0]) => {
+    // If this track is already playing, pause it
+    if (isTrackPlaying(track.trackId)) {
+      pause();
+      return;
+    }
+
+    // Otherwise, play the track
     play({
       id: track.trackId,
       title: track.title,
@@ -383,50 +395,57 @@ export default function ArtistDetailPage() {
                 <h2 className={styles.artistDetailPage__sectionTitle}>Canciones populares</h2>
               </div>
               <div className={styles.artistDetailPage__topTracksList}>
-                {topTracks.map((track, index) => (
-                  <div
-                    key={track.trackId}
-                    className={styles.artistDetailPage__topTrack}
-                    onClick={() => handlePlayTopTrack(track)}
-                  >
-                    <span className={styles.artistDetailPage__topTrackRank}>{index + 1}</span>
-                    {track.albumId && (
-                      <img
-                        src={`/api/albums/${track.albumId}/cover`}
-                        alt={track.albumName || track.title}
-                        className={styles.artistDetailPage__topTrackCover}
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder-album.png';
-                        }}
-                      />
-                    )}
-                    {!track.albumId && (
-                      <div className={styles.artistDetailPage__topTrackCoverPlaceholder}>
-                        <Music size={16} />
-                      </div>
-                    )}
-                    <div className={styles.artistDetailPage__topTrackInfo}>
-                      <span className={styles.artistDetailPage__topTrackTitle}>{track.title}</span>
-                      <span className={styles.artistDetailPage__topTrackMeta}>
-                        {track.albumName && <>{track.albumName} • </>}
-                        {formatPlayCount(track.playCount)} reproducciones
-                      </span>
-                    </div>
-                    <span className={styles.artistDetailPage__topTrackDuration}>
-                      {formatDuration(track.duration)}
-                    </span>
-                    <button
-                      className={styles.artistDetailPage__topTrackPlay}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlayTopTrack(track);
-                      }}
-                      aria-label={`Reproducir ${track.title}`}
+                {topTracks.map((track, index) => {
+                  const trackIsPlaying = isTrackPlaying(track.trackId);
+                  return (
+                    <div
+                      key={track.trackId}
+                      className={`${styles.artistDetailPage__topTrack} ${trackIsPlaying ? styles.artistDetailPage__topTrackPlaying : ''}`}
+                      onClick={() => handlePlayTopTrack(track)}
                     >
-                      <Play size={16} fill="currentColor" />
-                    </button>
-                  </div>
-                ))}
+                      <span className={styles.artistDetailPage__topTrackRank}>{index + 1}</span>
+                      {track.albumId && (
+                        <img
+                          src={`/api/albums/${track.albumId}/cover`}
+                          alt={track.albumName || track.title}
+                          className={styles.artistDetailPage__topTrackCover}
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder-album.png';
+                          }}
+                        />
+                      )}
+                      {!track.albumId && (
+                        <div className={styles.artistDetailPage__topTrackCoverPlaceholder}>
+                          <Music size={16} />
+                        </div>
+                      )}
+                      <div className={styles.artistDetailPage__topTrackInfo}>
+                        <span className={styles.artistDetailPage__topTrackTitle}>{track.title}</span>
+                        <span className={styles.artistDetailPage__topTrackMeta}>
+                          {track.albumName && <>{track.albumName} • </>}
+                          {formatPlayCount(track.playCount)} reproducciones
+                        </span>
+                      </div>
+                      <span className={styles.artistDetailPage__topTrackDuration}>
+                        {formatDuration(track.duration)}
+                      </span>
+                      <button
+                        className={`${styles.artistDetailPage__topTrackPlay} ${trackIsPlaying ? styles.artistDetailPage__topTrackPlayActive : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayTopTrack(track);
+                        }}
+                        aria-label={trackIsPlaying ? `Pausar ${track.title}` : `Reproducir ${track.title}`}
+                      >
+                        {trackIsPlaying ? (
+                          <Pause size={16} fill="currentColor" />
+                        ) : (
+                          <Play size={16} fill="currentColor" />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
