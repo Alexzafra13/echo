@@ -1,25 +1,15 @@
 /**
- * Album entity type
- * Represents a music album with all its metadata
+ * Album Types - Feature-specific types and re-exports
+ *
+ * Core Album type is defined in @shared/types/album.types
+ * This file re-exports it and adds feature-specific types
  */
-export interface Album {
-  id: string;
-  title: string;
-  artist: string;
-  artistId: string;
-  coverImage: string;
-  backgroundImage?: string;
-  albumArt?: string;
-  year: number;
-  releaseDate?: string;
-  totalTracks: number;
-  duration?: number;
-  genres?: string[];
-  genre?: string; // Single genre (from API)
-  addedAt: Date;
-  createdAt?: string; // ISO date string
-  path?: string; // File system path
-}
+
+// Re-export core types from shared
+export type { Album, AlbumSortOption, PaginatedAlbumsResponse } from '@shared/types/album.types';
+
+// Import for local use
+import type { Album } from '@shared/types/album.types';
 
 /**
  * Props for AlbumCard component
@@ -78,11 +68,6 @@ export interface HeroAlbumData {
   album: Album;
   isPlaying?: boolean;
 }
-
-/**
- * Album sort/filter options
- */
-export type AlbumSortOption = 'recent' | 'alphabetical' | 'artist' | 'recently-played' | 'top-played' | 'favorites';
 
 /**
  * Response type for alphabetically sorted albums
