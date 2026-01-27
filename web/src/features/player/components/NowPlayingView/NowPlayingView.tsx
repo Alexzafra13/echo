@@ -1,12 +1,19 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'wouter';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1, ListMusic, ChevronDown, Volume2, VolumeX, X } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
-import { QueueList } from '../QueueList/QueueList';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
-import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { formatDuration } from '@shared/utils/format';
+import { useSwipeToClose } from './hooks';
+import {
+  NowPlayingHeader,
+  NowPlayingCover,
+  NowPlayingInfo,
+  ProgressBar,
+  PlaybackControls,
+  VolumeControl,
+  MobileActions,
+  QueuePanel,
+} from './components';
 import styles from './NowPlayingView.module.css';
 
 interface NowPlayingViewProps {
@@ -37,36 +44,17 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     toggleRepeat,
   } = usePlayer();
 
-  // Navigation handlers - will use displayAlbumId and displayArtistId from getPlayerDisplayInfo
-  const handleGoToAlbum = useCallback((e: React.MouseEvent, albumIdParam?: string) => {
-    e.stopPropagation();
-    if (!isRadioMode && albumIdParam) {
-      onClose();
-      setTimeout(() => {
-        setLocation(`/album/${albumIdParam}`);
-      }, 50);
-    }
-  }, [isRadioMode, onClose, setLocation]);
-
-  const handleGoToArtist = useCallback((e: React.MouseEvent, artistIdParam?: string) => {
-    e.stopPropagation();
-    if (!isRadioMode && artistIdParam) {
-      onClose();
-      setTimeout(() => {
-        setLocation(`/artists/${artistIdParam}`);
-      }, 50);
-    }
-  }, [isRadioMode, onClose, setLocation]);
-
+  // Queue panel state
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [isQueueClosing, setIsQueueClosing] = useState(false); // For slide-out animation
-  const [queueState, setQueueState] = useState<'half' | 'full'>('half'); // 'half' = 50%, 'full' = 90%
+  const [isQueueClosing, setIsQueueClosing] = useState(false);
+  const [queueState, setQueueState] = useState<'half' | 'full'>('half');
   const [queueDragOffset, setQueueDragOffset] = useState(0);
   const queueRef = useRef<HTMLDivElement>(null);
   const queueContentRef = useRef<HTMLDivElement>(null);
   const isQueueDragging = useRef(false);
   const queueTouchStartY = useRef<number>(0);
-  const lastQueueScrollTop = useRef<number>(0);
+  const queueStateRef = useRef(queueState);
+  const queueDragOffsetRef = useRef(queueDragOffset);
 
   // Detect desktop
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
@@ -77,14 +65,68 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Volume handlers
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(parseFloat(e.target.value));
-  };
+  // Swipe to close gesture
+  const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose({
+    enabled: isOpen && !isQueueOpen,
+    onClose,
+  });
 
-  const toggleMute = () => {
+  // Navigation handlers
+  const handleGoToAlbum = useCallback(
+    (e: React.MouseEvent, albumId: string) => {
+      e.stopPropagation();
+      if (!isRadioMode) {
+        onClose();
+        setTimeout(() => setLocation(`/album/${albumId}`), 50);
+      }
+    },
+    [isRadioMode, onClose, setLocation]
+  );
+
+  const handleGoToArtist = useCallback(
+    (e: React.MouseEvent, artistId: string) => {
+      e.stopPropagation();
+      if (!isRadioMode) {
+        onClose();
+        setTimeout(() => setLocation(`/artists/${artistId}`), 50);
+      }
+    },
+    [isRadioMode, onClose, setLocation]
+  );
+
+  // Volume handlers
+  const handleToggleMute = useCallback(() => {
     setVolume(volume === 0 ? 0.7 : 0);
-  };
+  }, [volume, setVolume]);
+
+  // Queue handlers
+  const handleToggleQueue = useCallback(() => {
+    if (isQueueOpen) {
+      if (isDesktop) {
+        setIsQueueClosing(true);
+        setTimeout(() => {
+          setIsQueueOpen(false);
+          setIsQueueClosing(false);
+        }, 300);
+      } else {
+        setIsQueueOpen(false);
+      }
+    } else {
+      setIsQueueOpen(true);
+    }
+  }, [isQueueOpen, isDesktop]);
+
+  const handleCloseQueue = useCallback(() => {
+    if (isDesktop) {
+      setIsQueueClosing(true);
+      setTimeout(() => {
+        setIsQueueOpen(false);
+        setIsQueueClosing(false);
+      }, 300);
+    } else {
+      setIsQueueOpen(false);
+    }
+  }, [isDesktop]);
 
   // Open queue by default on desktop when NowPlayingView opens
   useEffect(() => {
@@ -102,19 +144,6 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       setQueueDragOffset(0);
     }
   }, [isOpen]);
-
-  // Handle queue close with animation on desktop
-  const handleCloseQueue = useCallback(() => {
-    if (isDesktop) {
-      setIsQueueClosing(true);
-      setTimeout(() => {
-        setIsQueueOpen(false);
-        setIsQueueClosing(false);
-      }, 300); // Match animation duration
-    } else {
-      setIsQueueOpen(false);
-    }
-  }, [isDesktop]);
 
   // Block body scroll when open
   useEffect(() => {
@@ -135,48 +164,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     }
   }, [isOpen]);
 
-  // Swipe down to close (main view)
-  const touchStartY = useRef<number>(0);
-  const touchCurrentY = useRef<number>(0);
-  const [dragOffset, setDragOffset] = useState(0);
-  const isDragging = useRef(false);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Don't start drag if queue is open
-    if (isQueueOpen) return;
-    touchStartY.current = e.touches[0].clientY;
-    touchCurrentY.current = e.touches[0].clientY;
-    isDragging.current = false;
-  }, [isQueueOpen]);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // Don't drag if queue is open
-    if (isQueueOpen) return;
-    const deltaY = e.touches[0].clientY - touchStartY.current;
-    touchCurrentY.current = e.touches[0].clientY;
-
-    // Only allow dragging down
-    if (deltaY > 0) {
-      isDragging.current = true;
-      setDragOffset(Math.min(deltaY, 300));
-    }
-  }, [isQueueOpen]);
-
-  const handleTouchEnd = useCallback(() => {
-    // Don't close if queue is open
-    if (isQueueOpen) return;
-    if (dragOffset > 150) {
-      onClose();
-    }
-    setDragOffset(0);
-    isDragging.current = false;
-  }, [dragOffset, onClose, isQueueOpen]);
-
-  // Queue panel gesture handling - 3 state behavior like Spotify
-  // Use refs to store current state for event listeners
-  const queueStateRef = useRef(queueState);
-  const queueDragOffsetRef = useRef(queueDragOffset);
-
+  // Queue panel gesture handling (mobile)
   useEffect(() => {
     queueStateRef.current = queueState;
   }, [queueState]);
@@ -185,39 +173,30 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     queueDragOffsetRef.current = queueDragOffset;
   }, [queueDragOffset]);
 
-  // Add touch event listeners with passive: false to allow preventDefault
   useEffect(() => {
     const queueElement = queueRef.current;
     if (!queueElement || isDesktop) return;
 
-    const handleTouchStart = (e: TouchEvent) => {
+    const handleQueueTouchStart = (e: TouchEvent) => {
       e.stopPropagation();
       queueTouchStartY.current = e.touches[0].clientY;
-      lastQueueScrollTop.current = queueContentRef.current?.scrollTop || 0;
       isQueueDragging.current = false;
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
+    const handleQueueTouchMove = (e: TouchEvent) => {
       e.stopPropagation();
       const deltaY = e.touches[0].clientY - queueTouchStartY.current;
       const scrollTop = queueContentRef.current?.scrollTop || 0;
       const isAtTop = scrollTop <= 0;
       const currentQueueState = queueStateRef.current;
 
-      // Dragging down (positive delta)
       if (deltaY > 0) {
-        if (currentQueueState === 'full' && isAtTop) {
-          isQueueDragging.current = true;
-          setQueueDragOffset(deltaY);
-          e.preventDefault();
-        } else if (currentQueueState === 'half' && isAtTop) {
+        if ((currentQueueState === 'full' || currentQueueState === 'half') && isAtTop) {
           isQueueDragging.current = true;
           setQueueDragOffset(deltaY);
           e.preventDefault();
         }
-      }
-      // Dragging up (negative delta)
-      else if (deltaY < 0) {
+      } else if (deltaY < 0) {
         if (currentQueueState === 'half') {
           isQueueDragging.current = true;
           setQueueDragOffset(deltaY);
@@ -226,7 +205,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       }
     };
 
-    const handleTouchEnd = () => {
+    const handleQueueTouchEnd = () => {
       const currentOffset = queueDragOffsetRef.current;
       const currentQueueState = queueStateRef.current;
 
@@ -244,53 +223,34 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       isQueueDragging.current = false;
     };
 
-    queueElement.addEventListener('touchstart', handleTouchStart, { passive: true });
-    queueElement.addEventListener('touchmove', handleTouchMove, { passive: false });
-    queueElement.addEventListener('touchend', handleTouchEnd, { passive: true });
+    queueElement.addEventListener('touchstart', handleQueueTouchStart, { passive: true });
+    queueElement.addEventListener('touchmove', handleQueueTouchMove, { passive: false });
+    queueElement.addEventListener('touchend', handleQueueTouchEnd, { passive: true });
 
     return () => {
-      queueElement.removeEventListener('touchstart', handleTouchStart);
-      queueElement.removeEventListener('touchmove', handleTouchMove);
-      queueElement.removeEventListener('touchend', handleTouchEnd);
+      queueElement.removeEventListener('touchstart', handleQueueTouchStart);
+      queueElement.removeEventListener('touchmove', handleQueueTouchMove);
+      queueElement.removeEventListener('touchend', handleQueueTouchEnd);
     };
   }, [isDesktop, isQueueOpen]);
 
-  // Get display info including artistId
-  const { title, artist, cover, albumName, artistId: displayArtistId, albumId: displayAlbumId } = getPlayerDisplayInfo(
+  // Get display info
+  const { title, artist, cover, albumName, artistId, albumId } = getPlayerDisplayInfo(
     isRadioMode,
     currentRadioStation,
     currentTrack
   );
-
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = x / rect.width;
-    seek(percent * duration);
-  };
-
-  const handleProgressTouch = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const percent = Math.max(0, Math.min(1, x / rect.width));
-    seek(percent * duration);
-  };
 
   // Calculate styles for drag interaction
   const dragStyles: React.CSSProperties = {
     '--dominant-color': dominantColor,
   } as React.CSSProperties;
 
-  // Only override transform when actively dragging down
   if (isOpen && dragOffset > 0) {
     dragStyles.transform = `translateY(${dragOffset}px)`;
     dragStyles.transition = 'none';
   }
 
-  // Use portal to render outside the player (which has transform that breaks fixed positioning)
   return createPortal(
     <div
       className={`${styles.nowPlaying} ${isOpen ? styles['nowPlaying--open'] : ''}`}
@@ -303,202 +263,79 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       <div className={styles.nowPlaying__background} />
 
       {/* Header */}
-      <div className={styles.nowPlaying__header}>
-        <button className={styles.nowPlaying__closeBtn} onClick={onClose} title="Cerrar">
-          <ChevronDown size={28} />
-        </button>
-        <div className={styles.nowPlaying__headerTitle}>
-          {albumName || 'Reproduciendo'}
-        </div>
-        <div className={styles.nowPlaying__headerSpacer} />
-      </div>
+      <NowPlayingHeader albumName={albumName} onClose={onClose} />
 
-      {/* Cover - clickable to go to album */}
-      <div
-        className={`${styles.nowPlaying__coverContainer} ${!isRadioMode && displayAlbumId ? styles['nowPlaying__coverContainer--clickable'] : ''}`}
-        onClick={!isRadioMode && displayAlbumId ? (e) => handleGoToAlbum(e, displayAlbumId) : undefined}
-        title={!isRadioMode && displayAlbumId ? `Ir al álbum: ${albumName}` : undefined}
-      >
-        <img
-          src={isRadioMode ? cover : getCoverUrl(cover)}
-          alt={title}
-          className={styles.nowPlaying__cover}
-          onError={handleImageError}
-        />
-      </div>
+      {/* Cover */}
+      <NowPlayingCover
+        cover={cover}
+        title={title}
+        albumName={albumName}
+        albumId={albumId}
+        isRadioMode={isRadioMode}
+        onGoToAlbum={handleGoToAlbum}
+      />
 
       {/* Track Info */}
-      <div className={styles.nowPlaying__info}>
-        <h1 className={styles.nowPlaying__title}>{title}</h1>
-        <p
-          className={`${styles.nowPlaying__artist} ${!isRadioMode && displayArtistId ? styles['nowPlaying__artist--clickable'] : ''}`}
-          onClick={!isRadioMode && displayArtistId ? (e) => handleGoToArtist(e, displayArtistId) : undefined}
-        >
-          {artist}
-        </p>
-      </div>
+      <NowPlayingInfo
+        title={title}
+        artist={artist}
+        artistId={artistId}
+        isRadioMode={isRadioMode}
+        onGoToArtist={handleGoToArtist}
+      />
 
       {/* Progress Bar */}
       {!isRadioMode && (
-        <div className={styles.nowPlaying__progress}>
-          <div
-            className={styles.nowPlaying__progressBar}
-            onClick={handleProgressClick}
-            onTouchMove={handleProgressTouch}
-          >
-            <div
-              className={styles.nowPlaying__progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
-            <div
-              className={styles.nowPlaying__progressHandle}
-              style={{ left: `${progressPercent}%` }}
-            />
-          </div>
-          <div className={styles.nowPlaying__time}>
-            <span>{formatDuration(currentTime)}</span>
-            <span>{formatDuration(duration)}</span>
-          </div>
-        </div>
+        <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
       )}
 
       {/* Controls */}
-      <div className={styles.nowPlaying__controls}>
-        {!isRadioMode && (
-          <button
-            className={`${styles.nowPlaying__controlBtn} ${styles['nowPlaying__controlBtn--small']} ${isShuffle ? styles['nowPlaying__controlBtn--active'] : ''}`}
-            onClick={toggleShuffle}
-            title="Aleatorio"
-          >
-            <Shuffle size={22} />
-          </button>
-        )}
+      <PlaybackControls
+        isPlaying={isPlaying}
+        isShuffle={isShuffle}
+        repeatMode={repeatMode}
+        isRadioMode={isRadioMode}
+        onTogglePlayPause={togglePlayPause}
+        onPlayNext={playNext}
+        onPlayPrevious={playPrevious}
+        onToggleShuffle={toggleShuffle}
+        onToggleRepeat={toggleRepeat}
+      />
 
-        <button
-          className={styles.nowPlaying__controlBtn}
-          onClick={playPrevious}
-          title="Anterior"
-          disabled={isRadioMode}
-        >
-          <SkipBack size={32} fill="currentColor" />
-        </button>
-
-        <button
-          className={`${styles.nowPlaying__controlBtn} ${styles.nowPlaying__playBtn}`}
-          onClick={togglePlayPause}
-          title={isPlaying ? 'Pausar' : 'Reproducir'}
-        >
-          {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
-        </button>
-
-        <button
-          className={styles.nowPlaying__controlBtn}
-          onClick={playNext}
-          title="Siguiente"
-          disabled={isRadioMode}
-        >
-          <SkipForward size={32} fill="currentColor" />
-        </button>
-
-        {!isRadioMode && (
-          <button
-            className={`${styles.nowPlaying__controlBtn} ${styles['nowPlaying__controlBtn--small']} ${repeatMode !== 'off' ? styles['nowPlaying__controlBtn--active'] : ''}`}
-            onClick={toggleRepeat}
-            title={`Repetir: ${repeatMode}`}
-          >
-            {repeatMode === 'one' ? <Repeat1 size={22} /> : <Repeat size={22} />}
-          </button>
-        )}
-      </div>
-
-      {/* Volume Control + Queue Button - Desktop style like Apple Music */}
+      {/* Volume Control (Desktop) */}
       {isDesktop && (
-        <div className={styles.nowPlaying__volumeRow}>
-          <div className={styles.nowPlaying__volume}>
-            <button
-              className={styles.nowPlaying__volumeBtn}
-              onClick={toggleMute}
-              title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
-            >
-              {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={handleVolumeChange}
-              className={styles.nowPlaying__volumeSlider}
-              style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
-            />
-          </div>
-          {/* Queue button next to volume */}
-          {!isRadioMode && (
-            <button
-              className={`${styles.nowPlaying__volumeQueueBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__volumeQueueBtn--active'] : ''}`}
-              onClick={() => isQueueOpen ? handleCloseQueue() : setIsQueueOpen(true)}
-              title="Cola de reproducción"
-            >
-              <ListMusic size={22} />
-              {queue.length > 0 && (
-                <span className={styles.nowPlaying__volumeQueueCount}>{queue.length}</span>
-              )}
-            </button>
-          )}
-        </div>
+        <VolumeControl
+          volume={volume}
+          queueLength={queue.length}
+          isQueueOpen={isQueueOpen && !isQueueClosing}
+          isRadioMode={isRadioMode}
+          onVolumeChange={setVolume}
+          onToggleMute={handleToggleMute}
+          onToggleQueue={handleToggleQueue}
+        />
       )}
 
-      {/* Bottom Actions - only on mobile */}
+      {/* Mobile Actions */}
       {!isRadioMode && !isDesktop && (
-        <div className={styles.nowPlaying__actions}>
-          <button
-            className={`${styles.nowPlaying__actionBtn} ${isQueueOpen && !isQueueClosing ? styles['nowPlaying__actionBtn--active'] : ''}`}
-            onClick={() => isQueueOpen ? handleCloseQueue() : setIsQueueOpen(true)}
-            title="Cola de reproducción"
-          >
-            <ListMusic size={24} />
-            {queue.length > 0 && (
-              <span className={styles.nowPlaying__actionCount}>{queue.length}</span>
-            )}
-          </button>
-        </div>
+        <MobileActions
+          queueLength={queue.length}
+          isQueueOpen={isQueueOpen && !isQueueClosing}
+          onToggleQueue={handleToggleQueue}
+        />
       )}
 
-      {/* Queue Panel - Bottom Sheet (mobile) / Side Panel (desktop) */}
+      {/* Queue Panel */}
       {(isQueueOpen || isQueueClosing) && (
-        <div
-          className={`${styles.nowPlaying__queuePanel} ${queueState === 'full' ? styles['nowPlaying__queuePanel--full'] : ''} ${isQueueClosing ? styles['nowPlaying__queuePanel--closing'] : ''}`}
+        <QueuePanel
           ref={queueRef}
-          style={!isDesktop ? {
-            height: queueState === 'full' ? '90vh' : '50vh',
-            transform: queueDragOffset > 0 ? `translateY(${queueDragOffset}px)` : undefined,
-            transition: isQueueDragging.current
-              ? 'none'
-              : 'height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease',
-          } : undefined}
-        >
-          {/* Mobile: drag handle */}
-          <div className={styles.nowPlaying__queueHandle} />
-
-          {/* Desktop: header with close button */}
-          {isDesktop && (
-            <div className={styles.nowPlaying__queueHeader}>
-              <h3 className={styles.nowPlaying__queueTitle}>Cola de reproducción</h3>
-              <button
-                className={styles.nowPlaying__queueClose}
-                onClick={handleCloseQueue}
-                title="Cerrar cola"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          )}
-
-          <div className={styles.nowPlaying__queueContent} ref={queueContentRef}>
-            <QueueList onClose={handleCloseQueue} />
-          </div>
-        </div>
+          isDesktop={isDesktop}
+          queueState={queueState}
+          isClosing={isQueueClosing}
+          dragOffset={queueDragOffset}
+          isDragging={isQueueDragging.current}
+          onClose={handleCloseQueue}
+          contentRef={queueContentRef}
+        />
       )}
 
       {/* Drag indicator */}
