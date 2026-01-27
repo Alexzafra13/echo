@@ -10,6 +10,7 @@ import {
   useDeleteCustomCover,
 } from '../../hooks/useAlbumCoversCustom';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './AlbumCoverUploadTab.module.css';
 
 interface AlbumCoverUploadTabProps {
@@ -64,20 +65,20 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
                 resetInput();
                 onSuccess?.();
               },
-              onError: (error: any) => {
+              onError: (err) => {
                 if (import.meta.env.DEV) {
-                  logger.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+                  logger.error('[AlbumCoverUpload] ❌ Error applying cover:', err);
                 }
-                setUploadError(error?.response?.data?.message || 'Error al aplicar la portada');
+                setUploadError(getApiErrorMessage(err, 'Error al aplicar la portada'));
               },
             }
           );
         },
-        onError: (error: any) => {
+        onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[AlbumCoverUpload] ❌ Error uploading cover:', error);
+            logger.error('[AlbumCoverUpload] ❌ Error uploading cover:', err);
           }
-          setUploadError(error?.response?.data?.message || 'Error al subir la portada');
+          setUploadError(getApiErrorMessage(err, 'Error al subir la portada'));
         },
       }
     );
@@ -96,11 +97,11 @@ export function AlbumCoverUploadTab({ albumId, onSuccess }: AlbumCoverUploadTabP
         onSuccess: () => {
           onSuccess?.();
         },
-        onError: (error: any) => {
+        onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[AlbumCoverUpload] ❌ Error applying cover:', error);
+            logger.error('[AlbumCoverUpload] ❌ Error applying cover:', err);
           }
-          setUploadError(error?.response?.data?.message || 'Error al aplicar la portada');
+          setUploadError(getApiErrorMessage(err, 'Error al aplicar la portada'));
         },
       }
     );

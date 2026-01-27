@@ -11,6 +11,7 @@ import { useAuthStore } from '@shared/store';
 import { useGridDimensions } from '@features/home/hooks';
 import { logger } from '@shared/utils/logger';
 import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './WaveMixPage.module.css';
 
 /**
@@ -48,9 +49,9 @@ export function WaveMixPage() {
       const data = await getAutoPlaylists();
       logger.debug('[WaveMix] Received playlists:', data);
       setPlaylists(data);
-    } catch (err: any) {
+    } catch (err) {
       logger.error('[WaveMix] Failed to load:', err);
-      setError(err.response?.data?.message || 'Error al cargar las playlists');
+      setError(getApiErrorMessage(err, 'Error al cargar las playlists'));
     } finally {
       setIsLoading(false);
     }
@@ -75,9 +76,9 @@ export function WaveMixPage() {
       const data = await refreshWaveMix();
       logger.debug('[WaveMix] Playlists refreshed:', data);
       setPlaylists(data);
-    } catch (err: any) {
+    } catch (err) {
       logger.error('[WaveMix] Failed to refresh:', err);
-      setError(err.response?.data?.message || 'Error al actualizar las playlists');
+      setError(getApiErrorMessage(err, 'Error al actualizar las playlists'));
     } finally {
       setIsLoading(false);
     }

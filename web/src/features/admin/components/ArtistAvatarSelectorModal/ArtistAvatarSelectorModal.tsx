@@ -7,6 +7,7 @@ import { AvatarOption, AvatarImageType } from '../../api/artist-avatars.api';
 import { FileUploadSection } from './FileUploadSection';
 import { metadataService } from '@features/admin/metadata/services/metadataService';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ArtistAvatarSelectorModal.module.css';
 
 interface ArtistAvatarSelectorModalProps {
@@ -102,11 +103,11 @@ export function ArtistAvatarSelectorModal({
           onSuccess?.();
           onClose();
         },
-        onError: (error: any) => {
+        onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[ArtistAvatarSelector] ❌ Error applying avatar:', error);
+            logger.error('[ArtistAvatarSelector] ❌ Error applying avatar:', err);
           }
-          setApplyError(error?.response?.data?.message || error?.message || 'Error al aplicar la imagen');
+          setApplyError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
         },
       },
     );

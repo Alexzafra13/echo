@@ -10,6 +10,7 @@ import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, 
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './PlaylistsPage.module.css';
 
 /**
@@ -88,11 +89,11 @@ export default function PlaylistsPage() {
 
     try {
       await deletePlaylistMutation.mutateAsync(deletePlaylistId);
-    } catch (error: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
-        logger.error('Error deleting playlist:', error);
+        logger.error('Error deleting playlist:', err);
       }
-      alert('Error al eliminar la playlist');
+      alert(getApiErrorMessage(err, 'Error al eliminar la playlist'));
     }
   };
 

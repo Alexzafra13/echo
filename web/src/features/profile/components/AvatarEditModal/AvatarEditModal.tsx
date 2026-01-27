@@ -4,6 +4,7 @@ import { useAuth, useFileUpload } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './AvatarEditModal.module.css';
 
 interface AvatarEditModalProps {
@@ -55,8 +56,8 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
         // Cerrar modal
         onClose();
       },
-      onError: (err: any) => {
-        setError(err.message || 'Error al subir la imagen');
+      onError: (err) => {
+        setError(getApiErrorMessage(err, 'Error al subir la imagen'));
       },
     });
   };
@@ -72,8 +73,8 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
         setShowDeleteConfirm(false);
         onClose();
       },
-      onError: (error: any) => {
-        setError(error.message || 'Error al eliminar el avatar');
+      onError: (err) => {
+        setError(getApiErrorMessage(err, 'Error al eliminar el avatar'));
         setShowDeleteConfirm(false);
       },
     });
