@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX, UserCheck } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
+import { useModal } from '@shared/hooks';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
@@ -17,13 +18,14 @@ import type { NotificationType } from '@shared/components/ui';
  * Panel de gestión de usuarios para administradores
  */
 export function UsersPanel() {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [credentialsData, setCredentialsData] = useState<{ username: string; password: string } | null>(null);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [userToPermanentlyDelete, setUserToPermanentlyDelete] = useState<User | null>(null);
-  const [userToResetPassword, setUserToResetPassword] = useState<User | null>(null);
-  const [userToReactivate, setUserToReactivate] = useState<User | null>(null);
+  // Modal states using useModal hook
+  const createModal = useModal();
+  const editModal = useModal<User>();
+  const credentialsModal = useModal<{ username: string; password: string }>();
+  const deleteModal = useModal<User>();
+  const permanentDeleteModal = useModal<User>();
+  const resetPasswordModal = useModal<User>();
+  const reactivateModal = useModal<User>();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,24 +48,16 @@ export function UsersPanel() {
 
   // Handlers
   const handleCreateSuccess = (username: string, password: string) => {
-    setIsCreateModalOpen(false);
-    setCredentialsData({ username, password });
-  };
-
-  const handleEditClick = (user: User) => {
-    setEditingUser(user);
-  };
-
-  const handleDeleteClick = (user: User) => {
-    setUserToDelete(user);
+    createModal.close();
+    credentialsModal.openWith({ username, password });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!userToDelete) return;
+    if (!deleteModal.data) return;
 
     try {
-      await deleteUserMutation.mutateAsync(userToDelete.id);
-      setUserToDelete(null);
+      await deleteUserMutation.mutateAsync(deleteModal.data.id);
+      deleteModal.close();
       setNotification({ type: 'success', message: 'Usuario desactivado correctamente' });
     } catch (err) {
       if (import.meta.env.DEV) {
@@ -73,16 +67,12 @@ export function UsersPanel() {
     }
   };
 
-  const handlePermanentlyDeleteClick = (user: User) => {
-    setUserToPermanentlyDelete(user);
-  };
-
   const handlePermanentlyDeleteConfirm = async () => {
-    if (!userToPermanentlyDelete) return;
+    if (!permanentDeleteModal.data) return;
 
     try {
-      await permanentlyDeleteUserMutation.mutateAsync(userToPermanentlyDelete.id);
-      setUserToPermanentlyDelete(null);
+      await permanentlyDeleteUserMutation.mutateAsync(permanentDeleteModal.data.id);
+      permanentDeleteModal.close();
       setNotification({ type: 'success', message: 'Usuario eliminado permanentemente' });
     } catch (err) {
       if (import.meta.env.DEV) {
@@ -92,18 +82,15 @@ export function UsersPanel() {
     }
   };
 
-  const handleResetPasswordClick = (user: User) => {
-    setUserToResetPassword(user);
-  };
-
   const handleResetPasswordConfirm = async () => {
-    if (!userToResetPassword) return;
+    if (!resetPasswordModal.data) return;
 
     try {
-      const result = await resetPasswordMutation.mutateAsync(userToResetPassword.id);
-      setUserToResetPassword(null);
-      setCredentialsData({
-        username: userToResetPassword.username,
+      const result = await resetPasswordMutation.mutateAsync(resetPasswordModal.data.id);
+      const username = resetPasswordModal.data.username;
+      resetPasswordModal.close();
+      credentialsModal.openWith({
+        username,
         password: result.temporaryPassword,
       });
     } catch (err) {
@@ -114,19 +101,15 @@ export function UsersPanel() {
     }
   };
 
-  const handleReactivateClick = (user: User) => {
-    setUserToReactivate(user);
-  };
-
   const handleReactivateConfirm = async () => {
-    if (!userToReactivate) return;
+    if (!reactivateModal.data) return;
 
     try {
       await updateUserMutation.mutateAsync({
-        id: userToReactivate.id,
+        id: reactivateModal.data.id,
         data: { isActive: true },
       });
-      setUserToReactivate(null);
+      reactivateModal.close();
       setNotification({ type: 'success', message: 'Usuario reactivado correctamente' });
     } catch (err) {
       if (import.meta.env.DEV) {
@@ -243,7 +226,7 @@ export function UsersPanel() {
         <Button
           variant="primary"
           leftIcon={<UserPlus size={18} />}
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={createModal.open}
         >
           Crear Usuario
         </Button>
@@ -386,7 +369,7 @@ export function UsersPanel() {
                     <div className={styles.actions}>
                       <button
                         className={styles.actionButton}
-                        onClick={() => handleEditClick(user)}
+                        onClick={() => editModal.openWith(user)}
                         title="Editar usuario"
                       >
                         <Edit2 size={14} />
@@ -394,7 +377,7 @@ export function UsersPanel() {
                       </button>
                       <button
                         className={styles.actionButton}
-                        onClick={() => handleResetPasswordClick(user)}
+                        onClick={() => resetPasswordModal.openWith(user)}
                         title="Resetear contraseña"
                         disabled={!user.isActive}
                       >
@@ -404,7 +387,7 @@ export function UsersPanel() {
                       {user.isActive ? (
                         <button
                           className={`${styles.actionButton} ${styles.actionButtonWarning}`}
-                          onClick={() => handleDeleteClick(user)}
+                          onClick={() => deleteModal.openWith(user)}
                           title={user.isSystemAdmin ? "No se puede desactivar al administrador principal" : "Desactivar usuario (acción reversible)"}
                           disabled={user.isSystemAdmin}
                         >
@@ -414,7 +397,7 @@ export function UsersPanel() {
                       ) : (
                         <button
                           className={`${styles.actionButton} ${styles.actionButtonSuccess}`}
-                          onClick={() => handleReactivateClick(user)}
+                          onClick={() => reactivateModal.openWith(user)}
                           title="Reactivar usuario"
                         >
                           <UserCheck size={14} />
@@ -423,7 +406,7 @@ export function UsersPanel() {
                       )}
                       <button
                         className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                        onClick={() => handlePermanentlyDeleteClick(user)}
+                        onClick={() => permanentDeleteModal.openWith(user)}
                         title={user.isSystemAdmin ? "No se puede eliminar al administrador principal" : "Eliminar permanentemente (no se puede deshacer)"}
                         disabled={user.isSystemAdmin}
                       >
@@ -507,68 +490,68 @@ export function UsersPanel() {
       )}
 
       {/* Modals */}
-      {isCreateModalOpen && (
+      {createModal.isOpen && (
         <CreateUserModal
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={createModal.close}
           onSuccess={handleCreateSuccess}
         />
       )}
 
-      {editingUser && (
+      {editModal.isOpen && editModal.data && (
         <EditUserModal
-          user={editingUser}
-          onClose={() => setEditingUser(null)}
+          user={editModal.data}
+          onClose={editModal.close}
         />
       )}
 
-      {credentialsData && (
+      {credentialsModal.isOpen && credentialsModal.data && (
         <CredentialsModal
-          username={credentialsData.username}
-          password={credentialsData.password}
-          onClose={() => setCredentialsData(null)}
+          username={credentialsModal.data.username}
+          password={credentialsModal.data.password}
+          onClose={credentialsModal.close}
         />
       )}
 
-      {userToDelete && (
+      {deleteModal.isOpen && deleteModal.data && (
         <ConfirmDialog
           title="Desactivar Usuario"
-          message={`¿Estás seguro de que quieres desactivar al usuario "${userToDelete.name || userToDelete.username}"? El usuario ya no podrá iniciar sesión.`}
+          message={`¿Estás seguro de que quieres desactivar al usuario "${deleteModal.data.name || deleteModal.data.username}"? El usuario ya no podrá iniciar sesión.`}
           confirmText="Desactivar"
           onConfirm={handleDeleteConfirm}
-          onCancel={() => setUserToDelete(null)}
+          onCancel={deleteModal.close}
           isLoading={deleteUserMutation.isPending}
         />
       )}
 
-      {userToResetPassword && (
+      {resetPasswordModal.isOpen && resetPasswordModal.data && (
         <ConfirmDialog
           title="Resetear Contraseña"
-          message={`¿Estás seguro de que quieres resetear la contraseña del usuario "${userToResetPassword.name || userToResetPassword.username}"? Se generará una contraseña temporal que deberás comunicarle al usuario.`}
+          message={`¿Estás seguro de que quieres resetear la contraseña del usuario "${resetPasswordModal.data.name || resetPasswordModal.data.username}"? Se generará una contraseña temporal que deberás comunicarle al usuario.`}
           confirmText="Resetear"
           onConfirm={handleResetPasswordConfirm}
-          onCancel={() => setUserToResetPassword(null)}
+          onCancel={resetPasswordModal.close}
           isLoading={resetPasswordMutation.isPending}
         />
       )}
 
-      {userToPermanentlyDelete && (
+      {permanentDeleteModal.isOpen && permanentDeleteModal.data && (
         <ConfirmDialog
           title="⚠️ Eliminar Permanentemente"
-          message={`¿Estás COMPLETAMENTE seguro de que quieres ELIMINAR PERMANENTEMENTE al usuario "${userToPermanentlyDelete.name || userToPermanentlyDelete.username}"? Esta acción NO SE PUEDE DESHACER. Todos los datos del usuario serán eliminados de forma permanente de la base de datos.`}
+          message={`¿Estás COMPLETAMENTE seguro de que quieres ELIMINAR PERMANENTEMENTE al usuario "${permanentDeleteModal.data.name || permanentDeleteModal.data.username}"? Esta acción NO SE PUEDE DESHACER. Todos los datos del usuario serán eliminados de forma permanente de la base de datos.`}
           confirmText="Eliminar Permanentemente"
           onConfirm={handlePermanentlyDeleteConfirm}
-          onCancel={() => setUserToPermanentlyDelete(null)}
+          onCancel={permanentDeleteModal.close}
           isLoading={permanentlyDeleteUserMutation.isPending}
         />
       )}
 
-      {userToReactivate && (
+      {reactivateModal.isOpen && reactivateModal.data && (
         <ConfirmDialog
           title="Reactivar Usuario"
-          message={`¿Estás seguro de que quieres reactivar al usuario "${userToReactivate.name || userToReactivate.username}"? El usuario podrá volver a iniciar sesión.`}
+          message={`¿Estás seguro de que quieres reactivar al usuario "${reactivateModal.data.name || reactivateModal.data.username}"? El usuario podrá volver a iniciar sesión.`}
           confirmText="Reactivar"
           onConfirm={handleReactivateConfirm}
-          onCancel={() => setUserToReactivate(null)}
+          onCancel={reactivateModal.close}
           isLoading={updateUserMutation.isPending}
         />
       )}
