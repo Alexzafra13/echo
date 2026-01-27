@@ -8,7 +8,7 @@ import { AlbumCoverSelectorModal } from '@features/admin/components/AlbumCoverSe
 import { useAlbum, useAlbumTracks } from '../../hooks/useAlbums';
 import { useArtistAlbums } from '@features/artists/hooks';
 import { usePlayer, Track } from '@features/player';
-import { useAlbumMetadataSync } from '@shared/hooks';
+import { useAlbumMetadataSync, useModal } from '@shared/hooks';
 import { Button } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -27,10 +27,10 @@ export default function AlbumPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39'); // Default dark blue
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
-  const [isCoverSelectorOpen, setIsCoverSelectorOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
+  const imageLightboxModal = useModal();
+  const infoModal = useModal();
+  const coverSelectorModal = useModal();
   const { playQueue, currentTrack, setShuffle } = usePlayer();
 
   // Real-time synchronization via WebSocket for album cover
@@ -109,16 +109,16 @@ export default function AlbumPage() {
 
   // Load cover dimensions when modal opens
   useEffect(() => {
-    if (isImageModalOpen && coverUrl) {
+    if (imageLightboxModal.isOpen && coverUrl) {
       const img = new window.Image();
       img.onload = () => {
         setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
       };
       img.src = coverUrl;
-    } else if (!isImageModalOpen) {
+    } else if (!imageLightboxModal.isOpen) {
       setCoverDimensions(null); // Reset when modal closes
     }
-  }, [isImageModalOpen, coverUrl]);
+  }, [imageLightboxModal.isOpen, coverUrl]);
 
   const handleArtistClick = () => {
     if (album?.artistId) {
@@ -166,7 +166,7 @@ export default function AlbumPage() {
   };
 
   const handleShowAlbumInfo = () => {
-    setIsInfoModalOpen(true);
+    infoModal.open();
   };
 
   const handleAddAlbumToPlaylist = () => {
@@ -185,7 +185,7 @@ export default function AlbumPage() {
   };
 
   const handleChangeCover = () => {
-    setIsCoverSelectorOpen(true);
+    coverSelectorModal.open();
   };
 
   const handleCoverChanged = () => {
@@ -200,7 +200,7 @@ export default function AlbumPage() {
     });
 
     // Close the modal
-    setIsCoverSelectorOpen(false);
+    coverSelectorModal.close();
   };
 
   if (loadingAlbum) {
@@ -263,7 +263,7 @@ export default function AlbumPage() {
               alt={album.title}
               className={styles.albumPage__heroCover}
               onError={handleImageError}
-              onClick={() => setIsImageModalOpen(true)}
+              onClick={imageLightboxModal.open}
             />
 
             {/* Album info */}
@@ -366,10 +366,10 @@ export default function AlbumPage() {
       </main>
 
       {/* Image Modal/Lightbox */}
-      {isImageModalOpen && (
+      {imageLightboxModal.isOpen && (
         <div
           className={styles.albumPage__imageModal}
-          onClick={() => setIsImageModalOpen(false)}
+          onClick={imageLightboxModal.close}
         >
           <div className={styles.albumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img
@@ -389,20 +389,20 @@ export default function AlbumPage() {
       )}
 
       {/* Album Info Modal */}
-      {isInfoModalOpen && album && (
+      {infoModal.isOpen && album && (
         <AlbumInfoModal
           album={album}
           tracks={tracks || []}
-          onClose={() => setIsInfoModalOpen(false)}
+          onClose={infoModal.close}
         />
       )}
 
       {/* Album Cover Selector Modal */}
-      {isCoverSelectorOpen && album && (
+      {coverSelectorModal.isOpen && album && (
         <AlbumCoverSelectorModal
           albumId={album.id}
           albumName={album.title}
-          onClose={() => setIsCoverSelectorOpen(false)}
+          onClose={coverSelectorModal.close}
           onSuccess={handleCoverChanged}
         />
       )}

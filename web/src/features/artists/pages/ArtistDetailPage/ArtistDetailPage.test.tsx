@@ -36,6 +36,13 @@ vi.mock('@shared/hooks', () => ({
   useAuth: vi.fn(),
   useArtistMetadataSync: vi.fn(),
   useAlbumMetadataSync: vi.fn(),
+  useModal: vi.fn(() => ({
+    isOpen: false,
+    data: null,
+    open: vi.fn(),
+    openWith: vi.fn(),
+    close: vi.fn(),
+  })),
 }));
 
 // Mock player context

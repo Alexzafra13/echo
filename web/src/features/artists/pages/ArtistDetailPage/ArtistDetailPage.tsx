@@ -1,6 +1,7 @@
 import { useParams, useLocation } from 'wouter';
 import { BookOpen, Music, Users, Play, Pause, TrendingUp, ListMusic } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { useModal } from '@shared/hooks';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar, AlbumGrid } from '@features/home/components';
 import { ArtistOptionsMenu } from '../../components';
@@ -27,10 +28,11 @@ export default function ArtistDetailPage() {
   const [, setLocation] = useLocation();
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const { play, pause, currentTrack, isPlaying } = usePlayer();
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [isAvatarSelectorOpen, setIsAvatarSelectorOpen] = useState(false);
-  const [isBackgroundPositionModalOpen, setIsBackgroundPositionModalOpen] = useState(false);
-  const [selectedImageType, setSelectedImageType] = useState<'profile' | 'background' | 'banner' | 'logo'>('profile');
+
+  // Modal states using useModal hook
+  const avatarLightboxModal = useModal();
+  const avatarSelectorModal = useModal<'profile' | 'background' | 'banner' | 'logo'>();
+  const backgroundPositionModal = useModal();
   const [imageRenderKey, setImageRenderKey] = useState(0);
   const [logoRenderKey, setLogoRenderKey] = useState(0);
   const [profileRenderKey, setProfileRenderKey] = useState(0);
@@ -220,24 +222,21 @@ export default function ArtistDetailPage() {
 
   // Handlers for image menu
   const handleChangeProfile = () => {
-    setSelectedImageType('profile');
-    setIsAvatarSelectorOpen(true);
+    avatarSelectorModal.openWith('profile');
   };
 
   const handleChangeBackgroundOrBanner = () => {
     // Pre-select whichever type is currently shown (most recently updated)
     const currentType = getBackgroundImageType() || 'background';
-    setSelectedImageType(currentType);
-    setIsAvatarSelectorOpen(true);
+    avatarSelectorModal.openWith(currentType);
   };
 
   const handleAdjustPosition = () => {
-    setIsBackgroundPositionModalOpen(true);
+    backgroundPositionModal.open();
   };
 
   const handleChangeLogo = () => {
-    setSelectedImageType('logo');
-    setIsAvatarSelectorOpen(true);
+    avatarSelectorModal.openWith('logo');
   };
 
   // Helper to format biography with drop cap
@@ -336,7 +335,7 @@ export default function ArtistDetailPage() {
                     src={profileUrl}
                     alt={artist.name}
                     className={styles.artistDetailPage__avatar}
-                    onClick={() => setIsAvatarModalOpen(true)}
+                    onClick={avatarLightboxModal.open}
                   />
                 ) : (
                   <div className={styles.artistDetailPage__avatarFallback}>
@@ -619,10 +618,10 @@ export default function ArtistDetailPage() {
       </main>
 
       {/* Avatar Modal/Lightbox */}
-      {isAvatarModalOpen && profileUrl && (
+      {avatarLightboxModal.isOpen && profileUrl && (
         <div
           className={styles.artistDetailPage__imageModal}
-          onClick={() => setIsAvatarModalOpen(false)}
+          onClick={avatarLightboxModal.close}
         >
           <div className={styles.artistDetailPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img
@@ -635,36 +634,36 @@ export default function ArtistDetailPage() {
       )}
 
       {/* Avatar Selector Modal */}
-      {isAvatarSelectorOpen && artist && (
+      {avatarSelectorModal.isOpen && artist && avatarSelectorModal.data && (
         <ArtistAvatarSelectorModal
           artistId={artist.id}
           artistName={artist.name}
-          defaultType={selectedImageType}
+          defaultType={avatarSelectorModal.data}
           allowedTypes={
-            selectedImageType === 'background' || selectedImageType === 'banner'
+            avatarSelectorModal.data === 'background' || avatarSelectorModal.data === 'banner'
               ? ['background', 'banner']
-              : [selectedImageType]
+              : [avatarSelectorModal.data]
           }
-          onClose={() => setIsAvatarSelectorOpen(false)}
+          onClose={avatarSelectorModal.close}
           onSuccess={() => {
             // WebSocket will automatically sync the changes via useArtistMetadataSync
             // No need for window.location.reload() - React Query handles it
-            setIsAvatarSelectorOpen(false);
+            avatarSelectorModal.close();
           }}
         />
       )}
 
       {/* Background Position Adjustment Modal */}
-      {isBackgroundPositionModalOpen && artist && backgroundUrl && (
+      {backgroundPositionModal.isOpen && artist && backgroundUrl && (
         <BackgroundPositionModal
           artistId={artist.id}
           artistName={artist.name}
           backgroundUrl={backgroundUrl}
           initialPosition={artist.backgroundPosition}
-          onClose={() => setIsBackgroundPositionModalOpen(false)}
+          onClose={backgroundPositionModal.close}
           onSuccess={() => {
             // WebSocket will automatically sync the changes
-            setIsBackgroundPositionModalOpen(false);
+            backgroundPositionModal.close();
           }}
         />
       )}
