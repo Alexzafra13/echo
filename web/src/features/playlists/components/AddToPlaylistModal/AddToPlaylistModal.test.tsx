@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { AddToPlaylistModal } from './AddToPlaylistModal';
 import type { Track } from '@features/home/types';
 
@@ -285,9 +286,16 @@ describe('AddToPlaylistModal', () => {
 
   describe('error handling', () => {
     it('should show error message when add to playlist fails', async () => {
-      mockAddTrackMutateAsync.mockRejectedValueOnce({
-        response: { data: { message: 'Track already in playlist' } },
-      });
+      // Create a proper AxiosError that getApiErrorMessage can handle
+      const axiosError = new AxiosError('Request failed');
+      axiosError.response = {
+        data: { message: 'Track already in playlist' },
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: { headers: {} as any },
+      };
+      mockAddTrackMutateAsync.mockRejectedValueOnce(axiosError);
 
       render(<AddToPlaylistModal track={mockTrack} onClose={vi.fn()} />, {
         wrapper: createWrapper(),
@@ -300,8 +308,23 @@ describe('AddToPlaylistModal', () => {
       });
     });
 
-    it('should show generic error when no message provided', async () => {
+    it('should show error message from Error object', async () => {
       mockAddTrackMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+      render(<AddToPlaylistModal track={mockTrack} onClose={vi.fn()} />, {
+        wrapper: createWrapper(),
+      });
+
+      fireEvent.click(screen.getByText('My Playlist'));
+
+      await waitFor(() => {
+        // getApiErrorMessage extracts message from Error objects
+        expect(screen.getByText('Network error')).toBeInTheDocument();
+      });
+    });
+
+    it('should show default error when error has no message', async () => {
+      mockAddTrackMutateAsync.mockRejectedValueOnce({});
 
       render(<AddToPlaylistModal track={mockTrack} onClose={vi.fn()} />, {
         wrapper: createWrapper(),

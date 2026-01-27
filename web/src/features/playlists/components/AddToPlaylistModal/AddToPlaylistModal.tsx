@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ListPlus, Plus, X, Loader2, Music } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { usePlaylists, useCreatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { PlaylistCoverMosaic } from '../PlaylistCoverMosaic/PlaylistCoverMosaic';
 import type { Track } from '@features/home/types';
 import styles from './AddToPlaylistModal.module.css';
@@ -27,8 +28,8 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
         dto: { trackId: track.id },
       });
       onClose();
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Error al agregar la canción');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Error al agregar la canción'));
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -53,8 +54,8 @@ export function AddToPlaylistModal({ track, onClose }: AddToPlaylistModalProps) 
       });
 
       onClose();
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Error al crear la playlist');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Error al crear la playlist'));
       setTimeout(() => setError(''), 3000);
     }
   };

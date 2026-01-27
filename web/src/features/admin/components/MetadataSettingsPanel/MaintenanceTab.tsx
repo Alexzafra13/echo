@@ -4,6 +4,7 @@ import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@sha
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatBytes } from '@shared/utils/format';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { MissingFilesPanel } from '../MissingFilesPanel';
 import { logger } from '@shared/utils/logger';
 import styles from './MaintenanceTab.module.css';
@@ -115,11 +116,11 @@ export function MaintenanceTab() {
 
       // Refrescar estadísticas
       await loadStats();
-    } catch (err: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error running cleanup:', err);
       }
-      setNotification({ type: 'error', message: err.response?.data?.message || 'Error al ejecutar limpieza' });
+      setNotification({ type: 'error', message: getApiErrorMessage(err, 'Error al ejecutar limpieza') });
     } finally {
       setIsCleaning(false);
     }
@@ -135,11 +136,11 @@ export function MaintenanceTab() {
       setNotification(null);
       await apiClient.post('/admin/settings/cache/clear');
       setNotification({ type: 'success', message: 'Caché limpiado correctamente' });
-    } catch (err: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error clearing cache:', err);
       }
-      setNotification({ type: 'error', message: err.response?.data?.message || 'Error al limpiar caché' });
+      setNotification({ type: 'error', message: getApiErrorMessage(err, 'Error al limpiar caché') });
     }
   };
 
@@ -155,11 +156,11 @@ export function MaintenanceTab() {
 
       // Refrescar estadísticas
       await loadStats();
-    } catch (error: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
-        logger.error('Error populating sort names:', error);
+        logger.error('Error populating sort names:', err);
       }
-      setPopulateError(error.response?.data?.message || 'Error al generar nombres de ordenamiento');
+      setPopulateError(getApiErrorMessage(err, 'Error al generar nombres de ordenamiento'));
     } finally {
       setIsPopulating(false);
     }

@@ -4,6 +4,7 @@ import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ProvidersTab.module.css';
 
 interface AutoSearchConfig {
@@ -92,13 +93,13 @@ export function AutoSearchTab() {
 
       // Reload config to get updated description
       await loadConfig();
-    } catch (err: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error saving auto-search config:', err);
       }
       setNotification({
         type: 'error',
-        message: err.response?.data?.message || 'Error al guardar configuración',
+        message: getApiErrorMessage(err, 'Error al guardar configuración'),
       });
     } finally {
       setIsSaving(false);

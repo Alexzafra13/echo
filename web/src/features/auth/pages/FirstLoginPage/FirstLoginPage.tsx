@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Check, X, AlertCircle, ArrowRight } from 'lucide-react';
 import { Button, Input } from '@shared/components/ui';
 import { useAuth } from '@shared/hooks';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { useAuthStore } from '@shared/store';
 import { useLocation } from 'wouter';
 import apiClient from '@shared/services/api';
@@ -90,8 +91,8 @@ export default function FirstLoginPage() {
 
       // Redirigir a home
       setLocation('/home');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al actualizar las credenciales');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Error al actualizar las credenciales'));
       setIsSubmitting(false);
     }
   };

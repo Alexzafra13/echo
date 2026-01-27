@@ -22,6 +22,7 @@ import {
 } from '../../hooks';
 import { ProviderCard } from './ProviderCard';
 import { AutoEnrichToggle } from './AutoEnrichToggle';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ProvidersTab.module.css';
 
 /**
@@ -65,12 +66,12 @@ export function ProvidersTab() {
         apiKey: lastfmKey,
       });
       setValidationResults(prev => ({ ...prev, lastfm: result }));
-    } catch (error: any) {
+    } catch (err) {
       setValidationResults(prev => ({
         ...prev,
         lastfm: {
           valid: false,
-          message: error.response?.data?.message || 'Error al validar API key',
+          message: getApiErrorMessage(err, 'Error al validar API key'),
         },
       }));
     }
@@ -83,12 +84,12 @@ export function ProvidersTab() {
         apiKey: fanartKey,
       });
       setValidationResults(prev => ({ ...prev, fanart: result }));
-    } catch (error: any) {
+    } catch (err) {
       setValidationResults(prev => ({
         ...prev,
         fanart: {
           valid: false,
-          message: error.response?.data?.message || 'Error al validar API key',
+          message: getApiErrorMessage(err, 'Error al validar API key'),
         },
       }));
     }
@@ -107,10 +108,10 @@ export function ProvidersTab() {
         onSuccess: () => {
           setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
         },
-        onError: (err: any) => {
+        onError: (err) => {
           setNotification({
             type: 'error',
-            message: err.response?.data?.message || 'Error al guardar configuración',
+            message: getApiErrorMessage(err, 'Error al guardar configuración'),
           });
         },
       }
@@ -128,10 +129,10 @@ export function ProvidersTab() {
             message: `Auto-enrichment ${enabled ? 'activado' : 'desactivado'}`,
           });
         },
-        onError: (err: any) => {
+        onError: (err) => {
           setNotification({
             type: 'error',
-            message: err.response?.data?.message || 'Error al actualizar configuración',
+            message: getApiErrorMessage(err, 'Error al actualizar configuración'),
           });
         },
       }

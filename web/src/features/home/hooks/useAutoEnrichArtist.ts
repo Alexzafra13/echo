@@ -35,10 +35,12 @@ export function useAutoEnrichArtist(
       const response = await apiClient.post(`/metadata/artists/${id}/enrich?forceRefresh=false`);
       return response.data;
     },
-    onError: (error: any) => {
+    onError: (err) => {
       // Only log unexpected errors (not 404/400 which are expected when enrichment is unavailable)
+      // Note: We cast to check status since React Query passes unknown type
+      const error = err as { response?: { status?: number } };
       if (import.meta.env.DEV && error.response?.status !== 404 && error.response?.status !== 400) {
-        logger.error('[useAutoEnrichArtist] Unexpected error:', error);
+        logger.error('[useAutoEnrichArtist] Unexpected error:', err);
       }
     },
   });
