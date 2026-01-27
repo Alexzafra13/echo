@@ -639,11 +639,11 @@
     transform: none;
   }
 
-  /* Ensure player never hides on mobile - no sidebar mode */
+  /* On mobile, player hides only when NowPlayingView is open */
   .player--hidden {
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
+    transform: translateY(120px);
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* Progress bar super fina abajo - pegada al borde inferior */
@@ -844,11 +844,11 @@
     transform: none;
   }
 
-  /* Ensure player never hides on small mobile */
+  /* On small mobile, player hides only when NowPlayingView is open */
   .player--hidden {
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
+    transform: translateY(120px);
+    opacity: 0;
+    pointer-events: none;
   }
 
   .trackInfo {
