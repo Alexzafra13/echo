@@ -18,6 +18,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
 
+// Current store version - increment when changing the persisted state structure
+const STORE_VERSION = 1;
+
 // Player position preference type
 export type PlayerPreference = 'dynamic' | 'sidebar' | 'footer';
 
@@ -68,14 +71,19 @@ const DEFAULT_AUTOPLAY: AutoplaySettings = {
   enabled: true,
 };
 
+// Initial state values (used for defaults and reset)
+const initialState = {
+  playerPreference: 'dynamic' as PlayerPreference,
+  crossfade: DEFAULT_CROSSFADE,
+  normalization: DEFAULT_NORMALIZATION,
+  autoplay: DEFAULT_AUTOPLAY,
+};
+
 export const usePlayerSettingsStore = create<PlayerSettingsState>()(
   persist(
     (set) => ({
       // Initial state
-      playerPreference: 'dynamic',
-      crossfade: DEFAULT_CROSSFADE,
-      normalization: DEFAULT_NORMALIZATION,
-      autoplay: DEFAULT_AUTOPLAY,
+      ...initialState,
 
       // Player preference actions
       setPlayerPreference: (preference) =>
@@ -125,8 +133,27 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
     }),
     {
       name: 'echo-player-settings',
-      // Migrate from old localStorage keys
-      onRehydrateStorage: () => (state) => {
+      version: STORE_VERSION,
+
+      // Migration: handle old store versions
+      migrate: (persistedState, version) => {
+        // If no version or very old, reset to clean state
+        if (version === 0 || !persistedState) {
+          return initialState;
+        }
+        // Future migrations can be added here:
+        // if (version < 2) { /* migrate v1 to v2 */ }
+        return persistedState as PlayerSettingsState;
+      },
+
+      // Error handling + migration from old localStorage keys
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('[PlayerSettingsStore] Error loading persisted state:', error);
+          localStorage.removeItem('echo-player-settings');
+          return;
+        }
+
         if (!state) return;
 
         // Try to migrate from old storage keys if they exist
@@ -168,9 +195,15 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
             localStorage.removeItem('autoplay-settings');
           }
         } catch {
-          // Ignore migration errors
+          // Ignore migration errors from old keys
         }
       },
+
+      // Safe merge: ensure defaults are always present
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...(persistedState as Partial<PlayerSettingsState> || {}),
+      }),
     }
   )
 );
