@@ -1,29 +1,6 @@
 import { useState } from 'react';
 import { useModal } from '@shared/hooks';
-import {
-  Server,
-  Link2,
-  Plus,
-  RefreshCw,
-  Trash2,
-  Copy,
-  Check,
-  AlertCircle,
-  Users,
-  Disc3,
-  Music,
-  Eye,
-  Download,
-  Radio,
-  Shield,
-  Wifi,
-  WifiOff,
-  Activity,
-  Bell,
-  X,
-  UserPlus,
-  RotateCcw,
-} from 'lucide-react';
+import { Server, Link2, Plus, Shield, Activity } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import {
   useConnectedServers,
@@ -44,7 +21,12 @@ import {
 import { ConnectedServer, InvitationToken, AccessToken } from '../../api/federation.api';
 import { ConnectServerModal } from './ConnectServerModal';
 import { CreateInvitationModal } from './CreateInvitationModal';
-import { formatDistanceToNow } from '@shared/utils/format';
+import {
+  ServerCard,
+  InvitationCard,
+  AccessCard,
+  MutualRequestsBanner,
+} from './components';
 import styles from './FederationPanel.module.css';
 import type { NotificationType } from '@shared/components/ui';
 
@@ -202,14 +184,6 @@ export function FederationPanel() {
     }
   };
 
-  const formatSize = (bytes: number): string => {
-    if (bytes === 0) return '0';
-    const k = 1024;
-    const sizes = ['', 'K', 'M', 'G'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
-  };
-
   return (
     <div className={styles.panel}>
       {/* Header */}
@@ -233,53 +207,13 @@ export function FederationPanel() {
       )}
 
       {/* Pending Mutual Requests Banner */}
-      {pendingMutualRequests.length > 0 && (
-        <div className={styles.mutualRequestsBanner}>
-          <div className={styles.mutualRequestsHeader}>
-            <Bell size={20} />
-            <span>
-              {pendingMutualRequests.length === 1
-                ? '1 servidor quiere conectarse contigo'
-                : `${pendingMutualRequests.length} servidores quieren conectarse contigo`}
-            </span>
-          </div>
-          <div className={styles.mutualRequestsList}>
-            {pendingMutualRequests.map((request) => (
-              <div key={request.id} className={styles.mutualRequestCard}>
-                <div className={styles.mutualRequestInfo}>
-                  <UserPlus size={18} />
-                  <div>
-                    <strong>{request.serverName}</strong>
-                    {request.serverUrl && (
-                      <span className={styles.mutualRequestUrl}>{request.serverUrl}</span>
-                    )}
-                  </div>
-                </div>
-                <div className={styles.mutualRequestActions}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    leftIcon={<Check size={14} />}
-                    onClick={() => handleApproveMutual(request)}
-                    disabled={approveMutualMutation.isPending}
-                  >
-                    Aceptar
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftIcon={<X size={14} />}
-                    onClick={() => handleRejectMutual(request)}
-                    disabled={rejectMutualMutation.isPending}
-                  >
-                    Rechazar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <MutualRequestsBanner
+        requests={pendingMutualRequests}
+        onApprove={handleApproveMutual}
+        onReject={handleRejectMutual}
+        isApproving={approveMutualMutation.isPending}
+        isRejecting={rejectMutualMutation.isPending}
+      />
 
       {/* Tabs */}
       <div className={styles.tabs}>
@@ -351,84 +285,13 @@ export function FederationPanel() {
             ) : servers && servers.length > 0 ? (
               <div className={styles.serverGrid}>
                 {servers.map((server) => (
-                  <div key={server.id} className={styles.serverCard}>
-                    <div className={styles.serverHeader}>
-                      <div className={styles.serverIcon}>
-                        <Server size={24} />
-                      </div>
-                      <div className={styles.serverInfo}>
-                        <h4 className={styles.serverName}>{server.name}</h4>
-                        <span className={styles.serverUrl}>{server.baseUrl}</span>
-                      </div>
-                      <span className={`${styles.serverStatus} ${server.isOnline ? styles.statusOnline : styles.statusOffline}`}>
-                        {server.isOnline ? (
-                          <>
-                            <Wifi size={14} />
-                            Online
-                          </>
-                        ) : (
-                          <>
-                            <WifiOff size={14} />
-                            Offline
-                          </>
-                        )}
-                      </span>
-                    </div>
-
-                    <div className={styles.serverStats}>
-                      <div className={styles.stat}>
-                        <Disc3 size={16} />
-                        <span>{formatSize(server.remoteAlbumCount)} álbums</span>
-                      </div>
-                      <div className={styles.stat}>
-                        <Music size={16} />
-                        <span>{formatSize(server.remoteTrackCount)} tracks</span>
-                      </div>
-                      <div className={styles.stat}>
-                        <Users size={16} />
-                        <span>{formatSize(server.remoteArtistCount)} artistas</span>
-                      </div>
-                    </div>
-
-                    {server.lastError && (
-                      <div className={styles.serverError}>
-                        <AlertCircle size={14} />
-                        <span>{server.lastError}</span>
-                      </div>
-                    )}
-
-                    <div className={styles.serverFooter}>
-                      <div className={styles.serverMeta}>
-                        {!server.isOnline && server.lastOnlineAt && (
-                          <span className={styles.lastOnline}>
-                            Última conexión: {formatDistanceToNow(new Date(server.lastOnlineAt))}
-                          </span>
-                        )}
-                        {!server.isOnline && server.lastSyncAt && (
-                          <span className={styles.lastSync}>
-                            Última sync: {formatDistanceToNow(new Date(server.lastSyncAt))}
-                          </span>
-                        )}
-                      </div>
-                      <div className={styles.serverActions}>
-                        <button
-                          className={styles.iconButton}
-                          onClick={() => handleSync(server)}
-                          disabled={syncMutation.isPending}
-                          title="Sincronizar"
-                        >
-                          <RefreshCw size={16} className={syncMutation.isPending ? styles.spinning : ''} />
-                        </button>
-                        <button
-                          className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                          onClick={() => disconnectModal.openWith(server)}
-                          title="Desconectar"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <ServerCard
+                    key={server.id}
+                    server={server}
+                    onSync={handleSync}
+                    onDisconnect={(s) => disconnectModal.openWith(s)}
+                    isSyncing={syncMutation.isPending}
+                  />
                 ))}
               </div>
             ) : (
@@ -470,43 +333,13 @@ export function FederationPanel() {
             ) : invitations && invitations.length > 0 ? (
               <div className={styles.invitationList}>
                 {invitations.map((invitation) => (
-                  <div key={invitation.id} className={styles.invitationCard}>
-                    <div className={styles.invitationHeader}>
-                      <div className={styles.tokenWrapper}>
-                        <code className={styles.token}>{invitation.token}</code>
-                        <button
-                          className={styles.copyButton}
-                          onClick={() => handleCopyToken(invitation.token)}
-                          title="Copiar token"
-                        >
-                          {copiedToken === invitation.token ? (
-                            <Check size={16} className={styles.copySuccess} />
-                          ) : (
-                            <Copy size={16} />
-                          )}
-                        </button>
-                      </div>
-                      <span className={`${styles.badge} ${invitation.isUsed ? styles.badgeUsed : styles.badgeActive}`}>
-                        {invitation.isUsed ? 'Usado' : 'Activo'}
-                      </span>
-                    </div>
-                    {invitation.name && (
-                      <p className={styles.invitationName}>{invitation.name}</p>
-                    )}
-                    <div className={styles.invitationMeta}>
-                      <span>Usos: {invitation.currentUses}/{invitation.maxUses}</span>
-                      <span>Expira: {formatDistanceToNow(new Date(invitation.expiresAt))}</span>
-                    </div>
-                    <div className={styles.invitationActions}>
-                      <button
-                        className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                        onClick={() => deleteInvitationModal.openWith(invitation)}
-                      >
-                        <Trash2 size={14} />
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
+                  <InvitationCard
+                    key={invitation.id}
+                    invitation={invitation}
+                    copiedToken={copiedToken}
+                    onCopyToken={handleCopyToken}
+                    onDelete={(inv) => deleteInvitationModal.openWith(inv)}
+                  />
                 ))}
               </div>
             ) : (
@@ -541,87 +374,16 @@ export function FederationPanel() {
             ) : accessTokens && accessTokens.length > 0 ? (
               <div className={styles.accessList}>
                 {accessTokens.map((token) => (
-                  <div key={token.id} className={styles.accessCard}>
-                    <div className={styles.accessHeader}>
-                      <div className={styles.accessInfo}>
-                        <Server size={20} />
-                        <div>
-                          <h4>{token.serverName}</h4>
-                          {token.serverUrl && <span className={styles.accessUrl}>{token.serverUrl}</span>}
-                        </div>
-                      </div>
-                      <span className={`${styles.badge} ${token.isActive ? styles.badgeActive : styles.badgeInactive}`}>
-                        {token.isActive ? 'Activo' : 'Revocado'}
-                      </span>
-                    </div>
-
-                    <div className={styles.permissions}>
-                      <button
-                        className={`${styles.permission} ${styles.permissionToggle} ${token.permissions.canBrowse ? styles.permissionEnabled : ''}`}
-                        onClick={() => handleTogglePermission(token, 'canBrowse')}
-                        disabled={updatePermissionsMutation.isPending}
-                        title={token.permissions.canBrowse ? 'Desactivar permiso' : 'Activar permiso'}
-                      >
-                        <Eye size={14} />
-                        <span>Ver biblioteca</span>
-                      </button>
-                      <button
-                        className={`${styles.permission} ${styles.permissionToggle} ${token.permissions.canStream ? styles.permissionEnabled : ''}`}
-                        onClick={() => handleTogglePermission(token, 'canStream')}
-                        disabled={updatePermissionsMutation.isPending}
-                        title={token.permissions.canStream ? 'Desactivar permiso' : 'Activar permiso'}
-                      >
-                        <Radio size={14} />
-                        <span>Reproducir</span>
-                      </button>
-                      <button
-                        className={`${styles.permission} ${styles.permissionToggle} ${token.permissions.canDownload ? styles.permissionEnabled : ''}`}
-                        onClick={() => handleTogglePermission(token, 'canDownload')}
-                        disabled={updatePermissionsMutation.isPending}
-                        title={token.permissions.canDownload ? 'Desactivar permiso' : 'Activar permiso'}
-                      >
-                        <Download size={14} />
-                        <span>Descargar</span>
-                      </button>
-                    </div>
-
-                    <div className={styles.accessFooter}>
-                      {token.lastUsedAt && (
-                        <span className={styles.lastUsed}>
-                          Último uso: {formatDistanceToNow(new Date(token.lastUsedAt))}
-                        </span>
-                      )}
-                      <div className={styles.accessActions}>
-                        {token.isActive ? (
-                          <button
-                            className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                            onClick={() => revokeAccessModal.openWith(token)}
-                          >
-                            <Trash2 size={14} />
-                            Revocar acceso
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              className={`${styles.actionButton} ${styles.actionButtonSuccess}`}
-                              onClick={() => handleReactivateAccess(token)}
-                              disabled={reactivateAccessMutation.isPending}
-                            >
-                              <RotateCcw size={14} />
-                              Reactivar
-                            </button>
-                            <button
-                              className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                              onClick={() => deleteAccessModal.openWith(token)}
-                            >
-                              <Trash2 size={14} />
-                              Eliminar
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <AccessCard
+                    key={token.id}
+                    token={token}
+                    onTogglePermission={handleTogglePermission}
+                    onRevoke={(t) => revokeAccessModal.openWith(t)}
+                    onReactivate={handleReactivateAccess}
+                    onDelete={(t) => deleteAccessModal.openWith(t)}
+                    isUpdatingPermissions={updatePermissionsMutation.isPending}
+                    isReactivating={reactivateAccessMutation.isPending}
+                  />
                 ))}
               </div>
             ) : (
