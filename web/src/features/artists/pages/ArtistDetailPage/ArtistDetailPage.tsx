@@ -230,7 +230,6 @@ export default function ArtistDetailPage() {
           {/* Top Tracks Section */}
           <TopTracksSection
             tracks={topTracks}
-            artistName={artist.name}
             currentTrackId={currentTrack?.id}
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTopTrack}
