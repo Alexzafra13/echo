@@ -6,14 +6,14 @@ import styles from '../ArtistDetailPage.module.css';
 interface AutoPlaylist {
   id: string;
   name: string;
-  type: string;
+  type: 'wave-mix' | 'artist' | 'genre' | 'mood';
   coverColor?: string;
   coverImageUrl?: string;
   metadata: {
     artistId?: string;
     artistName?: string;
   };
-  tracks: { id: string }[];
+  tracks: { trackId?: string }[];
 }
 
 interface UserPlaylist {
