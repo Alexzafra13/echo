@@ -24,6 +24,13 @@ vi.mock('@features/player/context/PlayerContext', () => ({
 // Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useDropdownMenu: vi.fn(),
+  useModal: vi.fn(() => ({
+    isOpen: false,
+    data: null,
+    open: vi.fn(),
+    openWith: vi.fn(),
+    close: vi.fn(),
+  })),
 }));
 
 // Mock components
@@ -417,30 +424,44 @@ describe('SharedAlbumPage', () => {
 
   describe('image modal', () => {
     it('should open image lightbox when clicking cover', () => {
+      const mockOpenLightbox = vi.fn();
+      vi.mocked(sharedHooks.useModal).mockReturnValue({
+        isOpen: false,
+        data: null,
+        open: mockOpenLightbox,
+        openWith: vi.fn(),
+        close: vi.fn(),
+      });
+
       render(<SharedAlbumPage />);
 
       const coverImage = screen.getByAltText('Remote Album');
       fireEvent.click(coverImage);
 
-      // Should have two images now (original + lightbox)
-      expect(screen.getAllByAltText('Remote Album')).toHaveLength(2);
+      expect(mockOpenLightbox).toHaveBeenCalled();
     });
 
     it('should close image lightbox when clicking backdrop', () => {
+      const mockCloseLightbox = vi.fn();
+      vi.mocked(sharedHooks.useModal).mockReturnValue({
+        isOpen: true,
+        data: null,
+        open: vi.fn(),
+        openWith: vi.fn(),
+        close: mockCloseLightbox,
+      });
+
       render(<SharedAlbumPage />);
 
-      const coverImage = screen.getByAltText('Remote Album');
-      fireEvent.click(coverImage);
-
+      // Should have two images now (original + lightbox)
       expect(screen.getAllByAltText('Remote Album')).toHaveLength(2);
 
       // Click the backdrop
       const modalBackdrop = document.querySelector('[class*="imageModal"]');
       if (modalBackdrop) {
         fireEvent.click(modalBackdrop);
+        expect(mockCloseLightbox).toHaveBeenCalled();
       }
-
-      expect(screen.getAllByAltText('Remote Album')).toHaveLength(1);
     });
   });
 

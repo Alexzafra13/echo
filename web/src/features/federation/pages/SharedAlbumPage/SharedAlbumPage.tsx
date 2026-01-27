@@ -9,7 +9,7 @@ import { Button, Portal } from '@shared/components/ui';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { handleImageError } from '@shared/utils/cover.utils';
 import { usePlayer } from '@features/player/context/PlayerContext';
-import { useDropdownMenu } from '@shared/hooks';
+import { useDropdownMenu, useModal } from '@shared/hooks';
 import { logger } from '@shared/utils/logger';
 import type { Track } from '@shared/types/track.types';
 import type { RemoteTrack } from '../../types';
@@ -23,8 +23,8 @@ export default function SharedAlbumPage() {
   const { serverId, albumId } = useParams<{ serverId: string; albumId: string }>();
   const [, setLocation] = useLocation();
   const [dominantColor, setDominantColor] = useState<string>('10, 14, 39');
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [coverDimensions, setCoverDimensions] = useState<{ width: number; height: number } | null>(null);
+  const imageLightboxModal = useModal();
   const [isImporting, setIsImporting] = useState(false);
   const [isImported, setIsImported] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -141,16 +141,16 @@ export default function SharedAlbumPage() {
 
   // Load cover dimensions when modal opens
   useEffect(() => {
-    if (isImageModalOpen && coverUrl) {
+    if (imageLightboxModal.isOpen && coverUrl) {
       const img = new window.Image();
       img.onload = () => {
         setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
       };
       img.src = coverUrl;
-    } else if (!isImageModalOpen) {
+    } else if (!imageLightboxModal.isOpen) {
       setCoverDimensions(null);
     }
-  }, [isImageModalOpen, coverUrl]);
+  }, [imageLightboxModal.isOpen, coverUrl]);
 
   const handleImport = async () => {
     if (!serverId || !albumId || isImporting || isImported) return;
@@ -267,7 +267,7 @@ export default function SharedAlbumPage() {
                 alt={album.name}
                 className={styles.sharedAlbumPage__heroCover}
                 onError={handleImageError}
-                onClick={() => setIsImageModalOpen(true)}
+                onClick={imageLightboxModal.open}
               />
             ) : (
               <div className={styles.sharedAlbumPage__heroCoverPlaceholder}>
@@ -462,10 +462,10 @@ export default function SharedAlbumPage() {
       </main>
 
       {/* Image Modal/Lightbox */}
-      {isImageModalOpen && coverUrl && (
+      {imageLightboxModal.isOpen && coverUrl && (
         <div
           className={styles.sharedAlbumPage__imageModal}
-          onClick={() => setIsImageModalOpen(false)}
+          onClick={imageLightboxModal.close}
         >
           <div className={styles.sharedAlbumPage__imageModalContent} onClick={(e) => e.stopPropagation()}>
             <img

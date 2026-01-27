@@ -44,6 +44,13 @@ vi.mock('@features/player', () => ({
 // Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useAlbumMetadataSync: vi.fn(),
+  useModal: vi.fn(() => ({
+    isOpen: false,
+    data: null,
+    open: vi.fn(),
+    openWith: vi.fn(),
+    close: vi.fn(),
+  })),
 }));
 
 // Mock components
@@ -123,6 +130,7 @@ import * as albumHooks from '../../hooks/useAlbums';
 import * as homeHooks from '../../hooks';
 import * as artistHooks from '@features/artists/hooks';
 import * as playerModule from '@features/player';
+import * as sharedHooks from '@shared/hooks';
 
 // Mock data
 const mockAlbum = {
@@ -392,65 +400,198 @@ describe('AlbumPage', () => {
 
   describe('modals', () => {
     it('should open info modal when clicking show info', () => {
+      const mockOpenInfoModal = vi.fn();
+      // Create stateful mocks for each modal instance
+      let callCount = 0;
+      vi.mocked(sharedHooks.useModal).mockImplementation(() => {
+        callCount++;
+        // Third call is the info modal
+        if (callCount === 2) {
+          return {
+            isOpen: false,
+            data: null,
+            open: mockOpenInfoModal,
+            openWith: vi.fn(),
+            close: vi.fn(),
+          };
+        }
+        return {
+          isOpen: false,
+          data: null,
+          open: vi.fn(),
+          openWith: vi.fn(),
+          close: vi.fn(),
+        };
+      });
+
       render(<AlbumPage />);
 
       fireEvent.click(screen.getByText('Show Info'));
 
-      expect(screen.getByTestId('album-info-modal')).toBeInTheDocument();
+      expect(mockOpenInfoModal).toHaveBeenCalled();
     });
 
     it('should close info modal', () => {
+      const mockCloseInfoModal = vi.fn();
+      // Set up modal to be open
+      let callCount = 0;
+      vi.mocked(sharedHooks.useModal).mockImplementation(() => {
+        callCount++;
+        // Second call is the info modal
+        if (callCount === 2) {
+          return {
+            isOpen: true,
+            data: null,
+            open: vi.fn(),
+            openWith: vi.fn(),
+            close: mockCloseInfoModal,
+          };
+        }
+        return {
+          isOpen: false,
+          data: null,
+          open: vi.fn(),
+          openWith: vi.fn(),
+          close: vi.fn(),
+        };
+      });
+
       render(<AlbumPage />);
 
-      fireEvent.click(screen.getByText('Show Info'));
       expect(screen.getByTestId('album-info-modal')).toBeInTheDocument();
 
       fireEvent.click(screen.getByText('Close'));
 
-      expect(screen.queryByTestId('album-info-modal')).not.toBeInTheDocument();
+      expect(mockCloseInfoModal).toHaveBeenCalled();
     });
 
     it('should open cover selector modal when clicking change cover', () => {
+      const mockOpenCoverModal = vi.fn();
+      let callCount = 0;
+      vi.mocked(sharedHooks.useModal).mockImplementation(() => {
+        callCount++;
+        // Third call is the cover selector modal
+        if (callCount === 3) {
+          return {
+            isOpen: false,
+            data: null,
+            open: mockOpenCoverModal,
+            openWith: vi.fn(),
+            close: vi.fn(),
+          };
+        }
+        return {
+          isOpen: false,
+          data: null,
+          open: vi.fn(),
+          openWith: vi.fn(),
+          close: vi.fn(),
+        };
+      });
+
       render(<AlbumPage />);
 
       fireEvent.click(screen.getByText('Change Cover'));
 
-      expect(screen.getByTestId('cover-selector-modal')).toBeInTheDocument();
+      expect(mockOpenCoverModal).toHaveBeenCalled();
     });
 
     it('should close cover selector modal', () => {
+      const mockCloseCoverModal = vi.fn();
+      let callCount = 0;
+      vi.mocked(sharedHooks.useModal).mockImplementation(() => {
+        callCount++;
+        // Third call is the cover selector modal
+        if (callCount === 3) {
+          return {
+            isOpen: true,
+            data: null,
+            open: vi.fn(),
+            openWith: vi.fn(),
+            close: mockCloseCoverModal,
+          };
+        }
+        return {
+          isOpen: false,
+          data: null,
+          open: vi.fn(),
+          openWith: vi.fn(),
+          close: vi.fn(),
+        };
+      });
+
       render(<AlbumPage />);
 
-      fireEvent.click(screen.getByText('Change Cover'));
       expect(screen.getByTestId('cover-selector-modal')).toBeInTheDocument();
 
       fireEvent.click(screen.getAllByText('Close')[0]);
 
-      expect(screen.queryByTestId('cover-selector-modal')).not.toBeInTheDocument();
+      expect(mockCloseCoverModal).toHaveBeenCalled();
     });
 
     it('should open image lightbox when clicking cover', () => {
+      const mockOpenLightbox = vi.fn();
+      let callCount = 0;
+      vi.mocked(sharedHooks.useModal).mockImplementation(() => {
+        callCount++;
+        // First call is the image lightbox modal
+        if (callCount === 1) {
+          return {
+            isOpen: false,
+            data: null,
+            open: mockOpenLightbox,
+            openWith: vi.fn(),
+            close: vi.fn(),
+          };
+        }
+        return {
+          isOpen: false,
+          data: null,
+          open: vi.fn(),
+          openWith: vi.fn(),
+          close: vi.fn(),
+        };
+      });
+
       render(<AlbumPage />);
 
-      // Find the album cover image and click it
       const coverImage = screen.getByAltText('Test Album');
       fireEvent.click(coverImage);
 
-      // The lightbox should show
-      expect(screen.getAllByAltText('Test Album')).toHaveLength(2); // Original + lightbox
+      expect(mockOpenLightbox).toHaveBeenCalled();
     });
 
     it('should close image lightbox when clicking backdrop', () => {
+      const mockCloseLightbox = vi.fn();
+      let callCount = 0;
+      vi.mocked(sharedHooks.useModal).mockImplementation(() => {
+        callCount++;
+        // First call is the image lightbox modal
+        if (callCount === 1) {
+          return {
+            isOpen: true,
+            data: null,
+            open: vi.fn(),
+            openWith: vi.fn(),
+            close: mockCloseLightbox,
+          };
+        }
+        return {
+          isOpen: false,
+          data: null,
+          open: vi.fn(),
+          openWith: vi.fn(),
+          close: vi.fn(),
+        };
+      });
+
       render(<AlbumPage />);
 
-      const coverImage = screen.getByAltText('Test Album');
-      fireEvent.click(coverImage);
-
-      // Click outside the modal content (on backdrop)
       // The backdrop has the modal class
       const modalBackdrop = document.querySelector('[class*="imageModal"]');
       if (modalBackdrop) {
         fireEvent.click(modalBackdrop);
+        expect(mockCloseLightbox).toHaveBeenCalled();
       }
     });
   });
