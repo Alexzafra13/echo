@@ -7,3 +7,5 @@ export {
   useArtistTopTracks,
   useRelatedArtists,
 } from './useArtists';
+
+export { useImagePreload } from './useImagePreload';

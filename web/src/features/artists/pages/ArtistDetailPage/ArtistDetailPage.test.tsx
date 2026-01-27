@@ -16,6 +16,12 @@ vi.mock('../../hooks', () => ({
   useArtistStats: vi.fn(),
   useArtistTopTracks: vi.fn(),
   useRelatedArtists: vi.fn(),
+  useImagePreload: vi.fn(() => ({
+    renderKey: 0,
+    isLoading: false,
+    isLoaded: true,
+    hasError: false,
+  })),
 }));
 
 // Mock home hooks
