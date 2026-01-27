@@ -4,7 +4,6 @@ import styles from '../ArtistDetailPage.module.css';
 
 interface TopTracksSectionProps {
   tracks: ArtistTopTrack[];
-  artistName: string;
   currentTrackId: string | undefined;
   isPlaying: boolean;
   onPlayTrack: (track: ArtistTopTrack) => void;
@@ -34,7 +33,6 @@ function formatPlayCount(count: number): string {
  */
 export function TopTracksSection({
   tracks,
-  artistName,
   currentTrackId,
   isPlaying,
   onPlayTrack,
