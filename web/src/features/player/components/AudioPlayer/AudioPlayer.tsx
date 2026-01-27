@@ -71,11 +71,13 @@ export function AudioPlayer() {
   }, []);
 
   // Lógica de visibilidad basada en preferencia
+  // - Cuando NowPlayingView está abierto: SIEMPRE ocultar
   // - En mobile: NUNCA ocultar (no hay sidebar)
   // - 'footer': siempre visible en footer (shouldHide = false)
   // - 'sidebar': siempre oculto, usa mini-player en sidebar (shouldHide = true)
   // - 'dynamic': ocultar cuando hay scroll (shouldHide = isMiniMode)
-  const shouldHide = isMobile ? false :
+  const shouldHide = isNowPlayingOpen ? true :
+    isMobile ? false :
     preference === 'footer' ? false :
     preference === 'sidebar' ? true :
     isMiniMode;
