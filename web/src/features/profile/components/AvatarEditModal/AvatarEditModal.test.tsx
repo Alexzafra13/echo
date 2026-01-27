@@ -133,7 +133,8 @@ describe('AvatarEditModal', () => {
 
       fireEvent.change(input, { target: { files: [invalidFile] } });
 
-      expect(screen.getByText('Solo se permiten imágenes JPEG, PNG o WebP')).toBeInTheDocument();
+      // Uses useFileUpload hook error message
+      expect(screen.getByText('Tipo de archivo no permitido. Use JPEG, PNG o WebP.')).toBeInTheDocument();
     });
 
     it('should show error for file too large', () => {
@@ -146,7 +147,8 @@ describe('AvatarEditModal', () => {
 
       fireEvent.change(input, { target: { files: [largeFile] } });
 
-      expect(screen.getByText('La imagen no puede superar los 5MB')).toBeInTheDocument();
+      // Uses useFileUpload hook error message
+      expect(screen.getByText('El archivo excede el tamaño máximo de 5MB.')).toBeInTheDocument();
     });
 
     it('should show preview and save button for valid file', async () => {
