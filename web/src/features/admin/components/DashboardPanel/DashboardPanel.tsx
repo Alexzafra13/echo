@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { LayoutDashboard, TrendingUp, TrendingDown } from 'lucide-react';
 import { apiClient } from '@shared/services/api';
 import { formatDuration, formatBytes } from '@shared/utils/format';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { StatCard } from './StatCard';
 import { HealthPanel } from './HealthPanel';
 import { ActivityTimelineChart } from './ActivityTimelineChart';
@@ -123,11 +124,11 @@ export function DashboardPanel({ onNavigateToTab }: DashboardPanelProps = {}) {
       setError(null);
       const response = await apiClient.get('/admin/dashboard/stats');
       setStats(response.data);
-    } catch (err: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error loading dashboard stats:', err);
       }
-      setError(err.response?.data?.message || 'Error al cargar las estadísticas');
+      setError(getApiErrorMessage(err, 'Error al cargar las estadísticas'));
     } finally {
       setIsLoading(false);
     }

@@ -1,25 +1,12 @@
 import { apiClient } from '@shared/services/api';
+import type { ConnectedServer, RemoteAlbum, RemoteTrack } from '@features/federation/types';
+
+// Re-export imported types for consumers of this module
+export type { ConnectedServer, RemoteAlbum, RemoteTrack };
 
 // ============================================
-// Types
+// Types (unique to admin API)
 // ============================================
-
-export interface ConnectedServer {
-  id: string;
-  name: string;
-  baseUrl: string;
-  isActive: boolean;
-  isOnline: boolean;
-  lastOnlineAt?: string;
-  lastCheckedAt?: string;
-  remoteAlbumCount: number;
-  remoteTrackCount: number;
-  remoteArtistCount: number;
-  lastSyncAt?: string;
-  lastError?: string;
-  lastErrorAt?: string;
-  createdAt: string;
-}
 
 export interface InvitationToken {
   id: string;
@@ -47,32 +34,6 @@ export interface AccessToken {
   lastUsedAt?: string;
   createdAt: string;
   mutualStatus?: MutualFederationStatus;
-}
-
-export interface RemoteAlbum {
-  id: string;
-  name: string;
-  artistName: string;
-  artistId: string;
-  year?: number;
-  songCount: number;
-  duration: number;
-  size: number;
-  coverUrl?: string;
-  genres?: string[];
-}
-
-export interface RemoteTrack {
-  id: string;
-  title: string;
-  artistName: string;
-  albumName: string;
-  albumId: string;
-  trackNumber?: number;
-  discNumber?: number;
-  duration: number;
-  size: number;
-  bitRate?: number;
 }
 
 export interface RemoteLibrary {

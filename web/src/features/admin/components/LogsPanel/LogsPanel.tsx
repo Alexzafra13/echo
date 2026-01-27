@@ -4,6 +4,7 @@ import { AlertCircle, AlertTriangle, Info, Bug, XCircle, Filter, Calendar, Chevr
 import { Button, InlineNotification } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import { formatDateWithTime } from '@shared/utils/format';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { logger } from '@shared/utils/logger';
 import styles from './LogsPanel.module.css';
 
@@ -69,7 +70,7 @@ export function LogsPanel() {
       setIsLoading(true);
       setError(null);
 
-      const params: any = {
+      const params: Record<string, string | number> = {
         limit,
         offset,
       };
@@ -85,11 +86,11 @@ export function LogsPanel() {
       const response = await apiClient.get<LogsResponse>('/logs', { params });
       setLogs(response.data.logs);
       setTotal(response.data.total);
-    } catch (err: any) {
+    } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error loading logs:', err);
       }
-      setError('Error al cargar logs');
+      setError(getApiErrorMessage(err, 'Error al cargar logs'));
     } finally {
       setIsLoading(false);
     }

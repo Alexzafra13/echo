@@ -9,6 +9,7 @@ import { getArtistPlaylistsPaginated, type AutoPlaylist } from '@shared/services
 import { useAuthStore } from '@shared/store';
 import { logger } from '@shared/utils/logger';
 import { safeSessionStorage } from '@shared/utils/safeSessionStorage';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './ArtistPlaylistsPage.module.css';
 
 /**
@@ -41,9 +42,9 @@ export function ArtistPlaylistsPage() {
       setAllPlaylists(data.playlists);
       setTotal(data.total);
       setCurrentPage(page);
-    } catch (err: any) {
+    } catch (err) {
       logger.error('[ArtistPlaylists] Failed to load:', err);
-      setError(err.response?.data?.message || 'Error al cargar las playlists de artistas');
+      setError(getApiErrorMessage(err, 'Error al cargar las playlists de artistas'));
     } finally {
       setIsLoading(false);
     }
