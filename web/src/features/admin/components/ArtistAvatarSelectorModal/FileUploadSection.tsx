@@ -11,6 +11,7 @@ import {
 } from '../../hooks/useArtistAvatars';
 import { CustomImage, AvatarImageType } from '../../api/artist-avatars.api';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './FileUploadSection.module.css';
 
 interface FileUploadSectionProps {
@@ -73,21 +74,21 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
                 resetInput();
                 onSuccess?.();
               },
-              onError: (error: any) => {
+              onError: (err) => {
                 if (import.meta.env.DEV) {
-                  logger.error('[FileUpload] ❌ Apply error:', error);
+                  logger.error('[FileUpload] ❌ Apply error:', err);
                 }
-                setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
+                setUploadError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
                 resetInput();
               },
             }
           );
         },
-        onError: (error: any) => {
+        onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Upload error:', error);
+            logger.error('[FileUpload] ❌ Upload error:', err);
           }
-          setUploadError(error?.response?.data?.message || 'Error al subir la imagen');
+          setUploadError(getApiErrorMessage(err, 'Error al subir la imagen'));
         },
       }
     );
@@ -108,11 +109,11 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
         onSuccess: () => {
           onSuccess?.();
         },
-        onError: (error: any) => {
+        onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Apply error:', error);
+            logger.error('[FileUpload] ❌ Apply error:', err);
           }
-          setUploadError(error?.response?.data?.message || 'Error al aplicar la imagen');
+          setUploadError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
         },
       }
     );
@@ -136,11 +137,11 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
             setSelectedCustomImage(null);
           }
         },
-        onError: (error: any) => {
+        onError: (err) => {
           if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Delete error:', error);
+            logger.error('[FileUpload] ❌ Delete error:', err);
           }
-          setUploadError(error?.response?.data?.message || 'Error al eliminar la imagen');
+          setUploadError(getApiErrorMessage(err, 'Error al eliminar la imagen'));
         },
       }
     );

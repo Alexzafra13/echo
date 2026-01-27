@@ -14,6 +14,7 @@ import { useAutoSearchStats } from '../../hooks/queries/useAutoSearchStats';
 import { AutoSearchToggle } from './AutoSearchToggle';
 import { ConfidenceSlider } from './ConfidenceSlider';
 import { AutoSearchStatsDisplay } from './AutoSearchStatsDisplay';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './AutoSearchTab.module.css';
 
 /**
@@ -49,10 +50,10 @@ export function AutoSearchTab() {
         onSuccess: () => {
           setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
         },
-        onError: (err: any) => {
+        onError: (err) => {
           setNotification({
             type: 'error',
-            message: err.response?.data?.message || 'Error al guardar configuración',
+            message: getApiErrorMessage(err, 'Error al guardar configuración'),
           });
         },
       }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useModal } from '@shared/hooks';
 import {
   Server,
   Link2,
@@ -53,13 +54,15 @@ import type { NotificationType } from '@shared/components/ui';
  */
 export function FederationPanel() {
   const [activeTab, setActiveTab] = useState<'servers' | 'invitations' | 'access'>('servers');
-  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
-  const [isCreateInvitationOpen, setIsCreateInvitationOpen] = useState(false);
-  const [serverToDisconnect, setServerToDisconnect] = useState<ConnectedServer | null>(null);
-  const [invitationToDelete, setInvitationToDelete] = useState<InvitationToken | null>(null);
-  const [accessToRevoke, setAccessToRevoke] = useState<AccessToken | null>(null);
-  const [accessToDelete, setAccessToDelete] = useState<AccessToken | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  // Modal states using useModal hook
+  const connectModal = useModal();
+  const createInvitationModal = useModal();
+  const disconnectModal = useModal<ConnectedServer>();
+  const deleteInvitationModal = useModal<InvitationToken>();
+  const revokeAccessModal = useModal<AccessToken>();
+  const deleteAccessModal = useModal<AccessToken>();
 
   // Notifications
   const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
@@ -112,10 +115,10 @@ export function FederationPanel() {
   };
 
   const handleDisconnect = async () => {
-    if (!serverToDisconnect) return;
+    if (!disconnectModal.data) return;
     try {
-      await disconnectMutation.mutateAsync(serverToDisconnect.id);
-      setServerToDisconnect(null);
+      await disconnectMutation.mutateAsync(disconnectModal.data.id);
+      disconnectModal.close();
       setNotification({ type: 'success', message: 'Desconectado correctamente' });
     } catch {
       setNotification({ type: 'error', message: 'Error al desconectar' });
@@ -123,10 +126,10 @@ export function FederationPanel() {
   };
 
   const handleDeleteInvitation = async () => {
-    if (!invitationToDelete) return;
+    if (!deleteInvitationModal.data) return;
     try {
-      await deleteInvitationMutation.mutateAsync(invitationToDelete.id);
-      setInvitationToDelete(null);
+      await deleteInvitationMutation.mutateAsync(deleteInvitationModal.data.id);
+      deleteInvitationModal.close();
       setNotification({ type: 'success', message: 'Invitación eliminada' });
     } catch {
       setNotification({ type: 'error', message: 'Error al eliminar invitación' });
@@ -134,10 +137,10 @@ export function FederationPanel() {
   };
 
   const handleRevokeAccess = async () => {
-    if (!accessToRevoke) return;
+    if (!revokeAccessModal.data) return;
     try {
-      await revokeAccessMutation.mutateAsync(accessToRevoke.id);
-      setAccessToRevoke(null);
+      await revokeAccessMutation.mutateAsync(revokeAccessModal.data.id);
+      revokeAccessModal.close();
       setNotification({ type: 'success', message: 'Acceso revocado' });
     } catch {
       setNotification({ type: 'error', message: 'Error al revocar acceso' });
@@ -145,10 +148,10 @@ export function FederationPanel() {
   };
 
   const handleDeleteAccess = async () => {
-    if (!accessToDelete) return;
+    if (!deleteAccessModal.data) return;
     try {
-      await deleteAccessMutation.mutateAsync(accessToDelete.id);
-      setAccessToDelete(null);
+      await deleteAccessMutation.mutateAsync(deleteAccessModal.data.id);
+      deleteAccessModal.close();
       setNotification({ type: 'success', message: 'Acceso eliminado permanentemente' });
     } catch {
       setNotification({ type: 'error', message: 'Error al eliminar acceso' });
@@ -336,7 +339,7 @@ export function FederationPanel() {
                 <Button
                   variant="primary"
                   leftIcon={<Plus size={18} />}
-                  onClick={() => setIsConnectModalOpen(true)}
+                  onClick={connectModal.open}
                 >
                   Conectar Servidor
                 </Button>
@@ -418,7 +421,7 @@ export function FederationPanel() {
                         </button>
                         <button
                           className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                          onClick={() => setServerToDisconnect(server)}
+                          onClick={() => disconnectModal.openWith(server)}
                           title="Desconectar"
                         >
                           <Trash2 size={16} />
@@ -436,7 +439,7 @@ export function FederationPanel() {
                 <Button
                   variant="secondary"
                   leftIcon={<Plus size={18} />}
-                  onClick={() => setIsConnectModalOpen(true)}
+                  onClick={connectModal.open}
                 >
                   Conectar Servidor
                 </Button>
@@ -456,7 +459,7 @@ export function FederationPanel() {
               <Button
                 variant="primary"
                 leftIcon={<Plus size={18} />}
-                onClick={() => setIsCreateInvitationOpen(true)}
+                onClick={createInvitationModal.open}
               >
                 Crear Invitación
               </Button>
@@ -497,7 +500,7 @@ export function FederationPanel() {
                     <div className={styles.invitationActions}>
                       <button
                         className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                        onClick={() => setInvitationToDelete(invitation)}
+                        onClick={() => deleteInvitationModal.openWith(invitation)}
                       >
                         <Trash2 size={14} />
                         Eliminar
@@ -514,7 +517,7 @@ export function FederationPanel() {
                 <Button
                   variant="secondary"
                   leftIcon={<Plus size={18} />}
-                  onClick={() => setIsCreateInvitationOpen(true)}
+                  onClick={createInvitationModal.open}
                 >
                   Crear Invitación
                 </Button>
@@ -592,7 +595,7 @@ export function FederationPanel() {
                         {token.isActive ? (
                           <button
                             className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                            onClick={() => setAccessToRevoke(token)}
+                            onClick={() => revokeAccessModal.openWith(token)}
                           >
                             <Trash2 size={14} />
                             Revocar acceso
@@ -609,7 +612,7 @@ export function FederationPanel() {
                             </button>
                             <button
                               className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                              onClick={() => setAccessToDelete(token)}
+                              onClick={() => deleteAccessModal.openWith(token)}
                             >
                               <Trash2 size={14} />
                               Eliminar
@@ -633,66 +636,66 @@ export function FederationPanel() {
       </div>
 
       {/* Modals */}
-      {isConnectModalOpen && (
+      {connectModal.isOpen && (
         <ConnectServerModal
-          onClose={() => setIsConnectModalOpen(false)}
+          onClose={connectModal.close}
           onSuccess={() => {
-            setIsConnectModalOpen(false);
+            connectModal.close();
             setNotification({ type: 'success', message: 'Conectado correctamente' });
           }}
         />
       )}
 
-      {isCreateInvitationOpen && (
+      {createInvitationModal.isOpen && (
         <CreateInvitationModal
-          onClose={() => setIsCreateInvitationOpen(false)}
+          onClose={createInvitationModal.close}
           onSuccess={() => {
-            setIsCreateInvitationOpen(false);
+            createInvitationModal.close();
             setNotification({ type: 'success', message: 'Invitación creada' });
           }}
         />
       )}
 
-      {serverToDisconnect && (
+      {disconnectModal.isOpen && disconnectModal.data && (
         <ConfirmDialog
           title="Desconectar servidor"
-          message={`¿Estás seguro de que quieres desconectar de "${serverToDisconnect.name}"? Ya no podrás ver su biblioteca.`}
+          message={`¿Estás seguro de que quieres desconectar de "${disconnectModal.data.name}"? Ya no podrás ver su biblioteca.`}
           confirmText="Desconectar"
           onConfirm={handleDisconnect}
-          onCancel={() => setServerToDisconnect(null)}
+          onCancel={disconnectModal.close}
           isLoading={disconnectMutation.isPending}
         />
       )}
 
-      {invitationToDelete && (
+      {deleteInvitationModal.isOpen && deleteInvitationModal.data && (
         <ConfirmDialog
           title="Eliminar invitación"
           message="¿Estás seguro de que quieres eliminar esta invitación? Los servidores que ya la usaron mantendrán el acceso."
           confirmText="Eliminar"
           onConfirm={handleDeleteInvitation}
-          onCancel={() => setInvitationToDelete(null)}
+          onCancel={deleteInvitationModal.close}
           isLoading={deleteInvitationMutation.isPending}
         />
       )}
 
-      {accessToRevoke && (
+      {revokeAccessModal.isOpen && revokeAccessModal.data && (
         <ConfirmDialog
           title="Revocar acceso"
-          message={`¿Estás seguro de que quieres revocar el acceso de "${accessToRevoke.serverName}"? Ya no podrán ver ni reproducir tu música.`}
+          message={`¿Estás seguro de que quieres revocar el acceso de "${revokeAccessModal.data.serverName}"? Ya no podrán ver ni reproducir tu música.`}
           confirmText="Revocar"
           onConfirm={handleRevokeAccess}
-          onCancel={() => setAccessToRevoke(null)}
+          onCancel={revokeAccessModal.close}
           isLoading={revokeAccessMutation.isPending}
         />
       )}
 
-      {accessToDelete && (
+      {deleteAccessModal.isOpen && deleteAccessModal.data && (
         <ConfirmDialog
           title="Eliminar acceso permanentemente"
-          message={`¿Estás seguro de que quieres eliminar permanentemente el acceso de "${accessToDelete.serverName}"? Esta acción no se puede deshacer.`}
+          message={`¿Estás seguro de que quieres eliminar permanentemente el acceso de "${deleteAccessModal.data.serverName}"? Esta acción no se puede deshacer.`}
           confirmText="Eliminar"
           onConfirm={handleDeleteAccess}
-          onCancel={() => setAccessToDelete(null)}
+          onCancel={deleteAccessModal.close}
           isLoading={deleteAccessMutation.isPending}
         />
       )}

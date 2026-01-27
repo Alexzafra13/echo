@@ -3,6 +3,7 @@ import { Camera, X, Trash2, Check } from 'lucide-react';
 import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './AvatarUpload.module.css';
 
 /**
@@ -70,8 +71,8 @@ export function AvatarUpload() {
         // Update timestamp to force image reload (cache bust)
         updateAvatarTimestamp();
       },
-      onError: (error: any) => {
-        setError(error.message || 'Error al subir la imagen');
+      onError: (err) => {
+        setError(getApiErrorMessage(err, 'Error al subir la imagen'));
       },
     });
   };
@@ -95,8 +96,8 @@ export function AvatarUpload() {
         // Update timestamp to ensure UI refreshes
         updateAvatarTimestamp();
       },
-      onError: (error: any) => {
-        setError(error.message || 'Error al eliminar el avatar');
+      onError: (err) => {
+        setError(getApiErrorMessage(err, 'Error al eliminar el avatar'));
       },
     });
   };

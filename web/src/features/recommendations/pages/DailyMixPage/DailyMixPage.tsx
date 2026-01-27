@@ -9,6 +9,7 @@ import { formatDuration } from '@shared/utils/format';
 import { getDailyMix, type DailyMix, type ScoredTrack } from '@shared/services/recommendations.service';
 import type { Track } from '@features/home/types';
 import { logger } from '@shared/utils/logger';
+import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './DailyMixPage.module.css';
 
 /**
@@ -30,10 +31,9 @@ export function DailyMixPage() {
       logger.debug('[DailyMix] Received:', mix);
       logger.debug('[DailyMix] Tracks count:', mix.tracks?.length || 0);
       setDailyMix(mix);
-    } catch (err: any) {
+    } catch (err) {
       logger.error('[DailyMix] Failed to load:', err);
-      logger.error('[DailyMix] Error response:', err.response?.data);
-      setError(err.response?.data?.message || 'Error al cargar el Daily Mix');
+      setError(getApiErrorMessage(err, 'Error al cargar el Daily Mix'));
     } finally {
       setIsLoading(false);
     }

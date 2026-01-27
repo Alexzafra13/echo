@@ -1,6 +1,10 @@
 // Federation Types
 
-export interface SharedAlbum {
+/**
+ * Remote album from a specific server's library
+ * Used when browsing a server's content via API
+ */
+export interface RemoteAlbum {
   id: string;
   name: string;
   artistName: string;
@@ -11,6 +15,13 @@ export interface SharedAlbum {
   size: number;
   coverUrl?: string;
   genres?: string[];
+}
+
+/**
+ * Shared album with server identification
+ * Extends RemoteAlbum with server info for federated browsing across multiple servers
+ */
+export interface SharedAlbum extends RemoteAlbum {
   serverId: string;
   serverName: string;
   createdAt?: string;
