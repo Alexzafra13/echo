@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { X, Upload, Trash2, } from 'lucide-react';
-import { useAuth } from '@shared/hooks';
+import { useAuth, useFileUpload } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { useUploadAvatar, useDeleteAvatar } from '../../hooks';
@@ -19,45 +19,27 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
   const avatarTimestamp = useAuthStore((state) => state.avatarTimestamp);
   const updateAvatarTimestamp = useAuthStore((state) => state.updateAvatarTimestamp);
   const updateUser = useAuthStore((state) => state.updateUser);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Use shared file upload hook for validation and preview
+  const {
+    selectedFile,
+    previewUrl,
+    error,
+    setError,
+    handleFileSelect,
+    resetInput,
+    fileInputRef,
+  } = useFileUpload({
+    maxSize: 5 * 1024 * 1024, // 5MB
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  });
 
   const { mutate: uploadAvatar, isPending: isUploading } = useUploadAvatar();
   const { mutate: deleteAvatar, isPending: isDeleting } = useDeleteAvatar();
 
   const avatarUrl = user?.id && user?.hasAvatar ? getUserAvatarUrl(user.id, user.hasAvatar, avatarTimestamp) : null;
   const initials = getUserInitials(user?.name, user?.username);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setError(null);
-
-    // Validate file type
-    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/)) {
-      setError('Solo se permiten imágenes JPEG, PNG o WebP');
-      return;
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('La imagen no puede superar los 5MB');
-      return;
-    }
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    setSelectedFile(file);
-  };
 
   const handleUpload = () => {
     if (!selectedFile) return;
@@ -69,16 +51,12 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
         // Actualizar timestamp global para que todos los componentes recarguen el avatar
         updateAvatarTimestamp();
         // Limpiar preview y archivo seleccionado
-        setPreviewUrl(null);
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
+        resetInput();
         // Cerrar modal
         onClose();
       },
-      onError: (error: any) => {
-        setError(error.message || 'Error al subir la imagen');
+      onError: (err: any) => {
+        setError(err.message || 'Error al subir la imagen');
       },
     });
   };
@@ -181,13 +159,7 @@ export function AvatarEditModal({ onClose }: AvatarEditModalProps) {
                 {isUploading ? 'Subiendo...' : 'Guardar cambios'}
               </button>
               <button
-                onClick={() => {
-                  setSelectedFile(null);
-                  setPreviewUrl(null);
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                  }
-                }}
+                onClick={resetInput}
                 className={styles.modal__buttonSecondary}
                 disabled={isUploading}
               >
