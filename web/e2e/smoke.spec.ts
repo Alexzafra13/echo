@@ -1,20 +1,31 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Smoke tests - Quick sanity checks that the app is working
+ * Smoke tests - Verificación básica de que la app funciona
  */
 test.describe('Smoke Tests', () => {
-  test('app loads without crashing', async ({ page }) => {
+  test('la app carga sin errores 500', async ({ page }) => {
     const response = await page.goto('/');
     expect(response?.status()).toBeLessThan(500);
   });
 
-  test('login page is accessible', async ({ page }) => {
+  test('la página de login es accesible', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('input[type="password"]')).toBeVisible();
+
+    // Debe mostrar el formulario de login
+    await expect(page.locator('input[name="username"]')).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Iniciar Sesión/i })).toBeVisible();
   });
 
-  test('no console errors on load', async ({ page }) => {
+  test('rutas protegidas redirigen a login', async ({ page }) => {
+    await page.goto('/home');
+
+    // Debe redirigir a /login porque no hay sesión
+    await expect(page).toHaveURL(/login/);
+  });
+
+  test('no hay errores críticos en la consola al cargar', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => {
       if (msg.type() === 'error') {
@@ -22,12 +33,12 @@ test.describe('Smoke Tests', () => {
       }
     });
 
-    await page.goto('/');
-    await page.waitForTimeout(2000); // Wait for async operations
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
 
-    // Filter out known acceptable errors
+    // Filtrar errores aceptables (favicon, imágenes de fondo)
     const criticalErrors = errors.filter(
-      e => !e.includes('favicon') && !e.includes('404')
+      e => !e.includes('favicon') && !e.includes('404') && !e.includes('backgrounds')
     );
 
     expect(criticalErrors).toHaveLength(0);
