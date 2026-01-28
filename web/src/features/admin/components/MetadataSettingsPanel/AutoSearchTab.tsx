@@ -1,110 +1,23 @@
-import { useState, useEffect } from 'react';
 import { Search, Check, AlertCircle, Info } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
-import type { NotificationType } from '@shared/components/ui';
-import { apiClient } from '@shared/services/api';
-import { logger } from '@shared/utils/logger';
-import { getApiErrorMessage } from '@shared/utils/error.utils';
+import { useAutoSearchConfig } from './useAutoSearchConfig';
 import styles from './ProvidersTab.module.css';
-
-interface AutoSearchConfig {
-  enabled: boolean;
-  confidenceThreshold: number;
-  description: string;
-}
-
-interface AutoSearchStats {
-  totalAutoSearched: number;
-  autoApplied: number;
-  conflictsCreated: number;
-  ignored: number;
-}
 
 /**
  * AutoSearchTab Component
  * Configuración de auto-búsqueda de MusicBrainz IDs (Picard-style)
  */
 export function AutoSearchTab() {
-  const [config, setConfig] = useState<AutoSearchConfig>({
-    enabled: false,
-    confidenceThreshold: 95,
-    description: '',
-  });
-  const [stats, setStats] = useState<AutoSearchStats>({
-    totalAutoSearched: 0,
-    autoApplied: 0,
-    conflictsCreated: 0,
-    ignored: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
-
-  // Load config and stats on mount
-  useEffect(() => {
-    loadConfig();
-    loadStats();
-  }, []);
-
-  const loadConfig = async () => {
-    try {
-      setIsLoading(true);
-      setNotification(null);
-      const response = await apiClient.get('/admin/mbid-auto-search/config');
-      setConfig(response.data);
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        logger.error('Error loading auto-search config:', err);
-      }
-      setNotification({ type: 'error', message: 'Error al cargar configuración de auto-búsqueda' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      const response = await apiClient.get('/admin/mbid-auto-search/stats');
-      // Ensure all values are numbers (protect against undefined/null)
-      setStats({
-        totalAutoSearched: response.data?.totalAutoSearched || 0,
-        autoApplied: response.data?.autoApplied || 0,
-        conflictsCreated: response.data?.conflictsCreated || 0,
-        ignored: response.data?.ignored || 0,
-      });
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        logger.error('Error loading auto-search stats:', error);
-      }
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      setIsSaving(true);
-      setNotification(null);
-
-      await apiClient.put('/admin/mbid-auto-search/config', {
-        enabled: config.enabled,
-        confidenceThreshold: config.confidenceThreshold,
-      });
-
-      setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
-
-      // Reload config to get updated description
-      await loadConfig();
-    } catch (err) {
-      if (import.meta.env.DEV) {
-        logger.error('Error saving auto-search config:', err);
-      }
-      setNotification({
-        type: 'error',
-        message: getApiErrorMessage(err, 'Error al guardar configuración'),
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const {
+    config,
+    stats,
+    isLoading,
+    isSaving,
+    notification,
+    updateConfig,
+    handleSave,
+    dismissNotification,
+  } = useAutoSearchConfig();
 
   if (isLoading) {
     return (
@@ -136,7 +49,7 @@ export function AutoSearchTab() {
               <input
                 type="checkbox"
                 checked={config.enabled}
-                onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
+                onChange={(e) => updateConfig({ enabled: e.target.checked })}
                 className={styles.checkbox}
               />
               <span>Habilitar auto-búsqueda durante el scan</span>
@@ -172,9 +85,7 @@ export function AutoSearchTab() {
                 max="100"
                 step="1"
                 value={config.confidenceThreshold}
-                onChange={(e) =>
-                  setConfig({ ...config, confidenceThreshold: parseInt(e.target.value) })
-                }
+                onChange={(e) => updateConfig({ confidenceThreshold: parseInt(e.target.value) })}
                 style={{
                   flex: 1,
                   height: '6px',
@@ -302,7 +213,7 @@ export function AutoSearchTab() {
         <InlineNotification
           type={notification.type}
           message={notification.message}
-          onDismiss={() => setNotification(null)}
+          onDismiss={dismissNotification}
           autoHideMs={3000}
         />
       )}
