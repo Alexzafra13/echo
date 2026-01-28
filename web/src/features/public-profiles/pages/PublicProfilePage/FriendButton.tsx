@@ -1,6 +1,6 @@
 import { UserPlus, UserCheck, Clock, X, Check } from 'lucide-react';
-import type { FriendshipStatus } from '../../../services/public-profiles.service';
-import styles from '../PublicProfilePage.module.css';
+import type { FriendshipStatus } from '../../services/public-profiles.service';
+import styles from './PublicProfilePage.module.css';
 
 interface FriendButtonProps {
   status: FriendshipStatus;

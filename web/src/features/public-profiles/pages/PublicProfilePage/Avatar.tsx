@@ -1,4 +1,4 @@
-import styles from '../PublicProfilePage.module.css';
+import styles from './PublicProfilePage.module.css';
 
 // =============================================================================
 // Helper Functions

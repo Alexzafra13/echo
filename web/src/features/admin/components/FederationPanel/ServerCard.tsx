@@ -9,10 +9,10 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { ConnectedServer } from '../../../api/federation.api';
+import { ConnectedServer } from '../../api/federation.api';
 import { formatDistanceToNow } from '@shared/utils/format';
 import { formatSize } from './utils';
-import styles from '../FederationPanel.module.css';
+import styles from './FederationPanel.module.css';
 
 interface ServerCardProps {
   server: ConnectedServer;

@@ -1,4 +1,4 @@
-import styles from '../UsersPanel.module.css';
+import styles from './UsersPanel.module.css';
 
 interface PaginationProps {
   currentPage: number;

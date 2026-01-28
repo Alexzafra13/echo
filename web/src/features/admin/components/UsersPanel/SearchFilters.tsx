@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import styles from '../UsersPanel.module.css';
+import styles from './UsersPanel.module.css';
 
 interface SearchFiltersProps {
   searchQuery: string;
