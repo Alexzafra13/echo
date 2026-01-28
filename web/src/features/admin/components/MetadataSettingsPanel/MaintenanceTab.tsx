@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { HardDrive, Trash2, AlertCircle, CheckCircle, RefreshCw, FolderOpen, Lock } from 'lucide-react';
+import { Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import type { NotificationType } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
@@ -7,25 +7,9 @@ import { formatBytes } from '@shared/utils/format';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
 import { MissingFilesPanel } from '../MissingFilesPanel';
 import { logger } from '@shared/utils/logger';
+import { StorageStatsGrid, type StorageStats } from './StorageStatsGrid';
+import { StoragePathsList, type StoragePaths } from './StoragePathsList';
 import styles from './MaintenanceTab.module.css';
-
-interface StorageStats {
-  totalSize: number;
-  totalFiles: number;
-  artistImages: number;
-  albumImages: number;
-  orphanedFiles: number;
-}
-
-interface StoragePaths {
-  dataPath: string;
-  musicPath: string;
-  metadataPath: string;
-  albumCoversPath: string;
-  artistImagesPath: string;
-  userUploadsPath: string;
-  isReadOnlyMusic: boolean;
-}
 
 interface CleanupResult {
   filesRemoved: number;
@@ -194,59 +178,7 @@ export function MaintenanceTab() {
         {isLoadingStats ? (
           <div className={styles.loading}>Cargando estadísticas...</div>
         ) : stats ? (
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <HardDrive size={24} />
-              </div>
-              <div className={styles.statContent}>
-                <p className={styles.statLabel}>Tamaño Total</p>
-                <p className={styles.statValue}>{formatBytes(stats.totalSize)}</p>
-              </div>
-            </div>
-
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <CheckCircle size={24} />
-              </div>
-              <div className={styles.statContent}>
-                <p className={styles.statLabel}>Archivos Totales</p>
-                <p className={styles.statValue}>{stats.totalFiles}</p>
-              </div>
-            </div>
-
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <CheckCircle size={24} />
-              </div>
-              <div className={styles.statContent}>
-                <p className={styles.statLabel}>Imágenes de Artistas</p>
-                <p className={styles.statValue}>{stats.artistImages}</p>
-              </div>
-            </div>
-
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <CheckCircle size={24} />
-              </div>
-              <div className={styles.statContent}>
-                <p className={styles.statLabel}>Imágenes de Álbumes</p>
-                <p className={styles.statValue}>{stats.albumImages}</p>
-              </div>
-            </div>
-
-            {stats.orphanedFiles > 0 && (
-              <div className={`${styles.statCard} ${styles.statCardWarning}`}>
-                <div className={styles.statIcon}>
-                  <AlertCircle size={24} />
-                </div>
-                <div className={styles.statContent}>
-                  <p className={styles.statLabel}>Archivos Huérfanos</p>
-                  <p className={styles.statValue}>{stats.orphanedFiles}</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <StorageStatsGrid stats={stats} />
         ) : (
           <div className={styles.error}>Error al cargar estadísticas</div>
         )}
@@ -258,64 +190,7 @@ export function MaintenanceTab() {
           <div className={styles.sectionHeader}>
             <h3 className={styles.sectionTitle}>Rutas de Almacenamiento</h3>
           </div>
-          <div className={styles.pathsList}>
-            <div className={styles.pathItem}>
-              <div className={styles.pathIcon}>
-                <FolderOpen size={18} />
-              </div>
-              <div className={styles.pathInfo}>
-                <span className={styles.pathLabel}>Datos</span>
-                <code className={styles.pathValue}>{paths.dataPath}</code>
-              </div>
-            </div>
-            <div className={styles.pathItem}>
-              <div className={styles.pathIcon}>
-                {paths.isReadOnlyMusic ? <Lock size={18} /> : <FolderOpen size={18} />}
-              </div>
-              <div className={styles.pathInfo}>
-                <span className={styles.pathLabel}>
-                  Música {paths.isReadOnlyMusic && <span className={styles.pathBadge}>Solo lectura</span>}
-                </span>
-                <code className={styles.pathValue}>{paths.musicPath}</code>
-              </div>
-            </div>
-            <div className={styles.pathItem}>
-              <div className={styles.pathIcon}>
-                <FolderOpen size={18} />
-              </div>
-              <div className={styles.pathInfo}>
-                <span className={styles.pathLabel}>Metadatos externos</span>
-                <code className={styles.pathValue}>{paths.metadataPath}</code>
-              </div>
-            </div>
-            <div className={styles.pathItem}>
-              <div className={styles.pathIcon}>
-                <FolderOpen size={18} />
-              </div>
-              <div className={styles.pathInfo}>
-                <span className={styles.pathLabel}>Carátulas de álbumes</span>
-                <code className={styles.pathValue}>{paths.albumCoversPath}</code>
-              </div>
-            </div>
-            <div className={styles.pathItem}>
-              <div className={styles.pathIcon}>
-                <FolderOpen size={18} />
-              </div>
-              <div className={styles.pathInfo}>
-                <span className={styles.pathLabel}>Imágenes de artistas</span>
-                <code className={styles.pathValue}>{paths.artistImagesPath}</code>
-              </div>
-            </div>
-            <div className={styles.pathItem}>
-              <div className={styles.pathIcon}>
-                <FolderOpen size={18} />
-              </div>
-              <div className={styles.pathInfo}>
-                <span className={styles.pathLabel}>Avatares de usuarios</span>
-                <code className={styles.pathValue}>{paths.userUploadsPath}</code>
-              </div>
-            </div>
-          </div>
+          <StoragePathsList paths={paths} />
         </div>
       )}
 

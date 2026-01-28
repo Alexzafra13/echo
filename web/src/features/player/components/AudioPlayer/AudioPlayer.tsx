@@ -10,8 +10,8 @@ import { usePlayerSettingsStore } from '../../store';
 import { useClickOutsideRef } from '../../hooks/useClickOutsideRef';
 import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
-import { formatDuration } from '@shared/utils/format';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
+import { ProgressBar } from './ProgressBar';
 import styles from './AudioPlayer.module.css';
 
 export function AudioPlayer() {
@@ -196,15 +196,6 @@ export function AudioPlayer() {
   if (!currentTrack && !currentRadioStation) {
     return null;
   }
-
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = x / rect.width;
-    seek(percent * duration);
-  };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVolume(parseFloat(e.target.value));
@@ -451,25 +442,9 @@ export function AudioPlayer() {
         />
       </div>
 
-      {/* Progress bar - Solo para tracks, no para radio - Ahora en la parte inferior del player */}
+      {/* Progress bar - Solo para tracks, no para radio */}
       {!isRadioMode && (
-        <div className={styles.progressContainer}>
-          <span className={styles.timeLabel}>{formatDuration(currentTime)}</span>
-          <div
-            className={styles.progressBar}
-            onClick={handleProgressClick}
-          >
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
-            <div
-              className={styles.progressHandle}
-              style={{ left: `${progressPercent}%` }}
-            />
-          </div>
-          <span className={styles.timeLabel}>{formatDuration(duration)}</span>
-        </div>
+        <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
       )}
 
       {/* NowPlayingView - Vista completa en pantalla (mobile) */}
