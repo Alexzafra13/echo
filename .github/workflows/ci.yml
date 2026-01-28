@@ -136,9 +136,9 @@ jobs:
         run: pnpm test:e2e
 
       # Web tests: React components and hooks
-      - name: Run web tests
+      - name: Run web tests with coverage
         working-directory: web
-        run: pnpm test --run
+        run: pnpm test:cov --run
 
       - name: Build API
         working-directory: api
@@ -148,11 +148,132 @@ jobs:
         working-directory: web
         run: pnpm build
 
-      # Upload coverage report as artifact
-      - name: Upload coverage report
+      # Upload coverage reports as artifacts
+      - name: Upload API coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
+          name: api-coverage-report
           path: api/coverage/
+          retention-days: 7
+
+      - name: Upload Web coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-coverage-report
+          path: web/coverage/
+          retention-days: 7
+
+  # Playwright E2E: Browser tests against running app
+  e2e-web:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: music_admin
+          POSTGRES_PASSWORD: music_password
+          POSTGRES_DB: music_server
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Apply database schema
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+        run: pnpm db:push --force
+
+      - name: Start API server
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql://music_admin:music_password@localhost:5432/music_server
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-min-32-chars
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-min-32
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          PORT: 3000
+        run: |
+          pnpm build
+          pnpm start &
+          # Wait for API to be ready
+          for i in $(seq 1 30); do
+            curl -s http://localhost:3000/api/health && break
+            sleep 2
+          done
+
+      - name: Run Playwright tests
+        working-directory: web
+        env:
+          E2E_BASE_URL: http://localhost:5173
+        run: pnpm e2e --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: web/playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: web/test-results/
           retention-days: 7
