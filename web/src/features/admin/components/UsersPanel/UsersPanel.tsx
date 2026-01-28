@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Users as UsersIcon, UserPlus, Edit2, Trash2, Key, Search, UserX, UserCheck } from 'lucide-react';
+import { Users as UsersIcon, UserPlus } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import { useModal } from '@shared/hooks';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
@@ -7,8 +7,9 @@ import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
 import { EditUserModal } from './EditUserModal';
 import { CredentialsModal } from './CredentialsModal';
-import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
-import { formatDateCompact } from '@shared/utils/format';
+import { UserRow } from './UserRow';
+import { SearchFilters } from './SearchFilters';
+import { Pagination } from './Pagination';
 import { logger } from '@shared/utils/logger';
 import styles from './UsersPanel.module.css';
 import type { NotificationType } from '@shared/components/ui';
@@ -152,7 +153,6 @@ export function UsersPanel() {
   }, [allUsers, searchQuery, roleFilter, statusFilter]);
 
   // Pagination for filtered results
-  const users = filteredUsers;
   const totalUsers = filteredUsers.length;
   const totalPages = Math.ceil(totalUsers / pageSize);
 
@@ -160,8 +160,8 @@ export function UsersPanel() {
   const paginatedUsers = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return users.slice(startIndex, endIndex);
-  }, [users, currentPage, pageSize]);
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage, pageSize]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -171,22 +171,22 @@ export function UsersPanel() {
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
-    setCurrentPage(1); // Reset to first page when changing page size
+    setCurrentPage(1);
   };
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1);
   };
 
   const handleRoleFilterChange = (role: 'all' | 'admin' | 'user') => {
     setRoleFilter(role);
-    setCurrentPage(1); // Reset to first page when filtering
+    setCurrentPage(1);
   };
 
   const handleStatusFilterChange = (status: 'all' | 'active' | 'inactive') => {
     setStatusFilter(status);
-    setCurrentPage(1); // Reset to first page when filtering
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -243,48 +243,14 @@ export function UsersPanel() {
       )}
 
       {/* Search and Filters */}
-      <div className={styles.searchFilters}>
-        <div className={styles.searchBox}>
-          <Search size={18} className={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre o usuario..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className={styles.searchInput}
-          />
-        </div>
-
-        <div className={styles.filters}>
-          <div className={styles.filterGroup}>
-            <label htmlFor="roleFilter">Rol:</label>
-            <select
-              id="roleFilter"
-              value={roleFilter}
-              onChange={(e) => handleRoleFilterChange(e.target.value as 'all' | 'admin' | 'user')}
-              className={styles.filterSelect}
-            >
-              <option value="all">Todos</option>
-              <option value="admin">Admin</option>
-              <option value="user">Usuario</option>
-            </select>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <label htmlFor="statusFilter">Estado:</label>
-            <select
-              id="statusFilter"
-              value={statusFilter}
-              onChange={(e) => handleStatusFilterChange(e.target.value as 'all' | 'active' | 'inactive')}
-              className={styles.filterSelect}
-            >
-              <option value="all">Todos</option>
-              <option value="active">Activo</option>
-              <option value="inactive">Inactivo</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <SearchFilters
+        searchQuery={searchQuery}
+        roleFilter={roleFilter}
+        statusFilter={statusFilter}
+        onSearchChange={handleSearchChange}
+        onRoleFilterChange={handleRoleFilterChange}
+        onStatusFilterChange={handleStatusFilterChange}
+      />
 
       {/* Table */}
       {paginatedUsers.length === 0 ? (
@@ -313,109 +279,15 @@ export function UsersPanel() {
             </thead>
             <tbody>
               {paginatedUsers.map((user) => (
-                <tr key={user.id}>
-                  <td data-label="Usuario">
-                    <div className={styles.userInfo}>
-                      <div className={styles.userAvatar}>
-                        {user.avatarPath ? (
-                          <img
-                            src={getUserAvatarUrl(user.id)}
-                            alt={user.name || user.username}
-                            className={styles.userAvatarImage}
-                            onError={handleAvatarError}
-                          />
-                        ) : (
-                          <div className={styles.userAvatarPlaceholder}>
-                            {getUserInitials(user.name, user.username)}
-                          </div>
-                        )}
-                      </div>
-                      <div className={styles.userDetails}>
-                        <div className={styles.userName}>
-                          {user.name || user.username}
-                        </div>
-                        {user.name && (
-                          <div className={styles.userEmail}>@{user.username}</div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td data-label="Rol">
-                    {user.isSystemAdmin ? (
-                      <span className={`${styles.badge} ${styles.badgeSystemAdmin}`}>
-                        Administrador Principal
-                      </span>
-                    ) : (
-                      <span
-                        className={`${styles.badge} ${
-                          user.isAdmin ? styles.badgeAdmin : styles.badgeUser
-                        }`}
-                      >
-                        {user.isAdmin ? 'Admin' : 'Usuario'}
-                      </span>
-                    )}
-                  </td>
-                  <td data-label="Estado">
-                    <span
-                      className={`${styles.badge} ${
-                        user.isActive ? styles.badgeActive : styles.badgeInactive
-                      }`}
-                    >
-                      {user.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td data-label="Último acceso">{formatDateCompact(user.lastLoginAt)}</td>
-                  <td data-label="Acciones">
-                    <div className={styles.actions}>
-                      <button
-                        className={styles.actionButton}
-                        onClick={() => editModal.openWith(user)}
-                        title="Editar usuario"
-                      >
-                        <Edit2 size={14} />
-                        Editar
-                      </button>
-                      <button
-                        className={styles.actionButton}
-                        onClick={() => resetPasswordModal.openWith(user)}
-                        title="Resetear contraseña"
-                        disabled={!user.isActive}
-                      >
-                        <Key size={14} />
-                        Reset
-                      </button>
-                      {user.isActive ? (
-                        <button
-                          className={`${styles.actionButton} ${styles.actionButtonWarning}`}
-                          onClick={() => deleteModal.openWith(user)}
-                          title={user.isSystemAdmin ? "No se puede desactivar al administrador principal" : "Desactivar usuario (acción reversible)"}
-                          disabled={user.isSystemAdmin}
-                        >
-                          <UserX size={14} />
-                          Desactivar
-                        </button>
-                      ) : (
-                        <button
-                          className={`${styles.actionButton} ${styles.actionButtonSuccess}`}
-                          onClick={() => reactivateModal.openWith(user)}
-                          title="Reactivar usuario"
-                        >
-                          <UserCheck size={14} />
-                          Reactivar
-                        </button>
-                      )}
-                      <button
-                        className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                        onClick={() => permanentDeleteModal.openWith(user)}
-                        title={user.isSystemAdmin ? "No se puede eliminar al administrador principal" : "Eliminar permanentemente (no se puede deshacer)"}
-                        disabled={user.isSystemAdmin}
-                      >
-                        <Trash2 size={14} />
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                <UserRow
+                  key={user.id}
+                  user={user}
+                  onEdit={(u) => editModal.openWith(u)}
+                  onResetPassword={(u) => resetPasswordModal.openWith(u)}
+                  onDeactivate={(u) => deleteModal.openWith(u)}
+                  onReactivate={(u) => reactivateModal.openWith(u)}
+                  onPermanentDelete={(u) => permanentDeleteModal.openWith(u)}
+                />
               ))}
             </tbody>
           </table>
@@ -423,71 +295,14 @@ export function UsersPanel() {
       )}
 
       {/* Pagination */}
-      {totalUsers > 0 && (
-        <div className={styles.pagination}>
-          <div className={styles.paginationInfo}>
-            Mostrando {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalUsers)} de {totalUsers}
-          </div>
-
-          <div className={styles.paginationControls}>
-            <button
-              className={styles.paginationButton}
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Anterior
-            </button>
-
-            <div className={styles.paginationPages}>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-
-                return (
-                  <button
-                    key={pageNum}
-                    className={`${styles.paginationButton} ${currentPage === pageNum ? styles.paginationButtonActive : ''}`}
-                    onClick={() => handlePageChange(pageNum)}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              className={styles.paginationButton}
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Siguiente
-            </button>
-          </div>
-
-          <div className={styles.paginationSize}>
-            <label htmlFor="pageSize">Por página:</label>
-            <select
-              id="pageSize"
-              value={pageSize}
-              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className={styles.paginationSelect}
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalUsers={totalUsers}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
 
       {/* Modals */}
       {createModal.isOpen && (

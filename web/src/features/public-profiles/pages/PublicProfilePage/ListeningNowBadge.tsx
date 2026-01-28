@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Music } from 'lucide-react';
-import type { ListeningNow } from '../../../services/public-profiles.service';
-import styles from '../PublicProfilePage.module.css';
+import type { ListeningNow } from '../../services/public-profiles.service';
+import styles from './PublicProfilePage.module.css';
 
 interface ListeningNowBadgeProps {
   listeningNow: ListeningNow | null;

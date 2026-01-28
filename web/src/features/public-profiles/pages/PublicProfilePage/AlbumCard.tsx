@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { Disc } from 'lucide-react';
-import type { TopAlbum } from '../../../services/public-profiles.service';
-import styles from '../PublicProfilePage.module.css';
+import type { TopAlbum } from '../../services/public-profiles.service';
+import styles from './PublicProfilePage.module.css';
 
 interface AlbumCardProps {
   album: TopAlbum;

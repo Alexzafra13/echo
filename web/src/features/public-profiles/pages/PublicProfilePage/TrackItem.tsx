@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { Music } from 'lucide-react';
-import type { TopTrack } from '../../../services/public-profiles.service';
-import styles from '../PublicProfilePage.module.css';
+import type { TopTrack } from '../../services/public-profiles.service';
+import styles from './PublicProfilePage.module.css';
 
 // =============================================================================
 // Helper Functions

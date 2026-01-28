@@ -1,7 +1,7 @@
 import { Copy, Check, Trash2 } from 'lucide-react';
-import { InvitationToken } from '../../../api/federation.api';
+import { InvitationToken } from '../../api/federation.api';
 import { formatDistanceToNow } from '@shared/utils/format';
-import styles from '../FederationPanel.module.css';
+import styles from './FederationPanel.module.css';
 
 interface InvitationCardProps {
   invitation: InvitationToken;
