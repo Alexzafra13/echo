@@ -1,7 +1,7 @@
 import { Bell, UserPlus, Check, X } from 'lucide-react';
 import { Button } from '@shared/components/ui';
-import { AccessToken } from '../../../api/federation.api';
-import styles from '../FederationPanel.module.css';
+import { AccessToken } from '../../api/federation.api';
+import styles from './FederationPanel.module.css';
 
 interface MutualRequestsBannerProps {
   requests: AccessToken[];

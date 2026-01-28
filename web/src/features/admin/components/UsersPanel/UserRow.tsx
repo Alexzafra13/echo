@@ -1,8 +1,8 @@
 import { Edit2, Trash2, Key, UserX, UserCheck } from 'lucide-react';
-import { User } from '../../../api/users.api';
+import { User } from '../../api/users.api';
 import { getUserAvatarUrl, handleAvatarError, getUserInitials } from '@shared/utils/avatar.utils';
 import { formatDateCompact } from '@shared/utils/format';
-import styles from '../UsersPanel.module.css';
+import styles from './UsersPanel.module.css';
 
 interface UserRowProps {
   user: User;

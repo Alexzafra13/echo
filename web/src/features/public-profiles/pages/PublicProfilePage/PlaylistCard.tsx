@@ -1,8 +1,8 @@
 import { Link } from 'wouter';
 import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { formatDuration } from '@shared/utils/format';
-import type { PublicPlaylist } from '../../../services/public-profiles.service';
-import styles from '../PublicProfilePage.module.css';
+import type { PublicPlaylist } from '../../services/public-profiles.service';
+import styles from './PublicProfilePage.module.css';
 
 interface PlaylistCardProps {
   playlist: PublicPlaylist;

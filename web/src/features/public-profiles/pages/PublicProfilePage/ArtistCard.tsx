@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { User as UserIcon } from 'lucide-react';
-import type { TopArtist } from '../../../services/public-profiles.service';
-import styles from '../PublicProfilePage.module.css';
+import type { TopArtist } from '../../services/public-profiles.service';
+import styles from './PublicProfilePage.module.css';
 
 interface ArtistCardProps {
   artist: TopArtist;
