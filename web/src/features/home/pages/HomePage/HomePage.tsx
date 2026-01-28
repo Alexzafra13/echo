@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState, ReactNode } from 'react';
-import { useLocation } from 'wouter';
-import { RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
@@ -9,16 +7,16 @@ import { useFeaturedAlbum, useRecentAlbums, useTopPlayedAlbums, useGridDimension
 import { useAutoRefreshOnScan } from '@shared/hooks';
 import { useHomePreferences } from '@features/settings/hooks';
 import { usePlaylists } from '@features/playlists/hooks/usePlaylists';
-import { PlaylistCoverMosaic } from '@features/playlists/components';
 import { useFavoriteStations, useDeleteFavoriteStation } from '@features/radio/hooks';
-import { RadioStationCard } from '@features/radio/components/RadioStationCard/RadioStationCard';
 import { usePlayer } from '@features/player/context/PlayerContext';
 import { useRandomAlbums } from '@features/explore/hooks';
 import { toAlbum } from '@features/explore/utils/transform';
 import { useSharedAlbumsForHome, SharedAlbumGrid } from '@features/federation';
+import { MyPlaylistsSection } from './MyPlaylistsSection';
+import { FavoriteRadiosSection } from './FavoriteRadiosSection';
+import { SurpriseMeSection } from './SurpriseMeSection';
 import type { HomeSectionId } from '@features/settings/services';
 import type { Album, HeroItem } from '../../types';
-import type { RadioStation } from '@features/radio/types';
 import styles from './HomePage.module.css';
 
 /**
@@ -65,7 +63,6 @@ export default function HomePage() {
   const { data: favoriteStations = [] } = useFavoriteStations();
   const deleteFavoriteMutation = useDeleteFavoriteStation();
   const { playRadio, currentRadioStation, isPlaying, isRadioMode, radioMetadata } = usePlayer();
-  const [, setLocation] = useLocation();
 
   // Random albums for surprise-me section
   const queryClient = useQueryClient();
@@ -135,7 +132,6 @@ export default function HomePage() {
 
     if (hasHighActivity) {
       // Active user: Mix of top played, new releases, artist playlists, and recent
-      // 3 top played + 1 new release + 2 artist playlists + 2 recent = 8 items
       pool.push(...topPlayed.slice(0, 3).map(album => ({ type: 'album' as const, data: album })));
 
       if (newReleases.length > 0) {
@@ -144,9 +140,7 @@ export default function HomePage() {
 
       // Add artist playlists: 1 most played + 1 less played (from the end)
       if (artistPlaylists.length >= 2) {
-        // Most played artist (first in the sorted list)
         pool.push({ type: 'playlist' as const, data: artistPlaylists[0] });
-        // Less played artist (random from the second half)
         const lessPlayedArtists = artistPlaylists.slice(Math.floor(artistPlaylists.length / 2));
         const randomLessPlayed = randomSelect(lessPlayedArtists, 1);
         if (randomLessPlayed.length > 0) {
@@ -165,7 +159,6 @@ export default function HomePage() {
 
     } else if (hasLowActivity) {
       // Low activity: More weight on new content
-      // 1 top played + 2 new releases + 1 artist playlist + 4 recent = 8 items
       pool.push(...topPlayed.slice(0, 1).map(album => ({ type: 'album' as const, data: album })));
       pool.push(...randomSelect(newReleases, 2).map(album => ({ type: 'album' as const, data: album })));
 
@@ -184,7 +177,6 @@ export default function HomePage() {
 
     } else {
       // New user: Show new releases and recent albums only (no playlists yet)
-      // 4 new releases + 4 recent = 8 albums
       pool.push(...randomSelect(newReleases, 4).map(album => ({ type: 'album' as const, data: album })));
 
       const existingAlbumIds = new Set(
@@ -209,7 +201,6 @@ export default function HomePage() {
     const { waveMix, artistPlaylists, genrePlaylists } = categorizeAutoPlaylists(autoPlaylists);
 
     // Artist Mix: Wave Mix (if exists) + artist playlists
-    // Use neededAlbums for responsive count (same as AlbumGrid - 2 rows)
     const artistMix = [];
     if (waveMix) {
       artistMix.push(waveMix);
@@ -234,7 +225,7 @@ export default function HomePage() {
 
     const interval = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % featuredHeroPool.length);
-    }, 20000); // Change album every 20 seconds
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [featuredHeroPool.length]);
@@ -329,89 +320,34 @@ export default function HomePage() {
           />
         );
       case 'my-playlists':
-        if (userPlaylists.length === 0) return null;
         return (
-          <section key="my-playlists" className={styles.homeSection}>
-            <div className={styles.homeSection__header}>
-              <h2 className={styles.homeSection__title}>Mis Playlists</h2>
-              <button
-                className={styles.homeSection__viewAll}
-                onClick={() => setLocation('/playlists')}
-              >
-                Ver todo →
-              </button>
-            </div>
-            <div className={styles.playlistsGrid}>
-              {userPlaylists.slice(0, neededPlaylists).map((playlist) => (
-                <div
-                  key={playlist.id}
-                  className={styles.playlistCard}
-                  onClick={() => setLocation(`/playlists/${playlist.id}`)}
-                >
-                  <div className={styles.playlistCard__cover}>
-                    <PlaylistCoverMosaic
-                      albumIds={playlist.albumIds || []}
-                      playlistName={playlist.name}
-                    />
-                  </div>
-                  <div className={styles.playlistCard__info}>
-                    <h3 className={styles.playlistCard__title}>{playlist.name}</h3>
-                    <p className={styles.playlistCard__meta}>
-                      {playlist.songCount} {playlist.songCount === 1 ? 'canción' : 'canciones'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <MyPlaylistsSection
+            key="my-playlists"
+            playlists={userPlaylists}
+            maxItems={neededPlaylists}
+          />
         );
       case 'favorite-radios':
-        if (favoriteStations.length === 0) return null;
         return (
-          <section key="favorite-radios" className={styles.homeSection}>
-            <div className={styles.homeSection__header}>
-              <h2 className={styles.homeSection__title}>Radios Favoritas</h2>
-              <button
-                className={styles.homeSection__viewAll}
-                onClick={() => setLocation('/radio')}
-              >
-                Ver todo →
-              </button>
-            </div>
-            <div className={styles.radiosGrid}>
-              {favoriteStations
-                .filter((station: RadioStation) => station.id)
-                .slice(0, neededPlaylists)
-                .map((station: RadioStation) => (
-                  <RadioStationCard
-                    key={station.id}
-                    station={station}
-                    isFavorite={true}
-                    isPlaying={isRadioMode && isPlaying && currentRadioStation?.id === station.id}
-                    currentMetadata={currentRadioStation?.id === station.id ? radioMetadata : null}
-                    onPlay={() => playRadio(station)}
-                    onToggleFavorite={() => deleteFavoriteMutation.mutate(station.id!)}
-                  />
-                ))}
-            </div>
-          </section>
+          <FavoriteRadiosSection
+            key="favorite-radios"
+            stations={favoriteStations}
+            maxItems={neededPlaylists}
+            currentRadioStation={currentRadioStation}
+            isPlaying={isPlaying}
+            isRadioMode={isRadioMode}
+            radioMetadata={radioMetadata}
+            onPlay={playRadio}
+            onRemoveFavorite={(id) => deleteFavoriteMutation.mutate(id)}
+          />
         );
       case 'surprise-me':
-        if (randomAlbums.length === 0) return null;
         return (
-          <section key="surprise-me" className={styles.homeSection}>
-            <div className={styles.homeSection__headerRow}>
-              <h2 className={styles.homeSection__title}>Sorpréndeme</h2>
-              <button
-                className={styles.homeSection__refreshButton}
-                onClick={handleRefreshRandom}
-                title="Obtener otros aleatorios"
-              >
-                <RefreshCw size={16} />
-              </button>
-            </div>
-            <AlbumGrid title="" albums={randomAlbums} />
-          </section>
+          <SurpriseMeSection
+            key="surprise-me"
+            albums={randomAlbums}
+            onRefresh={handleRefreshRandom}
+          />
         );
       case 'shared-albums':
         return (
