@@ -1,17 +1,8 @@
-import { useState } from 'react';
 import { Upload, X, Check, AlertCircle, Trash2 } from 'lucide-react';
 import { Button } from '@shared/components/ui';
-import { useFileUpload } from '@shared/hooks/useFileUpload';
 import { formatFileSize } from '@shared/utils/format';
-import {
-  useUploadCustomImage,
-  useListCustomImages,
-  useApplyCustomImage,
-  useDeleteCustomImage,
-} from '../../hooks/useArtistAvatars';
-import { CustomImage, AvatarImageType } from '../../api/artist-avatars.api';
-import { logger } from '@shared/utils/logger';
-import { getApiErrorMessage } from '@shared/utils/error.utils';
+import { AvatarImageType, CustomImage } from '../../api/artist-avatars.api';
+import { useCustomImageUpload } from './useCustomImageUpload';
 import styles from './FileUploadSection.module.css';
 
 interface FileUploadSectionProps {
@@ -25,138 +16,24 @@ interface FileUploadSectionProps {
  * Permite subir imágenes personalizadas desde el PC
  */
 export function FileUploadSection({ artistId, imageType, onSuccess }: FileUploadSectionProps) {
-  const [selectedCustomImage, setSelectedCustomImage] = useState<CustomImage | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-
-  // Hook para manejo de archivos
   const {
     selectedFile,
     previewUrl,
-    error: fileError,
-    handleFileSelect,
-    resetInput,
     fileInputRef,
-  } = useFileUpload({
-    onError: setUploadError,
-  });
-
-  const { mutate: uploadImage, isPending: isUploading } = useUploadCustomImage();
-  const { data: customImagesData, isLoading: isLoadingCustomImages } = useListCustomImages(artistId);
-  const { mutate: applyImage, isPending: isApplying } = useApplyCustomImage();
-  const { mutate: deleteImage, isPending: isDeleting } = useDeleteCustomImage();
-
-  // Filtrar imágenes por tipo
-  const customImages = (customImagesData?.customImages || []).filter((img) => img.imageType === imageType);
-
-  // Combinar errores del hook y de upload
-  const displayError = uploadError || fileError;
-
-  const handleUpload = () => {
-    if (!selectedFile) return;
-
-    setUploadError(null);
-    uploadImage(
-      {
-        artistId,
-        imageType,
-        file: selectedFile,
-      },
-      {
-        onSuccess: (data) => {
-          // Aplicar automáticamente la imagen recién subida
-          applyImage(
-            {
-              artistId,
-              customImageId: data.customImageId,
-            },
-            {
-              onSuccess: () => {
-                resetInput();
-                onSuccess?.();
-              },
-              onError: (err) => {
-                if (import.meta.env.DEV) {
-                  logger.error('[FileUpload] ❌ Apply error:', err);
-                }
-                setUploadError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
-                resetInput();
-              },
-            }
-          );
-        },
-        onError: (err) => {
-          if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Upload error:', err);
-          }
-          setUploadError(getApiErrorMessage(err, 'Error al subir la imagen'));
-        },
-      }
-    );
-  };
-
-  const handleCancel = () => {
-    resetInput();
-    setUploadError(null);
-  };
-
-  const handleApplyCustomImage = (image: CustomImage) => {
-    applyImage(
-      {
-        artistId,
-        customImageId: image.id,
-      },
-      {
-        onSuccess: () => {
-          onSuccess?.();
-        },
-        onError: (err) => {
-          if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Apply error:', err);
-          }
-          setUploadError(getApiErrorMessage(err, 'Error al aplicar la imagen'));
-        },
-      }
-    );
-  };
-
-  const handleDeleteCustomImage = (image: CustomImage, e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (!confirm(`¿Estás seguro de eliminar esta imagen personalizada?`)) {
-      return;
-    }
-
-    deleteImage(
-      {
-        artistId,
-        customImageId: image.id,
-      },
-      {
-        onSuccess: () => {
-          if (selectedCustomImage?.id === image.id) {
-            setSelectedCustomImage(null);
-          }
-        },
-        onError: (err) => {
-          if (import.meta.env.DEV) {
-            logger.error('[FileUpload] ❌ Delete error:', err);
-          }
-          setUploadError(getApiErrorMessage(err, 'Error al eliminar la imagen'));
-        },
-      }
-    );
-  };
-
-  // Utility function for future use
-  // const getTypeLabel = (type: string) => {
-  //   const labels: Record<string, string> = {
-  //     profile: 'Perfil',
-  //     background: 'Fondo',
-  //     banner: 'Banner',
-  //     logo: 'Logo',
-  //   };
-  //   return labels[type] || type;
-  // };
+    handleFileSelect,
+    customImages,
+    selectedCustomImage,
+    setSelectedCustomImage,
+    isLoadingCustomImages,
+    isUploading,
+    isApplying,
+    isDeleting,
+    displayError,
+    handleUpload,
+    handleCancel,
+    handleApplyCustomImage,
+    handleDeleteCustomImage,
+  } = useCustomImageUpload({ artistId, imageType, onSuccess });
 
   return (
     <div className={styles.container}>
@@ -176,12 +53,8 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
             />
             <label htmlFor="fileInput" className={styles.uploadLabel}>
               <Upload size={48} className={styles.uploadIcon} />
-              <p className={styles.uploadText}>
-                Haz clic para seleccionar una imagen
-              </p>
-              <span className={styles.uploadHint}>
-                JPEG, PNG o WebP (máx. 10MB)
-              </span>
+              <p className={styles.uploadText}>Haz clic para seleccionar una imagen</p>
+              <span className={styles.uploadHint}>JPEG, PNG o WebP (máx. 10MB)</span>
             </label>
           </div>
         ) : (
@@ -194,11 +67,7 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
             </div>
 
             <div className={styles.previewImageWrapper}>
-              <img
-                src={previewUrl || ''}
-                alt="Preview"
-                className={styles.previewImage}
-              />
+              <img src={previewUrl || ''} alt="Preview" className={styles.previewImage} />
             </div>
 
             <div className={styles.fileInfo}>
@@ -229,70 +98,21 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
       {/* Custom Images List */}
       {customImages.length > 0 && (
         <div className={styles.customImagesSection}>
-          <h3 className={styles.sectionTitle}>
-            Imágenes subidas ({customImages.length})
-          </h3>
+          <h3 className={styles.sectionTitle}>Imágenes subidas ({customImages.length})</h3>
 
           <div className={styles.customImagesGrid}>
             {customImages.map((image) => (
-              <div
+              <CustomImageCard
                 key={image.id}
-                className={`${styles.customImageCard} ${
-                  selectedCustomImage?.id === image.id ? styles.customImageCardSelected : ''
-                } ${image.isActive ? styles.customImageCardActive : ''}`}
-                onClick={() => setSelectedCustomImage(image)}
-              >
-                {selectedCustomImage?.id === image.id && (
-                  <div className={styles.selectedBadge}>
-                    <Check size={20} />
-                  </div>
-                )}
-
-                {image.isActive && (
-                  <div className={styles.activeBadge}>
-                    Activa
-                  </div>
-                )}
-
-                <div className={styles.customImageWrapper}>
-                  <img
-                    src={`/api/images/artists/${artistId}/custom/${image.id}`}
-                    alt={`Custom ${image.imageType}`}
-                    className={styles.customImage}
-                    onError={(e) => {
-                      e.currentTarget.src = '/images/avatar-default.svg';
-                    }}
-                  />
-                </div>
-
-                <div className={styles.customImageInfo}>
-                  <p className={styles.customImageName}>{image.fileName}</p>
-                  <p className={styles.customImageSize}>{formatFileSize(Number(image.fileSize))}</p>
-                </div>
-
-                <div className={styles.customImageActions}>
-                  {!image.isActive && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      fullWidth
-                      onClick={() => handleApplyCustomImage(image)}
-                      disabled={isApplying}
-                      loading={isApplying && selectedCustomImage?.id === image.id}
-                    >
-                      Aplicar
-                    </Button>
-                  )}
-                  <button
-                    className={styles.deleteButton}
-                    onClick={(e) => handleDeleteCustomImage(image, e)}
-                    disabled={isDeleting}
-                    title="Eliminar imagen"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
+                image={image}
+                artistId={artistId}
+                isSelected={selectedCustomImage?.id === image.id}
+                isApplying={isApplying}
+                isDeleting={isDeleting}
+                onSelect={() => setSelectedCustomImage(image)}
+                onApply={() => handleApplyCustomImage(image)}
+                onDelete={(e) => handleDeleteCustomImage(image, e)}
+              />
             ))}
           </div>
         </div>
@@ -303,6 +123,88 @@ export function FileUploadSection({ artistId, imageType, onSuccess }: FileUpload
           <p>Cargando imágenes personalizadas...</p>
         </div>
       )}
+    </div>
+  );
+}
+
+/* Custom Image Card - extracted for readability in map */
+interface CustomImageCardProps {
+  image: CustomImage;
+  artistId: string;
+  isSelected: boolean;
+  isApplying: boolean;
+  isDeleting: boolean;
+  onSelect: () => void;
+  onApply: () => void;
+  onDelete: (e: React.MouseEvent) => void;
+}
+
+function CustomImageCard({
+  image,
+  artistId,
+  isSelected,
+  isApplying,
+  isDeleting,
+  onSelect,
+  onApply,
+  onDelete,
+}: CustomImageCardProps) {
+  const cardClassName = [
+    styles.customImageCard,
+    isSelected ? styles.customImageCardSelected : '',
+    image.isActive ? styles.customImageCardActive : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={cardClassName} onClick={onSelect}>
+      {isSelected && (
+        <div className={styles.selectedBadge}>
+          <Check size={20} />
+        </div>
+      )}
+
+      {image.isActive && <div className={styles.activeBadge}>Activa</div>}
+
+      <div className={styles.customImageWrapper}>
+        <img
+          src={`/api/images/artists/${artistId}/custom/${image.id}`}
+          alt={`Custom ${image.imageType}`}
+          className={styles.customImage}
+          onError={(e) => {
+            e.currentTarget.src = '/images/avatar-default.svg';
+          }}
+        />
+      </div>
+
+      <div className={styles.customImageInfo}>
+        <p className={styles.customImageName}>{image.fileName}</p>
+        <p className={styles.customImageSize}>{formatFileSize(Number(image.fileSize))}</p>
+      </div>
+
+      <div className={styles.customImageActions}>
+        {!image.isActive && (
+          <Button
+            variant="primary"
+            size="sm"
+            fullWidth
+            onClick={onApply}
+            disabled={isApplying}
+            loading={isApplying && isSelected}
+          >
+            Aplicar
+          </Button>
+        )}
+        <button
+          className={styles.deleteButton}
+          onClick={onDelete}
+          disabled={isDeleting}
+          title="Eliminar imagen"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }
