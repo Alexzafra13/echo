@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Check } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification } from '@shared/components/ui';
-import type { NotificationType } from '@shared/components/ui';
+import { useNotification } from '@shared/hooks';
 import { useAutoSearchConfig } from '../../hooks/queries/useAutoSearchConfig';
 import { useUpdateAutoSearchConfig } from '../../hooks/mutations/useUpdateAutoSearchConfig';
 import { useAutoSearchStats } from '../../hooks/queries/useAutoSearchStats';
@@ -29,7 +29,7 @@ export function AutoSearchTab() {
   // Local form state
   const [enabled, setEnabled] = useState(false);
   const [confidenceThreshold, setConfidenceThreshold] = useState(95);
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
+  const { notification, showSuccess, showError, dismiss } = useNotification();
 
   // Sync config to local state when loaded
   useEffect(() => {
@@ -40,7 +40,7 @@ export function AutoSearchTab() {
   }, [config]);
 
   const handleSave = () => {
-    setNotification(null);
+    dismiss();
     updateConfig.mutate(
       {
         enabled,
@@ -48,13 +48,10 @@ export function AutoSearchTab() {
       },
       {
         onSuccess: () => {
-          setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
+          showSuccess('Configuración guardada correctamente');
         },
         onError: (err) => {
-          setNotification({
-            type: 'error',
-            message: getApiErrorMessage(err, 'Error al guardar configuración'),
-          });
+          showError(getApiErrorMessage(err, 'Error al guardar configuración'));
         },
       }
     );
@@ -123,7 +120,7 @@ export function AutoSearchTab() {
         <InlineNotification
           type={notification.type}
           message={notification.message}
-          onDismiss={() => setNotification(null)}
+          onDismiss={dismiss}
           autoHideMs={3000}
         />
       )}

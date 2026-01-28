@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileX, Trash2, RefreshCw, CheckCircle, Clock, Settings } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@shared/components/ui';
-import type { NotificationType } from '@shared/components/ui';
+import { useNotification } from '@shared/hooks';
 import {
   getMissingFiles,
   purgeMissingFiles,
@@ -26,7 +26,7 @@ export function MissingFilesPanel() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [newPurgeMode, setNewPurgeMode] = useState('never');
   const [purgeDays, setPurgeDays] = useState(30);
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
+  const { notification, showSuccess, showError, dismiss } = useNotification();
 
   useEffect(() => {
     loadMissingFiles();
@@ -50,7 +50,7 @@ export function MissingFilesPanel() {
       if (import.meta.env.DEV) {
         logger.error('Error loading missing files:', error);
       }
-      setNotification({ type: 'error', message: 'Error al cargar archivos desaparecidos' });
+      showError('Error al cargar archivos desaparecidos');
     } finally {
       setIsLoading(false);
     }
@@ -61,13 +61,13 @@ export function MissingFilesPanel() {
       setIsPurging(true);
       setShowPurgeConfirm(false);
       const result = await purgeMissingFiles();
-      setNotification({ type: 'success', message: result.message });
+      showSuccess(result.message);
       await loadMissingFiles();
     } catch (error) {
       if (import.meta.env.DEV) {
         logger.error('Error purging missing files:', error);
       }
-      setNotification({ type: 'error', message: 'Error al purgar archivos' });
+      showError('Error al purgar archivos');
     } finally {
       setIsPurging(false);
     }
@@ -78,16 +78,16 @@ export function MissingFilesPanel() {
       setDeletingId(trackId);
       const result = await deleteMissingTrack(trackId);
       if (result.success) {
-        setNotification({ type: 'success', message: result.message });
+        showSuccess(result.message);
         setTracks(prev => prev.filter(t => t.id !== trackId));
       } else {
-        setNotification({ type: 'error', message: result.message });
+        showError(result.message);
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         logger.error('Error deleting track:', error);
       }
-      setNotification({ type: 'error', message: 'Error al eliminar track' });
+      showError('Error al eliminar track');
     } finally {
       setDeletingId(null);
     }
@@ -99,12 +99,12 @@ export function MissingFilesPanel() {
       await updatePurgeMode(mode);
       setPurgeMode(mode);
       setShowSettingsModal(false);
-      setNotification({ type: 'success', message: 'Configuracion guardada' });
+      showSuccess('Configuracion guardada');
     } catch (error) {
       if (import.meta.env.DEV) {
         logger.error('Error saving settings:', error);
       }
-      setNotification({ type: 'error', message: 'Error al guardar configuracion' });
+      showError('Error al guardar configuracion');
     }
   };
 
@@ -190,7 +190,7 @@ export function MissingFilesPanel() {
         <InlineNotification
           type={notification.type}
           message={notification.message}
-          onDismiss={() => setNotification(null)}
+          onDismiss={dismiss}
           autoHideMs={3000}
         />
       )}

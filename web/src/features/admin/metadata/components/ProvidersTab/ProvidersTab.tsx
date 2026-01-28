@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Button, InlineNotification } from '@shared/components/ui';
-import type { NotificationType } from '@shared/components/ui';
+import { useNotification } from '@shared/hooks';
 import {
   useMetadataSettings,
   useUpdateMetadataSettings,
@@ -48,7 +48,7 @@ export function ProvidersTab() {
   }>({});
 
   // Inline notifications
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
+  const { notification, showSuccess, showError, dismiss } = useNotification();
 
   // Sync form state with fetched settings
   useEffect(() => {
@@ -96,7 +96,7 @@ export function ProvidersTab() {
   };
 
   const handleSave = () => {
-    setNotification(null);
+    dismiss();
     updateSettings.mutate(
       {
         providers: {
@@ -106,34 +106,25 @@ export function ProvidersTab() {
       },
       {
         onSuccess: () => {
-          setNotification({ type: 'success', message: 'Configuración guardada correctamente' });
+          showSuccess('Configuración guardada correctamente');
         },
         onError: (err) => {
-          setNotification({
-            type: 'error',
-            message: getApiErrorMessage(err, 'Error al guardar configuración'),
-          });
+          showError(getApiErrorMessage(err, 'Error al guardar configuración'));
         },
       }
     );
   };
 
   const handleToggleAutoEnrich = (enabled: boolean) => {
-    setNotification(null);
+    dismiss();
     updateSettings.mutate(
       { autoEnrichEnabled: enabled },
       {
         onSuccess: () => {
-          setNotification({
-            type: 'success',
-            message: `Auto-enrichment ${enabled ? 'activado' : 'desactivado'}`,
-          });
+          showSuccess(`Auto-enrichment ${enabled ? 'activado' : 'desactivado'}`);
         },
         onError: (err) => {
-          setNotification({
-            type: 'error',
-            message: getApiErrorMessage(err, 'Error al actualizar configuración'),
-          });
+          showError(getApiErrorMessage(err, 'Error al actualizar configuración'));
         },
       }
     );
@@ -227,7 +218,7 @@ export function ProvidersTab() {
         <InlineNotification
           type={notification.type}
           message={notification.message}
-          onDismiss={() => setNotification(null)}
+          onDismiss={dismiss}
           autoHideMs={3000}
         />
       )}
