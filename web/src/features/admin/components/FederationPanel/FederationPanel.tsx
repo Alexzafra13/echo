@@ -21,12 +21,10 @@ import {
 import { ConnectedServer, InvitationToken, AccessToken } from '../../api/federation.api';
 import { ConnectServerModal } from './ConnectServerModal';
 import { CreateInvitationModal } from './CreateInvitationModal';
-import {
-  ServerCard,
-  InvitationCard,
-  AccessCard,
-  MutualRequestsBanner,
-} from './components';
+import { ServerCard } from './ServerCard';
+import { InvitationCard } from './InvitationCard';
+import { AccessCard } from './AccessCard';
+import { MutualRequestsBanner } from './MutualRequestsBanner';
 import styles from './FederationPanel.module.css';
 import type { NotificationType } from '@shared/components/ui';
 

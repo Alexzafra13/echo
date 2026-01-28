@@ -1,7 +1,7 @@
 import { Server, Eye, Radio, Download, Trash2, RotateCcw } from 'lucide-react';
-import { AccessToken } from '../../../api/federation.api';
+import { AccessToken } from '../../api/federation.api';
 import { formatDistanceToNow } from '@shared/utils/format';
-import styles from '../FederationPanel.module.css';
+import styles from './FederationPanel.module.css';
 
 interface AccessCardProps {
   token: AccessToken;

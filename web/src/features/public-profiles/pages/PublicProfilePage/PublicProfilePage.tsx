@@ -11,17 +11,14 @@ import {
   useRemoveFriendship,
 } from '@features/social/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Avatar,
-  ListeningNowBadge,
-  FriendButton,
-  ArtistCard,
-  AlbumCard,
-  TrackItem,
-  PlaylistCard,
-  useImageColor,
-  formatPlayCount,
-} from './components';
+import { Avatar } from './Avatar';
+import { ListeningNowBadge } from './ListeningNowBadge';
+import { FriendButton } from './FriendButton';
+import { ArtistCard } from './ArtistCard';
+import { AlbumCard } from './AlbumCard';
+import { TrackItem, formatPlayCount } from './TrackItem';
+import { PlaylistCard } from './PlaylistCard';
+import { useImageColor } from './useImageColor';
 import styles from './PublicProfilePage.module.css';
 
 // =============================================================================
