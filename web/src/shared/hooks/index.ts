@@ -27,3 +27,4 @@ export { useDominantColor } from './useDominantColor';
 export { useFocusTrap } from './useFocusTrap';
 export { useModal } from './useModal';
 export type { UseModalReturn } from './useModal';
+export { useNotification } from './useNotification';

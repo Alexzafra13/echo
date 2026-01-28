@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { UsersPanel } from './UsersPanel';
 
-// Mock useModal
+// Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useModal: () => ({
     isOpen: false,
@@ -10,6 +10,14 @@ vi.mock('@shared/hooks', () => ({
     close: vi.fn(),
     openWith: vi.fn(),
     data: null,
+  }),
+  useNotification: () => ({
+    notification: null,
+    showSuccess: vi.fn(),
+    showError: vi.fn(),
+    showWarning: vi.fn(),
+    showInfo: vi.fn(),
+    dismiss: vi.fn(),
   }),
 }));
 
