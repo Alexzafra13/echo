@@ -1,7 +1,7 @@
 import { useLocation } from 'wouter';
 import { RadioStationCard } from '@features/radio/components/RadioStationCard/RadioStationCard';
 import type { RadioStation } from '@features/radio/types';
-import type { RadioMetadata } from '@features/player/context/PlayerContext';
+import type { RadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import styles from './HomePage.module.css';
 
 interface FavoriteRadiosSectionProps {
