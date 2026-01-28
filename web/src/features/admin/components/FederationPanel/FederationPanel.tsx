@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useModal } from '@shared/hooks';
+import { useModal, useNotification } from '@shared/hooks';
 import { Server, Link2, Plus, Shield, Activity } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import {
@@ -26,7 +26,6 @@ import { InvitationCard } from './InvitationCard';
 import { AccessCard } from './AccessCard';
 import { MutualRequestsBanner } from './MutualRequestsBanner';
 import styles from './FederationPanel.module.css';
-import type { NotificationType } from '@shared/components/ui';
 
 /**
  * FederationPanel Component
@@ -45,7 +44,7 @@ export function FederationPanel() {
   const deleteAccessModal = useModal<AccessToken>();
 
   // Notifications
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
+  const { notification, showSuccess, showError, dismiss } = useNotification();
 
   // Queries
   const { data: servers, isLoading: serversLoading } = useConnectedServers();
@@ -72,25 +71,25 @@ export function FederationPanel() {
       setCopiedToken(token);
       setTimeout(() => setCopiedToken(null), 2000);
     } catch {
-      setNotification({ type: 'error', message: 'Error al copiar el token' });
+      showError('Error al copiar el token');
     }
   };
 
   const handleSync = async (server: ConnectedServer) => {
     try {
       await syncMutation.mutateAsync(server.id);
-      setNotification({ type: 'success', message: `Sincronizado con ${server.name}` });
+      showSuccess(`Sincronizado con ${server.name}`);
     } catch {
-      setNotification({ type: 'error', message: 'Error al sincronizar' });
+      showError('Error al sincronizar');
     }
   };
 
   const handleCheckHealth = async () => {
     try {
       await checkHealthMutation.mutateAsync();
-      setNotification({ type: 'success', message: 'Estado de servidores actualizado' });
+      showSuccess('Estado de servidores actualizado');
     } catch {
-      setNotification({ type: 'error', message: 'Error al verificar estado' });
+      showError('Error al verificar estado');
     }
   };
 
@@ -99,9 +98,9 @@ export function FederationPanel() {
     try {
       await disconnectMutation.mutateAsync(disconnectModal.data.id);
       disconnectModal.close();
-      setNotification({ type: 'success', message: 'Desconectado correctamente' });
+      showSuccess('Desconectado correctamente');
     } catch {
-      setNotification({ type: 'error', message: 'Error al desconectar' });
+      showError('Error al desconectar');
     }
   };
 
@@ -110,9 +109,9 @@ export function FederationPanel() {
     try {
       await deleteInvitationMutation.mutateAsync(deleteInvitationModal.data.id);
       deleteInvitationModal.close();
-      setNotification({ type: 'success', message: 'Invitación eliminada' });
+      showSuccess('Invitación eliminada');
     } catch {
-      setNotification({ type: 'error', message: 'Error al eliminar invitación' });
+      showError('Error al eliminar invitación');
     }
   };
 
@@ -121,9 +120,9 @@ export function FederationPanel() {
     try {
       await revokeAccessMutation.mutateAsync(revokeAccessModal.data.id);
       revokeAccessModal.close();
-      setNotification({ type: 'success', message: 'Acceso revocado' });
+      showSuccess('Acceso revocado');
     } catch {
-      setNotification({ type: 'error', message: 'Error al revocar acceso' });
+      showError('Error al revocar acceso');
     }
   };
 
@@ -132,36 +131,36 @@ export function FederationPanel() {
     try {
       await deleteAccessMutation.mutateAsync(deleteAccessModal.data.id);
       deleteAccessModal.close();
-      setNotification({ type: 'success', message: 'Acceso eliminado permanentemente' });
+      showSuccess('Acceso eliminado permanentemente');
     } catch {
-      setNotification({ type: 'error', message: 'Error al eliminar acceso' });
+      showError('Error al eliminar acceso');
     }
   };
 
   const handleReactivateAccess = async (token: AccessToken) => {
     try {
       await reactivateAccessMutation.mutateAsync(token.id);
-      setNotification({ type: 'success', message: `Acceso de "${token.serverName}" reactivado` });
+      showSuccess(`Acceso de "${token.serverName}" reactivado`);
     } catch {
-      setNotification({ type: 'error', message: 'Error al reactivar acceso' });
+      showError('Error al reactivar acceso');
     }
   };
 
   const handleApproveMutual = async (request: AccessToken) => {
     try {
       await approveMutualMutation.mutateAsync(request.id);
-      setNotification({ type: 'success', message: `Conectado con ${request.serverName}` });
+      showSuccess(`Conectado con ${request.serverName}`);
     } catch {
-      setNotification({ type: 'error', message: 'Error al aprobar solicitud' });
+      showError('Error al aprobar solicitud');
     }
   };
 
   const handleRejectMutual = async (request: AccessToken) => {
     try {
       await rejectMutualMutation.mutateAsync(request.id);
-      setNotification({ type: 'success', message: 'Solicitud rechazada' });
+      showSuccess('Solicitud rechazada');
     } catch {
-      setNotification({ type: 'error', message: 'Error al rechazar solicitud' });
+      showError('Error al rechazar solicitud');
     }
   };
 
@@ -176,9 +175,9 @@ export function FederationPanel() {
           [permission]: !token.permissions[permission],
         },
       });
-      setNotification({ type: 'success', message: 'Permisos actualizados' });
+      showSuccess('Permisos actualizados');
     } catch {
-      setNotification({ type: 'error', message: 'Error al actualizar permisos' });
+      showError('Error al actualizar permisos');
     }
   };
 
@@ -199,7 +198,7 @@ export function FederationPanel() {
         <InlineNotification
           type={notification.type}
           message={notification.message}
-          onDismiss={() => setNotification(null)}
+          onDismiss={dismiss}
           autoHideMs={3000}
         />
       )}
@@ -401,7 +400,7 @@ export function FederationPanel() {
           onClose={connectModal.close}
           onSuccess={() => {
             connectModal.close();
-            setNotification({ type: 'success', message: 'Conectado correctamente' });
+            showSuccess('Conectado correctamente');
           }}
         />
       )}
@@ -411,7 +410,7 @@ export function FederationPanel() {
           onClose={createInvitationModal.close}
           onSuccess={() => {
             createInvitationModal.close();
-            setNotification({ type: 'success', message: 'Invitación creada' });
+            showSuccess('Invitación creada');
           }}
         />
       )}

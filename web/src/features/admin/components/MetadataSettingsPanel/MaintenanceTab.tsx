@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@shared/components/ui';
-import type { NotificationType } from '@shared/components/ui';
+import { useNotification } from '@shared/hooks';
 import { apiClient } from '@shared/services/api';
 import { formatBytes } from '@shared/utils/format';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
@@ -39,7 +39,7 @@ export function MaintenanceTab() {
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
   const [showCacheConfirm, setShowCacheConfirm] = useState(false);
   const [populateError, setPopulateError] = useState<string | null>(null);
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
+  const { notification, showSuccess, showError, dismiss } = useNotification();
 
   useEffect(() => {
     loadStats();
@@ -89,7 +89,7 @@ export function MaintenanceTab() {
     try {
       setIsCleaning(true);
       setCleanupResult(null);
-      setNotification(null);
+      dismiss();
       setShowCleanupConfirm(false);
 
       const response = await apiClient.post('/maintenance/cleanup/orphaned?dryRun=false');
@@ -104,7 +104,7 @@ export function MaintenanceTab() {
       if (import.meta.env.DEV) {
         logger.error('Error running cleanup:', err);
       }
-      setNotification({ type: 'error', message: getApiErrorMessage(err, 'Error al ejecutar limpieza') });
+      showError(getApiErrorMessage(err, 'Error al ejecutar limpieza'));
     } finally {
       setIsCleaning(false);
     }
@@ -117,14 +117,14 @@ export function MaintenanceTab() {
   const clearCache = async () => {
     try {
       setShowCacheConfirm(false);
-      setNotification(null);
+      dismiss();
       await apiClient.post('/admin/settings/cache/clear');
-      setNotification({ type: 'success', message: 'Caché limpiado correctamente' });
+      showSuccess('Caché limpiado correctamente');
     } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error clearing cache:', err);
       }
-      setNotification({ type: 'error', message: getApiErrorMessage(err, 'Error al limpiar caché') });
+      showError(getApiErrorMessage(err, 'Error al limpiar caché'));
     }
   };
 
@@ -335,7 +335,7 @@ export function MaintenanceTab() {
           <InlineNotification
             type={notification.type}
             message={notification.message}
-            onDismiss={() => setNotification(null)}
+            onDismiss={dismiss}
             autoHideMs={3000}
           />
         )}

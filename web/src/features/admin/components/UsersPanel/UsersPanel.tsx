@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Users as UsersIcon, UserPlus } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
-import { useModal } from '@shared/hooks';
+import { useModal, useNotification } from '@shared/hooks';
 import { useUsers, useDeleteUser, useResetPassword, usePermanentlyDeleteUser, useUpdateUser } from '../../hooks/useUsers';
 import { User } from '../../api/users.api';
 import { CreateUserModal } from './CreateUserModal';
@@ -12,7 +12,6 @@ import { SearchFilters } from './SearchFilters';
 import { Pagination } from './Pagination';
 import { logger } from '@shared/utils/logger';
 import styles from './UsersPanel.module.css';
-import type { NotificationType } from '@shared/components/ui';
 
 /**
  * UsersPanel Component
@@ -38,7 +37,7 @@ export function UsersPanel() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   // Inline notifications
-  const [notification, setNotification] = useState<{ type: NotificationType; message: string } | null>(null);
+  const { notification, showSuccess, showError, dismiss } = useNotification();
 
   // Queries - Load all users for client-side filtering
   const { data, isLoading, error } = useUsers(0, 1000);
@@ -59,12 +58,12 @@ export function UsersPanel() {
     try {
       await deleteUserMutation.mutateAsync(deleteModal.data.id);
       deleteModal.close();
-      setNotification({ type: 'success', message: 'Usuario desactivado correctamente' });
+      showSuccess('Usuario desactivado correctamente');
     } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error deleting user:', err);
       }
-      setNotification({ type: 'error', message: 'Error al eliminar usuario. Por favor intenta de nuevo.' });
+      showError('Error al eliminar usuario. Por favor intenta de nuevo.');
     }
   };
 
@@ -74,12 +73,12 @@ export function UsersPanel() {
     try {
       await permanentlyDeleteUserMutation.mutateAsync(permanentDeleteModal.data.id);
       permanentDeleteModal.close();
-      setNotification({ type: 'success', message: 'Usuario eliminado permanentemente' });
+      showSuccess('Usuario eliminado permanentemente');
     } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error permanently deleting user:', err);
       }
-      setNotification({ type: 'error', message: 'Error al eliminar usuario permanentemente. Por favor intenta de nuevo.' });
+      showError('Error al eliminar usuario permanentemente. Por favor intenta de nuevo.');
     }
   };
 
@@ -98,7 +97,7 @@ export function UsersPanel() {
       if (import.meta.env.DEV) {
         logger.error('Error resetting password:', err);
       }
-      setNotification({ type: 'error', message: 'Error al resetear contraseña. Por favor intenta de nuevo.' });
+      showError('Error al resetear contraseña. Por favor intenta de nuevo.');
     }
   };
 
@@ -111,12 +110,12 @@ export function UsersPanel() {
         data: { isActive: true },
       });
       reactivateModal.close();
-      setNotification({ type: 'success', message: 'Usuario reactivado correctamente' });
+      showSuccess('Usuario reactivado correctamente');
     } catch (err) {
       if (import.meta.env.DEV) {
         logger.error('Error reactivating user:', err);
       }
-      setNotification({ type: 'error', message: 'Error al reactivar usuario. Por favor intenta de nuevo.' });
+      showError('Error al reactivar usuario. Por favor intenta de nuevo.');
     }
   };
 
@@ -237,7 +236,7 @@ export function UsersPanel() {
         <InlineNotification
           type={notification.type}
           message={notification.message}
-          onDismiss={() => setNotification(null)}
+          onDismiss={dismiss}
           autoHideMs={3000}
         />
       )}
