@@ -7,7 +7,7 @@ Object.assign(navigator, {
   clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
 });
 
-// Mock useModal
+// Mock shared hooks
 vi.mock('@shared/hooks', () => ({
   useModal: () => ({
     isOpen: false,
@@ -15,6 +15,14 @@ vi.mock('@shared/hooks', () => ({
     close: vi.fn(),
     openWith: vi.fn(),
     data: null,
+  }),
+  useNotification: () => ({
+    notification: null,
+    showSuccess: vi.fn(),
+    showError: vi.fn(),
+    showWarning: vi.fn(),
+    showInfo: vi.fn(),
+    dismiss: vi.fn(),
   }),
 }));
 
