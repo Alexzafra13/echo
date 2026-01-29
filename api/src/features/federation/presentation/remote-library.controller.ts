@@ -126,10 +126,12 @@ export class RemoteLibraryController {
     // Aggregate results
     let allAlbums: SharedAlbumsResponseDto['albums'] = [];
     let successfulServers = 0;
+    let remoteTotalCount = 0;
 
     for (const result of results) {
       if (result.status === 'fulfilled' && result.value.albums.length > 0) {
         successfulServers++;
+        remoteTotalCount += result.value.total;
         for (const album of result.value.albums) {
           allAlbums.push({
             ...this.transformAlbumCoverUrl(album, result.value.server.id),
@@ -151,15 +153,27 @@ export class RemoteLibraryController {
     // Sort by name
     allAlbums.sort((a, b) => a.name.localeCompare(b.name));
 
-    // Apply pagination
+    // When searching, use filtered count; otherwise use remote total
+    const totalCount = searchTerm ? allAlbums.length : remoteTotalCount;
+    const totalPages = Math.ceil(totalCount / requestedLimit);
+
+    // Apply pagination only when searching (remote already paginates)
     const page = query.page || 1;
-    const startIndex = (page - 1) * requestedLimit;
-    const paginatedAlbums = allAlbums.slice(startIndex, startIndex + requestedLimit);
+    let paginatedAlbums: typeof allAlbums;
+
+    if (searchTerm) {
+      // When searching, we fetched all and filtered locally, so paginate here
+      const startIndex = (page - 1) * requestedLimit;
+      paginatedAlbums = allAlbums.slice(startIndex, startIndex + requestedLimit);
+    } else {
+      // When not searching, remote already paginated, just return what we got
+      paginatedAlbums = allAlbums.slice(0, requestedLimit);
+    }
 
     return {
       albums: paginatedAlbums,
-      total: allAlbums.length,
-      totalPages: Math.ceil(allAlbums.length / requestedLimit),
+      total: totalCount,
+      totalPages,
       serverCount: successfulServers,
     };
   }
