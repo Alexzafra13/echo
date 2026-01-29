@@ -11,8 +11,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['images/**/*', 'fonts/**/*'],
       workbox: {
+        // Immediately activate new service worker
+        skipWaiting: true,
+        clientsClaim: true,
         // Cache static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Fallback to index.html for SPA navigation
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api\//],
         // Runtime caching for API calls and images
         runtimeCaching: [
           {
