@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, memo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { X, Globe, Search } from 'lucide-react';
 import { Country } from '../CountrySelect/CountrySelect';
 import styles from './CountrySelectModal.module.css';
@@ -15,10 +16,9 @@ interface CountrySelectModalProps {
 /**
  * CountrySelectModal Component
  * Modal for selecting a country to filter radio stations
- * Better UX than dropdown - doesn't cover content and shows flags prominently
- * Now shows ALL countries from Radio Browser API
+ * Uses virtualization for the "All countries" section to handle 200+ countries efficiently
  */
-export function CountrySelectModal({
+export const CountrySelectModal = memo(function CountrySelectModal({
   isOpen,
   onClose,
   countries,
@@ -27,18 +27,19 @@ export function CountrySelectModal({
   userCountryCode
 }: CountrySelectModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen) return null;
-
-  const handleCountryClick = (countryCode: string) => {
+  const handleCountryClick = useCallback((countryCode: string) => {
     onChange(countryCode);
     onClose();
-  };
+  }, [onChange, onClose]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setSearchQuery('');
     onClose();
-  };
+  }, [onClose]);
+
+  if (!isOpen) return null;
 
   // Filter countries by search query
   const filteredCountries = searchQuery
@@ -93,7 +94,7 @@ export function CountrySelectModal({
         </div>
 
         {/* Content */}
-        <div className={styles.modal__body}>
+        <div className={styles.modal__body} ref={scrollContainerRef}>
           {/* Todo el mundo option */}
           <button
             className={`${styles.countryOption} ${selectedCountry === 'ALL' ? styles['countryOption--selected'] : ''}`}
@@ -155,30 +156,17 @@ export function CountrySelectModal({
             </>
           )}
 
-          {/* All other countries section */}
+          {/* All other countries section - VIRTUALIZED */}
           {otherCountries.length > 0 && !searchQuery && (
             <>
               <div className={styles.modal__section}>
-                <h3 className={styles.modal__sectionTitle}>Todos los países</h3>
+                <h3 className={styles.modal__sectionTitle}>Todos los países ({otherCountries.length})</h3>
               </div>
-              <div className={styles.modal__grid}>
-                {otherCountries.map(country => (
-                  <button
-                    key={country.code}
-                    className={`${styles.countryOption} ${selectedCountry === country.code ? styles['countryOption--selected'] : ''}`}
-                    onClick={() => handleCountryClick(country.code)}
-                  >
-                    <span className={styles.countryOption__flag}>{country.flag}</span>
-                    <span className={styles.countryOption__name}>
-                      {country.name}
-                      {country.stationCount ? ` (${country.stationCount})` : ''}
-                    </span>
-                    {selectedCountry === country.code && (
-                      <span className={styles.countryOption__check}>✓</span>
-                    )}
-                  </button>
-                ))}
-              </div>
+              <VirtualizedCountryList
+                countries={otherCountries}
+                selectedCountry={selectedCountry}
+                onCountryClick={handleCountryClick}
+              />
             </>
           )}
 
@@ -189,6 +177,71 @@ export function CountrySelectModal({
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+});
+
+/**
+ * VirtualizedCountryList Component
+ * Renders a virtualized list of countries for better performance with 150+ items
+ */
+interface VirtualizedCountryListProps {
+  countries: Country[];
+  selectedCountry: string;
+  onCountryClick: (code: string) => void;
+}
+
+function VirtualizedCountryList({ countries, selectedCountry, onCountryClick }: VirtualizedCountryListProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: countries.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 56, // Estimated height of each country option (padding + content)
+    overscan: 5, // Render 5 extra items above/below viewport for smoother scrolling
+  });
+
+  return (
+    <div
+      ref={parentRef}
+      className={styles.virtualList}
+      style={{ height: Math.min(400, countries.length * 56) }} // Max height 400px
+    >
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const country = countries[virtualRow.index];
+          return (
+            <button
+              key={country.code}
+              className={`${styles.countryOption} ${selectedCountry === country.code ? styles['countryOption--selected'] : ''}`}
+              onClick={() => onCountryClick(country.code)}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: virtualRow.size,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <span className={styles.countryOption__flag}>{country.flag}</span>
+              <span className={styles.countryOption__name}>
+                {country.name}
+                {country.stationCount ? ` (${country.stationCount})` : ''}
+              </span>
+              {selectedCountry === country.code && (
+                <span className={styles.countryOption__check}>✓</span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
