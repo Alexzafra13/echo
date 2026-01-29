@@ -256,6 +256,28 @@ jobs:
             sleep 2
           done
 
+      - name: Complete initial setup wizard
+        run: |
+          # Create admin user
+          curl -X POST http://localhost:3000/api/setup/admin \
+            -H "Content-Type: application/json" \
+            -d '{"username": "admin", "password": "admin"}' \
+            --fail --silent --show-error
+
+          # Create music directory and configure library
+          sudo mkdir -p /music && sudo chmod 777 /music
+          curl -X POST http://localhost:3000/api/setup/library \
+            -H "Content-Type: application/json" \
+            -d '{"path": "/music"}' \
+            --fail --silent --show-error
+
+          # Complete setup
+          curl -X POST http://localhost:3000/api/setup/complete \
+            -H "Content-Type: application/json" \
+            --fail --silent --show-error
+
+          echo "Setup wizard completed successfully"
+
       - name: Run Playwright tests
         working-directory: web
         env:
