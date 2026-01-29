@@ -92,14 +92,20 @@ export class RemoteLibraryController {
       return { albums: [], total: 0, serverCount: 0 };
     }
 
+    const requestedLimit = query.limit || 20;
+    const searchTerm = query.search?.trim().toLowerCase();
+
+    // If searching, request more albums to filter locally (fallback for servers without search)
+    const fetchLimit = searchTerm ? Math.max(requestedLimit * 5, 100) : requestedLimit;
+
     // Fetch albums from each server in parallel
     const results = await Promise.allSettled(
       targetServers.map(async (server) => {
         try {
           const result = await this.remoteServerService.getRemoteAlbums(
             server,
-            query.page || 1,
-            query.limit || 20,
+            searchTerm ? 1 : (query.page || 1), // Always fetch from page 1 when searching
+            fetchLimit,
             query.search,
           );
           return {
@@ -118,14 +124,12 @@ export class RemoteLibraryController {
     );
 
     // Aggregate results
-    const allAlbums: SharedAlbumsResponseDto['albums'] = [];
-    let totalCount = 0;
+    let allAlbums: SharedAlbumsResponseDto['albums'] = [];
     let successfulServers = 0;
 
     for (const result of results) {
       if (result.status === 'fulfilled' && result.value.albums.length > 0) {
         successfulServers++;
-        totalCount += result.value.total;
         for (const album of result.value.albums) {
           allAlbums.push({
             ...this.transformAlbumCoverUrl(album, result.value.server.id),
@@ -136,12 +140,26 @@ export class RemoteLibraryController {
       }
     }
 
-    // Sort by name (could be enhanced with more sorting options)
+    // Apply local search filter as fallback (for servers that don't support search)
+    if (searchTerm) {
+      allAlbums = allAlbums.filter(album =>
+        album.name.toLowerCase().includes(searchTerm) ||
+        album.artistName.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Sort by name
     allAlbums.sort((a, b) => a.name.localeCompare(b.name));
 
+    // Apply pagination
+    const page = query.page || 1;
+    const startIndex = (page - 1) * requestedLimit;
+    const paginatedAlbums = allAlbums.slice(startIndex, startIndex + requestedLimit);
+
     return {
-      albums: allAlbums.slice(0, query.limit || 20),
-      total: totalCount,
+      albums: paginatedAlbums,
+      total: allAlbums.length,
+      totalPages: Math.ceil(allAlbums.length / requestedLimit),
       serverCount: successfulServers,
     };
   }
