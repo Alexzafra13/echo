@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Download, CheckCircle, XCircle } from 'lucide-react';
 import { useImportProgressSSE } from '@features/federation/hooks/useImportProgressSSE';
 import styles from './FederationImportIndicator.module.css';
@@ -9,6 +10,7 @@ import styles from './FederationImportIndicator.module.css';
  */
 export function FederationImportIndicator() {
   const { activeImports, hasActiveImports } = useImportProgressSSE();
+  const [imageError, setImageError] = useState(false);
 
   if (!hasActiveImports) {
     return null;
@@ -18,9 +20,10 @@ export function FederationImportIndicator() {
   const currentImport = activeImports[0];
   if (!currentImport) return null;
 
-  const { albumName, artistName, status, progress, currentTrack, totalTracks } = currentImport;
+  const { albumName, artistName, status, progress, currentTrack, totalTracks, coverUrl } =
+    currentImport;
 
-  // Determine icon based on status
+  // Determine icon based on status (fallback when no cover)
   const getIcon = () => {
     switch (status) {
       case 'completed':
@@ -35,15 +38,41 @@ export function FederationImportIndicator() {
   // Truncate album name for display
   const displayName = albumName.length > 18 ? `${albumName.slice(0, 16)}...` : albumName;
 
+  // Show cover or icon
+  const hasCover = coverUrl && !imageError;
+
   return (
     <div
       className={`${styles.container} ${styles[`container--${status}`]}`}
-      title={`${artistName} - ${albumName}`}
+      title={`${artistName} - ${albumName} (${currentTrack}/${totalTracks})`}
     >
-      <div className={`${styles.iconWrapper} ${styles[`iconWrapper--${status}`]}`}>
-        {getIcon()}
+      {/* Album cover or icon */}
+      <div
+        className={`${styles.coverWrapper} ${styles[`coverWrapper--${status}`]} ${hasCover ? styles['coverWrapper--hasCover'] : ''}`}
+      >
+        {hasCover ? (
+          <img
+            src={coverUrl}
+            alt={albumName}
+            className={styles.coverImage}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          getIcon()
+        )}
+        {/* Status overlay for cover */}
+        {hasCover && status !== 'downloading' && (
+          <div className={styles.statusOverlay}>
+            {status === 'completed' ? (
+              <CheckCircle size={12} className={styles.iconCompleted} />
+            ) : (
+              <XCircle size={12} className={styles.iconFailed} />
+            )}
+          </div>
+        )}
       </div>
 
+      {/* Desktop content */}
       <div className={styles.content}>
         <span className={styles.albumName}>{displayName}</span>
         <div className={styles.progressRow}>
@@ -56,9 +85,24 @@ export function FederationImportIndicator() {
             </div>
           )}
           <span className={styles.status}>
-            {status === 'completed' ? 'Listo' : status === 'failed' ? 'Error' : `${currentTrack}/${totalTracks}`}
+            {status === 'completed'
+              ? 'Listo'
+              : status === 'failed'
+                ? 'Error'
+                : `${currentTrack}/${totalTracks}`}
           </span>
         </div>
+      </div>
+
+      {/* Mobile compact info */}
+      <div className={styles.mobileInfo}>
+        <span className={styles.mobileStatus}>
+          {status === 'completed'
+            ? '✓'
+            : status === 'failed'
+              ? '✗'
+              : `${currentTrack}/${totalTracks}`}
+        </span>
       </div>
 
       {activeImports.length > 1 && (

@@ -14,6 +14,7 @@ export interface ImportProgressEvent {
   totalTracks: number;
   downloadedSize: number;
   totalSize: number;
+  coverUrl?: string;
   error?: string;
 }
 
