@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 // New refactored controllers (smaller, focused)
 import { InvitationController } from './presentation/invitation.controller';
 import { ConnectedServerController } from './presentation/connected-server.controller';
@@ -15,6 +15,7 @@ import { FederationRepository } from './infrastructure/persistence/federation.re
 import { FEDERATION_REPOSITORY } from './domain/ports/federation.repository';
 import { CoverArtService } from '@shared/services';
 import { StreamingModule } from '@features/streaming/streaming.module';
+import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 
 /**
  * FederationModule - Módulo de federación entre servidores Echo
@@ -46,7 +47,7 @@ import { StreamingModule } from '@features/streaming/streaming.module';
  * - Permisos granulares (browse, stream, download)
  */
 @Module({
-  imports: [StreamingModule],
+  imports: [StreamingModule, forwardRef(() => ExternalMetadataModule)],
   controllers: [
     // Order matters: more specific routes first
     RemoteLibraryController,    // /federation/servers/:id/library, /albums, /tracks
