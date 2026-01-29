@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, or, ilike } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util';
 import { CoverArtService } from '@shared/services';
@@ -279,8 +279,10 @@ export class FederationPublicController {
     const page = query.page || 1;
     const limit = query.limit || 50;
     const offset = (page - 1) * limit;
+    const search = query.search?.trim();
 
-    const albumsResult = await this.drizzle.db
+    // Build base query
+    let albumsQuery = this.drizzle.db
       .select({
         id: albums.id,
         name: albums.name,
@@ -294,12 +296,39 @@ export class FederationPublicController {
       })
       .from(albums)
       .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .limit(limit)
-      .offset(offset);
+      .$dynamic();
 
-    const [total] = await this.drizzle.db
+    // Add search filter if provided
+    if (search) {
+      const searchPattern = `%${search}%`;
+      albumsQuery = albumsQuery.where(
+        or(
+          ilike(albums.name, searchPattern),
+          ilike(artists.name, searchPattern),
+        ),
+      );
+    }
+
+    const albumsResult = await albumsQuery.limit(limit).offset(offset);
+
+    // Count query (with same search filter)
+    let countQuery = this.drizzle.db
       .select({ count: count() })
-      .from(albums);
+      .from(albums)
+      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
+      .$dynamic();
+
+    if (search) {
+      const searchPattern = `%${search}%`;
+      countQuery = countQuery.where(
+        or(
+          ilike(albums.name, searchPattern),
+          ilike(artists.name, searchPattern),
+        ),
+      );
+    }
+
+    const [total] = await countQuery;
 
     return {
       albums: albumsResult.map((album) => ({
