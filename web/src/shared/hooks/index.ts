@@ -6,6 +6,7 @@ export type { WebSocketNamespace, WebSocketEventHandler, UseWebSocketConnectionO
 export { useScannerWebSocket } from './useScannerWebSocket';
 export { useLufsProgress } from './useLufsProgress';
 export type { LufsProgress } from './useLufsProgress';
+export { useGlobalScanProgress } from './useGlobalScanProgress';
 export { useMetadataEnrichment } from './useMetadataEnrichment';
 export type { EnrichmentNotification, EnrichmentProgress } from './useMetadataEnrichment';
 export { useMetadataWebSocket } from './useMetadataWebSocket';
