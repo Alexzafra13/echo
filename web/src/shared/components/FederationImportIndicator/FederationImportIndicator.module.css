@@ -33,26 +33,50 @@
   border-color: rgba(239, 68, 68, 0.4);
 }
 
-.iconWrapper {
+/* Cover wrapper - shows album cover or icon */
+.coverWrapper {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.iconWrapper--downloading {
+.coverWrapper--downloading {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
 }
 
-.iconWrapper--completed {
+.coverWrapper--completed {
   background: rgba(34, 197, 94, 0.15);
 }
 
-.iconWrapper--failed {
+.coverWrapper--failed {
   background: rgba(239, 68, 68, 0.15);
+}
+
+.coverWrapper--hasCover {
+  background: transparent;
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.statusOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
 }
 
 .iconDownloading {
@@ -132,6 +156,17 @@
   flex-shrink: 0;
 }
 
+/* Mobile info - hidden on desktop, shows track count */
+.mobileInfo {
+  display: none;
+}
+
+.mobileStatus {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .container {
@@ -140,9 +175,9 @@
     gap: 8px;
   }
 
-  .iconWrapper {
-    width: 24px;
-    height: 24px;
+  .coverWrapper {
+    width: 28px;
+    height: 28px;
   }
 
   .albumName {
@@ -154,15 +189,22 @@
   .container {
     padding: 6px 8px;
     gap: 6px;
-    max-width: 150px;
+    max-width: 100px;
   }
 
+  /* Hide full content on mobile */
   .content {
     display: none;
   }
 
-  .progressBar {
-    width: 40px;
-    flex: none;
+  /* Show compact mobile info with track count */
+  .mobileInfo {
+    display: flex;
+    align-items: center;
+  }
+
+  .coverWrapper {
+    width: 28px;
+    height: 28px;
   }
 }
