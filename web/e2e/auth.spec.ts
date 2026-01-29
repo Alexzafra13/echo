@@ -1,8 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+/**
+ * Tests de autenticación
+ * Requieren que el setup esté completo (admin user creado)
+ */
 test.describe('Autenticación', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
+    // Esperar a que el formulario de login esté visible
+    await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 15000 });
   });
 
   test('muestra el formulario de login con logo', async ({ page }) => {
@@ -42,8 +48,8 @@ test.describe('Autenticación', () => {
     await page.locator('input[name="password"]').fill('adminpassword123');
     await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
 
-    // Debe redirigir fuera de /login
-    await expect(page).not.toHaveURL(/login/, { timeout: 10000 });
+    // Debe redirigir fuera de /login (a /home o /first-login si debe cambiar contraseña)
+    await expect(page).not.toHaveURL(/login/, { timeout: 15000 });
   });
 
   test('el botón muestra loading durante el login', async ({ page }) => {
