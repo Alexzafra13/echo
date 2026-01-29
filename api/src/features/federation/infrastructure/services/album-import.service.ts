@@ -87,13 +87,14 @@ export interface AlbumImportProgressEvent {
   userId: string;
   albumName: string;
   artistName: string;
+  serverId: string; // Connected server ID (for cover proxy)
+  remoteAlbumId: string; // Remote album ID (for cover proxy)
   status: 'downloading' | 'completed' | 'failed';
   progress: number; // 0-100
   currentTrack: number;
   totalTracks: number;
   downloadedSize: number;
   totalSize: number;
-  coverUrl?: string; // Full URL to album cover on remote server
   error?: string;
 }
 
@@ -385,15 +386,10 @@ export class AlbumImportService {
       throw new Error('Import entry not found');
     }
 
-    // Construct full cover URL for progress events
-    const fullCoverUrl = metadata.album.coverUrl
-      ? `${server.baseUrl}${metadata.album.coverUrl}`
-      : undefined;
-
     try {
       // Update status to downloading
       await this.repository.updateAlbumImportStatus(importId, 'downloading');
-      this.emitProgress(importEntry, 'downloading', 0, 0, fullCoverUrl);
+      this.emitProgress(importEntry, 'downloading', 0, 0);
 
       // 1. Get music library path
       const musicPath = await this.getMusicLibraryPath();
@@ -454,7 +450,6 @@ export class AlbumImportService {
           'downloading',
           downloadedTracks,
           downloadedSize,
-          fullCoverUrl,
         );
 
         this.logger.debug(
@@ -470,7 +465,6 @@ export class AlbumImportService {
         'completed',
         downloadedTracks,
         downloadedSize,
-        fullCoverUrl,
       );
 
       this.logger.info(
@@ -485,7 +479,6 @@ export class AlbumImportService {
         'failed',
         importEntry.downloadedTracks,
         importEntry.downloadedSize,
-        fullCoverUrl,
         errorMessage,
       );
       throw error;
@@ -723,7 +716,6 @@ export class AlbumImportService {
     status: 'downloading' | 'completed' | 'failed',
     currentTrack: number,
     downloadedSize: number,
-    coverUrl?: string,
     error?: string,
   ): void {
     const event: AlbumImportProgressEvent = {
@@ -731,13 +723,14 @@ export class AlbumImportService {
       userId: importEntry.userId,
       albumName: importEntry.albumName,
       artistName: importEntry.artistName || 'Unknown Artist',
+      serverId: importEntry.connectedServerId,
+      remoteAlbumId: importEntry.remoteAlbumId,
       status,
       progress: importEntry.progress,
       currentTrack,
       totalTracks: importEntry.totalTracks,
       downloadedSize,
       totalSize: importEntry.totalSize,
-      coverUrl,
       error,
     };
 
