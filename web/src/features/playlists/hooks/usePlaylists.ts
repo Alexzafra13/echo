@@ -24,27 +24,29 @@ export function usePlaylists(params?: {
 
 /**
  * Hook to fetch a specific playlist by ID
+ * Self-hosted: playlists change rarely, mutations handle invalidation
  */
 export function usePlaylist(id: string) {
   return useQuery({
     queryKey: ['playlists', id],
     queryFn: () => playlistsService.getPlaylist(id),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000, // 2 minutes - show cached data quickly, refetch in background
-    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for faster navigation
+    staleTime: 5 * 60 * 1000, // 5 minutes - mutations invalidate on changes
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache for fast navigation
   });
 }
 
 /**
  * Hook to fetch tracks in a playlist
+ * Self-hosted: track list only changes via user mutations which invalidate cache
  */
 export function usePlaylistTracks(playlistId: string) {
   return useQuery({
     queryKey: ['playlists', playlistId, 'tracks'],
     queryFn: () => playlistsService.getPlaylistTracks(playlistId),
     enabled: !!playlistId,
-    staleTime: 2 * 60 * 1000, // 2 minutes - show cached data quickly
-    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for faster navigation
+    staleTime: 5 * 60 * 1000, // 5 minutes - mutations invalidate on changes
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache for fast navigation
   });
 }
 
