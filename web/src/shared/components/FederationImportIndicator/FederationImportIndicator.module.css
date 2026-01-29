@@ -1,139 +1,168 @@
 .container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--white-03);
-  border: 1px solid var(--white-08);
-  border-radius: 20px;
-  font-size: 12px;
+  gap: 10px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  font-size: 13px;
   white-space: nowrap;
-  max-width: 220px;
+  max-width: 240px;
   overflow: hidden;
   cursor: default;
-  transition: border-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.container:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .container--downloading {
-  border-color: var(--color-primary, #ff6b6b);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 .container--completed {
-  border-color: var(--color-success, #22c55e);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .container--failed {
-  border-color: var(--color-error, #ef4444);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.iconWrapper--downloading {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+}
+
+.iconWrapper--completed {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.iconWrapper--failed {
+  background: rgba(239, 68, 68, 0.15);
 }
 
 .iconDownloading {
-  color: var(--color-primary, #ff6b6b);
+  color: #818cf8;
   flex-shrink: 0;
-  animation: bounce 1s ease-in-out infinite;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .iconCompleted {
-  color: var(--color-success, #22c55e);
+  color: #22c55e;
   flex-shrink: 0;
 }
 
 .iconFailed {
-  color: var(--color-error, #ef4444);
+  color: #ef4444;
   flex-shrink: 0;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.95); }
 }
 
-.text {
+.content {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 4px;
   overflow: hidden;
   min-width: 0;
+  flex: 1;
 }
 
 .albumName {
-  color: var(--color-text-secondary, #b8bcc8);
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  font-size: 12px;
 }
 
-.status {
-  color: var(--color-text-tertiary, #6b7280);
-  font-size: 10px;
-  line-height: 1.2;
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .progressBar {
-  width: 40px;
+  flex: 1;
   height: 3px;
-  background: var(--white-08);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
   overflow: hidden;
-  flex-shrink: 0;
 }
 
 .progressFill {
   height: 100%;
-  background: var(--color-primary, #ff6b6b);
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 2px;
   transition: width 0.3s ease-out;
 }
 
-.badge {
-  background: var(--white-08);
-  color: var(--color-text-tertiary, #6b7280);
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
+.status {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1;
   flex-shrink: 0;
 }
 
-/* Responsive - Tablet */
-@media (max-width: 1024px) {
-  .container {
-    max-width: 180px;
-    padding: 5px 10px;
-    gap: 6px;
-  }
+.badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
-/* Responsive - Mobile */
+/* Responsive */
 @media (max-width: 768px) {
   .container {
-    max-width: none;
-    width: auto;
+    max-width: 180px;
     padding: 6px 10px;
-    gap: 6px;
+    gap: 8px;
   }
 
-  .text {
-    display: none;
+  .iconWrapper {
+    width: 24px;
+    height: 24px;
   }
 
-  .progressBar {
-    width: 32px;
-  }
-
-  .badge {
-    display: none;
+  .albumName {
+    font-size: 11px;
   }
 }
 
-/* Very small screens */
 @media (max-width: 480px) {
   .container {
-    padding: 4px 8px;
-    border-radius: 16px;
+    padding: 6px 8px;
+    gap: 6px;
+    max-width: 150px;
+  }
+
+  .content {
+    display: none;
   }
 
   .progressBar {
-    width: 24px;
+    width: 40px;
+    flex: none;
   }
 }
