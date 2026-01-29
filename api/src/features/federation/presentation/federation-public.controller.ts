@@ -29,6 +29,7 @@ import { eq, count, or, ilike } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { getAudioMimeType, getImageMimeType } from '@shared/utils/mime-type.util';
 import { CoverArtService } from '@shared/services';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { albums, tracks, artists } from '@infrastructure/database/schema';
 import { FederationTokenService } from '../domain/services';
 import { FederationAccessGuard } from './guards';
@@ -53,6 +54,7 @@ export class FederationPublicController {
     private readonly tokenService: FederationTokenService,
     private readonly drizzle: DrizzleService,
     private readonly coverArtService: CoverArtService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   @Post('connect')
@@ -783,8 +785,17 @@ export class FederationPublicController {
       .select({ count: count() })
       .from(artists);
 
+    // Get server name from settings, generate random default if not set
+    let serverName = await this.settingsService.getString('server.name', '');
+    if (!serverName) {
+      // Generate random server name: "Echo Server #XXXX"
+      const randomId = Math.floor(1000 + Math.random() * 9000);
+      serverName = `Echo Server #${randomId}`;
+      await this.settingsService.set('server.name', serverName);
+    }
+
     return {
-      name: 'Echo Music Server',
+      name: serverName,
       version: '1.0.0',
       albumCount: Number(albumCount?.count ?? 0),
       trackCount: Number(trackCount?.count ?? 0),

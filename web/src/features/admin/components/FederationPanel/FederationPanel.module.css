@@ -43,6 +43,138 @@
   line-height: 1.5;
 }
 
+/* Server Identity Card */
+.serverIdentityCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.serverIdentityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  color: #818cf8;
+}
+
+.serverIdentityInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.serverIdentityLabel {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-secondary, #9ca3af);
+  margin-bottom: 4px;
+}
+
+.serverIdentityName {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.serverNameDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serverNameEditBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--white-10);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.serverNameEditBtn:hover {
+  background: var(--white-15);
+  color: var(--color-text-primary);
+}
+
+.serverNameEdit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.serverNameInput {
+  flex: 1;
+  max-width: 300px;
+  padding: 8px 12px;
+  background: var(--white-10);
+  border: 1px solid var(--white-20);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.serverNameInput:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+}
+
+.serverNameInput::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.serverNameSaveBtn,
+.serverNameCancelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.serverNameSaveBtn {
+  background: #22c55e;
+  color: white;
+}
+
+.serverNameSaveBtn:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.serverNameSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.serverNameCancelBtn {
+  background: var(--white-10);
+  color: var(--color-text-secondary);
+}
+
+.serverNameCancelBtn:hover:not(:disabled) {
+  background: var(--white-15);
+  color: var(--color-text-primary);
+}
+
 /* Tabs */
 .tabs {
   display: flex;
