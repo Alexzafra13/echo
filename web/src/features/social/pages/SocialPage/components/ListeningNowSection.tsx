@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Headphones, Music } from 'lucide-react';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { Equalizer } from '../../../components/Equalizer';
@@ -9,7 +10,7 @@ interface ListeningNowSectionProps {
   onUserClick: (userId: string) => void;
 }
 
-export function ListeningNowSection({ listeningUsers, onUserClick }: ListeningNowSectionProps) {
+export const ListeningNowSection = memo(function ListeningNowSection({ listeningUsers, onUserClick }: ListeningNowSectionProps) {
   if (listeningUsers.length === 0) return null;
 
   return (
@@ -45,6 +46,8 @@ export function ListeningNowSection({ listeningUsers, onUserClick }: ListeningNo
               src={user.avatarUrl || getUserAvatarUrl(user.id, false)}
               alt={user.username}
               className={styles.listeningCard__avatar}
+              loading="lazy"
+              decoding="async"
               onError={handleAvatarError}
             />
 
@@ -55,6 +58,8 @@ export function ListeningNowSection({ listeningUsers, onUserClick }: ListeningNo
                   src={user.currentTrack.coverUrl}
                   alt={user.currentTrack.albumName}
                   className={styles.listeningCard__cover}
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div className={styles.listeningCard__coverPlaceholder}>
@@ -95,4 +100,4 @@ export function ListeningNowSection({ listeningUsers, onUserClick }: ListeningNo
       </div>
     </section>
   );
-}
+});
