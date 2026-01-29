@@ -250,48 +250,51 @@ jobs:
         run: |
           pnpm build
           pnpm start &
-          # Wait for API to be ready
+          echo "Waiting for API to start..."
           for i in $(seq 1 30); do
-            curl -s http://localhost:3000/api/health && break
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Attempt $i: API not ready yet..."
             sleep 2
           done
 
-      - name: Complete initial setup wizard
+      - name: Setup app for E2E tests
         run: |
-          # Wait a bit for the API to fully initialize
+          # Wait a bit more for API to be fully ready
           sleep 5
 
-          # Create admin user with retry logic (password must be at least 8 characters)
-          for i in $(seq 1 5); do
-            echo "Attempt $i: Creating admin user..."
-            if curl -X POST http://localhost:3000/api/setup/admin \
-              -H "Content-Type: application/json" \
-              -d '{"username": "admin", "password": "adminpass123"}' \
-              --fail --silent --show-error; then
-              echo "Admin user created successfully"
-              break
-            fi
-            if [ $i -eq 5 ]; then
-              echo "Failed to create admin user after 5 attempts"
-              exit 1
-            fi
-            echo "Retrying in 3 seconds..."
-            sleep 3
-          done
+          # Check setup status first
+          echo "Checking setup status..."
+          curl -s http://localhost:3000/api/setup/status | head -100
 
-          # Create music directory and configure library
-          sudo mkdir -p /music && sudo chmod 777 /music
-          curl -X POST http://localhost:3000/api/setup/library \
+          # Create admin user
+          echo ""
+          echo "Creating admin user..."
+          ADMIN_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/admin \
             -H "Content-Type: application/json" \
-            -d '{"path": "/music"}' \
-            --fail --silent --show-error
+            -d '{"username":"admin","password":"adminpassword123"}')
+          echo "Admin result: $ADMIN_RESULT"
 
           # Complete setup
-          curl -X POST http://localhost:3000/api/setup/complete \
-            -H "Content-Type: application/json" \
-            --fail --silent --show-error
+          echo "Completing setup..."
+          COMPLETE_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/complete)
+          echo "Complete result: $COMPLETE_RESULT"
 
-          echo "Setup wizard completed successfully"
+          # Verify setup is complete
+          echo ""
+          echo "Verifying setup status..."
+          FINAL_STATUS=$(curl -s http://localhost:3000/api/setup/status)
+          echo "Final status: $FINAL_STATUS"
+
+          # Check if setup is complete
+          if echo "$FINAL_STATUS" | grep -q '"setupCompleted":true'; then
+            echo "✅ Setup completed successfully!"
+          else
+            echo "❌ Setup may not be complete"
+            exit 1
+          fi
 
       - name: Run Playwright tests
         working-directory: web
