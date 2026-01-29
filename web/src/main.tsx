@@ -9,13 +9,17 @@ import { PlayerProvider } from '@features/player';
 import App from './app/App';
 import '@shared/styles/global.css';
 
-// Create React Query client
+// Create React Query client with optimized defaults
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5, // 5 minutes - data considered fresh
+      gcTime: 1000 * 60 * 15, // 15 minutes - keep unused data in cache longer
       retry: 1,
       refetchOnWindowFocus: false,
+      // Reduce unnecessary network requests
+      refetchOnMount: 'always',
+      refetchOnReconnect: 'always',
     },
   },
 });

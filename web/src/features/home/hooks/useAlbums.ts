@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { albumsService } from '../services';
 
 /**
@@ -8,7 +8,8 @@ export function useRecentAlbums(take?: number) {
   return useQuery({
     queryKey: ['albums', 'recent', take],
     queryFn: () => albumsService.getRecent(take),
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer for fast navigation
   });
 }
 
@@ -19,7 +20,8 @@ export function useTopPlayedAlbums(take?: number) {
   return useQuery({
     queryKey: ['albums', 'top-played', take],
     queryFn: () => albumsService.getTopPlayed(take),
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
@@ -30,7 +32,8 @@ export function useFeaturedAlbum() {
   return useQuery({
     queryKey: ['albums', 'featured'],
     queryFn: () => albumsService.getFeatured(),
-    staleTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 10 * 60 * 1000, // 10 minutes - featured changes less frequently
+    gcTime: 60 * 60 * 1000, // 1 hour
   });
 }
 
@@ -67,8 +70,10 @@ export function useAlbumSearch(query: string) {
   return useQuery({
     queryKey: ['albums', 'search', query],
     queryFn: () => albumsService.search(query),
-    enabled: query.length > 0, // Solo buscar si hay query
-    staleTime: 2 * 60 * 1000, // 2 minutos para búsquedas
+    enabled: query.length > 0, // Only search if query exists
+    staleTime: 2 * 60 * 1000, // 2 minutes for searches
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    placeholderData: keepPreviousData, // Show previous results while fetching new ones
   });
 }
 
