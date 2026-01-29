@@ -265,6 +265,12 @@ export class AlbumImportService {
     return pendingImport ?? null;
   }
 
+  /** Timeout for metadata requests (30 seconds) */
+  private static readonly METADATA_TIMEOUT = 30000;
+
+  /** Timeout for file downloads (5 minutes) */
+  private static readonly DOWNLOAD_TIMEOUT = 300000;
+
   /**
    * Fetch album metadata from remote server
    */
@@ -279,8 +285,12 @@ export class AlbumImportService {
       'Fetching album metadata from remote server',
     );
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AlbumImportService.METADATA_TIMEOUT);
+
     try {
       const response = await fetch(url, {
+        signal: controller.signal,
         headers: {
           Authorization: `Bearer ${server.authToken}`,
           'Content-Type': 'application/json',
@@ -298,16 +308,65 @@ export class AlbumImportService {
 
       return response.json();
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        this.logger.error(
+          { serverId: server.id, albumId, timeout: AlbumImportService.METADATA_TIMEOUT },
+          'Metadata request timed out',
+        );
+        throw new Error(`Request timed out after ${AlbumImportService.METADATA_TIMEOUT / 1000}s`);
+      }
       if (error instanceof Error && error.message.startsWith('Failed to fetch album metadata')) {
         throw error;
       }
-      // Network error or other fetch failure
+      // Network error or other fetch failure - extract more details
+      const errorMessage = this.getNetworkErrorMessage(error, url);
       this.logger.error(
-        { serverId: server.id, albumId, error: error instanceof Error ? error.message : error },
+        { serverId: server.id, albumId, error: errorMessage, cause: (error as any)?.cause?.code },
         'Network error fetching album metadata',
       );
-      throw new Error(`Cannot connect to remote server: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Cannot connect to remote server: ${errorMessage}`);
+    } finally {
+      clearTimeout(timeoutId);
     }
+  }
+
+  /**
+   * Extract meaningful error message from network errors
+   */
+  private getNetworkErrorMessage(error: unknown, url: string): string {
+    if (!(error instanceof Error)) {
+      return 'Unknown network error';
+    }
+
+    const cause = (error as any).cause;
+    if (cause?.code) {
+      switch (cause.code) {
+        case 'ECONNREFUSED':
+          return `Connection refused - server is not accepting connections`;
+        case 'ENOTFOUND':
+          return `DNS lookup failed - cannot resolve hostname`;
+        case 'ETIMEDOUT':
+          return `Connection timed out - server did not respond`;
+        case 'ECONNRESET':
+          return `Connection reset - server closed the connection`;
+        case 'CERT_HAS_EXPIRED':
+          return `SSL certificate expired`;
+        case 'DEPTH_ZERO_SELF_SIGNED_CERT':
+        case 'SELF_SIGNED_CERT_IN_CHAIN':
+          return `SSL error - self-signed certificate`;
+        case 'UNABLE_TO_VERIFY_LEAF_SIGNATURE':
+          return `SSL error - cannot verify certificate`;
+      }
+    }
+
+    if (error.message.toLowerCase().includes('fetch failed')) {
+      if (cause?.message) {
+        return cause.message;
+      }
+      return 'Network error - check if server is online and accessible';
+    }
+
+    return error.message;
   }
 
   /**
@@ -506,9 +565,13 @@ export class AlbumImportService {
     albumPath: string,
     albumId: string,
   ): Promise<void> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AlbumImportService.METADATA_TIMEOUT);
+
     try {
       const fullUrl = `${server.baseUrl}${coverUrl}`;
       const response = await fetch(fullUrl, {
+        signal: controller.signal,
         headers: {
           Authorization: `Bearer ${server.authToken}`,
         },
@@ -534,10 +597,15 @@ export class AlbumImportService {
 
       this.logger.debug({ albumId, coverPath }, 'Cover downloaded');
     } catch (error) {
+      const errorMessage = error instanceof Error && error.name === 'AbortError'
+        ? 'Cover download timed out'
+        : this.getNetworkErrorMessage(error, coverUrl);
       this.logger.warn(
-        { error: error instanceof Error ? error.message : error },
+        { error: errorMessage },
         'Failed to download cover, continuing without it',
       );
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -559,21 +627,39 @@ export class AlbumImportService {
     const filename = `${trackNum} - ${safeTitle}.${extension}`;
     const trackPath = path.join(albumPath, filename);
 
-    // Download the track file
+    // Download the track file with timeout
     const streamUrl = `${server.baseUrl}${trackMeta.streamUrl}`;
-    const response = await fetch(streamUrl, {
-      headers: {
-        Authorization: `Bearer ${server.authToken}`,
-      },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AlbumImportService.DOWNLOAD_TIMEOUT);
 
-    if (!response.ok) {
-      throw new Error(`Failed to download track: ${response.status}`);
+    let response: Response;
+    try {
+      response = await fetch(streamUrl, {
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${server.authToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download track: HTTP ${response.status}`);
+      }
+
+      const fileStream = fsSync.createWriteStream(trackPath);
+      const body = response.body as unknown as Readable;
+      await pipeline(body, fileStream);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Track download timed out after ${AlbumImportService.DOWNLOAD_TIMEOUT / 1000}s`);
+      }
+      if (error instanceof Error && error.message.startsWith('Failed to download track')) {
+        throw error;
+      }
+      const errorMessage = this.getNetworkErrorMessage(error, streamUrl);
+      throw new Error(`Failed to download track "${trackMeta.title}": ${errorMessage}`);
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const fileStream = fsSync.createWriteStream(trackPath);
-    const body = response.body as unknown as Readable;
-    await pipeline(body, fileStream);
 
     // Create track record with all metadata including LUFS/ReplayGain
     await this.drizzle.db.insert(tracks).values({

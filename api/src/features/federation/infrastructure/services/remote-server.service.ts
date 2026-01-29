@@ -506,6 +506,69 @@ export class RemoteServerService {
   /** Default timeout for HTTP requests (30 seconds) */
   private static readonly REQUEST_TIMEOUT = 30000;
 
+  /**
+   * Extract a meaningful error message from network/fetch errors
+   * Node.js Fetch API errors are often generic, this helps provide more context
+   */
+  private getNetworkErrorMessage(error: unknown, url: string): string {
+    if (!(error instanceof Error)) {
+      return 'Unknown network error';
+    }
+
+    const message = error.message.toLowerCase();
+    const cause = (error as any).cause;
+
+    // Check for specific error codes in the cause
+    if (cause?.code) {
+      switch (cause.code) {
+        case 'ECONNREFUSED':
+          return `Connection refused - server at ${new URL(url).host} is not accepting connections`;
+        case 'ENOTFOUND':
+          return `DNS lookup failed - cannot resolve hostname ${new URL(url).host}`;
+        case 'ETIMEDOUT':
+          return `Connection timed out - server at ${new URL(url).host} did not respond`;
+        case 'ECONNRESET':
+          return `Connection reset - server at ${new URL(url).host} closed the connection unexpectedly`;
+        case 'EHOSTUNREACH':
+          return `Host unreachable - cannot reach ${new URL(url).host}`;
+        case 'ENETUNREACH':
+          return `Network unreachable - no route to ${new URL(url).host}`;
+        case 'CERT_HAS_EXPIRED':
+          return `SSL certificate expired for ${new URL(url).host}`;
+        case 'DEPTH_ZERO_SELF_SIGNED_CERT':
+        case 'SELF_SIGNED_CERT_IN_CHAIN':
+          return `SSL certificate error - self-signed certificate for ${new URL(url).host}`;
+        case 'UNABLE_TO_VERIFY_LEAF_SIGNATURE':
+          return `SSL certificate error - cannot verify certificate for ${new URL(url).host}`;
+        case 'ERR_TLS_CERT_ALTNAME_INVALID':
+          return `SSL certificate error - hostname mismatch for ${new URL(url).host}`;
+      }
+    }
+
+    // Check for common error patterns in the message
+    if (message.includes('fetch failed')) {
+      // Try to extract more info from cause
+      if (cause?.message) {
+        return `Network error: ${cause.message}`;
+      }
+      return `Network error connecting to ${new URL(url).host} - check if server is online and accessible`;
+    }
+
+    if (message.includes('certificate') || message.includes('ssl') || message.includes('tls')) {
+      return `SSL/TLS error connecting to ${new URL(url).host}`;
+    }
+
+    if (message.includes('timeout') || error.name === 'AbortError') {
+      return `Request timed out after ${RemoteServerService.REQUEST_TIMEOUT / 1000}s`;
+    }
+
+    if (message.includes('network') || message.includes('socket')) {
+      return `Network error: ${error.message}`;
+    }
+
+    return error.message;
+  }
+
   private normalizeUrl(url: string): string {
     let normalized = url.trim();
     // Remove trailing slash
@@ -581,7 +644,13 @@ export class RemoteServerService {
           HttpStatus.GATEWAY_TIMEOUT,
         );
       }
-      throw error;
+      // Provide more detailed error message for network failures
+      const errorMessage = this.getNetworkErrorMessage(error, url);
+      this.logger.debug(
+        { url, originalError: error instanceof Error ? error.message : error, cause: (error as any)?.cause },
+        'Network request failed with detailed info',
+      );
+      throw new HttpException(errorMessage, HttpStatus.BAD_GATEWAY);
     } finally {
       clearTimeout(timeoutId);
     }
