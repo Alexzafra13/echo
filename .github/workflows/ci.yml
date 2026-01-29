@@ -247,7 +247,9 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           PORT: 3000
+          DATA_PATH: /tmp/echo-data
         run: |
+          mkdir -p /tmp/echo-data
           pnpm build
           pnpm start &
           echo "Waiting for API to start..."
