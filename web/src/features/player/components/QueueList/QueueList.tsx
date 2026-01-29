@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import { Music } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
@@ -11,16 +12,17 @@ interface QueueListProps {
 /**
  * QueueList Component
  * Displays the current playback queue with track details
+ * Memoized to prevent unnecessary re-renders
  */
-export function QueueList({ onClose }: QueueListProps) {
+export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
   const { queue, currentTrack, play } = usePlayer();
 
-  const handleTrackClick = (trackIndex: number) => {
+  const handleTrackClick = useCallback((trackIndex: number) => {
     if (queue[trackIndex]) {
       play(queue[trackIndex]);
       onClose();
     }
-  };
+  }, [queue, play, onClose]);
 
   if (queue.length === 0) {
     return (
@@ -68,6 +70,8 @@ export function QueueList({ onClose }: QueueListProps) {
                 src={getCoverUrl(track.coverImage)}
                 alt={track.title}
                 className={styles.queueList__cover}
+                loading="lazy"
+                decoding="async"
                 onError={handleImageError}
               />
               <div className={styles.queueList__info}>
@@ -83,4 +87,4 @@ export function QueueList({ onClose }: QueueListProps) {
       </div>
     </div>
   );
-}
+});

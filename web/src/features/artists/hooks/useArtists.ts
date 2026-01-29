@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { artistsService } from '../services/artists.service';
 
 /**
@@ -9,6 +9,7 @@ export function useArtists(params?: { skip?: number; take?: number }) {
     queryKey: ['artists', 'all', params],
     queryFn: () => artistsService.getAll(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache for fast navigation
   });
 }
 
@@ -20,7 +21,8 @@ export function useArtist(id: string | undefined) {
     queryKey: ['artists', id],
     queryFn: () => artistsService.getById(id!),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
@@ -33,6 +35,8 @@ export function useArtistSearch(query: string, params?: { skip?: number; take?: 
     queryFn: () => artistsService.search(query, params),
     enabled: query.length >= 2,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    placeholderData: keepPreviousData, // Show previous results while fetching
   });
 }
 
@@ -45,6 +49,7 @@ export function useArtistAlbums(artistId: string | undefined, params?: { skip?: 
     queryFn: () => artistsService.getAlbums(artistId!, params),
     enabled: !!artistId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
@@ -57,6 +62,7 @@ export function useArtistStats(artistId: string | undefined) {
     queryFn: () => artistsService.getStats(artistId!),
     enabled: !!artistId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 }
 
@@ -73,6 +79,7 @@ export function useArtistTopTracks(
     queryFn: () => artistsService.getTopTracks(artistId!, limit, days),
     enabled: !!artistId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 }
 
@@ -85,5 +92,6 @@ export function useRelatedArtists(artistId: string | undefined, limit: number = 
     queryFn: () => artistsService.getRelatedArtists(artistId!, limit),
     enabled: !!artistId,
     staleTime: 10 * 60 * 1000, // 10 minutes - relationships change slowly
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 }

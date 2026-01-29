@@ -30,7 +30,8 @@ export function usePlaylist(id: string) {
     queryKey: ['playlists', id],
     queryFn: () => playlistsService.getPlaylist(id),
     enabled: !!id,
-    staleTime: 0, // Always refetch to ensure metadata is up-to-date
+    staleTime: 2 * 60 * 1000, // 2 minutes - show cached data quickly, refetch in background
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for faster navigation
   });
 }
 
@@ -42,7 +43,8 @@ export function usePlaylistTracks(playlistId: string) {
     queryKey: ['playlists', playlistId, 'tracks'],
     queryFn: () => playlistsService.getPlaylistTracks(playlistId),
     enabled: !!playlistId,
-    staleTime: 0, // Always refetch to ensure tracks list is up-to-date
+    staleTime: 2 * 60 * 1000, // 2 minutes - show cached data quickly
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for faster navigation
   });
 }
 

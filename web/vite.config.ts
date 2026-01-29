@@ -118,17 +118,45 @@ export default defineConfig({
     // Chunk splitting for better caching
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks for better caching
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-utils': ['axios', 'zustand', 'zod', 'clsx'],
-          'vendor-icons': ['lucide-react'],
+        // Intelligent chunk splitting based on package boundaries
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            // Group React-related packages
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            // Group React Query
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            // Group utility libraries
+            if (id.includes('axios') || id.includes('zustand') || id.includes('zod') || id.includes('clsx')) {
+              return 'vendor-utils';
+            }
+            // Group icons (lucide-react is large)
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            // Group charts library
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts';
+            }
+          }
         },
+        // Optimize chunk file names for better caching
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
     // Report chunk sizes
     chunkSizeWarningLimit: 500,
+    // CSS code splitting for better performance
+    cssCodeSplit: true,
+    // Reduce bundle size by not including polyfills for very old browsers
+    modulePreload: {
+      polyfill: false,
+    },
   },
   // Optimize dependencies
   optimizeDeps: {

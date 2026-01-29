@@ -251,6 +251,8 @@ export function TrackList({ tracks, onTrackPlay, currentTrackId, hideGoToAlbum =
               src={coverUrl}
               alt={track.albumName || track.title}
               className={styles.trackList__trackCover}
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
                 e.currentTarget.src = '/placeholder-album.png';
               }}
