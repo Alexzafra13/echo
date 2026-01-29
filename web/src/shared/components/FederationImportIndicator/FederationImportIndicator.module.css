@@ -1,0 +1,139 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  cursor: default;
+  transition: border-color 0.2s ease;
+}
+
+.container--downloading {
+  border-color: var(--color-primary, #ff6b6b);
+}
+
+.container--completed {
+  border-color: var(--color-success, #22c55e);
+}
+
+.container--failed {
+  border-color: var(--color-error, #ef4444);
+}
+
+.iconDownloading {
+  color: var(--color-primary, #ff6b6b);
+  flex-shrink: 0;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.iconCompleted {
+  color: var(--color-success, #22c55e);
+  flex-shrink: 0;
+}
+
+.iconFailed {
+  color: var(--color-error, #ef4444);
+  flex-shrink: 0;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.albumName {
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.status {
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.progressBar {
+  width: 40px;
+  height: 3px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary, #ff6b6b);
+  border-radius: 2px;
+  transition: width 0.3s ease-out;
+}
+
+.badge {
+  background: var(--white-08);
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+/* Responsive - Tablet */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 180px;
+    padding: 5px 10px;
+    gap: 6px;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .container {
+    max-width: none;
+    width: auto;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .text {
+    display: none;
+  }
+
+  .progressBar {
+    width: 32px;
+  }
+
+  .badge {
+    display: none;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .container {
+    padding: 4px 8px;
+    border-radius: 16px;
+  }
+
+  .progressBar {
+    width: 24px;
+  }
+}
