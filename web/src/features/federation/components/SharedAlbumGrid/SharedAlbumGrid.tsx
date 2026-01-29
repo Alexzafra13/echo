@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Download, Check, Loader2, Users, Plus, AlertTriangle, X } from 'lucide-react';
 import { AxiosError } from 'axios';
@@ -42,6 +42,16 @@ export function SharedAlbumGrid({
   const [importedAlbums, setImportedAlbums] = useState<Set<string>>(new Set());
   const [importError, setImportError] = useState<{ message: string; serverName?: string } | null>(null);
   const { data: servers } = useConnectedServers();
+
+  // Auto-dismiss error notification after 5 seconds
+  useEffect(() => {
+    if (importError) {
+      const timer = setTimeout(() => {
+        setImportError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [importError]);
 
   const handleAlbumClick = (album: SharedAlbum) => {
     // Navigate to federation album detail page
