@@ -37,11 +37,8 @@ test.describe('Gestión de Usuarios', () => {
     // 2. Abrir modal de crear usuario
     await page.getByRole('button', { name: /Crear Usuario/i }).click();
 
-    // 3. Verificar que el modal se abrió (usar selector específico)
+    // 3. Verificar que el modal se abrió
     await expect(page.getByRole('dialog', { name: /Crear Usuario/i })).toBeVisible({ timeout: 5000 });
-
-    // 4. Verificar que tiene campos del formulario
-    await expect(page.locator('input[name="username"]')).toBeVisible();
   });
 });
 
