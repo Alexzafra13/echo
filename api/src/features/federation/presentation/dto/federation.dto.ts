@@ -419,6 +419,9 @@ export class SharedAlbumsResponseDto {
   @ApiProperty({ description: 'Total de álbums' })
   total!: number;
 
+  @ApiPropertyOptional({ description: 'Total de páginas' })
+  totalPages?: number;
+
   @ApiProperty({ description: 'Número de servidores consultados' })
   serverCount!: number;
 }
