@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Activity } from 'lucide-react';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
 import { formatTimeAgo } from '@shared/utils/date.utils';
@@ -11,7 +12,7 @@ interface ActivityFeedProps {
   onTargetClick: (url: string) => void;
 }
 
-export function ActivityFeed({ activities, onUserClick, onTargetClick }: ActivityFeedProps) {
+export const ActivityFeed = memo(function ActivityFeed({ activities, onUserClick, onTargetClick }: ActivityFeedProps) {
   return (
     <section className={styles.section}>
       <h2 className={styles.section__title}>
@@ -34,6 +35,8 @@ export function ActivityFeed({ activities, onUserClick, onTargetClick }: Activit
                     src={activity.user.avatarUrl || getUserAvatarUrl(activity.user.id, false)}
                     alt={activity.user.username}
                     className={styles.activityItem__avatar}
+                    loading="lazy"
+                    decoding="async"
                     onError={handleAvatarError}
                   />
                   <span className={styles.activityItem__icon}>
@@ -63,6 +66,8 @@ export function ActivityFeed({ activities, onUserClick, onTargetClick }: Activit
                             src={activity.secondUser.avatarUrl || getUserAvatarUrl(activity.secondUser.id, false)}
                             alt={activity.secondUser.username}
                             className={styles.activityItem__inlineAvatar}
+                            loading="lazy"
+                            decoding="async"
                             onError={handleAvatarError}
                           />
                           <span>{activity.secondUser.name || activity.secondUser.username}</span>
@@ -113,6 +118,8 @@ export function ActivityFeed({ activities, onUserClick, onTargetClick }: Activit
                           src={`/api/albums/${albumId}/cover`}
                           alt=""
                           className={styles.activityItem__mosaicImg}
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                       ))}
@@ -122,6 +129,8 @@ export function ActivityFeed({ activities, onUserClick, onTargetClick }: Activit
                       src={activity.targetCoverUrl}
                       alt={activity.targetName}
                       className={styles.activityItem__cover}
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : null}
                 </div>
@@ -137,4 +146,4 @@ export function ActivityFeed({ activities, onUserClick, onTargetClick }: Activit
       )}
     </section>
   );
-}
+});

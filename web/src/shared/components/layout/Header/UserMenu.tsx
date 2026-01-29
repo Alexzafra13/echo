@@ -106,6 +106,8 @@ export function UserMenu({
               src={avatarUrl}
               alt={user?.username || 'User'}
               className={styles.header__userAvatarLarge}
+              loading="lazy"
+              decoding="async"
               onError={handleAvatarError}
             />
             <div>

@@ -167,6 +167,13 @@
   gap: 8px;
 }
 
+/* Virtual list container for "All countries" section */
+.virtualList {
+  overflow-y: auto;
+  border-radius: 12px;
+  background: var(--color-bg-tertiary);
+}
+
 /* Country Option */
 .countryOption {
   display: flex;

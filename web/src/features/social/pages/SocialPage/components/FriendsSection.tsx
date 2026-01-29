@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Users, UserPlus } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
@@ -10,7 +11,7 @@ interface FriendsSectionProps {
   onShowSearch: () => void;
 }
 
-export function FriendsSection({ friends, onFriendClick, onShowSearch }: FriendsSectionProps) {
+export const FriendsSection = memo(function FriendsSection({ friends, onFriendClick, onShowSearch }: FriendsSectionProps) {
   return (
     <section className={styles.section}>
       <h2 className={styles.section__title}>
@@ -34,6 +35,8 @@ export function FriendsSection({ friends, onFriendClick, onShowSearch }: Friends
                 src={friend.avatarUrl || getUserAvatarUrl(friend.id, false)}
                 alt={friend.username}
                 className={styles.friendCard__avatar}
+                loading="lazy"
+                decoding="async"
                 onError={handleAvatarError}
               />
               <div className={styles.friendCard__info}>
@@ -62,4 +65,4 @@ export function FriendsSection({ friends, onFriendClick, onShowSearch }: Friends
       )}
     </section>
   );
-}
+});
