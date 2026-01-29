@@ -41,17 +41,27 @@ export function SharedAlbumGrid({
   const [importingAlbums, setImportingAlbums] = useState<Set<string>>(new Set());
   const [importedAlbums, setImportedAlbums] = useState<Set<string>>(new Set());
   const [importError, setImportError] = useState<{ message: string; serverName?: string } | null>(null);
+  const [isDismissing, setIsDismissing] = useState(false);
   const { data: servers } = useConnectedServers();
+
+  // Function to dismiss error with animation
+  const dismissError = () => {
+    setIsDismissing(true);
+    setTimeout(() => {
+      setImportError(null);
+      setIsDismissing(false);
+    }, 400); // Match animation duration
+  };
 
   // Auto-dismiss error notification after 5 seconds
   useEffect(() => {
-    if (importError) {
+    if (importError && !isDismissing) {
       const timer = setTimeout(() => {
-        setImportError(null);
+        dismissError();
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [importError]);
+  }, [importError, isDismissing]);
 
   const handleAlbumClick = (album: SharedAlbum) => {
     // Navigate to federation album detail page
@@ -171,14 +181,14 @@ export function SharedAlbumGrid({
 
       {/* Error banner */}
       {importError && (
-        <div className={styles.sharedAlbumGrid__errorBanner}>
+        <div className={`${styles.sharedAlbumGrid__errorBanner} ${isDismissing ? styles['sharedAlbumGrid__errorBanner--dismissing'] : ''}`}>
           <AlertTriangle size={20} />
           <div className={styles.sharedAlbumGrid__errorContent}>
             <span className={styles.sharedAlbumGrid__errorMessage}>{importError.message}</span>
           </div>
           <button
             className={styles.sharedAlbumGrid__errorClose}
-            onClick={() => setImportError(null)}
+            onClick={dismissError}
             aria-label="Cerrar"
           >
             <X size={16} />
