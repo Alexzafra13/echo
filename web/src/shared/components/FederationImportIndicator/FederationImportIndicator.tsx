@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Download, CheckCircle, XCircle } from 'lucide-react';
 import { useImportProgressSSE } from '@features/federation/hooks/useImportProgressSSE';
 import styles from './FederationImportIndicator.module.css';
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 /**
  * FederationImportIndicator Component
@@ -11,17 +13,46 @@ import styles from './FederationImportIndicator.module.css';
 export function FederationImportIndicator() {
   const { activeImports, hasActiveImports } = useImportProgressSSE();
   const [imageError, setImageError] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const previousImportRef = useRef(activeImports[0]);
 
-  if (!hasActiveImports) {
+  // Handle visibility with fade animation
+  useEffect(() => {
+    if (hasActiveImports) {
+      setIsVisible(true);
+      setIsLeaving(false);
+      // Reset image error when import changes
+      if (activeImports[0]?.importId !== previousImportRef.current?.importId) {
+        setImageError(false);
+      }
+      previousImportRef.current = activeImports[0];
+    } else if (isVisible) {
+      // Start fade out animation
+      setIsLeaving(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setIsLeaving(false);
+      }, 500); // Match CSS animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [hasActiveImports, activeImports, isVisible]);
+
+  if (!isVisible) {
     return null;
   }
 
-  // Get the most recent/active import to display
-  const currentImport = activeImports[0];
+  // Get the most recent/active import to display (or the last one during fade out)
+  const currentImport = activeImports[0] || previousImportRef.current;
   if (!currentImport) return null;
 
-  const { albumName, artistName, status, progress, currentTrack, totalTracks, coverUrl } =
+  const { albumName, artistName, status, progress, currentTrack, totalTracks, serverId, remoteAlbumId } =
     currentImport;
+
+  // Construct cover URL using the federation proxy endpoint
+  const coverUrl = serverId && remoteAlbumId
+    ? `${API_BASE}/api/federation/servers/${serverId}/albums/${remoteAlbumId}/cover`
+    : null;
 
   // Determine icon based on status (fallback when no cover)
   const getIcon = () => {
@@ -43,7 +74,7 @@ export function FederationImportIndicator() {
 
   return (
     <div
-      className={`${styles.container} ${styles[`container--${status}`]}`}
+      className={`${styles.container} ${styles[`container--${status}`]} ${isLeaving ? styles['container--leaving'] : ''}`}
       title={`${artistName} - ${albumName} (${currentTrack}/${totalTracks})`}
     >
       {/* Album cover or icon */}
