@@ -37,8 +37,8 @@ test.describe('Autenticación', () => {
     await page.locator('input[name="password"]').fill('password_invalida');
     await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
 
-    // Debe mostrar alerta de error
-    await expect(page.getByText(/Error al iniciar sesión|credenciales/i)).toBeVisible({
+    // Debe mostrar alerta de error (puede ser en español o inglés según el API)
+    await expect(page.getByText(/Error al iniciar sesión|Invalid credentials|credenciales/i)).toBeVisible({
       timeout: 10000,
     });
   });
