@@ -8,13 +8,14 @@ export interface ImportProgressEvent {
   userId: string;
   albumName: string;
   artistName: string;
+  serverId: string;
+  remoteAlbumId: string;
   status: 'downloading' | 'completed' | 'failed';
   progress: number;
   currentTrack: number;
   totalTracks: number;
   downloadedSize: number;
   totalSize: number;
-  coverUrl?: string;
   error?: string;
 }
 
