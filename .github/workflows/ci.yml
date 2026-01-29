@@ -250,11 +250,29 @@ jobs:
         run: |
           pnpm build
           pnpm start &
-          # Wait for API to be ready
+          echo "Waiting for API to start..."
           for i in $(seq 1 30); do
-            curl -s http://localhost:3000/api/health && break
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Attempt $i: API not ready yet..."
             sleep 2
           done
+
+      - name: Setup app for E2E tests
+        run: |
+          # Create admin user
+          echo "Creating admin user..."
+          curl -sf -X POST http://localhost:3000/api/setup/admin \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"adminpassword123"}' || echo "Admin may already exist"
+
+          # Complete setup
+          echo "Completing setup..."
+          curl -sf -X POST http://localhost:3000/api/setup/complete || echo "Setup may already be complete"
+
+          echo "App setup completed!"
 
       - name: Run Playwright tests
         working-directory: web

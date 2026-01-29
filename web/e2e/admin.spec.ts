@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 async function loginAsAdmin(page: import('@playwright/test').Page) {
   await page.goto('/login');
   await page.locator('input[name="username"]').fill('admin');
-  await page.locator('input[name="password"]').fill('admin');
+  await page.locator('input[name="password"]').fill('adminpassword123');
   await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
   await page.waitForURL(/^(?!.*login)/, { timeout: 10000 });
 }
