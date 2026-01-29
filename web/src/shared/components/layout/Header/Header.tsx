@@ -7,6 +7,7 @@ import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { LufsProgressIndicator } from '@shared/components/LufsProgressIndicator';
 import { FederationImportIndicator } from '@shared/components/FederationImportIndicator';
+import { ScanProgressIndicator } from '@shared/components/ScanProgressIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchPanel } from './SearchPanel';
 import { UserMenu } from './UserMenu';
@@ -152,6 +153,9 @@ export function Header({
 
       {/* Right section - Notifications, user menu */}
       <div className={styles.header__rightSection}>
+        {/* Library scan progress (solo visible cuando hay escaneos activos) */}
+        <ScanProgressIndicator />
+
         {/* Federation import progress (solo visible cuando hay importaciones activas) */}
         <FederationImportIndicator />
 

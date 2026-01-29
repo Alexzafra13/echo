@@ -4,3 +4,5 @@ export { useLufsProgressStore } from './lufsProgressStore';
 export type { LufsProgress } from './lufsProgressStore';
 export { useImportProgressStore } from './importProgressStore';
 export type { ImportProgressEvent } from './importProgressStore';
+export { useScanProgressStore } from './scanProgressStore';
+export type { ScanProgressEvent, ScanStatus } from './scanProgressStore';
