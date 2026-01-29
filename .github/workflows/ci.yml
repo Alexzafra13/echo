@@ -260,6 +260,9 @@ jobs:
             sleep 2
           done
 
+      - name: Create music directory for E2E tests
+        run: sudo mkdir -p /music && sudo chmod 777 /music
+
       - name: Setup app for E2E tests
         run: |
           # Wait a bit more for API to be fully ready
@@ -269,16 +272,25 @@ jobs:
           echo "Checking setup status..."
           curl -s http://localhost:3000/api/setup/status | head -100
 
-          # Create admin user
+          # Step 1: Create admin user
           echo ""
-          echo "Creating admin user..."
+          echo "Step 1: Creating admin user..."
           ADMIN_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/admin \
             -H "Content-Type: application/json" \
             -d '{"username":"admin","password":"adminpassword123"}')
           echo "Admin result: $ADMIN_RESULT"
 
-          # Complete setup
-          echo "Completing setup..."
+          # Step 2: Configure music library
+          echo ""
+          echo "Step 2: Configuring music library..."
+          LIBRARY_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/library \
+            -H "Content-Type: application/json" \
+            -d '{"path":"/music"}')
+          echo "Library result: $LIBRARY_RESULT"
+
+          # Step 3: Complete setup
+          echo ""
+          echo "Step 3: Completing setup..."
           COMPLETE_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/complete)
           echo "Complete result: $COMPLETE_RESULT"
 
@@ -293,6 +305,10 @@ jobs:
             echo "✅ Setup completed successfully!"
           else
             echo "❌ Setup may not be complete"
+            echo "This could mean:"
+            echo "  - Admin creation failed"
+            echo "  - Library configuration failed"
+            echo "  - Complete setup failed"
             exit 1
           fi
 
