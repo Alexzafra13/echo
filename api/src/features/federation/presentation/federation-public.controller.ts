@@ -281,8 +281,16 @@ export class FederationPublicController {
     const offset = (page - 1) * limit;
     const search = query.search?.trim();
 
-    // Build base query
-    let albumsQuery = this.drizzle.db
+    // Build search condition if provided
+    const searchCondition = search
+      ? or(
+          ilike(albums.name, `%${search}%`),
+          ilike(artists.name, `%${search}%`),
+        )
+      : undefined;
+
+    // Query albums with optional search filter
+    const baseQuery = this.drizzle.db
       .select({
         id: albums.id,
         name: albums.name,
@@ -295,40 +303,21 @@ export class FederationPublicController {
         artistName: artists.name,
       })
       .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .$dynamic();
+      .leftJoin(artists, eq(albums.albumArtistId, artists.id));
 
-    // Add search filter if provided
-    if (search) {
-      const searchPattern = `%${search}%`;
-      albumsQuery = albumsQuery.where(
-        or(
-          ilike(albums.name, searchPattern),
-          ilike(artists.name, searchPattern),
-        ),
-      );
-    }
+    const albumsResult = searchCondition
+      ? await baseQuery.where(searchCondition).limit(limit).offset(offset)
+      : await baseQuery.limit(limit).offset(offset);
 
-    const albumsResult = await albumsQuery.limit(limit).offset(offset);
-
-    // Count query (with same search filter)
-    let countQuery = this.drizzle.db
+    // Count query with same search filter
+    const countBaseQuery = this.drizzle.db
       .select({ count: count() })
       .from(albums)
-      .leftJoin(artists, eq(albums.albumArtistId, artists.id))
-      .$dynamic();
+      .leftJoin(artists, eq(albums.albumArtistId, artists.id));
 
-    if (search) {
-      const searchPattern = `%${search}%`;
-      countQuery = countQuery.where(
-        or(
-          ilike(albums.name, searchPattern),
-          ilike(artists.name, searchPattern),
-        ),
-      );
-    }
-
-    const [total] = await countQuery;
+    const [total] = searchCondition
+      ? await countBaseQuery.where(searchCondition)
+      : await countBaseQuery;
 
     return {
       albums: albumsResult.map((album) => ({
