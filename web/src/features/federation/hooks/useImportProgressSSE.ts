@@ -1,78 +1,49 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@shared/store/authStore';
+import { useImportProgressStore, ImportProgressEvent } from '@shared/store/importProgressStore';
 import { logger } from '@shared/utils/logger';
 
-/**
- * Album import progress event from SSE
- */
-export interface AlbumImportProgressEvent {
-  importId: string;
-  userId: string;
-  albumName: string;
-  artistName: string;
-  status: 'downloading' | 'completed' | 'failed';
-  progress: number; // 0-100
-  currentTrack: number;
-  totalTracks: number;
-  downloadedSize: number;
-  totalSize: number;
-  error?: string;
-}
+// Global EventSource instance to prevent multiple connections
+let globalEventSource: EventSource | null = null;
+let globalUserId: string | null = null;
 
 /**
  * Hook for real-time album import progress via Server-Sent Events.
- * More reliable than WebSocket as SSE handles reconnection automatically.
+ * Uses a global store to persist state between page navigations.
+ * Only one SSE connection is maintained globally.
  */
 export function useImportProgressSSE() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
-  const [activeImports, setActiveImports] = useState<Map<string, AlbumImportProgressEvent>>(
-    new Map()
-  );
-  const [isConnected, setIsConnected] = useState(false);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const {
+    activeImports,
+    isConnected,
+    updateImport,
+    removeImport,
+    setConnected,
+  } = useImportProgressStore();
 
-  const handleProgress = useCallback(
-    (event: AlbumImportProgressEvent) => {
-      logger.debug('[SSE] Received import progress:', event);
-
-      // Update active imports map
-      setActiveImports((prev) => {
-        const newMap = new Map(prev);
-        if (event.status === 'downloading') {
-          newMap.set(event.importId, event);
-        } else {
-          // Keep completed/failed imports visible for a moment
-          newMap.set(event.importId, event);
-          // Remove after delay
-          setTimeout(() => {
-            setActiveImports((current) => {
-              const updated = new Map(current);
-              updated.delete(event.importId);
-              return updated;
-            });
-          }, 5000);
-        }
-        return newMap;
-      });
-
-      // Invalidate relevant queries on completion
-      if (event.status === 'completed') {
-        queryClient.invalidateQueries({ queryKey: ['albums'] });
-        queryClient.invalidateQueries({ queryKey: ['artists'] });
-        queryClient.invalidateQueries({ queryKey: ['federation', 'imports'] });
-      } else if (event.status === 'failed') {
-        queryClient.invalidateQueries({ queryKey: ['federation', 'imports'] });
-      }
-    },
-    [queryClient]
-  );
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
 
   useEffect(() => {
     if (!user?.id) {
       return;
     }
+
+    // If already connected for this user, skip
+    if (globalEventSource && globalUserId === user.id && globalEventSource.readyState !== EventSource.CLOSED) {
+      return;
+    }
+
+    // Close existing connection if user changed
+    if (globalEventSource) {
+      globalEventSource.close();
+      globalEventSource = null;
+    }
+
+    globalUserId = user.id;
 
     // Build SSE URL
     const baseUrl = import.meta.env.VITE_API_URL || '';
@@ -81,47 +52,72 @@ export function useImportProgressSSE() {
     logger.debug('[SSE] Connecting to import progress stream:', sseUrl);
 
     const eventSource = new EventSource(sseUrl);
-    eventSourceRef.current = eventSource;
+    globalEventSource = eventSource;
 
     eventSource.onopen = () => {
       logger.debug('[SSE] Connected to import progress stream');
-      setIsConnected(true);
+      setConnected(true);
     };
 
     eventSource.onerror = (error) => {
       logger.error('[SSE] Connection error:', error);
-      setIsConnected(false);
+      setConnected(false);
       // EventSource will automatically try to reconnect
     };
 
-    // Listen for import progress events
-    eventSource.addEventListener('import:progress', (e) => {
+    // Handle import progress events
+    const handleProgress = (e: MessageEvent) => {
       try {
-        const data = JSON.parse(e.data) as AlbumImportProgressEvent;
-        handleProgress(data);
+        const data = JSON.parse(e.data) as ImportProgressEvent;
+        logger.debug('[SSE] Received import progress:', data);
+
+        updateImport(data);
+
+        // Remove completed/failed imports after delay
+        if (data.status === 'completed' || data.status === 'failed') {
+          setTimeout(() => {
+            removeImport(data.importId);
+          }, 5000);
+
+          // Invalidate queries
+          if (data.status === 'completed') {
+            queryClientRef.current.invalidateQueries({ queryKey: ['albums'] });
+            queryClientRef.current.invalidateQueries({ queryKey: ['artists'] });
+          }
+          queryClientRef.current.invalidateQueries({ queryKey: ['federation', 'imports'] });
+        }
       } catch (err) {
         logger.error('[SSE] Failed to parse progress event:', err);
       }
-    });
+    };
 
-    // Listen for connected event
+    eventSource.addEventListener('import:progress', handleProgress);
+
     eventSource.addEventListener('connected', (e) => {
       logger.debug('[SSE] Received connected event:', e.data);
     });
 
-    // Listen for keepalive
     eventSource.addEventListener('keepalive', () => {
-      logger.debug('[SSE] Keepalive received');
+      // Silent keepalive
     });
 
-    // Cleanup
+    // Cleanup only on unmount of last component using this hook
+    // Don't close on every unmount to persist connection
     return () => {
-      logger.debug('[SSE] Disconnecting from import progress stream');
-      eventSource.close();
-      eventSourceRef.current = null;
-      setIsConnected(false);
+      // Don't close - keep connection alive for persistence
     };
-  }, [user?.id, handleProgress]);
+  }, [user?.id, setConnected, updateImport, removeImport]);
+
+  // Cleanup on logout
+  useEffect(() => {
+    if (!user?.id && globalEventSource) {
+      logger.debug('[SSE] Closing connection on logout');
+      globalEventSource.close();
+      globalEventSource = null;
+      globalUserId = null;
+      setConnected(false);
+    }
+  }, [user?.id, setConnected]);
 
   return {
     activeImports: Array.from(activeImports.values()),
@@ -129,3 +125,6 @@ export function useImportProgressSSE() {
     isConnected,
   };
 }
+
+// Re-export types
+export type { ImportProgressEvent } from '@shared/store/importProgressStore';
