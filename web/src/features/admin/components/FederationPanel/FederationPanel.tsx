@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useModal, useNotification } from '@shared/hooks';
-import { Server, Link2, Plus, Shield, Activity } from 'lucide-react';
+import { Server, Link2, Plus, Shield, Activity, Edit3, Check, X } from 'lucide-react';
 import { Button, InlineNotification, ConfirmDialog } from '@shared/components/ui';
+import { apiClient } from '@shared/services/api';
 import {
   useConnectedServers,
   useInvitationTokens,
@@ -35,6 +36,32 @@ export function FederationPanel() {
   const [activeTab, setActiveTab] = useState<'servers' | 'invitations' | 'access'>('servers');
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
+  // Server name editing state
+  const [serverName, setServerName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [isLoadingName, setIsLoadingName] = useState(true);
+  const [isSavingName, setIsSavingName] = useState(false);
+
+  // Load server name on mount
+  useEffect(() => {
+    const loadServerName = async () => {
+      try {
+        const response = await apiClient.get('/admin/settings');
+        const settings = response.data as { key: string; value: string }[];
+        const nameSetting = settings.find(s => s.key === 'server.name');
+        if (nameSetting) {
+          setServerName(nameSetting.value);
+        }
+      } catch {
+        // Server name not set yet, will be generated on first connection
+      } finally {
+        setIsLoadingName(false);
+      }
+    };
+    loadServerName();
+  }, []);
+
   // Modal states using useModal hook
   const connectModal = useModal();
   const createInvitationModal = useModal();
@@ -63,6 +90,33 @@ export function FederationPanel() {
   const updatePermissionsMutation = useUpdatePermissions();
   const deleteAccessMutation = useDeleteAccessToken();
   const reactivateAccessMutation = useReactivateAccessToken();
+
+  // Server name handlers
+  const handleStartEditName = () => {
+    setEditedName(serverName);
+    setIsEditingName(true);
+  };
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false);
+    setEditedName('');
+  };
+
+  const handleSaveServerName = async () => {
+    if (!editedName.trim()) return;
+
+    setIsSavingName(true);
+    try {
+      await apiClient.put('/admin/settings/server.name', { value: editedName.trim() });
+      setServerName(editedName.trim());
+      setIsEditingName(false);
+      showSuccess('Nombre del servidor actualizado');
+    } catch {
+      showError('Error al guardar el nombre');
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   // Handlers
   const handleCopyToken = async (token: string) => {
@@ -190,6 +244,63 @@ export function FederationPanel() {
           <p className={styles.description}>
             Conecta con otros servidores Echo para compartir bibliotecas musicales con amigos.
           </p>
+        </div>
+      </div>
+
+      {/* Server Identity Card */}
+      <div className={styles.serverIdentityCard}>
+        <div className={styles.serverIdentityIcon}>
+          <Server size={24} />
+        </div>
+        <div className={styles.serverIdentityInfo}>
+          <span className={styles.serverIdentityLabel}>Tu servidor se identifica como:</span>
+          {isLoadingName ? (
+            <span className={styles.serverIdentityName}>Cargando...</span>
+          ) : isEditingName ? (
+            <div className={styles.serverNameEdit}>
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className={styles.serverNameInput}
+                placeholder="Nombre del servidor"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveServerName();
+                  if (e.key === 'Escape') handleCancelEditName();
+                }}
+              />
+              <button
+                className={styles.serverNameSaveBtn}
+                onClick={handleSaveServerName}
+                disabled={isSavingName || !editedName.trim()}
+                title="Guardar"
+              >
+                <Check size={16} />
+              </button>
+              <button
+                className={styles.serverNameCancelBtn}
+                onClick={handleCancelEditName}
+                disabled={isSavingName}
+                title="Cancelar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className={styles.serverNameDisplay}>
+              <span className={styles.serverIdentityName}>
+                {serverName || 'Sin nombre configurado'}
+              </span>
+              <button
+                className={styles.serverNameEditBtn}
+                onClick={handleStartEditName}
+                title="Editar nombre"
+              >
+                <Edit3 size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
