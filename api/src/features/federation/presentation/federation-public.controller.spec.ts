@@ -336,7 +336,8 @@ describe('FederationPublicController', () => {
 
       const countChain = {
         select: jest.fn().mockReturnThis(),
-        from: jest.fn().mockResolvedValue([{ count: 50 }]),
+        from: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockResolvedValue([{ count: 50 }]),
       };
 
       let callCount = 0;
