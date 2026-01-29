@@ -258,10 +258,10 @@ jobs:
 
       - name: Complete initial setup wizard
         run: |
-          # Create admin user
+          # Create admin user (password must be at least 8 characters)
           curl -X POST http://localhost:3000/api/setup/admin \
             -H "Content-Type: application/json" \
-            -d '{"username": "admin", "password": "admin"}' \
+            -d '{"username": "admin", "password": "adminpass123"}' \
             --fail --silent --show-error
 
           # Create music directory and configure library
