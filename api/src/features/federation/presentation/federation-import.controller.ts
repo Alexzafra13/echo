@@ -5,6 +5,9 @@ import {
   Delete,
   Param,
   Body,
+  Query,
+  Req,
+  Sse,
   UseGuards,
   Inject,
   NotFoundException,
@@ -12,6 +15,9 @@ import {
   BadGatewayException,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { FastifyRequest } from 'fastify';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   ApiTags,
   ApiOperation,
@@ -24,10 +30,11 @@ import {
 import { IsString, IsNotEmpty } from 'class-validator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
 import { User } from '@infrastructure/database/schema';
 import { AlbumImportQueue } from '../domain/types';
-import { AlbumImportService } from '../infrastructure/services';
+import { AlbumImportService, ImportProgressService } from '../infrastructure/services';
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../domain/ports/federation.repository';
 
 class StartImportDto {
@@ -52,6 +59,7 @@ export class FederationImportController {
     @InjectPinoLogger(FederationImportController.name)
     private readonly logger: PinoLogger,
     private readonly importService: AlbumImportService,
+    private readonly importProgressService: ImportProgressService,
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
   ) {}
@@ -179,5 +187,56 @@ export class FederationImportController {
 
     const success = await this.importService.cancelImport(id);
     return { success };
+  }
+
+  // SSE endpoint - EventSource doesn't support headers, so auth via query param
+  @Sse('progress/stream')
+  @Public()
+  @ApiOperation({
+    summary: 'Stream de progreso de importación (SSE)',
+    description: 'Server-Sent Events para recibir actualizaciones de progreso de importación en tiempo real. ' +
+      'Pasa userId como query param ya que EventSource no soporta headers.',
+  })
+  @ApiResponse({ status: 200, description: 'Stream de eventos de progreso' })
+  streamImportProgress(
+    @Query('userId') userId: string,
+    @Req() request: FastifyRequest,
+  ): Observable<MessageEvent> {
+    this.logger.info({ userId }, 'SSE client connected for import progress');
+
+    return new Observable((subscriber) => {
+      // Send initial connected event
+      subscriber.next({
+        type: 'connected',
+        data: { userId, timestamp: Date.now() },
+      } as MessageEvent);
+
+      // Subscribe to progress events for this user
+      const subscription = this.importProgressService
+        .subscribeForUser(userId)
+        .pipe(
+          map((event) => ({
+            type: 'import:progress',
+            data: event,
+          } as MessageEvent)),
+        )
+        .subscribe((event) => subscriber.next(event));
+
+      // Send keepalive every 30 seconds
+      const keepaliveInterval = setInterval(() => {
+        subscriber.next({
+          type: 'keepalive',
+          data: { timestamp: Date.now() },
+        } as MessageEvent);
+      }, 30000);
+
+      // Cleanup on client disconnect
+      request.raw.on('close', () => {
+        this.logger.info({ userId }, 'SSE client disconnected from import progress');
+        subscription.unsubscribe();
+        clearInterval(keepaliveInterval);
+        subscriber.complete();
+      });
+    });
   }
 }
