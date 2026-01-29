@@ -11,6 +11,7 @@ import { albums, artists, tracks, settings } from '@infrastructure/database/sche
 import { IFederationRepository, FEDERATION_REPOSITORY } from '../../domain/ports/federation.repository';
 import { AlbumImportQueue, ConnectedServer } from '../../domain/types';
 import { FederationGateway } from '../../presentation/federation.gateway';
+import { ImportProgressService } from './import-progress.service';
 
 /**
  * Metadata for album export from remote server
@@ -115,6 +116,7 @@ export class AlbumImportService {
     private readonly drizzle: DrizzleService,
     @Inject(forwardRef(() => FederationGateway))
     private readonly federationGateway: FederationGateway,
+    private readonly importProgressService: ImportProgressService,
   ) {}
 
   /**
@@ -705,7 +707,7 @@ export class AlbumImportService {
   }
 
   /**
-   * Emit progress event via WebSocket gateway
+   * Emit progress event via WebSocket gateway and SSE
    */
   private emitProgress(
     importEntry: AlbumImportQueue,
@@ -728,7 +730,10 @@ export class AlbumImportService {
       error,
     };
 
+    // Emit via WebSocket (existing)
     this.federationGateway.emitProgress(event);
+    // Emit via SSE (new - more reliable)
+    this.importProgressService.emit(event);
   }
 
   /**

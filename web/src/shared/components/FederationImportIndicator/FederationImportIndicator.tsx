@@ -1,5 +1,5 @@
 import { Download, CheckCircle, XCircle } from 'lucide-react';
-import { useAlbumImportWebSocket } from '@features/federation/hooks/useAlbumImportWebSocket';
+import { useImportProgressSSE } from '@features/federation/hooks/useImportProgressSSE';
 import styles from './FederationImportIndicator.module.css';
 
 /**
@@ -8,7 +8,7 @@ import styles from './FederationImportIndicator.module.css';
  * Only visible when there are active imports
  */
 export function FederationImportIndicator() {
-  const { activeImports, hasActiveImports } = useAlbumImportWebSocket();
+  const { activeImports, hasActiveImports } = useImportProgressSSE();
 
   if (!hasActiveImports) {
     return null;
