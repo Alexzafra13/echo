@@ -6,6 +6,7 @@ import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { LufsProgressIndicator } from '@shared/components/LufsProgressIndicator';
+import { FederationImportIndicator } from '@shared/components/FederationImportIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
 import { SearchPanel } from './SearchPanel';
 import { UserMenu } from './UserMenu';
@@ -151,6 +152,9 @@ export function Header({
 
       {/* Right section - Notifications, user menu */}
       <div className={styles.header__rightSection}>
+        {/* Federation import progress (solo visible cuando hay importaciones activas) */}
+        <FederationImportIndicator />
+
         {/* LUFS analysis progress (global, solo visible cuando hay análisis) */}
         <LufsProgressIndicator />
 
