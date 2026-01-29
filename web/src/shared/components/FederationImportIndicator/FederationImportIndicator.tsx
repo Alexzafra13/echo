@@ -20,8 +20,8 @@ export function FederationImportIndicator() {
 
   const { albumName, artistName, status, progress, currentTrack, totalTracks } = currentImport;
 
-  // Determine icon and color based on status
-  const getStatusIcon = () => {
+  // Determine icon based on status
+  const getIcon = () => {
     switch (status) {
       case 'completed':
         return <CheckCircle size={14} className={styles.iconCompleted} />;
@@ -32,35 +32,35 @@ export function FederationImportIndicator() {
     }
   };
 
-  const getStatusText = () => {
-    switch (status) {
-      case 'completed':
-        return 'Completado';
-      case 'failed':
-        return 'Error';
-      default:
-        return `${currentTrack}/${totalTracks}`;
-    }
-  };
-
   // Truncate album name for display
-  const displayName = albumName.length > 20 ? `${albumName.slice(0, 18)}...` : albumName;
+  const displayName = albumName.length > 18 ? `${albumName.slice(0, 16)}...` : albumName;
 
   return (
-    <div className={`${styles.container} ${styles[`container--${status}`]}`} title={`${artistName} - ${albumName}`}>
-      {getStatusIcon()}
-      <span className={styles.text}>
+    <div
+      className={`${styles.container} ${styles[`container--${status}`]}`}
+      title={`${artistName} - ${albumName}`}
+    >
+      <div className={`${styles.iconWrapper} ${styles[`iconWrapper--${status}`]}`}>
+        {getIcon()}
+      </div>
+
+      <div className={styles.content}>
         <span className={styles.albumName}>{displayName}</span>
-        <span className={styles.status}>{getStatusText()}</span>
-      </span>
-      {status === 'downloading' && (
-        <div className={styles.progressBar}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${progress}%` }}
-          />
+        <div className={styles.progressRow}>
+          {status === 'downloading' && (
+            <div className={styles.progressBar}>
+              <div
+                className={styles.progressFill}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+          <span className={styles.status}>
+            {status === 'completed' ? 'Listo' : status === 'failed' ? 'Error' : `${currentTrack}/${totalTracks}`}
+          </span>
         </div>
-      )}
+      </div>
+
       {activeImports.length > 1 && (
         <span className={styles.badge}>+{activeImports.length - 1}</span>
       )}
