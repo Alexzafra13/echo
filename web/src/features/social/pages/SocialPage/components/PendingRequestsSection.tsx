@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Clock, Send, Check, X } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { getUserAvatarUrl, handleAvatarError } from '@shared/utils/avatar.utils';
@@ -13,7 +14,7 @@ interface PendingRequestsSectionProps {
   isRemoving: boolean;
 }
 
-export function PendingRequestsSection({
+export const PendingRequestsSection = memo(function PendingRequestsSection({
   received,
   sent,
   onAccept,
@@ -42,6 +43,8 @@ export function PendingRequestsSection({
                   src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
                   alt={request.username}
                   className={styles.requestCard__avatar}
+                  loading="lazy"
+                  decoding="async"
                   onError={handleAvatarError}
                 />
                 <div className={styles.requestCard__info}>
@@ -96,6 +99,8 @@ export function PendingRequestsSection({
                   src={request.avatarUrl || getUserAvatarUrl(request.id, false)}
                   alt={request.username}
                   className={styles.requestCard__avatar}
+                  loading="lazy"
+                  decoding="async"
                   onError={handleAvatarError}
                 />
                 <div className={styles.requestCard__info}>
@@ -122,4 +127,4 @@ export function PendingRequestsSection({
       )}
     </>
   );
-}
+});

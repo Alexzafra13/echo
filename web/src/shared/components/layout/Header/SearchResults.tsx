@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, memo, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { Disc, User as UserIcon, Music, ListMusic } from 'lucide-react';
 import { useAlbumSearch, useTrackSearch } from '@features/home/hooks';
@@ -23,8 +23,9 @@ interface SearchResultsProps {
  * SearchResults Component
  * Displays search results grouped by type (Artists, Albums, Tracks)
  * with live search as user types (debounced)
+ * Memoized to prevent unnecessary re-renders during typing
  */
-export function SearchResults({ query, onClose }: SearchResultsProps) {
+export const SearchResults = memo(function SearchResults({ query, onClose }: SearchResultsProps) {
   const [, setLocation] = useLocation();
 
   // Fetch results from all sources
@@ -49,10 +50,10 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
   const isLoading = loadingArtists || loadingAlbums || loadingTracks || loadingPlaylists;
   const hasResults = artists.length > 0 || albums.length > 0 || tracks.length > 0 || playlists.length > 0;
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = useCallback((path: string) => {
     setLocation(path);
     onClose();
-  };
+  }, [setLocation, onClose]);
 
   if (query.length < 2) {
     return (
@@ -101,6 +102,8 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
                 src={getArtistImageUrl(artist.id, 'profile', artist.updatedAt)}
                 alt={artist.name}
                 className={styles.searchResults__avatar}
+                loading="lazy"
+                decoding="async"
                 onError={handleAvatarError}
               />
               <div className={styles.searchResults__info}>
@@ -129,6 +132,8 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
                 src={getCoverUrl(album.coverImage)}
                 alt={album.title}
                 className={styles.searchResults__cover}
+                loading="lazy"
+                decoding="async"
                 onError={handleImageError}
               />
               <div className={styles.searchResults__info}>
@@ -188,6 +193,8 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
                 src={getCoverUrl(track.albumId ? `/api/albums/${track.albumId}/cover` : undefined)}
                 alt={track.title}
                 className={styles.searchResults__cover}
+                loading="lazy"
+                decoding="async"
                 onError={handleImageError}
               />
               <div className={styles.searchResults__info}>
@@ -202,4 +209,4 @@ export function SearchResults({ query, onClose }: SearchResultsProps) {
       )}
     </div>
   );
-}
+});
