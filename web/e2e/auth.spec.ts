@@ -39,7 +39,7 @@ test.describe('Autenticación', () => {
 
   test('login exitoso redirige a /home', async ({ page }) => {
     await page.locator('input[name="username"]').fill('admin');
-    await page.locator('input[name="password"]').fill('admin');
+    await page.locator('input[name="password"]').fill('adminpassword123');
     await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
 
     // Debe redirigir fuera de /login
@@ -48,7 +48,7 @@ test.describe('Autenticación', () => {
 
   test('el botón muestra loading durante el login', async ({ page }) => {
     await page.locator('input[name="username"]').fill('admin');
-    await page.locator('input[name="password"]').fill('admin');
+    await page.locator('input[name="password"]').fill('adminpassword123');
 
     const submitButton = page.getByRole('button', { name: /Iniciar Sesión/i });
     await submitButton.click();
