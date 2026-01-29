@@ -262,17 +262,39 @@ jobs:
 
       - name: Setup app for E2E tests
         run: |
+          # Wait a bit more for API to be fully ready
+          sleep 5
+
+          # Check setup status first
+          echo "Checking setup status..."
+          curl -s http://localhost:3000/api/setup/status | head -100
+
           # Create admin user
+          echo ""
           echo "Creating admin user..."
-          curl -sf -X POST http://localhost:3000/api/setup/admin \
+          ADMIN_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/admin \
             -H "Content-Type: application/json" \
-            -d '{"username":"admin","password":"adminpassword123"}' || echo "Admin may already exist"
+            -d '{"username":"admin","password":"adminpassword123"}')
+          echo "Admin result: $ADMIN_RESULT"
 
           # Complete setup
           echo "Completing setup..."
-          curl -sf -X POST http://localhost:3000/api/setup/complete || echo "Setup may already be complete"
+          COMPLETE_RESULT=$(curl -s -X POST http://localhost:3000/api/setup/complete)
+          echo "Complete result: $COMPLETE_RESULT"
 
-          echo "App setup completed!"
+          # Verify setup is complete
+          echo ""
+          echo "Verifying setup status..."
+          FINAL_STATUS=$(curl -s http://localhost:3000/api/setup/status)
+          echo "Final status: $FINAL_STATUS"
+
+          # Check if setup is complete
+          if echo "$FINAL_STATUS" | grep -q '"setupCompleted":true'; then
+            echo "✅ Setup completed successfully!"
+          else
+            echo "❌ Setup may not be complete"
+            exit 1
+          fi
 
       - name: Run Playwright tests
         working-directory: web
