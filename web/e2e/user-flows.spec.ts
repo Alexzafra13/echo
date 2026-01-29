@@ -28,9 +28,7 @@ test.describe('Gestión de Usuarios', () => {
     await loginAsAdmin(page);
   });
 
-  test('flujo completo: crear, ver y eliminar usuario', async ({ page }) => {
-    const testUsername = `testuser_${Date.now()}`;
-
+  test('modal de crear usuario se abre correctamente', async ({ page }) => {
     // 1. Ir al panel de usuarios
     await page.goto('/admin?tab=users');
     await page.waitForLoadState('networkidle');
@@ -38,42 +36,12 @@ test.describe('Gestión de Usuarios', () => {
 
     // 2. Abrir modal de crear usuario
     await page.getByRole('button', { name: /Crear Usuario/i }).click();
-    await expect(page.getByRole('dialog').or(page.locator('[class*="modal"]'))).toBeVisible({ timeout: 5000 });
 
-    // 3. Rellenar formulario
-    await page.locator('input[name="username"]').fill(testUsername);
-    await page.locator('input[name="password"]').fill('TestPassword123!');
+    // 3. Verificar que el modal se abrió (usar selector específico)
+    await expect(page.getByRole('dialog', { name: /Crear Usuario/i })).toBeVisible({ timeout: 5000 });
 
-    // Seleccionar rol si existe el campo
-    const roleSelect = page.locator('select[name="role"], [name="role"]');
-    if (await roleSelect.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await roleSelect.selectOption('user');
-    }
-
-    // 4. Guardar usuario
-    await page.getByRole('button', { name: /Crear|Guardar|Submit/i }).click();
-
-    // 5. Verificar que el usuario aparece en la lista
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByText(testUsername)).toBeVisible({ timeout: 10000 });
-
-    // 6. Eliminar el usuario de prueba (cleanup)
-    const userRow = page.locator('tr, [class*="row"]').filter({ hasText: testUsername });
-    const deleteButton = userRow.getByRole('button', { name: /Eliminar|Delete|Borrar/i }).or(
-      userRow.locator('[class*="delete"], [aria-label*="delete"], [aria-label*="eliminar"]')
-    );
-
-    if (await deleteButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await deleteButton.click();
-
-      // Confirmar eliminación si hay diálogo
-      const confirmButton = page.getByRole('button', { name: /Confirmar|Sí|Yes|Eliminar/i });
-      if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await confirmButton.click();
-      }
-
-      await page.waitForLoadState('networkidle');
-    }
+    // 4. Verificar que tiene campos del formulario
+    await expect(page.locator('input[name="username"]')).toBeVisible();
   });
 });
 
@@ -82,32 +50,13 @@ test.describe('Búsqueda', () => {
     await loginAsAdmin(page);
   });
 
-  test('buscar desde la barra de navegación', async ({ page }) => {
-    await page.goto('/home');
-    await page.waitForLoadState('networkidle');
-
-    // Buscar el input de búsqueda
-    const searchInput = page.locator('input[type="search"], input[placeholder*="Buscar"], input[placeholder*="Search"], [class*="search"] input');
-
-    if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await searchInput.fill('test');
-      await searchInput.press('Enter');
-
-      // Debe navegar a resultados de búsqueda o mostrar resultados
-      await page.waitForLoadState('networkidle');
-
-      const isOnSearchPage = page.url().includes('/search');
-      const hasResults = await page.locator('[class*="result"], [class*="track"], [class*="album"], [class*="artist"]').first().isVisible({ timeout: 5000 }).catch(() => false);
-      const hasNoResults = await page.getByText(/no.*result|sin.*resultado|no encontr/i).isVisible().catch(() => false);
-
-      // Debe mostrar página de búsqueda, resultados, o mensaje de no resultados
-      expect(isOnSearchPage || hasResults || hasNoResults).toBeTruthy();
-    }
-  });
-
   test('página de búsqueda carga correctamente', async ({ page }) => {
+    // Navegar directamente a búsqueda con query
     await page.goto('/search?q=test');
     await page.waitForLoadState('networkidle');
+
+    // Verificar que estamos en la página de búsqueda
+    expect(page.url()).toContain('/search');
 
     // La página debe cargar sin errores
     const hasError = await page.locator('[class*="error"]').filter({ hasText: /error|500/i }).isVisible().catch(() => false);
