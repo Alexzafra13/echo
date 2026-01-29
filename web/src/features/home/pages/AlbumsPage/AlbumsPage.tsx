@@ -31,11 +31,20 @@ export default function AlbumsPage() {
 
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<AlbumSortOption>('recent');
   const [librarySource, setLibrarySource] = useState<LibrarySource>(
     sourceParam === 'shared' ? 'shared' : 'local'
   );
   const [selectedServerId, setSelectedServerId] = useState<string | undefined>();
+
+  // Debounce search query for shared albums (to avoid excessive API calls to remote servers)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -45,11 +54,11 @@ export default function AlbumsPage() {
   // Fetch connected servers for the dropdown
   const { data: connectedServers = [] } = useConnectedServers();
 
-  // Shared albums query
+  // Shared albums query (uses debounced search for better performance)
   const sharedAlbumsQuery = useSharedAlbums({
     page,
     limit: itemsPerPage,
-    search: searchQuery || undefined,
+    search: debouncedSearchQuery || undefined,
     serverId: selectedServerId,
   });
 
@@ -109,10 +118,10 @@ export default function AlbumsPage() {
     album.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Reset to first page when sort option, itemsPerPage, or source changes
+  // Reset to first page when sort option, itemsPerPage, source, or search changes
   useEffect(() => {
     setPage(1);
-  }, [sortBy, itemsPerPage, librarySource, selectedServerId]);
+  }, [sortBy, itemsPerPage, librarySource, selectedServerId, debouncedSearchQuery]);
 
   // Update URL when source changes
   const handleSourceChange = (source: LibrarySource) => {
