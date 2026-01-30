@@ -35,9 +35,9 @@ export function BeamsBackground({
 
   // Configuration based on intensity
   const config = {
-    subtle: { beamCount: 8, maxOpacity: 0.3, blur: 80 },
-    medium: { beamCount: 12, maxOpacity: 0.5, blur: 60 },
-    strong: { beamCount: 16, maxOpacity: 0.7, blur: 40 },
+    subtle: { beamCount: 10, maxOpacity: 0.4, blur: 40 },
+    medium: { beamCount: 15, maxOpacity: 0.6, blur: 30 },
+    strong: { beamCount: 20, maxOpacity: 0.8, blur: 20 },
   }[intensity];
 
   // Parse RGB from dominant color
@@ -66,13 +66,13 @@ export function BeamsBackground({
 
       return {
         x: Math.random() * canvasWidth,
-        width: 30 + Math.random() * 60,
-        speed: 0.3 + Math.random() * 0.5,
-        opacity: 0.1 + Math.random() * config.maxOpacity,
-        hue: hue + (Math.random() - 0.5) * 30, // Slight hue variation
-        pulseSpeed: 0.5 + Math.random() * 1,
+        width: 80 + Math.random() * 150, // Wider beams
+        speed: 0.5 + Math.random() * 1, // Faster movement
+        opacity: 0.2 + Math.random() * config.maxOpacity,
+        hue: hue + (Math.random() - 0.5) * 40, // More hue variation
+        pulseSpeed: 0.3 + Math.random() * 0.7,
         pulsePhase: Math.random() * Math.PI * 2,
-        y: canvasHeight + Math.random() * 100 + index * 50,
+        y: canvasHeight + Math.random() * 200 + index * 80,
       };
     },
     [dominantColor, config.maxOpacity, parseColor]
@@ -156,15 +156,15 @@ export function BeamsBackground({
           beam.y - canvas.height * 1.5
         );
 
-        // Use dominant color with hue shift
-        const hueShift = Math.sin(beam.pulsePhase * 0.5) * 10;
-        const saturation = 70 + Math.sin(beam.pulsePhase) * 20;
-        const lightness = 50 + Math.sin(beam.pulsePhase * 0.7) * 15;
+        // Use dominant color with hue shift - brighter, more saturated
+        const hueShift = Math.sin(beam.pulsePhase * 0.5) * 15;
+        const saturation = 80 + Math.sin(beam.pulsePhase) * 15;
+        const lightness = 60 + Math.sin(beam.pulsePhase * 0.7) * 20;
 
         gradient.addColorStop(0, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, 0)`);
-        gradient.addColorStop(0.1, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity * 0.5})`);
-        gradient.addColorStop(0.4, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity})`);
-        gradient.addColorStop(0.7, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity * 0.5})`);
+        gradient.addColorStop(0.15, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity * 0.7})`);
+        gradient.addColorStop(0.5, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity})`);
+        gradient.addColorStop(0.85, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity * 0.7})`);
         gradient.addColorStop(1, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, 0)`);
 
         ctx.fillStyle = gradient;
@@ -192,9 +192,9 @@ export function BeamsBackground({
         width: '100%',
         height: '100%',
         filter: `blur(${config.blur}px)`,
-        opacity: 0.8,
+        opacity: 1,
         pointerEvents: 'none',
-        zIndex: 0,
+        zIndex: 1,
       }}
     />
   );
