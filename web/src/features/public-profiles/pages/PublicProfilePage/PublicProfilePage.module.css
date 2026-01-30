@@ -760,6 +760,13 @@
 @media (max-width: 900px) {
   .publicProfilePage__main {
     margin-left: 0;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .publicProfilePage__content {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   .publicProfilePage__trackList {
@@ -767,8 +774,10 @@
   }
 
   .publicProfilePage__trackItem {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2);
     gap: var(--space-2);
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .publicProfilePage__trackCover,
