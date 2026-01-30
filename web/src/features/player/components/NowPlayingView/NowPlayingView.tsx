@@ -13,6 +13,7 @@ import {
   VolumeControl,
   MobileActions,
   QueuePanel,
+  BeamsBackground,
 } from './components';
 import styles from './NowPlayingView.module.css';
 
@@ -261,6 +262,9 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
     >
       {/* Background gradient */}
       <div className={styles.nowPlaying__background} />
+
+      {/* Animated beams overlay */}
+      {isOpen && <BeamsBackground dominantColor={dominantColor} intensity="medium" />}
 
       {/* Header */}
       <NowPlayingHeader albumName={albumName} onClose={onClose} />
