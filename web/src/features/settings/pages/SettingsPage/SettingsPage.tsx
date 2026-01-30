@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Settings, Palette, Globe, Check, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical, Sun, Moon, Monitor } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
+import { Switch } from '@shared/components/ui';
 import { useTheme } from '@shared/hooks';
 import { useHomePreferences, useUpdateHomePreferences } from '../../hooks';
 import { usePlayer } from '@features/player';
@@ -185,15 +186,11 @@ export function SettingsPage() {
                           >
                             <ChevronDown size={18} />
                           </button>
-                          <label className={styles.settingsPage__toggle}>
-                            <input
-                              type="checkbox"
-                              className={styles.settingsPage__toggleInput}
-                              checked={section.enabled}
-                              onChange={() => toggleSection(section.id)}
-                            />
-                            <span className={styles.settingsPage__toggleSlider}></span>
-                          </label>
+                          <Switch
+                            checked={section.enabled}
+                            onChange={() => toggleSection(section.id)}
+                            aria-label={`Activar ${SECTION_LABELS[section.id] || section.id}`}
+                          />
                         </div>
                       </div>
                     ))}
@@ -331,15 +328,11 @@ export function SettingsPage() {
                         Iguala el volumen percibido entre canciones para evitar cambios bruscos
                       </p>
                     </div>
-                    <label className={styles.settingsPage__toggle}>
-                      <input
-                        type="checkbox"
-                        className={styles.settingsPage__toggleInput}
-                        checked={normalization.enabled}
-                        onChange={(e) => setNormalizationEnabled(e.target.checked)}
-                      />
-                      <span className={styles.settingsPage__toggleSlider}></span>
-                    </label>
+                    <Switch
+                      checked={normalization.enabled}
+                      onChange={setNormalizationEnabled}
+                      aria-label="Normalizar volumen"
+                    />
                   </div>
 
                   {/* Target LUFS */}
@@ -370,15 +363,11 @@ export function SettingsPage() {
                             No aumenta el volumen más allá del límite seguro para evitar distorsión
                           </p>
                         </div>
-                        <label className={styles.settingsPage__toggle}>
-                          <input
-                            type="checkbox"
-                            className={styles.settingsPage__toggleInput}
-                            checked={normalization.preventClipping}
-                            onChange={(e) => setNormalizationPreventClipping(e.target.checked)}
-                          />
-                          <span className={styles.settingsPage__toggleSlider}></span>
-                        </label>
+                        <Switch
+                          checked={normalization.preventClipping}
+                          onChange={setNormalizationPreventClipping}
+                          aria-label="Prevenir distorsión"
+                        />
                       </div>
                     </>
                   )}
@@ -403,15 +392,11 @@ export function SettingsPage() {
                         Transición suave entre canciones con fundido de audio (crossfade)
                       </p>
                     </div>
-                    <label className={styles.settingsPage__toggle}>
-                      <input
-                        type="checkbox"
-                        className={styles.settingsPage__toggleInput}
-                        checked={crossfade.enabled}
-                        onChange={(e) => setCrossfadeEnabled(e.target.checked)}
-                      />
-                      <span className={styles.settingsPage__toggleSlider}></span>
-                    </label>
+                    <Switch
+                      checked={crossfade.enabled}
+                      onChange={setCrossfadeEnabled}
+                      aria-label="Fundido entre canciones"
+                    />
                   </div>
 
                   {/* Crossfade Duration */}
@@ -446,15 +431,11 @@ export function SettingsPage() {
                             Detecta automáticamente el final natural de las canciones para iniciar la transición
                           </p>
                         </div>
-                        <label className={styles.settingsPage__toggle}>
-                          <input
-                            type="checkbox"
-                            className={styles.settingsPage__toggleInput}
-                            checked={crossfade.smartMode}
-                            onChange={(e) => setCrossfadeSmartMode(e.target.checked)}
-                          />
-                          <span className={styles.settingsPage__toggleSlider}></span>
-                        </label>
+                        <Switch
+                          checked={crossfade.smartMode}
+                          onChange={setCrossfadeSmartMode}
+                          aria-label="Fundido inteligente"
+                        />
                       </div>
                     </>
                   )}
@@ -467,15 +448,11 @@ export function SettingsPage() {
                         Cuando termina un álbum o playlist, continúa automáticamente con artistas similares
                       </p>
                     </div>
-                    <label className={styles.settingsPage__toggle}>
-                      <input
-                        type="checkbox"
-                        className={styles.settingsPage__toggleInput}
-                        checked={autoplay.enabled}
-                        onChange={(e) => setAutoplayEnabled(e.target.checked)}
-                      />
-                      <span className={styles.settingsPage__toggleSlider}></span>
-                    </label>
+                    <Switch
+                      checked={autoplay.enabled}
+                      onChange={setAutoplayEnabled}
+                      aria-label="Reproducción automática"
+                    />
                   </div>
                 </div>
               </div>
