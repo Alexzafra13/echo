@@ -15,14 +15,12 @@ import {
 } from '../../components';
 import {
   useUserCountry,
-  useTopVotedStations,
-  useStationsByCountry,
-  useStationsByTag,
   useSearchStations,
   useFavoriteStations,
   useSaveFavoriteFromApi,
   useDeleteFavoriteStation,
-  useRadioCountries
+  useRadioCountries,
+  useFilteredStations,
 } from '../../hooks';
 import { radioService } from '../../services';
 import { POPULAR_COUNTRIES, GENRES } from '../../constants';
@@ -139,103 +137,27 @@ export default function RadioPage() {
     searchQuery.length >= 2
   );
 
-  // Determine which query to use based on filter and country
+  // Filter type flags for UI display
   const isAllCountries = selectedCountry === 'ALL';
   const isTopFilter = activeFilter === 'top';
   const isAllFilter = activeFilter === 'all';
   const isFavoritesFilter = activeFilter === 'favorites';
-  const isGenreFilter = !isTopFilter && !isAllFilter && !isFavoritesFilter;
 
-  // Queries for different filter combinations
+  // Use the filtered stations hook
+  const { stations, isLoading } = useFilteredStations({
+    filter: activeFilter,
+    country: selectedCountry,
+    stationsPerView,
+    favoriteStations,
+  });
 
-  // 1. Top emisoras global (llenan exactamente 3 filas)
-  const { data: topVotedStations = [], isLoading: loadingTopVoted } = useTopVotedStations(stationsPerView);
-
-  // 2. Top emisoras por país (llenan exactamente 3 filas)
-  const { data: countryTop20 = [], isLoading: loadingCountryTop } = useStationsByCountry(
-    !isAllCountries && isTopFilter ? selectedCountry : '',
-    stationsPerView
-  );
-
-  // 3. Todas las emisoras del país (traer todas, paginar localmente)
-  const { data: allCountryStations = [], isLoading: loadingAllCountry } = useStationsByCountry(
-    !isAllCountries && isAllFilter ? selectedCountry : '',
-    10000 // Traer todas las emisoras del país
-  );
-
-  // 4. Todas las emisoras del mundo (traer todas, paginar localmente)
-  const { data: allWorldStations = [], isLoading: loadingAllWorld } = useSearchStations(
-    {
-      limit: 10000, // Traer todas las emisoras del mundo
-      order: 'bitrate',
-      reverse: true,
-      hidebroken: true,
-      removeDuplicates: true
-    },
-    isAllCountries && isAllFilter
-  );
-
-  // 5. Filtro por género + país (traer todas, paginar localmente)
-  const { data: genreCountryStations = [], isLoading: loadingGenreCountry } = useSearchStations(
-    {
-      tag: isGenreFilter ? activeFilter : undefined,
-      countrycode: !isAllCountries && isGenreFilter ? selectedCountry : undefined,
-      limit: 10000, // Traer todas las emisoras del género/país
-      order: 'bitrate',
-      reverse: true,
-      hidebroken: true,
-      removeDuplicates: true
-    },
-    isGenreFilter && !isAllCountries
-  );
-
-  // 6. Filtro por género global (traer todas, paginar localmente)
-  const { data: genreGlobalStations = [], isLoading: loadingGenreGlobal } = useStationsByTag(
-    isGenreFilter && isAllCountries ? activeFilter : '',
-    10000 // Traer todas las emisoras del género
-  );
-
-  // Select the appropriate stations list
-  const stations = useMemo(() => {
-    // Favoritas (prioridad máxima)
-    if (isFavoritesFilter) return favoriteStations;
-
-    // Top emisoras mundial (mejor calidad/bitrate)
-    if (isAllCountries && isTopFilter) return topVotedStations;
-
-    // Top emisoras por país (mejor calidad/bitrate)
-    if (!isAllCountries && isTopFilter) return countryTop20;
-
-    // Todas del mundo
-    if (isAllCountries && isAllFilter) return allWorldStations;
-
-    // Todas del país
-    if (!isAllCountries && isAllFilter) return allCountryStations;
-
-    // Género + país
-    if (isGenreFilter && !isAllCountries) return genreCountryStations;
-
-    // Género global
-    if (isGenreFilter && isAllCountries) return genreGlobalStations;
-
-    return [];
-  }, [
-    isAllCountries, isTopFilter, isAllFilter, isFavoritesFilter, isGenreFilter,
-    topVotedStations, countryTop20, allWorldStations, allCountryStations,
-    genreCountryStations, genreGlobalStations, favoriteStations
-  ]);
-
-  // Paginate stations (3 rows per page, dinámico según tamaño de pantalla)
-  // Top no se pagina (solo muestra 1 página completa), el resto sí
+  // Paginate stations (3 rows per page, dynamic based on screen size)
+  // Top filter doesn't paginate (shows only 1 full page), others do
   const shouldPaginate = !isTopFilter;
   const totalPages = shouldPaginate ? Math.ceil(stations.length / stationsPerView) : 1;
   const paginatedStations = shouldPaginate
     ? stations.slice((currentPage - 1) * stationsPerView, currentPage * stationsPerView)
     : stations;
-
-  // Loading state
-  const isLoading = loadingTopVoted || loadingCountryTop || loadingAllCountry ||
-                    loadingAllWorld || loadingGenreCountry || loadingGenreGlobal;
 
   // Handlers
   const handleSearch = useCallback((query: string) => {
