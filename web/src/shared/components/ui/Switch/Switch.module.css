@@ -1,0 +1,58 @@
+/**
+ * Switch Styles
+ * Basic toggle switch control
+ */
+
+.switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.switchInput {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switchSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--white-10);
+  transition: 0.3s;
+  border-radius: 26px;
+  border: 1px solid var(--white-15);
+}
+
+.switchSlider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--text-secondary);
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.switchInput:checked + .switchSlider {
+  background-color: rgba(255, 107, 107, 0.3);
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+.switchInput:checked + .switchSlider:before {
+  transform: translateX(22px);
+  background-color: var(--color-primary);
+}
+
+.switchInput:disabled + .switchSlider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
