@@ -63,20 +63,15 @@ const mockStations = [
 // Mock radio hooks with data
 vi.mock('../../hooks', () => ({
   useUserCountry: () => ({ data: { countryCode: 'ES' } }),
-  useTopVotedStations: () => ({
-    data: mockStations,
-    isLoading: false,
-  }),
-  useStationsByCountry: () => ({
-    data: mockStations,
-    isLoading: false,
-  }),
-  useStationsByTag: () => ({ data: [], isLoading: false }),
   useSearchStations: () => ({ data: [], isLoading: false }),
   useFavoriteStations: () => ({ data: [], isLoading: false }),
   useSaveFavoriteFromApi: () => ({ mutateAsync: vi.fn() }),
   useDeleteFavoriteStation: () => ({ mutateAsync: vi.fn() }),
   useRadioCountries: () => ({ data: [] }),
+  useFilteredStations: () => ({
+    stations: mockStations,
+    isLoading: false,
+  }),
 }));
 
 // Mock radio service
