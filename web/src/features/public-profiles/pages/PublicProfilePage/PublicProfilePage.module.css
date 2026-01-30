@@ -361,8 +361,13 @@
 .publicProfilePage__sectionHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-3);
   margin-bottom: var(--space-6);
+}
+
+.publicProfilePage__sectionIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .publicProfilePage__sectionTitle {
@@ -370,6 +375,7 @@
   font-weight: var(--font-bold);
   color: var(--text-primary);
   margin: 0;
+  flex: 1;
 }
 
 .publicProfilePage__sectionLink {
@@ -531,10 +537,15 @@
   border-radius: var(--radius-base);
   text-decoration: none;
   transition: all var(--transition-base);
+  cursor: pointer;
 }
 
 .publicProfilePage__trackItem:hover {
   background: var(--white-05);
+}
+
+.publicProfilePage__trackItem:hover .publicProfilePage__trackPlay {
+  opacity: 1;
 }
 
 .publicProfilePage__trackNumber {
@@ -611,6 +622,42 @@
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.publicProfilePage__trackPlay {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  border: none;
+  color: var(--text-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.publicProfilePage__trackPlay:hover {
+  transform: scale(1.1);
+  background: var(--color-primary-hover);
+}
+
+/* Track currently playing state */
+.publicProfilePage__trackItemPlaying {
+  background: rgba(var(--color-primary-rgb, 237, 104, 66), 0.08);
+}
+
+.publicProfilePage__trackItemPlaying .publicProfilePage__trackTitle {
+  color: var(--color-primary);
+}
+
+/* Button visible and active when playing */
+.publicProfilePage__trackPlayActive {
+  opacity: 1;
+  background: var(--color-primary);
 }
 
 /* Playlist Grid */
@@ -750,6 +797,13 @@
     flex-shrink: 0;
   }
 
+  .publicProfilePage__trackPlay {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
   .publicProfilePage__hero {
     padding: 100px var(--space-6) var(--space-8);
     min-height: auto;
@@ -881,6 +935,11 @@
 
   .publicProfilePage__contentInner {
     padding: 0 var(--space-4) calc(60px + var(--player-bottom-spacer, 0px));
+  }
+
+  .publicProfilePage__sectionIcon {
+    width: 20px;
+    height: 20px;
   }
 
   .publicProfilePage__sectionTitle {

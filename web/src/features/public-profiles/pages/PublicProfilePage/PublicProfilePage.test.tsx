@@ -68,6 +68,16 @@ vi.mock('@features/playlists/components', () => ({
   ),
 }));
 
+// Mock player context
+vi.mock('@features/player/context/PlayerContext', () => ({
+  usePlayer: () => ({
+    play: vi.fn(),
+    pause: vi.fn(),
+    currentTrack: null,
+    isPlaying: false,
+  }),
+}));
+
 // Mock utils
 vi.mock('@shared/utils/format', () => ({
   formatDuration: (seconds: number) => {
@@ -361,12 +371,12 @@ describe('PublicProfilePage', () => {
       expect(screen.queryByText('Canciones más escuchadas')).not.toBeInTheDocument();
     });
 
-    it('should navigate to album when clicking track', () => {
+    it('should render play buttons for tracks', () => {
       render(<PublicProfilePage />);
 
-      fireEvent.click(screen.getByText('Hit Song'));
-
-      expect(mockSetLocation).toHaveBeenCalledWith('/album/album-1');
+      // Play buttons should be rendered (one for each track)
+      const playButtons = screen.getAllByRole('button', { name: /reproducir/i });
+      expect(playButtons.length).toBeGreaterThan(0);
     });
   });
 
