@@ -8,6 +8,7 @@ import { FederationPublicController } from './federation-public.controller';
 import { FederationTokenService } from '../domain/services';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { CoverArtService } from '@shared/services';
+import { SettingsService } from '@features/external-metadata/infrastructure/services/settings.service';
 import { getLoggerToken } from 'nestjs-pino';
 import { FederationAccessToken } from '../domain/types';
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -110,6 +111,13 @@ describe('FederationPublicController', () => {
           provide: CoverArtService,
           useValue: {
             getCoverPath: jest.fn(),
+          },
+        },
+        {
+          provide: SettingsService,
+          useValue: {
+            getString: jest.fn().mockResolvedValue(''),
+            set: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -227,7 +235,8 @@ describe('FederationPublicController', () => {
 
       const result = await controller.getInfo();
 
-      expect(result.name).toBe('Echo Music Server');
+      // Server name is now dynamic (random if not set)
+      expect(result.name).toMatch(/^Echo Server #\d{4}$/);
       expect(result.version).toBe('1.0.0');
       expect(result.albumCount).toBe(100);
     });
