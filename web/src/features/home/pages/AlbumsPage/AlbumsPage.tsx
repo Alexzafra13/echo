@@ -305,7 +305,7 @@ export default function AlbumsPage() {
                       { value: '', label: `Todos los servidores (${connectedServers.length})` },
                       ...connectedServers.map((server) => ({
                         value: server.id,
-                        label: `${server.name} (${server.stats?.albumCount ?? '?'} álbumes)`,
+                        label: `${server.name} (${server.remoteAlbumCount ?? '?'} álbumes)`,
                       })),
                     ]}
                     className={styles.albumsPage__filterWrapper}
@@ -317,7 +317,7 @@ export default function AlbumsPage() {
                         return server ? (
                           <>
                             <span className={styles.albumsPage__serverStats}>
-                              {server.stats?.albumCount ?? 0} álbumes • {server.stats?.trackCount ?? 0} canciones • {server.stats?.artistCount ?? 0} artistas
+                              {server.remoteAlbumCount ?? 0} álbumes • {server.remoteTrackCount ?? 0} canciones • {server.remoteArtistCount ?? 0} artistas
                             </span>
                             <span className={`${styles.albumsPage__serverStatus} ${server.isOnline ? styles['albumsPage__serverStatus--online'] : styles['albumsPage__serverStatus--offline']}`}>
                               {server.isOnline ? 'Online' : 'Offline'}
