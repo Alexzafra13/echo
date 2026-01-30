@@ -42,7 +42,7 @@ export function TrackItem({ track, index }: TrackItemProps) {
       artist: track.artistName || 'Unknown Artist',
       albumId: track.albumId || undefined,
       albumName: track.albumName || undefined,
-      duration: track.duration || 0,
+      duration: 0,
       coverImage: track.coverUrl || undefined,
     });
   };
