@@ -537,10 +537,15 @@
   border-radius: var(--radius-base);
   text-decoration: none;
   transition: all var(--transition-base);
+  cursor: pointer;
 }
 
 .publicProfilePage__trackItem:hover {
   background: var(--white-05);
+}
+
+.publicProfilePage__trackItem:hover .publicProfilePage__trackPlay {
+  opacity: 1;
 }
 
 .publicProfilePage__trackNumber {
@@ -617,6 +622,42 @@
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.publicProfilePage__trackPlay {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  border: none;
+  color: var(--text-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.publicProfilePage__trackPlay:hover {
+  transform: scale(1.1);
+  background: var(--color-primary-hover);
+}
+
+/* Track currently playing state */
+.publicProfilePage__trackItemPlaying {
+  background: rgba(var(--color-primary-rgb, 237, 104, 66), 0.08);
+}
+
+.publicProfilePage__trackItemPlaying .publicProfilePage__trackTitle {
+  color: var(--color-primary);
+}
+
+/* Button visible and active when playing */
+.publicProfilePage__trackPlayActive {
+  opacity: 1;
+  background: var(--color-primary);
 }
 
 /* Playlist Grid */
@@ -753,6 +794,13 @@
 
   .publicProfilePage__trackNumber {
     width: 20px;
+    flex-shrink: 0;
+  }
+
+  .publicProfilePage__trackPlay {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
   }
 
