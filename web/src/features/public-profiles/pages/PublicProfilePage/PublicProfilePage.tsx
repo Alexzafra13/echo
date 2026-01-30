@@ -1,6 +1,6 @@
 import { CSSProperties } from 'react';
 import { useParams } from 'wouter';
-import { Lock, User as UserIcon } from 'lucide-react';
+import { Lock, User as UserIcon, TrendingUp } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { usePublicProfile } from '../../hooks';
@@ -251,6 +251,7 @@ export function PublicProfilePage() {
             {settings.showTopTracks && topTracks && topTracks.length > 0 && (
               <section className={styles.publicProfilePage__section}>
                 <div className={styles.publicProfilePage__sectionHeader}>
+                  <TrendingUp size={24} className={styles.publicProfilePage__sectionIcon} />
                   <h2 className={styles.publicProfilePage__sectionTitle}>
                     Canciones más escuchadas
                   </h2>
