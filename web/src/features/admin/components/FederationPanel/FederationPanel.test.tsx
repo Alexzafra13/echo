@@ -285,7 +285,9 @@ describe('FederationPanel', () => {
       render(<FederationPanel />);
       fireEvent.click(screen.getByText('Quién tiene acceso'));
 
-      expect(screen.getByText('Cargando...')).toBeInTheDocument();
+      // Use getAllByText since server name also shows "Cargando..." while loading
+      const loadingElements = screen.getAllByText('Cargando...');
+      expect(loadingElements.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should show empty state when no access tokens', () => {
