@@ -36,7 +36,7 @@ export function WaveMixPage() {
     maxRows: 2,
     headerHeight: 450,
   });
-  const neededItems = Math.max(gridItems, 10);
+  const neededItems = Math.max(gridItems, 12);
 
   const getPlaceholdersCount = (itemsCount: number): number => {
     if (columns <= 0) return 0;
