@@ -294,21 +294,40 @@ export default function AlbumsPage() {
           {/* Shared Library Content */}
           {librarySource === 'shared' && (
             <>
-              {/* Server Filter */}
-              {connectedServers.length > 1 && (
-                <Select
-                  label="Servidor:"
-                  value={selectedServerId || ''}
-                  onChange={(value) => setSelectedServerId(value || undefined)}
-                  options={[
-                    { value: '', label: 'Todos los servidores' },
-                    ...connectedServers.map((server) => ({
-                      value: server.id,
-                      label: server.name,
-                    })),
-                  ]}
-                  className={styles.albumsPage__filterWrapper}
-                />
+              {/* Server Filter - always show when there are connected servers */}
+              {connectedServers.length > 0 && (
+                <div className={styles.albumsPage__serverFilter}>
+                  <Select
+                    label="Ver biblioteca de:"
+                    value={selectedServerId || ''}
+                    onChange={(value) => setSelectedServerId(value || undefined)}
+                    options={[
+                      { value: '', label: `Todos los servidores (${connectedServers.length})` },
+                      ...connectedServers.map((server) => ({
+                        value: server.id,
+                        label: `${server.name} (${server.stats?.albumCount ?? '?'} álbumes)`,
+                      })),
+                    ]}
+                    className={styles.albumsPage__filterWrapper}
+                  />
+                  {selectedServerId && (
+                    <div className={styles.albumsPage__serverInfo}>
+                      {(() => {
+                        const server = connectedServers.find(s => s.id === selectedServerId);
+                        return server ? (
+                          <>
+                            <span className={styles.albumsPage__serverStats}>
+                              {server.stats?.albumCount ?? 0} álbumes • {server.stats?.trackCount ?? 0} canciones • {server.stats?.artistCount ?? 0} artistas
+                            </span>
+                            <span className={`${styles.albumsPage__serverStatus} ${server.isOnline ? styles['albumsPage__serverStatus--online'] : styles['albumsPage__serverStatus--offline']}`}>
+                              {server.isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Top Pagination - Mobile Only */}

@@ -528,6 +528,47 @@ export class AdminSettingsController {
     }
   }
 
+  @Get('federation/server-name')
+  @ApiOperation({
+    summary: 'Get federation server name',
+    description: 'Returns the server name for federation. Generates a random default name if not configured.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Server name retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Echo Server #1234' },
+        isDefault: { type: 'boolean', description: 'True if the name was just auto-generated' },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async getFederationServerName() {
+    try {
+      let serverName = await this.settingsService.getString('server.name', '');
+      let isDefault = false;
+
+      if (!serverName) {
+        // Generate random server name: "Echo Server #XXXX"
+        const randomId = Math.floor(1000 + Math.random() * 9000);
+        serverName = `Echo Server #${randomId}`;
+        await this.settingsService.set('server.name', serverName);
+        isDefault = true;
+        this.logger.info(`Generated default server name: ${serverName}`);
+      }
+
+      return {
+        name: serverName,
+        isDefault,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting federation server name: ${(error as Error).message}`, (error as Error).stack);
+      throw error;
+    }
+  }
+
   @Post('cache/clear')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

@@ -43,18 +43,15 @@ export function FederationPanel() {
   const [isLoadingName, setIsLoadingName] = useState(true);
   const [isSavingName, setIsSavingName] = useState(false);
 
-  // Load server name on mount
+  // Load server name on mount (auto-generates if not set)
   useEffect(() => {
     const loadServerName = async () => {
       try {
-        const response = await apiClient.get('/admin/settings');
-        const settings = response.data as { key: string; value: string }[];
-        const nameSetting = settings.find(s => s.key === 'server.name');
-        if (nameSetting) {
-          setServerName(nameSetting.value);
-        }
+        const response = await apiClient.get('/admin/settings/federation/server-name');
+        const data = response.data as { name: string; isDefault: boolean };
+        setServerName(data.name);
       } catch {
-        // Server name not set yet, will be generated on first connection
+        // Error loading server name
       } finally {
         setIsLoadingName(false);
       }

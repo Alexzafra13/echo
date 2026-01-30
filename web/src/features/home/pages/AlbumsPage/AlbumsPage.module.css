@@ -381,6 +381,65 @@
   margin-bottom: 16px;
 }
 
+/* ===== Server Filter Section ===== */
+.albumsPage__serverFilter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.albumsPage__serverInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--white-05);
+  border-radius: 8px;
+  border: 1px solid var(--white-10);
+}
+
+.albumsPage__serverStats {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+.albumsPage__serverStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+.albumsPage__serverStatus::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.albumsPage__serverStatus--online {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.albumsPage__serverStatus--online::before {
+  background: #22c55e;
+}
+
+.albumsPage__serverStatus--offline {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.albumsPage__serverStatus--offline::before {
+  background: #ef4444;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .albumsPage__filterWrapper {
@@ -403,8 +462,29 @@
   }
 }
 
+@media (max-width: 768px) {
+  .albumsPage__serverFilter {
+    gap: 8px;
+  }
+
+  .albumsPage__serverInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .albumsPage__serverStatus {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .albumsPage__filterWrapper {
     margin-bottom: 20px;
+  }
+
+  .albumsPage__serverStats {
+    font-size: 13px;
   }
 }
