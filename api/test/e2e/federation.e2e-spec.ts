@@ -274,7 +274,8 @@ describe('Federation E2E', () => {
 
         expect(response.body.accessToken).toBeDefined();
         expect(response.body.serverInfo).toBeDefined();
-        expect(response.body.serverInfo.name).toBe('Echo Music Server');
+        // Server name is now dynamic (random if not set)
+        expect(response.body.serverInfo.name).toMatch(/^Echo Server #\d{4}$/);
       });
 
       it('debería rechazar con token inválido', () => {
@@ -342,7 +343,8 @@ describe('Federation E2E', () => {
           .set('Authorization', `Bearer ${fedToken.token}`)
           .expect(200);
 
-        expect(response.body.name).toBe('Echo Music Server');
+        // Server name is now dynamic (random if not set)
+        expect(response.body.name).toMatch(/^Echo Server #\d{4}$/);
         expect(response.body.version).toBeDefined();
         expect(typeof response.body.albumCount).toBe('number');
         expect(typeof response.body.trackCount).toBe('number');
