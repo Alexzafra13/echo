@@ -1,0 +1,45 @@
+/**
+ * ToggleSwitch Styles
+ * Container styles for toggle switch with label/description
+ * Note: The actual switch control styles are in Switch/Switch.module.css
+ */
+
+.toggleItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--white-08);
+  gap: 16px;
+}
+
+.toggleItem:last-child {
+  border-bottom: none;
+}
+
+.toggleInfo {
+  flex: 1;
+}
+
+.toggleLabel {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.toggleDescription {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toggleItem {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

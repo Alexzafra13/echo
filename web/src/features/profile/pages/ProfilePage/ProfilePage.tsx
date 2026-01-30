@@ -3,6 +3,7 @@ import { User, Lock, Calendar, Check, X, Eye, ExternalLink } from 'lucide-react'
 import { Link } from 'wouter';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
+import { ToggleSwitch } from '@shared/components/ui';
 import { useAuth, useModal } from '@shared/hooks';
 import { useAuthStore } from '@shared/store';
 import { useChangePassword, useUpdateProfile } from '../../hooks';
@@ -315,98 +316,43 @@ export function ProfilePage() {
               ) : (
                 <>
                   {/* Public Profile Toggle */}
-                  <div className={styles.profilePage__toggleItem}>
-                    <div className={styles.profilePage__toggleInfo}>
-                      <span className={styles.profilePage__toggleLabel}>Perfil público</span>
-                      <p className={styles.profilePage__toggleDescription}>
-                        Permite que otros usuarios vean tu perfil y estadísticas de escucha
-                      </p>
-                    </div>
-                    <label className={styles.profilePage__toggle}>
-                      <input
-                        type="checkbox"
-                        className={styles.profilePage__toggleInput}
-                        checked={isPublicProfile}
-                        onChange={(e) => setIsPublicProfile(e.target.checked)}
-                      />
-                      <span className={styles.profilePage__toggleSlider}></span>
-                    </label>
-                  </div>
+                  <ToggleSwitch
+                    label="Perfil público"
+                    description="Permite que otros usuarios vean tu perfil y estadísticas de escucha"
+                    checked={isPublicProfile}
+                    onChange={setIsPublicProfile}
+                  />
 
                   {/* Conditional settings when profile is public */}
                   {isPublicProfile && (
                     <>
-                      <div className={styles.profilePage__toggleItem}>
-                        <div className={styles.profilePage__toggleInfo}>
-                          <span className={styles.profilePage__toggleLabel}>Mostrar top canciones</span>
-                          <p className={styles.profilePage__toggleDescription}>
-                            Muestra tus canciones más escuchadas en tu perfil
-                          </p>
-                        </div>
-                        <label className={styles.profilePage__toggle}>
-                          <input
-                            type="checkbox"
-                            className={styles.profilePage__toggleInput}
-                            checked={showTopTracks}
-                            onChange={(e) => setShowTopTracks(e.target.checked)}
-                          />
-                          <span className={styles.profilePage__toggleSlider}></span>
-                        </label>
-                      </div>
+                      <ToggleSwitch
+                        label="Mostrar top canciones"
+                        description="Muestra tus canciones más escuchadas en tu perfil"
+                        checked={showTopTracks}
+                        onChange={setShowTopTracks}
+                      />
 
-                      <div className={styles.profilePage__toggleItem}>
-                        <div className={styles.profilePage__toggleInfo}>
-                          <span className={styles.profilePage__toggleLabel}>Mostrar top artistas</span>
-                          <p className={styles.profilePage__toggleDescription}>
-                            Muestra tus artistas más escuchados en tu perfil
-                          </p>
-                        </div>
-                        <label className={styles.profilePage__toggle}>
-                          <input
-                            type="checkbox"
-                            className={styles.profilePage__toggleInput}
-                            checked={showTopArtists}
-                            onChange={(e) => setShowTopArtists(e.target.checked)}
-                          />
-                          <span className={styles.profilePage__toggleSlider}></span>
-                        </label>
-                      </div>
+                      <ToggleSwitch
+                        label="Mostrar top artistas"
+                        description="Muestra tus artistas más escuchados en tu perfil"
+                        checked={showTopArtists}
+                        onChange={setShowTopArtists}
+                      />
 
-                      <div className={styles.profilePage__toggleItem}>
-                        <div className={styles.profilePage__toggleInfo}>
-                          <span className={styles.profilePage__toggleLabel}>Mostrar top álbumes</span>
-                          <p className={styles.profilePage__toggleDescription}>
-                            Muestra tus álbumes más escuchados en tu perfil
-                          </p>
-                        </div>
-                        <label className={styles.profilePage__toggle}>
-                          <input
-                            type="checkbox"
-                            className={styles.profilePage__toggleInput}
-                            checked={showTopAlbums}
-                            onChange={(e) => setShowTopAlbums(e.target.checked)}
-                          />
-                          <span className={styles.profilePage__toggleSlider}></span>
-                        </label>
-                      </div>
+                      <ToggleSwitch
+                        label="Mostrar top álbumes"
+                        description="Muestra tus álbumes más escuchados en tu perfil"
+                        checked={showTopAlbums}
+                        onChange={setShowTopAlbums}
+                      />
 
-                      <div className={styles.profilePage__toggleItem}>
-                        <div className={styles.profilePage__toggleInfo}>
-                          <span className={styles.profilePage__toggleLabel}>Mostrar playlists públicas</span>
-                          <p className={styles.profilePage__toggleDescription}>
-                            Muestra tus playlists marcadas como públicas en tu perfil
-                          </p>
-                        </div>
-                        <label className={styles.profilePage__toggle}>
-                          <input
-                            type="checkbox"
-                            className={styles.profilePage__toggleInput}
-                            checked={showPlaylists}
-                            onChange={(e) => setShowPlaylists(e.target.checked)}
-                          />
-                          <span className={styles.profilePage__toggleSlider}></span>
-                        </label>
-                      </div>
+                      <ToggleSwitch
+                        label="Mostrar playlists públicas"
+                        description="Muestra tus playlists marcadas como públicas en tu perfil"
+                        checked={showPlaylists}
+                        onChange={setShowPlaylists}
+                      />
 
                       {/* Bio */}
                       <div className={styles.profilePage__toggleItem} style={{ flexDirection: 'column', alignItems: 'stretch' }}>

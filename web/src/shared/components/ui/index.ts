@@ -27,3 +27,9 @@ export type { SelectProps, SelectOption } from './Select';
 
 export { ConfirmDialog } from './ConfirmDialog';
 export type { ConfirmDialogProps } from './ConfirmDialog';
+
+export { ToggleSwitch } from './ToggleSwitch';
+export type { ToggleSwitchProps } from './ToggleSwitch';
+
+export { Switch } from './Switch';
+export type { SwitchProps } from './Switch';
