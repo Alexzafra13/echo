@@ -276,7 +276,8 @@ describe('PublicProfilePage', () => {
 
       const avatar = screen.getByAltText('Test User');
       expect(avatar).toBeInTheDocument();
-      expect(avatar).toHaveAttribute('src', '/avatar.jpg');
+      // Avatar URL includes cache buster param
+      expect(avatar.getAttribute('src')).toMatch(/^\/avatar\.jpg\?_t=\d+$/);
     });
 
     it('should render avatar placeholder when no avatar', () => {
