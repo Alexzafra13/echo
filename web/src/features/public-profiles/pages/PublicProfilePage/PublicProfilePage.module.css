@@ -7,7 +7,8 @@
 .publicProfilePage {
   display: flex;
   min-height: 100vh;
-  background-color: var(--bg-base);
+  background: var(--bg-base);
+  background-image: var(--gradient-textured);
 }
 
 .publicProfilePage__main {
@@ -514,7 +515,7 @@
   margin: 0;
 }
 
-/* Tracks List */
+/* Tracks List - Styled like Artist Page */
 .publicProfilePage__trackList {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -524,12 +525,12 @@
 .publicProfilePage__trackItem {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-2);
-  margin: 0 calc(var(--space-2) * -1);
-  border-radius: var(--radius-sm);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--white-02);
+  border-radius: var(--radius-base);
   text-decoration: none;
-  transition: background var(--transition-base);
+  transition: all var(--transition-base);
 }
 
 .publicProfilePage__trackItem:hover {
@@ -537,10 +538,11 @@
 }
 
 .publicProfilePage__trackNumber {
-  width: 20px;
-  font-size: 15px;
+  width: 24px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   color: var(--text-tertiary);
-  text-align: right;
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -549,18 +551,18 @@
 }
 
 .publicProfilePage__trackCover {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
 }
 
 .publicProfilePage__trackCoverPlaceholder {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-sm);
-  background: var(--white-10);
+  background: var(--white-05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -571,13 +573,16 @@
 .publicProfilePage__trackInfo {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .publicProfilePage__trackTitle {
-  font-size: 15px;
-  font-weight: var(--font-normal);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   color: var(--text-primary);
-  margin: 0 0 2px 0;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -593,7 +598,7 @@
 }
 
 .publicProfilePage__trackMeta {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-tertiary);
   margin: 0;
   white-space: nowrap;
@@ -602,8 +607,9 @@
 }
 
 .publicProfilePage__trackPlays {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
@@ -711,6 +717,37 @@
 
   .publicProfilePage__trackList {
     grid-template-columns: 1fr;
+  }
+
+  .publicProfilePage__trackItem {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .publicProfilePage__trackCover,
+  .publicProfilePage__trackCoverPlaceholder {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .publicProfilePage__trackInfo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .publicProfilePage__trackTitle {
+    font-size: 13px;
+  }
+
+  .publicProfilePage__trackMeta {
+    font-size: 11px;
+  }
+
+  .publicProfilePage__trackNumber {
+    width: 20px;
+    flex-shrink: 0;
   }
 
   .publicProfilePage__hero {
