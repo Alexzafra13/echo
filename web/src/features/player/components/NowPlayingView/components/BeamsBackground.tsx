@@ -31,12 +31,13 @@ export function BeamsBackground({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beamsRef = useRef<Beam[]>([]);
   const animationFrameRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
   const MINIMUM_BEAMS = 20;
 
   const opacityMap = {
-    subtle: 0.7,
-    medium: 0.85,
-    strong: 1,
+    subtle: 0.5,
+    medium: 0.65,
+    strong: 0.8,
   };
 
   // Parse RGB and convert to HSL for hue extraction
@@ -76,11 +77,11 @@ export function BeamsBackground({
         width: 30 + Math.random() * 60,
         length: height * 2.5,
         angle,
-        speed: 0.6 + Math.random() * 1.2,
-        opacity: 0.12 + Math.random() * 0.16,
+        speed: 0.08 + Math.random() * 0.12, // Much slower speed
+        opacity: 0.08 + Math.random() * 0.12,
         hue: baseHue + (Math.random() - 0.5) * 70, // Variation around dominant color
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.02 + Math.random() * 0.03,
+        pulseSpeed: 0.003 + Math.random() * 0.005, // Slower pulse
       };
     };
 
@@ -91,24 +92,24 @@ export function BeamsBackground({
       beam.y = canvas.height + 100;
       beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
       beam.width = 100 + Math.random() * 100;
-      beam.speed = 0.5 + Math.random() * 0.4;
+      beam.speed = 0.06 + Math.random() * 0.08; // Much slower speed
       beam.hue = baseHue + ((index * 70) / totalBeams - 35);
-      beam.opacity = 0.2 + Math.random() * 0.1;
+      beam.opacity = 0.1 + Math.random() * 0.08;
       return beam;
     };
 
-    const drawBeam = (ctx: CanvasRenderingContext2D, beam: Beam) => {
+    const drawBeam = (ctx: CanvasRenderingContext2D, beam: Beam, intensityMultiplier: number) => {
       ctx.save();
       ctx.translate(beam.x, beam.y);
       ctx.rotate((beam.angle * Math.PI) / 180);
 
-      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * opacityMap[intensity];
+      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * intensityMultiplier;
 
       const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
 
       // Use high saturation and lightness for visibility
-      const saturation = '85%';
-      const lightness = '65%';
+      const saturation = '80%';
+      const lightness = '60%';
 
       gradient.addColorStop(0, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
       gradient.addColorStop(0.1, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
@@ -143,29 +144,38 @@ export function BeamsBackground({
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
-    const animate = () => {
+    const intensityMultiplier = opacityMap[intensity];
+
+    const animate = (currentTime: number) => {
       if (!canvas || !ctx) return;
+
+      // Calculate delta time for smooth animation
+      const deltaTime = lastTimeRef.current ? (currentTime - lastTimeRef.current) / 16.67 : 1; // Normalize to ~60fps
+      lastTimeRef.current = currentTime;
+
+      // Cap delta time to prevent jumps when tab is inactive
+      const cappedDelta = Math.min(deltaTime, 2);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = 'blur(35px)'; // Blur applied to context like original
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
-        beam.y -= beam.speed;
-        beam.pulse += beam.pulseSpeed;
+        beam.y -= beam.speed * cappedDelta;
+        beam.pulse += beam.pulseSpeed * cappedDelta;
 
         // Reset beam when it goes off screen
         if (beam.y + beam.length < -100) {
           resetBeam(beam, index, totalBeams);
         }
 
-        drawBeam(ctx, beam);
+        drawBeam(ctx, beam, intensityMultiplier);
       });
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
@@ -173,7 +183,7 @@ export function BeamsBackground({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [dominantColor, intensity, getHueFromColor, opacityMap]);
+  }, [dominantColor, intensity, getHueFromColor]);
 
   return (
     <canvas
@@ -182,7 +192,7 @@ export function BeamsBackground({
         position: 'absolute',
         inset: 0,
         filter: 'blur(15px)', // Additional CSS blur like original
-        zIndex: 1,
+        zIndex: 0, // Behind content (rendered before content in DOM)
         pointerEvents: 'none',
       }}
     />
