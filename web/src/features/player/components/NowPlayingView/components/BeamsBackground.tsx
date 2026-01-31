@@ -90,19 +90,19 @@ function BeamsBackgroundComponent({
       };
     };
 
-    // Mobile: static blobs that only pulse in opacity - positioned in top 45% where gradient color is
+    // Mobile: static blobs that only pulse in opacity - positioned in top 50% where gradient color is
     const createMobileBlob = (width: number, height: number): Beam => {
       return {
         x: width * 0.1 + Math.random() * width * 0.8, // 10%-90% of width
-        y: height * 0.05 + Math.random() * height * 0.4, // 5%-45% of height (gradient area only)
-        width: 100 + Math.random() * 150,
-        length: 100 + Math.random() * 150,
+        y: height * 0.08 + Math.random() * height * 0.42, // 8%-50% of height (gradient area only)
+        width: 140 + Math.random() * 180, // Larger blobs for more visibility
+        length: 140 + Math.random() * 180,
         angle: Math.random() * 360,
         speed: 0,
-        opacity: 0.12 + Math.random() * 0.1,
-        hue: baseHue + (Math.random() - 0.5) * 40,
+        opacity: 0.18 + Math.random() * 0.14, // More visible opacity
+        hue: baseHue + (Math.random() - 0.5) * 50,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.006 + Math.random() * 0.01,
+        pulseSpeed: 0.008 + Math.random() * 0.012, // Slightly faster pulse
       };
     };
 
@@ -147,18 +147,18 @@ function BeamsBackgroundComponent({
       ctx.save();
 
       // Pulsing opacity - fades in and out smoothly
-      const pulsingOpacity = beam.opacity * (0.3 + Math.sin(beam.pulse) * 0.7) * intensityMultiplier;
+      const pulsingOpacity = beam.opacity * (0.4 + Math.sin(beam.pulse) * 0.6) * intensityMultiplier;
 
       const gradient = ctx.createRadialGradient(
         beam.x, beam.y, 0,
         beam.x, beam.y, beam.width
       );
 
-      const saturation = '70%';
-      const lightness = '55%';
+      const saturation = '75%';
+      const lightness = '58%';
 
       gradient.addColorStop(0, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`);
-      gradient.addColorStop(0.5, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
+      gradient.addColorStop(0.4, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.6})`);
       gradient.addColorStop(1, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
 
       ctx.fillStyle = gradient;
@@ -197,7 +197,7 @@ function BeamsBackgroundComponent({
       const mobile = isMobile();
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = mobile ? 'blur(40px)' : 'blur(35px)'; // Slightly less blur on mobile for visibility
+      ctx.filter = mobile ? 'blur(30px)' : 'blur(35px)'; // Less blur on mobile for better visibility
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {

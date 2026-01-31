@@ -104,45 +104,37 @@
   width: 44px; /* Same as close button for centering */
 }
 
-/* Queue button in header (desktop) */
+/* Queue button in header - works on both mobile and desktop */
 .nowPlaying__headerQueueBtn {
-  background: transparent;
+  background: var(--white-10);
   border: none;
-  color: var(--text-secondary);
-  padding: 10px;
+  color: var(--text-primary);
+  padding: 8px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   border-radius: var(--radius-full);
   transition: all 0.2s ease;
   position: relative;
 }
 
-.nowPlaying__headerQueueBtn:hover {
-  color: var(--text-primary);
-  background: var(--white-10);
+.nowPlaying__headerQueueBtn:active {
+  transform: scale(0.95);
+  background: var(--white-15);
 }
 
 .nowPlaying__headerQueueBtn--active {
   color: var(--color-primary-500);
+  background: var(--white-15);
 }
 
 .nowPlaying__headerQueueBadge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  background: var(--white-80);
-  color: var(--bg-base);
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  line-height: 1;
 }
 
 /* Cover */
@@ -326,45 +318,9 @@
   box-shadow: 0 8px 24px var(--black-40);
 }
 
-/* Bottom Actions - positioned above the bottom navigation */
+/* Bottom Actions - no longer used on mobile, kept for potential future use */
 .nowPlaying__actions {
-  position: absolute;
-  bottom: calc(90px + env(safe-area-inset-bottom, 0));
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  z-index: 2;
-}
-
-.nowPlaying__actionBtn {
-  background: var(--white-10);
-  border: none;
-  color: var(--text-secondary);
-  padding: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-}
-
-.nowPlaying__actionBtn:hover {
-  color: var(--text-primary);
-  background: var(--white-10);
-}
-
-.nowPlaying__actionBtn--active {
-  color: var(--color-primary-500);
-}
-
-.nowPlaying__actionCount {
-  font-size: 15px;
-  font-weight: 500;
-  color: inherit;
-  line-height: 1;
+  display: none;
 }
 
 /* Volume Control - Desktop */

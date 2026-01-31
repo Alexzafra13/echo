@@ -11,7 +11,6 @@ import {
   ProgressBar,
   PlaybackControls,
   VolumeControl,
-  MobileActions,
   QueuePanel,
   BeamsBackground,
 } from './components';
@@ -266,8 +265,15 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       {/* Animated color effect - beams on desktop, subtle pulses on mobile */}
       {isOpen && <BeamsBackground dominantColor={dominantColor} intensity="medium" />}
 
-      {/* Header */}
-      <NowPlayingHeader albumName={albumName} onClose={onClose} />
+      {/* Header - on mobile shows queue button */}
+      <NowPlayingHeader
+        albumName={albumName}
+        onClose={onClose}
+        showQueueButton={!isDesktop && !isRadioMode}
+        queueLength={queue.length}
+        isQueueOpen={isQueueOpen && !isQueueClosing}
+        onToggleQueue={handleToggleQueue}
+      />
 
       {/* Cover */}
       <NowPlayingCover
@@ -319,14 +325,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         />
       )}
 
-      {/* Mobile Actions */}
-      {!isRadioMode && !isDesktop && (
-        <MobileActions
-          queueLength={queue.length}
-          isQueueOpen={isQueueOpen && !isQueueClosing}
-          onToggleQueue={handleToggleQueue}
-        />
-      )}
+      {/* Mobile Actions - now handled in header */}
 
       {/* Queue Panel */}
       {(isQueueOpen || isQueueClosing) && (
