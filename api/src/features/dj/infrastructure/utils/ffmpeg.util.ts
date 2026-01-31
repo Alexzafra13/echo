@@ -21,10 +21,10 @@ export function getFfmpegPath(): string {
   try {
     // Try to use ffmpeg-static first (development)
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const ffmpegStatic = require('ffmpeg-static');
+    const ffmpegStatic = require('ffmpeg-static') as string | undefined;
     if (ffmpegStatic && existsSync(ffmpegStatic)) {
       ffmpegPath = ffmpegStatic;
-      return ffmpegPath;
+      return ffmpegStatic;
     }
   } catch {
     // ffmpeg-static not available
@@ -32,7 +32,7 @@ export function getFfmpegPath(): string {
 
   // Fall back to system ffmpeg (production/Docker)
   ffmpegPath = 'ffmpeg';
-  return ffmpegPath;
+  return 'ffmpeg';
 }
 
 /**
@@ -45,10 +45,10 @@ export function getFfprobePath(): string {
   try {
     // Try @ffprobe-installer/ffprobe first (development)
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+    const ffprobeInstaller = require('@ffprobe-installer/ffprobe') as { path?: string } | undefined;
     if (ffprobeInstaller?.path && existsSync(ffprobeInstaller.path)) {
       ffprobePath = ffprobeInstaller.path;
-      return ffprobePath;
+      return ffprobeInstaller.path;
     }
   } catch {
     // @ffprobe-installer/ffprobe not available
@@ -56,7 +56,7 @@ export function getFfprobePath(): string {
 
   // Fall back to system ffprobe
   ffprobePath = 'ffprobe';
-  return ffprobePath;
+  return 'ffprobe';
 }
 
 /**
