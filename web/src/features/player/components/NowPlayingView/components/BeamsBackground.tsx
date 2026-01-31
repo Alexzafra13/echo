@@ -23,9 +23,9 @@ interface BeamsBackgroundProps {
 // Constants outside component to prevent recreation
 const MINIMUM_BEAMS = 20;
 const OPACITY_MAP = {
-  subtle: 0.5,
-  medium: 0.65,
-  strong: 0.8,
+  subtle: 0.6,
+  medium: 0.8,
+  strong: 1.0,
 } as const;
 
 // Fixed time step for consistent animation regardless of frame rate
@@ -81,11 +81,11 @@ function BeamsBackgroundComponent({
         width: 30 + Math.random() * 60,
         length: height * 2.5,
         angle,
-        speed: 0.08 + Math.random() * 0.12, // Slow speed
-        opacity: 0.08 + Math.random() * 0.12,
+        speed: 0.3 + Math.random() * 0.5, // Moderate speed
+        opacity: 0.15 + Math.random() * 0.15, // More visible
         hue: baseHue + (Math.random() - 0.5) * 70,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.003 + Math.random() * 0.005,
+        pulseSpeed: 0.01 + Math.random() * 0.015, // Faster pulse
       };
     };
 
@@ -96,9 +96,9 @@ function BeamsBackgroundComponent({
       beam.y = canvas.height + 100;
       beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
       beam.width = 100 + Math.random() * 100;
-      beam.speed = 0.06 + Math.random() * 0.08;
+      beam.speed = 0.25 + Math.random() * 0.4; // Moderate speed
       beam.hue = baseHue + ((index * 70) / totalBeams - 35);
-      beam.opacity = 0.1 + Math.random() * 0.08;
+      beam.opacity = 0.15 + Math.random() * 0.12; // More visible
       return beam;
     };
 
