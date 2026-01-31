@@ -78,19 +78,33 @@ function BeamsBackgroundComponent({
 
     const createBeam = (width: number, height: number): Beam => {
       const mobile = isMobile();
-      // More vertical angle on mobile for better coverage
-      const angle = mobile
-        ? -15 + Math.random() * 30  // -15 to +15 degrees (more vertical)
-        : -35 + Math.random() * 10; // -35 to -25 degrees (diagonal)
 
+      if (mobile) {
+        // Mobile: horizontal moving color blobs in the gradient area
+        return {
+          x: Math.random() * width * 1.2 - width * 0.1,
+          y: Math.random() * height * 0.8, // Stay in top 80% of canvas
+          width: 80 + Math.random() * 120, // Wider blobs
+          length: 150 + Math.random() * 200, // Shorter, more blob-like
+          angle: 60 + Math.random() * 60, // Mostly horizontal (60-120 degrees)
+          speed: 0.15 + Math.random() * 0.25, // Slower horizontal movement
+          opacity: 0.12 + Math.random() * 0.1,
+          hue: baseHue + (Math.random() - 0.5) * 50,
+          pulse: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.008 + Math.random() * 0.012,
+        };
+      }
+
+      // Desktop: diagonal beams moving up
+      const angle = -35 + Math.random() * 10;
       return {
         x: Math.random() * width * 1.5 - width * 0.25,
         y: Math.random() * height * 1.5 - height * 0.25,
-        width: mobile ? 40 + Math.random() * 80 : 30 + Math.random() * 60,
-        length: height * (mobile ? 3 : 2.5), // Longer beams on mobile
+        width: 30 + Math.random() * 60,
+        length: height * 2.5,
         angle,
         speed: 0.3 + Math.random() * 0.5,
-        opacity: mobile ? 0.18 + Math.random() * 0.15 : 0.15 + Math.random() * 0.15,
+        opacity: 0.15 + Math.random() * 0.15,
         hue: baseHue + (Math.random() - 0.5) * 70,
         pulse: Math.random() * Math.PI * 2,
         pulseSpeed: 0.01 + Math.random() * 0.015,
@@ -99,17 +113,28 @@ function BeamsBackgroundComponent({
 
     const resetBeam = (beam: Beam, index: number, totalBeams: number): Beam => {
       const mobile = isMobile();
-      const columns = mobile ? 2 : 3; // Fewer columns on mobile for wider spread
+
+      if (mobile) {
+        // Mobile: reset to left side, random vertical position in gradient area
+        beam.x = -beam.width;
+        beam.y = Math.random() * canvas.height * 0.8;
+        beam.speed = 0.15 + Math.random() * 0.25;
+        beam.hue = baseHue + (Math.random() - 0.5) * 50;
+        beam.opacity = 0.12 + Math.random() * 0.1;
+        return beam;
+      }
+
+      // Desktop: reset to bottom
+      const columns = 3;
       const column = index % columns;
       const spacing = canvas.width / columns;
 
       beam.y = canvas.height + 100;
       beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.6;
-      beam.width = mobile ? 80 + Math.random() * 120 : 100 + Math.random() * 100;
+      beam.width = 100 + Math.random() * 100;
       beam.speed = 0.25 + Math.random() * 0.4;
       beam.hue = baseHue + ((index * 70) / totalBeams - 35);
-      beam.opacity = mobile ? 0.18 + Math.random() * 0.12 : 0.15 + Math.random() * 0.12;
-      beam.angle = mobile ? -15 + Math.random() * 30 : beam.angle; // Update angle on reset for mobile
+      beam.opacity = 0.15 + Math.random() * 0.12;
       return beam;
     };
 
@@ -148,9 +173,9 @@ function BeamsBackgroundComponent({
       canvas.style.height = `${height}px`;
       ctx.scale(dpr, dpr);
 
-      // More beams on mobile to fill vertical space better
+      // Fewer blobs on mobile (they're bigger), more beams on desktop
       const mobile = isMobile();
-      const totalBeams = Math.floor(MINIMUM_BEAMS * (mobile ? 1.8 : 1.5));
+      const totalBeams = Math.floor(MINIMUM_BEAMS * (mobile ? 0.8 : 1.5));
       beamsRef.current = Array.from({ length: totalBeams }, () =>
         createBeam(canvas.width, canvas.height)
       );
@@ -163,18 +188,27 @@ function BeamsBackgroundComponent({
     const animate = () => {
       if (!canvas || !ctx) return;
 
+      const mobile = isMobile();
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Less blur on mobile for better visibility
-      ctx.filter = isMobile() ? 'blur(25px)' : 'blur(35px)';
+      ctx.filter = mobile ? 'blur(40px)' : 'blur(35px)'; // More blur on mobile for softer blobs
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
-        // Fixed time step for consistent movement regardless of frame rate
-        beam.y -= beam.speed * FIXED_TIME_STEP;
         beam.pulse += beam.pulseSpeed * FIXED_TIME_STEP;
 
-        if (beam.y + beam.length < -100) {
-          resetBeam(beam, index, totalBeams);
+        if (mobile) {
+          // Mobile: move horizontally
+          beam.x += beam.speed * FIXED_TIME_STEP;
+          if (beam.x > canvas.width + 50) {
+            resetBeam(beam, index, totalBeams);
+          }
+        } else {
+          // Desktop: move vertically (up)
+          beam.y -= beam.speed * FIXED_TIME_STEP;
+          if (beam.y + beam.length < -100) {
+            resetBeam(beam, index, totalBeams);
+          }
         }
 
         drawBeam(beam);
