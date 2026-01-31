@@ -130,17 +130,36 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
         return { bpmResult, keyResult, energyResult, danceabilityResult, beatsResult };
       });
 
-      // Convert key to Camelot
-      const camelotKey = DjAnalysis.keyToCamelot(
-        `${result.keyResult.key}${result.keyResult.scale === 'minor' ? 'm' : ''}`,
-      );
+      // Validate and sanitize results
+      const bpm = result.bpmResult?.bpm;
+      const validBpm = typeof bpm === 'number' && !isNaN(bpm) && isFinite(bpm) ? Math.round(bpm * 10) / 10 : 0;
+
+      const energy = result.energyResult?.energy;
+      const validEnergy = typeof energy === 'number' && !isNaN(energy) && isFinite(energy)
+        ? Math.min(1, Math.max(0, energy))
+        : 0;
+
+      const danceability = result.danceabilityResult?.danceability;
+      const validDanceability = typeof danceability === 'number' && !isNaN(danceability) && isFinite(danceability)
+        ? danceability
+        : undefined;
+
+      // Filter beatgrid to only valid numbers, limit to 500 beats max
+      const rawBeats = result.beatsResult?.ticks || [];
+      const validBeats = Array.isArray(rawBeats)
+        ? rawBeats.filter((v: unknown) => typeof v === 'number' && !isNaN(v as number) && isFinite(v as number)).slice(0, 500)
+        : [];
+
+      const key = result.keyResult?.key || 'Unknown';
+      const scale = result.keyResult?.scale;
+      const keyString = key !== 'Unknown' ? `${key}${scale === 'minor' ? 'm' : ''}` : 'Unknown';
 
       return {
-        bpm: Math.round(result.bpmResult.bpm * 10) / 10,
-        key: `${result.keyResult.key}${result.keyResult.scale === 'minor' ? 'm' : ''}`,
-        energy: Math.min(1, Math.max(0, result.energyResult.energy)),
-        danceability: result.danceabilityResult?.danceability,
-        beatgrid: result.beatsResult?.ticks || [],
+        bpm: validBpm,
+        key: keyString,
+        energy: validEnergy,
+        danceability: validDanceability,
+        beatgrid: validBeats.length > 0 ? validBeats : undefined,
       };
     } finally {
       // Cleanup temp file
