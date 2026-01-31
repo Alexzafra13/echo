@@ -1,0 +1,37 @@
+/**
+ * Audio Analyzer Port - Interface for audio analysis services
+ *
+ * Implementations can use different backends:
+ * - Essentia.js (JavaScript/WASM)
+ * - FFmpeg (for basic analysis)
+ * - External APIs
+ */
+
+export interface AudioAnalysisResult {
+  bpm: number;
+  key: string; // Musical key (e.g., "Am", "C#m")
+  energy: number; // 0.0 - 1.0
+  danceability?: number; // 0.0 - 1.0
+  beatgrid?: number[]; // Array of beat positions in seconds
+  introEnd?: number; // Seconds where intro ends
+  outroStart?: number; // Seconds where outro begins
+}
+
+export interface IAudioAnalyzer {
+  /**
+   * Analyze audio file for DJ characteristics
+   */
+  analyze(filePath: string): Promise<AudioAnalysisResult>;
+
+  /**
+   * Check if the analyzer is available
+   */
+  isAvailable(): Promise<boolean>;
+
+  /**
+   * Get analyzer name/version
+   */
+  getName(): string;
+}
+
+export const AUDIO_ANALYZER = 'IAudioAnalyzer';

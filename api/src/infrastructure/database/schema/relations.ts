@@ -13,6 +13,7 @@ import { players, transcodings } from './player';
 import { radioStations } from './radio';
 import { shares, bookmarks } from './shares';
 import { friendships } from './social';
+import { djAnalysis, djStems, djSessions } from './dj';
 
 // ============================================
 // User Relations
@@ -308,5 +309,29 @@ export const friendshipsRelations = relations(friendships, ({ one }) => ({
     fields: [friendships.addresseeId],
     references: [users.id],
     relationName: 'addressee',
+  }),
+}));
+
+// ============================================
+// DJ Relations
+// ============================================
+export const djAnalysisRelations = relations(djAnalysis, ({ one }) => ({
+  track: one(tracks, {
+    fields: [djAnalysis.trackId],
+    references: [tracks.id],
+  }),
+}));
+
+export const djStemsRelations = relations(djStems, ({ one }) => ({
+  track: one(tracks, {
+    fields: [djStems.trackId],
+    references: [tracks.id],
+  }),
+}));
+
+export const djSessionsRelations = relations(djSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [djSessions.userId],
+    references: [users.id],
   }),
 }));
