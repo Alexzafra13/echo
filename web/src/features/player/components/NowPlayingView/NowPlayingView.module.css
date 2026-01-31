@@ -326,10 +326,10 @@
   box-shadow: 0 8px 24px var(--black-40);
 }
 
-/* Bottom Actions - positioned at right */
+/* Bottom Actions - positioned above the bottom navigation */
 .nowPlaying__actions {
   position: absolute;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  bottom: calc(90px + env(safe-area-inset-bottom, 0));
   right: 20px;
   display: flex;
   align-items: center;
