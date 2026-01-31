@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsUUID, IsOptional, IsNumber, IsEnum, IsArray, Min, Max } from 'class-validator';
+import { IsUUID, IsOptional, IsNumber, IsEnum, IsArray, Min, Max, IsString } from 'class-validator';
 
 // ============================================
 // Analysis DTOs
@@ -8,13 +8,13 @@ import { IsUUID, IsOptional, IsNumber, IsEnum, IsArray, Min, Max } from 'class-v
 export class AnalyzeTrackRequestDto {
   @ApiProperty({ description: 'Track ID to analyze' })
   @IsUUID()
-  trackId: string;
+  trackId!: string;
 }
 
 export class AnalyzePlaylistRequestDto {
   @ApiProperty({ description: 'Playlist ID to analyze all tracks' })
   @IsUUID()
-  playlistId: string;
+  playlistId!: string;
 
   @ApiPropertyOptional({ description: 'Also process stems for mashups' })
   @IsOptional()
@@ -23,10 +23,10 @@ export class AnalyzePlaylistRequestDto {
 
 export class DjAnalysisResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  trackId: string;
+  trackId!: string;
 
   @ApiPropertyOptional()
   bpm?: number;
@@ -44,7 +44,7 @@ export class DjAnalysisResponseDto {
   danceability?: number;
 
   @ApiProperty()
-  status: string;
+  status!: string;
 
   @ApiPropertyOptional()
   analyzedAt?: Date;
@@ -57,18 +57,18 @@ export class DjAnalysisResponseDto {
 export class ProcessStemsRequestDto {
   @ApiProperty({ description: 'Track ID to process stems' })
   @IsUUID()
-  trackId: string;
+  trackId!: string;
 }
 
 export class StemsStatusResponseDto {
   @ApiProperty()
-  trackId: string;
+  trackId!: string;
 
   @ApiProperty()
-  status: string;
+  status!: string;
 
   @ApiProperty()
-  hasStems: boolean;
+  hasStems!: boolean;
 
   @ApiPropertyOptional()
   modelUsed?: string;
@@ -87,7 +87,7 @@ export class StemsStatusResponseDto {
 export class GetCompatibleTracksRequestDto {
   @ApiProperty({ description: 'Source track ID' })
   @IsUUID()
-  trackId: string;
+  trackId!: string;
 
   @ApiPropertyOptional({ description: 'BPM tolerance percentage (default: 6)' })
   @IsOptional()
@@ -106,13 +106,13 @@ export class GetCompatibleTracksRequestDto {
 
 export class TrackCompatibilityDto {
   @ApiProperty()
-  trackId: string;
+  trackId!: string;
 
   @ApiProperty()
-  title: string;
+  title!: string;
 
   @ApiProperty()
-  artist: string;
+  artist!: string;
 
   @ApiPropertyOptional()
   bpm?: number;
@@ -124,19 +124,19 @@ export class TrackCompatibilityDto {
   camelotKey?: string;
 
   @ApiProperty({ description: 'Harmonic compatibility score 0-100' })
-  harmonicScore: number;
+  harmonicScore!: number;
 
   @ApiProperty({ description: 'BPM difference percentage' })
-  bpmDifference: number;
+  bpmDifference!: number;
 
   @ApiProperty({ description: 'Overall compatibility score 0-100' })
-  overallScore: number;
+  overallScore!: number;
 
   @ApiProperty({ description: 'Recommended transition type' })
-  recommendedTransition: string;
+  recommendedTransition!: string;
 
   @ApiProperty({ description: 'Whether mashup is possible (both have stems)' })
-  canMashup: boolean;
+  canMashup!: boolean;
 }
 
 // ============================================
@@ -153,11 +153,11 @@ export enum TransitionTypeEnum {
 export class CalculateTransitionRequestDto {
   @ApiProperty({ description: 'First track ID' })
   @IsUUID()
-  trackAId: string;
+  trackAId!: string;
 
   @ApiProperty({ description: 'Second track ID' })
   @IsUUID()
-  trackBId: string;
+  trackBId!: string;
 
   @ApiPropertyOptional({ description: 'Transition type', enum: TransitionTypeEnum })
   @IsOptional()
@@ -172,22 +172,22 @@ export class CalculateTransitionRequestDto {
 
 export class TransitionResponseDto {
   @ApiProperty()
-  type: string;
+  type!: string;
 
   @ApiProperty({ description: 'Seconds into track A to start transition' })
-  startTimeA: number;
+  startTimeA!: number;
 
   @ApiProperty({ description: 'Seconds into track B to start' })
-  startTimeB: number;
+  startTimeB!: number;
 
   @ApiProperty({ description: 'Transition duration in seconds' })
-  duration: number;
+  duration!: number;
 
   @ApiPropertyOptional({ description: 'BPM adjustment percentage for track B' })
   bpmAdjustment?: number;
 
   @ApiProperty({ description: 'Human-readable description' })
-  description: string;
+  description!: string;
 }
 
 // ============================================
@@ -196,7 +196,7 @@ export class TransitionResponseDto {
 
 export class DjQueueStatusResponseDto {
   @ApiProperty()
-  analysis: {
+  analysis!: {
     isRunning: boolean;
     pendingTracks: number;
     processedInSession: number;
@@ -205,7 +205,7 @@ export class DjQueueStatusResponseDto {
   };
 
   @ApiProperty()
-  stems: {
+  stems!: {
     isRunning: boolean;
     pendingTracks: number;
     processedInSession: number;
@@ -221,12 +221,13 @@ export class DjQueueStatusResponseDto {
 
 export class CreateDjSessionRequestDto {
   @ApiProperty({ description: 'Session name' })
-  name: string;
+  @IsString()
+  name!: string;
 
   @ApiProperty({ description: 'Track IDs in order' })
   @IsArray()
   @IsUUID('4', { each: true })
-  trackIds: string[];
+  trackIds!: string[];
 
   @ApiPropertyOptional({ description: 'Default transition type', enum: TransitionTypeEnum })
   @IsOptional()
@@ -241,20 +242,20 @@ export class CreateDjSessionRequestDto {
 
 export class DjSessionResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  trackCount: number;
+  trackCount!: number;
 
   @ApiProperty()
-  transitionType: string;
+  transitionType!: string;
 
   @ApiProperty()
-  transitionDuration: number;
+  transitionDuration!: number;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 }
