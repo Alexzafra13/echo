@@ -90,19 +90,19 @@ function BeamsBackgroundComponent({
       };
     };
 
-    // Mobile: static blobs that only pulse in opacity
+    // Mobile: static blobs that only pulse in opacity - positioned in top 45% where gradient color is
     const createMobileBlob = (width: number, height: number): Beam => {
       return {
-        x: Math.random() * width,
-        y: Math.random() * height * 0.7, // Stay in top 70% (gradient area)
-        width: 120 + Math.random() * 180, // Larger blobs
-        length: 120 + Math.random() * 180,
+        x: width * 0.1 + Math.random() * width * 0.8, // 10%-90% of width
+        y: height * 0.05 + Math.random() * height * 0.4, // 5%-45% of height (gradient area only)
+        width: 100 + Math.random() * 150,
+        length: 100 + Math.random() * 150,
         angle: Math.random() * 360,
-        speed: 0, // No movement
-        opacity: 0.15 + Math.random() * 0.12, // More visible
-        hue: baseHue + (Math.random() - 0.5) * 50,
+        speed: 0,
+        opacity: 0.12 + Math.random() * 0.1,
+        hue: baseHue + (Math.random() - 0.5) * 40,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.008 + Math.random() * 0.012, // Slightly faster pulse
+        pulseSpeed: 0.006 + Math.random() * 0.01,
       };
     };
 
@@ -229,18 +229,12 @@ function BeamsBackgroundComponent({
     };
   }, [dominantColor, intensity, getHueFromColor]);
 
-  // On mobile, limit canvas to gradient area
-  const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
-
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: isMobileView ? '55%' : '100%', // Only gradient area on mobile
+        inset: 0,
         filter: 'blur(15px)',
         zIndex: 0,
         pointerEvents: 'none',
