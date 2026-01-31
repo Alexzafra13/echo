@@ -8,6 +8,7 @@ import {
   StemSeparationResult,
   StemSeparationOptions,
 } from '../../domain/ports/stem-separator.port';
+import { getFfmpegPath } from '../utils/ffmpeg.util';
 
 /**
  * OnnxStemSeparatorService - Stem separation using ONNX Runtime
@@ -216,7 +217,7 @@ export class OnnxStemSeparatorService implements IStemSeparator {
     // For now, convert to WAV for processing
     const tempWav = path.join(outputDir, 'input.wav');
 
-    await execFileAsync('ffmpeg', [
+    await execFileAsync(getFfmpegPath(), [
       '-i', inputPath,
       '-ac', '2', // stereo
       '-ar', '44100',

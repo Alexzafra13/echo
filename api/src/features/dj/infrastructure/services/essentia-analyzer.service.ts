@@ -5,6 +5,7 @@ import {
   AudioAnalysisResult,
 } from '../../domain/ports/audio-analyzer.port';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
+import { getFfmpegPath, getFfprobePath } from '../utils/ffmpeg.util';
 
 /**
  * EssentiaAnalyzerService - Audio analysis using Essentia.js
@@ -83,7 +84,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
 
     try {
       // Convert to WAV (mono, 44100Hz) using FFmpeg
-      await execFileAsync('ffmpeg', [
+      await execFileAsync(getFfmpegPath(), [
         '-i', filePath,
         '-ac', '1', // mono
         '-ar', '44100', // 44.1kHz
@@ -136,7 +137,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
 
     try {
       // Get audio info with FFprobe
-      const { stdout } = await execFileAsync('ffprobe', [
+      const { stdout } = await execFileAsync(getFfprobePath(), [
         '-v', 'quiet',
         '-print_format', 'json',
         '-show_streams',
@@ -145,10 +146,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
       ]);
 
       const info = JSON.parse(stdout);
-      const duration = parseFloat(info.format?.duration || '0');
+      const _duration = parseFloat(info.format?.duration || '0');
 
       // Basic energy analysis using loudness
-      const { stderr: loudnessOutput } = await execFileAsync('ffmpeg', [
+      const { stderr: loudnessOutput } = await execFileAsync(getFfmpegPath(), [
         '-i', filePath,
         '-af', 'volumedetect',
         '-f', 'null',
