@@ -263,7 +263,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
       {/* Background gradient */}
       <div className={styles.nowPlaying__background} />
 
-      {/* Animated beams overlay */}
+      {/* Animated color effect - beams on desktop, subtle pulses on mobile */}
       {isOpen && <BeamsBackground dominantColor={dominantColor} intensity="medium" />}
 
       {/* Header */}
