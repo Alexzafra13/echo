@@ -94,15 +94,15 @@ function BeamsBackgroundComponent({
     const createMobileBlob = (width: number, height: number): Beam => {
       return {
         x: Math.random() * width,
-        y: Math.random() * height * 0.6, // Stay in top 60% (gradient area)
-        width: 100 + Math.random() * 150, // Large soft blobs
-        length: 100 + Math.random() * 150,
+        y: Math.random() * height * 0.7, // Stay in top 70% (gradient area)
+        width: 120 + Math.random() * 180, // Larger blobs
+        length: 120 + Math.random() * 180,
         angle: Math.random() * 360,
         speed: 0, // No movement
-        opacity: 0.08 + Math.random() * 0.08, // Very subtle
-        hue: baseHue + (Math.random() - 0.5) * 40,
+        opacity: 0.15 + Math.random() * 0.12, // More visible
+        hue: baseHue + (Math.random() - 0.5) * 50,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.005 + Math.random() * 0.01, // Slow pulse
+        pulseSpeed: 0.008 + Math.random() * 0.012, // Slightly faster pulse
       };
     };
 
@@ -179,7 +179,7 @@ function BeamsBackgroundComponent({
       ctx.scale(dpr, dpr);
 
       const mobile = isMobile();
-      const totalBeams = mobile ? 8 : Math.floor(MINIMUM_BEAMS * 1.5); // Fewer blobs on mobile
+      const totalBeams = mobile ? 12 : Math.floor(MINIMUM_BEAMS * 1.5); // 12 blobs on mobile
 
       beamsRef.current = Array.from({ length: totalBeams }, () =>
         mobile
@@ -197,7 +197,7 @@ function BeamsBackgroundComponent({
       const mobile = isMobile();
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = mobile ? 'blur(50px)' : 'blur(35px)'; // More blur on mobile for softer effect
+      ctx.filter = mobile ? 'blur(40px)' : 'blur(35px)'; // Slightly less blur on mobile for visibility
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
