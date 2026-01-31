@@ -34,6 +34,7 @@ const FIXED_TIME_STEP = 1;
 /**
  * Animated beams background using the dominant color
  * Based on kokonutui/beams-background
+ * Desktop only - disabled on mobile
  */
 function BeamsBackgroundComponent({
   dominantColor,
@@ -73,30 +74,8 @@ function BeamsBackgroundComponent({
     const baseHue = getHueFromColor(dominantColor);
     const intensityMultiplier = OPACITY_MAP[intensity];
 
-    // Check if mobile/portrait mode (height > width)
-    const isMobile = () => window.innerWidth <= 768;
-
     const createBeam = (width: number, height: number): Beam => {
-      const mobile = isMobile();
-
-      if (mobile) {
-        // Mobile: horizontal moving color blobs in the gradient area
-        return {
-          x: Math.random() * width * 1.2 - width * 0.1,
-          y: Math.random() * height * 0.8, // Stay in top 80% of canvas
-          width: 80 + Math.random() * 120, // Wider blobs
-          length: 150 + Math.random() * 200, // Shorter, more blob-like
-          angle: 60 + Math.random() * 60, // Mostly horizontal (60-120 degrees)
-          speed: 0.15 + Math.random() * 0.25, // Slower horizontal movement
-          opacity: 0.12 + Math.random() * 0.1,
-          hue: baseHue + (Math.random() - 0.5) * 50,
-          pulse: Math.random() * Math.PI * 2,
-          pulseSpeed: 0.008 + Math.random() * 0.012,
-        };
-      }
-
-      // Desktop: diagonal beams moving up
-      const angle = -35 + Math.random() * 10;
+      const angle = -35 + Math.random() * 10; // Diagonal angle
       return {
         x: Math.random() * width * 1.5 - width * 0.25,
         y: Math.random() * height * 1.5 - height * 0.25,
@@ -112,19 +91,6 @@ function BeamsBackgroundComponent({
     };
 
     const resetBeam = (beam: Beam, index: number, totalBeams: number): Beam => {
-      const mobile = isMobile();
-
-      if (mobile) {
-        // Mobile: reset to left side, random vertical position in gradient area
-        beam.x = -beam.width;
-        beam.y = Math.random() * canvas.height * 0.8;
-        beam.speed = 0.15 + Math.random() * 0.25;
-        beam.hue = baseHue + (Math.random() - 0.5) * 50;
-        beam.opacity = 0.12 + Math.random() * 0.1;
-        return beam;
-      }
-
-      // Desktop: reset to bottom
       const columns = 3;
       const column = index % columns;
       const spacing = canvas.width / columns;
@@ -173,9 +139,7 @@ function BeamsBackgroundComponent({
       canvas.style.height = `${height}px`;
       ctx.scale(dpr, dpr);
 
-      // Fewer blobs on mobile (they're bigger), more beams on desktop
-      const mobile = isMobile();
-      const totalBeams = Math.floor(MINIMUM_BEAMS * (mobile ? 0.8 : 1.5));
+      const totalBeams = Math.floor(MINIMUM_BEAMS * 1.5);
       beamsRef.current = Array.from({ length: totalBeams }, () =>
         createBeam(canvas.width, canvas.height)
       );
@@ -184,31 +148,20 @@ function BeamsBackgroundComponent({
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
-    // Use fixed time step for consistent animation
+    // Animation loop
     const animate = () => {
       if (!canvas || !ctx) return;
 
-      const mobile = isMobile();
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = mobile ? 'blur(40px)' : 'blur(35px)'; // More blur on mobile for softer blobs
+      ctx.filter = 'blur(35px)';
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
+        beam.y -= beam.speed * FIXED_TIME_STEP;
         beam.pulse += beam.pulseSpeed * FIXED_TIME_STEP;
 
-        if (mobile) {
-          // Mobile: move horizontally
-          beam.x += beam.speed * FIXED_TIME_STEP;
-          if (beam.x > canvas.width + 50) {
-            resetBeam(beam, index, totalBeams);
-          }
-        } else {
-          // Desktop: move vertically (up)
-          beam.y -= beam.speed * FIXED_TIME_STEP;
-          if (beam.y + beam.length < -100) {
-            resetBeam(beam, index, totalBeams);
-          }
+        if (beam.y + beam.length < -100) {
+          resetBeam(beam, index, totalBeams);
         }
 
         drawBeam(beam);
@@ -227,18 +180,12 @@ function BeamsBackgroundComponent({
     };
   }, [dominantColor, intensity, getHueFromColor]);
 
-  // On mobile, only cover the top portion where the color gradient is
-  const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
-
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: isMobileView ? '55%' : '100%', // Only top 55% on mobile
+        inset: 0,
         filter: 'blur(15px)',
         zIndex: 0,
         pointerEvents: 'none',
