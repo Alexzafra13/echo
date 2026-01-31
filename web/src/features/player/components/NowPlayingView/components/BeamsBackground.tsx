@@ -203,8 +203,8 @@ function BeamsBackgroundComponent({
         position: 'absolute',
         top: 0,
         left: 0,
-        right: 0,
-        bottom: isMobileView ? '35%' : 0, // Only top 65% on mobile
+        width: '100%',
+        height: isMobileView ? '55%' : '100%', // Only top 55% on mobile
         filter: 'blur(15px)',
         zIndex: 0,
         pointerEvents: 'none',
