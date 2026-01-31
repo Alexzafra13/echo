@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, memo } from 'react';
 
 interface Beam {
   x: number;
@@ -20,24 +20,28 @@ interface BeamsBackgroundProps {
   intensity?: 'subtle' | 'medium' | 'strong';
 }
 
+// Constants outside component to prevent recreation
+const MINIMUM_BEAMS = 20;
+const OPACITY_MAP = {
+  subtle: 0.5,
+  medium: 0.65,
+  strong: 0.8,
+} as const;
+
+// Fixed time step for consistent animation regardless of frame rate
+const FIXED_TIME_STEP = 1;
+
 /**
  * Animated beams background using the dominant color
  * Based on kokonutui/beams-background
  */
-export function BeamsBackground({
+function BeamsBackgroundComponent({
   dominantColor,
   intensity = 'strong',
 }: BeamsBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beamsRef = useRef<Beam[]>([]);
   const animationFrameRef = useRef<number>(0);
-  const MINIMUM_BEAMS = 20;
-
-  const opacityMap = {
-    subtle: 0.7,
-    medium: 0.85,
-    strong: 1,
-  };
 
   // Parse RGB and convert to HSL for hue extraction
   const getHueFromColor = useCallback((color: string): number => {
@@ -67,6 +71,7 @@ export function BeamsBackground({
     if (!ctx) return;
 
     const baseHue = getHueFromColor(dominantColor);
+    const intensityMultiplier = OPACITY_MAP[intensity];
 
     const createBeam = (width: number, height: number): Beam => {
       const angle = -35 + Math.random() * 10; // Diagonal angle like original
@@ -76,11 +81,11 @@ export function BeamsBackground({
         width: 30 + Math.random() * 60,
         length: height * 2.5,
         angle,
-        speed: 0.6 + Math.random() * 1.2,
-        opacity: 0.12 + Math.random() * 0.16,
-        hue: baseHue + (Math.random() - 0.5) * 70, // Variation around dominant color
+        speed: 0.08 + Math.random() * 0.12, // Slow speed
+        opacity: 0.08 + Math.random() * 0.12,
+        hue: baseHue + (Math.random() - 0.5) * 70,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.02 + Math.random() * 0.03,
+        pulseSpeed: 0.003 + Math.random() * 0.005,
       };
     };
 
@@ -91,24 +96,22 @@ export function BeamsBackground({
       beam.y = canvas.height + 100;
       beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
       beam.width = 100 + Math.random() * 100;
-      beam.speed = 0.5 + Math.random() * 0.4;
+      beam.speed = 0.06 + Math.random() * 0.08;
       beam.hue = baseHue + ((index * 70) / totalBeams - 35);
-      beam.opacity = 0.2 + Math.random() * 0.1;
+      beam.opacity = 0.1 + Math.random() * 0.08;
       return beam;
     };
 
-    const drawBeam = (ctx: CanvasRenderingContext2D, beam: Beam) => {
+    const drawBeam = (beam: Beam) => {
       ctx.save();
       ctx.translate(beam.x, beam.y);
       ctx.rotate((beam.angle * Math.PI) / 180);
 
-      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * opacityMap[intensity];
+      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * intensityMultiplier;
 
       const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-
-      // Use high saturation and lightness for visibility
-      const saturation = '85%';
-      const lightness = '65%';
+      const saturation = '80%';
+      const lightness = '60%';
 
       gradient.addColorStop(0, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
       gradient.addColorStop(0.1, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
@@ -143,29 +146,30 @@ export function BeamsBackground({
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
+    // Use fixed time step for consistent animation
     const animate = () => {
       if (!canvas || !ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'blur(35px)'; // Blur applied to context like original
+      ctx.filter = 'blur(35px)';
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
-        beam.y -= beam.speed;
-        beam.pulse += beam.pulseSpeed;
+        // Fixed time step for consistent movement regardless of frame rate
+        beam.y -= beam.speed * FIXED_TIME_STEP;
+        beam.pulse += beam.pulseSpeed * FIXED_TIME_STEP;
 
-        // Reset beam when it goes off screen
         if (beam.y + beam.length < -100) {
           resetBeam(beam, index, totalBeams);
         }
 
-        drawBeam(ctx, beam);
+        drawBeam(beam);
       });
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
@@ -173,7 +177,7 @@ export function BeamsBackground({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [dominantColor, intensity, getHueFromColor, opacityMap]);
+  }, [dominantColor, intensity, getHueFromColor]);
 
   return (
     <canvas
@@ -181,10 +185,13 @@ export function BeamsBackground({
       style={{
         position: 'absolute',
         inset: 0,
-        filter: 'blur(15px)', // Additional CSS blur like original
-        zIndex: 1,
+        filter: 'blur(15px)',
+        zIndex: 0,
         pointerEvents: 'none',
       }}
     />
   );
 }
+
+// Memoize to prevent re-renders when parent updates (e.g., progress bar)
+export const BeamsBackground = memo(BeamsBackgroundComponent);
