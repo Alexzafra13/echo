@@ -30,25 +30,11 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
   }
 
   private async initializeEssentia(): Promise<void> {
-    try {
-      // Dynamic import for essentia.js
-      const EssentiaModule = await import('essentia.js');
-
-      // Initialize Essentia WASM
-      this.essentia = new EssentiaModule.Essentia(EssentiaModule.EssentiaWASM);
-      this.essentiaExtractor = new EssentiaModule.EssentiaExtractor(
-        EssentiaModule.EssentiaWASM,
-      );
-
-      this.isInitialized = true;
-      this.logger.info('Essentia.js initialized successfully');
-    } catch (error) {
-      this.initError = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.warn(
-        { error: this.initError },
-        'Essentia.js not available, will use FFmpeg fallback',
-      );
-    }
+    // Essentia.js WASM has verbose stdout output that pollutes logs
+    // Use FFmpeg fallback for cleaner output - it provides basic analysis
+    // TODO: Re-enable when essentia.js has quieter WASM builds
+    this.initError = 'Essentia.js disabled - using FFmpeg fallback for cleaner output';
+    this.logger.info('Using FFmpeg fallback for audio analysis');
   }
 
   async isAvailable(): Promise<boolean> {
