@@ -145,3 +145,10 @@
   background: var(--color-primary);
   transform: translateX(14px);
 }
+
+/* DJ Flow label with icon */
+.djFlowLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
