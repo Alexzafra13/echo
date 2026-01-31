@@ -54,15 +54,15 @@ export class DjController {
   // Analysis Endpoints
   // ============================================
 
-  @Post('analyze/track')
+  @Post('analyze/track/:trackId')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Analyze a single track for DJ features (BPM, Key, etc.)' })
   @ApiResponse({ status: 202, description: 'Analysis queued' })
-  async analyzeTrack(@Body() dto: AnalyzeTrackRequestDto): Promise<{ message: string }> {
+  async analyzeTrack(@Param('trackId', ParseUUIDPipe) trackId: string): Promise<{ message: string }> {
     const track = await this.drizzle.db
       .select()
       .from(tracks)
-      .where(eq(tracks.id, dto.trackId))
+      .where(eq(tracks.id, trackId))
       .limit(1);
 
     if (!track[0]) {
@@ -196,22 +196,24 @@ export class DjController {
   // Compatibility Endpoints
   // ============================================
 
-  @Get('compatible')
+  @Get('compatible/:trackId')
   @ApiOperation({ summary: 'Find tracks compatible with a given track' })
   @ApiResponse({ status: 200, type: [TrackCompatibilityDto] })
   async getCompatibleTracks(
-    @Query() query: GetCompatibleTracksRequestDto,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Query('bpmTolerance') bpmTolerance?: number,
+    @Query('limit') limit?: number,
   ): Promise<TrackCompatibilityDto[]> {
-    const sourceAnalysis = await this.djAnalysisRepository.findByTrackId(query.trackId);
+    const sourceAnalysis = await this.djAnalysisRepository.findByTrackId(trackId);
     if (!sourceAnalysis) {
       return [];
     }
 
     const compatible = await this.djAnalysisRepository.findCompatibleTracks(
-      query.trackId,
+      trackId,
       {
-        bpmTolerance: query.bpmTolerance,
-        limit: query.limit,
+        bpmTolerance,
+        limit,
       },
     );
 
@@ -236,7 +238,7 @@ export class DjController {
     return compatible.map((analysis) => {
       const track = trackMap.get(analysis.trackId);
       const stems = stemsMap.get(analysis.trackId);
-      const sourceStems = stemsMap.get(query.trackId);
+      const sourceStems = stemsMap.get(trackId);
 
       const compatibility = this.transitionEngine.calculateCompatibility(
         sourceAnalysis,
