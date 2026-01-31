@@ -338,9 +338,9 @@
 }
 
 .nowPlaying__actionBtn {
-  background: transparent;
+  background: var(--white-10);
   border: none;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   padding: 12px;
   cursor: pointer;
   display: flex;
