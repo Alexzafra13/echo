@@ -57,7 +57,6 @@ export function useDjFlow(options: UseDjFlowOptions): DjFlowInfo {
   const {
     analysis: currentAnalysis,
     isAnalyzing: isCurrentAnalyzing,
-    triggerAnalysis: triggerCurrentAnalysis,
   } = useTrackAnalysis(currentTrack?.id, {
     autoAnalyze: true,
     onlyWhenEnabled: true,
