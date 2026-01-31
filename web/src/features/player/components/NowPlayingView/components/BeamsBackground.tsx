@@ -193,12 +193,18 @@ function BeamsBackgroundComponent({
     };
   }, [dominantColor, intensity, getHueFromColor]);
 
+  // On mobile, only cover the top portion where the color gradient is
+  const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
+
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: 'absolute',
-        inset: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: isMobileView ? '35%' : 0, // Only top 65% on mobile
         filter: 'blur(15px)',
         zIndex: 0,
         pointerEvents: 'none',
