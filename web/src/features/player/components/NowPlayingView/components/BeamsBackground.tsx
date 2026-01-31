@@ -73,32 +73,43 @@ function BeamsBackgroundComponent({
     const baseHue = getHueFromColor(dominantColor);
     const intensityMultiplier = OPACITY_MAP[intensity];
 
+    // Check if mobile/portrait mode (height > width)
+    const isMobile = () => window.innerWidth <= 768;
+
     const createBeam = (width: number, height: number): Beam => {
-      const angle = -35 + Math.random() * 10; // Diagonal angle like original
+      const mobile = isMobile();
+      // More vertical angle on mobile for better coverage
+      const angle = mobile
+        ? -15 + Math.random() * 30  // -15 to +15 degrees (more vertical)
+        : -35 + Math.random() * 10; // -35 to -25 degrees (diagonal)
+
       return {
         x: Math.random() * width * 1.5 - width * 0.25,
         y: Math.random() * height * 1.5 - height * 0.25,
-        width: 30 + Math.random() * 60,
-        length: height * 2.5,
+        width: mobile ? 40 + Math.random() * 80 : 30 + Math.random() * 60,
+        length: height * (mobile ? 3 : 2.5), // Longer beams on mobile
         angle,
-        speed: 0.3 + Math.random() * 0.5, // Moderate speed
-        opacity: 0.15 + Math.random() * 0.15, // More visible
+        speed: 0.3 + Math.random() * 0.5,
+        opacity: mobile ? 0.18 + Math.random() * 0.15 : 0.15 + Math.random() * 0.15,
         hue: baseHue + (Math.random() - 0.5) * 70,
         pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.01 + Math.random() * 0.015, // Faster pulse
+        pulseSpeed: 0.01 + Math.random() * 0.015,
       };
     };
 
     const resetBeam = (beam: Beam, index: number, totalBeams: number): Beam => {
-      const column = index % 3;
-      const spacing = canvas.width / 3;
+      const mobile = isMobile();
+      const columns = mobile ? 2 : 3; // Fewer columns on mobile for wider spread
+      const column = index % columns;
+      const spacing = canvas.width / columns;
 
       beam.y = canvas.height + 100;
-      beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
-      beam.width = 100 + Math.random() * 100;
-      beam.speed = 0.25 + Math.random() * 0.4; // Moderate speed
+      beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.6;
+      beam.width = mobile ? 80 + Math.random() * 120 : 100 + Math.random() * 100;
+      beam.speed = 0.25 + Math.random() * 0.4;
       beam.hue = baseHue + ((index * 70) / totalBeams - 35);
-      beam.opacity = 0.15 + Math.random() * 0.12; // More visible
+      beam.opacity = mobile ? 0.18 + Math.random() * 0.12 : 0.15 + Math.random() * 0.12;
+      beam.angle = mobile ? -15 + Math.random() * 30 : beam.angle; // Update angle on reset for mobile
       return beam;
     };
 
@@ -137,7 +148,9 @@ function BeamsBackgroundComponent({
       canvas.style.height = `${height}px`;
       ctx.scale(dpr, dpr);
 
-      const totalBeams = Math.floor(MINIMUM_BEAMS * 1.5);
+      // More beams on mobile to fill vertical space better
+      const mobile = isMobile();
+      const totalBeams = Math.floor(MINIMUM_BEAMS * (mobile ? 1.8 : 1.5));
       beamsRef.current = Array.from({ length: totalBeams }, () =>
         createBeam(canvas.width, canvas.height)
       );
@@ -151,7 +164,8 @@ function BeamsBackgroundComponent({
       if (!canvas || !ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'blur(35px)';
+      // Less blur on mobile for better visibility
+      ctx.filter = isMobile() ? 'blur(25px)' : 'blur(35px)';
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
