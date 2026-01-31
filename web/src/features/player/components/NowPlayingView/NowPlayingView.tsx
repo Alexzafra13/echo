@@ -284,6 +284,7 @@ export function NowPlayingView({ isOpen, onClose, dominantColor }: NowPlayingVie
         title={title}
         artist={artist}
         artistId={artistId}
+        trackId={currentTrack?.id}
         isRadioMode={isRadioMode}
         onGoToArtist={handleGoToArtist}
       />

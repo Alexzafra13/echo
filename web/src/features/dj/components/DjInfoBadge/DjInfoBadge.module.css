@@ -1,0 +1,108 @@
+/* ===== DJ Info Badge Component ===== */
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Compact variant - single line */
+.compact {
+  background: var(--white-05);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(8px);
+}
+
+.compact .item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.separator {
+  color: var(--text-tertiary);
+}
+
+/* Full variant - detailed view */
+.full {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--white-05);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  min-width: 140px;
+}
+
+.full .item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.label {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  min-width: 40px;
+}
+
+.value {
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* Energy bar */
+.energyBar {
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: var(--white-10);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.energyBar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: calc(var(--energy) * 100%);
+  background: linear-gradient(90deg, var(--color-success) 0%, var(--color-warning) 50%, var(--color-error) 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Analyzing state */
+.analyzing {
+  color: var(--text-tertiary);
+  font-style: italic;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
