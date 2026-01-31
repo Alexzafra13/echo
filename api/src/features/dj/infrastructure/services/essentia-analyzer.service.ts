@@ -8,6 +8,26 @@ import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { getFfmpegPath, getFfprobePath } from '../utils/ffmpeg.util';
 
 /**
+ * Temporarily suppress stdout/console output during noisy WASM operations
+ */
+function withSuppressedOutput<T>(fn: () => T): T {
+  const originalLog = console.log;
+  const originalWrite = process.stdout.write.bind(process.stdout);
+
+  // Suppress output
+  console.log = () => {};
+  process.stdout.write = () => true;
+
+  try {
+    return fn();
+  } finally {
+    // Restore output
+    console.log = originalLog;
+    process.stdout.write = originalWrite;
+  }
+}
+
+/**
  * EssentiaAnalyzerService - Audio analysis using Essentia.js
  *
  * Provides BPM, key, energy detection using WebAssembly-based
@@ -31,14 +51,16 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
 
   private async initializeEssentia(): Promise<void> {
     try {
-      // Dynamic import for essentia.js
+      // Dynamic import for essentia.js with suppressed WASM output
       const EssentiaModule = await import('essentia.js');
 
-      // Initialize Essentia WASM
-      this.essentia = new EssentiaModule.Essentia(EssentiaModule.EssentiaWASM);
-      this.essentiaExtractor = new EssentiaModule.EssentiaExtractor(
-        EssentiaModule.EssentiaWASM,
-      );
+      // Initialize Essentia WASM - suppress verbose output
+      withSuppressedOutput(() => {
+        this.essentia = new EssentiaModule.Essentia(EssentiaModule.EssentiaWASM);
+        this.essentiaExtractor = new EssentiaModule.EssentiaExtractor(
+          EssentiaModule.EssentiaWASM,
+        );
+      });
 
       this.isInitialized = true;
       this.logger.info('Essentia.js initialized successfully');
@@ -97,26 +119,28 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer {
       const audioBuffer = fs.readFileSync(tempWav);
       const audioArray = new Float32Array(audioBuffer.buffer);
 
-      // Analyze with Essentia
-      const bpmResult = this.essentia.PercivalBpmEstimator(audioArray);
-      const keyResult = this.essentia.KeyExtractor(audioArray);
-      const energyResult = this.essentia.Energy(audioArray);
-      const danceabilityResult = this.essentia.Danceability(audioArray);
+      // Analyze with Essentia - suppress WASM verbose output
+      const result = withSuppressedOutput(() => {
+        const bpmResult = this.essentia.PercivalBpmEstimator(audioArray);
+        const keyResult = this.essentia.KeyExtractor(audioArray);
+        const energyResult = this.essentia.Energy(audioArray);
+        const danceabilityResult = this.essentia.Danceability(audioArray);
+        const beatsResult = this.essentia.BeatTrackerMultiFeature(audioArray);
 
-      // Detect beats for beatgrid
-      const beatsResult = this.essentia.BeatTrackerMultiFeature(audioArray);
+        return { bpmResult, keyResult, energyResult, danceabilityResult, beatsResult };
+      });
 
       // Convert key to Camelot
       const camelotKey = DjAnalysis.keyToCamelot(
-        `${keyResult.key}${keyResult.scale === 'minor' ? 'm' : ''}`,
+        `${result.keyResult.key}${result.keyResult.scale === 'minor' ? 'm' : ''}`,
       );
 
       return {
-        bpm: Math.round(bpmResult.bpm * 10) / 10,
-        key: `${keyResult.key}${keyResult.scale === 'minor' ? 'm' : ''}`,
-        energy: Math.min(1, Math.max(0, energyResult.energy)),
-        danceability: danceabilityResult?.danceability,
-        beatgrid: beatsResult?.ticks || [],
+        bpm: Math.round(result.bpmResult.bpm * 10) / 10,
+        key: `${result.keyResult.key}${result.keyResult.scale === 'minor' ? 'm' : ''}`,
+        energy: Math.min(1, Math.max(0, result.energyResult.energy)),
+        danceability: result.danceabilityResult?.danceability,
+        beatgrid: result.beatsResult?.ticks || [],
       };
     } finally {
       // Cleanup temp file
