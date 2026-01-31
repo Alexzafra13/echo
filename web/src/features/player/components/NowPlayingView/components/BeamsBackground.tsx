@@ -2,13 +2,15 @@ import { useEffect, useRef, useCallback } from 'react';
 
 interface Beam {
   x: number;
+  y: number;
   width: number;
+  length: number;
+  angle: number;
   speed: number;
   opacity: number;
   hue: number;
+  pulse: number;
   pulseSpeed: number;
-  pulsePhase: number;
-  y: number;
 }
 
 interface BeamsBackgroundProps {
@@ -16,101 +18,47 @@ interface BeamsBackgroundProps {
   dominantColor: string;
   /** Intensity of the beams effect */
   intensity?: 'subtle' | 'medium' | 'strong';
-  /** Background color - defaults to transparent */
-  backgroundColor?: string;
 }
 
 /**
  * Animated beams background using the dominant color
- * Inspired by kokonutui/beams-background
+ * Based on kokonutui/beams-background
  */
 export function BeamsBackground({
   dominantColor,
-  intensity = 'medium',
-  backgroundColor = 'transparent',
+  intensity = 'strong',
 }: BeamsBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beamsRef = useRef<Beam[]>([]);
   const animationFrameRef = useRef<number>(0);
+  const MINIMUM_BEAMS = 20;
 
-  // Configuration based on intensity
-  const config = {
-    subtle: { beamCount: 10, maxOpacity: 0.4, blur: 40 },
-    medium: { beamCount: 15, maxOpacity: 0.6, blur: 30 },
-    strong: { beamCount: 20, maxOpacity: 0.8, blur: 20 },
-  }[intensity];
+  const opacityMap = {
+    subtle: 0.7,
+    medium: 0.85,
+    strong: 1,
+  };
 
-  // Parse RGB from dominant color
-  const parseColor = useCallback((color: string): [number, number, number] => {
+  // Parse RGB and convert to HSL for hue extraction
+  const getHueFromColor = useCallback((color: string): number => {
     const parts = color.split(',').map((p) => parseInt(p.trim(), 10));
-    if (parts.length >= 3 && parts.every((p) => !isNaN(p))) {
-      return [parts[0], parts[1], parts[2]];
+    if (parts.length < 3 || parts.some((p) => isNaN(p))) {
+      return 200; // Fallback hue (blue-ish)
     }
-    return [237, 104, 66]; // Fallback to primary color
+    const [r, g, b] = parts.map((v) => v / 255);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let hue = 0;
+
+    if (max !== min) {
+      const d = max - min;
+      if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+      else if (max === g) hue = ((b - r) / d + 2) * 60;
+      else hue = ((r - g) / d + 4) * 60;
+    }
+    return hue;
   }, []);
 
-  // Create a new beam
-  const createBeam = useCallback(
-    (canvasWidth: number, canvasHeight: number, index: number): Beam => {
-      const [r, g, b] = parseColor(dominantColor);
-      // Calculate hue from RGB for variation
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let hue = 0;
-      if (max !== min) {
-        const d = max - min;
-        if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-        else if (max === g) hue = ((b - r) / d + 2) * 60;
-        else hue = ((r - g) / d + 4) * 60;
-      }
-
-      return {
-        x: Math.random() * canvasWidth,
-        width: 80 + Math.random() * 150, // Wider beams
-        speed: 0.5 + Math.random() * 1, // Faster movement
-        opacity: 0.2 + Math.random() * config.maxOpacity,
-        hue: hue + (Math.random() - 0.5) * 40, // More hue variation
-        pulseSpeed: 0.3 + Math.random() * 0.7,
-        pulsePhase: Math.random() * Math.PI * 2,
-        y: canvasHeight + Math.random() * 200 + index * 80,
-      };
-    },
-    [dominantColor, config.maxOpacity, parseColor]
-  );
-
-  // Initialize beams
-  const initBeams = useCallback(
-    (width: number, height: number) => {
-      beamsRef.current = Array.from({ length: config.beamCount }, (_, i) =>
-        createBeam(width, height, i)
-      );
-    },
-    [config.beamCount, createBeam]
-  );
-
-  // Handle resize
-  useEffect(() => {
-    const updateSize = () => {
-      if (canvasRef.current) {
-        const parent = canvasRef.current.parentElement;
-        if (parent) {
-          const { width, height } = parent.getBoundingClientRect();
-          const dpr = window.devicePixelRatio || 1;
-          canvasRef.current.width = width * dpr;
-          canvasRef.current.height = height * dpr;
-          canvasRef.current.style.width = `${width}px`;
-          canvasRef.current.style.height = `${height}px`;
-          initBeams(width * dpr, height * dpr);
-        }
-      }
-    };
-
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, [initBeams]);
-
-  // Animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -118,70 +66,114 @@ export function BeamsBackground({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let lastTime = performance.now();
+    const baseHue = getHueFromColor(dominantColor);
 
-    const animate = (currentTime: number) => {
-      const deltaTime = (currentTime - lastTime) / 16; // Normalize to ~60fps
-      lastTime = currentTime;
+    const createBeam = (width: number, height: number): Beam => {
+      const angle = -35 + Math.random() * 10; // Diagonal angle like original
+      return {
+        x: Math.random() * width * 1.5 - width * 0.25,
+        y: Math.random() * height * 1.5 - height * 0.25,
+        width: 30 + Math.random() * 60,
+        length: height * 2.5,
+        angle,
+        speed: 0.6 + Math.random() * 1.2,
+        opacity: 0.12 + Math.random() * 0.16,
+        hue: baseHue + (Math.random() - 0.5) * 70, // Variation around dominant color
+        pulse: Math.random() * Math.PI * 2,
+        pulseSpeed: 0.02 + Math.random() * 0.03,
+      };
+    };
 
-      // Clear canvas
+    const resetBeam = (beam: Beam, index: number, totalBeams: number): Beam => {
+      const column = index % 3;
+      const spacing = canvas.width / 3;
+
+      beam.y = canvas.height + 100;
+      beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
+      beam.width = 100 + Math.random() * 100;
+      beam.speed = 0.5 + Math.random() * 0.4;
+      beam.hue = baseHue + ((index * 70) / totalBeams - 35);
+      beam.opacity = 0.2 + Math.random() * 0.1;
+      return beam;
+    };
+
+    const drawBeam = (ctx: CanvasRenderingContext2D, beam: Beam) => {
+      ctx.save();
+      ctx.translate(beam.x, beam.y);
+      ctx.rotate((beam.angle * Math.PI) / 180);
+
+      const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * opacityMap[intensity];
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
+
+      // Use high saturation and lightness for visibility
+      const saturation = '85%';
+      const lightness = '65%';
+
+      gradient.addColorStop(0, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
+      gradient.addColorStop(0.1, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
+      gradient.addColorStop(0.4, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`);
+      gradient.addColorStop(0.6, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity})`);
+      gradient.addColorStop(0.9, `hsla(${beam.hue}, ${saturation}, ${lightness}, ${pulsingOpacity * 0.5})`);
+      gradient.addColorStop(1, `hsla(${beam.hue}, ${saturation}, ${lightness}, 0)`);
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(-beam.width / 2, 0, beam.width, beam.length);
+      ctx.restore();
+    };
+
+    const updateCanvasSize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const parent = canvas.parentElement;
+      if (!parent) return;
+
+      const { width, height } = parent.getBoundingClientRect();
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(dpr, dpr);
+
+      const totalBeams = Math.floor(MINIMUM_BEAMS * 1.5);
+      beamsRef.current = Array.from({ length: totalBeams }, () =>
+        createBeam(canvas.width, canvas.height)
+      );
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+
+    const animate = () => {
+      if (!canvas || !ctx) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.filter = 'blur(35px)'; // Blur applied to context like original
 
-      // Optional background
-      if (backgroundColor !== 'transparent') {
-        ctx.fillStyle = backgroundColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-
-      // Draw beams
+      const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
-        // Update position (move up)
-        beam.y -= beam.speed * deltaTime;
-        beam.pulsePhase += beam.pulseSpeed * 0.02 * deltaTime;
+        beam.y -= beam.speed;
+        beam.pulse += beam.pulseSpeed;
 
         // Reset beam when it goes off screen
-        if (beam.y + canvas.height < 0) {
-          beamsRef.current[index] = createBeam(canvas.width, canvas.height, index);
-          beamsRef.current[index].y = canvas.height + 50;
+        if (beam.y + beam.length < -100) {
+          resetBeam(beam, index, totalBeams);
         }
 
-        // Calculate pulsing opacity
-        const pulseOpacity = beam.opacity * (0.7 + 0.3 * Math.sin(beam.pulsePhase));
-
-        // Create gradient for beam
-        const gradient = ctx.createLinearGradient(
-          beam.x,
-          beam.y,
-          beam.x,
-          beam.y - canvas.height * 1.5
-        );
-
-        // Use dominant color with hue shift - brighter, more saturated
-        const hueShift = Math.sin(beam.pulsePhase * 0.5) * 15;
-        const saturation = 80 + Math.sin(beam.pulsePhase) * 15;
-        const lightness = 60 + Math.sin(beam.pulsePhase * 0.7) * 20;
-
-        gradient.addColorStop(0, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, 0)`);
-        gradient.addColorStop(0.15, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity * 0.7})`);
-        gradient.addColorStop(0.5, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity})`);
-        gradient.addColorStop(0.85, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, ${pulseOpacity * 0.7})`);
-        gradient.addColorStop(1, `hsla(${beam.hue + hueShift}, ${saturation}%, ${lightness}%, 0)`);
-
-        ctx.fillStyle = gradient;
-        ctx.fillRect(beam.x - beam.width / 2, beam.y - canvas.height * 1.5, beam.width, canvas.height * 1.5);
+        drawBeam(ctx, beam);
       });
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    animationFrameRef.current = requestAnimationFrame(animate);
+    animate();
 
     return () => {
+      window.removeEventListener('resize', updateCanvasSize);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [dominantColor, backgroundColor, createBeam, parseColor]);
+  }, [dominantColor, intensity, getHueFromColor, opacityMap]);
 
   return (
     <canvas
@@ -189,12 +181,9 @@ export function BeamsBackground({
       style={{
         position: 'absolute',
         inset: 0,
-        width: '100%',
-        height: '100%',
-        filter: `blur(${config.blur}px)`,
-        opacity: 1,
-        pointerEvents: 'none',
+        filter: 'blur(15px)', // Additional CSS blur like original
         zIndex: 1,
+        pointerEvents: 'none',
       }}
     />
   );
