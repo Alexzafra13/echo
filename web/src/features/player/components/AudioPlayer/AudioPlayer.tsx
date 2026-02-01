@@ -12,6 +12,7 @@ import { getPlayerDisplayInfo } from '../../utils/player.utils';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { extractDominantColor } from '@shared/utils/colorExtractor';
 import { ProgressBar } from './ProgressBar';
+import { DjInfoBadge } from '@features/dj/components';
 import styles from './AudioPlayer.module.css';
 
 export function AudioPlayer() {
@@ -292,6 +293,10 @@ export function AudioPlayer() {
             >
               {albumName}
             </div>
+          )}
+          {/* DJ Info Badge - BPM/Key when DJ Flow enabled */}
+          {!isRadioMode && currentTrack?.id && (
+            <DjInfoBadge trackId={currentTrack.id} variant="compact" className={styles.djBadge} />
           )}
           {/* ICY Metadata - Now Playing for Radio */}
           {isRadioMode && radioMetadata && (
