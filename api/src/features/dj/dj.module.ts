@@ -18,6 +18,9 @@ import { TransitionEngineService } from './infrastructure/services/transition-en
 // Repositories
 import { DrizzleDjAnalysisRepository } from './infrastructure/persistence/dj-analysis.repository';
 
+// Use Cases
+import { GetDjSuggestionsUseCase } from './application/use-cases/get-dj-suggestions.use-case';
+
 // Ports
 import { DJ_ANALYSIS_REPOSITORY } from './domain/ports/dj-analysis.repository.port';
 import { AUDIO_ANALYZER } from './domain/ports/audio-analyzer.port';
@@ -50,6 +53,9 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
 
     // Repositories
     DrizzleDjAnalysisRepository,
+
+    // Use Cases
+    GetDjSuggestionsUseCase,
 
     // Port implementations (Dependency Injection)
     {
