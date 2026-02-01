@@ -13,7 +13,12 @@
     "tsConfigPath": "./tsconfig.build.json",
     "webpack": false,
     "deleteOutDir": true,
-    "assets": [],
+    "assets": [
+      {
+        "include": "features/dj/infrastructure/workers/*.js",
+        "watchAssets": true
+      }
+    ],
     "watchAssets": false,
     "plugins": []
   }
