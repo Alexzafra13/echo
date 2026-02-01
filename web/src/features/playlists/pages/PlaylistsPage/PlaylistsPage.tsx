@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Check } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Check, Play, Clock } from 'lucide-react';
 import { useLocation, useSearch } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
@@ -7,10 +7,12 @@ import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
 import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
+import { useDjSessions, useDeleteDjSession } from '@features/dj/hooks/useDjSessions';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
+import { usePlayer } from '@features/player';
 import styles from './PlaylistsPage.module.css';
 
 type PlaylistMode = 'playlists' | 'dj';
@@ -26,13 +28,18 @@ export default function PlaylistsPage() {
 
   const [page, setPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateDjModal, setShowCreateDjModal] = useState(false);
   const [deletePlaylistId, setDeletePlaylistId] = useState<string | null>(null);
   const [deletePlaylistName, setDeletePlaylistName] = useState('');
+  const [deleteDjSessionId, setDeleteDjSessionId] = useState<string | null>(null);
+  const [deleteDjSessionName, setDeleteDjSessionName] = useState('');
   const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [playlistMode, setPlaylistMode] = useState<PlaylistMode>(
     modeParam === 'dj' ? 'dj' : 'playlists'
   );
+
+  const { playQueue } = usePlayer();
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -47,6 +54,11 @@ export default function PlaylistsPage() {
   const deletePlaylistMutation = useDeletePlaylist();
   const updatePlaylistMutation = useUpdatePlaylist();
   const addTrackMutation = useAddTrackToPlaylist();
+
+  // DJ Sessions hooks
+  const { data: djSessionsData, isLoading: isDjLoading } = useDjSessions();
+  const deleteDjSessionMutation = useDeleteDjSession();
+  const djSessions = djSessionsData?.sessions || [];
 
   const allPlaylists = playlistsData?.items || [];
   const total = playlistsData?.total || 0;
@@ -311,33 +323,120 @@ export default function PlaylistsPage() {
 
           {/* DJ Sessions Content */}
           {playlistMode === 'dj' && (
-            <div className={styles.playlistsPage__djEmptyState}>
-              <div className={styles.playlistsPage__djIcon}>
-                <Disc3 size={40} />
-              </div>
-              <h2 className={styles.playlistsPage__djTitle}>Sesiones DJ</h2>
-              <p className={styles.playlistsPage__djDescription}>
-                Crea sesiones que se ordenan automáticamente para lograr mezclas armónicas perfectas
-              </p>
-              <div className={styles.playlistsPage__djFeatures}>
-                <div className={styles.playlistsPage__djFeature}>
-                  <Check size={16} />
-                  <span>Ordenación automática por compatibilidad armónica</span>
+            <>
+              {isDjLoading ? (
+                <div className={styles.playlistsPage__loading}>
+                  <p>Cargando sesiones DJ...</p>
                 </div>
-                <div className={styles.playlistsPage__djFeature}>
-                  <Check size={16} />
-                  <span>Análisis de BPM, tonalidad y energía</span>
+              ) : djSessions.length === 0 ? (
+                <div className={styles.playlistsPage__djEmptyState}>
+                  <div className={styles.playlistsPage__djIcon}>
+                    <Disc3 size={40} />
+                  </div>
+                  <h2 className={styles.playlistsPage__djTitle}>Sesiones DJ</h2>
+                  <p className={styles.playlistsPage__djDescription}>
+                    Crea sesiones que se ordenan automáticamente para lograr mezclas armónicas perfectas
+                  </p>
+                  <div className={styles.playlistsPage__djFeatures}>
+                    <div className={styles.playlistsPage__djFeature}>
+                      <Check size={16} />
+                      <span>Ordenación automática por compatibilidad armónica</span>
+                    </div>
+                    <div className={styles.playlistsPage__djFeature}>
+                      <Check size={16} />
+                      <span>Análisis de BPM, tonalidad y energía</span>
+                    </div>
+                    <div className={styles.playlistsPage__djFeature}>
+                      <Check size={16} />
+                      <span>Sugerencias de transiciones suaves</span>
+                    </div>
+                  </div>
+                  <button
+                    className={styles.playlistsPage__djButton}
+                    onClick={() => setShowCreateDjModal(true)}
+                  >
+                    <Plus size={20} />
+                    Crear Sesión DJ
+                  </button>
                 </div>
-                <div className={styles.playlistsPage__djFeature}>
-                  <Check size={16} />
-                  <span>Sugerencias de transiciones suaves</span>
+              ) : (
+                <div className={styles.playlistsPage__gridWrapper}>
+                  <div className={styles.playlistsPage__djHeader}>
+                    <Button
+                      variant="primary"
+                      onClick={() => setShowCreateDjModal(true)}
+                    >
+                      <Plus size={20} />
+                      Nueva Sesión DJ
+                    </Button>
+                  </div>
+                  <div className={styles.playlistsPage__grid}>
+                    {djSessions.map((session) => (
+                      <div
+                        key={session.id}
+                        className={styles.djSessionCard}
+                        onClick={() => setLocation(`/dj/sessions/${session.id}`)}
+                      >
+                        <div className={styles.djSessionCard__cover}>
+                          <Disc3 size={48} />
+                        </div>
+
+                        <div className={styles.djSessionCard__info}>
+                          <h3 className={styles.djSessionCard__title}>{session.name}</h3>
+                          <div className={styles.djSessionCard__meta}>
+                            <span>
+                              {session.trackCount} {session.trackCount === 1 ? 'track' : 'tracks'}
+                            </span>
+                            {session.totalDuration && session.totalDuration > 0 && (
+                              <>
+                                <span className={styles.djSessionCard__separator}>•</span>
+                                <Clock size={12} />
+                                <span>{formatDuration(session.totalDuration)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className={styles.djSessionCard__actions}>
+                          <button
+                            className={styles.djSessionCard__playButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (session.tracks.length > 0) {
+                                const playerTracks = session.tracks.map(t => ({
+                                  id: t.trackId,
+                                  title: t.title || 'Unknown',
+                                  artist: t.artist || 'Unknown',
+                                  albumId: t.albumId,
+                                  duration: t.duration,
+                                  coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
+                                }));
+                                playQueue(playerTracks, 0);
+                              }
+                            }}
+                            title="Reproducir sesión"
+                          >
+                            <Play size={16} fill="currentColor" />
+                          </button>
+                          <button
+                            className={styles.djSessionCard__actionButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteDjSessionId(session.id);
+                              setDeleteDjSessionName(session.name);
+                            }}
+                            title="Eliminar sesión"
+                            disabled={deleteDjSessionMutation.isPending}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <button className={styles.playlistsPage__djButton}>
-                <Plus size={20} />
-                Crear Sesión DJ
-              </button>
-            </div>
+              )}
+            </>
           )}
         </div>
       </main>
@@ -369,6 +468,46 @@ export default function PlaylistsPage() {
           onSubmit={handleUpdatePlaylist}
           isLoading={updatePlaylistMutation.isPending}
         />
+      )}
+
+      {/* Delete DJ Session Modal */}
+      {deleteDjSessionId && (
+        <DeletePlaylistModal
+          playlistName={deleteDjSessionName}
+          onClose={() => {
+            setDeleteDjSessionId(null);
+            setDeleteDjSessionName('');
+          }}
+          onConfirm={async () => {
+            try {
+              await deleteDjSessionMutation.mutateAsync(deleteDjSessionId);
+              setDeleteDjSessionId(null);
+              setDeleteDjSessionName('');
+            } catch (err) {
+              if (import.meta.env.DEV) {
+                logger.error('Error deleting DJ session:', err);
+              }
+              alert(getApiErrorMessage(err, 'Error al eliminar la sesión DJ'));
+            }
+          }}
+          isLoading={deleteDjSessionMutation.isPending}
+        />
+      )}
+
+      {/* Create DJ Session Modal */}
+      {showCreateDjModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalBackdrop} onClick={() => setShowCreateDjModal(false)} />
+          <div className={styles.modalContent}>
+            <h2>Crear Sesión DJ</h2>
+            <p>Próximamente: Constructor de sesiones DJ con búsqueda de tracks y sugerencias de compatibilidad.</p>
+            <div className={styles.modalActions}>
+              <Button variant="secondary" onClick={() => setShowCreateDjModal(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -652,3 +652,187 @@
   letter-spacing: 0.5px;
   z-index: 2;
 }
+
+/* ===== DJ Session Cards ===== */
+.playlistsPage__djHeader {
+  margin-bottom: 24px;
+}
+
+.djSessionCard {
+  background: var(--bg-elevated, #1e293b);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--white-05);
+  position: relative;
+}
+
+.djSessionCard:hover {
+  background: var(--white-08);
+  border-color: #14b8a6;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.2);
+}
+
+.djSessionCard:hover .djSessionCard__actions {
+  opacity: 1;
+}
+
+.djSessionCard__cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(13, 148, 136, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #14b8a6;
+}
+
+.djSessionCard__info {
+  margin-bottom: 8px;
+}
+
+.djSessionCard__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.djSessionCard__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary, #6b7280);
+}
+
+.djSessionCard__meta svg {
+  flex-shrink: 0;
+}
+
+.djSessionCard__separator {
+  opacity: 0.5;
+}
+
+.djSessionCard__actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.djSessionCard__playButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.djSessionCard__playButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
+}
+
+.djSessionCard__actionButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--black-80);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--white-10);
+  color: var(--text-primary, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.djSessionCard__actionButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.djSessionCard__actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Modal Styles ===== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalBackdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  position: relative;
+  background: var(--bg-elevated, #1e293b);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  border: 1px solid var(--white-10);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+.modalContent h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 16px 0;
+}
+
+.modalContent p {
+  font-size: 15px;
+  color: var(--text-secondary, #b8bcc8);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .djSessionCard__actions {
+    opacity: 1;
+  }
+}

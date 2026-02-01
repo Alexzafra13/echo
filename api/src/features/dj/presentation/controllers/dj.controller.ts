@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -9,10 +11,14 @@ import {
   HttpStatus,
   UseGuards,
   ParseUUIDPipe,
+  Req,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtAuthGuard } from '../../../../shared/guards/jwt-auth.guard';
+import { RequestWithUser } from '../../../../shared/types/request.types';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { tracks, djAnalysis, djStems } from '../../../../infrastructure/database/schema';
 import { eq, inArray } from 'drizzle-orm';
@@ -21,7 +27,9 @@ import { DjAnalysisQueueService } from '../../infrastructure/services/dj-analysi
 import { StemQueueService } from '../../infrastructure/services/stem-queue.service';
 import { TransitionEngineService } from '../../infrastructure/services/transition-engine.service';
 import { DrizzleDjAnalysisRepository } from '../../infrastructure/persistence/dj-analysis.repository';
+import { DrizzleDjSessionRepository } from '../../infrastructure/persistence/dj-session.repository';
 import { GetDjSuggestionsUseCase } from '../../application/use-cases/get-dj-suggestions.use-case';
+import { DjCompatibilityService } from '../../domain/services/dj-compatibility.service';
 
 import {
   AnalyzeTrackRequestDto,
@@ -34,6 +42,12 @@ import {
   TrackCompatibilityDto,
   TransitionResponseDto,
   DjQueueStatusResponseDto,
+  CreateDjSessionRequestDto,
+  UpdateDjSessionRequestDto,
+  AddTrackToSessionRequestDto,
+  DjSessionResponseDto,
+  DjSessionListResponseDto,
+  DjSessionTrackDto,
 } from '../dtos/dj.dto';
 
 @ApiTags('DJ')
@@ -49,7 +63,9 @@ export class DjController {
     private readonly stemQueue: StemQueueService,
     private readonly transitionEngine: TransitionEngineService,
     private readonly djAnalysisRepository: DrizzleDjAnalysisRepository,
+    private readonly djSessionRepository: DrizzleDjSessionRepository,
     private readonly getDjSuggestionsUseCase: GetDjSuggestionsUseCase,
+    private readonly compatibilityService: DjCompatibilityService,
   ) {}
 
   // ============================================
@@ -355,6 +371,349 @@ export class DjController {
         backend: stemStatus.separatorBackend,
         isAvailable: stemStatus.isAvailable,
       },
+    };
+  }
+
+  // ============================================
+  // DJ Sessions Endpoints
+  // ============================================
+
+  @Get('sessions')
+  @ApiOperation({ summary: 'Get all DJ sessions for current user' })
+  @ApiResponse({ status: 200, type: DjSessionListResponseDto })
+  async getSessions(@Req() req: RequestWithUser): Promise<DjSessionListResponseDto> {
+    const sessions = await this.djSessionRepository.findByUserId(req.user.id);
+
+    // Enrich with track info
+    const enrichedSessions = await Promise.all(
+      sessions.map(session => this.enrichSessionWithTracks(session))
+    );
+
+    return {
+      sessions: enrichedSessions,
+      total: sessions.length,
+    };
+  }
+
+  @Post('sessions')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new DJ session' })
+  @ApiResponse({ status: 201, type: DjSessionResponseDto })
+  async createSession(
+    @Req() req: RequestWithUser,
+    @Body() dto: CreateDjSessionRequestDto,
+  ): Promise<DjSessionResponseDto> {
+    // Get DJ analysis for all tracks to include metadata
+    const trackAnalyses = await this.getTrackAnalyses(dto.trackIds);
+
+    // Build track list with DJ metadata and compatibility scores
+    const trackList = dto.trackIds.map((trackId, index) => {
+      const analysis = trackAnalyses.get(trackId);
+      let compatibilityScore: number | undefined;
+
+      // Calculate compatibility with previous track
+      if (index > 0) {
+        const prevTrackId = dto.trackIds[index - 1];
+        const prevAnalysis = trackAnalyses.get(prevTrackId);
+        if (analysis && prevAnalysis) {
+          compatibilityScore = this.compatibilityService.calculateCompatibility(
+            this.toTrackDjData(prevAnalysis),
+            this.toTrackDjData(analysis),
+          ).overall;
+        }
+      }
+
+      return {
+        trackId,
+        order: index,
+        bpm: analysis?.bpm ?? undefined,
+        camelotKey: analysis?.camelotKey ?? undefined,
+        energy: analysis?.energy ?? undefined,
+        compatibilityScore,
+      };
+    });
+
+    const session = await this.djSessionRepository.create({
+      userId: req.user.id,
+      name: dto.name,
+      transitionType: dto.transitionType as 'crossfade' | 'mashup' | 'cut' | undefined,
+      transitionDuration: dto.transitionDuration,
+      trackList,
+    });
+
+    return this.enrichSessionWithTracks(session);
+  }
+
+  @Get('sessions/:id')
+  @ApiOperation({ summary: 'Get a specific DJ session' })
+  @ApiResponse({ status: 200, type: DjSessionResponseDto })
+  async getSession(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<DjSessionResponseDto> {
+    const session = await this.djSessionRepository.findById(id);
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.userId !== req.user.id) {
+      throw new ForbiddenException('Not your session');
+    }
+
+    return this.enrichSessionWithTracks(session);
+  }
+
+  @Put('sessions/:id')
+  @ApiOperation({ summary: 'Update a DJ session' })
+  @ApiResponse({ status: 200, type: DjSessionResponseDto })
+  async updateSession(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateDjSessionRequestDto,
+  ): Promise<DjSessionResponseDto> {
+    const session = await this.djSessionRepository.findById(id);
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.userId !== req.user.id) {
+      throw new ForbiddenException('Not your session');
+    }
+
+    // If reordering tracks, recalculate compatibility scores
+    let trackList = session.trackList;
+    if (dto.trackIds) {
+      const trackAnalyses = await this.getTrackAnalyses(dto.trackIds);
+      trackList = dto.trackIds.map((trackId, index) => {
+        const existing = session.trackList.find(t => t.trackId === trackId);
+        const analysis = trackAnalyses.get(trackId);
+        let compatibilityScore: number | undefined;
+
+        if (index > 0) {
+          const prevTrackId = dto.trackIds![index - 1];
+          const prevAnalysis = trackAnalyses.get(prevTrackId);
+          if (analysis && prevAnalysis) {
+            compatibilityScore = this.compatibilityService.calculateCompatibility(
+              this.toTrackDjData(prevAnalysis),
+              this.toTrackDjData(analysis),
+            ).overall;
+          }
+        }
+
+        return {
+          trackId,
+          order: index,
+          bpm: existing?.bpm ?? analysis?.bpm ?? undefined,
+          camelotKey: existing?.camelotKey ?? analysis?.camelotKey ?? undefined,
+          energy: existing?.energy ?? analysis?.energy ?? undefined,
+          compatibilityScore,
+        };
+      });
+    }
+
+    const updated = await this.djSessionRepository.update(id, {
+      name: dto.name,
+      transitionType: dto.transitionType as 'crossfade' | 'mashup' | 'cut' | undefined,
+      transitionDuration: dto.transitionDuration,
+      trackList: dto.trackIds ? trackList : undefined,
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Session not found');
+    }
+
+    return this.enrichSessionWithTracks(updated);
+  }
+
+  @Delete('sessions/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a DJ session' })
+  async deleteSession(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    const session = await this.djSessionRepository.findById(id);
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.userId !== req.user.id) {
+      throw new ForbiddenException('Not your session');
+    }
+
+    await this.djSessionRepository.delete(id);
+  }
+
+  @Post('sessions/:id/tracks')
+  @ApiOperation({ summary: 'Add a track to a DJ session' })
+  @ApiResponse({ status: 200, type: DjSessionResponseDto })
+  async addTrackToSession(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddTrackToSessionRequestDto,
+  ): Promise<DjSessionResponseDto> {
+    const session = await this.djSessionRepository.findById(id);
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.userId !== req.user.id) {
+      throw new ForbiddenException('Not your session');
+    }
+
+    // Get DJ analysis for new track
+    const analysis = await this.djAnalysisRepository.findByTrackId(dto.trackId);
+
+    // Calculate compatibility with last track in session
+    let compatibilityScore: number | undefined;
+    if (session.trackList.length > 0) {
+      const lastTrack = session.trackList[session.trackList.length - 1];
+      const lastAnalysis = await this.djAnalysisRepository.findByTrackId(lastTrack.trackId);
+      if (analysis && lastAnalysis) {
+        compatibilityScore = this.compatibilityService.calculateCompatibility(
+          this.toTrackDjData(lastAnalysis),
+          this.toTrackDjData(analysis),
+        ).overall;
+      }
+    }
+
+    const newTrack = {
+      trackId: dto.trackId,
+      order: session.trackList.length,
+      bpm: analysis?.bpm ?? undefined,
+      camelotKey: analysis?.camelotKey ?? undefined,
+      energy: analysis?.energy ?? undefined,
+      compatibilityScore,
+    };
+
+    const updated = await this.djSessionRepository.addTrackToSession(id, newTrack);
+
+    if (!updated) {
+      throw new NotFoundException('Session not found');
+    }
+
+    return this.enrichSessionWithTracks(updated);
+  }
+
+  @Delete('sessions/:id/tracks/:trackId')
+  @ApiOperation({ summary: 'Remove a track from a DJ session' })
+  @ApiResponse({ status: 200, type: DjSessionResponseDto })
+  async removeTrackFromSession(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+  ): Promise<DjSessionResponseDto> {
+    const session = await this.djSessionRepository.findById(id);
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.userId !== req.user.id) {
+      throw new ForbiddenException('Not your session');
+    }
+
+    const updated = await this.djSessionRepository.removeTrackFromSession(id, trackId);
+
+    if (!updated) {
+      throw new NotFoundException('Session not found');
+    }
+
+    return this.enrichSessionWithTracks(updated);
+  }
+
+  // ============================================
+  // Helper Methods
+  // ============================================
+
+  private async getTrackAnalyses(trackIds: string[]): Promise<Map<string, any>> {
+    const analyses = await Promise.all(
+      trackIds.map(id => this.djAnalysisRepository.findByTrackId(id))
+    );
+
+    const map = new Map<string, any>();
+    trackIds.forEach((id, index) => {
+      if (analyses[index]) {
+        map.set(id, analyses[index]);
+      }
+    });
+
+    return map;
+  }
+
+  private async enrichSessionWithTracks(session: any): Promise<DjSessionResponseDto> {
+    const trackIds = session.trackList.map((t: any) => t.trackId);
+
+    if (trackIds.length === 0) {
+      return {
+        id: session.id,
+        name: session.name,
+        trackCount: 0,
+        transitionType: session.transitionType,
+        transitionDuration: session.transitionDuration,
+        tracks: [],
+        totalDuration: 0,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+      };
+    }
+
+    // Get track details
+    const trackDetails = await this.drizzle.db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        artistName: tracks.artistName,
+        albumId: tracks.albumId,
+        duration: tracks.duration,
+      })
+      .from(tracks)
+      .where(inArray(tracks.id, trackIds));
+
+    const trackMap = new Map(trackDetails.map(t => [t.id, t]));
+
+    const enrichedTracks: DjSessionTrackDto[] = session.trackList.map((t: any) => {
+      const track = trackMap.get(t.trackId);
+      return {
+        trackId: t.trackId,
+        order: t.order,
+        bpm: t.bpm,
+        camelotKey: t.camelotKey,
+        energy: t.energy,
+        compatibilityScore: t.compatibilityScore,
+        title: track?.title,
+        artist: track?.artistName,
+        albumId: track?.albumId,
+        duration: track?.duration,
+      };
+    });
+
+    const totalDuration = enrichedTracks.reduce((sum, t) => sum + (t.duration || 0), 0);
+
+    return {
+      id: session.id,
+      name: session.name,
+      trackCount: session.trackList.length,
+      transitionType: session.transitionType,
+      transitionDuration: session.transitionDuration,
+      tracks: enrichedTracks,
+      totalDuration,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+    };
+  }
+
+  private toTrackDjData(analysis: any): { trackId: string; bpm: number | null; key: string | null; camelotKey: string | null; energy: number | null } {
+    return {
+      trackId: analysis.trackId,
+      bpm: analysis.bpm ?? null,
+      key: analysis.key ?? null,
+      camelotKey: analysis.camelotKey ?? null,
+      energy: analysis.energy ?? null,
     };
   }
 }

@@ -240,6 +240,39 @@ export class CreateDjSessionRequestDto {
   transitionDuration?: number;
 }
 
+export class DjSessionTrackDto {
+  @ApiProperty()
+  trackId!: string;
+
+  @ApiProperty()
+  order!: number;
+
+  @ApiPropertyOptional()
+  bpm?: number;
+
+  @ApiPropertyOptional()
+  camelotKey?: string;
+
+  @ApiPropertyOptional()
+  energy?: number;
+
+  @ApiPropertyOptional()
+  compatibilityScore?: number;
+
+  // Track info (populated on response)
+  @ApiPropertyOptional()
+  title?: string;
+
+  @ApiPropertyOptional()
+  artist?: string;
+
+  @ApiPropertyOptional()
+  albumId?: string;
+
+  @ApiPropertyOptional()
+  duration?: number;
+}
+
 export class DjSessionResponseDto {
   @ApiProperty()
   id!: string;
@@ -256,6 +289,52 @@ export class DjSessionResponseDto {
   @ApiProperty()
   transitionDuration!: number;
 
+  @ApiProperty({ type: [DjSessionTrackDto] })
+  tracks!: DjSessionTrackDto[];
+
+  @ApiPropertyOptional()
+  totalDuration?: number;
+
   @ApiProperty()
   createdAt!: Date;
+
+  @ApiProperty()
+  updatedAt!: Date;
+}
+
+export class UpdateDjSessionRequestDto {
+  @ApiPropertyOptional({ description: 'New session name' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'New track order (array of track IDs)' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  trackIds?: string[];
+
+  @ApiPropertyOptional({ description: 'Transition type', enum: TransitionTypeEnum })
+  @IsOptional()
+  @IsEnum(TransitionTypeEnum)
+  transitionType?: TransitionTypeEnum;
+
+  @ApiPropertyOptional({ description: 'Transition duration in seconds' })
+  @IsOptional()
+  @IsNumber()
+  transitionDuration?: number;
+}
+
+export class AddTrackToSessionRequestDto {
+  @ApiProperty({ description: 'Track ID to add' })
+  @IsUUID()
+  trackId!: string;
+}
+
+export class DjSessionListResponseDto {
+  @ApiProperty({ type: [DjSessionResponseDto] })
+  sessions!: DjSessionResponseDto[];
+
+  @ApiProperty()
+  total!: number;
 }
