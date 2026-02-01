@@ -39,7 +39,17 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
     if (this.worker && this.workerReady) return;
 
     return new Promise((resolve, reject) => {
-      const workerPath = path.join(__dirname, '../workers/essentia-worker.js');
+      // Worker is in dist/features/... but compiled TS is in dist/src/...
+      // Use process.cwd() to get the api root, then find the worker
+      const workerPath = path.join(
+        process.cwd(),
+        'dist',
+        'features',
+        'dj',
+        'infrastructure',
+        'workers',
+        'essentia-worker.js',
+      );
 
       // Check if worker file exists
       if (!fs.existsSync(workerPath)) {
