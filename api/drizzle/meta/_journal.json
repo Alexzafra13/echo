@@ -92,6 +92,13 @@
       "when": 1768589656351,
       "tag": "0012_volatile_madelyne_pryor",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1768676056351,
+      "tag": "0013_dj_tables",
+      "breakpoints": true
     }
   ]
 }
