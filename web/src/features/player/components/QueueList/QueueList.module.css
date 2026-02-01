@@ -171,3 +171,10 @@
 .queueList__tracks::-webkit-scrollbar-thumb:hover {
   background: var(--white-30);
 }
+
+/* DJ Suggestions */
+.queueList__djSuggestions {
+  margin: 8px;
+  border-top: 1px solid var(--white-10);
+  padding-top: 8px;
+}
