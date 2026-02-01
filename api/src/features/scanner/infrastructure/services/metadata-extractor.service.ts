@@ -19,6 +19,10 @@ export interface TrackMetadata {
   discNumber?: number;
   duration?: number; // en segundos
 
+  // DJ/Audio analysis (from ID3 tags)
+  bpm?: number; // TBPM tag - tempo in beats per minute
+  initialKey?: string; // TKEY tag - musical key (e.g., "Am", "C", "5A")
+
   // Técnicos
   bitRate?: number;
   sampleRate?: number;
@@ -84,6 +88,10 @@ export class MetadataExtractorService {
       trackNumber: common.track?.no || undefined,
       discNumber: common.disk?.no || 1,
       duration: format.duration ? Math.round(format.duration) : undefined,
+
+      // DJ/Audio analysis from ID3 tags (TBPM, TKEY)
+      bpm: common.bpm ? Math.round(common.bpm) : undefined,
+      initialKey: common.key || undefined,
 
       // Técnicos
       bitRate: format.bitrate ? Math.round(format.bitrate) : undefined,
