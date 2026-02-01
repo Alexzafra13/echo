@@ -1,3 +1,6 @@
+-- Add missing column to tracks table
+ALTER TABLE "tracks" ADD COLUMN IF NOT EXISTS "initial_key" varchar(10);
+
 -- DJ Analysis Status Enum
 CREATE TYPE "public"."dj_analysis_status" AS ENUM('pending', 'analyzing', 'completed', 'failed');
 
