@@ -436,3 +436,59 @@
   border-radius: 2px;
   transition: width 0.5s ease-out;
 }
+
+/* DJ Analysis - Compact Bar */
+.djBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white-03);
+  border: 1px solid var(--white-08);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.djIcon {
+  color: var(--color-text-tertiary, #6b7280);
+  flex-shrink: 0;
+}
+
+.djIconRunning {
+  color: #14b8a6;
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.djText {
+  color: var(--color-text-secondary, #b8bcc8);
+  font-weight: 500;
+}
+
+.djPercent {
+  color: var(--color-text-tertiary, #6b7280);
+  margin-left: 4px;
+}
+
+.djEta {
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.djProgressInline {
+  width: 60px;
+  height: 4px;
+  background: var(--white-08);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.djProgressFill {
+  height: 100%;
+  background: #14b8a6;
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}

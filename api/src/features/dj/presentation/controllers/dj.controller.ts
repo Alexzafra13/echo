@@ -98,7 +98,7 @@ export class DjController {
         path: pt.track.path,
       }));
 
-    await this.analysisQueue.startAnalysisQueue(tracksToAnalyze);
+    await this.analysisQueue.startAnalysisQueueForTracks(tracksToAnalyze);
 
     if (dto.processStems) {
       await this.stemQueue.startStemQueue(tracksToAnalyze);

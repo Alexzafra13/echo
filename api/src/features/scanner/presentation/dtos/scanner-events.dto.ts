@@ -182,6 +182,26 @@ export class LufsProgressDto {
 }
 
 /**
+ * DTO para evento de progreso del análisis DJ (BPM, Key, Energy)
+ */
+export class DjProgressDto {
+  @IsBoolean()
+  isRunning!: boolean;
+
+  @IsNumber()
+  @Min(0)
+  pendingTracks!: number;
+
+  @IsNumber()
+  @Min(0)
+  processedInSession!: number;
+
+  @IsOptional()
+  @IsString()
+  estimatedTimeRemaining?: string | null;
+}
+
+/**
  * Tipo de cambio en la biblioteca
  */
 export enum LibraryChangeType {
