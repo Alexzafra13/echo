@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Settings, Palette, Globe, Check, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical, Sun, Moon, Monitor } from 'lucide-react';
+import { Settings, Palette, Globe, Check, Music, Volume2, Home, ChevronUp, ChevronDown, GripVertical, Sun, Moon, Monitor, Database } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@features/home/components';
 import { Switch } from '@shared/components/ui';
 import { useTheme } from '@shared/hooks';
 import { useHomePreferences, useUpdateHomePreferences } from '../../hooks';
+import { useLibraryAnalysisSettings } from '../../hooks/useLibraryAnalysisSettings';
 import { usePlayer } from '@features/player';
 import type { HomeSectionConfig, HomeSectionId } from '../../services';
 import styles from './SettingsPage.module.css';
@@ -42,6 +43,15 @@ export function SettingsPage() {
     autoplay,
     setAutoplayEnabled,
   } = usePlayer();
+
+  // Library analysis settings (LUFS and DJ)
+  const {
+    lufsEnabled,
+    djEnabled,
+    setLufsEnabled,
+    setDjEnabled,
+    isLoading: isLoadingAnalysis,
+  } = useLibraryAnalysisSettings();
 
   // Local state for home sections
   const [homeSections, setHomeSections] = useState<HomeSectionConfig[]>([]);
@@ -371,6 +381,59 @@ export function SettingsPage() {
                       </div>
                     </>
                   )}
+                </div>
+              </div>
+
+              {/* Library Analysis Card */}
+              <div className={styles.settingsPage__card}>
+                <div className={styles.settingsPage__cardHeader}>
+                  <h2>
+                    <Database size={20} />
+                    Análisis de Librería
+                  </h2>
+                </div>
+
+                <div className={styles.settingsPage__cardBody}>
+                  {/* Info note */}
+                  <div className={styles.settingsPage__infoNote}>
+                    <Music size={16} />
+                    <span>
+                      Estos análisis se ejecutan automáticamente después de cada escaneo de librería.
+                      Desactívalos si prefieres ahorrar tiempo de procesamiento.
+                    </span>
+                  </div>
+
+                  {/* LUFS Analysis Toggle */}
+                  <div className={styles.settingsPage__toggleItem}>
+                    <div className={styles.settingsPage__toggleInfo}>
+                      <span className={styles.settingsPage__toggleLabel}>Análisis LUFS</span>
+                      <p className={styles.settingsPage__toggleDescription}>
+                        Calcula los niveles de volumen (ReplayGain) para normalización de audio
+                      </p>
+                    </div>
+                    <Switch
+                      checked={lufsEnabled}
+                      onChange={setLufsEnabled}
+                      disabled={isLoadingAnalysis}
+                      aria-label="Análisis LUFS"
+                    />
+                  </div>
+
+                  {/* DJ Analysis Toggle */}
+                  <div className={styles.settingsPage__toggleItem}>
+                    <div className={styles.settingsPage__toggleInfo}>
+                      <span className={styles.settingsPage__toggleLabel}>Análisis DJ</span>
+                      <p className={styles.settingsPage__toggleDescription}>
+                        Detecta BPM, tonalidad (Key) y energía para sugerencias de mezcla armónica
+                      </p>
+                    </div>
+                    <Switch
+                      checked={djEnabled}
+                      onChange={setDjEnabled}
+                      disabled={isLoadingAnalysis}
+                      aria-label="Análisis DJ"
+                    />
+                  </div>
                 </div>
               </div>
 

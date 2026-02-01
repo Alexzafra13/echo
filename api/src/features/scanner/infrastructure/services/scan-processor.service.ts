@@ -470,6 +470,16 @@ export class ScanProcessorService implements OnModuleInit {
    */
   private async startLufsAnalysis(): Promise<void> {
     try {
+      const lufsAnalysisEnabled = await this.settingsService.getBoolean(
+        'lufs.auto_analysis.enabled',
+        true, // Enabled by default
+      );
+
+      if (!lufsAnalysisEnabled) {
+        this.logger.info('🎚️ Análisis LUFS deshabilitado en configuración');
+        return;
+      }
+
       const result = await this.lufsAnalysisQueue.startLufsAnalysisQueue();
 
       if (result.started) {
