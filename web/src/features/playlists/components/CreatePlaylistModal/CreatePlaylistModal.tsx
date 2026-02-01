@@ -19,13 +19,15 @@ interface CreatePlaylistModalProps {
   onClose: () => void;
   onSubmit: (name: string, trackIds: string[]) => Promise<void>;
   isLoading?: boolean;
+  /** If true, changes the modal title and placeholder text for DJ sessions */
+  isDjSession?: boolean;
 }
 
 /**
  * CreatePlaylistModal Component
  * Modal for creating a new playlist with at least one song
  */
-export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: CreatePlaylistModalProps) {
+export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDjSession = false }: CreatePlaylistModalProps) {
   const [name, setName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<SelectedTrack[]>([]);
@@ -57,7 +59,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
     e.preventDefault();
 
     if (!name.trim()) {
-      setError('El nombre de la playlist es obligatorio');
+      setError(isDjSession ? 'El nombre de la sesión es obligatorio' : 'El nombre de la playlist es obligatorio');
       return;
     }
 
@@ -70,7 +72,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
       await onSubmit(name.trim(), selectedTracks.map(t => t.id));
       onClose();
     } catch (error) {
-      setError(getApiErrorMessage(error, 'Error al crear la playlist'));
+      setError(getApiErrorMessage(error, isDjSession ? 'Error al crear la sesión DJ' : 'Error al crear la playlist'));
     }
   };
 
@@ -108,11 +110,11 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
   const filteredRecent = recentTracks.filter(r => !isTrackSelected(r.trackId));
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Nueva Playlist">
+    <Modal isOpen={true} onClose={onClose} title={isDjSession ? 'Nueva Sesión DJ' : 'Nueva Playlist'}>
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Playlist name */}
+        {/* Name field */}
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Nombre de la playlist</label>
+          <label className={styles.label}>{isDjSession ? 'Nombre de la sesión' : 'Nombre de la playlist'}</label>
           <input
             type="text"
             className={styles.input}
@@ -121,7 +123,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
               setName(e.target.value);
               setError('');
             }}
-            placeholder="Mi Playlist..."
+            placeholder={isDjSession ? 'Mi Sesión DJ...' : 'Mi Playlist...'}
             autoFocus
             disabled={isLoading}
           />
@@ -277,7 +279,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: Cr
             variant="primary"
             disabled={isLoading || !canCreate}
           >
-            {isLoading ? 'Creando...' : `Crear Playlist${selectedTracks.length > 0 ? ` (${selectedTracks.length})` : ''}`}
+            {isLoading ? 'Creando...' : `Crear ${isDjSession ? 'Sesión' : 'Playlist'}${selectedTracks.length > 0 ? ` (${selectedTracks.length})` : ''}`}
           </Button>
         </div>
       </form>
