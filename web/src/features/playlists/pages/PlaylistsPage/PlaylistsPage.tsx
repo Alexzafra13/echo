@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Search, X } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Check } from 'lucide-react';
+import { useLocation, useSearch } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
 import { Header } from '@shared/components/layout/Header';
@@ -13,18 +13,26 @@ import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
 import styles from './PlaylistsPage.module.css';
 
+type PlaylistMode = 'playlists' | 'dj';
+
 /**
  * PlaylistsPage Component
- * Displays user's playlists and allows creating new ones
+ * Displays user's playlists and DJ sessions with tab navigation
  */
 export default function PlaylistsPage() {
   const [, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
+  const modeParam = searchParams.get('mode');
+
   const [page, setPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deletePlaylistId, setDeletePlaylistId] = useState<string | null>(null);
   const [deletePlaylistName, setDeletePlaylistName] = useState('');
   const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [playlistMode, setPlaylistMode] = useState<PlaylistMode>(
+    modeParam === 'dj' ? 'dj' : 'playlists'
+  );
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -52,10 +60,21 @@ export default function PlaylistsPage() {
       )
     : allPlaylists;
 
-  // Reset to first page when itemsPerPage changes
+  // Reset to first page when itemsPerPage or mode changes
   useEffect(() => {
     setPage(1);
-  }, [itemsPerPage]);
+  }, [itemsPerPage, playlistMode]);
+
+  // Update URL when mode changes
+  const handleModeChange = (mode: PlaylistMode) => {
+    setPlaylistMode(mode);
+    setSearchQuery('');
+    if (mode === 'dj') {
+      setLocation('/playlists?mode=dj');
+    } else {
+      setLocation('/playlists');
+    }
+  };
 
   // Pagination handler
   const handlePageChange = (newPage: number) => {
@@ -142,43 +161,80 @@ export default function PlaylistsPage() {
         <div className={styles.playlistsPage__content}>
           {/* Header Section */}
           <div className={styles.playlistsPage__header}>
-            <h1 className={styles.playlistsPage__title}>Mis Playlists</h1>
+            <h1 className={styles.playlistsPage__title}>
+              {playlistMode === 'playlists' ? 'Mis Playlists' : 'Sesiones DJ'}
+            </h1>
             <p className={styles.playlistsPage__subtitle}>
-              {total} {total === 1 ? 'playlist' : 'playlists'}
+              {playlistMode === 'playlists'
+                ? `${total} ${total === 1 ? 'playlist' : 'playlists'}`
+                : 'Crea sesiones con mezcla armónica automática'
+              }
             </p>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus size={20} />
-              Nueva Playlist
-            </Button>
+            {playlistMode === 'playlists' && (
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <Plus size={20} />
+                Nueva Playlist
+              </Button>
+            )}
           </div>
 
-          {/* Top Pagination - Mobile Only */}
-          {!isLoading && playlists.length > 0 && totalPages > 1 && (
-            <div className={styles.playlistsPage__paginationTop}>
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                disabled={isLoading}
-              />
-            </div>
-          )}
+          {/* Source Tabs */}
+          <div className={styles.playlistsPage__sourceTabs}>
+            <div
+              className={`${styles.playlistsPage__sourceIndicator} ${
+                playlistMode === 'dj' ? styles['playlistsPage__sourceIndicator--dj'] : ''
+              }`}
+            />
+            <button
+              className={`${styles.playlistsPage__sourceTab} ${
+                playlistMode === 'playlists' ? styles['playlistsPage__sourceTab--active'] : ''
+              }`}
+              onClick={() => handleModeChange('playlists')}
+            >
+              <ListMusic size={18} />
+              <span>Playlists</span>
+            </button>
+            <button
+              className={`${styles.playlistsPage__sourceTab} ${
+                playlistMode === 'dj' ? styles['playlistsPage__sourceTab--active'] : ''
+              }`}
+              onClick={() => handleModeChange('dj')}
+            >
+              <Disc3 size={18} />
+              <span>Sesiones DJ</span>
+            </button>
+          </div>
 
-          {/* Playlists Grid */}
-          {isLoading ? (
-            <div className={styles.playlistsPage__loading}>
-              <p>Cargando playlists...</p>
-            </div>
-          ) : playlists.length === 0 ? (
-            <div className={styles.playlistsPage__emptyState}>
-              <Music size={64} />
-              <h2>No tienes playlists todavía</h2>
-              <p>Crea tu primera playlist para organizar tu música</p>
-            </div>
-          ) : (
+          {/* Playlists Content */}
+          {playlistMode === 'playlists' && (
+            <>
+              {/* Top Pagination - Mobile Only */}
+              {!isLoading && playlists.length > 0 && totalPages > 1 && (
+                <div className={styles.playlistsPage__paginationTop}>
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
+              {/* Playlists Grid */}
+              {isLoading ? (
+                <div className={styles.playlistsPage__loading}>
+                  <p>Cargando playlists...</p>
+                </div>
+              ) : playlists.length === 0 ? (
+                <div className={styles.playlistsPage__emptyState}>
+                  <Music size={64} />
+                  <h2>No tienes playlists todavía</h2>
+                  <p>Crea tu primera playlist para organizar tu música</p>
+                </div>
+              ) : (
             <div className={styles.playlistsPage__gridWrapper}>
               <div className={styles.playlistsPage__grid}>
                 {playlists.map((playlist) => (
@@ -248,6 +304,39 @@ export default function PlaylistsPage() {
                 onPageChange={handlePageChange}
                 disabled={isLoading}
               />
+            </div>
+              )}
+            </>
+          )}
+
+          {/* DJ Sessions Content */}
+          {playlistMode === 'dj' && (
+            <div className={styles.playlistsPage__djEmptyState}>
+              <div className={styles.playlistsPage__djIcon}>
+                <Disc3 size={40} />
+              </div>
+              <h2 className={styles.playlistsPage__djTitle}>Sesiones DJ</h2>
+              <p className={styles.playlistsPage__djDescription}>
+                Crea sesiones que se ordenan automáticamente para lograr mezclas armónicas perfectas
+              </p>
+              <div className={styles.playlistsPage__djFeatures}>
+                <div className={styles.playlistsPage__djFeature}>
+                  <Check size={16} />
+                  <span>Ordenación automática por compatibilidad armónica</span>
+                </div>
+                <div className={styles.playlistsPage__djFeature}>
+                  <Check size={16} />
+                  <span>Análisis de BPM, tonalidad y energía</span>
+                </div>
+                <div className={styles.playlistsPage__djFeature}>
+                  <Check size={16} />
+                  <span>Sugerencias de transiciones suaves</span>
+                </div>
+              </div>
+              <button className={styles.playlistsPage__djButton}>
+                <Plus size={20} />
+                Crear Sesión DJ
+              </button>
             </div>
           )}
         </div>
