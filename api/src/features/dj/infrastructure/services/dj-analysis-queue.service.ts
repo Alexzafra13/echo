@@ -134,21 +134,28 @@ export class DjAnalysisQueueService implements OnModuleInit {
         .limit(1);
 
       const trackBpm = trackData[0]?.bpm || 0;
-      const trackKey = trackData[0]?.initialKey || 'Unknown';
+      const trackKey = trackData[0]?.initialKey || '';
 
-      // Run FFmpeg analysis for energy (BPM/Key from ID3 tags take priority)
-      let energy = 0;
+      // Run audio analysis
+      let analyzedBpm = 0;
+      let analyzedKey = 'Unknown';
+      let energy = 0.5;
+
       try {
         const result = await this.analyzer.analyze(job.filePath);
+        analyzedBpm = result.bpm;
+        analyzedKey = result.key;
         energy = result.energy;
-      } catch {
-        // FFmpeg might not be available in dev, use default energy
-        energy = 0.5;
+      } catch (error) {
+        this.logger.debug(
+          { error: error instanceof Error ? error.message : 'Unknown' },
+          'Audio analysis failed, using defaults',
+        );
       }
 
-      // Use BPM/Key from ID3 tags, or fallback to 0/Unknown
-      const finalBpm = trackBpm || 0;
-      const finalKey = trackKey !== 'Unknown' ? trackKey : 'Unknown';
+      // Use ID3 tags first, fallback to Essentia analysis
+      const finalBpm = trackBpm > 0 ? trackBpm : analyzedBpm;
+      const finalKey = trackKey && trackKey !== 'Unknown' ? trackKey : analyzedKey;
 
       // Convert key to Camelot
       const camelotKey = DjAnalysis.keyToCamelot(finalKey);
@@ -172,13 +179,23 @@ export class DjAnalysisQueueService implements OnModuleInit {
         .where(eq(djAnalysis.id, analysisId));
 
       this.processedInSession++;
+
+      // Determine the source of BPM/Key
+      let bpmSource = 'none';
+      let keySource = 'none';
+      if (trackBpm > 0) bpmSource = 'id3-tags';
+      else if (analyzedBpm > 0) bpmSource = 'essentia';
+      if (trackKey && trackKey !== 'Unknown') keySource = 'id3-tags';
+      else if (analyzedKey && analyzedKey !== 'Unknown') keySource = 'essentia';
+
       this.logger.info(
         {
           trackId: job.trackId,
           bpm: finalBpm,
           key: finalKey,
           camelotKey,
-          source: trackBpm > 0 ? 'id3-tags' : 'none',
+          bpmSource,
+          keySource,
         },
         'DJ analysis completed',
       );
