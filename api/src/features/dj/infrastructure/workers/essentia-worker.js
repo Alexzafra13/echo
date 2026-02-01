@@ -19,9 +19,16 @@ async function initEssentia() {
   if (essentiaInitError) throw new Error(essentiaInitError);
 
   try {
-    const EssentiaModule = await import('essentia.js');
-    const EssentiaWASM = EssentiaModule.EssentiaWASM;
-    const Essentia = EssentiaModule.Essentia;
+    // Use require for CommonJS module (essentia.js uses CommonJS)
+    const EssentiaModule = require('essentia.js');
+
+    // Handle both ESM default export and CommonJS exports
+    const EssentiaWASM = EssentiaModule.EssentiaWASM || EssentiaModule.default?.EssentiaWASM;
+    const Essentia = EssentiaModule.Essentia || EssentiaModule.default?.Essentia;
+
+    if (!EssentiaWASM || !Essentia) {
+      throw new Error(`Essentia module not found. Keys: ${Object.keys(EssentiaModule).join(', ')}`);
+    }
 
     // Initialize WASM
     const wasmModule = await EssentiaWASM();
