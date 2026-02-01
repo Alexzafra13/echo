@@ -42,6 +42,8 @@ export function SettingsPage() {
     setNormalizationPreventClipping,
     autoplay,
     setAutoplayEnabled,
+    djAutoQueue,
+    setDjAutoQueueEnabled,
   } = usePlayer();
 
   // Library analysis settings (LUFS and DJ)
@@ -515,6 +517,21 @@ export function SettingsPage() {
                       checked={autoplay.enabled}
                       onChange={setAutoplayEnabled}
                       aria-label="Reproducción automática"
+                    />
+                  </div>
+
+                  {/* DJ Auto-queue Toggle */}
+                  <div className={styles.settingsPage__toggleItem}>
+                    <div className={styles.settingsPage__toggleInfo}>
+                      <span className={styles.settingsPage__toggleLabel}>Cola DJ inteligente</span>
+                      <p className={styles.settingsPage__toggleDescription}>
+                        Añade automáticamente tracks compatibles (BPM, tonalidad) cuando la cola está vacía
+                      </p>
+                    </div>
+                    <Switch
+                      checked={djAutoQueue.enabled}
+                      onChange={setDjAutoQueueEnabled}
+                      aria-label="Cola DJ inteligente"
                     />
                   </div>
                 </div>
