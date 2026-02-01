@@ -178,3 +178,84 @@
   border-top: 1px solid var(--white-10);
   padding-top: 8px;
 }
+
+/* ===== DJ Auto-Queue Styles ===== */
+
+/* DJ Badge on track cover */
+.queueList__coverWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.queueList__djBadge {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(20, 184, 166, 0.4);
+  z-index: 1;
+}
+
+.queueList__djBadge svg {
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+/* DJ Info row (BPM / Key / Score) */
+.queueList__djInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.queueList__djTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--white-05);
+  color: var(--text-tertiary, #6b7280);
+}
+
+.queueList__djTag--bpm {
+  color: #14b8a6;
+  background: rgba(20, 184, 166, 0.1);
+}
+
+.queueList__djTag--key {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.1);
+}
+
+.queueList__djTag--score {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+/* DJ-added track highlight */
+.queueList__item--dj {
+  position: relative;
+}
+
+.queueList__item--dj::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(180deg, #14b8a6 0%, #0d9488 100%);
+}
