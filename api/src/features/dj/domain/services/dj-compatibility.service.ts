@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 /**
  * DJ Compatibility Service
  *
@@ -314,4 +316,34 @@ export function getCompatibleCamelotKeys(camelotKey: string): string[] {
   compatible.push(`${minus1}${letter}`);
 
   return compatible;
+}
+
+/**
+ * Injectable service wrapper for DJ compatibility calculations
+ */
+@Injectable()
+export class DjCompatibilityService {
+  calculateCompatibility(track1: TrackDjData, track2: TrackDjData): CompatibilityScore {
+    return calculateCompatibility(track1, track2);
+  }
+
+  getCompatibleCamelotKeys(camelotKey: string): string[] {
+    return getCompatibleCamelotKeys(camelotKey);
+  }
+
+  calculateBpmScore(bpm1: number | null, bpm2: number | null) {
+    return calculateBpmScore(bpm1, bpm2);
+  }
+
+  calculateKeyScore(camelot1: string | null, camelot2: string | null) {
+    return calculateKeyScore(camelot1, camelot2);
+  }
+
+  calculateEnergyScore(energy1: number | null, energy2: number | null) {
+    return calculateEnergyScore(energy1, energy2);
+  }
+
+  keyToCamelot(key: string | null): string | null {
+    return keyToCamelot(key);
+  }
 }
