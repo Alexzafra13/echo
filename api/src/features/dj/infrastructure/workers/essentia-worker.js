@@ -137,14 +137,33 @@ process.on('message', async (message) => {
         key = 'Unknown';
       }
 
-      // Energy
+      // Energy - use RMS for better normalization
       let energy = 0.5;
       try {
-        const energyResult = essentia.Energy(audioVector);
-        const rawEnergy = energyResult.energy;
-        energy = Math.min(1, Math.max(0, Math.log10(rawEnergy + 1) / 6));
+        // Calculate RMS (Root Mean Square) for normalized energy
+        const rmsResult = essentia.RMS(audioVector);
+        const rms = rmsResult.rms;
+
+        // RMS is typically 0-1 for normalized audio, but can vary
+        // Use a sigmoid-like scaling for better distribution
+        const rawEnergy = rms;
+        energy = Math.min(1, Math.max(0, rawEnergy * 3)); // Scale up since RMS is usually < 0.5
+
+        process.send({ type: 'debug', step: 'energy_done', rawRms: rms, energy });
       } catch (e) {
-        energy = 0.5;
+        // Fallback: try simple Energy algorithm
+        try {
+          const energyResult = essentia.Energy(audioVector);
+          const rawEnergy = energyResult.energy;
+          // Energy is sum of squares, so very large for full tracks
+          // Normalize by sample count and apply log scale
+          const normalizedEnergy = rawEnergy / audioData.length;
+          energy = Math.min(1, Math.max(0, Math.sqrt(normalizedEnergy) * 3));
+          process.send({ type: 'debug', step: 'energy_fallback', rawEnergy, normalizedEnergy, energy });
+        } catch (e2) {
+          process.send({ type: 'debug', step: 'energy_failed', error: e2?.message || String(e2) });
+          energy = 0.5;
+        }
       }
 
       // Danceability (optional)
@@ -152,8 +171,10 @@ process.on('message', async (message) => {
       try {
         const danceResult = essentia.Danceability(audioVector);
         danceability = danceResult.danceability;
+        process.send({ type: 'debug', step: 'danceability_done', danceability });
       } catch (e) {
-        // Optional
+        process.send({ type: 'debug', step: 'danceability_failed', error: e?.message || String(e) });
+        // Danceability is optional, leave as undefined
       }
 
       process.send({ type: 'result', success: true, data: { bpm, key, energy, danceability } });
