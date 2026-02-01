@@ -109,6 +109,73 @@
   }
 }
 
+/* ===== Source Tabs (Playlists / DJ Sessions) ===== */
+.playlistsPage__sourceTabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  padding: 4px;
+  background: var(--white-05);
+  border-radius: 12px;
+  width: fit-content;
+  position: relative;
+}
+
+/* Sliding indicator background */
+.playlistsPage__sourceIndicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  height: calc(100% - 8px);
+  width: calc(50% - 4px);
+  background: linear-gradient(135deg, var(--color-primary, #ed6842) 0%, var(--color-primary-dark, #d55a35) 100%);
+  border-radius: 8px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(237, 104, 66, 0.3);
+  z-index: 0;
+}
+
+.playlistsPage__sourceIndicator--dj {
+  transform: translateX(100%);
+}
+
+.playlistsPage__sourceTab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary, #b8bcc8);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  justify-content: center;
+}
+
+.playlistsPage__sourceTab svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.playlistsPage__sourceTab:hover {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.playlistsPage__sourceTab--active {
+  color: white;
+}
+
+.playlistsPage__sourceTab--active:hover {
+  color: white;
+}
+
 /* Header Section */
 .playlistsPage__header {
   display: flex;
@@ -398,6 +465,21 @@
     padding: 20px 20px calc(60px + var(--player-bottom-spacer, 0px)); /* Top para header + bottom nav + player dinámico */
   }
 
+  .playlistsPage__sourceTabs {
+    width: 100%;
+  }
+
+  .playlistsPage__sourceIndicator {
+    width: calc(50% - 2px);
+  }
+
+  .playlistsPage__sourceTab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
   /* Remove grid layout on mobile for natural content flow */
   .playlistsPage__gridWrapper {
     display: block; /* Override grid layout */
@@ -472,4 +554,101 @@
   .playlistsPage__subtitle {
     font-size: 14px;
   }
+}
+
+/* ===== DJ Sessions Empty State ===== */
+.playlistsPage__djEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.playlistsPage__djIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(20, 184, 166, 0.3);
+}
+
+.playlistsPage__djIcon svg {
+  color: white;
+}
+
+.playlistsPage__djTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 12px 0;
+}
+
+.playlistsPage__djDescription {
+  font-size: 15px;
+  color: var(--text-secondary, #b8bcc8);
+  margin: 0 0 8px 0;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.playlistsPage__djFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 24px;
+}
+
+.playlistsPage__djFeature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-tertiary, #6b7280);
+}
+
+.playlistsPage__djFeature svg {
+  color: #14b8a6;
+  flex-shrink: 0;
+}
+
+.playlistsPage__djButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  border: none;
+  border-radius: 24px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playlistsPage__djButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.4);
+}
+
+/* DJ Session Card Badge */
+.playlistCard__djBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
 }
