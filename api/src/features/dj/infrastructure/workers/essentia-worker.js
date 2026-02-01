@@ -19,9 +19,16 @@ async function initEssentia() {
   if (essentiaInitError) throw new Error(essentiaInitError);
 
   try {
-    const EssentiaModule = await import('essentia.js');
-    const EssentiaWASM = EssentiaModule.EssentiaWASM;
-    const Essentia = EssentiaModule.Essentia;
+    // Use require for CommonJS module (essentia.js uses CommonJS)
+    const EssentiaModule = require('essentia.js');
+
+    // Handle both ESM default export and CommonJS exports
+    const EssentiaWASM = EssentiaModule.EssentiaWASM || EssentiaModule.default?.EssentiaWASM;
+    const Essentia = EssentiaModule.Essentia || EssentiaModule.default?.Essentia;
+
+    if (!EssentiaWASM || !Essentia) {
+      throw new Error(`Essentia module not found. Keys: ${Object.keys(EssentiaModule).join(', ')}`);
+    }
 
     // Initialize WASM
     const wasmModule = await EssentiaWASM();
@@ -72,81 +79,89 @@ function formatKey(key, scale) {
   return `${key}${scaleAbbrev}`;
 }
 
-async function analyzeTrack(filePath) {
-  // Step 1: Initialize Essentia
-  await initEssentia();
-
-  // Step 2: Decode audio to PCM
-  const audioData = await decodeAudio(filePath);
-
-  if (!audioData || audioData.length === 0) {
-    throw new Error('Audio decode produced empty data');
-  }
-
-  // Step 3: Convert to Essentia vector
-  const audioVector = essentia.arrayToVector(audioData);
-
-  // Step 4: Analyze BPM
-  let bpm = 0;
-  try {
-    const rhythmResult = essentia.RhythmExtractor2013(audioVector);
-    bpm = Math.round(rhythmResult.bpm);
-
-    // Validate BPM range (60-200 is typical for music)
-    if (bpm < 60 || bpm > 200) {
-      if (bpm > 200 && bpm <= 400) bpm = Math.round(bpm / 2);
-      else if (bpm < 60 && bpm >= 30) bpm = Math.round(bpm * 2);
-      else bpm = 0;
-    }
-  } catch (e) {
-    // BPM detection failed, continue with 0
-    bpm = 0;
-  }
-
-  // Step 5: Analyze Key using KeyExtractor (simpler approach)
-  let key = 'Unknown';
-  try {
-    const keyResult = essentia.KeyExtractor(audioVector);
-    if (keyResult && keyResult.key && keyResult.key !== '') {
-      key = formatKey(keyResult.key, keyResult.scale);
-    }
-  } catch (e) {
-    // Key detection failed
-    key = 'Unknown';
-  }
-
-  // Step 6: Analyze Energy
-  let energy = 0.5;
-  try {
-    const energyResult = essentia.Energy(audioVector);
-    const rawEnergy = energyResult.energy;
-    energy = Math.min(1, Math.max(0, Math.log10(rawEnergy + 1) / 6));
-  } catch (e) {
-    energy = 0.5;
-  }
-
-  // Step 7: Analyze Danceability (optional)
-  let danceability = undefined;
-  try {
-    const danceResult = essentia.Danceability(audioVector);
-    danceability = danceResult.danceability;
-  } catch (e) {
-    // Danceability is optional
-  }
-
-  return { bpm, key, energy, danceability };
-}
-
 // Handle messages from parent process
 process.on('message', async (message) => {
   if (message.type === 'analyze') {
     try {
-      const result = await analyzeTrack(message.filePath);
-      process.send({ type: 'result', success: true, data: result });
+      // Send debug info via IPC
+      process.send({ type: 'debug', step: 'start', filePath: message.filePath });
+
+      // Step 1: Init Essentia
+      process.send({ type: 'debug', step: 'init_essentia' });
+      await initEssentia();
+      process.send({ type: 'debug', step: 'essentia_ready' });
+
+      // Step 2: Decode audio
+      process.send({ type: 'debug', step: 'decode_audio' });
+      const audioData = await decodeAudio(message.filePath);
+      process.send({ type: 'debug', step: 'decoded', samples: audioData?.length || 0 });
+
+      if (!audioData || audioData.length === 0) {
+        throw new Error('Audio decode produced empty data');
+      }
+
+      // Step 3: Convert to vector
+      process.send({ type: 'debug', step: 'convert_vector' });
+      const audioVector = essentia.arrayToVector(audioData);
+      process.send({ type: 'debug', step: 'vector_ready' });
+
+      // Step 4: Analyze
+      process.send({ type: 'debug', step: 'analyze' });
+
+      // BPM
+      let bpm = 0;
+      try {
+        const rhythmResult = essentia.RhythmExtractor2013(audioVector);
+        bpm = Math.round(rhythmResult.bpm);
+        if (bpm < 60 || bpm > 200) {
+          if (bpm > 200 && bpm <= 400) bpm = Math.round(bpm / 2);
+          else if (bpm < 60 && bpm >= 30) bpm = Math.round(bpm * 2);
+          else bpm = 0;
+        }
+        process.send({ type: 'debug', step: 'bpm_done', bpm });
+      } catch (e) {
+        process.send({ type: 'debug', step: 'bpm_failed', error: e?.message || String(e) });
+        bpm = 0;
+      }
+
+      // Key
+      let key = 'Unknown';
+      try {
+        const keyResult = essentia.KeyExtractor(audioVector);
+        if (keyResult && keyResult.key && keyResult.key !== '') {
+          key = formatKey(keyResult.key, keyResult.scale);
+        }
+        process.send({ type: 'debug', step: 'key_done', key });
+      } catch (e) {
+        process.send({ type: 'debug', step: 'key_failed', error: e?.message || String(e) });
+        key = 'Unknown';
+      }
+
+      // Energy
+      let energy = 0.5;
+      try {
+        const energyResult = essentia.Energy(audioVector);
+        const rawEnergy = energyResult.energy;
+        energy = Math.min(1, Math.max(0, Math.log10(rawEnergy + 1) / 6));
+      } catch (e) {
+        energy = 0.5;
+      }
+
+      // Danceability (optional)
+      let danceability = undefined;
+      try {
+        const danceResult = essentia.Danceability(audioVector);
+        danceability = danceResult.danceability;
+      } catch (e) {
+        // Optional
+      }
+
+      process.send({ type: 'result', success: true, data: { bpm, key, energy, danceability } });
     } catch (error) {
       // Serialize error properly
       const errorMessage = error instanceof Error ? error.message : String(error);
-      process.send({ type: 'result', success: false, error: errorMessage });
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      process.send({ type: 'result', success: false, error: errorMessage, stack: errorStack });
     }
   } else if (message.type === 'exit') {
     process.exit(0);
