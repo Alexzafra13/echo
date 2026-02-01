@@ -18,6 +18,10 @@ import { TransitionEngineService } from './infrastructure/services/transition-en
 
 // Repositories
 import { DrizzleDjAnalysisRepository } from './infrastructure/persistence/dj-analysis.repository';
+import { DrizzleDjSessionRepository } from './infrastructure/persistence/dj-session.repository';
+
+// Services
+import { DjCompatibilityService } from './domain/services/dj-compatibility.service';
 
 // Use Cases
 import { GetDjSuggestionsUseCase } from './application/use-cases/get-dj-suggestions.use-case';
@@ -52,9 +56,11 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     DjAnalysisQueueService,
     StemQueueService,
     TransitionEngineService,
+    DjCompatibilityService,
 
     // Repositories
     DrizzleDjAnalysisRepository,
+    DrizzleDjSessionRepository,
 
     // Use Cases
     GetDjSuggestionsUseCase,
