@@ -12,17 +12,24 @@ const fs = require('fs');
 const path = require('path');
 
 let essentia = null;
-let EssentiaWASM = null;
+let essentiaInitError = null;
 
 async function initEssentia() {
-  if (essentia) return;
+  if (essentia) return true;
+  if (essentiaInitError) throw new Error(essentiaInitError);
 
   try {
-    const { Essentia, EssentiaWASM: WASM } = await import('essentia.js');
-    EssentiaWASM = await WASM.default();
-    essentia = new Essentia(EssentiaWASM);
+    const EssentiaModule = await import('essentia.js');
+    const EssentiaWASM = EssentiaModule.EssentiaWASM;
+    const Essentia = EssentiaModule.Essentia;
+
+    // Initialize WASM
+    const wasmModule = await EssentiaWASM();
+    essentia = new Essentia(wasmModule);
+    return true;
   } catch (error) {
-    throw new Error(`Failed to initialize Essentia: ${error.message}`);
+    essentiaInitError = `Failed to initialize Essentia: ${error.message || error}`;
+    throw new Error(essentiaInitError);
   }
 }
 
@@ -31,123 +38,55 @@ async function decodeAudio(filePath) {
   const { promisify } = require('util');
   const execFileAsync = promisify(execFile);
 
-  // Use ffmpeg to decode audio to raw PCM
-  let ffmpegPath = 'ffmpeg';
+  // Use system ffmpeg (should be in PATH after installation)
+  const ffmpegPath = 'ffmpeg';
+
   try {
-    const ffmpegStatic = require('ffmpeg-static');
-    if (ffmpegStatic) ffmpegPath = ffmpegStatic;
-  } catch {
-    // Use system ffmpeg
-  }
-
-  // Decode to mono 44.1kHz float32 PCM
-  const { stdout } = await execFileAsync(
-    ffmpegPath,
-    [
-      '-i', filePath,
-      '-ac', '1',           // mono
-      '-ar', '44100',       // 44.1kHz
-      '-f', 'f32le',        // 32-bit float little-endian
-      '-acodec', 'pcm_f32le',
-      'pipe:1',             // output to stdout
-    ],
-    {
-      encoding: 'buffer',
-      maxBuffer: 100 * 1024 * 1024, // 100MB buffer
-    }
-  );
-
-  // Convert buffer to Float32Array
-  return new Float32Array(stdout.buffer, stdout.byteOffset, stdout.length / 4);
-}
-
-function detectKey(essentia, audioVector) {
-  try {
-    // Use HPCP for key detection
-    const frameSize = 4096;
-    const hopSize = 2048;
-
-    const frames = essentia.FrameGenerator(audioVector, frameSize, hopSize);
-    const hpcpValues = [];
-
-    for (const frame of frames) {
-      const windowed = essentia.Windowing(frame, true, 'hann');
-      const spectrum = essentia.Spectrum(windowed.frame);
-      const peaks = essentia.SpectralPeaks(
-        spectrum.spectrum,
-        10000, // maxFrequency
-        100,   // maxPeaks
-        60,    // minFrequency
-        1      // magnitudeThreshold
-      );
-
-      if (peaks.frequencies.length > 0) {
-        const hpcp = essentia.HPCP(
-          peaks.frequencies,
-          peaks.magnitudes,
-          true,     // harmonics
-          500,      // maxFrequency
-          100,      // minFrequency
-          true,     // nonLinear
-          12,       // size
-          'squaredCosine', // weightType
-          1         // windowSize
-        );
-        hpcpValues.push(Array.from(hpcp.hpcp));
+    // Decode to mono 44.1kHz float32 PCM
+    const { stdout } = await execFileAsync(
+      ffmpegPath,
+      [
+        '-i', filePath,
+        '-ac', '1',           // mono
+        '-ar', '44100',       // 44.1kHz
+        '-f', 'f32le',        // 32-bit float little-endian
+        '-acodec', 'pcm_f32le',
+        'pipe:1',             // output to stdout
+      ],
+      {
+        encoding: 'buffer',
+        maxBuffer: 100 * 1024 * 1024, // 100MB buffer
       }
-    }
-
-    if (hpcpValues.length === 0) {
-      return 'Unknown';
-    }
-
-    // Average HPCP values
-    const avgHpcp = new Array(12).fill(0);
-    for (const hpcp of hpcpValues) {
-      for (let i = 0; i < 12; i++) {
-        avgHpcp[i] += hpcp[i] / hpcpValues.length;
-      }
-    }
-
-    // Find key using profiles
-    const keyResult = essentia.Key(
-      essentia.arrayToVector(avgHpcp),
-      true,        // usePolyphony
-      'temperley', // profileType
-      4,           // numHarmonics
-      4096,        // pcpSize
-      'none',      // slope
-      false        // useThreeChords
     );
 
-    const key = keyResult.key;
-    const scale = keyResult.scale;
-
-    // Convert to Camelot notation
-    return formatKey(key, scale);
+    // Convert buffer to Float32Array
+    return new Float32Array(stdout.buffer, stdout.byteOffset, stdout.length / 4);
   } catch (error) {
-    return 'Unknown';
+    throw new Error(`FFmpeg decode failed: ${error.message || error}`);
   }
 }
 
 function formatKey(key, scale) {
-  // Convert to standard notation (e.g., "C major" -> "Cmaj", "A minor" -> "Am")
   if (!key || key === 'Unknown') return 'Unknown';
-
   const scaleAbbrev = scale === 'minor' ? 'm' : '';
   return `${key}${scaleAbbrev}`;
 }
 
 async function analyzeTrack(filePath) {
+  // Step 1: Initialize Essentia
   await initEssentia();
 
-  // Decode audio to PCM
+  // Step 2: Decode audio to PCM
   const audioData = await decodeAudio(filePath);
 
-  // Convert to Essentia vector
+  if (!audioData || audioData.length === 0) {
+    throw new Error('Audio decode produced empty data');
+  }
+
+  // Step 3: Convert to Essentia vector
   const audioVector = essentia.arrayToVector(audioData);
 
-  // Analyze BPM
+  // Step 4: Analyze BPM
   let bpm = 0;
   try {
     const rhythmResult = essentia.RhythmExtractor2013(audioVector);
@@ -155,40 +94,43 @@ async function analyzeTrack(filePath) {
 
     // Validate BPM range (60-200 is typical for music)
     if (bpm < 60 || bpm > 200) {
-      // Try to adjust (half or double tempo)
       if (bpm > 200 && bpm <= 400) bpm = Math.round(bpm / 2);
       else if (bpm < 60 && bpm >= 30) bpm = Math.round(bpm * 2);
-      else bpm = 0; // Out of range
+      else bpm = 0;
     }
-  } catch {
+  } catch (e) {
+    // BPM detection failed, continue with 0
     bpm = 0;
   }
 
-  // Analyze Key
+  // Step 5: Analyze Key using KeyExtractor (simpler approach)
   let key = 'Unknown';
   try {
-    key = detectKey(essentia, audioVector);
-  } catch {
+    const keyResult = essentia.KeyExtractor(audioVector);
+    if (keyResult && keyResult.key && keyResult.key !== '') {
+      key = formatKey(keyResult.key, keyResult.scale);
+    }
+  } catch (e) {
+    // Key detection failed
     key = 'Unknown';
   }
 
-  // Analyze Energy (using Essentia's Energy algorithm)
+  // Step 6: Analyze Energy
   let energy = 0.5;
   try {
     const energyResult = essentia.Energy(audioVector);
-    // Normalize to 0-1 range (log scale)
     const rawEnergy = energyResult.energy;
     energy = Math.min(1, Math.max(0, Math.log10(rawEnergy + 1) / 6));
-  } catch {
+  } catch (e) {
     energy = 0.5;
   }
 
-  // Analyze Danceability
+  // Step 7: Analyze Danceability (optional)
   let danceability = undefined;
   try {
     const danceResult = essentia.Danceability(audioVector);
     danceability = danceResult.danceability;
-  } catch {
+  } catch (e) {
     // Danceability is optional
   }
 
@@ -202,11 +144,24 @@ process.on('message', async (message) => {
       const result = await analyzeTrack(message.filePath);
       process.send({ type: 'result', success: true, data: result });
     } catch (error) {
-      process.send({ type: 'result', success: false, error: error.message });
+      // Serialize error properly
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      process.send({ type: 'result', success: false, error: errorMessage });
     }
   } else if (message.type === 'exit') {
     process.exit(0);
   }
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  process.send({ type: 'result', success: false, error: `Uncaught: ${errorMessage}` });
+});
+
+process.on('unhandledRejection', (reason) => {
+  const errorMessage = reason instanceof Error ? reason.message : String(reason);
+  process.send({ type: 'result', success: false, error: `Unhandled: ${errorMessage}` });
 });
 
 // Signal ready
