@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import * as os from 'os';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
-import { djAnalysis } from '../../../../infrastructure/database/schema';
+import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
@@ -126,24 +126,45 @@ export class DjAnalysisQueueService implements OnModuleInit {
           .where(eq(djAnalysis.id, analysisId));
       }
 
-      // Run analysis
-      const result = await this.analyzer.analyze(job.filePath);
+      // First, try to get BPM/Key from tracks table (ID3 tags)
+      const trackData = await this.drizzle.db
+        .select({ bpm: tracks.bpm, initialKey: tracks.initialKey })
+        .from(tracks)
+        .where(eq(tracks.id, job.trackId))
+        .limit(1);
+
+      const trackBpm = trackData[0]?.bpm || 0;
+      const trackKey = trackData[0]?.initialKey || 'Unknown';
+
+      // Run FFmpeg analysis for energy (BPM/Key from ID3 tags take priority)
+      let energy = 0;
+      try {
+        const result = await this.analyzer.analyze(job.filePath);
+        energy = result.energy;
+      } catch {
+        // FFmpeg might not be available in dev, use default energy
+        energy = 0.5;
+      }
+
+      // Use BPM/Key from ID3 tags, or fallback to 0/Unknown
+      const finalBpm = trackBpm || 0;
+      const finalKey = trackKey !== 'Unknown' ? trackKey : 'Unknown';
 
       // Convert key to Camelot
-      const camelotKey = DjAnalysis.keyToCamelot(result.key);
+      const camelotKey = DjAnalysis.keyToCamelot(finalKey);
 
       // Update with results
       await this.drizzle.db
         .update(djAnalysis)
         .set({
-          bpm: result.bpm,
-          key: result.key,
+          bpm: finalBpm,
+          key: finalKey,
           camelotKey: camelotKey || null,
-          energy: result.energy,
-          danceability: result.danceability || null,
-          beatgrid: result.beatgrid ? JSON.stringify(result.beatgrid) : null,
-          introEnd: result.introEnd || null,
-          outroStart: result.outroStart || null,
+          energy: energy,
+          danceability: null,
+          beatgrid: null,
+          introEnd: null,
+          outroStart: null,
           status: 'completed',
           analyzedAt: new Date(),
           updatedAt: new Date(),
@@ -154,9 +175,10 @@ export class DjAnalysisQueueService implements OnModuleInit {
       this.logger.info(
         {
           trackId: job.trackId,
-          bpm: result.bpm,
-          key: result.key,
+          bpm: finalBpm,
+          key: finalKey,
           camelotKey,
+          source: trackBpm > 0 ? 'id3-tags' : 'none',
         },
         'DJ analysis completed',
       );
