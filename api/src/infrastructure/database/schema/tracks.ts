@@ -63,6 +63,7 @@ export const tracks = pgTable(
     catalogNum: varchar('catalog_num', { length: 255 }),
     path: varchar('path', { length: 512 }).notNull().unique(),
     bpm: integer('bpm'),
+    initialKey: varchar('initial_key', { length: 10 }), // Musical key from ID3 TKEY tag (e.g., "Am", "C", "5A")
     rgAlbumGain: real('rg_album_gain'),
     rgAlbumPeak: real('rg_album_peak'),
     rgTrackGain: real('rg_track_gain'),
