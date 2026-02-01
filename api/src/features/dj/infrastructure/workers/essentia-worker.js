@@ -30,9 +30,9 @@ async function initEssentia() {
       throw new Error(`Essentia module not found. Keys: ${Object.keys(EssentiaModule).join(', ')}`);
     }
 
-    // Initialize WASM
-    const wasmModule = await EssentiaWASM();
-    essentia = new Essentia(wasmModule);
+    // EssentiaWASM is already the initialized WASM module (not a factory function)
+    // Just pass it directly to the Essentia constructor
+    essentia = new Essentia(EssentiaWASM);
     return true;
   } catch (error) {
     essentiaInitError = `Failed to initialize Essentia: ${error.message || error}`;
