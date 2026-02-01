@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 // Infrastructure
 import { DrizzleModule } from '../../infrastructure/database/drizzle.module';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
+import { ScannerModule } from '../scanner/scanner.module';
 
 // Controllers
 import { DjController } from './presentation/controllers/dj.controller';
@@ -41,6 +42,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     ConfigModule,
     DrizzleModule,
     QueueModule,
+    forwardRef(() => ScannerModule), // For ScannerGateway WebSocket events
   ],
   controllers: [DjController],
   providers: [

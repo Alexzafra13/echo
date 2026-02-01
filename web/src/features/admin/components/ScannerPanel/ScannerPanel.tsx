@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image, Volume2 } from 'lucide-react';
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle, Music, Disc, User, Image, Volume2, Music2 } from 'lucide-react';
 import { CollapsibleInfo } from '@shared/components/ui';
 import { useScannerHistory, useStartScan } from '../../hooks/useScanner';
 import { useScannerWebSocket } from '@shared/hooks/useScannerWebSocket';
@@ -24,8 +24,8 @@ export function ScannerPanel() {
   const { mutate: startScan, isPending: isScanning, data: scanResponse } = useStartScan();
   const { accessToken } = useAuthStore();
 
-  // WebSocket para progreso en tiempo real (scan + LUFS)
-  const { progress, isCompleted, isConnected, lufsProgress } = useScannerWebSocket(
+  // WebSocket para progreso en tiempo real (scan + LUFS + DJ)
+  const { progress, isCompleted, isConnected, lufsProgress, djProgress } = useScannerWebSocket(
     currentScanId,
     accessToken
   );
@@ -254,6 +254,34 @@ export function ScannerPanel() {
                 className={styles.lufsProgressFill}
                 style={{
                   width: `${Math.round((lufsProgress.processedInSession / (lufsProgress.processedInSession + lufsProgress.pendingTracks)) * 100)}%`
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DJ Analysis Status - Compact */}
+      {djProgress && (djProgress.isRunning || djProgress.pendingTracks > 0) && (
+        <div className={styles.djBar}>
+          <Music2 size={14} className={djProgress.isRunning ? styles.djIconRunning : styles.djIcon} />
+          <span className={styles.djText}>
+            DJ: {djProgress.processedInSession}/{djProgress.processedInSession + djProgress.pendingTracks}
+            {djProgress.processedInSession + djProgress.pendingTracks > 0 && (
+              <span className={styles.djPercent}>
+                ({Math.round((djProgress.processedInSession / (djProgress.processedInSession + djProgress.pendingTracks)) * 100)}%)
+              </span>
+            )}
+          </span>
+          {djProgress.estimatedTimeRemaining && (
+            <span className={styles.djEta}>~{djProgress.estimatedTimeRemaining}</span>
+          )}
+          {djProgress.isRunning && (
+            <div className={styles.djProgressInline}>
+              <div
+                className={styles.djProgressFill}
+                style={{
+                  width: `${Math.round((djProgress.processedInSession / (djProgress.processedInSession + djProgress.pendingTracks)) * 100)}%`
                 }}
               />
             </div>
