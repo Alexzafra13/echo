@@ -14,7 +14,10 @@ export interface DjSuggestion {
   trackId: string;
   title: string;
   artist: string;
+  albumId: string | null;
   albumName: string | null;
+  artistId: string | null;
+  duration: number | null;
   bpm: number | null;
   key: string | null;
   camelotKey: string | null;
@@ -107,7 +110,10 @@ export class GetDjSuggestionsUseCase {
         energy: djAnalysis.energy,
         title: tracks.title,
         artistName: tracks.artistName,
+        artistId: tracks.artistId,
         albumName: tracks.albumName,
+        albumId: tracks.albumId,
+        duration: tracks.duration,
       })
       .from(djAnalysis)
       .innerJoin(tracks, eq(tracks.id, djAnalysis.trackId))
@@ -140,7 +146,10 @@ export class GetDjSuggestionsUseCase {
           trackId: candidate.trackId,
           title: candidate.title,
           artist: candidate.artistName ?? 'Unknown Artist',
+          artistId: candidate.artistId,
+          albumId: candidate.albumId,
           albumName: candidate.albumName,
+          duration: candidate.duration,
           bpm: candidate.bpm,
           key: candidate.key,
           camelotKey: candidate.camelotKey,

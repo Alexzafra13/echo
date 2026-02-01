@@ -26,21 +26,37 @@ export function useDjAutoQueue() {
     trackId: string;
     title: string;
     artist: string;
-    albumId?: string;
+    albumId?: string | null;
     albumName?: string | null;
-    duration?: number;
-    artistId?: string;
-    coverUrl?: string;
+    duration?: number | null;
+    artistId?: string | null;
+    bpm?: number | null;
+    camelotKey?: string | null;
+    energy?: number | null;
+    compatibility: {
+      overall: number;
+      bpmScore: number;
+      keyScore: number;
+      energyScore: number;
+    };
   }): Track => {
     return {
       id: suggestion.trackId,
       title: suggestion.title,
       artist: suggestion.artist,
-      artistId: suggestion.artistId,
-      albumId: suggestion.albumId,
+      artistId: suggestion.artistId ?? undefined,
+      albumId: suggestion.albumId ?? undefined,
       albumName: suggestion.albumName ?? undefined,
-      duration: suggestion.duration,
-      coverImage: suggestion.coverUrl || (suggestion.albumId ? `/api/images/albums/${suggestion.albumId}/cover` : undefined),
+      duration: suggestion.duration ?? undefined,
+      coverImage: suggestion.albumId ? `/api/images/albums/${suggestion.albumId}/cover` : undefined,
+      // Mark as added by DJ auto-queue
+      addedByDj: true,
+      djInfo: {
+        bpm: suggestion.bpm ?? undefined,
+        musicalKey: suggestion.camelotKey ?? undefined,
+        energy: suggestion.energy ?? undefined,
+        compatibilityScore: suggestion.compatibility.overall,
+      },
     };
   }, []);
 
