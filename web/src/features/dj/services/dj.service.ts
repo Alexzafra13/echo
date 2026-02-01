@@ -17,6 +17,7 @@ import type {
   DjSystemStatus,
   AnalyzeResponse,
   AnalyzePlaylistResponse,
+  DjSuggestionsResponse,
 } from '../types';
 
 export const djService = {
@@ -99,6 +100,25 @@ export const djService = {
   ): Promise<TrackCompatibility[]> => {
     const { data } = await apiClient.get<TrackCompatibility[]>(
       `/dj/compatible/${trackId}`,
+      { params: options }
+    );
+    return data;
+  },
+
+  /**
+   * Get smart DJ suggestions for the next track
+   * Uses BPM, Key (Camelot), and Energy for scoring
+   */
+  getSuggestions: async (
+    trackId: string,
+    options?: {
+      limit?: number;
+      minScore?: number;
+      prioritize?: 'bpm' | 'key' | 'energy' | 'balanced';
+    }
+  ): Promise<DjSuggestionsResponse> => {
+    const { data } = await apiClient.get<DjSuggestionsResponse>(
+      `/dj/suggestions/${trackId}`,
       { params: options }
     );
     return data;
