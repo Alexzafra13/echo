@@ -9,6 +9,7 @@ import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
 import { useDjSessions, useDeleteDjSession } from '@features/dj/hooks/useDjSessions';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
+import { CreateDjSessionModal } from '../../components/CreateDjSessionModal';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
@@ -496,18 +497,7 @@ export default function PlaylistsPage() {
 
       {/* Create DJ Session Modal */}
       {showCreateDjModal && (
-        <div className={styles.modal}>
-          <div className={styles.modalBackdrop} onClick={() => setShowCreateDjModal(false)} />
-          <div className={styles.modalContent}>
-            <h2>Crear Sesión DJ</h2>
-            <p>Próximamente: Constructor de sesiones DJ con búsqueda de tracks y sugerencias de compatibilidad.</p>
-            <div className={styles.modalActions}>
-              <Button variant="secondary" onClick={() => setShowCreateDjModal(false)}>
-                Cerrar
-              </Button>
-            </div>
-          </div>
-        </div>
+        <CreateDjSessionModal onClose={() => setShowCreateDjModal(false)} />
       )}
     </div>
   );
