@@ -67,6 +67,16 @@ export interface LufsProgress {
 }
 
 /**
+ * Progreso del análisis DJ (BPM, Key, Energy)
+ */
+export interface DjProgress {
+  isRunning: boolean;
+  pendingTracks: number;
+  processedInSession: number;
+  estimatedTimeRemaining: string | null;
+}
+
+/**
  * Hook para conectarse a los eventos de scanner via WebSocket
  *
  * @param scanId - ID del scan a monitorear
@@ -91,6 +101,7 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
   const [errors, setErrors] = useState<ScanError[]>([]);
   const [completed, setCompleted] = useState<ScanCompleted | null>(null);
   const [lufsProgress, setLufsProgress] = useState<LufsProgress | null>(null);
+  const [djProgress, setDjProgress] = useState<DjProgress | null>(null);
 
   // Handlers para eventos
   const handleProgress = useCallback((data: ScanProgress) => {
@@ -112,6 +123,10 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
     setLufsProgress(data);
   }, []);
 
+  const handleDjProgress = useCallback((data: DjProgress) => {
+    setDjProgress(data);
+  }, []);
+
   // Eventos a registrar
   const events = useMemo(
     () => [
@@ -119,8 +134,9 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
       { event: 'scan:error', handler: handleError },
       { event: 'scan:completed', handler: handleCompleted },
       { event: 'lufs:progress', handler: handleLufsProgress },
+      { event: 'dj:progress', handler: handleDjProgress },
     ],
-    [handleProgress, handleError, handleCompleted, handleLufsProgress]
+    [handleProgress, handleError, handleCompleted, handleLufsProgress, handleDjProgress]
   );
 
   // Callback cuando se conecta: suscribirse al scan
@@ -186,6 +202,7 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
     errors,
     completed,
     lufsProgress,
+    djProgress,
     isConnected,
     isCompleted: completed !== null,
     pauseScan,

@@ -22,6 +22,7 @@ import {
   CancelScanDto,
   ResumeScanDto,
   LufsProgressDto,
+  DjProgressDto,
   LibraryChangeDto,
 } from '../../presentation/dtos/scanner-events.dto';
 
@@ -59,6 +60,11 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     // Send current LUFS progress if there's an active analysis
     if (this.lufsProgress) {
       client.emit('lufs:progress', this.lufsProgress);
+    }
+
+    // Send current DJ progress if there's an active analysis
+    if (this.djProgress) {
+      client.emit('dj:progress', this.djProgress);
     }
   }
 
@@ -180,6 +186,8 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   // Store latest LUFS progress for late subscribers
   private lufsProgress: LufsProgressDto | null = null;
+  // Store latest DJ progress for late subscribers
+  private djProgress: DjProgressDto | null = null;
 
   emitProgress(data: ScanProgressDto): void {
     const room = `scan:${data.scanId}`;
@@ -237,6 +245,22 @@ export class ScannerGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   getCurrentLufsProgress(): LufsProgressDto | null {
     return this.lufsProgress;
+  }
+
+  emitDjProgress(data: DjProgressDto): void {
+    // Store latest progress for late subscribers
+    this.djProgress = data.isRunning ? data : null;
+
+    // Broadcast to all clients
+    this.server.emit('dj:progress', data);
+
+    this.logger.debug(
+      `Emitted DJ progress: ${data.processedInSession}/${data.processedInSession + data.pendingTracks} tracks`
+    );
+  }
+
+  getCurrentDjProgress(): DjProgressDto | null {
+    return this.djProgress;
   }
 
   getCurrentProgress(scanId: string): ScanProgressDto | null {
