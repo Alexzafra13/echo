@@ -3,7 +3,6 @@ import { Music } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
-import { DjSuggestions } from '@features/dj/components';
 import styles from './QueueList.module.css';
 
 interface QueueListProps {
@@ -40,13 +39,6 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
       </div>
     );
   }
-
-  // Handler for selecting a track from DJ suggestions
-  const handleSuggestionSelect = useCallback((trackId: string) => {
-    // For now, we just log it - auto-queue feature will use this
-    console.log('DJ suggestion selected:', trackId);
-    // Future: add track to queue or play immediately
-  }, []);
 
   return (
     <div className={styles.queueList}>
@@ -93,14 +85,6 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
           );
         })}
       </div>
-
-      {/* DJ Suggestions - shows when DJ Flow is enabled */}
-      <DjSuggestions
-        trackId={currentTrack?.id}
-        onSelectTrack={handleSuggestionSelect}
-        className={styles.queueList__djSuggestions}
-        compact
-      />
     </div>
   );
 });

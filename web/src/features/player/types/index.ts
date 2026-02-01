@@ -22,6 +22,10 @@ export interface AutoplaySettings {
   enabled: boolean;
 }
 
+export interface DjAutoQueueSettings {
+  enabled: boolean;
+}
+
 export interface PlayerState {
   // Track playback
   currentTrack: Track | null;
@@ -51,6 +55,9 @@ export interface PlayerState {
   autoplay: AutoplaySettings;
   isAutoplayActive: boolean; // Currently playing from autoplay
   autoplaySourceArtist: string | null; // Artist name that triggered autoplay
+
+  // DJ Auto-queue (pick next track based on harmonic compatibility)
+  djAutoQueue: DjAutoQueueSettings;
 }
 
 export interface PlayerContextValue extends PlayerState {
@@ -91,4 +98,7 @@ export interface PlayerContextValue extends PlayerState {
 
   // Autoplay controls
   setAutoplayEnabled: (enabled: boolean) => void;
+
+  // DJ Auto-queue controls
+  setDjAutoQueueEnabled: (enabled: boolean) => void;
 }
