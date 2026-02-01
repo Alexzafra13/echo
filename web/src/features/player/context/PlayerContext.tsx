@@ -564,8 +564,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         logger.debug('[Player] Playing next track in queue');
         handlePlayNext(false);
       } else {
-        // No more tracks in queue - try autoplay
-        await triggerAutoplay(crossfadeSettings.enabled);
+        // No more tracks in queue - try DJ auto-queue first, then autoplay
+        logger.debug('[Player] No more tracks - trying DJ auto-queue then autoplay');
+        await handlePlayNext(crossfadeSettings.enabled);
       }
     };
 
