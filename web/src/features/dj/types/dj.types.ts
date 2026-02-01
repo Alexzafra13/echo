@@ -157,7 +157,10 @@ export interface DjSuggestion {
   trackId: string;
   title: string;
   artist: string;
+  artistId: string | null;
+  albumId: string | null;
   albumName: string | null;
+  duration: number | null;
   bpm: number | null;
   key: string | null;
   camelotKey: string | null;
