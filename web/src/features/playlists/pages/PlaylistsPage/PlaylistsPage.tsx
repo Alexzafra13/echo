@@ -7,9 +7,8 @@ import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
 import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
-import { useDjSessions, useDeleteDjSession } from '@features/dj/hooks/useDjSessions';
+import { useDjSessions, useDeleteDjSession, useCreateDjSession } from '@features/dj/hooks/useDjSessions';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
-import { CreateDjSessionModal } from '../../components/CreateDjSessionModal';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
@@ -59,6 +58,7 @@ export default function PlaylistsPage() {
   // DJ Sessions hooks
   const { data: djSessionsData, isLoading: isDjLoading } = useDjSessions();
   const deleteDjSessionMutation = useDeleteDjSession();
+  const createDjSessionMutation = useCreateDjSession();
   const djSessions = djSessionsData?.sessions || [];
 
   const allPlaylists = playlistsData?.items || [];
@@ -109,6 +109,14 @@ export default function PlaylistsPage() {
         dto: { trackId },
       });
     }
+  };
+
+  const handleCreateDjSession = async (name: string, trackIds: string[]) => {
+    // Create the DJ session with tracks
+    await createDjSessionMutation.mutateAsync({
+      name,
+      trackIds,
+    });
   };
 
   const handleDeleteClick = (playlistId: string, playlistName: string) => {
@@ -376,7 +384,20 @@ export default function PlaylistsPage() {
                       <div
                         key={session.id}
                         className={styles.djSessionCard}
-                        onClick={() => setLocation(`/dj/sessions/${session.id}`)}
+                        onClick={() => {
+                          // Play the session directly when clicking on the card
+                          if (session.tracks.length > 0) {
+                            const playerTracks = session.tracks.map(t => ({
+                              id: t.trackId,
+                              title: t.title || 'Unknown',
+                              artist: t.artist || 'Unknown',
+                              albumId: t.albumId,
+                              duration: t.duration,
+                              coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
+                            }));
+                            playQueue(playerTracks, 0);
+                          }
+                        }}
                       >
                         <div className={styles.djSessionCard__cover}>
                           <Disc3 size={48} />
@@ -497,7 +518,12 @@ export default function PlaylistsPage() {
 
       {/* Create DJ Session Modal */}
       {showCreateDjModal && (
-        <CreateDjSessionModal onClose={() => setShowCreateDjModal(false)} />
+        <CreatePlaylistModal
+          onClose={() => setShowCreateDjModal(false)}
+          onSubmit={handleCreateDjSession}
+          isLoading={createDjSessionMutation.isPending}
+          isDjSession={true}
+        />
       )}
     </div>
   );
