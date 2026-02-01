@@ -16,7 +16,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings } from '../types';
+import type { CrossfadeSettings, NormalizationSettings, AutoplaySettings, DjAutoQueueSettings } from '../types';
 
 // Current store version - increment when changing the persisted state structure
 const STORE_VERSION = 1;
@@ -37,6 +37,9 @@ interface PlayerSettingsState {
   // Autoplay settings
   autoplay: AutoplaySettings;
 
+  // DJ Auto-queue settings
+  djAutoQueue: DjAutoQueueSettings;
+
   // Player preference actions
   setPlayerPreference: (preference: PlayerPreference) => void;
 
@@ -52,6 +55,9 @@ interface PlayerSettingsState {
 
   // Autoplay actions
   setAutoplayEnabled: (enabled: boolean) => void;
+
+  // DJ Auto-queue actions
+  setDjAutoQueueEnabled: (enabled: boolean) => void;
 }
 
 // Default values
@@ -71,12 +77,17 @@ const DEFAULT_AUTOPLAY: AutoplaySettings = {
   enabled: true,
 };
 
+const DEFAULT_DJ_AUTO_QUEUE: DjAutoQueueSettings = {
+  enabled: false, // Disabled by default, user opt-in
+};
+
 // Initial state values (used for defaults and reset)
 const initialState = {
   playerPreference: 'dynamic' as PlayerPreference,
   crossfade: DEFAULT_CROSSFADE,
   normalization: DEFAULT_NORMALIZATION,
   autoplay: DEFAULT_AUTOPLAY,
+  djAutoQueue: DEFAULT_DJ_AUTO_QUEUE,
 };
 
 export const usePlayerSettingsStore = create<PlayerSettingsState>()(
@@ -129,6 +140,12 @@ export const usePlayerSettingsStore = create<PlayerSettingsState>()(
       setAutoplayEnabled: (enabled) =>
         set((state) => ({
           autoplay: { ...state.autoplay, enabled },
+        })),
+
+      // DJ Auto-queue actions
+      setDjAutoQueueEnabled: (enabled) =>
+        set((state) => ({
+          djAutoQueue: { ...state.djAutoQueue, enabled },
         })),
     }),
     {

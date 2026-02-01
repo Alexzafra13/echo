@@ -21,6 +21,7 @@ import { useQueueManagement } from '../hooks/useQueueManagement';
 import { useCrossfadeLogic } from '../hooks/useCrossfadeLogic';
 import { useRadioPlayback } from '../hooks/useRadioPlayback';
 import { useAutoplay } from '../hooks/useAutoplay';
+import { useDjAutoQueue } from '../hooks/useDjAutoQueue';
 import { useRadioMetadata } from '@features/radio/hooks/useRadioMetadata';
 import { logger } from '@shared/utils/logger';
 import { useMediaSession } from '../hooks/useMediaSession';
@@ -41,6 +42,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const crossfadeSettings = usePlayerSettingsStore((s) => s.crossfade);
   const normalizationSettings = usePlayerSettingsStore((s) => s.normalization);
   const autoplaySettings = usePlayerSettingsStore((s) => s.autoplay);
+  const djAutoQueueSettings = usePlayerSettingsStore((s) => s.djAutoQueue);
   const setCrossfadeEnabledStore = usePlayerSettingsStore((s) => s.setCrossfadeEnabled);
   const setCrossfadeDurationStore = usePlayerSettingsStore((s) => s.setCrossfadeDuration);
   const setCrossfadeSmartModeStore = usePlayerSettingsStore((s) => s.setCrossfadeSmartMode);
@@ -48,8 +50,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const setNormalizationTargetLufsStore = usePlayerSettingsStore((s) => s.setNormalizationTargetLufs);
   const setNormalizationPreventClippingStore = usePlayerSettingsStore((s) => s.setNormalizationPreventClipping);
   const setAutoplayEnabledStore = usePlayerSettingsStore((s) => s.setAutoplayEnabled);
+  const setDjAutoQueueEnabledStore = usePlayerSettingsStore((s) => s.setDjAutoQueueEnabled);
 
   const autoplay = useAutoplay();
+  const djAutoQueue = useDjAutoQueue();
 
   // ========== STATE ==========
   const [isPlaying, setIsPlaying] = useState(false);
@@ -373,6 +377,42 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, [autoplaySettings.enabled, currentTrack, radio.isRadioMode, queue, autoplay, playTrack]);
 
   /**
+   * Trigger DJ auto-queue with harmonically compatible track
+   * @returns true if a compatible track was found and queued, false otherwise
+   */
+  const triggerDjAutoQueue = useCallback(async (useCrossfade: boolean = false): Promise<boolean> => {
+    const canDjAutoQueue = djAutoQueueSettings.enabled && currentTrack?.id && !radio.isRadioMode;
+
+    if (!canDjAutoQueue || !currentTrack?.id) {
+      logger.debug('[Player] Cannot DJ auto-queue - conditions not met');
+      return false;
+    }
+
+    logger.debug('[Player] Triggering DJ auto-queue for track:', currentTrack.id);
+
+    const currentQueueIds = new Set(queue.queue.map(t => t.id));
+    const nextTrack = await djAutoQueue.getNextCompatibleTrack(
+      currentTrack.id,
+      currentQueueIds
+    );
+
+    if (nextTrack) {
+      logger.debug('[Player] DJ auto-queue: found compatible track', nextTrack.title);
+
+      // Calculate next index BEFORE adding to queue
+      const nextIndex = queue.queue.length;
+      // Add track to queue and play
+      queue.addToQueue(nextTrack);
+      queue.setCurrentIndex(nextIndex);
+      playTrack(nextTrack, useCrossfade);
+      return true;
+    } else {
+      logger.debug('[Player] DJ auto-queue: no compatible tracks found');
+      return false;
+    }
+  }, [djAutoQueueSettings.enabled, currentTrack, radio.isRadioMode, queue, djAutoQueue, playTrack]);
+
+  /**
    * Handle playing next track
    */
   const handlePlayNext = useCallback(async (useCrossfade: boolean = false) => {
@@ -385,9 +425,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
     const nextIndex = queue.getNextIndex();
 
-    // No next track - try autoplay
+    // No next track - try DJ auto-queue first, then regular autoplay
     if (nextIndex === -1) {
-      logger.warn('[Player] No next track, attempting autoplay via next button');
+      logger.debug('[Player] No next track in queue');
+
+      // Try DJ auto-queue first if enabled
+      if (djAutoQueueSettings.enabled) {
+        logger.debug('[Player] Attempting DJ auto-queue');
+        const djQueued = await triggerDjAutoQueue(useCrossfade);
+        if (djQueued) return;
+      }
+
+      // Fall back to regular autoplay
+      logger.debug('[Player] Attempting regular autoplay');
       await triggerAutoplay(useCrossfade);
       return;
     }
@@ -397,7 +447,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (nextTrack) {
       playTrack(nextTrack, useCrossfade);
     }
-  }, [queue, playTracking, playTrack, triggerAutoplay]);
+  }, [queue, playTracking, playTrack, triggerAutoplay, triggerDjAutoQueue, djAutoQueueSettings.enabled]);
 
   // Update ref for crossfade callback
   useEffect(() => {
@@ -441,16 +491,17 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
    * Does NOT auto-shuffle - caller is responsible for shuffle state and track order
    */
   const playQueue = useCallback((tracks: Track[], startIndex: number = 0) => {
-    // Reset autoplay state when user starts new playback
+    // Reset autoplay and DJ auto-queue state when user starts new playback
     setIsAutoplayActive(false);
     setAutoplaySourceArtist(null);
     autoplay.resetSession();
+    djAutoQueue.resetSession();
 
     queue.setQueue(tracks, startIndex);
     if (tracks[startIndex]) {
       playTrack(tracks[startIndex], false);
     }
-  }, [queue, playTrack, autoplay]);
+  }, [queue, playTrack, autoplay, djAutoQueue]);
 
   /**
    * Remove track from queue
@@ -642,6 +693,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setAutoplayEnabledStore(enabled);
   }, [setAutoplayEnabledStore]);
 
+  // ========== DJ AUTO-QUEUE SETTINGS ==========
+
+  const setDjAutoQueueEnabled = useCallback((enabled: boolean) => {
+    setDjAutoQueueEnabledStore(enabled);
+  }, [setDjAutoQueueEnabledStore]);
+
   // ========== CONTEXT VALUE ==========
 
   const value: PlayerContextValue = useMemo(
@@ -674,6 +731,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       autoplay: autoplaySettings,
       isAutoplayActive,
       autoplaySourceArtist,
+
+      // DJ Auto-queue state
+      djAutoQueue: djAutoQueueSettings,
 
       // Playback controls
       play,
@@ -712,6 +772,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       // Autoplay controls
       setAutoplayEnabled,
+
+      // DJ Auto-queue controls
+      setDjAutoQueueEnabled,
     }),
     [
       currentTrack,
@@ -756,6 +819,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       isAutoplayActive,
       autoplaySourceArtist,
       setAutoplayEnabled,
+      djAutoQueueSettings,
+      setDjAutoQueueEnabled,
     ]
   );
 
