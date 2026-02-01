@@ -83,12 +83,15 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         this.terminateWorker();
       }, 30000);
 
-      this.worker.on('message', (message: { type: string; success?: boolean; data?: AudioAnalysisResult; error?: string }) => {
+      this.worker.on('message', (message: { type: string; success?: boolean; data?: AudioAnalysisResult; error?: string; stack?: string; step?: string; [key: string]: unknown }) => {
         if (message.type === 'ready') {
           this.workerReady = true;
           clearTimeout(timeout);
           this.logger.info('Essentia worker ready');
           resolve();
+        } else if (message.type === 'debug') {
+          // Log debug messages from worker
+          this.logger.debug({ workerDebug: message }, `Worker step: ${message.step}`);
         } else if (message.type === 'result') {
           // Find pending request and resolve it
           const entries = Array.from(this.pendingRequests.entries());
@@ -99,6 +102,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
             if (message.success && message.data) {
               res(message.data);
             } else {
+              this.logger.debug({ workerError: message.error, workerStack: message.stack }, 'Worker returned error');
               rej(new Error(message.error || 'Analysis failed'));
             }
           }
@@ -164,7 +168,8 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         return result;
       }
     } catch (error) {
-      this.logger.debug({ error, filePath }, 'Essentia analysis failed, falling back to FFmpeg');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.debug({ error: errorMessage, filePath }, 'Essentia analysis failed, falling back to FFmpeg');
     }
 
     // Fallback to FFmpeg for energy only
