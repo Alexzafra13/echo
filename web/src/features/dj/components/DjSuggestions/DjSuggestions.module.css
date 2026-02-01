@@ -1,0 +1,208 @@
+.container {
+  background: var(--color-surface);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.compact {
+  background: var(--color-surface-alt);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.header:hover {
+  background: var(--color-surface-hover);
+}
+
+.icon {
+  color: var(--color-primary);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
+}
+
+.keysHint {
+  display: flex;
+  gap: 4px;
+}
+
+.keyBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.content {
+  padding: 0 8px 8px;
+}
+
+.loading,
+.empty {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 16px 8px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-surface-alt);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.suggestion:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border);
+}
+
+.suggestionMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.emoji {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.trackInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trackTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackArtist {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestionMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.djInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.camelotKey {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bpm {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.scores {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.transition {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Compact mode adjustments */
+.compact .header {
+  padding: 8px 10px;
+}
+
+.compact .title {
+  font-size: 12px;
+}
+
+.compact .content {
+  padding: 0 6px 6px;
+}
+
+.compact .suggestion {
+  padding: 6px 8px;
+}
+
+.compact .trackTitle {
+  font-size: 12px;
+}
+
+.compact .trackArtist {
+  font-size: 10px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .keysHint {
+    display: none;
+  }
+
+  .transition {
+    display: none;
+  }
+}

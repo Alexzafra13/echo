@@ -136,3 +136,44 @@ export interface CompatibleTracksResponse {
   sourceTrackId: string;
   compatibleTracks: TrackCompatibility[];
 }
+
+// ============================================
+// DJ Suggestions Types
+// ============================================
+
+export interface CompatibilityScore {
+  overall: number;
+  bpmScore: number;
+  keyScore: number;
+  energyScore: number;
+  bpmDiff: number;
+  keyCompatibility: 'perfect' | 'compatible' | 'energy_boost' | 'incompatible';
+  energyDiff: number;
+  canBeatmatch: boolean;
+  suggestedTransition: 'smooth' | 'energy_up' | 'energy_down' | 'key_change';
+}
+
+export interface DjSuggestion {
+  trackId: string;
+  title: string;
+  artist: string;
+  albumName: string | null;
+  bpm: number | null;
+  key: string | null;
+  camelotKey: string | null;
+  energy: number | null;
+  compatibility: CompatibilityScore;
+}
+
+export interface DjSuggestionsResponse {
+  currentTrack: {
+    trackId: string;
+    title: string;
+    bpm: number | null;
+    key: string | null;
+    camelotKey: string | null;
+    energy: number | null;
+  } | null;
+  suggestions: DjSuggestion[];
+  compatibleKeys: string[];
+}

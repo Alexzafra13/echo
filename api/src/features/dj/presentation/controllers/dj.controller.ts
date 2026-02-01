@@ -21,6 +21,7 @@ import { DjAnalysisQueueService } from '../../infrastructure/services/dj-analysi
 import { StemQueueService } from '../../infrastructure/services/stem-queue.service';
 import { TransitionEngineService } from '../../infrastructure/services/transition-engine.service';
 import { DrizzleDjAnalysisRepository } from '../../infrastructure/persistence/dj-analysis.repository';
+import { GetDjSuggestionsUseCase } from '../../application/use-cases/get-dj-suggestions.use-case';
 
 import {
   AnalyzeTrackRequestDto,
@@ -48,6 +49,7 @@ export class DjController {
     private readonly stemQueue: StemQueueService,
     private readonly transitionEngine: TransitionEngineService,
     private readonly djAnalysisRepository: DrizzleDjAnalysisRepository,
+    private readonly getDjSuggestionsUseCase: GetDjSuggestionsUseCase,
   ) {}
 
   // ============================================
@@ -131,6 +133,28 @@ export class DjController {
       status: analysis.status,
       analyzedAt: analysis.analyzedAt,
     };
+  }
+
+  @Get('suggestions/:trackId')
+  @ApiOperation({ summary: 'Get DJ track suggestions based on harmonic mixing and BPM compatibility' })
+  @ApiResponse({ status: 200, description: 'List of compatible tracks with scores' })
+  async getSuggestions(
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Query('limit') limit?: number,
+    @Query('minScore') minScore?: number,
+    @Query('prioritize') prioritize?: 'bpm' | 'key' | 'energy' | 'balanced',
+  ) {
+    const result = await this.getDjSuggestionsUseCase.execute(trackId, {
+      limit: limit ? parseInt(String(limit), 10) : undefined,
+      minScore: minScore ? parseInt(String(minScore), 10) : undefined,
+      prioritize: prioritize || 'balanced',
+    });
+
+    if (!result) {
+      return { currentTrack: null, suggestions: [], compatibleKeys: [] };
+    }
+
+    return result;
   }
 
   // ============================================
