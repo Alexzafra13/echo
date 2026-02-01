@@ -3,7 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import * as os from 'os';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
-import { djAnalysis } from '../../../../infrastructure/database/schema';
+import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
@@ -126,24 +126,52 @@ export class DjAnalysisQueueService implements OnModuleInit {
           .where(eq(djAnalysis.id, analysisId));
       }
 
-      // Run analysis
-      const result = await this.analyzer.analyze(job.filePath);
+      // First, try to get BPM/Key from tracks table (ID3 tags)
+      const trackData = await this.drizzle.db
+        .select({ bpm: tracks.bpm, initialKey: tracks.initialKey })
+        .from(tracks)
+        .where(eq(tracks.id, job.trackId))
+        .limit(1);
+
+      const trackBpm = trackData[0]?.bpm || 0;
+      const trackKey = trackData[0]?.initialKey || '';
+
+      // Run audio analysis
+      let analyzedBpm = 0;
+      let analyzedKey = 'Unknown';
+      let energy = 0.5;
+
+      try {
+        const result = await this.analyzer.analyze(job.filePath);
+        analyzedBpm = result.bpm;
+        analyzedKey = result.key;
+        energy = result.energy;
+      } catch (error) {
+        this.logger.debug(
+          { error: error instanceof Error ? error.message : 'Unknown' },
+          'Audio analysis failed, using defaults',
+        );
+      }
+
+      // Use ID3 tags first, fallback to Essentia analysis
+      const finalBpm = trackBpm > 0 ? trackBpm : analyzedBpm;
+      const finalKey = trackKey && trackKey !== 'Unknown' ? trackKey : analyzedKey;
 
       // Convert key to Camelot
-      const camelotKey = DjAnalysis.keyToCamelot(result.key);
+      const camelotKey = DjAnalysis.keyToCamelot(finalKey);
 
       // Update with results
       await this.drizzle.db
         .update(djAnalysis)
         .set({
-          bpm: result.bpm,
-          key: result.key,
+          bpm: finalBpm,
+          key: finalKey,
           camelotKey: camelotKey || null,
-          energy: result.energy,
-          danceability: result.danceability || null,
-          beatgrid: result.beatgrid ? JSON.stringify(result.beatgrid) : null,
-          introEnd: result.introEnd || null,
-          outroStart: result.outroStart || null,
+          energy: energy,
+          danceability: null,
+          beatgrid: null,
+          introEnd: null,
+          outroStart: null,
           status: 'completed',
           analyzedAt: new Date(),
           updatedAt: new Date(),
@@ -151,12 +179,23 @@ export class DjAnalysisQueueService implements OnModuleInit {
         .where(eq(djAnalysis.id, analysisId));
 
       this.processedInSession++;
+
+      // Determine the source of BPM/Key
+      let bpmSource = 'none';
+      let keySource = 'none';
+      if (trackBpm > 0) bpmSource = 'id3-tags';
+      else if (analyzedBpm > 0) bpmSource = 'essentia';
+      if (trackKey && trackKey !== 'Unknown') keySource = 'id3-tags';
+      else if (analyzedKey && analyzedKey !== 'Unknown') keySource = 'essentia';
+
       this.logger.info(
         {
           trackId: job.trackId,
-          bpm: result.bpm,
-          key: result.key,
+          bpm: finalBpm,
+          key: finalKey,
           camelotKey,
+          bpmSource,
+          keySource,
         },
         'DJ analysis completed',
       );

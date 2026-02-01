@@ -217,6 +217,9 @@ export class TrackProcessingService {
         mbzAlbumId: mbzAlbumId,
         mbzArtistId: mbzArtistId,
         mbzAlbumArtistId: mbzAlbumArtistId,
+        // DJ/Audio analysis from ID3 tags (TBPM, TKEY)
+        bpm: metadata.bpm ?? null,
+        initialKey: metadata.initialKey ?? null,
       };
 
       // Check if track exists (need albumId to detect album changes)
