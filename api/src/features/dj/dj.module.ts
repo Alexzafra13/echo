@@ -15,6 +15,7 @@ import { OnnxStemSeparatorService } from './infrastructure/services/onnx-stem-se
 import { DjAnalysisQueueService } from './infrastructure/services/dj-analysis-queue.service';
 import { StemQueueService } from './infrastructure/services/stem-queue.service';
 import { TransitionEngineService } from './infrastructure/services/transition-engine.service';
+import { TempoCacheService } from './infrastructure/services/tempo-cache.service';
 
 // Repositories
 import { DrizzleDjAnalysisRepository } from './infrastructure/persistence/dj-analysis.repository';
@@ -56,6 +57,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     DjAnalysisQueueService,
     StemQueueService,
     TransitionEngineService,
+    TempoCacheService,
     DjCompatibilityService,
 
     // Repositories
@@ -86,6 +88,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     DjAnalysisQueueService,
     StemQueueService,
     TransitionEngineService,
+    TempoCacheService,
   ],
 })
 export class DjModule {}

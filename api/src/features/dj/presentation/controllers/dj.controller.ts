@@ -26,6 +26,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { DjAnalysisQueueService } from '../../infrastructure/services/dj-analysis-queue.service';
 import { StemQueueService } from '../../infrastructure/services/stem-queue.service';
 import { TransitionEngineService } from '../../infrastructure/services/transition-engine.service';
+import { TempoCacheService } from '../../infrastructure/services/tempo-cache.service';
 import { DrizzleDjAnalysisRepository } from '../../infrastructure/persistence/dj-analysis.repository';
 import { DrizzleDjSessionRepository } from '../../infrastructure/persistence/dj-session.repository';
 import { GetDjSuggestionsUseCase } from '../../application/use-cases/get-dj-suggestions.use-case';
@@ -62,6 +63,7 @@ export class DjController {
     private readonly analysisQueue: DjAnalysisQueueService,
     private readonly stemQueue: StemQueueService,
     private readonly transitionEngine: TransitionEngineService,
+    private readonly tempoCacheService: TempoCacheService,
     private readonly djAnalysisRepository: DrizzleDjAnalysisRepository,
     private readonly djSessionRepository: DrizzleDjSessionRepository,
     private readonly getDjSuggestionsUseCase: GetDjSuggestionsUseCase,
@@ -441,7 +443,34 @@ export class DjController {
       trackList,
     });
 
+    // Generate tempo cache in background (don't await - let it run async)
+    this.generateTempoCacheForSession(session.id, dto.trackIds).catch((err) => {
+      this.logger.error({ err, sessionId: session.id }, 'Failed to generate tempo cache');
+    });
+
     return this.enrichSessionWithTracks(session);
+  }
+
+  /**
+   * Generate tempo cache for all transitions in a session
+   */
+  private async generateTempoCacheForSession(sessionId: string, trackIds: string[]): Promise<void> {
+    if (trackIds.length < 2) return;
+
+    // Get track paths
+    const trackRecords = await this.drizzle.db
+      .select({ id: tracks.id, path: tracks.path })
+      .from(tracks)
+      .where(inArray(tracks.id, trackIds));
+
+    const trackData = trackIds
+      .map((id) => {
+        const record = trackRecords.find((t) => t.id === id);
+        return record ? { trackId: id, filePath: record.path } : null;
+      })
+      .filter((t): t is { trackId: string; filePath: string } => t !== null);
+
+    await this.tempoCacheService.generateForSession(sessionId, trackData);
   }
 
   @Get('sessions/:id')
@@ -524,6 +553,16 @@ export class DjController {
       throw new NotFoundException('Session not found');
     }
 
+    // If tracks changed, regenerate tempo cache
+    if (dto.trackIds) {
+      // Delete old cache first
+      await this.tempoCacheService.deleteForSession(id);
+      // Generate new cache in background
+      this.generateTempoCacheForSession(id, dto.trackIds).catch((err) => {
+        this.logger.error({ err, sessionId: id }, 'Failed to regenerate tempo cache');
+      });
+    }
+
     return this.enrichSessionWithTracks(updated);
   }
 
@@ -543,6 +582,9 @@ export class DjController {
     if (session.userId !== req.user.id) {
       throw new ForbiddenException('Not your session');
     }
+
+    // Delete tempo cache files before deleting session
+    await this.tempoCacheService.deleteForSession(id);
 
     await this.djSessionRepository.delete(id);
   }
