@@ -104,8 +104,8 @@ export class WaveMixService {
     const finalTracks = qualifiedTracks.slice(0, finalConfig.maxTracks);
     this.logger.info({ userId, selectedTracks: finalTracks.length }, 'Selected tracks for Wave Mix');
 
-    // Intelligent shuffle
-    const shuffledTracks = this.shuffleService.intelligentShuffle(finalTracks, tracksResult);
+    // Intelligent shuffle (uses DJ analysis for harmonic flow when available)
+    const shuffledTracks = await this.shuffleService.intelligentShuffle(finalTracks, tracksResult);
 
     // Calculate metadata
     const metadata = await this.shuffleService.calculateMetadata(userId, shuffledTracks, tracksResult);
