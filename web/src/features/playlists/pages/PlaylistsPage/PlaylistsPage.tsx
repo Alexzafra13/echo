@@ -369,16 +369,15 @@ export default function PlaylistsPage() {
                   </button>
                 </div>
               ) : (
-                <div className={styles.playlistsPage__gridWrapper}>
-                  <div className={styles.playlistsPage__djHeader}>
-                    <Button
-                      variant="primary"
-                      onClick={() => setShowCreateDjModal(true)}
-                    >
-                      <Plus size={20} />
-                      Nueva Sesión DJ
-                    </Button>
-                  </div>
+                <>
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowCreateDjModal(true)}
+                    style={{ marginBottom: '24px' }}
+                  >
+                    <Plus size={20} />
+                    Nueva Sesión DJ
+                  </Button>
                   <div className={styles.playlistsPage__grid}>
                     {djSessions.map((session) => {
                       // Get unique album IDs for cover mosaic
@@ -417,7 +416,7 @@ export default function PlaylistsPage() {
                                 playlistName={session.name}
                               />
                             ) : (
-                              <div className={styles.playlistCard__coverPlaceholder}>
+                              <div className={styles.playlistCard__coverPlaceholderDj}>
                                 <Disc3 size={48} />
                               </div>
                             )}
@@ -485,7 +484,7 @@ export default function PlaylistsPage() {
                       );
                     })}
                   </div>
-                </div>
+                </>
               )}
             </>
           )}
