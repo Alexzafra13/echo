@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DrizzleModule } from '../../infrastructure/database/drizzle.module';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
 import { ScannerModule } from '../scanner/scanner.module';
+import { ExternalMetadataModule } from '../external-metadata/external-metadata.module';
 
 // Controllers
 import { DjController } from './presentation/controllers/dj.controller';
@@ -48,6 +49,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     DrizzleModule,
     QueueModule,
     forwardRef(() => ScannerModule), // For ScannerGateway WebSocket events
+    ExternalMetadataModule, // For SettingsService (used by TempoCacheService)
   ],
   controllers: [DjController],
   providers: [
