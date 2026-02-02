@@ -5,6 +5,50 @@
  * All magic numbers and timeouts are defined here for easy maintenance.
  */
 
+/**
+ * Camelot Wheel Colors
+ * Based on the standard Camelot/Mixed In Key color wheel.
+ * Each position has a distinct color for visual identification.
+ */
+export const CAMELOT_COLORS: Record<string, { bg: string; text: string; name: string }> = {
+  // Position 1 - Teal
+  '1A': { bg: '#1DB4B4', text: '#FFFFFF', name: 'Teal' },
+  '1B': { bg: '#14D4D4', text: '#000000', name: 'Cyan' },
+  // Position 2 - Green-Teal
+  '2A': { bg: '#1DB488', text: '#FFFFFF', name: 'Sea Green' },
+  '2B': { bg: '#14D49C', text: '#000000', name: 'Mint' },
+  // Position 3 - Green
+  '3A': { bg: '#1DB454', text: '#FFFFFF', name: 'Green' },
+  '3B': { bg: '#14D464', text: '#000000', name: 'Light Green' },
+  // Position 4 - Yellow-Green
+  '4A': { bg: '#5CB41D', text: '#FFFFFF', name: 'Lime' },
+  '4B': { bg: '#7CD414', text: '#000000', name: 'Yellow-Green' },
+  // Position 5 - Yellow
+  '5A': { bg: '#B4A81D', text: '#FFFFFF', name: 'Olive' },
+  '5B': { bg: '#D4C814', text: '#000000', name: 'Yellow' },
+  // Position 6 - Orange/Pink
+  '6A': { bg: '#D47894', text: '#FFFFFF', name: 'Rose' },
+  '6B': { bg: '#F490AC', text: '#000000', name: 'Pink' },
+  // Position 7 - Purple
+  '7A': { bg: '#9454B4', text: '#FFFFFF', name: 'Purple' },
+  '7B': { bg: '#B464D4', text: '#FFFFFF', name: 'Violet' },
+  // Position 8 - Blue-Purple
+  '8A': { bg: '#5454B4', text: '#FFFFFF', name: 'Indigo' },
+  '8B': { bg: '#6464D4', text: '#FFFFFF', name: 'Blue-Violet' },
+  // Position 9 - Blue
+  '9A': { bg: '#1D54B4', text: '#FFFFFF', name: 'Blue' },
+  '9B': { bg: '#1464D4', text: '#FFFFFF', name: 'Azure' },
+  // Position 10 - Blue-Cyan
+  '10A': { bg: '#1D88B4', text: '#FFFFFF', name: 'Ocean' },
+  '10B': { bg: '#149CD4', text: '#000000', name: 'Sky Blue' },
+  // Position 11 - Magenta
+  '11A': { bg: '#B41D88', text: '#FFFFFF', name: 'Magenta' },
+  '11B': { bg: '#D4149C', text: '#FFFFFF', name: 'Hot Pink' },
+  // Position 12 - Cyan
+  '12A': { bg: '#1DB4D4', text: '#000000', name: 'Turquoise' },
+  '12B': { bg: '#14D4E8', text: '#000000', name: 'Aqua' },
+} as const;
+
 export const DJ_CONFIG = {
   /**
    * Audio Analysis Configuration

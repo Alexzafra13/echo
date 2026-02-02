@@ -146,6 +146,9 @@ export class DjController {
       bpm: analysis.bpm,
       key: analysis.key,
       camelotKey: analysis.camelotKey,
+      camelotColor: analysis.camelotKey
+        ? this.compatibilityService.getCamelotColor(analysis.camelotKey) || undefined
+        : undefined,
       energy: analysis.energy,
       danceability: analysis.danceability,
       status: analysis.status,
@@ -296,6 +299,9 @@ export class DjController {
         bpm: analysis.bpm,
         key: analysis.key,
         camelotKey: analysis.camelotKey,
+        camelotColor: analysis.camelotKey
+          ? this.compatibilityService.getCamelotColor(analysis.camelotKey) || undefined
+          : undefined,
         harmonicScore: compatibility.harmonicScore,
         bpmDifference: compatibility.bpmDifference,
         overallScore: compatibility.overallScore,
@@ -720,11 +726,15 @@ export class DjController {
 
     const enrichedTracks: DjSessionTrackDto[] = session.trackList.map((t: any) => {
       const track = trackMap.get(t.trackId);
+      const camelotColor = t.camelotKey
+        ? this.compatibilityService.getCamelotColor(t.camelotKey)
+        : undefined;
       return {
         trackId: t.trackId,
         order: t.order,
         bpm: t.bpm,
         camelotKey: t.camelotKey,
+        camelotColor: camelotColor || undefined,
         energy: t.energy,
         compatibilityScore: t.compatibilityScore,
         title: track?.title,
