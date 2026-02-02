@@ -651,6 +651,40 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* DJ Meta (BPM range, etc) */
+.playlistCard__djMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #14b8a6;
+  margin-top: 4px;
+}
+
+/* Play button for cards */
+.playlistCard__playButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playlistCard__playButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
 }
 
 /* ===== DJ Session Cards ===== */
