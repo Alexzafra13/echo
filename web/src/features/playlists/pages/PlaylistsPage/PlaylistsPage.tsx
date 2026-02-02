@@ -7,7 +7,8 @@ import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
 import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
-import { useDjSessions, useDeleteDjSession, useCreateDjSession } from '@features/dj/hooks/useDjSessions';
+import { useDjSessions, useDeleteDjSession, useCreateDjSession, useUpdateDjSession } from '@features/dj/hooks/useDjSessions';
+import type { DjSession } from '@features/dj/services/djSessions.service';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
@@ -34,6 +35,7 @@ export default function PlaylistsPage() {
   const [deleteDjSessionId, setDeleteDjSessionId] = useState<string | null>(null);
   const [deleteDjSessionName, setDeleteDjSessionName] = useState('');
   const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
+  const [editDjSession, setEditDjSession] = useState<DjSession | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [playlistMode, setPlaylistMode] = useState<PlaylistMode>(
     modeParam === 'dj' ? 'dj' : 'playlists'
@@ -59,6 +61,7 @@ export default function PlaylistsPage() {
   const { data: djSessionsData, isLoading: isDjLoading } = useDjSessions();
   const deleteDjSessionMutation = useDeleteDjSession();
   const createDjSessionMutation = useCreateDjSession();
+  const updateDjSessionMutation = useUpdateDjSession();
   const djSessions = djSessionsData?.sessions || [];
 
   const allPlaylists = playlistsData?.items || [];
@@ -144,6 +147,10 @@ export default function PlaylistsPage() {
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
     await updatePlaylistMutation.mutateAsync({ id, dto: data });
+  };
+
+  const handleUpdateDjSession = async (id: string, data: UpdatePlaylistDto) => {
+    await updateDjSessionMutation.mutateAsync({ id, dto: { name: data.name } });
   };
 
   return (
@@ -448,6 +455,16 @@ export default function PlaylistsPage() {
                               className={styles.playlistCard__actionButton}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setEditDjSession(session);
+                              }}
+                              title="Editar sesión"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              className={styles.playlistCard__actionButton}
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setDeleteDjSessionId(session.id);
                                 setDeleteDjSessionName(session.name);
                               }}
@@ -527,6 +544,16 @@ export default function PlaylistsPage() {
           onSubmit={handleCreateDjSession}
           isLoading={createDjSessionMutation.isPending}
           isDjSession={true}
+        />
+      )}
+
+      {/* Edit DJ Session Modal */}
+      {editDjSession && (
+        <EditPlaylistModal
+          djSession={editDjSession}
+          onClose={() => setEditDjSession(null)}
+          onSubmit={handleUpdateDjSession}
+          isLoading={updateDjSessionMutation.isPending}
         />
       )}
     </div>
