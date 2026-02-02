@@ -79,11 +79,18 @@ FROM alpine:3.20 AS models
 
 # Download stem separation model (~171MB) - included in image like FFmpeg
 # Using separate stage so model download is cached independently
-RUN apk add --no-cache wget && \
+# Uses curl with retries for reliability in CI/CD environments
+RUN apk add --no-cache curl && \
     mkdir -p /models && \
-    wget -q --show-progress -O /models/htdemucs.onnx \
+    curl -L \
+      --retry 5 \
+      --retry-delay 3 \
+      --retry-all-errors \
+      --connect-timeout 30 \
+      --max-time 600 \
+      -o /models/htdemucs.onnx \
       "https://huggingface.co/webai-community/models/resolve/main/demucs.onnx" && \
-    echo "Model downloaded: $(ls -lh /models/htdemucs.onnx)"
+    ls -lh /models/htdemucs.onnx
 
 # ----------------------------------------
 # Stage 4: Minimal Production Runtime
