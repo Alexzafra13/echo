@@ -45,6 +45,11 @@ export interface IStemSeparator {
    * Get estimated processing time for a given duration
    */
   estimateProcessingTime(durationSeconds: number): number;
+
+  /**
+   * Get initialization error if any
+   */
+  getError?(): string | null;
 }
 
 export const STEM_SEPARATOR = 'IStemSeparator';
