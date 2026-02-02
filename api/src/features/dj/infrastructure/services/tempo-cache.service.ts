@@ -52,8 +52,14 @@ export class TempoCacheService implements OnModuleInit {
     this.cacheDir = path.join(dataDir, 'tempo-cache');
 
     // Ensure cache directory exists
-    await fs.mkdir(this.cacheDir, { recursive: true });
-    this.logger.info(`Tempo cache directory: ${this.cacheDir}`);
+    try {
+      await fs.mkdir(this.cacheDir, { recursive: true });
+      this.logger.info(`Tempo cache directory: ${this.cacheDir}`);
+    } catch (error) {
+      // In production, directories are created by entrypoint
+      // This is just a fallback for development
+      this.logger.warn(`Could not create ${this.cacheDir}: ${(error as Error).message}`);
+    }
 
     // Register BullMQ processor for cleanup jobs
     this.bullmq.registerProcessor(
