@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus } from '@nestjs/common';
 import { StreamingController } from './streaming.controller';
 import { StreamTrackUseCase } from '../domain/use-cases';
+import { TempoCacheService } from '../../dj/infrastructure/services/tempo-cache.service';
 import { StreamTokenGuard } from './guards';
 import { NotFoundError } from '@shared/errors';
 import { Readable } from 'stream';
@@ -43,6 +44,10 @@ describe('StreamingController', () => {
       execute: jest.fn(),
     };
 
+    const mockTempoCacheService = {
+      getCachedPath: jest.fn().mockResolvedValue(null),
+    };
+
     module = await Test.createTestingModule({
       controllers: [StreamingController],
       providers: [
@@ -53,6 +58,10 @@ describe('StreamingController', () => {
         {
           provide: StreamTrackUseCase,
           useValue: mockStreamTrackUseCase,
+        },
+        {
+          provide: TempoCacheService,
+          useValue: mockTempoCacheService,
         },
       ],
     })
