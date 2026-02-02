@@ -37,6 +37,9 @@ export class DjAnalysisResponseDto {
   @ApiPropertyOptional()
   camelotKey?: string;
 
+  @ApiPropertyOptional({ description: 'Color for Camelot key visualization' })
+  camelotColor?: { bg: string; text: string; name: string };
+
   @ApiPropertyOptional()
   energy?: number;
 
@@ -122,6 +125,9 @@ export class TrackCompatibilityDto {
 
   @ApiPropertyOptional()
   camelotKey?: string;
+
+  @ApiPropertyOptional({ description: 'Color for Camelot key visualization' })
+  camelotColor?: { bg: string; text: string; name: string };
 
   @ApiProperty({ description: 'Harmonic compatibility score 0-100' })
   harmonicScore!: number;
@@ -240,6 +246,17 @@ export class CreateDjSessionRequestDto {
   transitionDuration?: number;
 }
 
+export class CamelotColorDto {
+  @ApiProperty({ description: 'Background color hex' })
+  bg!: string;
+
+  @ApiProperty({ description: 'Text color hex for contrast' })
+  text!: string;
+
+  @ApiProperty({ description: 'Color name' })
+  name!: string;
+}
+
 export class DjSessionTrackDto {
   @ApiProperty()
   trackId!: string;
@@ -252,6 +269,9 @@ export class DjSessionTrackDto {
 
   @ApiPropertyOptional()
   camelotKey?: string;
+
+  @ApiPropertyOptional({ type: CamelotColorDto, description: 'Color for Camelot key visualization' })
+  camelotColor?: CamelotColorDto;
 
   @ApiPropertyOptional()
   energy?: number;

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CAMELOT_COLORS } from '../../config/dj.config';
 
 /**
  * DJ Compatibility Service
@@ -292,6 +293,14 @@ export function calculateCompatibility(
 }
 
 /**
+ * Get color info for a Camelot key
+ */
+export function getCamelotColor(camelotKey: string | null): { bg: string; text: string; name: string } | null {
+  if (!camelotKey) return null;
+  return CAMELOT_COLORS[camelotKey] || null;
+}
+
+/**
  * Get compatible Camelot keys for a given key
  */
 export function getCompatibleCamelotKeys(camelotKey: string): string[] {
@@ -345,5 +354,9 @@ export class DjCompatibilityService {
 
   keyToCamelot(key: string | null): string | null {
     return keyToCamelot(key);
+  }
+
+  getCamelotColor(camelotKey: string | null): { bg: string; text: string; name: string } | null {
+    return getCamelotColor(camelotKey);
   }
 }
