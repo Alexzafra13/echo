@@ -82,9 +82,10 @@ function formatKey(key, scale) {
 // Handle messages from parent process
 process.on('message', async (message) => {
   if (message.type === 'analyze') {
+    const requestId = message.requestId; // Track requestId for response correlation
     try {
       // Send debug info via IPC
-      process.send({ type: 'debug', step: 'start', filePath: message.filePath });
+      process.send({ type: 'debug', step: 'start', filePath: message.filePath, requestId });
 
       // Step 1: Init Essentia
       process.send({ type: 'debug', step: 'init_essentia' });
@@ -177,12 +178,12 @@ process.on('message', async (message) => {
         // Danceability is optional, leave as undefined
       }
 
-      process.send({ type: 'result', success: true, data: { bpm, key, energy, danceability } });
+      process.send({ type: 'result', requestId, success: true, data: { bpm, key, energy, danceability } });
     } catch (error) {
       // Serialize error properly
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      process.send({ type: 'result', success: false, error: errorMessage, stack: errorStack });
+      process.send({ type: 'result', requestId, success: false, error: errorMessage, stack: errorStack });
     }
   } else if (message.type === 'exit') {
     process.exit(0);

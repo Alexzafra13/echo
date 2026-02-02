@@ -197,6 +197,8 @@ export class TempoCacheService implements OnModuleInit {
    * Run FFmpeg to generate tempo-adjusted audio
    */
   private runFfmpeg(input: string, output: string, atempoFilters: string): Promise<void> {
+    const FFMPEG_TIMEOUT = 5 * 60 * 1000; // 5 minutes max per file
+
     return new Promise((resolve, reject) => {
       const args = [
         '-i', input,
@@ -209,6 +211,21 @@ export class TempoCacheService implements OnModuleInit {
       ];
 
       const ffmpeg = spawn('ffmpeg', args);
+      let settled = false;
+
+      const cleanup = () => {
+        if (!ffmpeg.killed) {
+          ffmpeg.kill('SIGKILL');
+        }
+      };
+
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          reject(new Error(`FFmpeg timeout after ${FFMPEG_TIMEOUT / 1000}s for: ${input}`));
+        }
+      }, FFMPEG_TIMEOUT);
 
       let stderr = '';
       ffmpeg.stderr.on('data', (data) => {
@@ -216,6 +233,10 @@ export class TempoCacheService implements OnModuleInit {
       });
 
       ffmpeg.on('close', (code) => {
+        clearTimeout(timeout);
+        if (settled) return;
+        settled = true;
+
         if (code === 0) {
           resolve();
         } else {
@@ -224,6 +245,10 @@ export class TempoCacheService implements OnModuleInit {
       });
 
       ffmpeg.on('error', (err) => {
+        clearTimeout(timeout);
+        if (settled) return;
+        settled = true;
+        cleanup();
         reject(new Error(`FFmpeg spawn error: ${err.message}`));
       });
     });
