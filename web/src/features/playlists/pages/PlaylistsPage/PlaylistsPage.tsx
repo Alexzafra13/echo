@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Check, Play } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Play } from 'lucide-react';
 import { useLocation, useSearch } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
@@ -180,8 +180,8 @@ export default function PlaylistsPage() {
         />
 
         <div className={styles.playlistsPage__content}>
-          {/* Header Section */}
-          <div className={styles.playlistsPage__header}>
+          {/* Page Header */}
+          <div className={styles.playlistsPage__pageHeader}>
             <h1 className={styles.playlistsPage__title}>
               {playlistMode === 'playlists' ? 'Mis Playlists' : 'Sesiones DJ'}
             </h1>
@@ -191,15 +191,6 @@ export default function PlaylistsPage() {
                 : 'Crea sesiones con mezcla armónica automática'
               }
             </p>
-            {playlistMode === 'playlists' && (
-              <Button
-                variant="primary"
-                onClick={() => setShowCreateModal(true)}
-              >
-                <Plus size={20} />
-                Nueva Playlist
-              </Button>
-            )}
           </div>
 
           {/* Source Tabs */}
@@ -232,6 +223,16 @@ export default function PlaylistsPage() {
           {/* Playlists Content */}
           {playlistMode === 'playlists' && (
             <>
+              {/* Create button */}
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateModal(true)}
+                className={styles.playlistsPage__createButton}
+              >
+                <Plus size={20} />
+                Nueva Playlist
+              </Button>
+
               {/* Top Pagination - Mobile Only */}
               {!isLoading && playlists.length > 0 && totalPages > 1 && (
                 <div className={styles.playlistsPage__paginationTop}>
@@ -333,52 +334,28 @@ export default function PlaylistsPage() {
           {/* DJ Sessions Content */}
           {playlistMode === 'dj' && (
             <>
+              {/* Create button */}
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateDjModal(true)}
+                className={styles.playlistsPage__createButton}
+              >
+                <Plus size={20} />
+                Nueva Sesión DJ
+              </Button>
+
               {isDjLoading ? (
                 <div className={styles.playlistsPage__loading}>
                   <p>Cargando sesiones DJ...</p>
                 </div>
               ) : djSessions.length === 0 ? (
-                <div className={styles.playlistsPage__djEmptyState}>
-                  <div className={styles.playlistsPage__djIcon}>
-                    <Disc3 size={40} />
-                  </div>
-                  <h2 className={styles.playlistsPage__djTitle}>Sesiones DJ</h2>
-                  <p className={styles.playlistsPage__djDescription}>
-                    Crea sesiones que se ordenan automáticamente para lograr mezclas armónicas perfectas
-                  </p>
-                  <div className={styles.playlistsPage__djFeatures}>
-                    <div className={styles.playlistsPage__djFeature}>
-                      <Check size={16} />
-                      <span>Ordenación automática por compatibilidad armónica</span>
-                    </div>
-                    <div className={styles.playlistsPage__djFeature}>
-                      <Check size={16} />
-                      <span>Análisis de BPM, tonalidad y energía</span>
-                    </div>
-                    <div className={styles.playlistsPage__djFeature}>
-                      <Check size={16} />
-                      <span>Sugerencias de transiciones suaves</span>
-                    </div>
-                  </div>
-                  <button
-                    className={styles.playlistsPage__djButton}
-                    onClick={() => setShowCreateDjModal(true)}
-                  >
-                    <Plus size={20} />
-                    Crear Sesión DJ
-                  </button>
+                <div className={styles.playlistsPage__emptyState}>
+                  <Disc3 size={64} />
+                  <h2>No tienes sesiones DJ todavía</h2>
+                  <p>Crea tu primera sesión para mezclas armónicas perfectas</p>
                 </div>
               ) : (
-                <>
-                  <Button
-                    variant="primary"
-                    onClick={() => setShowCreateDjModal(true)}
-                    style={{ marginBottom: '24px' }}
-                  >
-                    <Plus size={20} />
-                    Nueva Sesión DJ
-                  </Button>
-                  <div className={styles.playlistsPage__grid}>
+                <div className={styles.playlistsPage__grid}>
                     {djSessions.map((session) => {
                       // Get unique album IDs for cover mosaic
                       const albumIds = [...new Set(session.tracks.map(t => t.albumId).filter(Boolean))] as string[];
@@ -483,8 +460,7 @@ export default function PlaylistsPage() {
                         </div>
                       );
                     })}
-                  </div>
-                </>
+                </div>
               )}
             </>
           )}

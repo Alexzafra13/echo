@@ -176,26 +176,27 @@
   color: white;
 }
 
-/* Header Section */
-.playlistsPage__header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 32px;
+/* Page Header (title + subtitle only) */
+.playlistsPage__pageHeader {
+  margin-bottom: 24px;
 }
 
 .playlistsPage__title {
   font-size: 36px;
   font-weight: 800;
   color: var(--text-primary, #ffffff);
-  margin: 0;
+  margin: 0 0 8px 0;
 }
 
 .playlistsPage__subtitle {
   font-size: 16px;
   color: var(--text-secondary, #b8bcc8);
   margin: 0;
+}
+
+/* Create Button */
+.playlistsPage__createButton {
+  margin-bottom: 24px;
 }
 
 /* Create Form */
@@ -507,15 +508,15 @@
     margin-bottom: 24px;
   }
 
-  .playlistsPage__header {
-    margin-bottom: 16px; /* Reduced since pagination is below */
+  .playlistsPage__pageHeader {
+    margin-bottom: 16px;
   }
 
   .playlistsPage__title {
     font-size: 28px;
   }
 
-  .playlistsPage__header button {
+  .playlistsPage__createButton {
     width: 100%;
     border-radius: 20px; /* iOS rounded button */
   }
@@ -553,7 +554,7 @@
     padding: 16px 16px calc(60px + var(--player-bottom-spacer, 0px)); /* Ajustado para header más pequeño + bottom nav + player dinámico */
   }
 
-  .playlistsPage__header {
+  .playlistsPage__pageHeader {
     margin-bottom: 24px;
   }
 
