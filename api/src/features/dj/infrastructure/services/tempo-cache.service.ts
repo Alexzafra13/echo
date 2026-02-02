@@ -10,11 +10,11 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq, and, lt, sql, inArray } from 'drizzle-orm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { spawn } from 'child_process';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { tempoCache, djAnalysis } from '../../../../infrastructure/database/schema';
 import { SettingsService } from '../../../external-metadata/infrastructure/services/settings.service';
+import { runFfmpeg } from '../utils/ffmpeg.util';
 
 const TEMPO_CACHE_QUEUE = 'tempo-cache-queue';
 const CLEANUP_JOB = 'cleanup-old-cache';
@@ -144,7 +144,7 @@ export class TempoCacheService implements OnModuleInit {
       const atempoFilters = this.buildAtempoFilters(tempoRatio);
 
       // Run FFmpeg
-      await this.runFfmpeg(sourceFilePath, outputPath, atempoFilters);
+      await this.runTempoAdjust(sourceFilePath, outputPath, atempoFilters);
 
       // Get file size
       const stats = await fs.stat(outputPath);
@@ -196,11 +196,9 @@ export class TempoCacheService implements OnModuleInit {
   /**
    * Run FFmpeg to generate tempo-adjusted audio
    */
-  private runFfmpeg(input: string, output: string, atempoFilters: string): Promise<void> {
-    const FFMPEG_TIMEOUT = 5 * 60 * 1000; // 5 minutes max per file
-
-    return new Promise((resolve, reject) => {
-      const args = [
+  private runTempoAdjust(input: string, output: string, atempoFilters: string): Promise<void> {
+    return runFfmpeg(
+      [
         '-i', input,
         '-filter:a', atempoFilters,
         '-vn', // No video
@@ -208,50 +206,9 @@ export class TempoCacheService implements OnModuleInit {
         '-q:a', '2', // High quality VBR
         '-y', // Overwrite output
         output,
-      ];
-
-      const ffmpeg = spawn('ffmpeg', args);
-      let settled = false;
-
-      const cleanup = () => {
-        if (!ffmpeg.killed) {
-          ffmpeg.kill('SIGKILL');
-        }
-      };
-
-      const timeout = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          cleanup();
-          reject(new Error(`FFmpeg timeout after ${FFMPEG_TIMEOUT / 1000}s for: ${input}`));
-        }
-      }, FFMPEG_TIMEOUT);
-
-      let stderr = '';
-      ffmpeg.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      ffmpeg.on('close', (code) => {
-        clearTimeout(timeout);
-        if (settled) return;
-        settled = true;
-
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-500)}`));
-        }
-      });
-
-      ffmpeg.on('error', (err) => {
-        clearTimeout(timeout);
-        if (settled) return;
-        settled = true;
-        cleanup();
-        reject(new Error(`FFmpeg spawn error: ${err.message}`));
-      });
-    });
+      ],
+      { description: `Tempo adjust for ${path.basename(input)}` },
+    );
   }
 
   /**

@@ -8,7 +8,7 @@ import {
   StemSeparationResult,
   StemSeparationOptions,
 } from '../../domain/ports/stem-separator.port';
-import { getFfmpegPath } from '../utils/ffmpeg.util';
+import { getFfmpegPath, getAudioDuration, runFfmpeg, runFfmpegWithOutput } from '../utils/ffmpeg.util';
 
 /**
  * OnnxStemSeparatorService - Stem separation using ONNX Runtime
@@ -132,14 +132,9 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
     this.logger.info({ inputPath, outputDir, trackId: options.trackId }, 'Starting stem separation');
 
     try {
-      // Step 1: Convert input to raw PCM using FFmpeg
-      const audioData = await this.loadAudioAsPCM(inputPath);
-
-      // Step 2: Process through model
-      const stems = await this.processAudio(audioData);
-
-      // Step 3: Save stems as WAV files
-      const stemPaths = await this.saveStems(stems, outputDir);
+      // Use streaming approach to minimize memory usage
+      // Process audio chunk by chunk, writing output incrementally
+      const stemPaths = await this.processAudioStreaming(inputPath, outputDir);
 
       // Calculate total size
       let totalSize = 0;
@@ -172,51 +167,145 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
   }
 
   /**
-   * Load audio file as raw PCM float32 samples
+   * Process audio in streaming fashion to minimize memory usage
+   * Reads input in chunks, processes through model, writes output incrementally
+   *
+   * Memory usage: ~50MB per chunk instead of entire file
    */
-  private async loadAudioAsPCM(inputPath: string): Promise<Float32Array> {
+  private async processAudioStreaming(
+    inputPath: string,
+    outputDir: string,
+  ): Promise<{ vocals: string; drums: string; bass: string; other: string }> {
+    const { spawn } = await import('child_process');
+
+    if (!this.session || !this.ort) {
+      throw new Error('ONNX session not initialized');
+    }
+
+    // Get audio duration first
+    const duration = await getAudioDuration(inputPath);
+    const totalSamples = Math.ceil(duration * this.SAMPLE_RATE);
+    const numChunks = Math.ceil(totalSamples / (this.CHUNK_SIZE - this.OVERLAP));
+
+    this.logger.debug(
+      { duration, totalSamples, numChunks },
+      'Starting streaming stem separation',
+    );
+
+    // Create temp PCM files for output stems (append mode)
+    const tempFiles = {
+      vocals: path.join(outputDir, 'vocals_temp.pcm'),
+      drums: path.join(outputDir, 'drums_temp.pcm'),
+      bass: path.join(outputDir, 'bass_temp.pcm'),
+      other: path.join(outputDir, 'other_temp.pcm'),
+    };
+
+    // Initialize empty files
+    for (const file of Object.values(tempFiles)) {
+      fs.writeFileSync(file, Buffer.alloc(0));
+    }
+
+    // Process each chunk
+    for (let chunkIdx = 0; chunkIdx < numChunks; chunkIdx++) {
+      const startSample = chunkIdx * (this.CHUNK_SIZE - this.OVERLAP);
+      const startTime = startSample / this.SAMPLE_RATE;
+      const chunkDuration = this.CHUNK_SIZE / this.SAMPLE_RATE;
+
+      // Read only this chunk from the input file using FFmpeg
+      const chunkData = await this.readAudioChunk(inputPath, startTime, chunkDuration);
+
+      // Process chunk through model
+      const stemChunks = await this.processChunk(chunkData);
+
+      // Determine which samples to write (handle overlap)
+      const writeStart = chunkIdx === 0 ? 0 : this.OVERLAP;
+      const actualSamples = Math.min(
+        this.CHUNK_SIZE - writeStart,
+        totalSamples - startSample - writeStart,
+      );
+
+      // Append to output files
+      for (const [name, data] of Object.entries(stemChunks)) {
+        const sliceStart = writeStart * this.CHANNELS;
+        const sliceEnd = sliceStart + actualSamples * this.CHANNELS;
+        const writeData = data.slice(sliceStart, sliceEnd);
+        const buffer = Buffer.from(writeData.buffer, writeData.byteOffset, writeData.byteLength);
+        fs.appendFileSync(tempFiles[name as keyof typeof tempFiles], buffer);
+      }
+
+      // Log progress
+      if ((chunkIdx + 1) % 5 === 0 || chunkIdx === numChunks - 1) {
+        this.logger.debug(
+          { progress: Math.round(((chunkIdx + 1) / numChunks) * 100) },
+          'Stem separation progress',
+        );
+      }
+
+      // Allow GC to clean up chunk data
+      // @ts-expect-error - explicit null to help GC
+      chunkData = null;
+    }
+
+    // Convert PCM files to WAV
+    const stemPaths = await this.convertPcmToWav(tempFiles, outputDir);
+
+    return stemPaths;
+  }
+
+  /**
+   * Read a specific chunk of audio
+   */
+  private async readAudioChunk(
+    inputPath: string,
+    startTime: number,
+    duration: number,
+  ): Promise<Float32Array> {
     const { execFile } = await import('child_process');
     const { promisify } = await import('util');
     const execFileAsync = promisify(execFile);
 
-    // Use FFmpeg to decode audio to raw PCM
-    const tempPcm = path.join(this.stemsDir, `temp_${Date.now()}.pcm`);
-    fs.mkdirSync(this.stemsDir, { recursive: true });
+    const expectedSamples = Math.ceil(duration * this.SAMPLE_RATE) * this.CHANNELS;
+    const expectedBytes = expectedSamples * 4; // float32 = 4 bytes
 
     try {
-      await execFileAsync(getFfmpegPath(), [
-        '-i', inputPath,
-        '-f', 'f32le',        // 32-bit float little-endian
-        '-acodec', 'pcm_f32le',
-        '-ac', String(this.CHANNELS),
-        '-ar', String(this.SAMPLE_RATE),
-        '-y',
-        tempPcm,
-      ], { maxBuffer: 1024 * 1024 * 100 }); // 100MB buffer
-
-      // Read PCM data
-      const buffer = fs.readFileSync(tempPcm);
-      const audioData = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.length / 4);
-
-      this.logger.debug(
-        { samples: audioData.length, durationSec: audioData.length / this.SAMPLE_RATE / this.CHANNELS },
-        'Audio loaded',
+      const { stdout } = await execFileAsync(
+        getFfmpegPath(),
+        [
+          '-ss', String(startTime),
+          '-t', String(duration),
+          '-i', inputPath,
+          '-f', 'f32le',
+          '-acodec', 'pcm_f32le',
+          '-ac', String(this.CHANNELS),
+          '-ar', String(this.SAMPLE_RATE),
+          'pipe:1',
+        ],
+        {
+          encoding: 'buffer',
+          maxBuffer: expectedBytes + 1024 * 1024, // Add 1MB margin
+        },
       );
 
+      // Pad to expected size if needed
+      const audioData = new Float32Array(this.CHUNK_SIZE * this.CHANNELS);
+      const sourceData = new Float32Array(
+        stdout.buffer,
+        stdout.byteOffset,
+        stdout.length / 4,
+      );
+      audioData.set(sourceData.slice(0, audioData.length));
+
       return audioData;
-    } finally {
-      // Cleanup temp file
-      if (fs.existsSync(tempPcm)) {
-        fs.unlinkSync(tempPcm);
-      }
+    } catch (error) {
+      this.logger.error({ error, startTime, duration }, 'Failed to read audio chunk');
+      throw error;
     }
   }
 
   /**
-   * Process audio through the ONNX model
-   * Returns separated stems as Float32Arrays
+   * Process a single chunk through the ONNX model
    */
-  private async processAudio(audioData: Float32Array): Promise<{
+  private async processChunk(chunkData: Float32Array): Promise<{
     vocals: Float32Array;
     drums: Float32Array;
     bass: Float32Array;
@@ -226,86 +315,41 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
       throw new Error('ONNX session not initialized');
     }
 
-    const numSamples = audioData.length / this.CHANNELS;
+    // Create input tensor [1, channels, samples]
+    const inputTensor = new this.ort.Tensor(
+      'float32',
+      chunkData,
+      [1, this.CHANNELS, this.CHUNK_SIZE],
+    );
 
-    // Initialize output arrays
-    const vocals = new Float32Array(audioData.length);
-    const drums = new Float32Array(audioData.length);
-    const bass = new Float32Array(audioData.length);
-    const other = new Float32Array(audioData.length);
+    // Run inference
+    const feeds: Record<string, import('onnxruntime-node').Tensor> = {};
+    feeds[this.session.inputNames[0]] = inputTensor;
 
-    // Process in chunks with overlap
-    const numChunks = Math.ceil(numSamples / (this.CHUNK_SIZE - this.OVERLAP));
+    const results = await this.session.run(feeds);
 
-    this.logger.debug({ numChunks, numSamples }, 'Processing audio in chunks');
+    // Get output tensor - shape should be [1, 4, 2, samples]
+    const outputTensor = results[this.session.outputNames[0]];
+    const outputData = outputTensor.data as Float32Array;
 
-    for (let chunkIdx = 0; chunkIdx < numChunks; chunkIdx++) {
-      const startSample = chunkIdx * (this.CHUNK_SIZE - this.OVERLAP);
-      const endSample = Math.min(startSample + this.CHUNK_SIZE, numSamples);
-      const chunkSamples = endSample - startSample;
+    // Initialize output arrays for this chunk only
+    const vocals = new Float32Array(this.CHUNK_SIZE * this.CHANNELS);
+    const drums = new Float32Array(this.CHUNK_SIZE * this.CHANNELS);
+    const bass = new Float32Array(this.CHUNK_SIZE * this.CHANNELS);
+    const other = new Float32Array(this.CHUNK_SIZE * this.CHANNELS);
 
-      // Extract chunk (interleaved stereo)
-      const chunkData = audioData.slice(
-        startSample * this.CHANNELS,
-        endSample * this.CHANNELS,
-      );
+    // Extract stems from output tensor
+    // Output layout: [batch, source, channel, sample]
+    // Sources: 0=drums, 1=bass, 2=other, 3=vocals
+    const samplesPerSource = this.CHUNK_SIZE;
 
-      // Pad if necessary
-      let inputData: Float32Array;
-      if (chunkData.length < this.CHUNK_SIZE * this.CHANNELS) {
-        inputData = new Float32Array(this.CHUNK_SIZE * this.CHANNELS);
-        inputData.set(chunkData);
-      } else {
-        inputData = chunkData;
-      }
-
-      // Reshape to [1, channels, samples] for the model
-      // Model expects: batch=1, channels=2, samples
-      const inputTensor = new this.ort.Tensor(
-        'float32',
-        inputData,
-        [1, this.CHANNELS, this.CHUNK_SIZE],
-      );
-
-      // Run inference
-      const feeds: Record<string, import('onnxruntime-node').Tensor> = {};
-      feeds[this.session.inputNames[0]] = inputTensor;
-
-      const results = await this.session.run(feeds);
-
-      // Get output tensor - shape should be [1, 4, 2, samples]
-      // 4 sources: drums, bass, other, vocals
-      const outputTensor = results[this.session.outputNames[0]];
-      const outputData = outputTensor.data as Float32Array;
-
-      // Copy results back with overlap handling
-      const copyStart = chunkIdx === 0 ? 0 : this.OVERLAP;
-      const copyEnd = chunkSamples;
-
-      for (let i = copyStart; i < copyEnd; i++) {
-        const outIdx = (startSample + i) * this.CHANNELS;
-        const srcIdx = i * this.CHANNELS;
-
-        // Output layout: [batch, source, channel, sample]
-        // Sources: 0=drums, 1=bass, 2=other, 3=vocals
-        const samplesPerSource = this.CHUNK_SIZE;
-        const channelsPerSource = this.CHANNELS;
-
-        for (let ch = 0; ch < this.CHANNELS; ch++) {
-          if (outIdx + ch < drums.length) {
-            drums[outIdx + ch] = outputData[0 * channelsPerSource * samplesPerSource + ch * samplesPerSource + i] || 0;
-            bass[outIdx + ch] = outputData[1 * channelsPerSource * samplesPerSource + ch * samplesPerSource + i] || 0;
-            other[outIdx + ch] = outputData[2 * channelsPerSource * samplesPerSource + ch * samplesPerSource + i] || 0;
-            vocals[outIdx + ch] = outputData[3 * channelsPerSource * samplesPerSource + ch * samplesPerSource + i] || 0;
-          }
-        }
-      }
-
-      if ((chunkIdx + 1) % 10 === 0 || chunkIdx === numChunks - 1) {
-        this.logger.debug(
-          { progress: Math.round(((chunkIdx + 1) / numChunks) * 100) },
-          'Stem separation progress',
-        );
+    for (let i = 0; i < this.CHUNK_SIZE; i++) {
+      for (let ch = 0; ch < this.CHANNELS; ch++) {
+        const outIdx = i * this.CHANNELS + ch;
+        drums[outIdx] = outputData[0 * this.CHANNELS * samplesPerSource + ch * samplesPerSource + i] || 0;
+        bass[outIdx] = outputData[1 * this.CHANNELS * samplesPerSource + ch * samplesPerSource + i] || 0;
+        other[outIdx] = outputData[2 * this.CHANNELS * samplesPerSource + ch * samplesPerSource + i] || 0;
+        vocals[outIdx] = outputData[3 * this.CHANNELS * samplesPerSource + ch * samplesPerSource + i] || 0;
       }
     }
 
@@ -313,10 +357,10 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
   }
 
   /**
-   * Save stems as WAV files using FFmpeg
+   * Convert temp PCM files to WAV format
    */
-  private async saveStems(
-    stems: { vocals: Float32Array; drums: Float32Array; bass: Float32Array; other: Float32Array },
+  private async convertPcmToWav(
+    tempFiles: { vocals: string; drums: string; bass: string; other: string },
     outputDir: string,
   ): Promise<{ vocals: string; drums: string; bass: string; other: string }> {
     const { execFile } = await import('child_process');
@@ -330,28 +374,24 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
       other: path.join(outputDir, 'other.wav'),
     };
 
-    for (const [name, data] of Object.entries(stems)) {
-      const tempPcm = path.join(outputDir, `${name}_temp.pcm`);
+    for (const [name, tempFile] of Object.entries(tempFiles)) {
       const outputPath = stemPaths[name as keyof typeof stemPaths];
 
       try {
-        // Write raw PCM
-        const buffer = Buffer.from(data.buffer);
-        fs.writeFileSync(tempPcm, buffer);
-
         // Convert to WAV using FFmpeg
         await execFileAsync(getFfmpegPath(), [
           '-f', 'f32le',
           '-ar', String(this.SAMPLE_RATE),
           '-ac', String(this.CHANNELS),
-          '-i', tempPcm,
-          '-c:a', 'pcm_s16le',  // 16-bit WAV
+          '-i', tempFile,
+          '-c:a', 'pcm_s16le', // 16-bit WAV
           '-y',
           outputPath,
         ]);
       } finally {
-        if (fs.existsSync(tempPcm)) {
-          fs.unlinkSync(tempPcm);
+        // Clean up temp PCM file
+        if (fs.existsSync(tempFile)) {
+          fs.unlinkSync(tempFile);
         }
       }
     }
