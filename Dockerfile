@@ -94,8 +94,9 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
-# FFmpeg is used for audio analysis (LUFS normalization) when files lack ReplayGain tags
-RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg
+# FFmpeg: audio analysis (LUFS) and stem separation
+# wget: download ML models on first run
+RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg wget
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -123,12 +124,12 @@ COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create unified data directory
-RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
-    chown -R echoapp:nodejs /app/data
+# Create unified data directory and models directory
+RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs /app/models && \
+    chown -R echoapp:nodejs /app/data /app/models
 
 # Create wrapper script for proper permissions
-RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
     > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port
