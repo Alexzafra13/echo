@@ -156,6 +156,7 @@
   z-index: 1;
   flex: 1;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .playlistsPage__sourceTab svg {
