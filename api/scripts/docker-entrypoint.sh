@@ -79,14 +79,26 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 3. Database Migrations (Drizzle)
+# 3. Verify ML Models
+# ============================================
+MODEL_FILE="/app/models/htdemucs.onnx"
+
+if [ -f "$MODEL_FILE" ]; then
+  echo "✅ ML model present (stem separation available)"
+else
+  echo "⚠️  ML model not found (stem separation will be unavailable)"
+fi
+echo ""
+
+# ============================================
+# 4. Database Migrations (Drizzle)
 # ============================================
 # Use lightweight migration script (drizzle-orm only, no drizzle-kit needed)
 # This saves ~30MB in the Docker image
 node scripts/run-migrations.js
 
 # ============================================
-# 4. Check Setup Status
+# 5. Check Setup Status
 # ============================================
 echo ""
 if [ -f "$SETUP_FILE" ]; then
@@ -106,7 +118,7 @@ echo "✅ Initialization complete!"
 echo ""
 
 # ============================================
-# 5. Start Application
+# 6. Start Application
 # ============================================
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🎵 Echo Music Server"
