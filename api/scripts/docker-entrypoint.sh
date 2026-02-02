@@ -79,14 +79,41 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 3. Database Migrations (Drizzle)
+# 3. Download ML Models (if not present)
+# ============================================
+MODELS_DIR="/app/models"
+MODEL_FILE="$MODELS_DIR/htdemucs.onnx"
+MODEL_URL="https://huggingface.co/webai-community/models/resolve/main/demucs.onnx"
+
+mkdir -p "$MODELS_DIR"
+
+if [ ! -f "$MODEL_FILE" ]; then
+  echo "📥 Downloading stem separation model (~171MB)..."
+  if command -v wget > /dev/null; then
+    wget -q --show-progress -O "$MODEL_FILE" "$MODEL_URL" || echo "⚠️  Model download failed (stem separation will be unavailable)"
+  elif command -v curl > /dev/null; then
+    curl -L -o "$MODEL_FILE" "$MODEL_URL" || echo "⚠️  Model download failed (stem separation will be unavailable)"
+  else
+    echo "⚠️  No wget/curl available, skipping model download"
+  fi
+
+  if [ -f "$MODEL_FILE" ]; then
+    echo "✅ Model downloaded successfully"
+  fi
+else
+  echo "✅ ML model already present"
+fi
+echo ""
+
+# ============================================
+# 4. Database Migrations (Drizzle)
 # ============================================
 # Use lightweight migration script (drizzle-orm only, no drizzle-kit needed)
 # This saves ~30MB in the Docker image
 node scripts/run-migrations.js
 
 # ============================================
-# 4. Check Setup Status
+# 5. Check Setup Status
 # ============================================
 echo ""
 if [ -f "$SETUP_FILE" ]; then
@@ -106,7 +133,7 @@ echo "✅ Initialization complete!"
 echo ""
 
 # ============================================
-# 5. Start Application
+# 6. Start Application
 # ============================================
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🎵 Echo Music Server"
