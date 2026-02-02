@@ -9,6 +9,7 @@ import {
   StemSeparationOptions,
 } from '../../domain/ports/stem-separator.port';
 import { getFfmpegPath, getAudioDuration, runFfmpeg, runFfmpegWithOutput } from '../utils/ffmpeg.util';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 /**
  * OnnxStemSeparatorService - Stem separation using ONNX Runtime
@@ -31,11 +32,11 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
   private modelPath: string;
   private stemsDir: string;
 
-  // Model constants
-  private readonly SAMPLE_RATE = 44100;
-  private readonly CHANNELS = 2;
-  private readonly CHUNK_SIZE = 44100 * 10; // 10 seconds per chunk
-  private readonly OVERLAP = 44100 * 1; // 1 second overlap
+  // Use centralized config
+  private readonly SAMPLE_RATE = DJ_CONFIG.stems.sampleRate;
+  private readonly CHANNELS = DJ_CONFIG.stems.channels;
+  private readonly CHUNK_SIZE = DJ_CONFIG.stems.chunkSize;
+  private readonly OVERLAP = DJ_CONFIG.stems.overlap;
 
   constructor(
     @InjectPinoLogger(OnnxStemSeparatorService.name)
@@ -44,12 +45,12 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
   ) {
     // Model path - matches download-models.ts output
     this.modelPath = this.configService.get<string>(
-      'DJ_MODEL_PATH',
+      DJ_CONFIG.envVars.modelPath,
       path.join(process.cwd(), 'models', 'htdemucs.onnx'),
     );
     this.stemsDir = this.configService.get<string>(
-      'DJ_STEMS_DIR',
-      path.join(process.cwd(), 'data', 'stems'),
+      DJ_CONFIG.envVars.stemsDir,
+      path.join(process.cwd(), 'data', DJ_CONFIG.directories.stems),
     );
   }
 

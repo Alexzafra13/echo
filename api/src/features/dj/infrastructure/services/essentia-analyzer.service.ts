@@ -8,6 +8,7 @@ import {
   AudioAnalysisResult,
 } from '../../domain/ports/audio-analyzer.port';
 import { getFfmpegPath, getFfprobePath } from '../utils/ffmpeg.util';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 /**
  * EssentiaAnalyzerService - Audio analysis using Essentia.js
@@ -99,7 +100,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         this.closeFd(); // Clean up FD on timeout
         reject(new Error('Worker startup timeout'));
         this.terminateWorker();
-      }, 30000);
+      }, DJ_CONFIG.analysis.workerStartupTimeout);
 
       this.worker.on('message', (message: { type: string; requestId?: string; success?: boolean; data?: AudioAnalysisResult; error?: string; stack?: string; step?: string; [key: string]: unknown }) => {
         if (message.type === 'ready') {
@@ -211,7 +212,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       const timeout = setTimeout(() => {
         this.pendingRequests.delete(requestId);
         reject(new Error('Analysis timeout'));
-      }, 120000); // 2 minute timeout for long files
+      }, DJ_CONFIG.analysis.timeout);
 
       // Store request with timeout-clearing wrappers
       this.pendingRequests.set(requestId, {

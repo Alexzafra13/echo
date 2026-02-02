@@ -15,6 +15,7 @@ import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { tempoCache, djAnalysis } from '../../../../infrastructure/database/schema';
 import { SettingsService } from '../../../external-metadata/infrastructure/services/settings.service';
 import { runFfmpeg } from '../utils/ffmpeg.util';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 const TEMPO_CACHE_QUEUE = 'tempo-cache-queue';
 const CLEANUP_JOB = 'cleanup-old-cache';
@@ -36,7 +37,7 @@ interface GenerateCacheParams {
 @Injectable()
 export class TempoCacheService implements OnModuleInit {
   private cacheDir!: string;
-  private readonly MAX_TEMPO_CHANGE = 0.5; // FFmpeg atempo limit per filter (0.5 to 2.0)
+  private readonly MAX_TEMPO_CHANGE = DJ_CONFIG.tempoCache.maxTempoChange;
 
   constructor(
     @InjectPinoLogger(TempoCacheService.name)
@@ -48,8 +49,8 @@ export class TempoCacheService implements OnModuleInit {
 
   async onModuleInit() {
     // Get cache directory from settings or use default
-    const dataDir = await this.settingsService.getString('storage.data_dir', '/data');
-    this.cacheDir = path.join(dataDir, 'tempo-cache');
+    const dataDir = await this.settingsService.getString(DJ_CONFIG.envVars.dataDir, '/data');
+    this.cacheDir = path.join(dataDir, DJ_CONFIG.directories.tempoCache);
 
     // Ensure cache directory exists
     try {
@@ -72,15 +73,15 @@ export class TempoCacheService implements OnModuleInit {
       { concurrency: 1 },
     );
 
-    // Schedule repeatable cleanup job (daily at 3:30 AM)
+    // Schedule repeatable cleanup job
     await this.bullmq.addJob(TEMPO_CACHE_QUEUE, CLEANUP_JOB, {}, {
       repeat: {
-        pattern: '30 3 * * *',
+        pattern: DJ_CONFIG.tempoCache.cleanupSchedule,
       },
       jobId: 'tempo-cache-cleanup-scheduled',
     });
 
-    this.logger.info('Tempo cache cleanup job scheduled (daily at 3:30 AM)');
+    this.logger.info(`Tempo cache cleanup job scheduled (${DJ_CONFIG.tempoCache.cleanupSchedule})`);
   }
 
   /**
@@ -127,8 +128,8 @@ export class TempoCacheService implements OnModuleInit {
     // Calculate tempo ratio
     const tempoRatio = targetBpm / originalBpm;
 
-    // Validate tempo change is within reasonable bounds (50% to 200%)
-    if (tempoRatio < 0.5 || tempoRatio > 2.0) {
+    // Validate tempo change is within reasonable bounds
+    if (tempoRatio < DJ_CONFIG.tempoCache.atempo.min || tempoRatio > DJ_CONFIG.tempoCache.atempo.max) {
       return {
         success: false,
         error: `Tempo change too extreme: ${originalBpm} → ${targetBpm} (ratio: ${tempoRatio.toFixed(2)})`,
@@ -313,7 +314,7 @@ export class TempoCacheService implements OnModuleInit {
   /**
    * Clean up old cache entries not used in the last N days
    */
-  async cleanupOldCache(daysOld: number = 30): Promise<number> {
+  async cleanupOldCache(daysOld: number = DJ_CONFIG.tempoCache.maxAgeDays): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
@@ -381,7 +382,7 @@ export class TempoCacheService implements OnModuleInit {
   async handleScheduledCleanup(): Promise<void> {
     try {
       this.logger.info('Starting scheduled tempo cache cleanup');
-      const deleted = await this.cleanupOldCache(30);
+      const deleted = await this.cleanupOldCache();
       if (deleted > 0) {
         this.logger.info(`Scheduled cleanup completed: removed ${deleted} old tempo cache files`);
       }
