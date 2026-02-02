@@ -99,6 +99,13 @@
       "when": 1768676056351,
       "tag": "0013_dj_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1770024741447,
+      "tag": "0014_chemical_oracle",
+      "breakpoints": true
     }
   ]
 }

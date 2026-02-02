@@ -134,6 +134,40 @@ export const djSessions = pgTable(
   ],
 );
 
+// ============================================
+// Tempo Cache - BPM-adjusted audio files
+// ============================================
+
+export const tempoCache = pgTable(
+  'tempo_cache',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    trackId: uuid('track_id')
+      .notNull()
+      .references(() => tracks.id, { onDelete: 'cascade' }),
+    sessionId: uuid('session_id')
+      .references(() => djSessions.id, { onDelete: 'cascade' }),
+
+    // BPM info
+    originalBpm: real('original_bpm').notNull(),
+    targetBpm: real('target_bpm').notNull(),
+
+    // File info
+    filePath: varchar('file_path', { length: 512 }).notNull(),
+    fileSizeBytes: real('file_size_bytes'),
+
+    // Timestamps
+    lastUsedAt: timestamp('last_used_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_tempo_cache_track').on(table.trackId),
+    index('idx_tempo_cache_session').on(table.sessionId),
+    index('idx_tempo_cache_bpm').on(table.trackId, table.targetBpm),
+    index('idx_tempo_cache_last_used').on(table.lastUsedAt),
+  ],
+);
+
 // Type exports
 export type DjAnalysis = typeof djAnalysis.$inferSelect;
 export type NewDjAnalysis = typeof djAnalysis.$inferInsert;
@@ -141,3 +175,5 @@ export type DjStems = typeof djStems.$inferSelect;
 export type NewDjStems = typeof djStems.$inferInsert;
 export type DjSession = typeof djSessions.$inferSelect;
 export type NewDjSession = typeof djSessions.$inferInsert;
+export type TempoCache = typeof tempoCache.$inferSelect;
+export type NewTempoCache = typeof tempoCache.$inferInsert;
