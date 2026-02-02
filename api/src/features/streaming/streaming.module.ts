@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TracksModule } from '@features/tracks/tracks.module';
+import { DjModule } from '@features/dj/dj.module';
 import { StreamingController } from './presentation/streaming.controller';
 import { StreamTokenController } from './presentation/stream-token.controller';
 import { DownloadController } from './presentation/download.controller';
@@ -27,7 +28,7 @@ import { DownloadService } from './infrastructure/services/download.service';
  * - DrizzleService: Global via DrizzleModule
  */
 @Module({
-  imports: [TracksModule],
+  imports: [TracksModule, DjModule],
   controllers: [StreamingController, StreamTokenController, DownloadController],
   providers: [
     StreamTrackUseCase,
