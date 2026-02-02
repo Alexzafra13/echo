@@ -6,3 +6,5 @@ export { useImportProgressStore } from './importProgressStore';
 export type { ImportProgressEvent } from './importProgressStore';
 export { useScanProgressStore } from './scanProgressStore';
 export type { ScanProgressEvent, ScanStatus } from './scanProgressStore';
+export { useDjProgressStore } from './djProgressStore';
+export type { DjProgress } from './djProgressStore';
