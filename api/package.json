@@ -11,6 +11,8 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "setup:env": "node scripts/generate-env.js",
+    "postinstall": "tsx scripts/download-models.ts || echo 'Model download skipped or failed'",
+    "download:models": "tsx scripts/download-models.ts",
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/src/main",
