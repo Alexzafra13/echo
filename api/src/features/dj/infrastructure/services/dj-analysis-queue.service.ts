@@ -8,6 +8,7 @@ import { eq, isNull, and, notInArray, sql } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 interface DjAnalysisJob {
   trackId: string;
@@ -29,7 +30,7 @@ function getOptimalConcurrency(): number {
   const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.5));
   concurrency = Math.min(concurrency, maxByMemory);
 
-  return Math.min(concurrency, 8);
+  return Math.min(concurrency, DJ_CONFIG.analysis.concurrency * 4); // Allow up to 4x config for faster systems
 }
 
 @Injectable()

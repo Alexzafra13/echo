@@ -8,6 +8,7 @@ import { DrizzleService } from '../../../../infrastructure/database/drizzle.serv
 import { djStems } from '../../../../infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
 import { OnnxStemSeparatorService } from './onnx-stem-separator.service';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 interface StemJob {
   trackId: string;
@@ -23,14 +24,14 @@ function getOptimalConcurrency(): number {
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
   // Stem separation is very resource-intensive
-  // Use at most 2 concurrent jobs, or 1 if memory is limited
+  // Use at most configured concurrent jobs, or 1 if memory is limited
   let concurrency = Math.max(1, Math.floor(cpuCores / 4));
 
-  // Each stem separation uses ~4-8GB RAM
-  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 6));
+  // Each stem separation uses ~50MB per chunk with streaming approach
+  const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 2) / 0.5));
   concurrency = Math.min(concurrency, maxByMemory);
 
-  return Math.min(concurrency, 2);
+  return Math.min(concurrency, DJ_CONFIG.stems.concurrency);
 }
 
 @Injectable()
@@ -51,8 +52,8 @@ export class StemQueueService implements OnModuleInit {
   ) {
     this.concurrency = getOptimalConcurrency();
     this.stemsDir = this.configService.get<string>(
-      'DJ_STEMS_DIR',
-      path.join(process.cwd(), 'data', 'stems'),
+      DJ_CONFIG.envVars.stemsDir,
+      path.join(process.cwd(), 'data', DJ_CONFIG.directories.stems),
     );
     this.logger.info(
       { concurrency: this.concurrency, stemsDir: this.stemsDir },
