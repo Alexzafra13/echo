@@ -73,7 +73,20 @@ RUN find /prod/node_modules -type f \( \
     find /prod/node_modules -type d -empty -delete 2>/dev/null || true
 
 # ----------------------------------------
-# Stage 3: Minimal Production Runtime
+# Stage 3: Download ML Models
+# ----------------------------------------
+FROM alpine:3.20 AS models
+
+# Download stem separation model (~171MB) - included in image like FFmpeg
+# Using separate stage so model download is cached independently
+RUN apk add --no-cache wget && \
+    mkdir -p /models && \
+    wget -q --show-progress -O /models/htdemucs.onnx \
+      "https://huggingface.co/webai-community/models/resolve/main/demucs.onnx" && \
+    echo "Model downloaded: $(ls -lh /models/htdemucs.onnx)"
+
+# ----------------------------------------
+# Stage 4: Minimal Production Runtime
 # ----------------------------------------
 FROM node:22-alpine AS production
 
@@ -95,8 +108,7 @@ ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
 # FFmpeg: audio analysis (LUFS) and stem separation
-# wget: download ML models on first run
-RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg wget
+RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -127,6 +139,9 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
 # Create unified data directory and models directory
 RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs /app/models && \
     chown -R echoapp:nodejs /app/data /app/models
+
+# Copy ML models from models stage (included in image like FFmpeg)
+COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx /app/models/
 
 # Create wrapper script for proper permissions
 RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
