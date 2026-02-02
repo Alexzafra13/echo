@@ -1,3 +1,6 @@
 packages:
   - api
   - web
+
+onlyBuiltDependencies:
+  - ffmpeg-static
