@@ -1,25 +1,142 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import { TrackScore, PlaylistMetadata } from '../../entities/track-score.entity';
 import {
   IPlayTrackingRepository,
   PLAY_TRACKING_REPOSITORY,
 } from '@features/play-tracking/domain/ports';
-import { Inject } from '@nestjs/common';
+import {
+  IDjAnalysisRepository,
+  DJ_ANALYSIS_REPOSITORY,
+} from '@features/dj/domain/ports/dj-analysis.repository.port';
+import {
+  DjCompatibilityService,
+  TrackDjData,
+} from '@features/dj/domain/services/dj-compatibility.service';
 
 /**
  * Service for shuffling and calculating metadata for playlists
+ * Uses DJ analysis data for harmonic ordering when available
  */
 @Injectable()
 export class PlaylistShuffleService {
   constructor(
     @Inject(PLAY_TRACKING_REPOSITORY)
     private readonly playTrackingRepo: IPlayTrackingRepository,
+    @Optional()
+    @Inject(DJ_ANALYSIS_REPOSITORY)
+    private readonly djAnalysisRepo?: IDjAnalysisRepository,
+    @Optional()
+    private readonly djCompatibility?: DjCompatibilityService,
   ) {}
 
   /**
-   * Intelligent shuffle to avoid consecutive tracks from same artist/album
+   * Intelligent shuffle that uses DJ analysis for harmonic flow when available,
+   * otherwise falls back to avoiding consecutive tracks from same artist/album
    */
-  intelligentShuffle(
+  async intelligentShuffle(
+    tracks: TrackScore[],
+    trackDetails: Array<{ id: string; artistId: string | null; albumId: string | null }>
+  ): Promise<TrackScore[]> {
+    if (tracks.length <= 1) return tracks;
+
+    // Try harmonic shuffle if DJ data is available
+    if (this.djAnalysisRepo && this.djCompatibility) {
+      const harmonicResult = await this.tryHarmonicShuffle(tracks);
+      if (harmonicResult) return harmonicResult;
+    }
+
+    // Fallback: basic shuffle avoiding same artist/album
+    return this.basicShuffle(tracks, trackDetails);
+  }
+
+  /**
+   * Attempts harmonic shuffle using DJ analysis data
+   * Returns null if not enough tracks have analysis
+   */
+  private async tryHarmonicShuffle(tracks: TrackScore[]): Promise<TrackScore[] | null> {
+    const trackIds = tracks.map((t) => t.trackId);
+    const analyses = await this.djAnalysisRepo!.findByTrackIds(trackIds);
+
+    // Need at least 50% of tracks with analysis to use harmonic shuffle
+    if (analyses.length < tracks.length * 0.5) return null;
+
+    const analysisMap = new Map(analyses.map((a) => [a.trackId, a]));
+    const tracksWithAnalysis = tracks.filter((t) => analysisMap.has(t.trackId));
+    const tracksWithoutAnalysis = tracks.filter((t) => !analysisMap.has(t.trackId));
+
+    // Build DJ data for compatibility scoring
+    const djDataMap = new Map<string, TrackDjData>();
+    for (const analysis of analyses) {
+      djDataMap.set(analysis.trackId, {
+        trackId: analysis.trackId,
+        bpm: analysis.bpm,
+        key: analysis.key,
+        camelotKey: analysis.camelotKey,
+        energy: analysis.energy,
+      });
+    }
+
+    // Start with a random track
+    const shuffled: TrackScore[] = [];
+    const remaining = [...tracksWithAnalysis];
+    const startIdx = Math.floor(Math.random() * remaining.length);
+    shuffled.push(remaining.splice(startIdx, 1)[0]);
+
+    // Build chain by selecting compatible tracks with weighted randomness
+    while (remaining.length > 0) {
+      const lastTrack = shuffled[shuffled.length - 1];
+      const lastDjData = djDataMap.get(lastTrack.trackId);
+
+      if (!lastDjData) {
+        // No DJ data for last track, pick random
+        const idx = Math.floor(Math.random() * remaining.length);
+        shuffled.push(remaining.splice(idx, 1)[0]);
+        continue;
+      }
+
+      // Score all remaining tracks by compatibility
+      const scored = remaining.map((track) => {
+        const djData = djDataMap.get(track.trackId);
+        if (!djData) return { track, score: 50 };
+        const compat = this.djCompatibility!.calculateCompatibility(lastDjData, djData);
+        return { track, score: compat.overall };
+      });
+
+      // Weighted random selection: higher compatibility = higher chance
+      const nextTrack = this.weightedRandomSelect(scored);
+      shuffled.push(nextTrack);
+      remaining.splice(remaining.indexOf(nextTrack), 1);
+    }
+
+    // Append tracks without analysis at random positions
+    for (const track of tracksWithoutAnalysis) {
+      const insertIdx = Math.floor(Math.random() * (shuffled.length + 1));
+      shuffled.splice(insertIdx, 0, track);
+    }
+
+    return shuffled;
+  }
+
+  /**
+   * Weighted random selection - tracks with higher scores have higher probability
+   */
+  private weightedRandomSelect(scored: Array<{ track: TrackScore; score: number }>): TrackScore {
+    // Convert scores to weights (exponential to favor high scores)
+    const weights = scored.map((s) => Math.pow(s.score / 100, 2));
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+    let random = Math.random() * totalWeight;
+    for (let i = 0; i < scored.length; i++) {
+      random -= weights[i];
+      if (random <= 0) return scored[i].track;
+    }
+    return scored[scored.length - 1].track;
+  }
+
+  /**
+   * Basic shuffle avoiding consecutive tracks from same artist/album
+   */
+  private basicShuffle(
     tracks: TrackScore[],
     trackDetails: Array<{ id: string; artistId: string | null; albumId: string | null }>
   ): TrackScore[] {
@@ -27,27 +144,33 @@ export class PlaylistShuffleService {
     const remaining = [...tracks];
     const trackMap = new Map(trackDetails.map((t) => [t.id, t]));
 
+    // Start with random track
+    const startIdx = Math.floor(Math.random() * remaining.length);
+    shuffled.push(remaining.splice(startIdx, 1)[0]);
+
     while (remaining.length > 0) {
       let nextTrack: TrackScore | null = null;
-      const lastTrack = shuffled.length > 0 ? shuffled[shuffled.length - 1] : null;
-      const lastTrackDetails = lastTrack ? trackMap.get(lastTrack.trackId) : null;
+      const lastTrack = shuffled[shuffled.length - 1];
+      const lastTrackDetails = trackMap.get(lastTrack.trackId);
 
       // Try to find a track from different artist/album
       if (lastTrackDetails) {
-        nextTrack =
-          remaining.find((t) => {
-            const details = trackMap.get(t.trackId);
-            return (
-              details &&
-              details.artistId !== lastTrackDetails.artistId &&
-              details.albumId !== lastTrackDetails.albumId
-            );
-          }) || null;
+        const candidates = remaining.filter((t) => {
+          const details = trackMap.get(t.trackId);
+          return (
+            details &&
+            details.artistId !== lastTrackDetails.artistId &&
+            details.albumId !== lastTrackDetails.albumId
+          );
+        });
+        if (candidates.length > 0) {
+          nextTrack = candidates[Math.floor(Math.random() * candidates.length)];
+        }
       }
 
-      // If no suitable track found, just take the first one
+      // If no suitable track found, pick random
       if (!nextTrack) {
-        nextTrack = remaining[0];
+        nextTrack = remaining[Math.floor(Math.random() * remaining.length)];
       }
 
       shuffled.push(nextTrack);
