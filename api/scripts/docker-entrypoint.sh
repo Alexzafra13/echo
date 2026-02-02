@@ -79,29 +79,14 @@ echo "✅ Redis is ready!"
 echo ""
 
 # ============================================
-# 3. Download ML Models (if not present)
+# 3. Verify ML Models
 # ============================================
-MODELS_DIR="/app/models"
-MODEL_FILE="$MODELS_DIR/htdemucs.onnx"
-MODEL_URL="https://huggingface.co/webai-community/models/resolve/main/demucs.onnx"
+MODEL_FILE="/app/models/htdemucs.onnx"
 
-mkdir -p "$MODELS_DIR"
-
-if [ ! -f "$MODEL_FILE" ]; then
-  echo "📥 Downloading stem separation model (~171MB)..."
-  if command -v wget > /dev/null; then
-    wget -q --show-progress -O "$MODEL_FILE" "$MODEL_URL" || echo "⚠️  Model download failed (stem separation will be unavailable)"
-  elif command -v curl > /dev/null; then
-    curl -L -o "$MODEL_FILE" "$MODEL_URL" || echo "⚠️  Model download failed (stem separation will be unavailable)"
-  else
-    echo "⚠️  No wget/curl available, skipping model download"
-  fi
-
-  if [ -f "$MODEL_FILE" ]; then
-    echo "✅ Model downloaded successfully"
-  fi
+if [ -f "$MODEL_FILE" ]; then
+  echo "✅ ML model present (stem separation available)"
 else
-  echo "✅ ML model already present"
+  echo "⚠️  ML model not found (stem separation will be unavailable)"
 fi
 echo ""
 
