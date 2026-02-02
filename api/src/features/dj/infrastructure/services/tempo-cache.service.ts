@@ -5,15 +5,19 @@
  * Uses FFmpeg atempo filter for time-stretching while preserving pitch.
  */
 
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { eq, and, lt, sql, inArray } from 'drizzle-orm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
+import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { tempoCache, djAnalysis } from '../../../../infrastructure/database/schema';
 import { SettingsService } from '../../../external-metadata/infrastructure/services/settings.service';
+
+const TEMPO_CACHE_QUEUE = 'tempo-cache-queue';
+const CLEANUP_JOB = 'cleanup-old-cache';
 
 interface TempoCacheResult {
   success: boolean;
@@ -31,12 +35,14 @@ interface GenerateCacheParams {
 
 @Injectable()
 export class TempoCacheService implements OnModuleInit {
-  private readonly logger = new Logger(TempoCacheService.name);
   private cacheDir!: string;
   private readonly MAX_TEMPO_CHANGE = 0.5; // FFmpeg atempo limit per filter (0.5 to 2.0)
 
   constructor(
+    @InjectPinoLogger(TempoCacheService.name)
+    private readonly logger: PinoLogger,
     private readonly drizzle: DrizzleService,
+    private readonly bullmq: BullmqService,
     private readonly settingsService: SettingsService,
   ) {}
 
@@ -47,7 +53,28 @@ export class TempoCacheService implements OnModuleInit {
 
     // Ensure cache directory exists
     await fs.mkdir(this.cacheDir, { recursive: true });
-    this.logger.log(`Tempo cache directory: ${this.cacheDir}`);
+    this.logger.info(`Tempo cache directory: ${this.cacheDir}`);
+
+    // Register BullMQ processor for cleanup jobs
+    this.bullmq.registerProcessor(
+      TEMPO_CACHE_QUEUE,
+      async (job) => {
+        if (job.name === CLEANUP_JOB) {
+          return this.handleScheduledCleanup();
+        }
+      },
+      { concurrency: 1 },
+    );
+
+    // Schedule repeatable cleanup job (daily at 3:30 AM)
+    await this.bullmq.addJob(TEMPO_CACHE_QUEUE, CLEANUP_JOB, {}, {
+      repeat: {
+        pattern: '30 3 * * *',
+      },
+      jobId: 'tempo-cache-cleanup-scheduled',
+    });
+
+    this.logger.info('Tempo cache cleanup job scheduled (daily at 3:30 AM)');
   }
 
   /**
@@ -126,7 +153,7 @@ export class TempoCacheService implements OnModuleInit {
         fileSizeBytes: stats.size,
       });
 
-      this.logger.log(
+      this.logger.info(
         `Generated tempo cache: ${trackId} @ ${targetBpm} BPM (${(stats.size / 1024 / 1024).toFixed(1)} MB)`,
       );
 
@@ -291,7 +318,7 @@ export class TempoCacheService implements OnModuleInit {
 
     await this.drizzle.db.delete(tempoCache).where(eq(tempoCache.sessionId, sessionId));
 
-    this.logger.log(`Deleted ${deleted} tempo cache files for session ${sessionId}`);
+    this.logger.info(`Deleted ${deleted} tempo cache files for session ${sessionId}`);
     return deleted;
   }
 
@@ -319,7 +346,7 @@ export class TempoCacheService implements OnModuleInit {
     await this.drizzle.db.delete(tempoCache).where(lt(tempoCache.lastUsedAt, cutoffDate));
 
     if (deleted > 0) {
-      this.logger.log(`Cleaned up ${deleted} old tempo cache files (> ${daysOld} days)`);
+      this.logger.info(`Cleaned up ${deleted} old tempo cache files (> ${daysOld} days)`);
     }
 
     return deleted;
@@ -361,15 +388,14 @@ export class TempoCacheService implements OnModuleInit {
 
   /**
    * Scheduled cleanup of old cache entries
-   * Runs daily at 3:30 AM (after log cleanup at 3:00 AM)
+   * Runs daily at 3:30 AM via BullMQ repeatable job
    */
-  @Cron('30 3 * * *')
   async handleScheduledCleanup(): Promise<void> {
     try {
-      this.logger.log('Starting scheduled tempo cache cleanup');
+      this.logger.info('Starting scheduled tempo cache cleanup');
       const deleted = await this.cleanupOldCache(30);
       if (deleted > 0) {
-        this.logger.log(`Scheduled cleanup completed: removed ${deleted} old tempo cache files`);
+        this.logger.info(`Scheduled cleanup completed: removed ${deleted} old tempo cache files`);
       }
     } catch (error) {
       this.logger.error(`Scheduled tempo cache cleanup failed: ${(error as Error).message}`);
