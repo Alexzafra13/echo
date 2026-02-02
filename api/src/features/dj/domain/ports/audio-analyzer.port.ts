@@ -32,6 +32,11 @@ export interface IAudioAnalyzer {
    * Get analyzer name/version
    */
   getName(): string;
+
+  /**
+   * Get initialization error if any
+   */
+  getError?(): string | null;
 }
 
 export const AUDIO_ANALYZER = 'IAudioAnalyzer';

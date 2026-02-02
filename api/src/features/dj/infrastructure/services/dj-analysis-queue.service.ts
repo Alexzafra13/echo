@@ -8,6 +8,7 @@ import { eq, isNull, and, notInArray, sql } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 interface DjAnalysisJob {
   trackId: string;
@@ -29,7 +30,7 @@ function getOptimalConcurrency(): number {
   const maxByMemory = Math.max(1, Math.floor((totalMemoryGB - 1) / 0.5));
   concurrency = Math.min(concurrency, maxByMemory);
 
-  return Math.min(concurrency, 8);
+  return Math.min(concurrency, DJ_CONFIG.analysis.concurrency * 4); // Allow up to 4x config for faster systems
 }
 
 @Injectable()
@@ -178,32 +179,42 @@ export class DjAnalysisQueueService implements OnModuleInit {
     );
 
     try {
-      // Check if analysis already exists
-      const existing = await this.drizzle.db
-        .select()
-        .from(djAnalysis)
-        .where(eq(djAnalysis.trackId, job.trackId))
-        .limit(1);
+      // Use transaction to avoid TOCTOU race condition
+      const analysisId = await this.drizzle.db.transaction(async (tx) => {
+        // Check if analysis already exists with row lock
+        const existing = await tx
+          .select()
+          .from(djAnalysis)
+          .where(eq(djAnalysis.trackId, job.trackId))
+          .limit(1);
 
-      if (existing.length > 0 && existing[0].status === 'completed') {
-        this.logger.debug({ trackId: job.trackId }, 'Analysis already exists');
+        if (existing.length > 0 && existing[0].status === 'completed') {
+          this.logger.debug({ trackId: job.trackId }, 'Analysis already exists');
+          return null; // Skip processing
+        }
+
+        // Create or update analysis record atomically
+        const id = existing[0]?.id || crypto.randomUUID();
+
+        if (existing.length === 0) {
+          await tx.insert(djAnalysis).values({
+            id,
+            trackId: job.trackId,
+            status: 'analyzing',
+          });
+        } else {
+          await tx
+            .update(djAnalysis)
+            .set({ status: 'analyzing', updatedAt: new Date() })
+            .where(eq(djAnalysis.id, id));
+        }
+
+        return id;
+      });
+
+      // Skip if already completed
+      if (analysisId === null) {
         return;
-      }
-
-      // Create or update analysis record
-      const analysisId = existing[0]?.id || crypto.randomUUID();
-
-      if (existing.length === 0) {
-        await this.drizzle.db.insert(djAnalysis).values({
-          id: analysisId,
-          trackId: job.trackId,
-          status: 'analyzing',
-        });
-      } else {
-        await this.drizzle.db
-          .update(djAnalysis)
-          .set({ status: 'analyzing', updatedAt: new Date() })
-          .where(eq(djAnalysis.id, analysisId));
       }
 
       // First, try to get BPM/Key from tracks table (ID3 tags)
@@ -346,12 +357,20 @@ export class DjAnalysisQueueService implements OnModuleInit {
       ? this.formatDuration((pendingTracks / this.concurrency) * this.averageProcessingTime)
       : null;
 
-    this.scannerGateway.emitDjProgress({
-      isRunning: this.isRunning,
-      pendingTracks,
-      processedInSession: this.processedInSession,
-      estimatedTimeRemaining,
-    });
+    try {
+      this.scannerGateway.emitDjProgress({
+        isRunning: this.isRunning,
+        pendingTracks,
+        processedInSession: this.processedInSession,
+        estimatedTimeRemaining,
+      });
+    } catch (error) {
+      // WebSocket may be unavailable, don't let it crash the queue
+      this.logger.debug(
+        { error: error instanceof Error ? error.message : 'Unknown' },
+        'Failed to emit DJ progress via WebSocket',
+      );
+    }
   }
 
   /**

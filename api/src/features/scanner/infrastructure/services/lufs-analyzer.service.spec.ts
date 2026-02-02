@@ -236,7 +236,7 @@ Some info after
       // We don't assert true/false because FFmpeg may or may not be installed
       // in the test environment. We just verify the method returns a boolean.
       expect(typeof result).toBe('boolean');
-    });
+    }, 15000); // Increase timeout for FFmpeg check which can be slow in CI
   });
 
   describe('analyzeFile with mocked implementation', () => {

@@ -91,6 +91,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     StemQueueService,
     TransitionEngineService,
     TempoCacheService,
+    DjCompatibilityService,
   ],
 })
 export class DjModule {}

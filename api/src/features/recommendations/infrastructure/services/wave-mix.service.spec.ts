@@ -75,7 +75,7 @@ describe('WaveMixService', () => {
     };
 
     mockShuffleService = {
-      intelligentShuffle: jest.fn().mockImplementation((tracks) => tracks),
+      intelligentShuffle: jest.fn().mockImplementation((tracks) => Promise.resolve(tracks)),
       calculateMetadata: jest.fn().mockResolvedValue({
         totalTracks: 0,
         avgScore: 0,

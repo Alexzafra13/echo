@@ -8,6 +8,7 @@ import {
   AudioAnalysisResult,
 } from '../../domain/ports/audio-analyzer.port';
 import { getFfmpegPath, getFfprobePath } from '../utils/ffmpeg.util';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 /**
  * EssentiaAnalyzerService - Audio analysis using Essentia.js
@@ -19,6 +20,7 @@ import { getFfmpegPath, getFfprobePath } from '../utils/ffmpeg.util';
 export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy {
   private worker: ChildProcess | null = null;
   private workerReady = false;
+  private nullFd: number = -1; // Track FD for cleanup
   private pendingRequests: Map<
     string,
     { resolve: (result: AudioAnalysisResult) => void; reject: (error: Error) => void }
@@ -33,6 +35,17 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
 
   async onModuleDestroy() {
     await this.terminateWorker();
+  }
+
+  private closeFd(): void {
+    if (this.nullFd >= 0) {
+      try {
+        fs.closeSync(this.nullFd);
+      } catch {
+        // Ignore close errors
+      }
+      this.nullFd = -1;
+    }
   }
 
   private async spawnWorker(): Promise<void> {
@@ -59,31 +72,37 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       }
 
       // Open /dev/null for stdout/stderr suppression
-      let nullFd: number;
       try {
-        nullFd = fs.openSync('/dev/null', 'w');
+        this.nullFd = fs.openSync('/dev/null', 'w');
       } catch {
         // Windows fallback - use 'ignore'
         this.logger.debug('Using ignore for stdio (Windows or no /dev/null)');
-        nullFd = -1;
+        this.nullFd = -1;
       }
 
       const stdioConfig: ('ipc' | 'ignore' | number)[] =
-        nullFd >= 0
-          ? ['ignore', nullFd, nullFd, 'ipc']
+        this.nullFd >= 0
+          ? ['ignore', this.nullFd, this.nullFd, 'ipc']
           : ['ignore', 'ignore', 'ignore', 'ipc'];
 
-      this.worker = fork(workerPath, [], {
-        stdio: stdioConfig,
-        env: { ...process.env, NODE_ENV: process.env.NODE_ENV },
-      });
+      try {
+        this.worker = fork(workerPath, [], {
+          stdio: stdioConfig,
+          env: { ...process.env, NODE_ENV: process.env.NODE_ENV },
+        });
+      } catch (error) {
+        this.closeFd(); // Clean up FD on fork failure
+        reject(error);
+        return;
+      }
 
       const timeout = setTimeout(() => {
+        this.closeFd(); // Clean up FD on timeout
         reject(new Error('Worker startup timeout'));
         this.terminateWorker();
-      }, 30000);
+      }, DJ_CONFIG.analysis.workerStartupTimeout);
 
-      this.worker.on('message', (message: { type: string; success?: boolean; data?: AudioAnalysisResult; error?: string; stack?: string; step?: string; [key: string]: unknown }) => {
+      this.worker.on('message', (message: { type: string; requestId?: string; success?: boolean; data?: AudioAnalysisResult; error?: string; stack?: string; step?: string; [key: string]: unknown }) => {
         if (message.type === 'ready') {
           this.workerReady = true;
           clearTimeout(timeout);
@@ -93,10 +112,10 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
           // Log debug messages from worker
           this.logger.debug({ workerDebug: message }, `Worker step: ${message.step}`);
         } else if (message.type === 'result') {
-          // Find pending request and resolve it
-          const entries = Array.from(this.pendingRequests.entries());
-          if (entries.length > 0) {
-            const [requestId, { resolve: res, reject: rej }] = entries[0];
+          // Match response to request using requestId
+          const requestId = message.requestId;
+          if (requestId && this.pendingRequests.has(requestId)) {
+            const { resolve: res, reject: rej } = this.pendingRequests.get(requestId)!;
             this.pendingRequests.delete(requestId);
 
             if (message.success && message.data) {
@@ -105,6 +124,8 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
               this.logger.debug({ workerError: message.error, workerStack: message.stack }, 'Worker returned error');
               rej(new Error(message.error || 'Analysis failed'));
             }
+          } else {
+            this.logger.warn({ requestId }, 'Received result for unknown requestId');
           }
         }
       });
@@ -112,20 +133,20 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       this.worker.on('error', (error) => {
         this.logger.error({ error }, 'Essentia worker error');
         clearTimeout(timeout);
+        this.closeFd(); // Clean up FD on error
         this.workerReady = false;
         reject(error);
       });
 
       this.worker.on('exit', (code) => {
-        if (nullFd >= 0) {
-          try {
-            fs.closeSync(nullFd);
-          } catch {
-            // Ignore close errors
-          }
-        }
+        this.closeFd(); // Clean up FD on exit
         this.workerReady = false;
         this.worker = null;
+        // Reject all pending requests
+        for (const [requestId, { reject: rej }] of this.pendingRequests) {
+          rej(new Error('Worker exited unexpectedly'));
+          this.pendingRequests.delete(requestId);
+        }
         if (code !== 0) {
           this.logger.warn({ code }, 'Essentia worker exited with non-zero code');
         }
@@ -145,6 +166,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       this.worker = null;
       this.workerReady = false;
     }
+    this.closeFd();
   }
 
   async isAvailable(): Promise<boolean> {
@@ -184,31 +206,28 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
     }
 
     return new Promise((resolve, reject) => {
-      const requestId = `${Date.now()}-${Math.random()}`;
-      this.pendingRequests.set(requestId, { resolve, reject });
+      const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
       // Set timeout
       const timeout = setTimeout(() => {
         this.pendingRequests.delete(requestId);
         reject(new Error('Analysis timeout'));
-      }, 120000); // 2 minute timeout for long files
+      }, DJ_CONFIG.analysis.timeout);
 
-      this.worker!.send({ type: 'analyze', filePath });
-
-      // Clear timeout when resolved
-      const originalResolve = resolve;
-      const originalReject = reject;
-
+      // Store request with timeout-clearing wrappers
       this.pendingRequests.set(requestId, {
         resolve: (result) => {
           clearTimeout(timeout);
-          originalResolve(result);
+          resolve(result);
         },
         reject: (error) => {
           clearTimeout(timeout);
-          originalReject(error);
+          reject(error);
         },
       });
+
+      // Send message with requestId for correlation
+      this.worker!.send({ type: 'analyze', requestId, filePath });
     });
   }
 
