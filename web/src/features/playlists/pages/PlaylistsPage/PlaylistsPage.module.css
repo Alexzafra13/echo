@@ -359,6 +359,16 @@
   color: var(--color-primary-500, #ed6842);
 }
 
+.playlistCard__coverPlaceholderDj {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(13, 148, 136, 0.1) 100%);
+  color: #14b8a6;
+}
+
 .playlistCard__info {
   margin-bottom: 8px;
 }
