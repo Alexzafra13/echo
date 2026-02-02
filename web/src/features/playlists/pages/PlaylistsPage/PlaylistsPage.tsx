@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Check, Play, Clock } from 'lucide-react';
+import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Check, Play } from 'lucide-react';
 import { useLocation, useSearch } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
@@ -380,81 +380,110 @@ export default function PlaylistsPage() {
                     </Button>
                   </div>
                   <div className={styles.playlistsPage__grid}>
-                    {djSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        className={styles.djSessionCard}
-                        onClick={() => {
-                          // Play the session directly when clicking on the card
-                          if (session.tracks.length > 0) {
-                            const playerTracks = session.tracks.map(t => ({
-                              id: t.trackId,
-                              title: t.title || 'Unknown',
-                              artist: t.artist || 'Unknown',
-                              albumId: t.albumId,
-                              duration: t.duration,
-                              coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
-                            }));
-                            playQueue(playerTracks, 0);
-                          }
-                        }}
-                      >
-                        <div className={styles.djSessionCard__cover}>
-                          <Disc3 size={48} />
-                        </div>
+                    {djSessions.map((session) => {
+                      // Get unique album IDs for cover mosaic
+                      const albumIds = [...new Set(session.tracks.map(t => t.albumId).filter(Boolean))] as string[];
 
-                        <div className={styles.djSessionCard__info}>
-                          <h3 className={styles.djSessionCard__title}>{session.name}</h3>
-                          <div className={styles.djSessionCard__meta}>
-                            <span>
-                              {session.trackCount} {session.trackCount === 1 ? 'track' : 'tracks'}
-                            </span>
-                            {session.totalDuration && session.totalDuration > 0 && (
-                              <>
-                                <span className={styles.djSessionCard__separator}>•</span>
-                                <Clock size={12} />
-                                <span>{formatDuration(session.totalDuration)}</span>
-                              </>
+                      // Calculate BPM range
+                      const bpms = session.tracks.map(t => t.bpm).filter(Boolean) as number[];
+                      const bpmRange = bpms.length > 0
+                        ? bpms.length === 1
+                          ? `${Math.round(bpms[0])} BPM`
+                          : `${Math.round(Math.min(...bpms))}-${Math.round(Math.max(...bpms))} BPM`
+                        : null;
+
+                      return (
+                        <div
+                          key={session.id}
+                          className={styles.playlistCard}
+                          onClick={() => {
+                            if (session.tracks.length > 0) {
+                              const playerTracks = session.tracks.map(t => ({
+                                id: t.trackId,
+                                title: t.title || 'Unknown',
+                                artist: t.artist || 'Unknown',
+                                albumId: t.albumId,
+                                duration: t.duration,
+                                coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
+                              }));
+                              playQueue(playerTracks, 0);
+                            }
+                          }}
+                        >
+                          <div className={styles.playlistCard__cover}>
+                            {albumIds.length > 0 ? (
+                              <PlaylistCoverMosaic
+                                albumIds={albumIds}
+                                playlistName={session.name}
+                              />
+                            ) : (
+                              <div className={styles.playlistCard__coverPlaceholder}>
+                                <Disc3 size={48} />
+                              </div>
+                            )}
+                            <div className={styles.playlistCard__djBadge}>
+                              <Disc3 size={12} />
+                              DJ
+                            </div>
+                          </div>
+
+                          <div className={styles.playlistCard__info}>
+                            <h3 className={styles.playlistCard__title}>{session.name}</h3>
+                            <div className={styles.playlistCard__meta}>
+                              <span>
+                                {session.trackCount} {session.trackCount === 1 ? 'track' : 'tracks'}
+                              </span>
+                              {session.totalDuration && session.totalDuration > 0 && (
+                                <>
+                                  <span className={styles.playlistCard__separator}>•</span>
+                                  <span>{formatDuration(session.totalDuration)}</span>
+                                </>
+                              )}
+                            </div>
+                            {bpmRange && (
+                              <div className={styles.playlistCard__djMeta}>
+                                <span>{bpmRange}</span>
+                              </div>
                             )}
                           </div>
-                        </div>
 
-                        <div className={styles.djSessionCard__actions}>
-                          <button
-                            className={styles.djSessionCard__playButton}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (session.tracks.length > 0) {
-                                const playerTracks = session.tracks.map(t => ({
-                                  id: t.trackId,
-                                  title: t.title || 'Unknown',
-                                  artist: t.artist || 'Unknown',
-                                  albumId: t.albumId,
-                                  duration: t.duration,
-                                  coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
-                                }));
-                                playQueue(playerTracks, 0);
-                              }
-                            }}
-                            title="Reproducir sesión"
-                          >
-                            <Play size={16} fill="currentColor" />
-                          </button>
-                          <button
-                            className={styles.djSessionCard__actionButton}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteDjSessionId(session.id);
-                              setDeleteDjSessionName(session.name);
-                            }}
-                            title="Eliminar sesión"
-                            disabled={deleteDjSessionMutation.isPending}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          <div className={styles.playlistCard__actions}>
+                            <button
+                              className={styles.playlistCard__playButton}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (session.tracks.length > 0) {
+                                  const playerTracks = session.tracks.map(t => ({
+                                    id: t.trackId,
+                                    title: t.title || 'Unknown',
+                                    artist: t.artist || 'Unknown',
+                                    albumId: t.albumId,
+                                    duration: t.duration,
+                                    coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
+                                  }));
+                                  playQueue(playerTracks, 0);
+                                }
+                              }}
+                              title="Reproducir sesión"
+                            >
+                              <Play size={16} fill="currentColor" />
+                            </button>
+                            <button
+                              className={styles.playlistCard__actionButton}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteDjSessionId(session.id);
+                                setDeleteDjSessionName(session.name);
+                              }}
+                              title="Eliminar sesión"
+                              disabled={deleteDjSessionMutation.isPending}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
