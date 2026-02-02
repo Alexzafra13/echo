@@ -69,10 +69,10 @@ export class PlaylistShuffleService {
     for (const analysis of analyses) {
       djDataMap.set(analysis.trackId, {
         trackId: analysis.trackId,
-        bpm: analysis.bpm,
-        key: analysis.key,
-        camelotKey: analysis.camelotKey,
-        energy: analysis.energy,
+        bpm: analysis.bpm ?? null,
+        key: analysis.key ?? null,
+        camelotKey: analysis.camelotKey ?? null,
+        energy: analysis.energy ?? null,
       });
     }
 
