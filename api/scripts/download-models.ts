@@ -127,6 +127,11 @@ async function downloadModel(model: ModelConfig): Promise<boolean> {
 
   // Check if model already exists
   if (fs.existsSync(modelPath)) {
+    // Skip verification if no checksum provided
+    if (!model.sha256) {
+      console.log(`  File exists - skipping (no checksum to verify)`);
+      return true;
+    }
     console.log(`  File exists, verifying checksum...`);
     const existingHash = await calculateSha256(modelPath);
 
@@ -150,19 +155,23 @@ async function downloadModel(model: ModelConfig): Promise<boolean> {
     return false;
   }
 
-  // Verify checksum
-  console.log(`  Verifying checksum...`);
-  const downloadedHash = await calculateSha256(modelPath);
+  // Verify checksum (skip if not provided)
+  if (model.sha256) {
+    console.log(`  Verifying checksum...`);
+    const downloadedHash = await calculateSha256(modelPath);
 
-  if (downloadedHash !== model.sha256) {
-    console.error(`  Checksum verification FAILED!`);
-    console.error(`  Expected: ${model.sha256}`);
-    console.error(`  Got:      ${downloadedHash}`);
-    fs.unlinkSync(modelPath);
-    return false;
+    if (downloadedHash !== model.sha256) {
+      console.error(`  Checksum verification FAILED!`);
+      console.error(`  Expected: ${model.sha256}`);
+      console.error(`  Got:      ${downloadedHash}`);
+      fs.unlinkSync(modelPath);
+      return false;
+    }
+    console.log(`  Checksum OK`);
+  } else {
+    console.log(`  Skipping checksum verification`);
   }
 
-  console.log(`  Checksum OK`);
   return true;
 }
 
