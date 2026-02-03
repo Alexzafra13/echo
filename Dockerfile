@@ -77,25 +77,37 @@ RUN find /prod/node_modules -type f \( \
 # ----------------------------------------
 FROM alpine:3.20 AS models
 
-# Download stem separation model (~171MB) - included in image like FFmpeg
-# Using separate stage so model download is cached independently
-# Uses curl with retries for reliability in CI/CD environments
+# Download stem separation models from GitHub releases
+# htdemucs.onnx (~2.5MB) - model structure
+# htdemucs.onnx.data (~160MB) - model weights
 RUN apk add --no-cache curl && \
     mkdir -p /models && \
+    echo "Downloading htdemucs.onnx..." && \
     curl -L \
       --retry 5 \
       --retry-delay 3 \
       --retry-all-errors \
       --connect-timeout 30 \
-      --max-time 600 \
+      --max-time 300 \
       -o /models/htdemucs.onnx \
-      "https://huggingface.co/webai-community/models/resolve/main/demucs.onnx" && \
-    ls -lh /models/htdemucs.onnx
+      "https://github.com/Alexzafra13/echo/releases/download/models-v1.0.0/htdemucs.onnx" && \
+    echo "Downloading htdemucs.onnx.data..." && \
+    curl -L \
+      --retry 5 \
+      --retry-delay 3 \
+      --retry-all-errors \
+      --connect-timeout 30 \
+      --max-time 900 \
+      -o /models/htdemucs.onnx.data \
+      "https://github.com/Alexzafra13/echo/releases/download/models-v1.0.0/htdemucs.onnx.data" && \
+    ls -lh /models/
 
 # ----------------------------------------
 # Stage 4: Minimal Production Runtime
 # ----------------------------------------
-FROM node:22-alpine AS production
+# Using Debian slim instead of Alpine for glibc compatibility
+# (onnxruntime-node requires glibc, not musl)
+FROM node:22-slim AS production
 
 # Metadata
 ARG BUILD_DATE
@@ -115,11 +127,17 @@ ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
 # FFmpeg: audio analysis (LUFS) and stem separation
-RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg
+# Using apt for Debian slim image
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    netcat-openbsd \
+    dumb-init \
+    gosu \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S echoapp -u 1001
+RUN groupadd -g 1001 nodejs && \
+    useradd -u 1001 -g nodejs -s /bin/sh -m echoapp
 
 WORKDIR /app
 
@@ -149,9 +167,11 @@ RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/log
 
 # Copy ML models from models stage (included in image like FFmpeg)
 COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx /app/models/
+COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx.data /app/models/
 
 # Create wrapper script for proper permissions
-RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+# Using gosu instead of su-exec (Debian equivalent)
+RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec gosu echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
     > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port
