@@ -79,10 +79,14 @@ export const DJ_CONFIG = {
     sampleRate: 44100,
     /** Number of audio channels */
     channels: 2,
-    /** Chunk size in samples (10 seconds) */
-    chunkSize: 44100 * 10,
-    /** Overlap between chunks in samples (1 second) */
-    overlap: 44100 * 1,
+    /**
+     * Chunk size in samples (~7.8 seconds)
+     * This MUST match the ONNX model's expected input size.
+     * The htdemucs model expects exactly 343980 samples.
+     */
+    chunkSize: 343980,
+    /** Overlap between chunks in samples (~0.5 second) */
+    overlap: 22050,
     /** Concurrency for stem processing queue */
     concurrency: 1,
     /** Estimated processing time multiplier (2.5x realtime) */
