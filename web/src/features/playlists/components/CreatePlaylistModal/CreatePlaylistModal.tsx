@@ -131,6 +131,27 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
           />
         </div>
 
+        {/* Stem processing option (DJ sessions only) - placed early for mobile visibility */}
+        {isDjSession && (
+          <div className={styles.stemOption}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={processStems}
+                onChange={(e) => setProcessStems(e.target.checked)}
+                className={styles.checkbox}
+                disabled={isLoading}
+              />
+              <span className={styles.checkboxText}>
+                Procesar stems (permite mashups)
+              </span>
+            </label>
+            <span className={styles.stemHint}>
+              La separación de stems puede tardar varios minutos por canción
+            </span>
+          </div>
+        )}
+
         {/* Song search */}
         <div className={styles.inputGroup}>
           <label className={styles.label}>Buscar canciones</label>
@@ -260,27 +281,6 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Stem processing option (DJ sessions only) */}
-        {isDjSession && (
-          <div className={styles.stemOption}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={processStems}
-                onChange={(e) => setProcessStems(e.target.checked)}
-                className={styles.checkbox}
-                disabled={isLoading}
-              />
-              <span className={styles.checkboxText}>
-                Procesar stems (permite mashups)
-              </span>
-            </label>
-            <span className={styles.stemHint}>
-              La separación de stems puede tardar varios minutos por canción
-            </span>
           </div>
         )}
 
