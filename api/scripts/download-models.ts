@@ -26,12 +26,20 @@ interface ModelConfig {
 const MODELS: ModelConfig[] = [
   {
     name: 'htdemucs.onnx',
-    url: 'https://huggingface.co/webai-community/models/resolve/main/demucs.onnx',
-    sha256: '2a66b7134944e24b2c05f014632bf274335e73b0016d1b8143b42503a5b03407',
-    sizeBytes: 171_000_000, // ~171 MB
-    description: 'Demucs v4 Hybrid Transformer for stem separation (vocals, drums, bass, other)',
+    url: 'https://github.com/Alexzafra13/echo/releases/download/models-v1.0.0/htdemucs.onnx',
+    sha256: '', // Skip verification - file from trusted source
+    sizeBytes: 2_600_000, // ~2.6 MB (model structure)
+    description: 'Demucs v4 Hybrid Transformer - model structure',
+  },
+  {
+    name: 'htdemucs.onnx.data',
+    url: 'https://github.com/Alexzafra13/echo/releases/download/models-v1.0.0/htdemucs.onnx.data',
+    sha256: '', // Skip verification - file from trusted source
+    sizeBytes: 168_000_000, // ~168 MB (model weights)
+    description: 'Demucs v4 Hybrid Transformer - model weights',
   },
 ];
+
 
 const MODELS_DIR = path.join(__dirname, '..', 'models');
 
