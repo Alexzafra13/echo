@@ -46,6 +46,7 @@ export class PluginsController {
   private readonly stemsPluginUrl: string;
   private readonly stemsImage: string;
   private readonly dockerAvailable: boolean;
+  private readonly dockerError: string | null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -60,23 +61,59 @@ export class PluginsController {
       'STEMS_PLUGIN_IMAGE',
       'ghcr.io/alexzafra13/echo-stems:latest',
     );
-    this.dockerAvailable = fs.existsSync(DOCKER_SOCKET);
+
+    // Check Docker socket existence and permissions
+    const dockerCheck = this.checkDockerSocket();
+    this.dockerAvailable = dockerCheck.available;
+    this.dockerError = dockerCheck.error;
 
     if (!this.dockerAvailable) {
-      this.logger.info('Docker socket not available - plugin installation disabled');
+      this.logger.info({ error: this.dockerError }, 'Docker socket not available - plugin installation disabled');
+    }
+  }
+
+  private checkDockerSocket(): { available: boolean; error: string | null } {
+    // Check if socket exists
+    if (!fs.existsSync(DOCKER_SOCKET)) {
+      return {
+        available: false,
+        error: 'Docker socket no encontrado. Monta /var/run/docker.sock en el contenedor.'
+      };
+    }
+
+    // Check if we have read/write access to the socket
+    try {
+      fs.accessSync(DOCKER_SOCKET, fs.constants.R_OK | fs.constants.W_OK);
+      return { available: true, error: null };
+    } catch (err) {
+      const nodeError = err as NodeJS.ErrnoException;
+      if (nodeError.code === 'EACCES') {
+        return {
+          available: false,
+          error: 'Sin permisos para acceder al socket de Docker. Ejecuta el contenedor con el grupo docker o ajusta los permisos.'
+        };
+      }
+      return {
+        available: false,
+        error: `Error al acceder al socket de Docker: ${nodeError.message}`
+      };
     }
   }
 
   @Get()
   @ApiOperation({ summary: 'List all available plugins' })
-  async listPlugins(): Promise<{ plugins: PluginInfo[]; dockerAvailable: boolean }> {
+  async listPlugins(): Promise<{ plugins: PluginInfo[]; dockerAvailable: boolean; dockerError: string | null }> {
     const plugins: PluginInfo[] = [];
 
     // Check stems plugin
     const stemsPlugin = await this.checkStemsPlugin();
     plugins.push(stemsPlugin);
 
-    return { plugins, dockerAvailable: this.dockerAvailable };
+    return {
+      plugins,
+      dockerAvailable: this.dockerAvailable,
+      dockerError: this.dockerError
+    };
   }
 
   @Get('stems/health')
