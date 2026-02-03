@@ -20,7 +20,7 @@ export interface DjStemsProps {
   // Processing info
   status: StemStatus;
   processingError?: string;
-  modelUsed?: string; // 'demucs-onnx', 'spleeter', 'node-audio-stem'
+  modelUsed?: string; // 'demucs-plugin', 'spleeter', etc.
 
   // File sizes
   totalSizeBytes?: number;
