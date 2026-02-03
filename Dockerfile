@@ -73,40 +73,8 @@ RUN find /prod/node_modules -type f \( \
     find /prod/node_modules -type d -empty -delete 2>/dev/null || true
 
 # ----------------------------------------
-# Stage 3: Download ML Models
+# Stage 3: Minimal Production Runtime
 # ----------------------------------------
-FROM alpine:3.20 AS models
-
-# Download stem separation models from GitHub releases
-# htdemucs.onnx (~2.5MB) - model structure
-# htdemucs.onnx.data (~160MB) - model weights
-RUN apk add --no-cache curl && \
-    mkdir -p /models && \
-    echo "Downloading htdemucs.onnx..." && \
-    curl -L \
-      --retry 5 \
-      --retry-delay 3 \
-      --retry-all-errors \
-      --connect-timeout 30 \
-      --max-time 300 \
-      -o /models/htdemucs.onnx \
-      "https://github.com/Alexzafra13/echo/releases/download/models-v1.0.0/htdemucs.onnx" && \
-    echo "Downloading htdemucs.onnx.data..." && \
-    curl -L \
-      --retry 5 \
-      --retry-delay 3 \
-      --retry-all-errors \
-      --connect-timeout 30 \
-      --max-time 900 \
-      -o /models/htdemucs.onnx.data \
-      "https://github.com/Alexzafra13/echo/releases/download/models-v1.0.0/htdemucs.onnx.data" && \
-    ls -lh /models/
-
-# ----------------------------------------
-# Stage 4: Minimal Production Runtime
-# ----------------------------------------
-# Using Alpine with gcompat for glibc compatibility
-# (onnxruntime-node requires glibc, gcompat provides compatibility layer)
 FROM node:22-alpine AS production
 
 # Metadata
@@ -126,12 +94,8 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
-# gcompat + libc6-compat: glibc compatibility for onnxruntime-node
-# FFmpeg: audio analysis (LUFS) and stem separation
+# FFmpeg: audio analysis (LUFS) and format conversion
 RUN apk add --no-cache \
-    gcompat \
-    libc6-compat \
-    libstdc++ \
     netcat-openbsd \
     dumb-init \
     su-exec \
@@ -163,17 +127,12 @@ COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create unified data directory and models directory
-RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs /app/models && \
-    chown -R echoapp:nodejs /app/data /app/models
-
-# Copy ML models from models stage (included in image like FFmpeg)
-COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx /app/models/
-COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx.data /app/models/
+# Create unified data directory
+RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
+    chown -R echoapp:nodejs /app/data
 
 # Create wrapper script for proper permissions
-# Using su-exec for Alpine
-RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
     > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port

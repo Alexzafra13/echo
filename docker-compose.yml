@@ -47,6 +47,8 @@ services:
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:-echo_music_server}
       DATA_PATH: /app/data
+      # Stems plugin URL (optional - only if stems profile is enabled)
+      STEMS_PLUGIN_URL: http://echo-stems:5000
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,6 +109,45 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # ===========================================
+  # PLUGIN: Separación de Stems (OPCIONAL)
+  # ===========================================
+  # Activa con: docker compose --profile stems up -d
+  # Este plugin permite separar canciones en:
+  # vocals, drums, bass, otros
+  # Tamaño de imagen: ~1.3GB
+  # ===========================================
+  echo-stems:
+    image: ghcr.io/alexzafra13/echo-stems:latest
+    container_name: echo-stems
+    profiles:
+      - stems
+    volumes:
+      - stems_data:/app/data
+    environment:
+      DEMUCS_MODEL: htdemucs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - echo-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Recursos recomendados para ML
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
 networks:
   echo-network:
     name: echo-network
@@ -114,3 +155,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  stems_data:
