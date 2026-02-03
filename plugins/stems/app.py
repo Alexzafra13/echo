@@ -130,8 +130,11 @@ async def process_separation(job_id: str, input_path: Path, output_dir: Path):
 
         logger.info(f"[{job_id}] Loading audio from {input_path}")
 
-        # Load audio
-        waveform, sample_rate = torchaudio.load(str(input_path))
+        # Load audio - detect format from file extension for proper backend selection
+        file_ext = input_path.suffix.lower().lstrip('.')
+        audio_format = file_ext if file_ext in ('mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac') else None
+        logger.info(f"[{job_id}] Detected audio format: {audio_format}")
+        waveform, sample_rate = torchaudio.load(str(input_path), format=audio_format)
 
         # Resample to model's sample rate if needed (44100 Hz for htdemucs)
         if sample_rate != separator.samplerate:
