@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as os from 'os';
@@ -7,7 +7,7 @@ import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djStems } from '../../../../infrastructure/database/schema';
 import { eq } from 'drizzle-orm';
-import { OnnxStemSeparatorService } from './onnx-stem-separator.service';
+import { IStemSeparator, STEM_SEPARATOR } from '../../domain/ports/stem-separator.port';
 import { DJ_CONFIG } from '../../config/dj.config';
 
 interface StemJob {
@@ -47,7 +47,8 @@ export class StemQueueService implements OnModuleInit {
     private readonly logger: PinoLogger,
     private readonly bullmq: BullmqService,
     private readonly drizzle: DrizzleService,
-    private readonly stemSeparator: OnnxStemSeparatorService,
+    @Inject(STEM_SEPARATOR)
+    private readonly stemSeparator: IStemSeparator,
     private readonly configService: ConfigService,
   ) {
     this.concurrency = getOptimalConcurrency();

@@ -12,7 +12,7 @@ import { DjController } from './presentation/controllers/dj.controller';
 
 // Services
 import { EssentiaAnalyzerService } from './infrastructure/services/essentia-analyzer.service';
-import { OnnxStemSeparatorService } from './infrastructure/services/onnx-stem-separator.service';
+import { HttpStemSeparatorService } from './infrastructure/services/http-stem-separator.service';
 import { DjAnalysisQueueService } from './infrastructure/services/dj-analysis-queue.service';
 import { StemQueueService } from './infrastructure/services/stem-queue.service';
 import { TransitionEngineService } from './infrastructure/services/transition-engine.service';
@@ -38,7 +38,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
  *
  * Provides:
  * - Audio analysis (BPM, Key, Energy) using Essentia.js
- * - Stem separation (vocals, drums, bass, other) using ONNX/Demucs
+ * - Stem separation (vocals, drums, bass, other) via plugin container
  * - Harmonic mixing recommendations (Camelot wheel)
  * - Transition calculations for DJ mixing
  * - Async processing queues for heavy operations
@@ -55,7 +55,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
   providers: [
     // Services
     EssentiaAnalyzerService,
-    OnnxStemSeparatorService,
+    HttpStemSeparatorService,
     DjAnalysisQueueService,
     StemQueueService,
     TransitionEngineService,
@@ -80,7 +80,7 @@ import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
     },
     {
       provide: STEM_SEPARATOR,
-      useClass: OnnxStemSeparatorService,
+      useClass: HttpStemSeparatorService,
     },
   ],
   exports: [

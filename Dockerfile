@@ -73,27 +73,7 @@ RUN find /prod/node_modules -type f \( \
     find /prod/node_modules -type d -empty -delete 2>/dev/null || true
 
 # ----------------------------------------
-# Stage 3: Download ML Models
-# ----------------------------------------
-FROM alpine:3.20 AS models
-
-# Download stem separation model (~171MB) - included in image like FFmpeg
-# Using separate stage so model download is cached independently
-# Uses curl with retries for reliability in CI/CD environments
-RUN apk add --no-cache curl && \
-    mkdir -p /models && \
-    curl -L \
-      --retry 5 \
-      --retry-delay 3 \
-      --retry-all-errors \
-      --connect-timeout 30 \
-      --max-time 600 \
-      -o /models/htdemucs.onnx \
-      "https://huggingface.co/webai-community/models/resolve/main/demucs.onnx" && \
-    ls -lh /models/htdemucs.onnx
-
-# ----------------------------------------
-# Stage 4: Minimal Production Runtime
+# Stage 3: Minimal Production Runtime
 # ----------------------------------------
 FROM node:22-alpine AS production
 
@@ -114,12 +94,16 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
-# FFmpeg: audio analysis (LUFS) and stem separation
-RUN apk add --no-cache netcat-openbsd dumb-init su-exec ffmpeg
+# FFmpeg: audio analysis (LUFS) and format conversion
+RUN apk add --no-cache \
+    netcat-openbsd \
+    dumb-init \
+    su-exec \
+    ffmpeg
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S echoapp -u 1001
+RUN addgroup -g 1001 nodejs && \
+    adduser -u 1001 -G nodejs -s /bin/sh -D echoapp
 
 WORKDIR /app
 
@@ -143,15 +127,12 @@ COPY --chown=echoapp:nodejs api/scripts/reset-admin-password.js ./scripts/
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create unified data directory and models directory
-RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs /app/models && \
-    chown -R echoapp:nodejs /app/data /app/models
-
-# Copy ML models from models stage (included in image like FFmpeg)
-COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx /app/models/
+# Create unified data directory
+RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/logs && \
+    chown -R echoapp:nodejs /app/data
 
 # Create wrapper script for proper permissions
-RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
     > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port
