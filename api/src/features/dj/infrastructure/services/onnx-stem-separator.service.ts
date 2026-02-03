@@ -70,12 +70,28 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
         return;
       }
 
+      // Check for external data file (required for large models)
+      const externalDataPath = this.modelPath + '.data';
+      const hasExternalData = fs.existsSync(externalDataPath);
+      this.logger.info(
+        { modelPath: this.modelPath, hasExternalData, externalDataPath },
+        'Checking model files...',
+      );
+
+      if (!hasExternalData) {
+        this.logger.warn(
+          { externalDataPath },
+          'External data file not found. Model may not load correctly.',
+        );
+      }
+
       // Dynamic import for onnxruntime-node
       this.ort = await import('onnxruntime-node');
 
       this.logger.info({ modelPath: this.modelPath }, 'Loading ONNX model...');
 
       // Create inference session with optimizations
+      // For models with external data, ONNX Runtime looks in the same directory
       this.session = await this.ort.InferenceSession.create(this.modelPath, {
         executionProviders: ['cpu'],
         graphOptimizationLevel: 'all',
@@ -88,9 +104,19 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
         {
           inputs: this.session.inputNames,
           outputs: this.session.outputNames,
+          inputCount: this.session.inputNames.length,
+          outputCount: this.session.outputNames.length,
         },
         'ONNX model loaded successfully',
       );
+
+      // Validate model has expected structure
+      if (this.session.inputNames.length === 0) {
+        throw new Error('Model has no inputs defined - possible loading error');
+      }
+      if (this.session.outputNames.length === 0) {
+        throw new Error('Model has no outputs defined - possible loading error');
+      }
 
       this.isInitialized = true;
     } catch (error) {
@@ -323,9 +349,24 @@ export class OnnxStemSeparatorService implements IStemSeparator, OnModuleInit {
       [1, this.CHANNELS, this.CHUNK_SIZE],
     );
 
-    // Run inference
-    const feeds: Record<string, import('onnxruntime-node').Tensor> = {};
-    feeds[this.session.inputNames[0]] = inputTensor;
+    // Run inference - use the actual input name from the model
+    const inputName = this.session.inputNames[0];
+    if (!inputName) {
+      this.logger.error(
+        { inputNames: this.session.inputNames },
+        'Model has no input names defined',
+      );
+      throw new Error('Model has no input names defined');
+    }
+
+    this.logger.debug(
+      { inputName, tensorShape: [1, this.CHANNELS, this.CHUNK_SIZE] },
+      'Running inference with input',
+    );
+
+    const feeds: Record<string, import('onnxruntime-node').Tensor> = {
+      [inputName]: inputTensor,
+    };
 
     const results = await this.session.run(feeds);
 
