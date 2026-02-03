@@ -299,7 +299,7 @@ export class PluginsController {
     return new Promise((resolve, reject) => {
       const options: http.RequestOptions = {
         socketPath: DOCKER_SOCKET,
-        path: `/v1.43${path}`,
+        path: `/v1.44${path}`,
         method,
         headers: {
           'Content-Type': 'application/json',
