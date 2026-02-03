@@ -41,16 +41,8 @@ services:
       - /media:/media:ro
       # ===========================================
 
-      # ===========================================
-      #   GESTIÓN DE PLUGINS DESDE LA UI (OPCIONAL)
-      # ===========================================
-      # Descomenta la siguiente línea para poder
-      # instalar/desinstalar plugins desde el panel
-      # de administración de Echo.
-      # NOTA: Esto da acceso a Docker al contenedor.
-      #
-      # - /var/run/docker.sock:/var/run/docker.sock
-      # ===========================================
+      # Docker socket para gestión de plugins desde la UI
+      - /var/run/docker.sock:/var/run/docker.sock
 
     environment:
       NODE_ENV: production
