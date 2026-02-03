@@ -7,10 +7,10 @@ uvicorn[standard]==0.30.6
 # Audio processing
 demucs==4.0.1
 
-# PyTorch CPU-only (smaller image)
+# PyTorch CPU-only (smaller image, works on amd64 and arm64)
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.0+cpu
-torchaudio==2.2.0+cpu
+torch==2.6.0
+torchaudio==2.6.0
 
 # Utilities
 python-multipart==0.0.9
