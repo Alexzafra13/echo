@@ -41,6 +41,17 @@ services:
       - /media:/media:ro
       # ===========================================
 
+      # ===========================================
+      #   GESTIÓN DE PLUGINS DESDE LA UI (OPCIONAL)
+      # ===========================================
+      # Descomenta la siguiente línea para poder
+      # instalar/desinstalar plugins desde el panel
+      # de administración de Echo.
+      # NOTA: Esto da acceso a Docker al contenedor.
+      #
+      # - /var/run/docker.sock:/var/run/docker.sock
+      # ===========================================
+
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-echo}:${POSTGRES_PASSWORD:-echo_music_server}@postgres:5432/${POSTGRES_DB:-echo}

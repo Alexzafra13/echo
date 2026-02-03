@@ -135,6 +135,11 @@
   color: #ef4444;
 }
 
+.statusNotInstalled {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
 .statusDot {
   width: 8px;
   height: 8px;
@@ -172,12 +177,47 @@
   font-size: 12px;
   color: var(--color-text-secondary, #6b7280);
   font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.pluginActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .errorMessage {
   font-size: 12px;
   color: #ef4444;
   margin-top: 8px;
+}
+
+/* Action Messages */
+.actionMessage {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.actionSuccess {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.actionError {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Spinning Animation */
+.spinning {
+  animation: spin 1s linear infinite;
 }
 
 /* Instructions Box */
@@ -205,6 +245,14 @@
   font-size: 13px;
   color: var(--color-text-primary, #ffffff);
   overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.instructionsText {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Loading State */

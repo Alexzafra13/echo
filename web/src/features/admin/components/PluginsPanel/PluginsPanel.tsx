@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Puzzle, Music2, RefreshCw } from 'lucide-react';
+import { Puzzle, Music2, RefreshCw, Download, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@shared/components/ui';
 import { apiClient } from '@shared/services/api';
 import styles from './PluginsPanel.module.css';
@@ -9,14 +9,23 @@ interface PluginInfo {
   name: string;
   description: string;
   version: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status: 'connected' | 'disconnected' | 'error' | 'installing' | 'not_installed';
   url: string;
   features: string[];
   error?: string;
+  canInstall: boolean;
+  containerStatus?: string;
+  image: string;
 }
 
 interface PluginsResponse {
   plugins: PluginInfo[];
+  dockerAvailable: boolean;
+}
+
+interface ActionResponse {
+  success: boolean;
+  message: string;
 }
 
 /**
@@ -25,13 +34,17 @@ interface PluginsResponse {
  */
 export function PluginsPanel() {
   const [plugins, setPlugins] = useState<PluginInfo[]>([]);
+  const [dockerAvailable, setDockerAvailable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchPlugins = async () => {
     try {
       const response = await apiClient.get<PluginsResponse>('/admin/plugins');
       setPlugins(response.data.plugins);
+      setDockerAvailable(response.data.dockerAvailable);
     } catch (error) {
       console.error('Error fetching plugins:', error);
     } finally {
@@ -46,7 +59,59 @@ export function PluginsPanel() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
+    setActionMessage(null);
     fetchPlugins();
+  };
+
+  const handleInstall = async (pluginId: string) => {
+    setActionInProgress(pluginId);
+    setActionMessage(null);
+
+    try {
+      const response = await apiClient.post<ActionResponse>(`/admin/plugins/${pluginId}/install`);
+
+      if (response.data.success) {
+        setActionMessage({ type: 'success', text: response.data.message });
+        // Wait a bit for the container to start, then refresh
+        setTimeout(() => fetchPlugins(), 3000);
+      } else {
+        setActionMessage({ type: 'error', text: response.data.message });
+      }
+    } catch (error) {
+      setActionMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Error al instalar el plugin',
+      });
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleUninstall = async (pluginId: string) => {
+    if (!confirm('¿Estás seguro de que quieres desinstalar este plugin?')) {
+      return;
+    }
+
+    setActionInProgress(pluginId);
+    setActionMessage(null);
+
+    try {
+      const response = await apiClient.delete<ActionResponse>(`/admin/plugins/${pluginId}/uninstall`);
+
+      if (response.data.success) {
+        setActionMessage({ type: 'success', text: response.data.message });
+        fetchPlugins();
+      } else {
+        setActionMessage({ type: 'error', text: response.data.message });
+      }
+    } catch (error) {
+      setActionMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Error al desinstalar el plugin',
+      });
+    } finally {
+      setActionInProgress(null);
+    }
   };
 
   const getStatusLabel = (status: PluginInfo['status']) => {
@@ -57,8 +122,25 @@ export function PluginsPanel() {
         return 'Desconectado';
       case 'error':
         return 'Error';
+      case 'not_installed':
+        return 'No instalado';
+      case 'installing':
+        return 'Instalando...';
       default:
         return status;
+    }
+  };
+
+  const getStatusClass = (status: PluginInfo['status']) => {
+    switch (status) {
+      case 'connected':
+        return styles.statusConnected;
+      case 'error':
+        return styles.statusError;
+      case 'not_installed':
+        return styles.statusNotInstalled;
+      default:
+        return styles.statusDisconnected;
     }
   };
 
@@ -102,6 +184,16 @@ export function PluginsPanel() {
         </Button>
       </div>
 
+      {actionMessage && (
+        <div
+          className={`${styles.actionMessage} ${
+            actionMessage.type === 'success' ? styles.actionSuccess : styles.actionError
+          }`}
+        >
+          {actionMessage.text}
+        </div>
+      )}
+
       <div className={styles.pluginsGrid}>
         {plugins.map((plugin) => (
           <div key={plugin.id} className={styles.pluginCard}>
@@ -113,15 +205,7 @@ export function PluginsPanel() {
                 <h3 className={styles.pluginName}>{plugin.name}</h3>
                 <span className={styles.pluginVersion}>v{plugin.version}</span>
               </div>
-              <span
-                className={`${styles.statusBadge} ${
-                  plugin.status === 'connected'
-                    ? styles.statusConnected
-                    : plugin.status === 'error'
-                    ? styles.statusError
-                    : styles.statusDisconnected
-                }`}
-              >
+              <span className={`${styles.statusBadge} ${getStatusClass(plugin.status)}`}>
                 <span className={styles.statusDot} />
                 {getStatusLabel(plugin.status)}
               </span>
@@ -139,22 +223,70 @@ export function PluginsPanel() {
               </div>
             )}
 
-            <div className={styles.pluginFooter}>
-              <span className={styles.pluginUrl}>{plugin.url}</span>
-            </div>
-
             {plugin.error && (
               <p className={styles.errorMessage}>{plugin.error}</p>
             )}
+
+            <div className={styles.pluginFooter}>
+              <span className={styles.pluginUrl}>{plugin.image}</span>
+
+              <div className={styles.pluginActions}>
+                {plugin.canInstall && (
+                  <>
+                    {(plugin.status === 'not_installed' || plugin.status === 'disconnected') && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleInstall(plugin.id)}
+                        disabled={actionInProgress === plugin.id}
+                      >
+                        {actionInProgress === plugin.id ? (
+                          <Loader2 size={16} className={styles.spinning} />
+                        ) : (
+                          <Download size={16} />
+                        )}
+                        {actionInProgress === plugin.id ? 'Instalando...' : 'Instalar'}
+                      </Button>
+                    )}
+
+                    {(plugin.status === 'connected' || plugin.status === 'error') && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleUninstall(plugin.id)}
+                        disabled={actionInProgress === plugin.id}
+                      >
+                        {actionInProgress === plugin.id ? (
+                          <Loader2 size={16} className={styles.spinning} />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
+                        Desinstalar
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      {plugins.some((p) => p.status === 'disconnected') && (
+      {!dockerAvailable && (
         <div className={styles.instructionsBox}>
           <h4 className={styles.instructionsTitle}>
-            Para activar el plugin de Stems:
+            Instalación manual requerida
           </h4>
+          <p className={styles.instructionsText}>
+            Para habilitar la instalación desde la UI, monta el socket de Docker:
+          </p>
+          <code className={styles.instructionsCode}>
+            volumes:
+              - /var/run/docker.sock:/var/run/docker.sock
+          </code>
+          <p className={styles.instructionsText} style={{ marginTop: '12px' }}>
+            O instala manualmente con:
+          </p>
           <code className={styles.instructionsCode}>
             docker compose --profile stems up -d
           </code>
