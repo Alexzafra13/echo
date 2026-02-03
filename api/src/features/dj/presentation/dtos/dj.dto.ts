@@ -244,6 +244,10 @@ export class CreateDjSessionRequestDto {
   @IsOptional()
   @IsNumber()
   transitionDuration?: number;
+
+  @ApiPropertyOptional({ description: 'Process stems for all tracks (enables mashups)' })
+  @IsOptional()
+  processStems?: boolean;
 }
 
 export class CamelotColorDto {

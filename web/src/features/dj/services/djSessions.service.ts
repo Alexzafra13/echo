@@ -35,6 +35,7 @@ export interface CreateDjSessionDto {
   trackIds: string[];
   transitionType?: 'crossfade' | 'mashup' | 'cut';
   transitionDuration?: number;
+  processStems?: boolean;
 }
 
 export interface UpdateDjSessionDto {

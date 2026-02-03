@@ -373,6 +373,75 @@
   opacity: 0.7;
 }
 
+/* Stem processing option */
+.stemOption {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--white-05);
+  border-radius: 10px;
+  border: 1px solid var(--white-10);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--text-tertiary, #6b7280);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkbox:checked {
+  background: var(--color-primary, #ed6842);
+  border-color: var(--color-primary, #ed6842);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox:hover:not(:disabled) {
+  border-color: var(--text-secondary, #9ca3af);
+}
+
+.checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkboxText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #ffffff);
+}
+
+.stemHint {
+  font-size: 12px;
+  color: var(--text-tertiary, #6b7280);
+  margin-left: 28px;
+}
+
 /* Error message */
 .error {
   padding: 12px 16px;

@@ -114,12 +114,15 @@ export default function PlaylistsPage() {
     }
   };
 
-  const handleCreateDjSession = async (name: string, trackIds: string[]) => {
+  const handleCreateDjSession = async (name: string, trackIds: string[], options?: { processStems?: boolean }) => {
     // Create the DJ session with tracks
-    await createDjSessionMutation.mutateAsync({
+    const session = await createDjSessionMutation.mutateAsync({
       name,
       trackIds,
+      processStems: options?.processStems,
     });
+    // Navigate to the new session's detail page
+    setLocation(`/dj/sessions/${session.id}`);
   };
 
   const handleDeleteClick = (playlistId: string, playlistName: string) => {
@@ -379,19 +382,7 @@ export default function PlaylistsPage() {
                         <div
                           key={session.id}
                           className={styles.playlistCard}
-                          onClick={() => {
-                            if (session.tracks.length > 0) {
-                              const playerTracks = session.tracks.map(t => ({
-                                id: t.trackId,
-                                title: t.title || 'Unknown',
-                                artist: t.artist || 'Unknown',
-                                albumId: t.albumId,
-                                duration: t.duration,
-                                coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
-                              }));
-                              playQueue(playerTracks, 0);
-                            }
-                          }}
+                          onClick={() => setLocation(`/dj/sessions/${session.id}`)}
                         >
                           <div className={styles.playlistCard__cover}>
                             {albumIds.length > 0 ? (
