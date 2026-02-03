@@ -105,9 +105,9 @@ RUN apk add --no-cache curl && \
 # ----------------------------------------
 # Stage 4: Minimal Production Runtime
 # ----------------------------------------
-# Using Debian slim instead of Alpine for glibc compatibility
-# (onnxruntime-node requires glibc, not musl)
-FROM node:22-slim AS production
+# Using Alpine with gcompat for glibc compatibility
+# (onnxruntime-node requires glibc, gcompat provides compatibility layer)
+FROM node:22-alpine AS production
 
 # Metadata
 ARG BUILD_DATE
@@ -126,18 +126,20 @@ LABEL org.opencontainers.image.title="Echo Music Server" \
 ENV NODE_ENV=production
 
 # Install runtime dependencies in single layer
+# gcompat + libc6-compat: glibc compatibility for onnxruntime-node
 # FFmpeg: audio analysis (LUFS) and stem separation
-# Using apt for Debian slim image
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
+    gcompat \
+    libc6-compat \
+    libstdc++ \
     netcat-openbsd \
     dumb-init \
-    gosu \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+    su-exec \
+    ffmpeg
 
 # Create non-root user
-RUN groupadd -g 1001 nodejs && \
-    useradd -u 1001 -g nodejs -s /bin/sh -m echoapp
+RUN addgroup -g 1001 nodejs && \
+    adduser -u 1001 -G nodejs -s /bin/sh -D echoapp
 
 WORKDIR /app
 
@@ -170,8 +172,8 @@ COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx /app/models/
 COPY --from=models --chown=echoapp:nodejs /models/htdemucs.onnx.data /app/models/
 
 # Create wrapper script for proper permissions
-# Using gosu instead of su-exec (Debian equivalent)
-RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec gosu echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+# Using su-exec for Alpine
+RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data /app/models 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
     > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port
