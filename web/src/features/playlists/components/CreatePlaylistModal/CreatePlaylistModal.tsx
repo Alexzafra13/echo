@@ -17,7 +17,7 @@ interface SelectedTrack {
 
 interface CreatePlaylistModalProps {
   onClose: () => void;
-  onSubmit: (name: string, trackIds: string[]) => Promise<void>;
+  onSubmit: (name: string, trackIds: string[], options?: { processStems?: boolean }) => Promise<void>;
   isLoading?: boolean;
   /** If true, changes the modal title and placeholder text for DJ sessions */
   isDjSession?: boolean;
@@ -34,6 +34,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
   const [recentTracks, setRecentTracks] = useState<RecentlyPlayed[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [error, setError] = useState('');
+  const [processStems, setProcessStems] = useState(false);
 
   // Search tracks
   const { data: searchResults, isLoading: searchLoading } = useTrackSearch(searchQuery, { take: 8 });
@@ -69,7 +70,8 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
     }
 
     try {
-      await onSubmit(name.trim(), selectedTracks.map(t => t.id));
+      const options = isDjSession ? { processStems } : undefined;
+      await onSubmit(name.trim(), selectedTracks.map(t => t.id), options);
       onClose();
     } catch (error) {
       setError(getApiErrorMessage(error, isDjSession ? 'Error al crear la sesión DJ' : 'Error al crear la playlist'));
@@ -258,6 +260,27 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Stem processing option (DJ sessions only) */}
+        {isDjSession && (
+          <div className={styles.stemOption}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={processStems}
+                onChange={(e) => setProcessStems(e.target.checked)}
+                className={styles.checkbox}
+                disabled={isLoading}
+              />
+              <span className={styles.checkboxText}>
+                Procesar stems (permite mashups)
+              </span>
+            </label>
+            <span className={styles.stemHint}>
+              La separación de stems puede tardar varios minutos por canción
+            </span>
           </div>
         )}
 

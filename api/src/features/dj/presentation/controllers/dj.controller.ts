@@ -454,6 +454,13 @@ export class DjController {
       this.logger.error({ err, sessionId: session.id }, 'Failed to generate tempo cache');
     });
 
+    // Process stems in background if requested (for mashups)
+    if (dto.processStems) {
+      this.processSessionStems(dto.trackIds).catch((err) => {
+        this.logger.error({ err, sessionId: session.id }, 'Failed to queue stems processing');
+      });
+    }
+
     return this.enrichSessionWithTracks(session);
   }
 
@@ -477,6 +484,32 @@ export class DjController {
       .filter((t): t is { trackId: string; filePath: string } => t !== null);
 
     await this.tempoCacheService.generateForSession(sessionId, trackData);
+  }
+
+  /**
+   * Process stems for all tracks in a session
+   */
+  private async processSessionStems(trackIds: string[]): Promise<void> {
+    if (trackIds.length === 0) return;
+
+    // Get track info
+    const trackRecords = await this.drizzle.db
+      .select({ id: tracks.id, title: tracks.title, path: tracks.path })
+      .from(tracks)
+      .where(inArray(tracks.id, trackIds));
+
+    const tracksToProcess = trackRecords.map((t) => ({
+      id: t.id,
+      title: t.title,
+      path: t.path,
+    }));
+
+    await this.stemQueue.startStemQueue(tracksToProcess);
+
+    this.logger.info(
+      { trackCount: tracksToProcess.length },
+      'Queued stems processing for DJ session',
+    );
   }
 
   @Get('sessions/:id')
