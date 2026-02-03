@@ -132,7 +132,8 @@ RUN mkdir -p /app/data/metadata /app/data/covers /app/data/uploads /app/data/log
     chown -R echoapp:nodejs /app/data
 
 # Create wrapper script for proper permissions
-RUN printf '#!/bin/sh\nset -e\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
+# Automatically detects Docker socket GID and grants access to echoapp user
+RUN printf '#!/bin/sh\nset -e\n\n# Fix data directory permissions\nchown -R echoapp:nodejs /app/data 2>/dev/null || true\n\n# Auto-configure Docker socket access if mounted\nDOCKER_SOCKET="/var/run/docker.sock"\nif [ -S "$DOCKER_SOCKET" ]; then\n  DOCKER_GID=$(stat -c "%%g" "$DOCKER_SOCKET" 2>/dev/null || stat -f "%%g" "$DOCKER_SOCKET" 2>/dev/null)\n  if [ -n "$DOCKER_GID" ] && [ "$DOCKER_GID" != "0" ]; then\n    # Create docker group with the socket GID if it does not exist\n    if ! getent group "$DOCKER_GID" >/dev/null 2>&1; then\n      addgroup -g "$DOCKER_GID" docker 2>/dev/null || true\n    fi\n    # Add echoapp to the docker group\n    DOCKER_GROUP=$(getent group "$DOCKER_GID" | cut -d: -f1)\n    addgroup echoapp "$DOCKER_GROUP" 2>/dev/null || true\n  fi\nfi\n\nexec su-exec echoapp /usr/local/bin/docker-entrypoint.sh "$@"\n' \
     > /entrypoint-wrapper.sh && chmod +x /entrypoint-wrapper.sh
 
 # Default port

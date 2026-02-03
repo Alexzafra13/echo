@@ -285,35 +285,13 @@ export function PluginsPanel() {
               {dockerError}
             </p>
           )}
-          {dockerError?.includes('permisos') ? (
-            <>
-              <p className={styles.instructionsText}>
-                Para solucionar el problema de permisos, añade el grupo docker al contenedor:
-              </p>
-              <code className={styles.instructionsCode}>
-{`services:
-  echo:
-    group_add:
-      - "\${DOCKER_GID:-999}"`}
-              </code>
-              <p className={styles.instructionsText} style={{ marginTop: '12px' }}>
-                Y ejecuta con la variable DOCKER_GID:
-              </p>
-              <code className={styles.instructionsCode}>
-                DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose up -d
-              </code>
-            </>
-          ) : (
-            <>
-              <p className={styles.instructionsText}>
-                Para habilitar la instalación desde la UI, monta el socket de Docker:
-              </p>
-              <code className={styles.instructionsCode}>
+          <p className={styles.instructionsText}>
+            Para habilitar la instalación desde la UI, monta el socket de Docker:
+          </p>
+          <code className={styles.instructionsCode}>
 {`volumes:
   - /var/run/docker.sock:/var/run/docker.sock`}
-              </code>
-            </>
-          )}
+          </code>
           <p className={styles.instructionsText} style={{ marginTop: '12px' }}>
             O instala manualmente con:
           </p>
