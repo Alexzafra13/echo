@@ -91,7 +91,7 @@ export const djStems = pgTable(
     // Processing info
     status: stemStatusEnum('status').default('pending').notNull(),
     processingError: varchar('processing_error', { length: 512 }),
-    modelUsed: varchar('model_used', { length: 50 }), // 'demucs-onnx', 'spleeter', etc.
+    modelUsed: varchar('model_used', { length: 50 }), // 'demucs-plugin', 'spleeter', etc.
 
     // File sizes for storage management
     totalSizeBytes: real('total_size_bytes'),
