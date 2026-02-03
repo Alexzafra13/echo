@@ -8,6 +8,10 @@
 #   2. Ejecuta: docker compose up -d
 #   3. Abre: http://localhost:4567
 #
+# PARA PLUGINS (opcional):
+#   Si quieres instalar plugins desde la UI, ejecuta:
+#   DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose up -d
+#
 # DESCARGAR ESTE ARCHIVO:
 #   mkdir echo && cd echo
 #   curl -O https://raw.githubusercontent.com/Alexzafra13/echo/main/docker-compose.yml
@@ -43,6 +47,10 @@ services:
 
       # Docker socket para gestión de plugins desde la UI
       - /var/run/docker.sock:/var/run/docker.sock
+    # Permisos para acceder al socket de Docker
+    # Obtén el GID con: getent group docker | cut -d: -f3
+    group_add:
+      - "${DOCKER_GID:-999}"
 
     environment:
       NODE_ENV: production

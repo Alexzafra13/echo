@@ -21,6 +21,7 @@ interface PluginInfo {
 interface PluginsResponse {
   plugins: PluginInfo[];
   dockerAvailable: boolean;
+  dockerError: string | null;
 }
 
 interface ActionResponse {
@@ -35,6 +36,7 @@ interface ActionResponse {
 export function PluginsPanel() {
   const [plugins, setPlugins] = useState<PluginInfo[]>([]);
   const [dockerAvailable, setDockerAvailable] = useState(false);
+  const [dockerError, setDockerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export function PluginsPanel() {
       const response = await apiClient.get<PluginsResponse>('/admin/plugins');
       setPlugins(response.data.plugins);
       setDockerAvailable(response.data.dockerAvailable);
+      setDockerError(response.data.dockerError);
     } catch (error) {
       console.error('Error fetching plugins:', error);
     } finally {
@@ -275,15 +278,42 @@ export function PluginsPanel() {
       {!dockerAvailable && (
         <div className={styles.instructionsBox}>
           <h4 className={styles.instructionsTitle}>
-            Instalación manual requerida
+            Docker no disponible
           </h4>
-          <p className={styles.instructionsText}>
-            Para habilitar la instalación desde la UI, monta el socket de Docker:
-          </p>
-          <code className={styles.instructionsCode}>
-            volumes:
-              - /var/run/docker.sock:/var/run/docker.sock
-          </code>
+          {dockerError && (
+            <p className={styles.errorMessage} style={{ marginBottom: '12px' }}>
+              {dockerError}
+            </p>
+          )}
+          {dockerError?.includes('permisos') ? (
+            <>
+              <p className={styles.instructionsText}>
+                Para solucionar el problema de permisos, añade el grupo docker al contenedor:
+              </p>
+              <code className={styles.instructionsCode}>
+{`services:
+  echo:
+    group_add:
+      - "\${DOCKER_GID:-999}"`}
+              </code>
+              <p className={styles.instructionsText} style={{ marginTop: '12px' }}>
+                Y ejecuta con la variable DOCKER_GID:
+              </p>
+              <code className={styles.instructionsCode}>
+                DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose up -d
+              </code>
+            </>
+          ) : (
+            <>
+              <p className={styles.instructionsText}>
+                Para habilitar la instalación desde la UI, monta el socket de Docker:
+              </p>
+              <code className={styles.instructionsCode}>
+{`volumes:
+  - /var/run/docker.sock:/var/run/docker.sock`}
+              </code>
+            </>
+          )}
           <p className={styles.instructionsText} style={{ marginTop: '12px' }}>
             O instala manualmente con:
           </p>
