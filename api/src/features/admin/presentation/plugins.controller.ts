@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Delete, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@features/auth/guards/jwt-auth.guard';
-import { AdminGuard } from '@features/auth/guards/admin.guard';
+import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
+import { AdminGuard } from '@shared/guards/admin.guard';
 import { ConfigService } from '@nestjs/config';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import * as http from 'http';
