@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { getFfmpegPath } from '@features/dj/infrastructure/utils/ffmpeg.util';
 
 const execFileAsync = promisify(execFile);
 
@@ -98,7 +99,7 @@ export class LufsAnalyzerService {
   private async analyzeLoudness(filePath: string): Promise<{ inputLufs: number; inputPeak: number } | null> {
     try {
       const { stderr } = await execFileAsync(
-        'ffmpeg',
+        getFfmpegPath(),
         [
           '-nostdin',
           '-hide_banner',
@@ -129,7 +130,7 @@ export class LufsAnalyzerService {
       // -60dB threshold: only actual silence/near-silence (not just quiet parts)
       // d=1.0: minimum silence duration of 1 second (avoid brief pauses)
       const { stderr } = await execFileAsync(
-        'ffmpeg',
+        getFfmpegPath(),
         [
           '-nostdin',
           '-hide_banner',
@@ -252,7 +253,7 @@ export class LufsAnalyzerService {
    */
   async isFFmpegAvailable(): Promise<boolean> {
     try {
-      await execFileAsync('ffmpeg', ['-version']);
+      await execFileAsync(getFfmpegPath(), ['-version']);
       return true;
     } catch {
       return false;
