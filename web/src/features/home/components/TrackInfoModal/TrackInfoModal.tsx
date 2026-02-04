@@ -1,7 +1,8 @@
-import { X } from 'lucide-react';
+import { X, Music2 } from 'lucide-react';
 import type { Track } from '../../types';
 import { formatDuration, formatFileSize, formatBitrate, formatDate } from '@shared/utils/format';
 import { getCoverUrl } from '@shared/utils/cover.utils';
+import { useTrackDjAnalysis } from '@shared/hooks';
 import styles from './TrackInfoModal.module.css';
 
 interface TrackInfoModalProps {
@@ -15,6 +16,7 @@ interface TrackInfoModalProps {
  */
 export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
   const coverUrl = track.albumId ? getCoverUrl(`/api/albums/${track.albumId}/cover`) : undefined;
+  const { djAnalysis, isLoading: djLoading } = useTrackDjAnalysis(track.id);
 
   return (
     <div className={styles.trackInfoModal} onClick={onClose}>
@@ -177,6 +179,119 @@ export function TrackInfoModal({ track, onClose }: TrackInfoModalProps) {
                 </>
               )}
             </div>
+          </div>
+
+          {/* DJ Analysis */}
+          <div className={styles.trackInfoModal__section}>
+            <h4 className={styles.trackInfoModal__sectionTitle}>
+              <Music2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+              Análisis DJ
+            </h4>
+            {djLoading ? (
+              <div className={styles.trackInfoModal__djNotAvailable}>Cargando...</div>
+            ) : !djAnalysis ? (
+              <div className={styles.trackInfoModal__djNotAvailable}>No disponible</div>
+            ) : djAnalysis.status === 'pending' ? (
+              <div className={styles.trackInfoModal__infoRow}>
+                <span className={styles.trackInfoModal__infoLabel}>Estado:</span>
+                <span className={styles.trackInfoModal__infoValue}>
+                  <span className={styles.trackInfoModal__pending}>Pendiente</span>
+                </span>
+              </div>
+            ) : djAnalysis.status === 'analyzing' ? (
+              <div className={styles.trackInfoModal__infoRow}>
+                <span className={styles.trackInfoModal__infoLabel}>Estado:</span>
+                <span className={styles.trackInfoModal__infoValue}>
+                  <span className={styles.trackInfoModal__djAnalyzing}>Analizando</span>
+                </span>
+              </div>
+            ) : djAnalysis.status === 'failed' ? (
+              <div className={styles.trackInfoModal__infoGrid}>
+                <div className={styles.trackInfoModal__infoRow}>
+                  <span className={styles.trackInfoModal__infoLabel}>Estado:</span>
+                  <span className={styles.trackInfoModal__infoValue}>
+                    <span className={styles.trackInfoModal__djFailed}>Error</span>
+                  </span>
+                </div>
+                {djAnalysis.analysisError && (
+                  <div className={styles.trackInfoModal__infoRow}>
+                    <span className={styles.trackInfoModal__infoLabel}>Detalle:</span>
+                    <span className={styles.trackInfoModal__infoValue}>{djAnalysis.analysisError}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={styles.trackInfoModal__djGrid}>
+                {/* BPM */}
+                <div className={styles.trackInfoModal__djItem}>
+                  <span className={styles.trackInfoModal__djLabel}>BPM</span>
+                  <span className={styles.trackInfoModal__djValue}>
+                    {djAnalysis.bpm ?? '—'}
+                  </span>
+                </div>
+
+                {/* Key / Camelot */}
+                <div className={styles.trackInfoModal__djItem}>
+                  <span className={styles.trackInfoModal__djLabel}>Tonalidad</span>
+                  <div className={styles.trackInfoModal__camelotBadge}>
+                    {djAnalysis.camelotKey && djAnalysis.camelotColor ? (
+                      <span
+                        className={styles.trackInfoModal__camelotKey}
+                        style={{
+                          backgroundColor: djAnalysis.camelotColor.bg,
+                          color: djAnalysis.camelotColor.text,
+                        }}
+                      >
+                        {djAnalysis.camelotKey}
+                      </span>
+                    ) : null}
+                    <span className={styles.trackInfoModal__musicalKey}>
+                      {djAnalysis.key ?? '—'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Energy */}
+                <div className={styles.trackInfoModal__djItem}>
+                  <span className={styles.trackInfoModal__djLabel}>Energía</span>
+                  {djAnalysis.energy !== undefined ? (
+                    <>
+                      <div className={styles.trackInfoModal__progressBar}>
+                        <div
+                          className={`${styles.trackInfoModal__progressFill} ${styles['trackInfoModal__progressFill--energy']}`}
+                          style={{ width: `${djAnalysis.energy * 100}%` }}
+                        />
+                      </div>
+                      <span className={styles.trackInfoModal__progressValue}>
+                        {Math.round(djAnalysis.energy * 100)}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className={styles.trackInfoModal__djValue}>—</span>
+                  )}
+                </div>
+
+                {/* Danceability */}
+                <div className={styles.trackInfoModal__djItem}>
+                  <span className={styles.trackInfoModal__djLabel}>Bailabilidad</span>
+                  {djAnalysis.danceability !== undefined ? (
+                    <>
+                      <div className={styles.trackInfoModal__progressBar}>
+                        <div
+                          className={`${styles.trackInfoModal__progressFill} ${styles['trackInfoModal__progressFill--danceability']}`}
+                          style={{ width: `${djAnalysis.danceability * 100}%` }}
+                        />
+                      </div>
+                      <span className={styles.trackInfoModal__progressValue}>
+                        {Math.round(djAnalysis.danceability * 100)}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className={styles.trackInfoModal__djValue}>—</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Lyrics if available */}
