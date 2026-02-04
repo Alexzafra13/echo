@@ -21,9 +21,14 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
   private worker: ChildProcess | null = null;
   private workerReady = false;
   private nullFd: number = -1; // Track FD for cleanup
+  private spawningPromise: Promise<void> | null = null; // Prevent race condition
   private pendingRequests: Map<
     string,
-    { resolve: (result: AudioAnalysisResult) => void; reject: (error: Error) => void }
+    {
+      resolve: (result: AudioAnalysisResult) => void;
+      reject: (error: Error) => void;
+      timeout: ReturnType<typeof setTimeout>;
+    }
   > = new Map();
 
   constructor(
@@ -49,9 +54,15 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
   }
 
   private async spawnWorker(): Promise<void> {
+    // Already ready
     if (this.worker && this.workerReady) return;
 
-    return new Promise((resolve, reject) => {
+    // Already spawning - wait for existing promise (prevents race condition)
+    if (this.spawningPromise) {
+      return this.spawningPromise;
+    }
+
+    this.spawningPromise = new Promise<void>((resolve, reject) => {
       // Worker is in dist/features/... but compiled TS is in dist/src/...
       // Use process.cwd() to get the api root, then find the worker
       const workerPath = path.join(
@@ -105,6 +116,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       this.worker.on('message', (message: { type: string; requestId?: string; success?: boolean; data?: AudioAnalysisResult; error?: string; stack?: string; step?: string; [key: string]: unknown }) => {
         if (message.type === 'ready') {
           this.workerReady = true;
+          this.spawningPromise = null;
           clearTimeout(timeout);
           this.logger.info('Essentia worker ready');
           resolve();
@@ -135,23 +147,28 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         clearTimeout(timeout);
         this.closeFd(); // Clean up FD on error
         this.workerReady = false;
+        this.spawningPromise = null;
         reject(error);
       });
 
       this.worker.on('exit', (code) => {
         this.closeFd(); // Clean up FD on exit
         this.workerReady = false;
+        this.spawningPromise = null;
         this.worker = null;
-        // Reject all pending requests
-        for (const [requestId, { reject: rej }] of this.pendingRequests) {
+        // Reject all pending requests and clear their timeouts (prevents memory leak)
+        for (const [requestId, { reject: rej, timeout: reqTimeout }] of this.pendingRequests) {
+          clearTimeout(reqTimeout);
           rej(new Error('Worker exited unexpectedly'));
-          this.pendingRequests.delete(requestId);
         }
+        this.pendingRequests.clear();
         if (code !== 0) {
           this.logger.warn({ code }, 'Essentia worker exited with non-zero code');
         }
       });
     });
+
+    return this.spawningPromise;
   }
 
   private async terminateWorker(): Promise<void> {
@@ -214,20 +231,28 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         reject(new Error('Analysis timeout'));
       }, DJ_CONFIG.analysis.timeout);
 
-      // Store request with timeout-clearing wrappers
+      // Store request with timeout reference (for cleanup on worker exit)
       this.pendingRequests.set(requestId, {
         resolve: (result) => {
           clearTimeout(timeout);
+          this.pendingRequests.delete(requestId);
           resolve(result);
         },
         reject: (error) => {
           clearTimeout(timeout);
+          this.pendingRequests.delete(requestId);
           reject(error);
         },
+        timeout,
       });
 
-      // Send message with requestId for correlation
-      this.worker!.send({ type: 'analyze', requestId, filePath });
+      // Send message with requestId and ffmpegPath for correlation
+      this.worker!.send({
+        type: 'analyze',
+        requestId,
+        filePath,
+        ffmpegPath: getFfmpegPath(),
+      });
     });
   }
 

@@ -40,18 +40,18 @@ async function initEssentia() {
   }
 }
 
-async function decodeAudio(filePath) {
+async function decodeAudio(filePath, ffmpegPath) {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
   const execFileAsync = promisify(execFile);
 
-  // Use system ffmpeg (should be in PATH after installation)
-  const ffmpegPath = 'ffmpeg';
+  // Use ffmpegPath passed from parent service, fallback to system ffmpeg
+  const ffmpeg = ffmpegPath || 'ffmpeg';
 
   try {
     // Decode to mono 44.1kHz float32 PCM
     const { stdout } = await execFileAsync(
-      ffmpegPath,
+      ffmpeg,
       [
         '-i', filePath,
         '-ac', '1',           // mono
@@ -63,8 +63,14 @@ async function decodeAudio(filePath) {
       {
         encoding: 'buffer',
         maxBuffer: 100 * 1024 * 1024, // 100MB buffer
+        timeout: 120000, // 2 minute timeout to prevent hanging
       }
     );
+
+    // Validate buffer length is divisible by 4 (float32 = 4 bytes)
+    if (stdout.length % 4 !== 0) {
+      throw new Error(`Invalid PCM buffer length: ${stdout.length} (not divisible by 4)`);
+    }
 
     // Convert buffer to Float32Array
     return new Float32Array(stdout.buffer, stdout.byteOffset, stdout.length / 4);
@@ -94,7 +100,7 @@ process.on('message', async (message) => {
 
       // Step 2: Decode audio
       process.send({ type: 'debug', step: 'decode_audio' });
-      const audioData = await decodeAudio(message.filePath);
+      const audioData = await decodeAudio(message.filePath, message.ffmpegPath);
       process.send({ type: 'debug', step: 'decoded', samples: audioData?.length || 0 });
 
       if (!audioData || audioData.length === 0) {
