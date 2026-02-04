@@ -4,7 +4,7 @@ import * as os from 'os';
 import { BullmqService } from '../../../../infrastructure/queue/bullmq.service';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
-import { eq, isNull, and, notInArray, sql } from 'drizzle-orm';
+import { eq, notInArray } from 'drizzle-orm';
 import { EssentiaAnalyzerService } from './essentia-analyzer.service';
 import { DjAnalysis } from '../../domain/entities/dj-analysis.entity';
 import { ScannerGateway } from '../../../scanner/infrastructure/gateways/scanner.gateway';
@@ -40,7 +40,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
   private processedInSession = 0;
   private sessionStartedAt: Date | null = null;
   private totalToProcess = 0;
-  private averageProcessingTime = 3000; // ~3 seconds per track on average
+  private averageProcessingTime = 3000; // Initial estimate, updated dynamically
+  private processingTimes: number[] = []; // Track actual processing times for averaging
 
   constructor(
     @InjectPinoLogger(DjAnalysisQueueService.name)
@@ -70,8 +71,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
    * Called automatically after library scan
    */
   async startAnalysisQueue(): Promise<{ started: boolean; pending: number; message: string }> {
-    // Get all tracks that don't have DJ analysis yet
-    const analyzedTrackIds = this.drizzle.db
+    // Get all tracks that don't have completed DJ analysis (using Drizzle subquery)
+    const completedAnalysisIds = this.drizzle.db
       .select({ trackId: djAnalysis.trackId })
       .from(djAnalysis)
       .where(eq(djAnalysis.status, 'completed'));
@@ -83,9 +84,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
         path: tracks.path,
       })
       .from(tracks)
-      .where(
-        sql`${tracks.id} NOT IN (SELECT track_id FROM dj_analysis WHERE status = 'completed')`
-      );
+      .where(notInArray(tracks.id, completedAnalysisIds));
 
     if (pendingTracks.length === 0) {
       return {
@@ -173,6 +172,8 @@ export class DjAnalysisQueueService implements OnModuleInit {
   }
 
   private async processAnalysisJob(job: DjAnalysisJob): Promise<void> {
+    const startTime = Date.now();
+
     this.logger.debug(
       { trackId: job.trackId, title: job.trackTitle },
       'Processing DJ analysis',
@@ -267,6 +268,9 @@ export class DjAnalysisQueueService implements OnModuleInit {
         .where(eq(djAnalysis.id, analysisId));
 
       this.processedInSession++;
+
+      // Update average processing time with actual measurement
+      this.updateAverageProcessingTime(Date.now() - startTime);
 
       // Emit progress via WebSocket
       this.emitProgress();
@@ -368,6 +372,89 @@ export class DjAnalysisQueueService implements OnModuleInit {
         'Failed to emit DJ progress via WebSocket',
       );
     }
+  }
+
+  /**
+   * Update average processing time with actual measurement
+   * Keeps a rolling window of last 20 measurements for accuracy
+   */
+  private updateAverageProcessingTime(processingTime: number): void {
+    this.processingTimes.push(processingTime);
+
+    // Keep only last 20 measurements for rolling average
+    if (this.processingTimes.length > 20) {
+      this.processingTimes.shift();
+    }
+
+    // Calculate new average
+    const sum = this.processingTimes.reduce((a, b) => a + b, 0);
+    this.averageProcessingTime = Math.round(sum / this.processingTimes.length);
+  }
+
+  /**
+   * Retry all failed analyses
+   * Resets failed status to pending and re-enqueues tracks
+   */
+  async retryFailedAnalyses(): Promise<{ retried: number; message: string }> {
+    // Get all failed analyses with track info
+    const failedAnalyses = await this.drizzle.db
+      .select({
+        analysisId: djAnalysis.id,
+        trackId: djAnalysis.trackId,
+        title: tracks.title,
+        path: tracks.path,
+      })
+      .from(djAnalysis)
+      .innerJoin(tracks, eq(djAnalysis.trackId, tracks.id))
+      .where(eq(djAnalysis.status, 'failed'));
+
+    if (failedAnalyses.length === 0) {
+      return {
+        retried: 0,
+        message: 'No failed analyses to retry.',
+      };
+    }
+
+    // Reset status to pending
+    await this.drizzle.db
+      .update(djAnalysis)
+      .set({
+        status: 'pending',
+        analysisError: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(djAnalysis.status, 'failed'));
+
+    // Re-enqueue all failed tracks
+    for (const analysis of failedAnalyses) {
+      await this.bullmq.addJob(DJ_ANALYSIS_QUEUE, DJ_ANALYSIS_JOB, {
+        trackId: analysis.trackId,
+        trackTitle: analysis.title,
+        filePath: analysis.path,
+      });
+    }
+
+    // Update session counters if not already running
+    if (!this.isRunning) {
+      this.isRunning = true;
+      this.processedInSession = 0;
+      this.sessionStartedAt = new Date();
+      this.totalToProcess = failedAnalyses.length;
+      this.emitProgress();
+    } else {
+      // If already running, just add to total
+      this.totalToProcess += failedAnalyses.length;
+    }
+
+    this.logger.info(
+      { count: failedAnalyses.length },
+      'Retrying failed DJ analyses',
+    );
+
+    return {
+      retried: failedAnalyses.length,
+      message: `Retrying ${failedAnalyses.length} failed analyses.`,
+    };
   }
 
   /**
