@@ -12,9 +12,6 @@ export interface AudioAnalysisResult {
   key: string; // Musical key (e.g., "Am", "C#m")
   energy: number; // 0.0 - 1.0
   danceability?: number; // 0.0 - 1.0
-  beatgrid?: number[]; // Array of beat positions in seconds
-  introEnd?: number; // Seconds where intro ends
-  outroStart?: number; // Seconds where outro begins
 }
 
 export interface IAudioAnalyzer {

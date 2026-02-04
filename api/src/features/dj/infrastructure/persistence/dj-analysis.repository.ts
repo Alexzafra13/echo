@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and, inArray, sql, or, between } from 'drizzle-orm';
+import { eq, and, inArray, sql, between } from 'drizzle-orm';
 import { DrizzleService } from '../../../../infrastructure/database/drizzle.service';
 import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
 import { DjAnalysis, DjAnalysisStatus } from '../../domain/entities/dj-analysis.entity';
 import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository.port';
 import { DjAnalysisMapper } from './dj-analysis.mapper';
-import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
+import { getCompatibleCamelotKeys, getSimpleHarmonicScore } from '../../domain/utils/camelot.util';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -108,6 +108,7 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
 
     // Get compatible Camelot keys using centralized utility
     const compatibleKeys = getCompatibleCamelotKeys(source.camelotKey);
+    const sourceCamelotKey = source.camelotKey;
 
     const result = await this.drizzle.db
       .select()
@@ -120,9 +121,18 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
           inArray(djAnalysis.camelotKey, compatibleKeys),
         ),
       )
-      .limit(limit);
+      .limit(limit * 2); // Fetch more to allow for better sorting
 
-    return DjAnalysisMapper.toDomainArray(result);
+    const domainResults = DjAnalysisMapper.toDomainArray(result);
+
+    // Sort by harmonic compatibility score (highest first)
+    return domainResults
+      .sort((a, b) => {
+        const scoreA = getSimpleHarmonicScore(sourceCamelotKey, a.camelotKey);
+        const scoreB = getSimpleHarmonicScore(sourceCamelotKey, b.camelotKey);
+        return scoreB - scoreA;
+      })
+      .slice(0, limit);
   }
 
   async countPending(): Promise<number> {
