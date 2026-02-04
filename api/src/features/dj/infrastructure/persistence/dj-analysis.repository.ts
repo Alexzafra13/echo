@@ -5,6 +5,7 @@ import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
 import { DjAnalysis, DjAnalysisStatus } from '../../domain/entities/dj-analysis.entity';
 import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository.port';
 import { DjAnalysisMapper } from './dj-analysis.mapper';
+import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -105,17 +106,8 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
     const bpmMin = source.bpm * (1 - bpmTolerance / 100);
     const bpmMax = source.bpm * (1 + bpmTolerance / 100);
 
-    // Get compatible Camelot keys
-    const camelotNum = parseInt(source.camelotKey.slice(0, -1));
-    const camelotLetter = source.camelotKey.slice(-1);
-
-    // Compatible keys: same, ±1, or relative major/minor
-    const compatibleKeys = [
-      source.camelotKey, // Same
-      `${camelotNum}${camelotLetter === 'A' ? 'B' : 'A'}`, // Relative
-      `${((camelotNum - 2 + 12) % 12) + 1}${camelotLetter}`, // -1
-      `${(camelotNum % 12) + 1}${camelotLetter}`, // +1
-    ];
+    // Get compatible Camelot keys using centralized utility
+    const compatibleKeys = getCompatibleCamelotKeys(source.camelotKey);
 
     const result = await this.drizzle.db
       .select()
