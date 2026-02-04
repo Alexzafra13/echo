@@ -13,7 +13,6 @@ import { ArtistAvatarsController } from './presentation/artist-avatars.controlle
 import { ArtistBannersManagementController } from './presentation/artist-banners.controller';
 import { CustomArtistImagesController } from './presentation/custom-artist-images.controller';
 import { CustomAlbumCoversController } from './presentation/custom-album-covers.controller';
-import { PluginsController } from './presentation/plugins.controller';
 import {
   CreateUserUseCase,
   ListUsersUseCase,
@@ -70,7 +69,6 @@ import {
     ArtistBannersManagementController,
     CustomArtistImagesController,
     CustomAlbumCoversController,
-    PluginsController,
   ],
   providers: [
     // Dashboard services (implementing domain ports)

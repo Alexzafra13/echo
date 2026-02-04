@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearch } from 'wouter';
-import { LayoutDashboard, Library, Music2, Wrench, Users, FileText, Server, Puzzle } from 'lucide-react';
+import { LayoutDashboard, Library, Music2, Wrench, Users, FileText, Server } from 'lucide-react';
 import { Header } from '@shared/components/layout/Header';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
@@ -13,7 +13,6 @@ import { MaintenanceTab } from '../../components/MetadataSettingsPanel/Maintenan
 import { UsersPanel } from '../../components/UsersPanel';
 import { LogsPanel } from '../../components/LogsPanel';
 import { FederationPanel } from '../../components/FederationPanel';
-import { PluginsPanel } from '../../components/PluginsPanel';
 import styles from './AdminPage.module.css';
 
 interface Tab {
@@ -22,7 +21,7 @@ interface Tab {
   icon: React.ReactNode;
 }
 
-const validTabs = ['dashboard', 'library', 'metadata', 'maintenance', 'users', 'federation', 'plugins', 'logs'];
+const validTabs = ['dashboard', 'library', 'metadata', 'maintenance', 'users', 'federation', 'logs'];
 
 /**
  * AdminPage Component
@@ -65,7 +64,6 @@ export default function AdminPage() {
     maintenance: 'Mantenimiento',
     users: 'Usuarios',
     federation: 'Federación',
-    plugins: 'Plugins',
     logs: 'Logs',
   };
 
@@ -84,7 +82,6 @@ export default function AdminPage() {
     { id: 'maintenance', label: 'Mantenimiento', icon: <Wrench size={20} /> },
     { id: 'users', label: 'Usuarios', icon: <Users size={20} /> },
     { id: 'federation', label: 'Federación', icon: <Server size={20} /> },
-    { id: 'plugins', label: 'Plugins', icon: <Puzzle size={20} /> },
     { id: 'logs', label: 'Logs', icon: <FileText size={20} /> },
   ];
 
@@ -113,8 +110,6 @@ export default function AdminPage() {
         return <UsersPanel />;
       case 'federation':
         return <FederationPanel />;
-      case 'plugins':
-        return <PluginsPanel />;
       case 'logs':
         return <LogsPanel />;
       default:
