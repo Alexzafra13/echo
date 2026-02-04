@@ -4,7 +4,9 @@ import { GetTrackUseCase } from '../../domain/use-cases/get-track/get-track.use-
 import { GetTracksUseCase } from '../../domain/use-cases/get-tracks/get-tracks.use-case';
 import { SearchTracksUseCase } from '../../domain/use-cases/search-tracks/search-tracks.use-case';
 import { GetShuffledTracksUseCase } from '../../domain/use-cases/get-shuffled-tracks/get-shuffled-tracks.use-case';
+import { GetDjShuffledTracksUseCase } from '../../domain/use-cases/get-dj-shuffled-tracks/get-dj-shuffled-tracks.use-case';
 import { Track } from '../../domain/entities/track.entity';
+import { DJ_ANALYSIS_REPOSITORY } from '@features/dj/domain/ports/dj-analysis.repository.port';
 
 describe('TracksController', () => {
   let controller: TracksController;
@@ -12,6 +14,7 @@ describe('TracksController', () => {
   let getTracksUseCase: jest.Mocked<GetTracksUseCase>;
   let searchTracksUseCase: jest.Mocked<SearchTracksUseCase>;
   let getShuffledTracksUseCase: jest.Mocked<GetShuffledTracksUseCase>;
+  let getDjShuffledTracksUseCase: jest.Mocked<GetDjShuffledTracksUseCase>;
 
   const mockTrack = Track.reconstruct({
     id: 'track-1',
@@ -51,6 +54,15 @@ describe('TracksController', () => {
       execute: jest.fn(),
     };
 
+    const mockGetDjShuffledTracksUseCase = {
+      execute: jest.fn(),
+    };
+
+    const mockDjAnalysisRepository = {
+      findByTrackId: jest.fn(),
+      findByTrackIds: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TracksController],
       providers: [
@@ -58,6 +70,8 @@ describe('TracksController', () => {
         { provide: GetTracksUseCase, useValue: mockGetTracksUseCase },
         { provide: SearchTracksUseCase, useValue: mockSearchTracksUseCase },
         { provide: GetShuffledTracksUseCase, useValue: mockGetShuffledTracksUseCase },
+        { provide: GetDjShuffledTracksUseCase, useValue: mockGetDjShuffledTracksUseCase },
+        { provide: DJ_ANALYSIS_REPOSITORY, useValue: mockDjAnalysisRepository },
       ],
     }).compile();
 
@@ -66,6 +80,7 @@ describe('TracksController', () => {
     getTracksUseCase = module.get(GetTracksUseCase);
     searchTracksUseCase = module.get(SearchTracksUseCase);
     getShuffledTracksUseCase = module.get(GetShuffledTracksUseCase);
+    getDjShuffledTracksUseCase = module.get(GetDjShuffledTracksUseCase);
   });
 
   it('should be defined', () => {
