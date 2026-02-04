@@ -3,7 +3,7 @@ import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
 import { AlbumsModule } from '@features/albums/albums.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
-import { DjModule } from '@features/dj/dj.module';
+import { DjModule } from '@features/dj';
 
 // Presentation Layer
 import { ScannerController } from './presentation/controller/scanner.controller';
@@ -63,7 +63,7 @@ import { CoverArtService } from '@shared/services';
     WebSocketModule, // Para WebSocket
     forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
     ExternalMetadataModule, // Para auto-enriquecimiento de metadatos
-    DjModule, // Para análisis DJ post-scan (BPM, Key, Energy)
+    forwardRef(() => DjModule), // Para análisis DJ post-scan (BPM, Key, Energy)
   ],
   controllers: [ScannerController],
   providers: [
