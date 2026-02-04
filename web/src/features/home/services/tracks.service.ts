@@ -15,6 +15,14 @@ export interface ShuffledTracksResponse {
 }
 
 /**
+ * Response from DJ shuffle endpoint (includes djMode flag)
+ */
+export interface DjShuffledTracksResponse extends ShuffledTracksResponse {
+  /** Whether DJ-aware ordering was used (true) or fallback to random (false) */
+  djMode: boolean;
+}
+
+/**
  * Parameters for shuffle endpoint
  */
 export interface ShuffleParams {
@@ -50,6 +58,20 @@ export const tracksService = {
    */
   getShuffled: async (params?: ShuffleParams): Promise<ShuffledTracksResponse> => {
     const response = await apiClient.get<ShuffledTracksResponse>('/tracks/shuffle', {
+      params,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get tracks with DJ-aware ordering (harmonic mixing)
+   * Falls back to random if not enough tracks have DJ analysis
+   *
+   * @param params - Optional parameters for seed and pagination
+   * @returns Response with djMode indicating if DJ ordering was used
+   */
+  getDjShuffled: async (params?: ShuffleParams): Promise<DjShuffledTracksResponse> => {
+    const response = await apiClient.get<DjShuffledTracksResponse>('/tracks/shuffle/dj', {
       params,
     });
     return response.data;

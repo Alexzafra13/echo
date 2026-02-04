@@ -29,3 +29,4 @@ export { useFocusTrap } from './useFocusTrap';
 export { useModal } from './useModal';
 export type { UseModalReturn } from './useModal';
 export { useNotification } from './useNotification';
+export { useTrackDjAnalysis } from './useTrackDjAnalysis';

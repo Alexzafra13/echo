@@ -291,6 +291,132 @@
   background: var(--white-30);
 }
 
+/* DJ Analysis Section */
+.trackInfoModal__djGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.trackInfoModal__djItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trackInfoModal__djLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trackInfoModal__djValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.trackInfoModal__camelotBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trackInfoModal__camelotKey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 40px;
+}
+
+.trackInfoModal__musicalKey {
+  font-size: 14px;
+  color: var(--color-text-secondary, #b8bcc8);
+}
+
+/* Progress Bars */
+.trackInfoModal__progressBar {
+  height: 8px;
+  background: var(--white-10);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.trackInfoModal__progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.trackInfoModal__progressFill--energy {
+  background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+}
+
+.trackInfoModal__progressFill--danceability {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899);
+}
+
+.trackInfoModal__progressValue {
+  font-size: 13px;
+  color: var(--color-text-secondary, #b8bcc8);
+  margin-top: 4px;
+}
+
+/* DJ Status indicators */
+.trackInfoModal__djAnalyzing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.trackInfoModal__djAnalyzing::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.trackInfoModal__djFailed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.trackInfoModal__djFailed::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+}
+
+.trackInfoModal__djNotAvailable {
+  color: var(--color-text-tertiary, #6b7280);
+  font-size: 14px;
+  font-style: italic;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .trackInfoModal {

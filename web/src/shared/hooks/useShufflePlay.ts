@@ -25,6 +25,8 @@ interface ShuffleState {
   seenTrackIds: Set<string>;
   // Total tracks available in the library
   totalTracks: number;
+  // Whether DJ mode was used for initial shuffle
+  djMode: boolean;
 }
 
 export function useShufflePlay(): UseShufflePlayReturn {
@@ -39,6 +41,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
     queueIds: new Set(),
     seenTrackIds: new Set(),
     totalTracks: 0,
+    djMode: false,
   });
 
   // Detect when queue has been completely replaced (not by shuffle)
@@ -168,19 +171,39 @@ export function useShufflePlay(): UseShufflePlayReturn {
       let currentSkip = 0;
       let attempts = 0;
       const maxAttempts = 5;
+      let usedDjMode = false;
+
+      // First call uses DJ endpoint for harmonic ordering
+      // Subsequent calls (for pagination) use regular shuffle
+      const isFirstFetch = true;
 
       // Fetch tracks until we have enough unseen ones
       while (newTracks.length < BATCH_SIZE && attempts < maxAttempts) {
-        const response = await tracksService.getShuffled({
-          seed: currentSeed ?? undefined,
-          skip: currentSkip,
-          take: BATCH_SIZE,
-        });
+        // Use DJ endpoint for first fetch, regular for subsequent
+        const response = isFirstFetch && attempts === 0
+          ? await tracksService.getDjShuffled({
+              seed: currentSeed ?? undefined,
+              skip: currentSkip,
+              take: BATCH_SIZE,
+            })
+          : await tracksService.getShuffled({
+              seed: currentSeed ?? undefined,
+              skip: currentSkip,
+              take: BATCH_SIZE,
+            });
 
         if (currentSeed === null) {
           currentSeed = response.seed;
         }
         state.totalTracks = response.total;
+
+        // Track if DJ mode was used (only on first successful fetch)
+        if (attempts === 0 && 'djMode' in response) {
+          usedDjMode = response.djMode;
+          if (import.meta.env.DEV) {
+            logger.info(`[ShufflePlay] DJ mode: ${usedDjMode ? 'enabled' : 'fallback to random'}`);
+          }
+        }
 
         if (response.data.length === 0) {
           break;
@@ -228,6 +251,7 @@ export function useShufflePlay(): UseShufflePlayReturn {
       state.skip = currentSkip;
       state.loading = false;
       state.queueIds = queueIds;
+      state.djMode = usedDjMode;
 
       // Determine if there are more unseen tracks
       const remainingUnseen = state.totalTracks - state.seenTrackIds.size;
