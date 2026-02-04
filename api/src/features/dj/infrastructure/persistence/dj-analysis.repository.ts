@@ -6,6 +6,7 @@ import { DjAnalysis, DjAnalysisStatus } from '../../domain/entities/dj-analysis.
 import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository.port';
 import { DjAnalysisMapper } from './dj-analysis.mapper';
 import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -94,7 +95,7 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
     trackId: string,
     options: { bpmTolerance?: number; limit?: number } = {},
   ): Promise<DjAnalysis[]> {
-    const { bpmTolerance = 6, limit = 20 } = options;
+    const { bpmTolerance = DJ_CONFIG.compatibility.bpmTolerancePercent, limit = 20 } = options;
 
     // Get the source track analysis
     const source = await this.findByTrackId(trackId);
