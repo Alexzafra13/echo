@@ -23,7 +23,7 @@ function getOptimalConcurrency(): number {
   const cpuCores = os.cpus().length;
   const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
 
-  // Essentia analysis is less intensive than stem separation
+  // Essentia analysis is relatively lightweight
   let concurrency = Math.max(1, Math.floor(cpuCores / 2));
 
   // Each analysis uses ~500MB

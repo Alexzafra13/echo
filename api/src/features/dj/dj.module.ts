@@ -8,17 +8,12 @@ import { DjCompatibilityService } from './domain/services/dj-compatibility.servi
 import { ScannerModule } from '@features/scanner/scanner.module';
 
 /**
- * DjModule - Simplified version for harmonic analysis only
+ * DjModule - Harmonic analysis for DJ mixing
  *
  * Provides:
  * - Audio analysis (BPM, Key, Camelot) via Essentia.js
  * - DJ compatibility scoring for harmonic mixing
  * - Analysis queue for background processing
- *
- * Does NOT include:
- * - Stem separation
- * - DJ Sessions
- * - Tempo cache
  */
 @Module({
   imports: [
