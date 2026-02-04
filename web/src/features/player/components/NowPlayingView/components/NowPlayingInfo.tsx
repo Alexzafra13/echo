@@ -1,11 +1,9 @@
-import { DjInfoBadge } from '@features/dj/components';
 import styles from '../NowPlayingView.module.css';
 
 interface NowPlayingInfoProps {
   title: string;
   artist: string;
   artistId: string | undefined;
-  trackId: string | undefined;
   isRadioMode: boolean;
   onGoToArtist: (e: React.MouseEvent, artistId: string) => void;
 }
@@ -17,7 +15,6 @@ export function NowPlayingInfo({
   title,
   artist,
   artistId,
-  trackId,
   isRadioMode,
   onGoToArtist,
 }: NowPlayingInfoProps) {
@@ -32,9 +29,6 @@ export function NowPlayingInfo({
       >
         {artist}
       </p>
-      {!isRadioMode && trackId && (
-        <DjInfoBadge trackId={trackId} variant="compact" className={styles.nowPlaying__djBadge} />
-      )}
     </div>
   );
 }

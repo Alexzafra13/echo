@@ -1,7 +1,6 @@
-import { MoreVertical, Disc3 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { usePlayerSettingsStore, type PlayerPreference } from '../../store';
 import { usePlayer } from '../../context/PlayerContext';
-import { useDjFlowStore } from '@features/dj/store';
 import styles from './PlayerMenu.module.css';
 
 interface PlayerMenuProps {
@@ -17,8 +16,6 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
   const preference = usePlayerSettingsStore((s) => s.playerPreference);
   const setPreference = usePlayerSettingsStore((s) => s.setPlayerPreference);
   const { crossfade, setCrossfadeEnabled } = usePlayer();
-  const djFlowEnabled = useDjFlowStore((s) => s.settings.enabled);
-  const toggleDjFlow = useDjFlowStore((s) => s.toggleDjFlow);
 
   const handleOptionClick = (value: PlayerPreference) => {
     setPreference(value);
@@ -27,10 +24,6 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
 
   const handleCrossfadeToggle = () => {
     setCrossfadeEnabled(!crossfade.enabled);
-  };
-
-  const handleDjFlowToggle = () => {
-    toggleDjFlow();
   };
 
   return (
@@ -72,17 +65,6 @@ export function PlayerMenu({ isOpen, onToggle, onClose, menuRef, size = 16, stro
           >
             <span>Fundido entre canciones</span>
             <span className={`${styles.toggleIndicator} ${crossfade.enabled ? styles['toggleIndicator--active'] : ''}`} />
-          </button>
-
-          <button
-            className={`${styles.menuOptionToggle} ${djFlowEnabled ? styles['menuOptionToggle--active'] : ''}`}
-            onClick={handleDjFlowToggle}
-          >
-            <span className={styles.djFlowLabel}>
-              <Disc3 size={14} />
-              DJ Flow
-            </span>
-            <span className={`${styles.toggleIndicator} ${djFlowEnabled ? styles['toggleIndicator--active'] : ''}`} />
           </button>
         </div>
       )}
