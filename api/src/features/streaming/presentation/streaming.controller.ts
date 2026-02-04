@@ -24,7 +24,6 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FastifyReply } from 'fastify';
 import { StreamTrackUseCase } from '../domain/use-cases';
 import { StreamTokenGuard } from './guards';
-import { TempoCacheService } from '@features/dj/infrastructure/services/tempo-cache.service';
 import { AllowChangePassword } from '@shared/decorators/allow-change-password.decorator';
 import { ApiCommonErrors, ApiNotFoundError } from '@shared/decorators';
 import * as fs from 'fs';
@@ -46,7 +45,6 @@ export class StreamingController implements OnModuleDestroy {
     @InjectPinoLogger(StreamingController.name)
     private readonly logger: PinoLogger,
     private readonly streamTrackUseCase: StreamTrackUseCase,
-    private readonly tempoCacheService: TempoCacheService,
   ) {}
 
   onModuleDestroy(): void {
@@ -209,13 +207,6 @@ export class StreamingController implements OnModuleDestroy {
     required: true,
     example: 'a1b2c3d4e5f6...',
   })
-  @ApiQuery({
-    name: 'targetBpm',
-    type: Number,
-    description: 'Target BPM for DJ mode (uses cached tempo-adjusted version if available)',
-    required: false,
-    example: 128,
-  })
   @ApiHeader({
     name: 'Range',
     required: false,
@@ -233,27 +224,11 @@ export class StreamingController implements OnModuleDestroy {
   @ApiResponse({ status: 416, description: 'Range no satisfacible' })
   async streamTrack(
     @Param('id', ParseUUIDPipe) trackId: string,
-    @Query('targetBpm') targetBpmStr: string | undefined,
     @Headers('range') range: string | undefined,
     @Res() res: FastifyReply,
   ): Promise<void> {
     const metadata = await this.streamTrackUseCase.execute({ trackId, range });
-    let { filePath, fileSize, mimeType } = metadata;
-
-    // Check for tempo-cached version if targetBpm is specified
-    if (targetBpmStr) {
-      const targetBpm = parseFloat(targetBpmStr);
-      if (!isNaN(targetBpm) && targetBpm > 0) {
-        const cachedPath = await this.tempoCacheService.getCachedPath(trackId, targetBpm);
-        if (cachedPath) {
-          filePath = cachedPath;
-          // Update file size for cached file
-          const stats = await fs.promises.stat(cachedPath);
-          fileSize = stats.size;
-          this.logger.debug({ trackId, targetBpm, cachedPath }, 'Using tempo-cached version');
-        }
-      }
-    }
+    const { filePath, fileSize, mimeType } = metadata;
 
     if (range) {
       // Manejar partial content (Range request)

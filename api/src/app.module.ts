@@ -36,7 +36,6 @@ import { SetupModule } from './features/setup/setup.module';
 import { PublicProfilesModule } from './features/public-profiles/public-profiles.module';
 import { SocialModule } from './features/social/social.module';
 import { FederationModule } from './features/federation/federation.module';
-import { DjModule } from './features/dj/dj.module';
 import { validateEnvironment } from './config/env.validation';
 import { SecuritySecretsModule } from './config/security-secrets.module';
 import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer.util';
@@ -121,7 +120,6 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
     PublicProfilesModule,
     SocialModule,
     FederationModule,
-    DjModule,
   ],
   controllers: [
     // SPA fallback is registered manually in main.ts (must be outside /api prefix)

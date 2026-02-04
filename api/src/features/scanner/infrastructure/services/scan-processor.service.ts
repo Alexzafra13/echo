@@ -10,7 +10,6 @@ import {
 } from '../../domain/ports/scanner-repository.port';
 import { FileScannerService } from './file-scanner.service';
 import { LufsAnalysisQueueService } from './lufs-analysis-queue.service';
-import { DjAnalysisQueueService } from '@features/dj/infrastructure/services/dj-analysis-queue.service';
 import { ScannerGateway } from '../gateways/scanner.gateway';
 import { ScanStatus } from '../../presentation/dtos/scanner-events.dto';
 import { CachedAlbumRepository } from '@features/albums/infrastructure/persistence/cached-album.repository';
@@ -52,7 +51,6 @@ export class ScanProcessorService implements OnModuleInit {
     private readonly bullmq: BullmqService,
     private readonly fileScanner: FileScannerService,
     private readonly lufsAnalysisQueue: LufsAnalysisQueueService,
-    private readonly djAnalysisQueue: DjAnalysisQueueService,
     @Inject(forwardRef(() => ScannerGateway))
     private readonly scannerGateway: ScannerGateway,
     private readonly cachedAlbumRepository: CachedAlbumRepository,
@@ -215,7 +213,6 @@ export class ScanProcessorService implements OnModuleInit {
       // Post-scan tasks
       await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
       await this.startLufsAnalysis();
-      await this.startDjAnalysis();
 
       await this.logService.info(
         LogCategory.SCANNER,
@@ -395,7 +392,6 @@ export class ScanProcessorService implements OnModuleInit {
       // Post-scan tasks
       await this.performAutoEnrichment(tracker.artistsCreated, tracker.albumsCreated);
       await this.startLufsAnalysis();
-      await this.startDjAnalysis();
 
       // Emit: completed
       this.scannerGateway.emitCompleted({
@@ -497,35 +493,4 @@ export class ScanProcessorService implements OnModuleInit {
     }
   }
 
-  /**
-   * Trigger DJ analysis (BPM, Key, Energy) after scan
-   */
-  private async startDjAnalysis(): Promise<void> {
-    try {
-      const djAnalysisEnabled = await this.settingsService.getBoolean(
-        'dj.auto_analysis.enabled',
-        true, // Enabled by default
-      );
-
-      if (!djAnalysisEnabled) {
-        this.logger.info('🎧 Análisis DJ deshabilitado en configuración');
-        return;
-      }
-
-      const result = await this.djAnalysisQueue.startAnalysisQueue();
-
-      if (result.started) {
-        this.logger.info(
-          `🎧 Cola de análisis DJ iniciada: ${result.pending} tracks pendientes`
-        );
-      } else if (result.pending > 0) {
-        this.logger.info(`ℹ️ ${result.message}`);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error al iniciar cola de análisis DJ: ${(error as Error).message}`,
-        (error as Error).stack,
-      );
-    }
-  }
 }

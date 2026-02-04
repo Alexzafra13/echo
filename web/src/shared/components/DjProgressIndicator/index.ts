@@ -1,1 +1,0 @@
-export { DjProgressIndicator } from './DjProgressIndicator';

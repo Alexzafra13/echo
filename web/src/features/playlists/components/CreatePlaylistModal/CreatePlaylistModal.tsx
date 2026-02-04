@@ -17,24 +17,21 @@ interface SelectedTrack {
 
 interface CreatePlaylistModalProps {
   onClose: () => void;
-  onSubmit: (name: string, trackIds: string[], options?: { processStems?: boolean }) => Promise<void>;
+  onSubmit: (name: string, trackIds: string[]) => Promise<void>;
   isLoading?: boolean;
-  /** If true, changes the modal title and placeholder text for DJ sessions */
-  isDjSession?: boolean;
 }
 
 /**
  * CreatePlaylistModal Component
  * Modal for creating a new playlist with at least one song
  */
-export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDjSession = false }: CreatePlaylistModalProps) {
+export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false }: CreatePlaylistModalProps) {
   const [name, setName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<SelectedTrack[]>([]);
   const [recentTracks, setRecentTracks] = useState<RecentlyPlayed[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [error, setError] = useState('');
-  const [processStems, setProcessStems] = useState(false);
 
   // Search tracks
   const { data: searchResults, isLoading: searchLoading } = useTrackSearch(searchQuery, { take: 8 });
@@ -60,7 +57,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
     e.preventDefault();
 
     if (!name.trim()) {
-      setError(isDjSession ? 'El nombre de la sesión es obligatorio' : 'El nombre de la playlist es obligatorio');
+      setError('El nombre de la playlist es obligatorio');
       return;
     }
 
@@ -70,11 +67,10 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
     }
 
     try {
-      const options = isDjSession ? { processStems } : undefined;
-      await onSubmit(name.trim(), selectedTracks.map(t => t.id), options);
+      await onSubmit(name.trim(), selectedTracks.map(t => t.id));
       onClose();
     } catch (error) {
-      setError(getApiErrorMessage(error, isDjSession ? 'Error al crear la sesión DJ' : 'Error al crear la playlist'));
+      setError(getApiErrorMessage(error, 'Error al crear la playlist'));
     }
   };
 
@@ -112,11 +108,11 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
   const filteredRecent = recentTracks.filter(r => !isTrackSelected(r.trackId));
 
   return (
-    <Modal isOpen={true} onClose={onClose} title={isDjSession ? 'Nueva Sesión DJ' : 'Nueva Playlist'}>
+    <Modal isOpen={true} onClose={onClose} title="Nueva Playlist">
       <form onSubmit={handleSubmit} className={styles.form}>
         {/* Name field */}
         <div className={styles.inputGroup}>
-          <label className={styles.label}>{isDjSession ? 'Nombre de la sesión' : 'Nombre de la playlist'}</label>
+          <label className={styles.label}>Nombre de la playlist</label>
           <input
             type="text"
             className={styles.input}
@@ -125,32 +121,11 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
               setName(e.target.value);
               setError('');
             }}
-            placeholder={isDjSession ? 'Mi Sesión DJ...' : 'Mi Playlist...'}
+            placeholder="Mi Playlist..."
             autoFocus
             disabled={isLoading}
           />
         </div>
-
-        {/* Stem processing option (DJ sessions only) - placed early for mobile visibility */}
-        {isDjSession && (
-          <div className={styles.stemOption}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={processStems}
-                onChange={(e) => setProcessStems(e.target.checked)}
-                className={styles.checkbox}
-                disabled={isLoading}
-              />
-              <span className={styles.checkboxText}>
-                Procesar stems (permite mashups)
-              </span>
-            </label>
-            <span className={styles.stemHint}>
-              La separación de stems puede tardar varios minutos por canción
-            </span>
-          </div>
-        )}
 
         {/* Song search */}
         <div className={styles.inputGroup}>
@@ -302,7 +277,7 @@ export function CreatePlaylistModal({ onClose, onSubmit, isLoading = false, isDj
             variant="primary"
             disabled={isLoading || !canCreate}
           >
-            {isLoading ? 'Creando...' : `Crear ${isDjSession ? 'Sesión' : 'Playlist'}${selectedTracks.length > 0 ? ` (${selectedTracks.length})` : ''}`}
+            {isLoading ? 'Creando...' : `Crear Playlist${selectedTracks.length > 0 ? ` (${selectedTracks.length})` : ''}`}
           </Button>
         </div>
       </form>

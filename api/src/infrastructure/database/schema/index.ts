@@ -21,7 +21,6 @@ export * from './settings';
 export * from './system';
 export * from './social';
 export * from './federation';
-export * from './dj';
 
 // Relations
 export * from './relations';

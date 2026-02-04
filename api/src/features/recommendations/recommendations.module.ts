@@ -4,7 +4,6 @@ import { UserInteractionsModule } from '@features/user-interactions/user-interac
 import { PlayTrackingModule } from '@features/play-tracking/play-tracking.module';
 import { ExternalMetadataModule } from '@features/external-metadata/external-metadata.module';
 import { TracksModule } from '@features/tracks/tracks.module';
-import { DjModule } from '@features/dj/dj.module';
 import { ScoringService } from './domain/services/scoring.service';
 import { WaveMixService } from './infrastructure/services/wave-mix.service';
 import { SmartPlaylistService } from './infrastructure/services/smart-playlist.service';
@@ -28,7 +27,7 @@ import { WaveMixSchedulerService } from './infrastructure/jobs/wave-mix-schedule
  * DrizzleService is provided globally via DrizzleModule
  */
 @Module({
-  imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule, TracksModule, DjModule],
+  imports: [CacheModule, UserInteractionsModule, PlayTrackingModule, ExternalMetadataModule, TracksModule],
   controllers: [RecommendationsController],
   providers: [
     // Core Services
