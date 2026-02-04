@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePlayer } from '@features/player';
-import { tracksService } from '@features/home/services/tracks.service';
+import { tracksService, type ShuffledTracksResponse, type DjShuffledTracksResponse } from '@features/home/services/tracks.service';
 import { logger } from '@shared/utils/logger';
 import { toPlayerTracks } from '@shared/utils/track.utils';
 import type { Track } from '@shared/types/track.types';
@@ -180,17 +180,20 @@ export function useShufflePlay(): UseShufflePlayReturn {
       // Fetch tracks until we have enough unseen ones
       while (newTracks.length < BATCH_SIZE && attempts < maxAttempts) {
         // Use DJ endpoint for first fetch, regular for subsequent
-        const response = isFirstFetch && attempts === 0
-          ? await tracksService.getDjShuffled({
-              seed: currentSeed ?? undefined,
-              skip: currentSkip,
-              take: BATCH_SIZE,
-            })
-          : await tracksService.getShuffled({
-              seed: currentSeed ?? undefined,
-              skip: currentSkip,
-              take: BATCH_SIZE,
-            });
+        let response: ShuffledTracksResponse | DjShuffledTracksResponse;
+        if (isFirstFetch && attempts === 0) {
+          response = await tracksService.getDjShuffled({
+            seed: currentSeed ?? undefined,
+            skip: currentSkip,
+            take: BATCH_SIZE,
+          });
+        } else {
+          response = await tracksService.getShuffled({
+            seed: currentSeed ?? undefined,
+            skip: currentSkip,
+            take: BATCH_SIZE,
+          });
+        }
 
         if (currentSeed === null) {
           currentSeed = response.seed;
