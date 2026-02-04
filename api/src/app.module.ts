@@ -29,6 +29,7 @@ import { RadioModule } from './features/radio/radio.module';
 import { UserInteractionsModule } from './features/user-interactions/user-interactions.module';
 import { PlayTrackingModule } from './features/play-tracking/play-tracking.module';
 import { RecommendationsModule } from './features/recommendations/recommendations.module';
+import { DjModule } from './features/dj/dj.module';
 import { ExploreModule } from './features/explore/explore.module';
 import { LogsModule } from './features/logs/logs.module';
 import { HealthModule } from './features/health/health.module';
@@ -116,6 +117,7 @@ import { sanitizeQueryParams, sanitizeParams } from '@shared/utils/log-sanitizer
     UserInteractionsModule,
     PlayTrackingModule,
     RecommendationsModule,
+    DjModule,
     ExploreModule,
     PublicProfilesModule,
     SocialModule,

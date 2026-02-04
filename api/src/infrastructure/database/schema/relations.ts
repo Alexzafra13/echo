@@ -13,6 +13,7 @@ import { players, transcodings } from './player';
 import { radioStations } from './radio';
 import { shares, bookmarks } from './shares';
 import { friendships } from './social';
+import { djAnalysis } from './dj';
 
 // ============================================
 // User Relations
@@ -311,3 +312,12 @@ export const friendshipsRelations = relations(friendships, ({ one }) => ({
   }),
 }));
 
+// ============================================
+// DJ Analysis Relations
+// ============================================
+export const djAnalysisRelations = relations(djAnalysis, ({ one }) => ({
+  track: one(tracks, {
+    fields: [djAnalysis.trackId],
+    references: [tracks.id],
+  }),
+}));
