@@ -7,6 +7,7 @@ import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository
 import { DjAnalysisMapper } from './dj-analysis.mapper';
 import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
 import { DJ_CONFIG } from '../../config/dj.config';
+import { calculateCompatibility, TrackDjData } from '../../domain/services/dj-compatibility.service';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -93,9 +94,13 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
 
   async findCompatibleTracks(
     trackId: string,
-    options: { bpmTolerance?: number; limit?: number } = {},
+    options: { bpmTolerance?: number; limit?: number; minScore?: number } = {},
   ): Promise<DjAnalysis[]> {
-    const { bpmTolerance = DJ_CONFIG.compatibility.bpmTolerancePercent, limit = 20 } = options;
+    const {
+      bpmTolerance = DJ_CONFIG.compatibility.bpmTolerancePercent,
+      limit = 20,
+      minScore = DJ_CONFIG.compatibility.minCompatibleScore,
+    } = options;
 
     // Get the source track analysis
     const source = await this.findByTrackId(trackId);
@@ -108,18 +113,10 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
     const bpmMax = source.bpm * (1 + bpmTolerance / 100);
 
     // Get compatible Camelot keys using centralized utility
-    // Keys are ordered by compatibility: same key first, then adjacent, etc.
     const compatibleKeys = getCompatibleCamelotKeys(source.camelotKey);
 
-    // Build CASE expression for ordering by key compatibility
-    // Same key gets priority 1, then adjacent keys get 2, etc.
-    const keyPriorityCases = compatibleKeys
-      .map((key, index) => `WHEN ${djAnalysis.camelotKey.name} = '${key}' THEN ${index}`)
-      .join(' ');
-    const keyPriorityExpr = sql.raw(`CASE ${keyPriorityCases} ELSE 999 END`);
-
-    // BPM closeness: absolute difference from source BPM
-    const bpmCloseness = sql`ABS(${djAnalysis.bpm} - ${source.bpm})`;
+    // Fetch candidates (get more than needed to account for filtering)
+    const fetchLimit = Math.ceil(limit * 1.5);
 
     const result = await this.drizzle.db
       .select()
@@ -132,10 +129,40 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
           inArray(djAnalysis.camelotKey, compatibleKeys),
         ),
       )
-      .orderBy(keyPriorityExpr, bpmCloseness)
-      .limit(limit);
+      .limit(fetchLimit);
 
-    return DjAnalysisMapper.toDomainArray(result);
+    const candidates = DjAnalysisMapper.toDomainArray(result);
+
+    // Convert source to TrackDjData format
+    const sourceData: TrackDjData = {
+      trackId: source.trackId,
+      bpm: source.bpm,
+      key: source.key ?? null,
+      camelotKey: source.camelotKey,
+      energy: source.energy ?? null,
+      danceability: source.danceability ?? null,
+    };
+
+    // Calculate compatibility scores and filter by minScore
+    const minScorePercent = minScore * 100; // Convert 0.6 to 60
+    const scoredCandidates = candidates
+      .map((candidate) => {
+        const candidateData: TrackDjData = {
+          trackId: candidate.trackId,
+          bpm: candidate.bpm ?? null,
+          key: candidate.key ?? null,
+          camelotKey: candidate.camelotKey ?? null,
+          energy: candidate.energy ?? null,
+          danceability: candidate.danceability ?? null,
+        };
+        const score = calculateCompatibility(sourceData, candidateData);
+        return { candidate, score: score.overall };
+      })
+      .filter(({ score }) => score >= minScorePercent)
+      .sort((a, b) => b.score - a.score) // Sort by score descending
+      .slice(0, limit);
+
+    return scoredCandidates.map(({ candidate }) => candidate);
   }
 
   async countPending(): Promise<number> {
