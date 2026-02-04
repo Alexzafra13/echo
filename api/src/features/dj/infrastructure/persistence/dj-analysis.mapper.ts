@@ -1,5 +1,16 @@
-import { DjAnalysis, DjAnalysisProps } from '../../domain/entities/dj-analysis.entity';
+import { DjAnalysis, DjAnalysisStatus } from '../../domain/entities/dj-analysis.entity';
 import { DjAnalysis as DjAnalysisDb } from '../../../../infrastructure/database/schema';
+
+const VALID_STATUSES: DjAnalysisStatus[] = ['pending', 'analyzing', 'completed', 'failed'];
+
+function validateStatus(status: string): DjAnalysisStatus {
+  if (VALID_STATUSES.includes(status as DjAnalysisStatus)) {
+    return status as DjAnalysisStatus;
+  }
+  // Log warning and default to 'pending' for invalid values
+  console.warn(`Invalid DJ analysis status: "${status}", defaulting to "pending"`);
+  return 'pending';
+}
 
 export class DjAnalysisMapper {
   static toDomain(raw: DjAnalysisDb): DjAnalysis {
@@ -11,7 +22,7 @@ export class DjAnalysisMapper {
       camelotKey: raw.camelotKey ?? undefined,
       energy: raw.energy ?? undefined,
       danceability: raw.danceability ?? undefined,
-      status: raw.status as DjAnalysisProps['status'],
+      status: validateStatus(raw.status),
       analysisError: raw.analysisError ?? undefined,
       analyzedAt: raw.analyzedAt ?? undefined,
       createdAt: raw.createdAt,

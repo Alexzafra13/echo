@@ -5,7 +5,7 @@ import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
 import { DjAnalysis, DjAnalysisStatus } from '../../domain/entities/dj-analysis.entity';
 import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository.port';
 import { DjAnalysisMapper } from './dj-analysis.mapper';
-import { getCompatibleCamelotKeys, getSimpleHarmonicScore } from '../../domain/utils/camelot.util';
+import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -107,8 +107,18 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
     const bpmMax = source.bpm * (1 + bpmTolerance / 100);
 
     // Get compatible Camelot keys using centralized utility
+    // Keys are ordered by compatibility: same key first, then adjacent, etc.
     const compatibleKeys = getCompatibleCamelotKeys(source.camelotKey);
-    const sourceCamelotKey = source.camelotKey;
+
+    // Build CASE expression for ordering by key compatibility
+    // Same key gets priority 1, then adjacent keys get 2, etc.
+    const keyPriorityCases = compatibleKeys
+      .map((key, index) => `WHEN ${djAnalysis.camelotKey.name} = '${key}' THEN ${index}`)
+      .join(' ');
+    const keyPriorityExpr = sql.raw(`CASE ${keyPriorityCases} ELSE 999 END`);
+
+    // BPM closeness: absolute difference from source BPM
+    const bpmCloseness = sql`ABS(${djAnalysis.bpm} - ${source.bpm})`;
 
     const result = await this.drizzle.db
       .select()
@@ -121,18 +131,10 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
           inArray(djAnalysis.camelotKey, compatibleKeys),
         ),
       )
-      .limit(limit * 2); // Fetch more to allow for better sorting
+      .orderBy(keyPriorityExpr, bpmCloseness)
+      .limit(limit);
 
-    const domainResults = DjAnalysisMapper.toDomainArray(result);
-
-    // Sort by harmonic compatibility score (highest first)
-    return domainResults
-      .sort((a, b) => {
-        const scoreA = getSimpleHarmonicScore(sourceCamelotKey, a.camelotKey);
-        const scoreB = getSimpleHarmonicScore(sourceCamelotKey, b.camelotKey);
-        return scoreB - scoreA;
-      })
-      .slice(0, limit);
+    return DjAnalysisMapper.toDomainArray(result);
   }
 
   async countPending(): Promise<number> {

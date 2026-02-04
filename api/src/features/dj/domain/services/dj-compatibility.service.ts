@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CAMELOT_COLORS } from '../../config/dj.config';
+import { CAMELOT_COLORS, DJ_CONFIG } from '../../config/dj.config';
 import {
   keyToCamelot as camelotUtilKeyToCamelot,
   parseCamelot,
@@ -23,9 +23,11 @@ export interface CompatibilityScore {
   bpmScore: number; // 0-100
   keyScore: number; // 0-100
   energyScore: number; // 0-100
+  danceabilityScore: number | null; // 0-100 (null if not available)
   bpmDiff: number; // Percentage difference
   keyCompatibility: 'perfect' | 'compatible' | 'energy_boost' | 'incompatible';
   energyDiff: number; // Absolute difference
+  danceabilityDiff: number | null; // Absolute difference (null if not available)
   canBeatmatch: boolean;
   suggestedTransition: 'smooth' | 'energy_up' | 'energy_down' | 'key_change';
 }
@@ -36,6 +38,7 @@ export interface TrackDjData {
   key: string | null;
   camelotKey: string | null;
   energy: number | null;
+  danceability?: number | null;
 }
 
 /**
@@ -147,7 +150,41 @@ export function calculateEnergyScore(
 }
 
 /**
+ * Calculate danceability compatibility score
+ *
+ * Similar tracks in danceability mix well together.
+ * Uses same scoring as energy for consistency.
+ */
+export function calculateDanceabilityScore(
+  danceability1: number | null | undefined,
+  danceability2: number | null | undefined
+): { score: number; diff: number } | null {
+  if (danceability1 == null || danceability2 == null) {
+    return null; // Not available
+  }
+
+  const diff = danceability2 - danceability1;
+  const absDiff = Math.abs(diff);
+
+  let score: number;
+  if (absDiff <= 0.1) {
+    score = 100;
+  } else if (absDiff <= 0.2) {
+    score = 90 - ((absDiff - 0.1) * 100); // 90-80
+  } else if (absDiff <= 0.3) {
+    score = 80 - ((absDiff - 0.2) * 100); // 80-70
+  } else if (absDiff <= 0.5) {
+    score = 70 - ((absDiff - 0.3) * 50); // 70-60
+  } else {
+    score = Math.max(30, 60 - ((absDiff - 0.5) * 60)); // 60-30
+  }
+
+  return { score, diff };
+}
+
+/**
  * Calculate overall compatibility score between two tracks
+ * Uses weights from DJ_CONFIG.compatibility
  */
 export function calculateCompatibility(
   track1: TrackDjData,
@@ -156,13 +193,32 @@ export function calculateCompatibility(
   const bpmResult = calculateBpmScore(track1.bpm, track2.bpm);
   const keyResult = calculateKeyScore(track1.camelotKey, track2.camelotKey);
   const energyResult = calculateEnergyScore(track1.energy, track2.energy);
+  const danceabilityResult = calculateDanceabilityScore(track1.danceability, track2.danceability);
 
-  // Weighted average: BPM most important for DJing, then key, then energy
-  const overall = Math.round(
-    bpmResult.score * 0.40 +
-    keyResult.score * 0.40 +
-    energyResult.score * 0.20
-  );
+  // Use config weights for scoring
+  const { tempoWeight, keyWeight, energyWeight } = DJ_CONFIG.compatibility;
+
+  // Calculate overall score using config weights
+  // If danceability is available, use it; otherwise distribute its weight to other factors
+  let overall: number;
+  if (danceabilityResult) {
+    // With danceability: normalize weights to include it (takes from energy weight)
+    const danceabilityWeight = energyWeight * 0.5; // Split energy weight
+    const adjustedEnergyWeight = energyWeight * 0.5;
+    overall = Math.round(
+      bpmResult.score * tempoWeight +
+      keyResult.score * keyWeight +
+      energyResult.score * adjustedEnergyWeight +
+      danceabilityResult.score * danceabilityWeight
+    );
+  } else {
+    // Without danceability: use standard weights
+    overall = Math.round(
+      bpmResult.score * tempoWeight +
+      keyResult.score * keyWeight +
+      energyResult.score * energyWeight
+    );
+  }
 
   // Determine suggested transition type
   let suggestedTransition: 'smooth' | 'energy_up' | 'energy_down' | 'key_change';
@@ -179,9 +235,11 @@ export function calculateCompatibility(
     bpmScore: Math.round(bpmResult.score),
     keyScore: Math.round(keyResult.score),
     energyScore: Math.round(energyResult.score),
+    danceabilityScore: danceabilityResult ? Math.round(danceabilityResult.score) : null,
     bpmDiff: Math.round(bpmResult.diff * 10) / 10,
     keyCompatibility: keyResult.compatibility,
     energyDiff: Math.round(energyResult.diff * 100) / 100,
+    danceabilityDiff: danceabilityResult ? Math.round(danceabilityResult.diff * 100) / 100 : null,
     canBeatmatch: bpmResult.canBeatmatch,
     suggestedTransition,
   };
@@ -226,6 +284,10 @@ export class DjCompatibilityService {
 
   calculateEnergyScore(energy1: number | null, energy2: number | null) {
     return calculateEnergyScore(energy1, energy2);
+  }
+
+  calculateDanceabilityScore(danceability1: number | null | undefined, danceability2: number | null | undefined) {
+    return calculateDanceabilityScore(danceability1, danceability2);
   }
 
   keyToCamelot(key: string | null): string | null {
