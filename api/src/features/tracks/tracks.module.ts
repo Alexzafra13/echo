@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { CacheModule } from '@infrastructure/cache/cache.module';
 import { DjModule } from '@features/dj/dj.module';
 import { TracksController } from './presentation/controller/tracks.controller';
-import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase } from './domain/use-cases';
+import { GetTrackUseCase, GetTracksUseCase, SearchTracksUseCase, GetShuffledTracksUseCase, GetDjShuffledTracksUseCase } from './domain/use-cases';
 import { DrizzleTrackRepository } from './infrastructure/persistence/track.repository';
 import { CachedTrackRepository } from './infrastructure/persistence/cached-track.repository';
 import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
@@ -34,6 +34,7 @@ import { TRACK_REPOSITORY } from './domain/ports/track-repository.port';
     GetTracksUseCase,
     SearchTracksUseCase,
     GetShuffledTracksUseCase,
+    GetDjShuffledTracksUseCase,
 
     // Repositories
     DrizzleTrackRepository,
