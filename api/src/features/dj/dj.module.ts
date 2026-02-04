@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { QueueModule } from '@infrastructure/queue/queue.module';
 import { WebSocketModule } from '@infrastructure/websocket';
 import { DJ_ANALYSIS_REPOSITORY, AUDIO_ANALYZER } from './domain/ports';
-import { DjAnalysisRepository } from './infrastructure/persistence';
+import { DrizzleDjAnalysisRepository } from './infrastructure/persistence';
 import { EssentiaAnalyzerService, DjAnalysisQueueService } from './infrastructure/services';
 import { DjCompatibilityService } from './domain/services/dj-compatibility.service';
 
@@ -23,7 +23,7 @@ import { DjCompatibilityService } from './domain/services/dj-compatibility.servi
   imports: [QueueModule, WebSocketModule],
   providers: [
     // Repository
-    { provide: DJ_ANALYSIS_REPOSITORY, useClass: DjAnalysisRepository },
+    { provide: DJ_ANALYSIS_REPOSITORY, useClass: DrizzleDjAnalysisRepository },
 
     // Audio Analyzer
     { provide: AUDIO_ANALYZER, useClass: EssentiaAnalyzerService },
