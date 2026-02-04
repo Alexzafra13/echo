@@ -6,7 +6,6 @@ import { useAuthStore } from '@shared/store';
 import { BackButton } from '@shared/components/ui';
 import { SystemHealthIndicator } from '@shared/components/SystemHealthIndicator';
 import { LufsProgressIndicator } from '@shared/components/LufsProgressIndicator';
-import { DjProgressIndicator } from '@shared/components/DjProgressIndicator';
 import { FederationImportIndicator } from '@shared/components/FederationImportIndicator';
 import { ScanProgressIndicator } from '@shared/components/ScanProgressIndicator';
 import { MetadataNotifications } from './MetadataNotifications';
@@ -162,9 +161,6 @@ export function Header({
 
         {/* LUFS analysis progress (global, solo visible cuando hay análisis) */}
         <LufsProgressIndicator />
-
-        {/* DJ analysis progress (global, solo visible cuando hay análisis) */}
-        <DjProgressIndicator />
 
         {/* System health indicator (solo admin) */}
         <SystemHealthIndicator />

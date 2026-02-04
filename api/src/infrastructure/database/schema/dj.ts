@@ -3,7 +3,6 @@ import {
   uuid,
   varchar,
   real,
-  boolean,
   timestamp,
   jsonb,
   index,
@@ -12,7 +11,7 @@ import {
 import { tracks } from './tracks';
 
 // ============================================
-// DJ Analysis - Audio analysis for DJ features
+// DJ Analysis - Audio analysis for harmonic mixing
 // ============================================
 
 export const djAnalysisStatusEnum = pgEnum('dj_analysis_status', [
@@ -62,118 +61,6 @@ export const djAnalysis = pgTable(
   ],
 );
 
-// ============================================
-// DJ Stems - Separated audio stems for mashups
-// ============================================
-
-export const stemStatusEnum = pgEnum('stem_status', [
-  'pending',
-  'processing',
-  'completed',
-  'failed',
-]);
-
-export const djStems = pgTable(
-  'dj_stems',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    trackId: uuid('track_id')
-      .notNull()
-      .references(() => tracks.id, { onDelete: 'cascade' })
-      .unique(),
-
-    // Stem file paths (relative to stems directory)
-    vocalsPath: varchar('vocals_path', { length: 512 }),
-    drumsPath: varchar('drums_path', { length: 512 }),
-    bassPath: varchar('bass_path', { length: 512 }),
-    otherPath: varchar('other_path', { length: 512 }),
-
-    // Processing info
-    status: stemStatusEnum('status').default('pending').notNull(),
-    processingError: varchar('processing_error', { length: 512 }),
-    modelUsed: varchar('model_used', { length: 50 }), // 'demucs-plugin', 'spleeter', etc.
-
-    // File sizes for storage management
-    totalSizeBytes: real('total_size_bytes'),
-
-    // Timestamps
-    processedAt: timestamp('processed_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  },
-  (table) => [
-    index('idx_dj_stems_track').on(table.trackId),
-    index('idx_dj_stems_status').on(table.status),
-  ],
-);
-
-// ============================================
-// DJ Sessions - Saved DJ mix sessions
-// ============================================
-
-export const djSessions = pgTable(
-  'dj_sessions',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    name: varchar('name', { length: 255 }).notNull(),
-
-    // Session configuration
-    transitionType: varchar('transition_type', { length: 50 }).default('crossfade').notNull(), // 'crossfade', 'mashup', 'cut'
-    transitionDuration: real('transition_duration').default(8).notNull(), // seconds
-
-    // Track list with order
-    trackList: jsonb('track_list').notNull(), // Array of { trackId, order, customTransition? }
-
-    // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  },
-  (table) => [
-    index('idx_dj_sessions_user').on(table.userId),
-  ],
-);
-
-// ============================================
-// Tempo Cache - BPM-adjusted audio files
-// ============================================
-
-export const tempoCache = pgTable(
-  'tempo_cache',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    trackId: uuid('track_id')
-      .notNull()
-      .references(() => tracks.id, { onDelete: 'cascade' }),
-    sessionId: uuid('session_id')
-      .references(() => djSessions.id, { onDelete: 'cascade' }),
-
-    // BPM info
-    originalBpm: real('original_bpm').notNull(),
-    targetBpm: real('target_bpm').notNull(),
-
-    // File info
-    filePath: varchar('file_path', { length: 512 }).notNull(),
-    fileSizeBytes: real('file_size_bytes'),
-
-    // Timestamps
-    lastUsedAt: timestamp('last_used_at').defaultNow().notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => [
-    index('idx_tempo_cache_track').on(table.trackId),
-    index('idx_tempo_cache_session').on(table.sessionId),
-    index('idx_tempo_cache_bpm').on(table.trackId, table.targetBpm),
-    index('idx_tempo_cache_last_used').on(table.lastUsedAt),
-  ],
-);
-
 // Type exports
 export type DjAnalysis = typeof djAnalysis.$inferSelect;
 export type NewDjAnalysis = typeof djAnalysis.$inferInsert;
-export type DjStems = typeof djStems.$inferSelect;
-export type NewDjStems = typeof djStems.$inferInsert;
-export type DjSession = typeof djSessions.$inferSelect;
-export type NewDjSession = typeof djSessions.$inferInsert;
-export type TempoCache = typeof tempoCache.$inferSelect;
-export type NewTempoCache = typeof tempoCache.$inferInsert;

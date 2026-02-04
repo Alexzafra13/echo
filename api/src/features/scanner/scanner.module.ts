@@ -63,7 +63,7 @@ import { CoverArtService } from '@shared/services';
     WebSocketModule, // Para WebSocket
     forwardRef(() => AlbumsModule), // Para invalidar caché después del scan
     ExternalMetadataModule, // Para auto-enriquecimiento de metadatos
-    DjModule, // Para análisis DJ (BPM, Key, Energy)
+    DjModule, // Para análisis DJ post-scan (BPM, Key, Energy)
   ],
   controllers: [ScannerController],
   providers: [

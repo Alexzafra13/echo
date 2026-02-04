@@ -73,7 +73,6 @@ const TrendingPage = lazy(() =>
 const SharedAlbumPage = lazy(() =>
   import('@features/federation').then((m) => ({ default: m.SharedAlbumPage }))
 );
-const DjSessionDetailPage = lazy(() => import('@features/dj/pages/DjSessionDetailPage'));
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -173,13 +172,6 @@ function App() {
           <Route path="/playlists/:id">
             <ProtectedRoute>
               <PlaylistDetailPage />
-            </ProtectedRoute>
-          </Route>
-
-          {/* DJ Session Detail Route (Protected) */}
-          <Route path="/dj/sessions/:id">
-            <ProtectedRoute>
-              <DjSessionDetailPage />
             </ProtectedRoute>
           </Route>
 

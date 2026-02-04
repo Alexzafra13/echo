@@ -1,15 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlaylistShuffleService } from './playlist-shuffle.service';
 import { PLAY_TRACKING_REPOSITORY } from '@features/play-tracking/domain/ports';
-import { DJ_ANALYSIS_REPOSITORY } from '@features/dj/domain/ports/dj-analysis.repository.port';
-import { DjCompatibilityService } from '@features/dj/domain/services/dj-compatibility.service';
 import { TrackScore } from '../../entities/track-score.entity';
 
 describe('PlaylistShuffleService', () => {
   let service: PlaylistShuffleService;
   let mockPlayTrackingRepo: any;
-  let mockDjAnalysisRepo: any;
-  let mockDjCompatibility: any;
 
   // Test data
   const createTrackScore = (trackId: string, score: number): TrackScore => ({
@@ -30,45 +26,15 @@ describe('PlaylistShuffleService', () => {
     { id: 'track-5', artistId: 'artist-3', albumId: 'album-4' },
   ];
 
-  const mockDjAnalyses = [
-    { trackId: 'track-1', bpm: 128, key: 'Am', camelotKey: '8A', energy: 0.7 },
-    { trackId: 'track-2', bpm: 130, key: 'Em', camelotKey: '9A', energy: 0.75 },
-    { trackId: 'track-3', bpm: 126, key: 'Dm', camelotKey: '7A', energy: 0.65 },
-    { trackId: 'track-4', bpm: 132, key: 'C', camelotKey: '8B', energy: 0.8 },
-    { trackId: 'track-5', bpm: 125, key: 'G', camelotKey: '9B', energy: 0.6 },
-  ];
-
   beforeEach(async () => {
     mockPlayTrackingRepo = {
       getUserPlayHistory: jest.fn().mockResolvedValue([]),
-    };
-
-    mockDjAnalysisRepo = {
-      findByTrackIds: jest.fn().mockResolvedValue(mockDjAnalyses),
-    };
-
-    mockDjCompatibility = {
-      calculateCompatibility: jest.fn().mockImplementation((track1, track2) => {
-        // Simulate compatibility based on Camelot wheel proximity
-        const key1 = parseInt(track1.camelotKey?.slice(0, -1) || '0');
-        const key2 = parseInt(track2.camelotKey?.slice(0, -1) || '0');
-        const keyDiff = Math.min(Math.abs(key1 - key2), 12 - Math.abs(key1 - key2));
-        const bpmDiff = Math.abs((track1.bpm || 128) - (track2.bpm || 128));
-
-        let score = 100;
-        score -= keyDiff * 10; // Penalty for key distance
-        score -= bpmDiff * 2;  // Penalty for BPM difference
-
-        return { overall: Math.max(0, score) };
-      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PlaylistShuffleService,
         { provide: PLAY_TRACKING_REPOSITORY, useValue: mockPlayTrackingRepo },
-        { provide: DJ_ANALYSIS_REPOSITORY, useValue: mockDjAnalysisRepo },
-        { provide: DjCompatibilityService, useValue: mockDjCompatibility },
       ],
     }).compile();
 
@@ -109,47 +75,6 @@ describe('PlaylistShuffleService', () => {
       expect(resultIds).toContain('track-5');
     });
 
-    it('should use harmonic shuffle when DJ analysis is available', async () => {
-      const tracks = [
-        createTrackScore('track-1', 80),
-        createTrackScore('track-2', 75),
-        createTrackScore('track-3', 70),
-        createTrackScore('track-4', 65),
-        createTrackScore('track-5', 60),
-      ];
-
-      await service.intelligentShuffle(tracks, mockTrackDetails);
-
-      // Should have fetched DJ analysis
-      expect(mockDjAnalysisRepo.findByTrackIds).toHaveBeenCalledWith([
-        'track-1', 'track-2', 'track-3', 'track-4', 'track-5'
-      ]);
-      // Should have calculated compatibility scores
-      expect(mockDjCompatibility.calculateCompatibility).toHaveBeenCalled();
-    });
-
-    it('should fallback to basic shuffle when less than 50% have DJ analysis', async () => {
-      // Only return analysis for 2 out of 5 tracks (40%)
-      mockDjAnalysisRepo.findByTrackIds.mockResolvedValue([
-        mockDjAnalyses[0],
-        mockDjAnalyses[1],
-      ]);
-
-      const tracks = [
-        createTrackScore('track-1', 80),
-        createTrackScore('track-2', 75),
-        createTrackScore('track-3', 70),
-        createTrackScore('track-4', 65),
-        createTrackScore('track-5', 60),
-      ];
-
-      const result = await service.intelligentShuffle(tracks, mockTrackDetails);
-
-      expect(result).toHaveLength(5);
-      // Should NOT calculate compatibility (using basic shuffle)
-      expect(mockDjCompatibility.calculateCompatibility).not.toHaveBeenCalled();
-    });
-
     it('should produce different results on multiple calls (randomness)', async () => {
       const tracks = [
         createTrackScore('track-1', 80),
@@ -171,12 +96,7 @@ describe('PlaylistShuffleService', () => {
     });
   });
 
-  describe('basicShuffle (fallback)', () => {
-    beforeEach(() => {
-      // Force basic shuffle by returning no DJ analysis
-      mockDjAnalysisRepo.findByTrackIds.mockResolvedValue([]);
-    });
-
+  describe('basicShuffle', () => {
     it('should avoid consecutive tracks from same artist', async () => {
       // Create tracks with repeated artists
       const tracks = [
@@ -236,65 +156,6 @@ describe('PlaylistShuffleService', () => {
       }
 
       expect(consecutiveSameAlbumCount).toBeLessThan(20);
-    });
-  });
-
-  describe('harmonicShuffle', () => {
-    it('should favor tracks with higher compatibility scores', async () => {
-      // Create a scenario where compatibility matters
-      const tracks = [
-        createTrackScore('track-1', 80), // 8A - 128 BPM
-        createTrackScore('track-2', 75), // 9A - 130 BPM (adjacent key)
-        createTrackScore('track-3', 70), // 7A - 126 BPM (adjacent key)
-        createTrackScore('track-4', 65), // 8B - 132 BPM (relative major)
-        createTrackScore('track-5', 60), // 9B - 125 BPM
-      ];
-
-      // Track statistics across multiple shuffles
-      const followingTrack1: Record<string, number> = {};
-
-      for (let i = 0; i < 100; i++) {
-        const result = await service.intelligentShuffle(tracks, mockTrackDetails);
-        const track1Index = result.findIndex(t => t.trackId === 'track-1');
-
-        if (track1Index < result.length - 1) {
-          const nextTrack = result[track1Index + 1].trackId;
-          followingTrack1[nextTrack] = (followingTrack1[nextTrack] || 0) + 1;
-        }
-      }
-
-      // Adjacent keys (9A, 7A, 8B) should follow track-1 (8A) more often than distant keys
-      // This is a probabilistic assertion - compatible tracks should appear more frequently
-      const compatibleFollows = (followingTrack1['track-2'] || 0) +
-                                (followingTrack1['track-3'] || 0) +
-                                (followingTrack1['track-4'] || 0);
-
-      // Compatible tracks should follow at least sometimes
-      expect(compatibleFollows).toBeGreaterThan(0);
-    });
-
-    it('should include tracks without DJ analysis at random positions', async () => {
-      // Only 3 tracks have analysis
-      mockDjAnalysisRepo.findByTrackIds.mockResolvedValue([
-        mockDjAnalyses[0],
-        mockDjAnalyses[1],
-        mockDjAnalyses[2],
-      ]);
-
-      const tracks = [
-        createTrackScore('track-1', 80),
-        createTrackScore('track-2', 75),
-        createTrackScore('track-3', 70),
-        createTrackScore('track-4', 65), // No analysis
-        createTrackScore('track-5', 60), // No analysis
-      ];
-
-      const result = await service.intelligentShuffle(tracks, mockTrackDetails);
-
-      // All 5 tracks should be present
-      expect(result).toHaveLength(5);
-      expect(result.map(t => t.trackId)).toContain('track-4');
-      expect(result.map(t => t.trackId)).toContain('track-5');
     });
   });
 

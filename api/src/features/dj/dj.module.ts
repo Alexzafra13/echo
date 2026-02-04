@@ -1,96 +1,44 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-
-// Infrastructure
-import { DrizzleModule } from '../../infrastructure/database/drizzle.module';
-import { QueueModule } from '../../infrastructure/queue/queue.module';
-import { ScannerModule } from '../scanner/scanner.module';
-import { ExternalMetadataModule } from '../external-metadata/external-metadata.module';
-
-// Controllers
-import { DjController } from './presentation/controllers/dj.controller';
-
-// Services
-import { EssentiaAnalyzerService } from './infrastructure/services/essentia-analyzer.service';
-import { HttpStemSeparatorService } from './infrastructure/services/http-stem-separator.service';
-import { DjAnalysisQueueService } from './infrastructure/services/dj-analysis-queue.service';
-import { StemQueueService } from './infrastructure/services/stem-queue.service';
-import { TransitionEngineService } from './infrastructure/services/transition-engine.service';
-import { TempoCacheService } from './infrastructure/services/tempo-cache.service';
-
-// Repositories
-import { DrizzleDjAnalysisRepository } from './infrastructure/persistence/dj-analysis.repository';
-import { DrizzleDjSessionRepository } from './infrastructure/persistence/dj-session.repository';
-
-// Services
+import { Module } from '@nestjs/common';
+import { QueueModule } from '@infrastructure/queue/queue.module';
+import { WebSocketModule } from '@infrastructure/websocket';
+import { DJ_ANALYSIS_REPOSITORY, AUDIO_ANALYZER } from './domain/ports';
+import { DjAnalysisRepository } from './infrastructure/persistence';
+import { EssentiaAnalyzerService, DjAnalysisQueueService } from './infrastructure/services';
 import { DjCompatibilityService } from './domain/services/dj-compatibility.service';
 
-// Use Cases
-import { GetDjSuggestionsUseCase } from './application/use-cases/get-dj-suggestions.use-case';
-
-// Ports
-import { DJ_ANALYSIS_REPOSITORY } from './domain/ports/dj-analysis.repository.port';
-import { AUDIO_ANALYZER } from './domain/ports/audio-analyzer.port';
-import { STEM_SEPARATOR } from './domain/ports/stem-separator.port';
-
 /**
- * DjModule - DJ Features for Echo Music Server
+ * DjModule - Simplified version for harmonic analysis only
  *
  * Provides:
- * - Audio analysis (BPM, Key, Energy) using Essentia.js
- * - Stem separation (vocals, drums, bass, other) via plugin container
- * - Harmonic mixing recommendations (Camelot wheel)
- * - Transition calculations for DJ mixing
- * - Async processing queues for heavy operations
+ * - Audio analysis (BPM, Key, Camelot) via Essentia.js
+ * - DJ compatibility scoring for harmonic mixing
+ * - Analysis queue for background processing
+ *
+ * Does NOT include:
+ * - Stem separation
+ * - DJ Sessions
+ * - Tempo cache
  */
 @Module({
-  imports: [
-    ConfigModule,
-    DrizzleModule,
-    QueueModule,
-    forwardRef(() => ScannerModule), // For ScannerGateway WebSocket events
-    ExternalMetadataModule, // For SettingsService (used by TempoCacheService)
-  ],
-  controllers: [DjController],
+  imports: [QueueModule, WebSocketModule],
   providers: [
-    // Services
+    // Repository
+    { provide: DJ_ANALYSIS_REPOSITORY, useClass: DjAnalysisRepository },
+
+    // Audio Analyzer
+    { provide: AUDIO_ANALYZER, useClass: EssentiaAnalyzerService },
     EssentiaAnalyzerService,
-    HttpStemSeparatorService,
+
+    // Queue Service
     DjAnalysisQueueService,
-    StemQueueService,
-    TransitionEngineService,
-    TempoCacheService,
+
+    // Compatibility Service
     DjCompatibilityService,
-
-    // Repositories
-    DrizzleDjAnalysisRepository,
-    DrizzleDjSessionRepository,
-
-    // Use Cases
-    GetDjSuggestionsUseCase,
-
-    // Port implementations (Dependency Injection)
-    {
-      provide: DJ_ANALYSIS_REPOSITORY,
-      useClass: DrizzleDjAnalysisRepository,
-    },
-    {
-      provide: AUDIO_ANALYZER,
-      useClass: EssentiaAnalyzerService,
-    },
-    {
-      provide: STEM_SEPARATOR,
-      useClass: HttpStemSeparatorService,
-    },
   ],
   exports: [
     DJ_ANALYSIS_REPOSITORY,
     AUDIO_ANALYZER,
-    STEM_SEPARATOR,
     DjAnalysisQueueService,
-    StemQueueService,
-    TransitionEngineService,
-    TempoCacheService,
     DjCompatibilityService,
   ],
 })

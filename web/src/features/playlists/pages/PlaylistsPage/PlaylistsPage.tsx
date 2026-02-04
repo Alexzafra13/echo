@@ -1,47 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Plus, Music, Trash2, Edit2, Search, X, ListMusic, Disc3, Play } from 'lucide-react';
-import { useLocation, useSearch } from 'wouter';
+import { Plus, Music, Trash2, Edit2, Search, X } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { Sidebar } from '@features/home/components';
 import { useGridDimensions } from '@features/home/hooks';
 import { Header } from '@shared/components/layout/Header';
 import { Button, Pagination } from '@shared/components/ui';
 import { formatDuration } from '@shared/utils/format';
 import { usePlaylists, useDeletePlaylist, useCreatePlaylist, useUpdatePlaylist, useAddTrackToPlaylist } from '../../hooks/usePlaylists';
-import { useDjSessions, useDeleteDjSession, useCreateDjSession, useUpdateDjSession } from '@features/dj/hooks/useDjSessions';
-import type { DjSession } from '@features/dj/services/djSessions.service';
 import { PlaylistCoverMosaic, CreatePlaylistModal, DeletePlaylistModal, EditPlaylistModal } from '../../components';
 import { Playlist, UpdatePlaylistDto } from '../../types';
 import { logger } from '@shared/utils/logger';
 import { getApiErrorMessage } from '@shared/utils/error.utils';
-import { usePlayer } from '@features/player';
 import styles from './PlaylistsPage.module.css';
-
-type PlaylistMode = 'playlists' | 'dj';
 
 /**
  * PlaylistsPage Component
- * Displays user's playlists and DJ sessions with tab navigation
+ * Displays user's playlists
  */
 export default function PlaylistsPage() {
   const [, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(useSearch());
-  const modeParam = searchParams.get('mode');
 
   const [page, setPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCreateDjModal, setShowCreateDjModal] = useState(false);
   const [deletePlaylistId, setDeletePlaylistId] = useState<string | null>(null);
   const [deletePlaylistName, setDeletePlaylistName] = useState('');
-  const [deleteDjSessionId, setDeleteDjSessionId] = useState<string | null>(null);
-  const [deleteDjSessionName, setDeleteDjSessionName] = useState('');
   const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
-  const [editDjSession, setEditDjSession] = useState<DjSession | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [playlistMode, setPlaylistMode] = useState<PlaylistMode>(
-    modeParam === 'dj' ? 'dj' : 'playlists'
-  );
-
-  const { playQueue } = usePlayer();
 
   // Calculate dynamic grid dimensions to fill the screen
   const { itemsPerPage } = useGridDimensions({
@@ -57,13 +41,6 @@ export default function PlaylistsPage() {
   const updatePlaylistMutation = useUpdatePlaylist();
   const addTrackMutation = useAddTrackToPlaylist();
 
-  // DJ Sessions hooks
-  const { data: djSessionsData, isLoading: isDjLoading } = useDjSessions();
-  const deleteDjSessionMutation = useDeleteDjSession();
-  const createDjSessionMutation = useCreateDjSession();
-  const updateDjSessionMutation = useUpdateDjSession();
-  const djSessions = djSessionsData?.sessions || [];
-
   const allPlaylists = playlistsData?.items || [];
   const total = playlistsData?.total || 0;
   const totalPages = Math.ceil(total / itemsPerPage) || 1;
@@ -76,21 +53,10 @@ export default function PlaylistsPage() {
       )
     : allPlaylists;
 
-  // Reset to first page when itemsPerPage or mode changes
+  // Reset to first page when itemsPerPage changes
   useEffect(() => {
     setPage(1);
-  }, [itemsPerPage, playlistMode]);
-
-  // Update URL when mode changes
-  const handleModeChange = (mode: PlaylistMode) => {
-    setPlaylistMode(mode);
-    setSearchQuery('');
-    if (mode === 'dj') {
-      setLocation('/playlists?mode=dj');
-    } else {
-      setLocation('/playlists');
-    }
-  };
+  }, [itemsPerPage]);
 
   // Pagination handler
   const handlePageChange = (newPage: number) => {
@@ -112,17 +78,6 @@ export default function PlaylistsPage() {
         dto: { trackId },
       });
     }
-  };
-
-  const handleCreateDjSession = async (name: string, trackIds: string[], options?: { processStems?: boolean }) => {
-    // Create the DJ session with tracks
-    const session = await createDjSessionMutation.mutateAsync({
-      name,
-      trackIds,
-      processStems: options?.processStems,
-    });
-    // Navigate to the new session's detail page
-    setLocation(`/dj/sessions/${session.id}`);
   };
 
   const handleDeleteClick = (playlistId: string, playlistName: string) => {
@@ -150,10 +105,6 @@ export default function PlaylistsPage() {
 
   const handleUpdatePlaylist = async (id: string, data: UpdatePlaylistDto) => {
     await updatePlaylistMutation.mutateAsync({ id, dto: data });
-  };
-
-  const handleUpdateDjSession = async (id: string, data: UpdatePlaylistDto) => {
-    await updateDjSessionMutation.mutateAsync({ id, dto: { name: data.name } });
   };
 
   return (
@@ -192,81 +143,46 @@ export default function PlaylistsPage() {
         <div className={styles.playlistsPage__content}>
           {/* Page Header */}
           <div className={styles.playlistsPage__pageHeader}>
-            <h1 className={styles.playlistsPage__title}>
-              {playlistMode === 'playlists' ? 'Mis Playlists' : 'Sesiones DJ'}
-            </h1>
+            <h1 className={styles.playlistsPage__title}>Mis Playlists</h1>
             <p className={styles.playlistsPage__subtitle}>
-              {playlistMode === 'playlists'
-                ? `${total} ${total === 1 ? 'playlist' : 'playlists'}`
-                : 'Crea sesiones con mezcla armónica automática'
-              }
+              {total} {total === 1 ? 'playlist' : 'playlists'}
             </p>
           </div>
 
-          {/* Source Tabs */}
-          <div className={styles.playlistsPage__sourceTabs}>
-            <div
-              className={`${styles.playlistsPage__sourceIndicator} ${
-                playlistMode === 'dj' ? styles['playlistsPage__sourceIndicator--dj'] : ''
-              }`}
-            />
-            <button
-              className={`${styles.playlistsPage__sourceTab} ${
-                playlistMode === 'playlists' ? styles['playlistsPage__sourceTab--active'] : ''
-              }`}
-              onClick={() => handleModeChange('playlists')}
-            >
-              <ListMusic size={18} />
-              <span>Playlists</span>
-            </button>
-            <button
-              className={`${styles.playlistsPage__sourceTab} ${
-                playlistMode === 'dj' ? styles['playlistsPage__sourceTab--active'] : ''
-              }`}
-              onClick={() => handleModeChange('dj')}
-            >
-              <Disc3 size={18} />
-              <span>Sesiones DJ</span>
-            </button>
-          </div>
+          {/* Create button */}
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateModal(true)}
+            className={styles.playlistsPage__createButton}
+          >
+            <Plus size={20} />
+            Nueva Playlist
+          </Button>
 
-          {/* Playlists Content */}
-          {playlistMode === 'playlists' && (
-            <>
-              {/* Create button */}
-              <Button
-                variant="primary"
-                onClick={() => setShowCreateModal(true)}
-                className={styles.playlistsPage__createButton}
-              >
-                <Plus size={20} />
-                Nueva Playlist
-              </Button>
+          {/* Top Pagination - Mobile Only */}
+          {!isLoading && playlists.length > 0 && totalPages > 1 && (
+            <div className={styles.playlistsPage__paginationTop}>
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                disabled={isLoading}
+              />
+            </div>
+          )}
 
-              {/* Top Pagination - Mobile Only */}
-              {!isLoading && playlists.length > 0 && totalPages > 1 && (
-                <div className={styles.playlistsPage__paginationTop}>
-                  <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    disabled={isLoading}
-                  />
-                </div>
-              )}
-
-              {/* Playlists Grid */}
-              {isLoading ? (
-                <div className={styles.playlistsPage__loading}>
-                  <p>Cargando playlists...</p>
-                </div>
-              ) : playlists.length === 0 ? (
-                <div className={styles.playlistsPage__emptyState}>
-                  <Music size={64} />
-                  <h2>No tienes playlists todavía</h2>
-                  <p>Crea tu primera playlist para organizar tu música</p>
-                </div>
-              ) : (
+          {/* Playlists Grid */}
+          {isLoading ? (
+            <div className={styles.playlistsPage__loading}>
+              <p>Cargando playlists...</p>
+            </div>
+          ) : playlists.length === 0 ? (
+            <div className={styles.playlistsPage__emptyState}>
+              <Music size={64} />
+              <h2>No tienes playlists todavía</h2>
+              <p>Crea tu primera playlist para organizar tu música</p>
+            </div>
+          ) : (
             <div className={styles.playlistsPage__gridWrapper}>
               <div className={styles.playlistsPage__grid}>
                 {playlists.map((playlist) => (
@@ -337,140 +253,6 @@ export default function PlaylistsPage() {
                 disabled={isLoading}
               />
             </div>
-              )}
-            </>
-          )}
-
-          {/* DJ Sessions Content */}
-          {playlistMode === 'dj' && (
-            <>
-              {/* Create button */}
-              <Button
-                variant="primary"
-                onClick={() => setShowCreateDjModal(true)}
-                className={styles.playlistsPage__createButton}
-              >
-                <Plus size={20} />
-                Nueva Sesión DJ
-              </Button>
-
-              {isDjLoading ? (
-                <div className={styles.playlistsPage__loading}>
-                  <p>Cargando sesiones DJ...</p>
-                </div>
-              ) : djSessions.length === 0 ? (
-                <div className={styles.playlistsPage__emptyState}>
-                  <Disc3 size={64} />
-                  <h2>No tienes sesiones DJ todavía</h2>
-                  <p>Crea tu primera sesión para mezclas armónicas perfectas</p>
-                </div>
-              ) : (
-                <div className={styles.playlistsPage__grid}>
-                    {djSessions.map((session) => {
-                      // Get unique album IDs for cover mosaic
-                      const albumIds = [...new Set(session.tracks.map(t => t.albumId).filter(Boolean))] as string[];
-
-                      // Calculate BPM range
-                      const bpms = session.tracks.map(t => t.bpm).filter(Boolean) as number[];
-                      const bpmRange = bpms.length > 0
-                        ? bpms.length === 1
-                          ? `${Math.round(bpms[0])} BPM`
-                          : `${Math.round(Math.min(...bpms))}-${Math.round(Math.max(...bpms))} BPM`
-                        : null;
-
-                      return (
-                        <div
-                          key={session.id}
-                          className={styles.playlistCard}
-                          onClick={() => setLocation(`/dj/sessions/${session.id}`)}
-                        >
-                          <div className={styles.playlistCard__cover}>
-                            {albumIds.length > 0 ? (
-                              <PlaylistCoverMosaic
-                                albumIds={albumIds}
-                                playlistName={session.name}
-                              />
-                            ) : (
-                              <div className={styles.playlistCard__coverPlaceholderDj}>
-                                <Disc3 size={48} />
-                              </div>
-                            )}
-                            <div className={styles.playlistCard__djBadge}>
-                              <Disc3 size={12} />
-                              DJ
-                            </div>
-                          </div>
-
-                          <div className={styles.playlistCard__info}>
-                            <h3 className={styles.playlistCard__title}>{session.name}</h3>
-                            <div className={styles.playlistCard__meta}>
-                              <span>
-                                {session.trackCount} {session.trackCount === 1 ? 'track' : 'tracks'}
-                              </span>
-                              {session.totalDuration && session.totalDuration > 0 && (
-                                <>
-                                  <span className={styles.playlistCard__separator}>•</span>
-                                  <span>{formatDuration(session.totalDuration)}</span>
-                                </>
-                              )}
-                            </div>
-                            {bpmRange && (
-                              <div className={styles.playlistCard__djMeta}>
-                                <span>{bpmRange}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className={styles.playlistCard__actions}>
-                            <button
-                              className={styles.playlistCard__playButton}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (session.tracks.length > 0) {
-                                  const playerTracks = session.tracks.map(t => ({
-                                    id: t.trackId,
-                                    title: t.title || 'Unknown',
-                                    artist: t.artist || 'Unknown',
-                                    albumId: t.albumId,
-                                    duration: t.duration,
-                                    coverImage: t.albumId ? `/api/images/albums/${t.albumId}/cover` : undefined,
-                                  }));
-                                  playQueue(playerTracks, 0);
-                                }
-                              }}
-                              title="Reproducir sesión"
-                            >
-                              <Play size={16} fill="currentColor" />
-                            </button>
-                            <button
-                              className={styles.playlistCard__actionButton}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditDjSession(session);
-                              }}
-                              title="Editar sesión"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              className={styles.playlistCard__actionButton}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteDjSessionId(session.id);
-                                setDeleteDjSessionName(session.name);
-                              }}
-                              title="Eliminar sesión"
-                              disabled={deleteDjSessionMutation.isPending}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </>
           )}
         </div>
       </main>
@@ -501,50 +283,6 @@ export default function PlaylistsPage() {
           onClose={() => setEditPlaylist(null)}
           onSubmit={handleUpdatePlaylist}
           isLoading={updatePlaylistMutation.isPending}
-        />
-      )}
-
-      {/* Delete DJ Session Modal */}
-      {deleteDjSessionId && (
-        <DeletePlaylistModal
-          playlistName={deleteDjSessionName}
-          onClose={() => {
-            setDeleteDjSessionId(null);
-            setDeleteDjSessionName('');
-          }}
-          onConfirm={async () => {
-            try {
-              await deleteDjSessionMutation.mutateAsync(deleteDjSessionId);
-              setDeleteDjSessionId(null);
-              setDeleteDjSessionName('');
-            } catch (err) {
-              if (import.meta.env.DEV) {
-                logger.error('Error deleting DJ session:', err);
-              }
-              alert(getApiErrorMessage(err, 'Error al eliminar la sesión DJ'));
-            }
-          }}
-          isLoading={deleteDjSessionMutation.isPending}
-        />
-      )}
-
-      {/* Create DJ Session Modal */}
-      {showCreateDjModal && (
-        <CreatePlaylistModal
-          onClose={() => setShowCreateDjModal(false)}
-          onSubmit={handleCreateDjSession}
-          isLoading={createDjSessionMutation.isPending}
-          isDjSession={true}
-        />
-      )}
-
-      {/* Edit DJ Session Modal */}
-      {editDjSession && (
-        <EditPlaylistModal
-          djSession={editDjSession}
-          onClose={() => setEditDjSession(null)}
-          onSubmit={handleUpdateDjSession}
-          isLoading={updateDjSessionMutation.isPending}
         />
       )}
     </div>

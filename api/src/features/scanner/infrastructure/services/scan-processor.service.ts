@@ -528,4 +528,5 @@ export class ScanProcessorService implements OnModuleInit {
       );
     }
   }
+
 }
