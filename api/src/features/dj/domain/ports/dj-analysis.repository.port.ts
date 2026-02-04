@@ -42,13 +42,14 @@ export interface IDjAnalysisRepository {
   deleteByTrackId(trackId: string): Promise<boolean>;
 
   /**
-   * Find tracks compatible with a given track (by BPM and key)
+   * Find tracks compatible with a given track (by BPM, key, and overall score)
    */
   findCompatibleTracks(
     trackId: string,
     options?: {
-      bpmTolerance?: number; // percentage
-      limit?: number;
+      bpmTolerance?: number; // percentage (default: from config)
+      limit?: number; // max results (default: 20)
+      minScore?: number; // minimum compatibility score 0-1 (default: from config)
     },
   ): Promise<DjAnalysis[]>;
 

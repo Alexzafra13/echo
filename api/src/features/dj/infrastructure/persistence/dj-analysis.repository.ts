@@ -5,7 +5,9 @@ import { djAnalysis, tracks } from '../../../../infrastructure/database/schema';
 import { DjAnalysis, DjAnalysisStatus } from '../../domain/entities/dj-analysis.entity';
 import { IDjAnalysisRepository } from '../../domain/ports/dj-analysis.repository.port';
 import { DjAnalysisMapper } from './dj-analysis.mapper';
-import { getCompatibleCamelotKeys, getSimpleHarmonicScore } from '../../domain/utils/camelot.util';
+import { getCompatibleCamelotKeys } from '../../domain/utils/camelot.util';
+import { DJ_CONFIG } from '../../config/dj.config';
+import { calculateCompatibility, TrackDjData } from '../../domain/services/dj-compatibility.service';
 
 @Injectable()
 export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
@@ -92,9 +94,13 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
 
   async findCompatibleTracks(
     trackId: string,
-    options: { bpmTolerance?: number; limit?: number } = {},
+    options: { bpmTolerance?: number; limit?: number; minScore?: number } = {},
   ): Promise<DjAnalysis[]> {
-    const { bpmTolerance = 6, limit = 20 } = options;
+    const {
+      bpmTolerance = DJ_CONFIG.compatibility.bpmTolerancePercent,
+      limit = 20,
+      minScore = DJ_CONFIG.compatibility.minCompatibleScore,
+    } = options;
 
     // Get the source track analysis
     const source = await this.findByTrackId(trackId);
@@ -108,7 +114,9 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
 
     // Get compatible Camelot keys using centralized utility
     const compatibleKeys = getCompatibleCamelotKeys(source.camelotKey);
-    const sourceCamelotKey = source.camelotKey;
+
+    // Fetch candidates (get more than needed to account for filtering)
+    const fetchLimit = Math.ceil(limit * 1.5);
 
     const result = await this.drizzle.db
       .select()
@@ -121,18 +129,40 @@ export class DrizzleDjAnalysisRepository implements IDjAnalysisRepository {
           inArray(djAnalysis.camelotKey, compatibleKeys),
         ),
       )
-      .limit(limit * 2); // Fetch more to allow for better sorting
+      .limit(fetchLimit);
 
-    const domainResults = DjAnalysisMapper.toDomainArray(result);
+    const candidates = DjAnalysisMapper.toDomainArray(result);
 
-    // Sort by harmonic compatibility score (highest first)
-    return domainResults
-      .sort((a, b) => {
-        const scoreA = getSimpleHarmonicScore(sourceCamelotKey, a.camelotKey);
-        const scoreB = getSimpleHarmonicScore(sourceCamelotKey, b.camelotKey);
-        return scoreB - scoreA;
+    // Convert source to TrackDjData format
+    const sourceData: TrackDjData = {
+      trackId: source.trackId,
+      bpm: source.bpm,
+      key: source.key ?? null,
+      camelotKey: source.camelotKey,
+      energy: source.energy ?? null,
+      danceability: source.danceability ?? null,
+    };
+
+    // Calculate compatibility scores and filter by minScore
+    const minScorePercent = minScore * 100; // Convert 0.6 to 60
+    const scoredCandidates = candidates
+      .map((candidate) => {
+        const candidateData: TrackDjData = {
+          trackId: candidate.trackId,
+          bpm: candidate.bpm ?? null,
+          key: candidate.key ?? null,
+          camelotKey: candidate.camelotKey ?? null,
+          energy: candidate.energy ?? null,
+          danceability: candidate.danceability ?? null,
+        };
+        const score = calculateCompatibility(sourceData, candidateData);
+        return { candidate, score: score.overall };
       })
+      .filter(({ score }) => score >= minScorePercent)
+      .sort((a, b) => b.score - a.score) // Sort by score descending
       .slice(0, limit);
+
+    return scoredCandidates.map(({ candidate }) => candidate);
   }
 
   async countPending(): Promise<number> {

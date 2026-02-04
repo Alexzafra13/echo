@@ -86,13 +86,11 @@ export const DJ_CONFIG = {
    */
   compatibility: {
     /** Weight for key compatibility (Camelot wheel) */
-    keyWeight: 0.4,
+    keyWeight: 0.45,
     /** Weight for tempo/BPM compatibility */
-    tempoWeight: 0.3,
+    tempoWeight: 0.35,
     /** Weight for energy level matching */
     energyWeight: 0.2,
-    /** Weight for genre matching (future use) */
-    genreWeight: 0.1,
     /** Minimum score to be considered "compatible" (0-1) */
     minCompatibleScore: 0.6,
     /** BPM tolerance for "same tempo" matching (%) */

@@ -12,6 +12,7 @@ import {
   isValidBpm,
   isValidEnergy,
 } from '../utils/camelot.util';
+import { DJ_CONFIG } from '../../config/dj.config';
 
 export type DjAnalysisStatus = 'pending' | 'analyzing' | 'completed' | 'failed';
 
@@ -154,9 +155,9 @@ export class DjAnalysis {
   }
 
   /**
-   * Check if BPM is compatible for mixing (within 6% tolerance)
+   * Check if BPM is compatible for mixing (uses config tolerance)
    */
-  isBpmCompatibleWith(other: DjAnalysis, tolerancePercent = 6): boolean {
+  isBpmCompatibleWith(other: DjAnalysis, tolerancePercent = DJ_CONFIG.compatibility.bpmTolerancePercent): boolean {
     if (!this.bpm || !other.bpm) {
       return false;
     }
