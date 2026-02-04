@@ -26,13 +26,6 @@ export interface DjAnalysisProps {
   energy?: number; // 0.0 - 1.0
   danceability?: number; // 0.0 - 1.0
 
-  // Beat detection
-  beatgrid?: number[]; // Array of beat positions in seconds
-
-  // Intro/outro for smart transitions
-  introEnd?: number;
-  outroStart?: number;
-
   // Status
   status: DjAnalysisStatus;
   analysisError?: string;
@@ -130,18 +123,6 @@ export class DjAnalysis {
     return this.props.danceability;
   }
 
-  get beatgrid(): number[] | undefined {
-    return this.props.beatgrid;
-  }
-
-  get introEnd(): number | undefined {
-    return this.props.introEnd;
-  }
-
-  get outroStart(): number | undefined {
-    return this.props.outroStart;
-  }
-
   get status(): DjAnalysisStatus {
     return this.props.status;
   }
@@ -237,9 +218,6 @@ export class DjAnalysis {
       camelotKey: this.camelotKey,
       energy: this.energy,
       danceability: this.danceability,
-      beatgrid: this.beatgrid,
-      introEnd: this.introEnd,
-      outroStart: this.outroStart,
       status: this.status,
       analysisError: this.analysisError,
       analyzedAt: this.analyzedAt,

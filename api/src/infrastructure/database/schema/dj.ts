@@ -4,7 +4,6 @@ import {
   varchar,
   real,
   timestamp,
-  jsonb,
   index,
   pgEnum,
 } from 'drizzle-orm/pg-core';
@@ -37,13 +36,6 @@ export const djAnalysis = pgTable(
     energy: real('energy'), // Energy level 0.0 - 1.0
     danceability: real('danceability'), // Danceability 0.0 - 1.0
 
-    // Beat detection
-    beatgrid: jsonb('beatgrid'), // Array of beat positions in seconds
-
-    // Intro/outro detection for smart transitions
-    introEnd: real('intro_end'), // Seconds where intro ends
-    outroStart: real('outro_start'), // Seconds where outro begins
-
     // Analysis status
     status: djAnalysisStatusEnum('status').default('pending').notNull(),
     analysisError: varchar('analysis_error', { length: 512 }),
@@ -55,9 +47,9 @@ export const djAnalysis = pgTable(
   },
   (table) => [
     index('idx_dj_analysis_track').on(table.trackId),
-    index('idx_dj_analysis_bpm').on(table.bpm),
-    index('idx_dj_analysis_key').on(table.camelotKey),
     index('idx_dj_analysis_status').on(table.status),
+    // Composite index for compatibility queries (status + camelot_key + bpm)
+    index('idx_dj_analysis_compatibility').on(table.status, table.camelotKey, table.bpm),
   ],
 );
 

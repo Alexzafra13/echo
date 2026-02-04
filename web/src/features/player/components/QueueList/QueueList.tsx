@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { Music, Disc3 } from 'lucide-react';
+import { Music } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
 import { getCoverUrl, handleImageError } from '@shared/utils/cover.utils';
 import { formatDuration } from '@shared/utils/format';
@@ -55,11 +55,10 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
       <div className={styles.queueList__tracks}>
         {queue.map((track, index) => {
           const isCurrentTrack = currentTrack?.id === track.id;
-          const isDjTrack = track.addedByDj;
           return (
             <button
               key={`${track.id}-${index}`}
-              className={`${styles.queueList__item} ${isCurrentTrack ? styles.queueList__item_active : ''} ${isDjTrack ? styles['queueList__item--dj'] : ''}`}
+              className={`${styles.queueList__item} ${isCurrentTrack ? styles.queueList__item_active : ''}`}
               onClick={() => handleTrackClick(index)}
             >
               {track.trackNumber && (
@@ -76,34 +75,10 @@ export const QueueList = memo(function QueueList({ onClose }: QueueListProps) {
                   decoding="async"
                   onError={handleImageError}
                 />
-                {isDjTrack && (
-                  <div className={styles.queueList__djBadge} title="Añadido por DJ Auto-Queue">
-                    <Disc3 />
-                  </div>
-                )}
               </div>
               <div className={styles.queueList__info}>
                 <p className={styles.queueList__name}>{track.title}</p>
                 <p className={styles.queueList__meta}>{track.artist}</p>
-                {isDjTrack && track.djInfo && (
-                  <div className={styles.queueList__djInfo}>
-                    {track.djInfo.bpm && (
-                      <span className={`${styles.queueList__djTag} ${styles['queueList__djTag--bpm']}`}>
-                        {Math.round(track.djInfo.bpm)} BPM
-                      </span>
-                    )}
-                    {track.djInfo.musicalKey && (
-                      <span className={`${styles.queueList__djTag} ${styles['queueList__djTag--key']}`}>
-                        {track.djInfo.musicalKey}
-                      </span>
-                    )}
-                    {track.djInfo.compatibilityScore && (
-                      <span className={`${styles.queueList__djTag} ${styles['queueList__djTag--score']}`}>
-                        {Math.round(track.djInfo.compatibilityScore)}%
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
               <span className={styles.queueList__duration}>
                 {formatDuration(track.duration)}

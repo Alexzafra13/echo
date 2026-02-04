@@ -272,7 +272,6 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         key: 'Unknown',
         energy,
         danceability: undefined,
-        beatgrid: undefined,
       };
     } catch (error) {
       this.logger.error({ error, filePath }, 'FFmpeg analysis failed');

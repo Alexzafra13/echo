@@ -1,7 +1,7 @@
 /**
  * DJ Module Configuration
  *
- * Centralized configuration for all DJ-related services.
+ * Centralized configuration for audio analysis and harmonic mixing.
  * All magic numbers and timeouts are defined here for easy maintenance.
  */
 
@@ -72,31 +72,6 @@ export const DJ_CONFIG = {
   },
 
   /**
-   * Stem Separation Configuration
-   */
-  stems: {
-    /** Concurrency for stem processing queue */
-    concurrency: 1,
-  },
-
-  /**
-   * Tempo Cache Configuration
-   */
-  tempoCache: {
-    /** FFmpeg atempo filter limits */
-    atempo: {
-      min: 0.5,
-      max: 2.0,
-    },
-    /** Max tempo change per filter (same as atempo.min) */
-    maxTempoChange: 0.5,
-    /** Days to keep unused cache files */
-    maxAgeDays: 30,
-    /** Cleanup schedule (cron pattern: daily at 3:30 AM) */
-    cleanupSchedule: '30 3 * * *',
-  },
-
-  /**
    * FFmpeg Configuration
    */
   ffmpeg: {
@@ -104,26 +79,10 @@ export const DJ_CONFIG = {
     timeout: 5 * 60 * 1000,
     /** Max buffer for piped output (100MB) */
     maxBuffer: 100 * 1024 * 1024,
-    /** MP3 encoding quality (VBR, 0=best, 9=worst) */
-    mp3Quality: 2,
   },
 
   /**
-   * Mixing & Transition Configuration
-   */
-  mixing: {
-    /** Default transition duration in beats */
-    defaultTransitionBeats: 16,
-    /** Valid transition beat counts */
-    validTransitionBeats: [8, 16, 32] as const,
-    /** BPM tolerance for "same tempo" matching (±) */
-    bpmTolerance: 2,
-    /** Maximum BPM difference for viable transition */
-    maxBpmDifference: 10,
-  },
-
-  /**
-   * Compatibility Scoring Weights
+   * Compatibility Scoring Configuration
    */
   compatibility: {
     /** Weight for key compatibility (Camelot wheel) */
@@ -132,27 +91,12 @@ export const DJ_CONFIG = {
     tempoWeight: 0.3,
     /** Weight for energy level matching */
     energyWeight: 0.2,
-    /** Weight for genre matching */
+    /** Weight for genre matching (future use) */
     genreWeight: 0.1,
     /** Minimum score to be considered "compatible" (0-1) */
     minCompatibleScore: 0.6,
-  },
-
-  /**
-   * Directory Configuration (relative to data dir)
-   */
-  directories: {
-    stems: 'stems',
-    tempoCache: 'tempo-cache',
-  },
-
-  /**
-   * Environment Variable Names
-   * Used for ConfigService.get() with defaults from this config
-   */
-  envVars: {
-    stemsDir: 'DJ_STEMS_DIR',
-    dataDir: 'storage.data_dir',
+    /** BPM tolerance for "same tempo" matching (%) */
+    bpmTolerancePercent: 6,
   },
 } as const;
 

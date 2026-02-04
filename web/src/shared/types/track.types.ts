@@ -68,15 +68,6 @@ export interface Track {
   playlistOrder?: number; // Order in playlist (when track is from a playlist)
   streamUrl?: string; // Custom stream URL (for federated/remote tracks)
 
-  // DJ auto-queue metadata
-  addedByDj?: boolean; // True if track was added by DJ auto-queue
-  djInfo?: {
-    bpm?: number;
-    musicalKey?: string; // e.g., "8A", "11B"
-    energy?: number; // 0-1
-    compatibilityScore?: number; // 0-100
-  };
-
   // Timestamps
   createdAt?: Date | string;
   updatedAt?: Date | string;
