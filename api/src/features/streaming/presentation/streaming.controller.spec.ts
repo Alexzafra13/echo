@@ -157,7 +157,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', undefined, undefined, mockRes as any);
+      await controller.streamTrack('track-123', undefined, mockRes as any);
 
       // Assert
       expect(streamTrackUseCase.execute).toHaveBeenCalledWith({
@@ -179,7 +179,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', undefined, 'bytes=0-1023', mockRes as any);
+      await controller.streamTrack('track-123', 'bytes=0-1023', mockRes as any);
 
       // Assert
       expect(mockRes.raw.writeHead).toHaveBeenCalledWith(HttpStatus.PARTIAL_CONTENT, {
@@ -201,7 +201,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', undefined, 'bytes=1000-', mockRes as any);
+      await controller.streamTrack('track-123', 'bytes=1000-', mockRes as any);
 
       // Assert
       expect(mockRes.raw.writeHead).toHaveBeenCalledWith(HttpStatus.PARTIAL_CONTENT, {
@@ -219,7 +219,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', undefined, 'bytes=10000000-', mockRes as any);
+      await controller.streamTrack('track-123', 'bytes=10000000-', mockRes as any);
 
       // Assert
       expect(mockRes.status).toHaveBeenCalledWith(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -233,7 +233,7 @@ describe('StreamingController', () => {
       const mockRes = createMockResponse();
 
       // Act
-      await controller.streamTrack('track-123', undefined, 'bytes=1000-500', mockRes as any);
+      await controller.streamTrack('track-123', 'bytes=1000-500', mockRes as any);
 
       // Assert
       expect(mockRes.status).toHaveBeenCalledWith(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -246,7 +246,7 @@ describe('StreamingController', () => {
 
       // Act & Assert
       await expect(
-        controller.streamTrack('nonexistent', undefined, undefined, mockRes as any)
+        controller.streamTrack('nonexistent', undefined, mockRes as any)
       ).rejects.toThrow(NotFoundError);
     });
   });
