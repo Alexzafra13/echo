@@ -213,12 +213,6 @@
   color: var(--color-primary-500);
 }
 
-/* DJ Info Badge */
-.nowPlaying__djBadge {
-  margin-top: 12px;
-  justify-content: center;
-}
-
 /* Progress Bar */
 .nowPlaying__progress {
   width: 100%;

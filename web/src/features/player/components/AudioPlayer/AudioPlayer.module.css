@@ -213,11 +213,6 @@
   line-height: 1.3;
 }
 
-/* DJ Info Badge in player */
-.djBadge {
-  margin-top: 4px;
-}
-
 /* ===== Player Controls ===== */
 
 .playerControls {
@@ -772,11 +767,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  /* Hide DJ badge on mobile - not enough space */
-  .djBadge {
-    display: none;
   }
 
   /* Solo botón play/pause - derecha (grid col 2, row 1) */
