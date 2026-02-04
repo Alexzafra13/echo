@@ -5,6 +5,14 @@
  * used for intelligent mixing and track recommendations.
  */
 
+import {
+  keyToCamelot as camelotUtilKeyToCamelot,
+  areKeysCompatible,
+  getSimpleHarmonicScore,
+  isValidBpm,
+  isValidEnergy,
+} from '../utils/camelot.util';
+
 export type DjAnalysisStatus = 'pending' | 'analyzing' | 'completed' | 'failed';
 
 export interface DjAnalysisProps {
@@ -35,40 +43,29 @@ export interface DjAnalysisProps {
   updatedAt: Date;
 }
 
-// Camelot wheel mapping for harmonic mixing
-const KEY_TO_CAMELOT: Record<string, string> = {
-  // Minor keys (A column)
-  'Abm': '1A', 'G#m': '1A',
-  'Ebm': '2A', 'D#m': '2A',
-  'Bbm': '3A', 'A#m': '3A',
-  'Fm': '4A',
-  'Cm': '5A',
-  'Gm': '6A',
-  'Dm': '7A',
-  'Am': '8A',
-  'Em': '9A',
-  'Bm': '10A',
-  'F#m': '11A', 'Gbm': '11A',
-  'C#m': '12A', 'Dbm': '12A',
-  // Major keys (B column)
-  'B': '1B', 'Cb': '1B',
-  'F#': '2B', 'Gb': '2B',
-  'C#': '3B', 'Db': '3B',
-  'Ab': '4B', 'G#': '4B',
-  'Eb': '5B', 'D#': '5B',
-  'Bb': '6B', 'A#': '6B',
-  'F': '7B',
-  'C': '8B',
-  'G': '9B',
-  'D': '10B',
-  'A': '11B',
-  'E': '12B',
-};
+export interface DjAnalysisValidationError {
+  field: string;
+  message: string;
+}
 
 export class DjAnalysis {
   private constructor(private readonly props: DjAnalysisProps) {}
 
+  /**
+   * Create a new DjAnalysis with validation
+   * @throws Error if BPM or energy values are out of valid range
+   */
   static create(props: Omit<DjAnalysisProps, 'id' | 'createdAt' | 'updatedAt'>): DjAnalysis {
+    // Validate BPM if provided
+    if (props.bpm !== undefined && !isValidBpm(props.bpm)) {
+      throw new Error(`Invalid BPM value: ${props.bpm}. Must be between 30 and 300.`);
+    }
+
+    // Validate energy if provided
+    if (props.energy !== undefined && !isValidEnergy(props.energy)) {
+      throw new Error(`Invalid energy value: ${props.energy}. Must be between 0 and 1.`);
+    }
+
     const now = new Date();
     return new DjAnalysis({
       id: crypto.randomUUID(),
@@ -76,6 +73,28 @@ export class DjAnalysis {
       updatedAt: now,
       ...props,
     });
+  }
+
+  /**
+   * Validate analysis data without throwing
+   * @returns Array of validation errors (empty if valid)
+   */
+  static validate(props: Partial<DjAnalysisProps>): DjAnalysisValidationError[] {
+    const errors: DjAnalysisValidationError[] = [];
+
+    if (props.bpm !== undefined && !isValidBpm(props.bpm)) {
+      errors.push({ field: 'bpm', message: 'BPM must be between 30 and 300' });
+    }
+
+    if (props.energy !== undefined && !isValidEnergy(props.energy)) {
+      errors.push({ field: 'energy', message: 'Energy must be between 0 and 1' });
+    }
+
+    if (props.danceability !== undefined && (props.danceability < 0 || props.danceability > 1)) {
+      errors.push({ field: 'danceability', message: 'Danceability must be between 0 and 1' });
+    }
+
+    return errors;
   }
 
   static fromPrimitives(props: DjAnalysisProps): DjAnalysis {
@@ -150,34 +169,7 @@ export class DjAnalysis {
    * Compatible transitions: same key, +1/-1 on wheel, or relative major/minor
    */
   isHarmonicallyCompatibleWith(other: DjAnalysis): boolean {
-    if (!this.camelotKey || !other.camelotKey) {
-      return false;
-    }
-
-    const thisNum = parseInt(this.camelotKey.slice(0, -1));
-    const thisLetter = this.camelotKey.slice(-1);
-    const otherNum = parseInt(other.camelotKey.slice(0, -1));
-    const otherLetter = other.camelotKey.slice(-1);
-
-    // Same key
-    if (this.camelotKey === other.camelotKey) {
-      return true;
-    }
-
-    // Same number, different letter (relative major/minor)
-    if (thisNum === otherNum && thisLetter !== otherLetter) {
-      return true;
-    }
-
-    // Adjacent numbers on the wheel (+1 or -1, wrapping around 12)
-    if (thisLetter === otherLetter) {
-      const diff = Math.abs(thisNum - otherNum);
-      if (diff === 1 || diff === 11) {
-        return true;
-      }
-    }
-
-    return false;
+    return areKeysCompatible(this.camelotKey, other.camelotKey);
   }
 
   /**
@@ -206,46 +198,18 @@ export class DjAnalysis {
    * Get harmonic compatibility score (0-100)
    */
   getHarmonicScore(other: DjAnalysis): number {
+    // Return 0 when keys are missing (entity-specific behavior)
     if (!this.camelotKey || !other.camelotKey) {
       return 0;
     }
-
-    if (this.camelotKey === other.camelotKey) {
-      return 100; // Perfect match
-    }
-
-    const thisNum = parseInt(this.camelotKey.slice(0, -1));
-    const thisLetter = this.camelotKey.slice(-1);
-    const otherNum = parseInt(other.camelotKey.slice(0, -1));
-    const otherLetter = other.camelotKey.slice(-1);
-
-    // Relative major/minor
-    if (thisNum === otherNum && thisLetter !== otherLetter) {
-      return 90;
-    }
-
-    // Adjacent on wheel
-    if (thisLetter === otherLetter) {
-      const diff = Math.abs(thisNum - otherNum);
-      if (diff === 1 || diff === 11) {
-        return 80;
-      }
-    }
-
-    // Two steps away
-    const diff = Math.abs(thisNum - otherNum);
-    if (diff === 2 || diff === 10) {
-      return 50;
-    }
-
-    return 0; // Not compatible
+    return getSimpleHarmonicScore(this.camelotKey, other.camelotKey);
   }
 
   /**
    * Convert musical key to Camelot notation
    */
   static keyToCamelot(key: string): string | undefined {
-    return KEY_TO_CAMELOT[key];
+    return camelotUtilKeyToCamelot(key) ?? undefined;
   }
 
   isAnalyzed(): boolean {
