@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@shared/components/ErrorBoundary';
 import { PageLoader } from '@shared/components/PageLoader';
 import { useAuthStore } from '@shared/store';
 import { AudioPlayer } from '@features/player';
+import { GlobalProgressListeners } from '@shared/components/GlobalProgressListeners';
 
 // Lazy loaded pages for better initial bundle size
 const FirstLoginPage = lazy(() => import('@features/auth/pages/FirstLoginPage'));
@@ -257,8 +258,13 @@ function App() {
         </Switch>
       </Suspense>
 
-      {/* Audio Player - Only show when authenticated */}
-      {isAuthenticated && <AudioPlayer />}
+      {/* Global listeners & Audio Player - Only when authenticated */}
+      {isAuthenticated && (
+        <>
+          <GlobalProgressListeners />
+          <AudioPlayer />
+        </>
+      )}
     </ErrorBoundary>
   );
 }
