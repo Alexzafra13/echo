@@ -28,6 +28,17 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
       return;
     }
 
+    try {
+      const parsed = new URL(serverUrl.trim());
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        setError('La URL debe usar http:// o https://');
+        return;
+      }
+    } catch {
+      setError('La URL del servidor no es válida');
+      return;
+    }
+
     if (!invitationToken.trim()) {
       setError('El token de invitación es requerido');
       return;
@@ -36,6 +47,19 @@ export function ConnectServerModal({ onClose, onSuccess }: ConnectServerModalPro
     if (requestMutual && !localServerUrl.trim()) {
       setError('La URL de tu servidor es requerida para federación mutua');
       return;
+    }
+
+    if (requestMutual) {
+      try {
+        const parsed = new URL(localServerUrl.trim());
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          setError('La URL de tu servidor debe usar http:// o https://');
+          return;
+        }
+      } catch {
+        setError('La URL de tu servidor no es válida');
+        return;
+      }
     }
 
     try {

@@ -33,26 +33,29 @@ export function useGridDimensions(config: GridDimensionsConfig = {}): GridDimens
 
   useEffect(() => {
     const handleResize = () => {
-      const newDimensions = calculateDimensions(
-        window.innerWidth,
-        window.innerHeight,
-        maxRows,
-        containerPadding,
-        headerHeight
-      );
+      setDimensions(prev => {
+        const newDimensions = calculateDimensions(
+          window.innerWidth,
+          window.innerHeight,
+          maxRows,
+          containerPadding,
+          headerHeight
+        );
 
-      // Solo actualizar si realmente cambiaron las dimensiones
-      if (
-        newDimensions.columns !== dimensions.columns ||
-        newDimensions.rows !== dimensions.rows
-      ) {
-        setDimensions(newDimensions);
-      }
+        // Solo actualizar si realmente cambiaron las dimensiones
+        if (
+          newDimensions.columns === prev.columns &&
+          newDimensions.rows === prev.rows
+        ) {
+          return prev;
+        }
+        return newDimensions;
+      });
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [maxRows, containerPadding, headerHeight, dimensions.columns, dimensions.rows]);
+  }, [maxRows, containerPadding, headerHeight]);
 
   return dimensions;
 }

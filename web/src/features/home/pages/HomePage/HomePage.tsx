@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, ReactNode } from 'react';
+import { useEffect, useMemo, useState, useCallback, ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { HeroSection, AlbumGrid, PlaylistGrid, Sidebar } from '../../components';
 import { HeaderWithSearch } from '@shared/components/layout/Header';
@@ -264,7 +264,7 @@ export default function HomePage() {
   const displayedRecentlyPlayedAlbums = recentlyPlayedAlbums?.data?.slice(0, neededAlbums) || [];
 
   // Render a section by ID
-  const renderSection = (sectionId: HomeSectionId): ReactNode => {
+  const renderSection = useCallback((sectionId: HomeSectionId): ReactNode => {
     switch (sectionId) {
       case 'recent-albums':
         if (displayedRecentAlbums.length === 0) return null;
@@ -363,7 +363,13 @@ export default function HomePage() {
       default:
         return null;
     }
-  };
+  }, [
+    displayedRecentAlbums, displayedTopPlayedAlbums, displayedRecentlyPlayedAlbums,
+    artistMixPlaylists, genreMixPlaylists, userPlaylists, neededPlaylists,
+    favoriteStations, currentRadioStation, isPlaying, isRadioMode, radioMetadata,
+    playRadio, deleteFavoriteMutation, randomAlbums, handleRefreshRandom,
+    sharedAlbums, neededAlbums,
+  ]);
 
   return (
     <div className={styles.homePage}>
