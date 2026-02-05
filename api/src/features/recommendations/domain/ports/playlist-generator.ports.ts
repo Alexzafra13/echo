@@ -1,13 +1,23 @@
 import { AutoPlaylist, SmartPlaylistConfig, TrackScore, WaveMixConfig } from '../entities/track-score.entity';
 
+/** Metadata returned from smart playlist generation */
+export interface SmartPlaylistMetadata {
+  totalTracks: number;
+  avgScore: number;
+  config?: Partial<SmartPlaylistConfig>;
+}
+
+/** Result of smart playlist generation */
+export interface SmartPlaylistResult {
+  tracks: TrackScore[];
+  metadata: SmartPlaylistMetadata;
+}
+
 /**
  * Port for smart playlist generation
  */
 export interface ISmartPlaylistGenerator {
-  generateSmartPlaylist(
-    userId: string,
-    config: SmartPlaylistConfig,
-  ): Promise<{ tracks: TrackScore[]; metadata: any }>;
+  generateSmartPlaylist(userId: string, config: SmartPlaylistConfig): Promise<SmartPlaylistResult>;
 }
 
 /**

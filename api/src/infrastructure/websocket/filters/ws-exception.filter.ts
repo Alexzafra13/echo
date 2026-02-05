@@ -7,6 +7,12 @@ import { sanitizeForLog } from '@shared/utils/log-sanitizer.util';
 // Only log payloads in non-production environments
 const LOG_PAYLOADS = process.env.NODE_ENV !== 'production';
 
+/** Structure for WsException error object (when not a string) */
+interface WsExceptionError {
+  message?: string;
+  code?: string;
+}
+
 /**
  * WsExceptionFilter - Filtro global para excepciones de WebSocket
  *
@@ -48,9 +54,14 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
     let code = 'INTERNAL_ERROR';
 
     if (exception instanceof WsException) {
-      const error = (exception as WsException).getError();
-      message = typeof error === 'string' ? error : (error as any).message;
-      code = (error as any).code || 'WS_EXCEPTION';
+      const error = exception.getError();
+      if (typeof error === 'string') {
+        message = error;
+      } else {
+        const errorObj = error as WsExceptionError;
+        message = errorObj.message ?? 'WebSocket error';
+        code = errorObj.code ?? 'WS_EXCEPTION';
+      }
     } else if (exception instanceof Error) {
       message = exception.message;
       code = 'ERROR';

@@ -7,6 +7,7 @@ import { logger } from '@shared/utils/logger';
 const AUTOPLAY_BATCH_SIZE = 20; // Tracks to load per autoplay trigger
 const MAX_ARTISTS_TO_TRY = 5; // Max similar artists to try if first ones have no tracks
 const PREFETCH_THRESHOLD = 3; // Prefetch when X tracks remaining in queue
+const MAX_PLAYED_TRACK_IDS = 500; // Limit to prevent memory leak in long sessions
 
 interface PrefetchedResult {
   artistId: string;
@@ -117,6 +118,10 @@ export function useAutoplay() {
               // Only mark as played if not prefetching (will be marked when actually used)
               if (!isPrefetch) {
                 freshTracks.forEach(t => {
+                  // Prevent memory leak: clear old IDs if limit exceeded
+                  if (state.playedTrackIds.size >= MAX_PLAYED_TRACK_IDS) {
+                    state.playedTrackIds.clear();
+                  }
                   state.playedTrackIds.add(t.id);
                   allExcluded.add(t.id);
                 });
@@ -199,8 +204,13 @@ export function useAutoplay() {
       logger.warn('[Autoplay] Using prefetched tracks - instant playback!');
       const result = state.prefetchedResult;
 
-      // Mark tracks as played
-      result.tracks.forEach(t => state.playedTrackIds.add(t.id));
+      // Mark tracks as played (with memory leak prevention)
+      result.tracks.forEach(t => {
+        if (state.playedTrackIds.size >= MAX_PLAYED_TRACK_IDS) {
+          state.playedTrackIds.clear();
+        }
+        state.playedTrackIds.add(t.id);
+      });
 
       // Clear cache after use
       state.prefetchedResult = null;
