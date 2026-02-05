@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Smoke tests must start unauthenticated
+test.use({ storageState: { cookies: [], origins: [] } });
+
 /**
  * Smoke tests - Verificación básica de que la app funciona
  * Estos tests asumen que el setup ya está completo (ver CI setup step)

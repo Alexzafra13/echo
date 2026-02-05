@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Auth tests must start unauthenticated
+test.use({ storageState: { cookies: [], origins: [] } });
+
 /**
  * Tests de autenticación
  * Requieren que el setup esté completo (admin user creado)
