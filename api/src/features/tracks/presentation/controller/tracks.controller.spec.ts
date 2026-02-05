@@ -208,4 +208,50 @@ describe('TracksController', () => {
       });
     });
   });
+
+  describe('getDjShuffledTracks', () => {
+    it('debería retornar tracks con ordenamiento DJ', async () => {
+      // Arrange
+      getDjShuffledTracksUseCase.execute.mockResolvedValue({
+        data: [mockTrack.toPrimitives()],
+        seed: 0.5,
+        skip: 0,
+        take: 50,
+        hasMore: true,
+        total: 100,
+        djMode: true,
+      });
+
+      // Act
+      const result = await controller.getDjShuffledTracks('0.5', '0', '50');
+
+      // Assert
+      expect(getDjShuffledTracksUseCase.execute).toHaveBeenCalledWith({
+        seed: 0.5,
+        skip: 0,
+        take: 50,
+      });
+      expect(result.seed).toBe(0.5);
+      expect(result.djMode).toBe(true);
+    });
+
+    it('debería retornar djMode false cuando no hay suficiente análisis DJ', async () => {
+      // Arrange
+      getDjShuffledTracksUseCase.execute.mockResolvedValue({
+        data: [mockTrack.toPrimitives()],
+        seed: 0.5,
+        skip: 0,
+        take: 50,
+        hasMore: true,
+        total: 100,
+        djMode: false,
+      });
+
+      // Act
+      const result = await controller.getDjShuffledTracks('0.5');
+
+      // Assert
+      expect(result.djMode).toBe(false);
+    });
+  });
 });

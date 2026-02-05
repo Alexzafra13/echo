@@ -210,7 +210,7 @@ export class GetDjShuffledTracksUseCase {
       artistId: track.artistId ?? null,
       albumArtistId: track.albumArtistId ?? null,
       trackNumber: track.trackNumber ?? null,
-      discNumber: track.discNumber,
+      discNumber: track.discNumber ?? null,
       year: track.year ?? null,
       duration: track.duration ?? null,
       path: track.path,
