@@ -13,14 +13,13 @@ import { DJ_CONFIG } from '../../config/dj.config';
 /**
  * EssentiaAnalyzerService - Audio analysis using Essentia.js
  *
- * Essentia.js runs in a child process with stdout/stderr redirected to /dev/null
- * to suppress WASM debug output. Falls back to FFmpeg if Essentia fails.
+ * Essentia.js runs in a child process. Stdout is suppressed (WASM noise),
+ * stderr is piped to capture errors. Falls back to FFmpeg if Essentia fails.
  */
 @Injectable()
 export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy {
   private worker: ChildProcess | null = null;
   private workerReady = false;
-  private nullFd: number = -1; // Track FD for cleanup
   private spawningPromise: Promise<void> | null = null; // Prevent race condition
   private pendingRequests: Map<
     string,
@@ -40,17 +39,6 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
 
   async onModuleDestroy() {
     await this.terminateWorker();
-  }
-
-  private closeFd(): void {
-    if (this.nullFd >= 0) {
-      try {
-        fs.closeSync(this.nullFd);
-      } catch {
-        // Ignore close errors
-      }
-      this.nullFd = -1;
-    }
   }
 
   private async spawnWorker(): Promise<void> {
@@ -82,33 +70,34 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         return;
       }
 
-      // Open /dev/null for stdout/stderr suppression
-      try {
-        this.nullFd = fs.openSync('/dev/null', 'w');
-      } catch {
-        // Windows fallback - use 'ignore'
-        this.logger.debug('Using ignore for stdio (Windows or no /dev/null)');
-        this.nullFd = -1;
-      }
-
-      const stdioConfig: ('ipc' | 'ignore' | number)[] =
-        this.nullFd >= 0
-          ? ['ignore', this.nullFd, this.nullFd, 'ipc']
-          : ['ignore', 'ignore', 'ignore', 'ipc'];
-
+      // stdin: ignore, stdout: ignore (suppress WASM noise), stderr: pipe (capture errors), ipc
       try {
         this.worker = fork(workerPath, [], {
-          stdio: stdioConfig,
+          stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
           env: { ...process.env, NODE_ENV: process.env.NODE_ENV },
         });
       } catch (error) {
-        this.closeFd(); // Clean up FD on fork failure
         reject(error);
         return;
       }
 
+      // Capture stderr from worker for error visibility
+      if (this.worker.stderr) {
+        let stderrBuffer = '';
+        this.worker.stderr.on('data', (chunk: Buffer) => {
+          stderrBuffer += chunk.toString();
+          // Flush complete lines
+          const lines = stderrBuffer.split('\n');
+          stderrBuffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.trim()) {
+              this.logger.warn({ source: 'essentia-worker' }, `Worker stderr: ${line.trim()}`);
+            }
+          }
+        });
+      }
+
       const timeout = setTimeout(() => {
-        this.closeFd(); // Clean up FD on timeout
         reject(new Error('Worker startup timeout'));
         this.terminateWorker();
       }, DJ_CONFIG.analysis.workerStartupTimeout);
@@ -133,7 +122,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
             if (message.success && message.data) {
               res(message.data);
             } else {
-              this.logger.debug({ workerError: message.error, workerStack: message.stack }, 'Worker returned error');
+              this.logger.warn({ workerError: message.error, workerStack: message.stack }, 'Worker returned error for analysis');
               rej(new Error(message.error || 'Analysis failed'));
             }
           } else {
@@ -145,19 +134,17 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       this.worker.on('error', (error) => {
         this.logger.error({ error }, 'Essentia worker error');
         clearTimeout(timeout);
-        this.closeFd(); // Clean up FD on error
         this.workerReady = false;
         this.spawningPromise = null;
         reject(error);
       });
 
       this.worker.on('exit', (code) => {
-        this.closeFd(); // Clean up FD on exit
         this.workerReady = false;
         this.spawningPromise = null;
         this.worker = null;
         // Reject all pending requests and clear their timeouts (prevents memory leak)
-        for (const [requestId, { reject: rej, timeout: reqTimeout }] of this.pendingRequests) {
+        for (const [, { reject: rej, timeout: reqTimeout }] of this.pendingRequests) {
           clearTimeout(reqTimeout);
           rej(new Error('Worker exited unexpectedly'));
         }
@@ -183,7 +170,6 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       this.worker = null;
       this.workerReady = false;
     }
-    this.closeFd();
   }
 
   async isAvailable(): Promise<boolean> {
@@ -208,7 +194,7 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.debug({ error: errorMessage, filePath }, 'Essentia analysis failed, falling back to FFmpeg');
+      this.logger.warn({ error: errorMessage, filePath }, 'Essentia analysis failed, falling back to FFmpeg');
     }
 
     // Fallback to FFmpeg for energy only
