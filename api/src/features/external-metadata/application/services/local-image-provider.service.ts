@@ -2,6 +2,7 @@ import { Injectable} from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { isFileNotFoundError } from '@shared/types/error.types';
 
 /**
  * Tipos de imágenes que puede detectar el LocalImageProvider
@@ -143,7 +144,7 @@ export class LocalImageProvider {
 
       return result;
     } catch (error) {
-      if ((error as any).code === 'ENOENT') {
+      if (isFileNotFoundError(error)) {
         this.logger.debug(`Folder does not exist: ${artistFolderPath}`);
       } else {
         this.logger.error(`Error scanning folder ${artistFolderPath}: ${(error as Error).message}`);

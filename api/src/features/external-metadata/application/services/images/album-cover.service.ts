@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../../infrastructure/services/storage.service';
 import { getMimeType } from '@shared/utils';
+import { isFileNotFoundError } from '@shared/types/error.types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { eq, and, desc } from 'drizzle-orm';
@@ -132,7 +133,7 @@ export class AlbumCoverService {
       this.cache.set(cacheKey, result);
       return result;
     } catch (error) {
-      if ((error as any).code === 'ENOENT') {
+      if (isFileNotFoundError(error)) {
         throw new NotFoundException(`Custom cover file not found: ${customCover.filePath}`);
       }
       throw error;
@@ -268,7 +269,7 @@ export class AlbumCoverService {
         tag: this.cache.generateTag(filePath, stats.mtime),
       };
     } catch (error) {
-      if ((error as any).code === 'ENOENT') {
+      if (isFileNotFoundError(error)) {
         throw new NotFoundException(`Image file not found: ${filePath}`);
       }
       throw error;

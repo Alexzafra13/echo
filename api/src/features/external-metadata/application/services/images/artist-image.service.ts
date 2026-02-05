@@ -3,6 +3,7 @@ import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { StorageService } from '../../../infrastructure/services/storage.service';
 import { getMimeType } from '@shared/utils';
+import { isFileNotFoundError } from '@shared/types/error.types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { eq, and, desc } from 'drizzle-orm';
@@ -108,7 +109,7 @@ export class ArtistImageService {
       this.cache.set(cacheKey, result);
       return result;
     } catch (error) {
-      if ((error as any).code === 'ENOENT') {
+      if (isFileNotFoundError(error)) {
         throw new NotFoundException(`Custom image file not found: ${customImage.filePath}`);
       }
       throw error;

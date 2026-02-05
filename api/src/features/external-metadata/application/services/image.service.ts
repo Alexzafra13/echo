@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { getMimeType } from '@shared/utils';
+import { isFileNotFoundError } from '@shared/types/error.types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { eq } from 'drizzle-orm';
@@ -204,7 +205,7 @@ export class ImageService {
         tag: this.cache.generateTag(filePath, stats.mtime),
       };
     } catch (error) {
-      if ((error as any).code === 'ENOENT') {
+      if (isFileNotFoundError(error)) {
         throw new NotFoundException(`Image file not found: ${filePath}`);
       }
       throw error;
