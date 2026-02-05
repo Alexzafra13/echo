@@ -30,3 +30,4 @@ export { useModal } from './useModal';
 export type { UseModalReturn } from './useModal';
 export { useNotification } from './useNotification';
 export { useTrackDjAnalysis } from './useTrackDjAnalysis';
+export { useDjProgressListener } from './useDjProgressListener';
