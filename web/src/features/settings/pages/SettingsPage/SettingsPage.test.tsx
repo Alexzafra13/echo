@@ -47,6 +47,18 @@ vi.mock('../../hooks', () => ({
   useUpdateHomePreferences: () => mockUpdateHome,
 }));
 
+vi.mock('../../hooks/useLibraryAnalysisSettings', () => ({
+  useLibraryAnalysisSettings: () => ({
+    lufsEnabled: true,
+    djEnabled: true,
+    isLoading: false,
+    error: null,
+    setLufsEnabled: vi.fn(),
+    setDjEnabled: vi.fn(),
+    isSaving: false,
+  }),
+}));
+
 const mockPlayerState = {
   crossfade: { enabled: false, duration: 5, smartMode: false },
   setCrossfadeEnabled: vi.fn(),
