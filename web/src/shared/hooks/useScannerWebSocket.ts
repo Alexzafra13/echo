@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useWebSocketConnection } from './useWebSocketConnection';
+import { useDjProgressStore } from '@shared/store';
 
 /**
  * Estados del escaneo
@@ -103,6 +104,9 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
   const [lufsProgress, setLufsProgress] = useState<LufsProgress | null>(null);
   const [djProgress, setDjProgress] = useState<DjProgress | null>(null);
 
+  // Global store for DJ progress (accessible from header)
+  const updateDjProgressStore = useDjProgressStore((state) => state.updateProgress);
+
   // Handlers para eventos
   const handleProgress = useCallback((data: ScanProgress) => {
     setProgress(data);
@@ -125,7 +129,9 @@ export function useScannerWebSocket(scanId: string | null, token: string | null)
 
   const handleDjProgress = useCallback((data: DjProgress) => {
     setDjProgress(data);
-  }, []);
+    // Also update global store for header indicator
+    updateDjProgressStore(data);
+  }, [updateDjProgressStore]);
 
   // Eventos a registrar
   const events = useMemo(
