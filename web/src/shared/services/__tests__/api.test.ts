@@ -218,10 +218,19 @@ describe('API Client', () => {
         config: { headers: {}, _retry: false },
       } as unknown as AxiosError;
 
+      // Listen for SPA navigation event
+      let navigatedPath = '';
+      const handler = (e: Event) => {
+        navigatedPath = (e as CustomEvent<{ path: string }>).detail.path;
+      };
+      window.addEventListener('app:navigate', handler);
+
       await expect(responseErrorInterceptor(error)).rejects.toThrow();
 
+      window.removeEventListener('app:navigate', handler);
+
       expect(mockClearAuth).toHaveBeenCalled();
-      expect(window.location.href).toBe('/login');
+      expect(navigatedPath).toBe('/login');
     });
 
     it('should not retry if no refresh token available', async () => {
@@ -286,10 +295,19 @@ describe('API Client', () => {
         config: { headers: {} },
       } as unknown as AxiosError;
 
+      // Listen for SPA navigation event
+      let navigatedPath = '';
+      const handler = (e: Event) => {
+        navigatedPath = (e as CustomEvent<{ path: string }>).detail.path;
+      };
+      window.addEventListener('app:navigate', handler);
+
       await expect(responseErrorInterceptor(error)).rejects.toBeDefined();
 
+      window.removeEventListener('app:navigate', handler);
+
       expect(mockUpdateUser).toHaveBeenCalledWith({ mustChangePassword: true });
-      expect(window.location.href).toBe('/first-login');
+      expect(navigatedPath).toBe('/first-login');
     });
 
     it('should not redirect on 403 without mustChangePassword flag', async () => {
