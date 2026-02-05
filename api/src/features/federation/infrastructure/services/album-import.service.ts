@@ -402,6 +402,13 @@ export class AlbumImportService {
       const albumFolder = this.sanitizeFolderName(metadata.album.name);
       const albumPath = path.join(musicPath, artistFolder, albumFolder);
 
+      // Validate resolved path is within the music library (prevent path traversal)
+      const resolvedAlbumPath = path.resolve(albumPath);
+      const resolvedMusicPath = path.resolve(musicPath);
+      if (!resolvedAlbumPath.startsWith(resolvedMusicPath + path.sep)) {
+        throw new Error('Path traversal detected in album/artist name');
+      }
+
       await fs.mkdir(albumPath, { recursive: true });
 
       this.logger.info(
@@ -627,9 +634,16 @@ export class AlbumImportService {
     // Build filename: "01 - Title.flac"
     const trackNum = String(trackMeta.trackNumber || 0).padStart(2, '0');
     const safeTitle = this.sanitizeFileName(trackMeta.title);
-    const extension = trackMeta.suffix || 'mp3';
+    const extension = this.sanitizeExtension(trackMeta.suffix || 'mp3');
     const filename = `${trackNum} - ${safeTitle}.${extension}`;
     const trackPath = path.join(albumPath, filename);
+
+    // Validate resolved path is within the album directory (prevent path traversal)
+    const resolvedPath = path.resolve(trackPath);
+    const resolvedAlbumPath = path.resolve(albumPath);
+    if (!resolvedPath.startsWith(resolvedAlbumPath + path.sep)) {
+      throw new Error(`Path traversal detected for track "${trackMeta.title}"`);
+    }
 
     // Download the track file with timeout
     const streamUrl = `${server.baseUrl}${trackMeta.streamUrl}`;
@@ -742,23 +756,47 @@ export class AlbumImportService {
 
   /**
    * Sanitize folder name for filesystem
+   * Prevents path traversal by removing dangerous characters and patterns
    */
   private sanitizeFolderName(name: string): string {
-    return name
+    let sanitized = name
       .replace(/[<>:"/\\|?*]/g, '') // Remove invalid chars
+      .replace(/\.\./g, '') // Remove path traversal sequences
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
       .substring(0, 100); // Limit length
+
+    // Prevent folder names that are only dots (e.g. ".", "..")
+    if (/^\.+$/.test(sanitized) || sanitized.length === 0) {
+      sanitized = 'Unknown';
+    }
+
+    return sanitized;
   }
 
   /**
    * Sanitize file name for filesystem
+   * Prevents path traversal by removing dangerous characters and patterns
    */
   private sanitizeFileName(name: string): string {
-    return name
+    let sanitized = name
       .replace(/[<>:"/\\|?*]/g, '')
+      .replace(/\.\./g, '') // Remove path traversal sequences
       .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 200);
+
+    if (/^\.+$/.test(sanitized) || sanitized.length === 0) {
+      sanitized = 'Unknown';
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Sanitize file extension - only allow alphanumeric characters
+   */
+  private sanitizeExtension(ext: string): string {
+    return ext.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10) || 'mp3';
   }
 }

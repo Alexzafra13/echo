@@ -232,6 +232,10 @@ jobs:
         working-directory: web
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Build Web for Playwright
+        working-directory: web
+        run: pnpm build
+
       - name: Apply database schema
         working-directory: api
         env:

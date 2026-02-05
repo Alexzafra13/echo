@@ -7,6 +7,8 @@ import { logger } from '@shared/utils/logger';
 // Global EventSource instance to prevent multiple connections
 let globalEventSource: EventSource | null = null;
 let globalUserId: string | null = null;
+// Track cleanup timers for proper disposal
+const cleanupTimers = new Set<ReturnType<typeof setTimeout>>();
 
 /**
  * Hook for real-time album import progress via Server-Sent Events.
@@ -16,6 +18,7 @@ let globalUserId: string | null = null;
 export function useImportProgressSSE() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.accessToken);
   const {
     activeImports,
     isConnected,
@@ -28,7 +31,7 @@ export function useImportProgressSSE() {
   queryClientRef.current = queryClient;
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!user?.id || !token) {
       return;
     }
 
@@ -45,9 +48,9 @@ export function useImportProgressSSE() {
 
     globalUserId = user.id;
 
-    // Build SSE URL
+    // Build SSE URL - pass JWT token for authentication (EventSource can't send headers)
     const baseUrl = import.meta.env.VITE_API_URL || '';
-    const sseUrl = `${baseUrl}/api/federation/import/progress/stream?userId=${user.id}`;
+    const sseUrl = `${baseUrl}/api/federation/import/progress/stream?token=${encodeURIComponent(token)}`;
 
     logger.debug('[SSE] Connecting to import progress stream:', sseUrl);
 
@@ -75,9 +78,11 @@ export function useImportProgressSSE() {
 
         // Remove completed/failed imports after delay
         if (data.status === 'completed' || data.status === 'failed') {
-          setTimeout(() => {
+          const timer = setTimeout(() => {
+            cleanupTimers.delete(timer);
             removeImport(data.importId);
           }, 5000);
+          cleanupTimers.add(timer);
 
           // Invalidate queries
           if (data.status === 'completed') {
@@ -106,7 +111,7 @@ export function useImportProgressSSE() {
     return () => {
       // Don't close - keep connection alive for persistence
     };
-  }, [user?.id, setConnected, updateImport, removeImport]);
+  }, [user?.id, token, setConnected, updateImport, removeImport]);
 
   // Cleanup on logout
   useEffect(() => {
@@ -115,6 +120,8 @@ export function useImportProgressSSE() {
       globalEventSource.close();
       globalEventSource = null;
       globalUserId = null;
+      cleanupTimers.forEach(clearTimeout);
+      cleanupTimers.clear();
       setConnected(false);
     }
   }, [user?.id, setConnected]);

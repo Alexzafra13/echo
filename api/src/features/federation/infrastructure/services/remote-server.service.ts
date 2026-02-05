@@ -307,13 +307,6 @@ export class RemoteServerService {
   }
 
   /**
-   * Get stream URL for a track from a connected server
-   */
-  getRemoteStreamUrl(server: ConnectedServer, trackId: string): string {
-    return `${server.baseUrl}/api/federation/stream/${trackId}?token=${server.authToken}`;
-  }
-
-  /**
    * Stream a track from a connected server (proxy)
    * Returns the response stream and headers for piping to the client
    */
@@ -392,13 +385,6 @@ export class RemoteServerService {
       );
       return null;
     }
-  }
-
-  /**
-   * Get download URL for an album from a connected server
-   */
-  getRemoteAlbumDownloadUrl(server: ConnectedServer, albumId: string): string {
-    return `${server.baseUrl}/api/federation/albums/${albumId}/download?token=${server.authToken}`;
   }
 
   /**
