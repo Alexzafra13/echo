@@ -29,6 +29,7 @@ import {
 } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '@shared/guards/jwt-auth.guard';
 import { Public } from '@shared/decorators/public.decorator';
 import { CurrentUser } from '@shared/decorators/current-user.decorator';
@@ -62,6 +63,7 @@ export class FederationImportController {
     private readonly importProgressService: ImportProgressService,
     @Inject(FEDERATION_REPOSITORY)
     private readonly repository: IFederationRepository,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Post()
@@ -189,19 +191,36 @@ export class FederationImportController {
     return { success };
   }
 
-  // SSE endpoint - EventSource doesn't support headers, so auth via query param
+  // SSE endpoint - EventSource doesn't support headers, so auth via JWT in query param
   @Sse('progress/stream')
   @Public()
   @ApiOperation({
     summary: 'Stream de progreso de importación (SSE)',
     description: 'Server-Sent Events para recibir actualizaciones de progreso de importación en tiempo real. ' +
-      'Pasa userId como query param ya que EventSource no soporta headers.',
+      'Pasa token JWT como query param ya que EventSource no soporta headers.',
   })
   @ApiResponse({ status: 200, description: 'Stream de eventos de progreso' })
+  @ApiResponse({ status: 403, description: 'Token inválido o expirado' })
   streamImportProgress(
-    @Query('userId') userId: string,
+    @Query('token') token: string,
     @Req() request: FastifyRequest,
   ): Observable<MessageEvent> {
+    // Validate JWT token from query param (EventSource can't send headers)
+    let userId: string;
+    try {
+      const payload = this.jwtService.verify(token);
+      userId = payload.userId;
+    } catch {
+      this.logger.warn('SSE connection rejected: invalid or expired token');
+      return new Observable((subscriber) => {
+        subscriber.next({
+          type: 'error',
+          data: { message: 'Invalid or expired token' },
+        } as MessageEvent);
+        subscriber.complete();
+      });
+    }
+
     this.logger.info({ userId }, 'SSE client connected for import progress');
 
     return new Observable((subscriber) => {
