@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import WebSocketService from '@shared/services/websocket.service';
 
 // Current store version - increment when changing the persisted state structure
 const STORE_VERSION = 1;
@@ -59,13 +60,16 @@ export const useAuthStore = create<AuthState>()(
           user: state.user ? { ...state.user, ...userData } : null,
         })),
 
-      clearAuth: () =>
+      clearAuth: () => {
+        // Disconnect all WebSocket connections before clearing auth
+        WebSocketService.disconnectAll();
         set({
           user: null,
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
-        }),
+        });
+      },
 
       setTokens: (accessToken, refreshToken) =>
         set({ accessToken, refreshToken }),

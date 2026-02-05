@@ -5,6 +5,14 @@ import type { ApiErrorData } from '@shared/types/api.types';
 // Get API base URL from environment or default to same origin
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+/**
+ * Navigate without full page reload (SPA-friendly)
+ * Uses a custom event that the router listens to, preserving app state
+ */
+function navigateTo(path: string): void {
+  window.dispatchEvent(new CustomEvent('app:navigate', { detail: { path } }));
+}
+
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -108,7 +116,7 @@ apiClient.interceptors.response.use(
 
         // If refresh fails, clear auth and redirect to login
         useAuthStore.getState().clearAuth();
-        window.location.href = '/login';
+        navigateTo('/login');
         return Promise.reject(refreshError);
       }
     }
@@ -119,7 +127,7 @@ apiClient.interceptors.response.use(
       if (errorData?.mustChangePassword === true) {
         // Update user in store to ensure mustChangePassword is true
         useAuthStore.getState().updateUser({ mustChangePassword: true });
-        window.location.href = '/first-login';
+        navigateTo('/first-login');
         return Promise.reject(error);
       }
     }

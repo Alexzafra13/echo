@@ -3,8 +3,8 @@ import { UnauthorizedError } from '@shared/errors';
 import { StreamTokenService } from '../../infrastructure/services/stream-token.service';
 
 /**
- * Guard to validate stream tokens from query parameters
- * Used for audio streaming endpoints where JWT headers aren't supported (HTML5 audio)
+ * Guard to validate stream tokens from headers (preferred) or query parameters (fallback)
+ * Headers are preferred because query params are visible in logs, browser history and referrer headers
  */
 @Injectable()
 export class StreamTokenGuard implements CanActivate {
@@ -13,8 +13,10 @@ export class StreamTokenGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
 
-    // Extract token from query parameter
-    const token = request.query?.token;
+    // Prefer token from header, fallback to query parameter for backwards compatibility
+    const headerToken = request.headers?.['x-stream-token'];
+    const queryToken = request.query?.token;
+    const token = headerToken || queryToken;
 
     if (!token || typeof token !== 'string') {
       throw new UnauthorizedError('Token de streaming requerido');

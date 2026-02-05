@@ -70,14 +70,14 @@ echo ""
 # Verificar que el contenedor de postgres esté corriendo
 if ! docker ps | grep -q echo-postgres; then
     echo -e "${YELLOW}⚠️  El contenedor echo-postgres no está corriendo. Iniciando servicios...${NC}"
-    docker compose -f docker-compose.simple.yml up -d postgres
+    docker compose -f docker-compose.yml up -d postgres
     echo "   Esperando a que PostgreSQL esté listo..."
     sleep 10
 fi
 
 # Obtener credenciales de la base de datos
-POSTGRES_USER=$(docker inspect echo-postgres | grep -A 10 '"Env"' | grep POSTGRES_USER | cut -d'=' -f2 | tr -d '",' || echo "music_admin")
-POSTGRES_DB=$(docker inspect echo-postgres | grep -A 10 '"Env"' | grep POSTGRES_DB | cut -d'=' -f2 | tr -d '",' || echo "music_server")
+POSTGRES_USER=$(docker inspect echo-postgres | grep -A 10 '"Env"' | grep POSTGRES_USER | cut -d'=' -f2 | tr -d '",' || echo "echo")
+POSTGRES_DB=$(docker inspect echo-postgres | grep -A 10 '"Env"' | grep POSTGRES_DB | cut -d'=' -f2 | tr -d '",' || echo "echo")
 
 # 1. Restaurar PostgreSQL
 if [ -f "$BACKUP_PATH/postgres_dump.backup" ]; then
@@ -124,7 +124,7 @@ if [ -f "$BACKUP_PATH/uploads.tar.gz" ]; then
     echo -e "${GREEN}2️⃣  Restaurando uploads (covers, avatars)...${NC}"
 
     # Detener echo-app para evitar escrituras concurrentes
-    docker compose -f docker-compose.simple.yml stop echo-app 2>/dev/null || true
+    docker compose -f docker-compose.yml stop echo-app 2>/dev/null || true
 
     docker run --rm \
         -v echo-uploads:/target \
@@ -156,7 +156,7 @@ echo ""
 
 # Reiniciar servicios
 echo -e "${GREEN}4️⃣  Reiniciando servicios...${NC}"
-docker compose -f docker-compose.simple.yml restart
+docker compose -f docker-compose.yml restart
 echo -e "   ✅ Servicios reiniciados"
 echo ""
 
@@ -169,6 +169,6 @@ echo "   2. Inicia sesión con tus credenciales anteriores"
 echo "   3. Verifica que tus playlists y favoritos estén presentes"
 echo ""
 echo -e "${YELLOW}⚠️  Si algo salió mal:${NC}"
-echo "   - Revisa los logs: docker compose -f docker-compose.simple.yml logs -f"
+echo "   - Revisa los logs: docker compose -f docker-compose.yml logs -f"
 echo "   - El backup original sigue intacto en: $BACKUP_PATH"
 echo ""

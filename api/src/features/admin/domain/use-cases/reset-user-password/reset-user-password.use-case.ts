@@ -5,7 +5,7 @@ import {
   PASSWORD_SERVICE,
   IPasswordService,
 } from '@features/auth/domain/ports';
-import { NotFoundError } from '@shared/errors';
+import { NotFoundError, ForbiddenError } from '@shared/errors';
 import { PasswordUtil } from '@shared/utils/password.util';
 import { LogService, LogCategory } from '@features/logs/application/log.service';
 import { ResetUserPasswordInput, ResetUserPasswordOutput } from './reset-user-password.dto';
@@ -27,7 +27,12 @@ export class ResetUserPasswordUseCase {
       throw new NotFoundError('User not found');
     }
 
-    // 2. Generar nueva contraseña temporal alfanumérica
+    // 2. No permitir que un admin resetee su propia contraseña
+    if (input.adminId && input.userId === input.adminId) {
+      throw new ForbiddenError('No puedes resetear tu propia contraseña desde el panel de admin. Usa la opción de cambio de contraseña en tu perfil.');
+    }
+
+    // 3. Generar nueva contraseña temporal alfanumérica
     const temporaryPassword = PasswordUtil.generateTemporaryPassword();
     const passwordHash = await this.passwordService.hash(temporaryPassword);
 

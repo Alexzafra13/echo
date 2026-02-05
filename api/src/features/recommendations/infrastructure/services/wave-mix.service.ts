@@ -41,7 +41,7 @@ const DEFAULT_WAVE_MIX_CONFIG: WaveMixConfig = {
 @Injectable()
 export class WaveMixService {
   private readonly CACHE_KEY_PREFIX = 'auto-playlists';
-  private readonly CACHE_TTL_SECONDS = 24 * 60 * 60;
+  private readonly CACHE_TTL_SECONDS = 4 * 60 * 60; // 4 hours (refreshes with new listening data)
 
   constructor(
     @InjectPinoLogger(WaveMixService.name)
@@ -218,6 +218,16 @@ export class WaveMixService {
    */
   async refreshAutoPlaylists(userId: string): Promise<AutoPlaylist[]> {
     return this.getAllAutoPlaylists(userId, true);
+  }
+
+  /**
+   * Invalidate cached playlists for a user
+   * Call this when user interactions change (new plays, favorites, etc.)
+   */
+  async invalidateCache(userId: string): Promise<void> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${userId}`;
+    await this.redis.del(cacheKey);
+    this.logger.debug({ userId }, 'Invalidated playlist cache');
   }
 
   /**

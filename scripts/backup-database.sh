@@ -26,10 +26,10 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Configuration
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.simple.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
-POSTGRES_USER="${POSTGRES_USER:-music_admin}"
-POSTGRES_DB="${POSTGRES_DB:-music_server}"
+POSTGRES_USER="${POSTGRES_USER:-echo}"
+POSTGRES_DB="${POSTGRES_DB:-echo}"
 RETENTION_DAYS="${RETENTION_DAYS:-7}"
 AUTO_MODE=false
 RESTORE_MODE=false

@@ -6,6 +6,7 @@
 #
 #   1. Configura tus rutas de música abajo (busca ">>> TU MÚSICA")
 #   2. Ejecuta: docker compose up -d
+#      (Las contraseñas se generan automáticamente en el primer arranque)
 #   3. Abre: http://localhost:4567
 #
 # DESCARGAR ESTE ARCHIVO:
@@ -43,9 +44,9 @@ services:
 
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-echo}:${POSTGRES_PASSWORD:-echo_music_server}@postgres:5432/${POSTGRES_DB:-echo}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-echo}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-echo}
       REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-echo_music_server}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       DATA_PATH: /app/data
     depends_on:
       postgres:
@@ -71,10 +72,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-echo}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-echo_music_server}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-echo}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-echo}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-echo}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -90,11 +91,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: echo-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD:-echo_music_server}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD:-echo_music_server}", "ping"]
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5

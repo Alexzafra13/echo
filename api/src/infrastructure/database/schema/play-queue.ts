@@ -49,6 +49,7 @@ export const playQueueTracks = pgTable(
   (table) => [
     unique('play_queue_tracks_queue_order_unique').on(table.queueId, table.queueOrder),
     index('idx_play_queue_tracks_queue').on(table.queueId, table.queueOrder),
+    index('idx_play_queue_tracks_track').on(table.trackId),
   ],
 );
 
