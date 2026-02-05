@@ -23,15 +23,23 @@ async function initEssentia() {
     const EssentiaModule = require('essentia.js');
 
     // Handle both ESM default export and CommonJS exports
-    const EssentiaWASM = EssentiaModule.EssentiaWASM || EssentiaModule.default?.EssentiaWASM;
+    let EssentiaWASM = EssentiaModule.EssentiaWASM || EssentiaModule.default?.EssentiaWASM;
     const Essentia = EssentiaModule.Essentia || EssentiaModule.default?.Essentia;
 
     if (!EssentiaWASM || !Essentia) {
       throw new Error(`Essentia module not found. Keys: ${Object.keys(EssentiaModule).join(', ')}`);
     }
 
-    // EssentiaWASM is already the initialized WASM module (not a factory function)
-    // Just pass it directly to the Essentia constructor
+    // EssentiaWASM may be a factory function that returns a promise (depends on version)
+    // Handle both pre-initialized module and factory function patterns
+    if (typeof EssentiaWASM === 'function' && !EssentiaWASM.RhythmExtractor2013) {
+      try {
+        EssentiaWASM = await EssentiaWASM();
+      } catch (wasmError) {
+        throw new Error(`WASM factory initialization failed: ${wasmError.message || wasmError}`);
+      }
+    }
+
     essentia = new Essentia(EssentiaWASM);
     return true;
   } catch (error) {

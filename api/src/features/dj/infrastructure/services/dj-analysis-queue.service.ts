@@ -232,16 +232,18 @@ export class DjAnalysisQueueService implements OnModuleInit {
       let analyzedBpm = 0;
       let analyzedKey = 'Unknown';
       let energy = 0.5;
+      let danceability: number | null = null;
 
       try {
         const result = await this.analyzer.analyze(job.filePath);
         analyzedBpm = result.bpm;
         analyzedKey = result.key;
         energy = result.energy;
+        danceability = result.danceability ?? null;
       } catch (error) {
-        this.logger.debug(
-          { error: error instanceof Error ? error.message : 'Unknown' },
-          'Audio analysis failed, using defaults',
+        this.logger.warn(
+          { trackId: job.trackId, error: error instanceof Error ? error.message : 'Unknown' },
+          'Audio analysis failed, using defaults (bpm=0, key=Unknown, energy=0.5)',
         );
       }
 
@@ -260,7 +262,7 @@ export class DjAnalysisQueueService implements OnModuleInit {
           key: finalKey,
           camelotKey: camelotKey || null,
           energy: energy,
-          danceability: null,
+          danceability,
           status: 'completed',
           analyzedAt: new Date(),
           updatedAt: new Date(),

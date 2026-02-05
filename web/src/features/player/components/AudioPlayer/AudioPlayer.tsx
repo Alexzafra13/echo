@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useId } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
