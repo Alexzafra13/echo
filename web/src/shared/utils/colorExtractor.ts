@@ -155,11 +155,6 @@ function loadImageAndExtractColor(
 ) {
   const img = new Image();
 
-  // Only set crossOrigin for external URLs
-  if (!imageSrc.startsWith('blob:')) {
-    img.crossOrigin = 'Anonymous';
-  }
-
   img.onload = () => {
     try {
       // Create canvas

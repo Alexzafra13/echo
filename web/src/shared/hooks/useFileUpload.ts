@@ -96,6 +96,11 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRet
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
       };
+      reader.onerror = () => {
+        const errorMsg = 'Error al leer el archivo para la vista previa.';
+        setError(errorMsg);
+        onError?.(errorMsg);
+      };
       reader.readAsDataURL(file);
     },
     [allowedTypes, maxSize, onError]

@@ -173,10 +173,7 @@ export default function RadioPage() {
   }, [searchQuery]);
 
   const handleSearchBlur = useCallback(() => {
-    // Don't close immediately - let click events fire first
-    setTimeout(() => {
-      // Panel will auto-close when query is cleared or user clicks result
-    }, 200);
+    // Panel will auto-close when query is cleared or user clicks result
   }, []);
 
   const handleResultSelect = useCallback((station: RadioStation | RadioBrowserStation) => {

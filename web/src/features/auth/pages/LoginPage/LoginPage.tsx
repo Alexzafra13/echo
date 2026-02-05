@@ -35,7 +35,11 @@ export default function LoginPage() {
 
     // If queue is empty, reshuffle all backgrounds
     if (queue.length === 0) {
-      queue = [...LOGIN_BACKGROUNDS].sort(() => Math.random() - 0.5);
+      queue = [...LOGIN_BACKGROUNDS];
+      for (let i = queue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [queue[i], queue[j]] = [queue[j], queue[i]];
+      }
     }
 
     // Take the next background from the queue

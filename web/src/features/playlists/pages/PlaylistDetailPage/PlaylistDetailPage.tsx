@@ -47,12 +47,17 @@ export default function PlaylistDetailPage() {
     const tracks = playlistTracks?.tracks || [];
     const firstAlbumId = tracks.find((track) => track.albumId)?.albumId;
 
-    if (firstAlbumId) {
-      const coverUrl = `/api/albums/${firstAlbumId}/cover`;
-      extractDominantColor(coverUrl)
-        .then((color) => setDominantColor(color))
-        .catch(() => {/* Color extraction failed, use default */});
-    }
+    if (!firstAlbumId) return;
+
+    let cancelled = false;
+    const coverUrl = `/api/albums/${firstAlbumId}/cover`;
+    extractDominantColor(coverUrl)
+      .then((color) => {
+        if (!cancelled) setDominantColor(color);
+      })
+      .catch(() => {/* Color extraction failed, use default */});
+
+    return () => { cancelled = true; };
   }, [playlistTracks]);
 
   const handlePlayAll = () => {
@@ -96,9 +101,7 @@ export default function PlaylistDetailPage() {
     try {
       await removeTrackMutation.mutateAsync({ playlistId: id, trackId: track.id });
     } catch (error) {
-      if (import.meta.env.DEV) {
-        logger.error('Error removing track from playlist:', error);
-      }
+      logger.error('Error removing track from playlist:', error);
     }
   };
 
@@ -111,11 +114,6 @@ export default function PlaylistDetailPage() {
     } catch (error) {
       logger.error('Error deleting playlist:', error);
     }
-  };
-
-  const handleDownloadPlaylist = () => {
-    // TODO: Implement playlist download
-    logger.debug('Download playlist - to be implemented');
   };
 
   const handleToggleVisibility = async () => {
@@ -296,7 +294,6 @@ export default function PlaylistDetailPage() {
                 <PlaylistOptionsMenu
                   onEdit={editModal.open}
                   onToggleVisibility={handleToggleVisibility}
-                  onDownload={handleDownloadPlaylist}
                   onDelete={deleteModal.open}
                   isPublic={playlist.public}
                 />

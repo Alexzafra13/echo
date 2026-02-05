@@ -146,6 +146,9 @@ export default function SharedAlbumPage() {
       img.onload = () => {
         setCoverDimensions({ width: img.naturalWidth, height: img.naturalHeight });
       };
+      img.onerror = () => {
+        setCoverDimensions(null);
+      };
       img.src = coverUrl;
     } else if (!imageLightboxModal.isOpen) {
       setCoverDimensions(null);

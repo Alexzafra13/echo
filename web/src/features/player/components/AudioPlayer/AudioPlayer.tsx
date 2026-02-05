@@ -124,21 +124,23 @@ export function AudioPlayer() {
     if (isRadioMode) {
       coverUrl = currentRadioStation?.favicon || undefined;
     } else if (currentTrack) {
-      // Try multiple sources for the cover URL
       coverUrl = currentTrack.album?.cover ||
                  currentTrack.coverImage ||
-                 // If we have albumId, construct the URL
                  (currentTrack.albumId ? `/api/images/albums/${currentTrack.albumId}/cover` : undefined);
     }
 
-    if (coverUrl) {
-      const finalCoverUrl = isRadioMode ? coverUrl : getCoverUrl(coverUrl);
-      extractDominantColor(finalCoverUrl)
-        .then(color => setDominantColor(color))
-        .catch(() => setDominantColor('0, 0, 0'));
-    } else {
+    if (!coverUrl) {
       setDominantColor('0, 0, 0');
+      return;
     }
+
+    let cancelled = false;
+    const finalCoverUrl = isRadioMode ? coverUrl : getCoverUrl(coverUrl);
+    extractDominantColor(finalCoverUrl)
+      .then(color => { if (!cancelled) setDominantColor(color); })
+      .catch(() => { if (!cancelled) setDominantColor('0, 0, 0'); });
+
+    return () => { cancelled = true; };
   }, [currentTrack, currentRadioStation, isRadioMode]);
 
   // Swipe gesture handlers for mobile

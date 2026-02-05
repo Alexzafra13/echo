@@ -82,8 +82,8 @@ function App() {
   // Listen for navigation events from non-React code (e.g., axios interceptors)
   useEffect(() => {
     const handler = (e: Event) => {
-      const path = (e as CustomEvent<{ path: string }>).detail.path;
-      setLocation(path);
+      if (!(e instanceof CustomEvent) || !e.detail?.path) return;
+      setLocation(e.detail.path);
     };
     window.addEventListener('app:navigate', handler);
     return () => window.removeEventListener('app:navigate', handler);

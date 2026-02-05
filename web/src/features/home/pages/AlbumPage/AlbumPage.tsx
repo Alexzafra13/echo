@@ -64,26 +64,18 @@ export default function AlbumPage() {
     ? getAlbumCoverUrl(id, coverMeta.cover.tag)
     : getCoverUrl(album?.coverImage);
 
-  // Debug: Log cover metadata changes
-  useEffect(() => {
-    if (coverMeta) {
-      logger.debug('[AlbumPage] 📊 Cover metadata updated:', {
-        albumId: id,
-        exists: coverMeta.cover.exists,
-        tag: coverMeta.cover.tag,
-        lastModified: coverMeta.cover.lastModified,
-        source: coverMeta.cover.source
-      });
-    }
-  }, [coverMeta, id]);
-
   // Extract dominant color from album cover
   useEffect(() => {
-    if (coverUrl) {
-      extractDominantColor(coverUrl)
-        .then(color => setDominantColor(color))
-        .catch(() => {/* Color extraction failed, use default */});
-    }
+    if (!coverUrl) return;
+
+    let cancelled = false;
+    extractDominantColor(coverUrl)
+      .then(color => {
+        if (!cancelled) setDominantColor(color);
+      })
+      .catch(() => {/* Color extraction failed, use default */});
+
+    return () => { cancelled = true; };
   }, [coverUrl]);
 
   // Preload cover image when URL changes (cache busting handled by coverKey)
@@ -93,17 +85,8 @@ export default function AlbumPage() {
         ? `${coverUrl}&_cb=${Date.now()}`
         : `${coverUrl}?_cb=${Date.now()}`;
 
-      logger.debug('[AlbumPage] 🔄 Preloading cover with cache bust:', cacheBustUrl);
-      logger.debug('[AlbumPage] 📌 Current tag:', coverMeta.cover.tag);
-
       const img = new window.Image();
       img.src = cacheBustUrl;
-      img.onload = () => {
-        logger.debug('[AlbumPage] ✅ Cover image preloaded successfully');
-      };
-      img.onerror = () => {
-        logger.error('[AlbumPage] ❌ Failed to preload cover');
-      };
     }
   }, [coverUrl, coverMeta]);
 
@@ -169,15 +152,9 @@ export default function AlbumPage() {
     infoModal.open();
   };
 
-  const handleAddAlbumToPlaylist = () => {
-    // TODO: Implement add album to playlist
-    logger.debug('Add album to playlist - to be implemented');
-  };
-
   const handleDownloadAlbum = async () => {
     if (!album || !id) return;
     try {
-      logger.info('Starting album download:', { albumId: id, title: album.title });
       await downloadService.downloadAlbum(id, album.title, album.artist);
     } catch (error) {
       logger.error('Failed to download album:', error);
@@ -320,7 +297,6 @@ export default function AlbumPage() {
                 </Button>
                 <AlbumOptionsMenu
                   onShowInfo={handleShowAlbumInfo}
-                  onAddToPlaylist={handleAddAlbumToPlaylist}
                   onDownload={handleDownloadAlbum}
                   onChangeCover={handleChangeCover}
                 />

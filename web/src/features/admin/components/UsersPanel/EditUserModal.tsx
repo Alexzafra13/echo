@@ -14,7 +14,6 @@ interface EditUserModalProps {
 
 export function EditUserModal({ user, onClose }: EditUserModalProps) {
   const [formData, setFormData] = useState({
-    username: user.username,
     isAdmin: user.isAdmin,
     isActive: user.isActive,
   });
@@ -22,21 +21,8 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
 
   const updateUserMutation = useUpdateUser();
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.username || formData.username.trim().length === 0) {
-      newErrors.username = 'El nombre de usuario es obligatorio';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
 
     try {
       await updateUserMutation.mutateAsync({
@@ -68,7 +54,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
           {user.isSystemAdmin && (
             <div className={styles.infoBox}>
               <p>
-                Este es el administrador principal del sistema. Solo se puede cambiar el nombre de usuario.
+                Este es el administrador principal del sistema. No se pueden cambiar sus permisos.
               </p>
             </div>
           )}
@@ -80,17 +66,12 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
             <input
               id="username"
               type="text"
-              className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              placeholder="usuario123"
-              autoFocus
+              className={styles.input}
+              value={user.username}
+              disabled
             />
-            {errors.username && (
-              <span className={styles.errorText}>{errors.username}</span>
-            )}
             <p className={styles.helpText}>
-              El nombre de usuario debe ser único en el sistema
+              El nombre de usuario no se puede cambiar
             </p>
           </div>
 

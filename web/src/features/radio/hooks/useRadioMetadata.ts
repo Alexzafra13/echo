@@ -33,6 +33,7 @@ export function useRadioMetadata({
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const connectSSERef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     // Clear metadata immediately when station changes
@@ -117,6 +118,9 @@ export function useRadioMetadata({
       }
     };
 
+    // Store connectSSE ref for visibility handler
+    connectSSERef.current = connectSSE;
+
     // Initial connection
     connectSSE();
 
@@ -144,9 +148,10 @@ export function useRadioMetadata({
           eventSourceRef.current = null;
           setIsConnected(false);
         }
-      } else if (isPlaying && stationUuid && streamUrl) {
+      } else if (isPlaying && stationUuid && streamUrl && !eventSourceRef.current) {
         // User came back, reconnect if still playing
-        // The main useEffect will handle reconnection
+        reconnectAttemptsRef.current = 0;
+        connectSSERef.current?.();
       }
     };
 

@@ -447,6 +447,8 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       audioA.removeEventListener('playing', handlePlaying);
       audioA.removeEventListener('stalled', handleStalled);
       audioA.pause();
+      audioA.src = '';
+      audioA.load();
 
       // Cleanup audio B
       audioB.removeEventListener('timeupdate', handleTimeUpdateB);
@@ -459,6 +461,11 @@ export function useAudioElements(options: UseAudioElementsOptions = {}) {
       audioB.removeEventListener('playing', handlePlaying);
       audioB.removeEventListener('stalled', handleStalled);
       audioB.pause();
+      audioB.src = '';
+      audioB.load();
+
+      audioRefA.current = null;
+      audioRefB.current = null;
     };
   }, [initialVolume]);
 
