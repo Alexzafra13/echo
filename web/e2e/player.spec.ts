@@ -8,7 +8,6 @@ import { test, expect } from '@playwright/test';
 test.describe('Reproductor de Audio', () => {
   test('la página home carga correctamente después de login', async ({ page }) => {
     await page.goto('/home');
-    await page.waitForLoadState('networkidle');
 
     // Verificar que estamos en home y la página cargó
     expect(page.url()).toContain('/home');
@@ -20,7 +19,6 @@ test.describe('Reproductor de Audio', () => {
 
   test('página de álbumes carga correctamente', async ({ page }) => {
     await page.goto('/albums');
-    await page.waitForLoadState('networkidle');
 
     expect(page.url()).toContain('/albums');
 
@@ -31,7 +29,6 @@ test.describe('Reproductor de Audio', () => {
 
   test('página de artistas carga correctamente', async ({ page }) => {
     await page.goto('/artists');
-    await page.waitForLoadState('networkidle');
 
     expect(page.url()).toContain('/artists');
 
@@ -41,14 +38,12 @@ test.describe('Reproductor de Audio', () => {
 
   test('click en track muestra en el player', async ({ page }) => {
     await page.goto('/albums');
-    await page.waitForLoadState('networkidle');
 
     // Navegar a un álbum
     const albumCard = page.locator('[class*="album"], [class*="card"]').filter({ has: page.locator('img') }).first();
 
     if (await albumCard.isVisible({ timeout: 5000 }).catch(() => false)) {
       await albumCard.click();
-      await page.waitForLoadState('networkidle');
 
       // Buscar y hacer click en un track
       const track = page.locator('[class*="track"], [class*="song"], tr').filter({ has: page.locator('button, [class*="play"]') }).first();
@@ -78,7 +73,6 @@ test.describe('Reproductor de Audio', () => {
 test.describe('Radio', () => {
   test('página de radio carga correctamente', async ({ page }) => {
     await page.goto('/radio');
-    await page.waitForLoadState('networkidle');
 
     expect(page.url()).toContain('/radio');
 

@@ -8,7 +8,6 @@ test.describe('Gestión de Usuarios', () => {
   test('modal de crear usuario se abre correctamente', async ({ page }) => {
     // 1. Ir al panel de usuarios
     await page.goto('/admin?tab=users');
-    await page.waitForLoadState('networkidle');
     await expect(page.getByText('Gestión de Usuarios')).toBeVisible({ timeout: 15000 });
 
     // 2. Abrir modal de crear usuario
@@ -23,7 +22,6 @@ test.describe('Búsqueda', () => {
   test('página de búsqueda carga correctamente', async ({ page }) => {
     // Navegar directamente a búsqueda con query
     await page.goto('/search?q=test');
-    await page.waitForLoadState('networkidle');
 
     // Verificar que estamos en la página de búsqueda
     expect(page.url()).toContain('/search');
@@ -37,30 +35,25 @@ test.describe('Búsqueda', () => {
 test.describe('Navegación principal', () => {
   test('navegación entre secciones principales', async ({ page }) => {
     await page.goto('/home');
-    await page.waitForLoadState('networkidle');
 
     // Home carga
     expect(page.url()).toContain('/home');
 
     // Navegar a Albums
     await page.goto('/albums');
-    await page.waitForLoadState('networkidle');
     expect(page.url()).toContain('/albums');
 
     // Navegar a Artists
     await page.goto('/artists');
-    await page.waitForLoadState('networkidle');
     expect(page.url()).toContain('/artists');
 
     // Navegar a Playlists
     await page.goto('/playlists');
-    await page.waitForLoadState('networkidle');
     expect(page.url()).toContain('/playlists');
   });
 
   test('sidebar o navegación muestra links principales', async ({ page }) => {
     await page.goto('/home');
-    await page.waitForLoadState('networkidle');
 
     // Buscar navegación
     const nav = page.locator('nav, aside, [class*="sidebar"], [class*="nav"]').first();
@@ -78,7 +71,6 @@ test.describe('Navegación principal', () => {
 test.describe('Playlists', () => {
   test('página de playlists carga correctamente', async ({ page }) => {
     await page.goto('/playlists');
-    await page.waitForLoadState('networkidle');
 
     expect(page.url()).toContain('/playlists');
 
@@ -94,7 +86,6 @@ test.describe('Playlists', () => {
     const playlistName = `Test Playlist ${Date.now()}`;
 
     await page.goto('/playlists');
-    await page.waitForLoadState('networkidle');
 
     // Buscar botón de crear
     const createButton = page.getByRole('button', { name: /Crear|Nueva|New|Create/i });
@@ -112,7 +103,6 @@ test.describe('Playlists', () => {
 
         // Guardar
         await page.getByRole('button', { name: /Crear|Guardar|Save|Submit/i }).click();
-        await page.waitForLoadState('networkidle');
 
         // Verificar que se creó
         const created = await page.getByText(playlistName).isVisible({ timeout: 5000 }).catch(() => false);
@@ -125,7 +115,6 @@ test.describe('Playlists', () => {
 test.describe('Perfil de usuario', () => {
   test('página de perfil carga correctamente', async ({ page }) => {
     await page.goto('/profile');
-    await page.waitForLoadState('networkidle');
 
     expect(page.url()).toContain('/profile');
 
@@ -138,7 +127,6 @@ test.describe('Perfil de usuario', () => {
 
   test('página de configuración carga correctamente', async ({ page }) => {
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
 
     expect(page.url()).toContain('/settings');
 
