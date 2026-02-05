@@ -139,9 +139,9 @@ RUN printf '#!/bin/sh\nset -e\n\n# Fix data directory permissions\nchown -R echo
 ENV PORT=4567
 EXPOSE ${PORT}
 
-# Health check
+# Health check (wget is included in alpine, much lighter than spawning node ~30MB)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "const port = process.env.PORT || 4567; require('http').get('http://localhost:' + port + '/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD wget -qO- http://localhost:${PORT:-4567}/api/health || exit 1
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]

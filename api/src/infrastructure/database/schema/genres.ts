@@ -38,6 +38,7 @@ export const artistGenres = pgTable(
   (table) => [
     primaryKey({ columns: [table.artistId, table.genreId] }),
     index('idx_artist_genres_genre').on(table.genreId),
+    index('idx_artist_genres_artist').on(table.artistId),
   ],
 );
 
@@ -53,6 +54,7 @@ export const albumGenres = pgTable(
   (table) => [
     primaryKey({ columns: [table.albumId, table.genreId] }),
     index('idx_album_genres_genre').on(table.genreId),
+    index('idx_album_genres_album').on(table.albumId),
   ],
 );
 
@@ -68,6 +70,7 @@ export const trackGenres = pgTable(
   (table) => [
     primaryKey({ columns: [table.trackId, table.genreId] }),
     index('idx_track_genres_genre').on(table.genreId),
+    index('idx_track_genres_track').on(table.trackId),
   ],
 );
 

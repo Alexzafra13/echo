@@ -1,4 +1,4 @@
-import { forwardRef, InputHTMLAttributes, ReactNode, useState, useMemo } from 'react';
+import { forwardRef, InputHTMLAttributes, ReactNode, useState, useMemo, useId } from 'react';
 import clsx from 'clsx';
 import { Eye, EyeOff } from 'lucide-react';
 import styles from './Input.module.css';
@@ -29,7 +29,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+    const generatedId = useId();
+    const inputId = id || generatedId;
     const [showPassword, setShowPassword] = useState(false);
     const [hasValue, setHasValue] = useState(!!props.value || !!props.defaultValue);
 

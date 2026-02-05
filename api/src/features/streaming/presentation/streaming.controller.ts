@@ -30,8 +30,8 @@ import * as fs from 'fs';
 import { ReadStream } from 'fs';
 import { ServerResponse } from 'http';
 
-// Timeout para streams en milisegundos (30 minutos para tracks completos)
-const STREAM_TIMEOUT_MS = 30 * 60 * 1000;
+// Timeout para streams en milisegundos (10 minutos - suficiente para cualquier track)
+const STREAM_TIMEOUT_MS = 10 * 60 * 1000;
 
 // Streaming de audio con soporte para Range requests (seek/skip)
 @ApiTags('streaming')

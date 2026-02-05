@@ -21,28 +21,41 @@ mkdir -p "$DATA_DIR/logs"
 echo "📁 Data directory: $DATA_DIR"
 
 # ============================================
-# 1. Auto-generate JWT Secrets (Jellyfin-style)
+# 1. Auto-generate ALL secrets (Jellyfin-style)
 # ============================================
-# Generate secrets if they don't exist OR if they're empty (FIRST RUN ONLY)
-if [ ! -f "$SECRETS_FILE" ] || [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = '""' ] || [ "$JWT_SECRET" = "''" ]; then
-  echo "🔐 Generating secure JWT secrets..."
+# Generate secrets if they don't exist (FIRST RUN ONLY)
+if [ ! -f "$SECRETS_FILE" ]; then
+  echo "🔐 First run detected - generating secure secrets..."
 
   # Generate cryptographically secure secrets
   JWT_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
   JWT_REFRESH_SECRET=$(head -c 64 /dev/urandom | base64 | tr -d '\n')
 
-  # Save to persistent volume
+  # Auto-generate DB and Redis passwords if not provided via environment
+  if [ -z "$POSTGRES_PASSWORD" ]; then
+    POSTGRES_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
+    echo "🔑 Auto-generated PostgreSQL password"
+  fi
+  if [ -z "$REDIS_PASSWORD" ]; then
+    REDIS_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -d '\n/+=')
+    echo "🔑 Auto-generated Redis password"
+  fi
+
+  # Save to persistent volume with restricted permissions
   cat > "$SECRETS_FILE" << EOF
-# Auto-generated JWT secrets (DO NOT EDIT MANUALLY)
+# Auto-generated secrets (DO NOT EDIT MANUALLY)
 # Generated on: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 JWT_SECRET="$JWT_SECRET"
 JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET"
+POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
+REDIS_PASSWORD="$REDIS_PASSWORD"
 EOF
+  chmod 600 "$SECRETS_FILE"
 
-  echo "✅ Secure JWT secrets generated"
+  echo "✅ Secure secrets generated and saved"
   echo ""
 else
-  echo "ℹ️  Using existing JWT secrets"
+  echo "ℹ️  Using existing secrets"
   echo ""
 fi
 
@@ -51,13 +64,13 @@ set -a
 . "$SECRETS_FILE"
 set +a
 
-# Verify secrets are loaded
+# Verify critical secrets are loaded
 if [ -z "$JWT_SECRET" ] || [ -z "$JWT_REFRESH_SECRET" ]; then
   echo "❌ ERROR: JWT secrets failed to load from $SECRETS_FILE"
   exit 1
 fi
 
-echo "✅ JWT secrets loaded"
+echo "✅ Secrets loaded"
 
 # ============================================
 # 2. Wait for Dependencies

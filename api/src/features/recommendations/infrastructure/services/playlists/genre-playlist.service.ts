@@ -217,15 +217,34 @@ export class GenrePlaylistService {
     const playlists: AutoPlaylist[] = [];
     const now = new Date();
 
+    // Pre-score ALL tracks in a single call to avoid N+1 queries
+    const allTrackIds: string[] = [];
+    const allTrackArtistMap = new Map<string, string>();
+    for (const genreData of genresData) {
+      const genreTracks = tracksByGenre.get(genreData.genreId);
+      if (!genreTracks) continue;
+      for (const t of genreTracks) {
+        if (!allTrackArtistMap.has(t.id)) {
+          allTrackIds.push(t.id);
+          allTrackArtistMap.set(t.id, t.artistId || '');
+        }
+      }
+    }
+
+    const allScoredTracks = allTrackIds.length > 0
+      ? await this.scoringService.calculateAndRankTracks(userId, allTrackIds, allTrackArtistMap)
+      : [];
+    const scoreMap = new Map(allScoredTracks.map(t => [t.trackId, t]));
+
     for (const genreData of genresData) {
       const genreTracks = tracksByGenre.get(genreData.genreId);
       if (!genreTracks || genreTracks.length === 0) continue;
 
-      const trackIdsList = genreTracks.map(t => t.id);
-      const trackArtistMap = new Map(genreTracks.map((t) => [t.id, t.artistId || '']));
-
-      // Score tracks
-      const scoredTracks = await this.scoringService.calculateAndRankTracks(userId, trackIdsList, trackArtistMap);
+      // Get scores from pre-computed map and sort
+      const scoredTracks = genreTracks
+        .map(t => scoreMap.get(t.id))
+        .filter((s): s is NonNullable<typeof s> => s != null)
+        .sort((a, b) => b.totalScore - a.totalScore);
 
       // Take top 30 tracks
       const topTracks = scoredTracks.slice(0, 30);

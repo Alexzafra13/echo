@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { useLocation } from 'wouter';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Shuffle, Repeat, Repeat1, ListMusic, Radio, Maximize2 } from 'lucide-react';
 import { usePlayer } from '../../context/PlayerContext';
@@ -51,6 +51,14 @@ export function AudioPlayer() {
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
   const isSwiping = useRef(false);
+  const swipeTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Cleanup swipe timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (swipeTimeoutRef.current) clearTimeout(swipeTimeoutRef.current);
+    };
+  }, []);
 
   // Detectar cuando el usuario llega al final de la página para activar mini-player
   const isMiniMode = usePageEndDetection(120);
@@ -170,7 +178,7 @@ export function AudioPlayer() {
       if (deltaX < 0) {
         // Swipe left → next track
         setSwipeDirection('left');
-        setTimeout(() => {
+        swipeTimeoutRef.current = setTimeout(() => {
           playNext();
           setSwipeDirection(null);
           setSwipeOffset(0);
@@ -178,7 +186,7 @@ export function AudioPlayer() {
       } else {
         // Swipe right → previous track
         setSwipeDirection('right');
-        setTimeout(() => {
+        swipeTimeoutRef.current = setTimeout(() => {
           playPrevious();
           setSwipeDirection(null);
           setSwipeOffset(0);
@@ -252,6 +260,8 @@ export function AudioPlayer() {
     <div
       className={`${styles.player} ${shouldHide ? styles['player--hidden'] : ''}`}
       style={{ '--player-color': dominantColor } as React.CSSProperties}
+      role="region"
+      aria-label="Reproductor de audio"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -310,7 +320,7 @@ export function AudioPlayer() {
             <button
               className={`${styles.controlButton} ${styles.playButton}`}
               onClick={togglePlayPause}
-              title={isPlaying ? 'Pausar' : 'Reproducir'}
+              aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
             >
               {isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
@@ -320,7 +330,8 @@ export function AudioPlayer() {
               <button
                 className={`${styles.controlButton} ${styles.controlButtonSmall} ${isShuffle ? styles.active : ''}`}
                 onClick={toggleShuffle}
-                title="Shuffle"
+                aria-label={isShuffle ? 'Desactivar aleatorio' : 'Activar aleatorio'}
+                aria-pressed={isShuffle}
               >
                 <Shuffle size={16} />
               </button>
@@ -328,7 +339,7 @@ export function AudioPlayer() {
               <button
                 className={styles.controlButton}
                 onClick={playPrevious}
-                title="Anterior"
+                aria-label="Anterior"
               >
                 <SkipBack size={20} />
               </button>
@@ -336,7 +347,7 @@ export function AudioPlayer() {
               <button
                 className={`${styles.controlButton} ${styles.playButton}`}
                 onClick={togglePlayPause}
-                title={isPlaying ? 'Pausar' : 'Reproducir'}
+                aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
               >
                 {isPlaying ? <Pause size={24} /> : <Play size={24} />}
               </button>
@@ -344,7 +355,7 @@ export function AudioPlayer() {
               <button
                 className={styles.controlButton}
                 onClick={playNext}
-                title="Siguiente"
+                aria-label="Siguiente"
               >
                 <SkipForward size={20} />
               </button>
@@ -352,7 +363,8 @@ export function AudioPlayer() {
               <button
                 className={`${styles.controlButton} ${styles.controlButtonSmall} ${repeatMode !== 'off' ? styles.active : ''}`}
                 onClick={toggleRepeat}
-                title={`Repetir: ${repeatMode}`}
+                aria-label={`Repetir: ${repeatMode === 'off' ? 'desactivado' : repeatMode === 'one' ? 'una canción' : 'todas'}`}
+                aria-pressed={repeatMode !== 'off'}
               >
                 {repeatMode === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
               </button>
@@ -404,7 +416,7 @@ export function AudioPlayer() {
           <button
             className={styles.volumeButton}
             onClick={toggleMute}
-            title={volume === 0 ? 'Activar sonido' : 'Silenciar'}
+            aria-label={volume === 0 ? 'Activar sonido' : 'Silenciar'}
           >
             {volume === 0 ? <VolumeX size={22} strokeWidth={1.5} /> : <Volume2 size={22} strokeWidth={1.5} />}
           </button>
@@ -416,6 +428,8 @@ export function AudioPlayer() {
             value={volume}
             onChange={handleVolumeChange}
             className={styles.volumeSlider}
+            aria-label="Volumen"
+            aria-valuetext={`${Math.round(volume * 100)}%`}
             style={{ '--volume-percent': `${volume * 100}%` } as React.CSSProperties}
           />
         </div>
@@ -425,7 +439,7 @@ export function AudioPlayer() {
           <button
             className={styles.expandButton}
             onClick={() => setIsNowPlayingOpen(true)}
-            title="Expandir reproductor"
+            aria-label="Expandir reproductor"
           >
             <Maximize2 size={22} strokeWidth={1.5} />
           </button>

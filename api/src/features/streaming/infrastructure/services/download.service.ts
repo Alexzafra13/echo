@@ -221,28 +221,25 @@ export class DownloadService {
    * Calculate estimated ZIP size (sum of file sizes)
    */
   async calculateAlbumSize(albumInfo: AlbumDownloadInfo): Promise<number> {
-    let totalSize = 0;
-
-    for (const track of albumInfo.tracks) {
+    // Stat all files in parallel for better performance
+    const statPromises = albumInfo.tracks.map(async (track) => {
       try {
         const stats = await fs.promises.stat(track.path);
-        totalSize += stats.size;
+        return stats.size;
       } catch {
-        // File not found, skip
+        return 0;
       }
-    }
+    });
 
     // Add cover size if exists
     if (albumInfo.coverPath) {
-      try {
-        const stats = await fs.promises.stat(albumInfo.coverPath);
-        totalSize += stats.size;
-      } catch {
-        // Cover not found, skip
-      }
+      statPromises.push(
+        fs.promises.stat(albumInfo.coverPath).then(s => s.size).catch(() => 0),
+      );
     }
 
-    return totalSize;
+    const sizes = await Promise.all(statPromises);
+    return sizes.reduce((sum, size) => sum + size, 0);
   }
 
   /**

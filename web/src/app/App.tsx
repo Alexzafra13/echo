@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { Route, Switch, Redirect } from 'wouter';
+import { lazy, Suspense, useEffect } from 'react';
+import { Route, Switch, Redirect, useLocation } from 'wouter';
 import { SetupWizard } from '@features/setup';
 import LoginPage from '@features/auth/pages/LoginPage/LoginPage';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
@@ -77,6 +77,17 @@ const SharedAlbumPage = lazy(() =>
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [, setLocation] = useLocation();
+
+  // Listen for navigation events from non-React code (e.g., axios interceptors)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const path = (e as CustomEvent<{ path: string }>).detail.path;
+      setLocation(path);
+    };
+    window.addEventListener('app:navigate', handler);
+    return () => window.removeEventListener('app:navigate', handler);
+  }, [setLocation]);
 
   return (
     <ErrorBoundary>
