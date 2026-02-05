@@ -3,9 +3,8 @@ import { eq, desc, and, count, sql, inArray, asc, max } from 'drizzle-orm';
 import { DrizzleService } from '@infrastructure/database/drizzle.service';
 import { createSearchPattern } from '@shared/utils';
 import { playlists, playlistTracks, tracks, albums, artists } from '@infrastructure/database/schema';
-import { IPlaylistRepository } from '../../domain/ports';
-import { Playlist, PlaylistTrack } from '../../domain/entities';
-import { Track } from '@features/tracks/domain/entities/track.entity';
+import { IPlaylistRepository, TrackWithPlaylistOrder } from '../../domain/ports';
+import { Playlist, PlaylistTrack, PlaylistProps } from '../../domain/entities';
 import { PlaylistMapper } from '../mappers/playlist.mapper';
 import { TrackMapper } from '@features/tracks/infrastructure/persistence/track.mapper';
 
@@ -109,8 +108,11 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     return PlaylistMapper.toDomain(result[0]);
   }
 
-  async update(id: string, playlist: Partial<Playlist>): Promise<Playlist | null> {
-    const props = playlist.toPrimitives ? playlist.toPrimitives() : (playlist as any);
+  async update(id: string, playlist: Partial<Playlist> | Partial<PlaylistProps>): Promise<Playlist | null> {
+    // Handle both Playlist entity and plain props object
+    const props: Partial<PlaylistProps> = 'toPrimitives' in playlist && typeof playlist.toPrimitives === 'function'
+      ? playlist.toPrimitives()
+      : playlist as Partial<PlaylistProps>;
 
     const result = await this.drizzle.db
       .update(playlists)
@@ -200,7 +202,7 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
     return result.length > 0;
   }
 
-  async getPlaylistTracks(playlistId: string): Promise<Track[]> {
+  async getPlaylistTracks(playlistId: string): Promise<TrackWithPlaylistOrder[]> {
     const result = await this.drizzle.db
       .select({
         playlistTrack: playlistTracks,
@@ -215,12 +217,10 @@ export class DrizzlePlaylistRepository implements IPlaylistRepository {
       .where(eq(playlistTracks.playlistId, playlistId))
       .orderBy(asc(playlistTracks.trackOrder));
 
-    // Map tracks and attach trackOrder to each track
+    // Map tracks and attach playlistOrder (1-indexed for display)
     return result.map((r, index) => {
       const track = TrackMapper.toDomain(r.track);
-      // Attach trackOrder as a custom property (1-indexed for display)
-      (track as any).playlistOrder = index + 1;
-      return track;
+      return Object.assign(track, { playlistOrder: index + 1 }) as TrackWithPlaylistOrder;
     });
   }
 

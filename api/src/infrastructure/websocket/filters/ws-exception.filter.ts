@@ -57,6 +57,7 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
       const error = exception.getError();
       if (typeof error === 'string') {
         message = error;
+        code = 'WS_EXCEPTION';
       } else {
         const errorObj = error as WsExceptionError;
         message = errorObj.message ?? 'WebSocket error';
