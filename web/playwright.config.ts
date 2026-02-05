@@ -16,11 +16,14 @@ export default defineConfig({
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
 
-  // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  // Retry on CI only (1 retry to save time)
+  retries: process.env.CI ? 1 : 0,
 
   // Opt out of parallel tests on CI
   workers: process.env.CI ? 1 : undefined,
+
+  // Global timeout per test (prevent hanging tests from blocking CI)
+  timeout: 30000,
 
   // Reporter to use
   reporter: [
@@ -38,6 +41,12 @@ export default defineConfig({
 
     // Screenshot on failure
     screenshot: 'only-on-failure',
+
+    // Navigation timeout
+    navigationTimeout: 15000,
+
+    // Action timeout (click, fill, etc.)
+    actionTimeout: 10000,
   },
 
   // Configure projects for major browsers
@@ -75,8 +84,10 @@ export default defineConfig({
   ],
 
   // Run local dev server before starting the tests
+  // CI: use preview (serves pre-built files, much faster)
+  // Local: use dev server with HMR
   webServer: {
-    command: 'pnpm dev',
+    command: process.env.CI ? 'pnpm preview --port 5173' : 'pnpm dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
