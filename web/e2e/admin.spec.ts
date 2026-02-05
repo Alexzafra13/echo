@@ -1,34 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-/**
- * Helper: Login como admin antes de cada test
- */
-async function loginAsAdmin(page: import('@playwright/test').Page) {
-  await page.goto('/login');
-  // Esperar a que el formulario de login esté visible
-  await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 15000 });
-
-  await page.locator('input[name="username"]').fill('admin');
-  await page.locator('input[name="password"]').fill('adminpassword123');
-  await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
-
-  // Esperar a que redirija fuera de login
-  await page.waitForURL(/^(?!.*login)/, { timeout: 15000 });
-
-  // Si redirige a first-login, completar el cambio de contraseña
-  if (page.url().includes('first-login')) {
-    await page.locator('input[name="newPassword"]').fill('adminpassword123');
-    await page.locator('input[name="confirmPassword"]').fill('adminpassword123');
-    await page.getByRole('button', { name: /Cambiar|Guardar/i }).click();
-    await page.waitForURL(/^(?!.*first-login)/, { timeout: 15000 });
-  }
-}
-
 test.describe('Panel de Administración', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test.describe('Acceso y navegación', () => {
     test('accede al panel admin', async ({ page }) => {
       await page.goto('/admin');
@@ -171,6 +143,8 @@ test.describe('Panel de Administración', () => {
 });
 
 test.describe('Acceso no autorizado al admin', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('redirige a login o setup si no está autenticado', async ({ page }) => {
     await page.goto('/admin');
 

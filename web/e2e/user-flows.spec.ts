@@ -4,30 +4,7 @@ import { test, expect } from '@playwright/test';
  * Tests de flujos críticos de usuario
  */
 
-// Helper: Login como admin
-async function loginAsAdmin(page: import('@playwright/test').Page) {
-  await page.goto('/login');
-  await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 15000 });
-
-  await page.locator('input[name="username"]').fill('admin');
-  await page.locator('input[name="password"]').fill('adminpassword123');
-  await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
-
-  await page.waitForURL(/^(?!.*login)/, { timeout: 15000 });
-
-  if (page.url().includes('first-login')) {
-    await page.locator('input[name="newPassword"]').fill('adminpassword123');
-    await page.locator('input[name="confirmPassword"]').fill('adminpassword123');
-    await page.getByRole('button', { name: /Cambiar|Guardar/i }).click();
-    await page.waitForURL(/^(?!.*first-login)/, { timeout: 15000 });
-  }
-}
-
 test.describe('Gestión de Usuarios', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('modal de crear usuario se abre correctamente', async ({ page }) => {
     // 1. Ir al panel de usuarios
     await page.goto('/admin?tab=users');
@@ -43,10 +20,6 @@ test.describe('Gestión de Usuarios', () => {
 });
 
 test.describe('Búsqueda', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('página de búsqueda carga correctamente', async ({ page }) => {
     // Navegar directamente a búsqueda con query
     await page.goto('/search?q=test');
@@ -62,10 +35,6 @@ test.describe('Búsqueda', () => {
 });
 
 test.describe('Navegación principal', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('navegación entre secciones principales', async ({ page }) => {
     await page.goto('/home');
     await page.waitForLoadState('networkidle');
@@ -107,10 +76,6 @@ test.describe('Navegación principal', () => {
 });
 
 test.describe('Playlists', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('página de playlists carga correctamente', async ({ page }) => {
     await page.goto('/playlists');
     await page.waitForLoadState('networkidle');
@@ -158,10 +123,6 @@ test.describe('Playlists', () => {
 });
 
 test.describe('Perfil de usuario', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('página de perfil carga correctamente', async ({ page }) => {
     await page.goto('/profile');
     await page.waitForLoadState('networkidle');

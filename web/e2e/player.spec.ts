@@ -5,30 +5,7 @@ import { test, expect } from '@playwright/test';
  * Nota: Estos tests verifican la UI del player, no la reproducción real de audio
  */
 
-// Helper: Login como admin
-async function loginAsAdmin(page: import('@playwright/test').Page) {
-  await page.goto('/login');
-  await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 15000 });
-
-  await page.locator('input[name="username"]').fill('admin');
-  await page.locator('input[name="password"]').fill('adminpassword123');
-  await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
-
-  await page.waitForURL(/^(?!.*login)/, { timeout: 15000 });
-
-  if (page.url().includes('first-login')) {
-    await page.locator('input[name="newPassword"]').fill('adminpassword123');
-    await page.locator('input[name="confirmPassword"]').fill('adminpassword123');
-    await page.getByRole('button', { name: /Cambiar|Guardar/i }).click();
-    await page.waitForURL(/^(?!.*first-login)/, { timeout: 15000 });
-  }
-}
-
 test.describe('Reproductor de Audio', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('la página home carga correctamente después de login', async ({ page }) => {
     await page.goto('/home');
     await page.waitForLoadState('networkidle');
@@ -99,10 +76,6 @@ test.describe('Reproductor de Audio', () => {
 });
 
 test.describe('Radio', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-  });
-
   test('página de radio carga correctamente', async ({ page }) => {
     await page.goto('/radio');
     await page.waitForLoadState('networkidle');
