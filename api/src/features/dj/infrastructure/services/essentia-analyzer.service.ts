@@ -273,16 +273,17 @@ export class EssentiaAnalyzerService implements IAudioAnalyzer, OnModuleDestroy 
         '-show_streams',
         '-show_format',
         filePath,
-      ]);
+      ], { encoding: 'utf8' });
 
       const info = JSON.parse(stdout);
       const _duration = parseFloat(info.format?.duration || '0');
 
       // Basic energy analysis using loudness
+      // Note: volumedetect output goes to stderr, must specify encoding
       const { stderr: loudnessOutput } = await execFileAsync(
         getFfmpegPath(),
-        ['-i', filePath, '-af', 'volumedetect', '-f', 'null', '-'],
-        { timeout: 60000 },
+        ['-i', filePath, '-af', 'volumedetect', '-f', 'null', '/dev/null'],
+        { timeout: 60000, encoding: 'utf8' },
       );
 
       // Parse mean volume for energy estimate
