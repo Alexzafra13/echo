@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@shared/store/authStore';
 import { useWebSocketConnection } from '@shared/hooks/useWebSocketConnection';
@@ -44,6 +44,7 @@ export function useAlbumImportWebSocket(
     new Map()
   );
   const [recentNotifications, setRecentNotifications] = useState<ImportNotification[]>([]);
+  const cleanupTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const handleNotification = useCallback(
     (notification: ImportNotification) => {
@@ -56,13 +57,15 @@ export function useAlbumImportWebSocket(
           newMap.set(event.importId, event);
         } else {
           // Remove completed/failed imports after a delay
-          setTimeout(() => {
+          const timer = setTimeout(() => {
+            cleanupTimersRef.current.delete(timer);
             setActiveImports((current) => {
               const updated = new Map(current);
               updated.delete(event.importId);
               return updated;
             });
           }, 5000);
+          cleanupTimersRef.current.add(timer);
           newMap.set(event.importId, event);
         }
         return newMap;
@@ -117,6 +120,15 @@ export function useAlbumImportWebSocket(
       logger.debug('[WebSocket] Disconnected from federation namespace');
     },
   });
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    const timers = cleanupTimersRef.current;
+    return () => {
+      timers.forEach(clearTimeout);
+      timers.clear();
+    };
+  }, []);
 
   // Register event listener
   useEffect(() => {

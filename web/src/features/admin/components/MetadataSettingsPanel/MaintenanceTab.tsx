@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Trash2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button, CollapsibleInfo, InlineNotification, ConfirmDialog } from '@shared/components/ui';
 import { useNotification } from '@shared/hooks';
@@ -40,10 +40,17 @@ export function MaintenanceTab() {
   const [showCacheConfirm, setShowCacheConfirm] = useState(false);
   const [populateError, setPopulateError] = useState<string | null>(null);
   const { notification, showSuccess, showError, dismiss } = useNotification();
+  const autoHideTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   useEffect(() => {
     loadStats();
     loadPaths();
+
+    const timers = autoHideTimersRef.current;
+    return () => {
+      timers.forEach(clearTimeout);
+      timers.clear();
+    };
   }, []);
 
   const loadStats = async () => {
@@ -96,7 +103,8 @@ export function MaintenanceTab() {
       setCleanupResult(response.data);
 
       // Auto-hide cleanup result after 5 seconds
-      setTimeout(() => setCleanupResult(null), 5000);
+      const timer = setTimeout(() => setCleanupResult(null), 5000);
+      autoHideTimersRef.current.add(timer);
 
       // Refrescar estadísticas
       await loadStats();
@@ -136,7 +144,8 @@ export function MaintenanceTab() {
       setPopulateResult(response.data);
 
       // Auto-hide populate result after 5 seconds
-      setTimeout(() => setPopulateResult(null), 5000);
+      const timer2 = setTimeout(() => setPopulateResult(null), 5000);
+      autoHideTimersRef.current.add(timer2);
 
       // Refrescar estadísticas
       await loadStats();
