@@ -230,21 +230,20 @@ describe('AudioPlayer', () => {
       mockPlayerContext.isPlaying = false;
       render(<AudioPlayer />);
 
-      const playButtons = screen.getAllByTitle(/Reproducir|Pausar/);
-      expect(playButtons.length).toBeGreaterThan(0);
+      expect(screen.getByLabelText('Reproducir')).toBeInTheDocument();
     });
 
     it('should render pause button when playing', () => {
       mockPlayerContext.isPlaying = true;
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Pausar')).toBeInTheDocument();
+      expect(screen.getByLabelText('Pausar')).toBeInTheDocument();
     });
 
     it('should call togglePlayPause when clicking play/pause button', () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Reproducir'));
+      fireEvent.click(screen.getByLabelText('Reproducir'));
 
       expect(mockTogglePlayPause).toHaveBeenCalled();
     });
@@ -252,14 +251,14 @@ describe('AudioPlayer', () => {
     it('should render skip controls', () => {
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Anterior')).toBeInTheDocument();
-      expect(screen.getByTitle('Siguiente')).toBeInTheDocument();
+      expect(screen.getByLabelText('Anterior')).toBeInTheDocument();
+      expect(screen.getByLabelText('Siguiente')).toBeInTheDocument();
     });
 
     it('should call playPrevious when clicking previous button', () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Anterior'));
+      fireEvent.click(screen.getByLabelText('Anterior'));
 
       expect(mockPlayPrevious).toHaveBeenCalled();
     });
@@ -267,7 +266,7 @@ describe('AudioPlayer', () => {
     it('should call playNext when clicking next button', () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Siguiente'));
+      fireEvent.click(screen.getByLabelText('Siguiente'));
 
       expect(mockPlayNext).toHaveBeenCalled();
     });
@@ -275,13 +274,13 @@ describe('AudioPlayer', () => {
     it('should render shuffle button', () => {
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Shuffle')).toBeInTheDocument();
+      expect(screen.getByLabelText('Activar aleatorio')).toBeInTheDocument();
     });
 
     it('should call toggleShuffle when clicking shuffle button', () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Shuffle'));
+      fireEvent.click(screen.getByLabelText('Activar aleatorio'));
 
       expect(mockToggleShuffle).toHaveBeenCalled();
     });
@@ -289,13 +288,13 @@ describe('AudioPlayer', () => {
     it('should render repeat button', () => {
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Repetir: off')).toBeInTheDocument();
+      expect(screen.getByLabelText('Repetir: desactivado')).toBeInTheDocument();
     });
 
     it('should call toggleRepeat when clicking repeat button', () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Repetir: off'));
+      fireEvent.click(screen.getByLabelText('Repetir: desactivado'));
 
       expect(mockToggleRepeat).toHaveBeenCalled();
     });
@@ -314,10 +313,10 @@ describe('AudioPlayer', () => {
     it('should only render play/pause button in radio mode', () => {
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Reproducir')).toBeInTheDocument();
-      expect(screen.queryByTitle('Anterior')).not.toBeInTheDocument();
-      expect(screen.queryByTitle('Siguiente')).not.toBeInTheDocument();
-      expect(screen.queryByTitle('Shuffle')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Reproducir')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Anterior')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Siguiente')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/aleatorio/)).not.toBeInTheDocument();
     });
 
     it('should render live indicator in radio mode', () => {
@@ -364,20 +363,20 @@ describe('AudioPlayer', () => {
     it('should render volume button', () => {
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Silenciar')).toBeInTheDocument();
+      expect(screen.getByLabelText('Silenciar')).toBeInTheDocument();
     });
 
     it('should render mute button when volume is 0', () => {
       mockPlayerContext.volume = 0;
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Activar sonido')).toBeInTheDocument();
+      expect(screen.getByLabelText('Activar sonido')).toBeInTheDocument();
     });
 
     it('should toggle mute when clicking volume button', () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Silenciar'));
+      fireEvent.click(screen.getByLabelText('Silenciar'));
 
       expect(mockSetVolume).toHaveBeenCalledWith(0);
     });
@@ -386,7 +385,7 @@ describe('AudioPlayer', () => {
       mockPlayerContext.volume = 0;
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Activar sonido'));
+      fireEvent.click(screen.getByLabelText('Activar sonido'));
 
       expect(mockSetVolume).toHaveBeenCalledWith(0.7);
     });
@@ -544,13 +543,13 @@ describe('AudioPlayer', () => {
     it('should render expand button on desktop', () => {
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Expandir reproductor')).toBeInTheDocument();
+      expect(screen.getByLabelText('Expandir reproductor')).toBeInTheDocument();
     });
 
     it('should open NowPlayingView when clicking expand button', async () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Expandir reproductor'));
+      fireEvent.click(screen.getByLabelText('Expandir reproductor'));
 
       await waitFor(() => {
         expect(screen.getByTestId('now-playing-view')).toBeInTheDocument();
@@ -560,7 +559,7 @@ describe('AudioPlayer', () => {
     it('should close NowPlayingView when clicking close button', async () => {
       render(<AudioPlayer />);
 
-      fireEvent.click(screen.getByTitle('Expandir reproductor'));
+      fireEvent.click(screen.getByLabelText('Expandir reproductor'));
 
       await waitFor(() => {
         expect(screen.getByTestId('now-playing-view')).toBeInTheDocument();
@@ -604,18 +603,18 @@ describe('AudioPlayer', () => {
       };
     });
 
-    it('should show repeat one mode title', () => {
+    it('should show repeat one mode label', () => {
       mockPlayerContext.repeatMode = 'one';
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Repetir: one')).toBeInTheDocument();
+      expect(screen.getByLabelText('Repetir: una canción')).toBeInTheDocument();
     });
 
-    it('should show repeat all mode title', () => {
+    it('should show repeat all mode label', () => {
       mockPlayerContext.repeatMode = 'all';
       render(<AudioPlayer />);
 
-      expect(screen.getByTitle('Repetir: all')).toBeInTheDocument();
+      expect(screen.getByLabelText('Repetir: todas')).toBeInTheDocument();
     });
   });
 
