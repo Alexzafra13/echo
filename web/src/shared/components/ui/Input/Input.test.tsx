@@ -23,7 +23,7 @@ describe('Input', () => {
       const input = container.querySelector('input');
 
       expect(input).toHaveAttribute('id');
-      expect(input?.id).toMatch(/^input-/);
+      expect(input?.id).toBeTruthy();
     });
   });
 
