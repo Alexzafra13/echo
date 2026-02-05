@@ -1,4 +1,4 @@
-import * as ffmpegStatic from 'ffmpeg-static';
+import ffmpegStatic from 'ffmpeg-static';
 import * as path from 'path';
 
 /**
@@ -6,8 +6,8 @@ import * as path from 'path';
  * Uses ffmpeg-static if available, otherwise falls back to system ffmpeg
  */
 export function getFfmpegPath(): string {
-  if (ffmpegStatic) {
-    return ffmpegStatic as unknown as string;
+  if (ffmpegStatic && typeof ffmpegStatic === 'string') {
+    return ffmpegStatic;
   }
   return 'ffmpeg';
 }
