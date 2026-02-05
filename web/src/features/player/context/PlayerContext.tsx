@@ -343,7 +343,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       return false;
     }
 
-    logger.warn('[Player] Triggering autoplay for artist:', currentTrack.artistId);
+    logger.debug('[Player] Triggering autoplay for artist:', currentTrack.artistId);
 
     const currentQueueIds = new Set(queue.queue.map(t => t.id));
     const result = await autoplay.loadSimilarArtistTracks(
@@ -352,7 +352,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     );
 
     if (result.tracks.length > 0) {
-      logger.warn(`[Player] Autoplay: loaded ${result.tracks.length} tracks from similar artists`);
+      logger.debug(`[Player] Autoplay: loaded ${result.tracks.length} tracks from similar artists`);
       setIsAutoplayActive(true);
       setAutoplaySourceArtist(result.sourceArtistName);
 
@@ -495,8 +495,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
       const hasNextTrack = queue.hasNext();
 
-      // Using warn level so it shows in production for debugging
-      logger.warn('[Player] Track ended - checking next action', {
+      logger.debug('[Player] Track ended - checking next action', {
         repeatMode: queue.repeatMode,
         hasNext: hasNextTrack,
         currentIndex: queue.currentIndex,
@@ -508,7 +507,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       });
 
       if (queue.repeatMode === 'one') {
-        logger.warn('[Player] Repeat one - replaying current track');
+        logger.debug('[Player] Repeat one - replaying current track');
         audioElements.playActive();
       } else if (hasNextTrack) {
         logger.debug('[Player] Playing next track in queue');
