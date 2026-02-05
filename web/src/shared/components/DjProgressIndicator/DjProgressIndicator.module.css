@@ -120,6 +120,15 @@
   margin-left: auto;
 }
 
+/* Mobile counter - hidden by default, shown on small screens */
+.mobileCount {
+  display: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .container {
@@ -144,13 +153,17 @@
 
 @media (max-width: 480px) {
   .container {
-    padding: 6px 8px;
-    gap: 6px;
-    max-width: 110px;
+    padding: 6px 10px;
+    gap: 8px;
+    max-width: 140px;
   }
 
   .content {
     display: none;
+  }
+
+  .mobileCount {
+    display: block;
   }
 
   .iconWrapper {

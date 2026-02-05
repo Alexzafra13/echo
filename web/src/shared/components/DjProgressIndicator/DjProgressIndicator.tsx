@@ -34,6 +34,7 @@ export function DjProgressIndicator() {
         )}
       </div>
 
+      {/* Full content for desktop/tablet */}
       <div className={styles.content}>
         <span className={styles.title}>
           <Music2 size={10} className={styles.titleIcon} />
@@ -56,6 +57,11 @@ export function DjProgressIndicator() {
           )}
         </div>
       </div>
+
+      {/* Compact counter for mobile (visible when content is hidden) */}
+      <span className={styles.mobileCount}>
+        {isRunning ? `${processedInSession}/${total}` : 'OK'}
+      </span>
     </div>
   );
 }
