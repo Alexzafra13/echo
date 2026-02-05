@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useDjProgressStore } from '@shared/store';
 import { useAuthStore } from '@shared/store';
-import { websocketService } from '@shared/services/websocket.service';
+import { WebSocketService } from '@shared/services/websocket.service';
 
 interface DjProgressEvent {
   isRunning: boolean;
@@ -26,7 +26,8 @@ export function useDjProgressListener() {
     if (!accessToken) return;
 
     // Connect to scanner namespace for DJ progress events
-    const socket = websocketService.connect('scanner', accessToken);
+    const wsService = WebSocketService.getInstance();
+    const socket = wsService.connect('scanner', accessToken);
 
     socket.on('dj:progress', handleDjProgress);
 
